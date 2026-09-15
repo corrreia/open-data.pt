@@ -141,7 +141,8 @@ function summaryOptions(lines: SummaryLine[], palette: readonly string[], unit: 
         // The band: the lowest value, then the height up to the highest, stacked and shaded.
         { name: `${line.label} low`, type: "line", stack: `band-${index}`, data: bucketRows.map((row) => [row[0], row[2]]), symbol: "none", lineStyle: { opacity: 0 }, silent: true },
         { name: `${line.label} range`, type: "line", stack: `band-${index}`, data: bucketRows.map((row) => [row[0], row[3] - row[2]]), symbol: "none", lineStyle: { opacity: 0 }, areaStyle: { color, opacity: 0.15 }, silent: true },
-        { name: line.label, type: "line", data: bucketRows.map((row) => [row[0], row[1]]), color, showSymbol: false, lineStyle: { width: 2 } },
+        // A lone bucket is drawn as a dot; a line needs two.
+        { name: line.label, type: "line", data: bucketRows.map((row) => [row[0], row[1]]), color, showSymbol: bucketRows.length < 2, lineStyle: { width: 2 } },
       ];
     }),
   };
@@ -316,7 +317,7 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
         <LayerCard.Secondary className="flex flex-wrap items-center justify-between gap-2 text-xs">
           <span>
             {timeWindow
-              ? `${summary.data ? RESOLUTION_LABEL[summary.data.resolution] : "Loading"} · ${shownFrom ? periodLabel(shownFrom, resolution) : dayLabel(timeWindow.from)} – ${dayLabel(Date.parse(timeWindow.to) - 1)}${unit ? ` · ${unit}` : ""}`
+              ? `${summary.data ? RESOLUTION_LABEL[summary.data.resolution] : "Loading"} · ${shownFrom ? periodLabel(shownFrom, resolution === "month" ? "month" : "day") : dayLabel(timeWindow.from)} – ${dayLabel(Date.parse(timeWindow.to) - 1)}${unit ? ` · ${unit}` : ""}`
               : `${unit || "Value"} · ${fmt.int(points.length)} points in ${fmt.int(series.length)} series${oldest ? ` · since ${fmt.date(oldest)}` : ""}`}
           </span>
           <span className="text-kumo-subtle">{coverageNote}</span>

@@ -248,6 +248,16 @@ describe("reading summaries", () => {
     expect(none.series).toEqual([]);
   });
 
+  it("answers decades of a short history as its own span would be, unless asked for months", async () => {
+    const objects = await summarised();
+    const decades = { from: "1986-09-01T00:00:00Z", to: "2026-09-12T00:00:00Z", seriesKeys: [] };
+    const fitted = await readSummaryRange(objects, "power-series", decades);
+    expect(fitted.resolution).toBe("hour");
+    expect(fitted.series[0]?.buckets).toHaveLength(6);
+    const asked = await readSummaryRange(objects, "power-series", { ...decades, resolution: "month" });
+    expect(asked.series[0]?.buckets).toHaveLength(1);
+  });
+
   it("refuses ranges it would have to read too much for", async () => {
     const objects = new ObjectStore(new MemorySnapshots());
     const index: SummaryIndex = { version: 1, firstDay: "2020-01-01", through: "2026-09-10", updatedAt: "2026-09-12T00:00:00.000Z" };

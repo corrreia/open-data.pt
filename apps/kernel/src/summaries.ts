@@ -679,26 +679,42 @@ export async function readSummaryRange(objects: ObjectStore, slug: string, query
   const readFrom = firstDay ? Math.max(from, Date.parse(lisbonDayBounds(firstDay).from)) : to;
   const readTo = index ? Math.min(to, Date.parse(lisbonDayBounds(index.through).to)) : from;
 
+  const wanted = new Set(query.seriesKeys);
+  const inRange = (blobs: Array<SummaryMonth | SummaryYear>) =>
+    blobs.flatMap((blob) => blob.buckets).filter((bucket) => {
+      const start = Date.parse(bucket[1]);
+      return start >= from && start < to && (wanted.size === 0 || wanted.has(bucket[0]));
+    });
+
   let resolution = query.resolution ?? autoResolution(to - from);
-  let blobs: Array<SummaryMonth | SummaryYear>;
+  let blobs: Array<SummaryMonth | SummaryYear> = [];
+  // Asked for no resolution, a range reaching far before a short history is answered as the history's own span would be.
+  let fitted = false;
+  let monthsFrom = readFrom;
   if (resolution === "month") {
     const years = readFrom < readTo ? yearsBetween(readFrom, readTo) : [];
     if (years.length > MAX_SUMMARY_YEARS) throw new InvalidQueryError(`A summary range by month spans at most ${MAX_SUMMARY_YEARS} years of data; read a longer span one window at a time`);
     blobs = (await mapLimited(years, (year) => objects.read<SummaryYear>(summaryKey(slug, year)))).flatMap((blob) => blob ?? []);
-  } else {
-    const months = readFrom < readTo ? monthsBetween(readFrom, readTo) : [];
+    const first = earliestStart(inRange(blobs));
+    if (query.resolution === undefined && first < to && autoResolution(to - first) !== "month") {
+      fitted = true;
+      resolution = autoResolution(to - first);
+      monthsFrom = Math.max(readFrom, first);
+    }
+  }
+  if (resolution !== "month") {
+    const months = monthsFrom < readTo ? monthsBetween(monthsFrom, readTo) : [];
     if (months.length > MAX_SUMMARY_MONTHS) throw new InvalidQueryError(`A summary range by ${resolution} spans at most ${MAX_SUMMARY_MONTHS} months of data; ask for resolution=month, or read a longer span one window at a time`);
     const monthBlobs = (await mapLimited(months, (month) => objects.read<SummaryMonth>(summaryKey(slug, month)))).flatMap((blob) => blob ?? []);
+    // A year knows only the month its history begins in; the months know the hour.
+    const firstHour = fitted ? earliestStart(inRange(monthBlobs)) : Infinity;
+    if (firstHour < to) resolution = autoResolution(to - firstHour);
     if (resolution === "hour" && monthBlobs.some((blob) => blob.resolution === "day")) resolution = "day";
     blobs = monthBlobs;
   }
 
-  const wanted = new Set(query.seriesKeys);
-  const inRange = blobs.flatMap((blob) => blob.buckets).filter((bucket) => {
-    const start = Date.parse(bucket[1]);
-    return start >= from && start < to && (wanted.size === 0 || wanted.has(bucket[0]));
-  });
-  const buckets = resolution === "day" ? rollUp(inRange, dayStart) : inRange;
+  const found = inRange(blobs);
+  const buckets = resolution === "day" ? rollUp(found, dayStart) : found;
   if (buckets.length > MAX_SUMMARY_BUCKETS) throw new InvalidQueryError(`That is ${buckets.length} buckets, more than ${MAX_SUMMARY_BUCKETS}: name fewer series with seriesKey, or ask for a coarser resolution`);
 
   const meta = new Map<string, SummarySeries>();
@@ -719,6 +735,13 @@ export async function readSummaryRange(objects: ObjectStore, slug: string, query
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(([seriesKey, list]) => ({ seriesKey, unit: meta.get(seriesKey)?.unit ?? "", dimensions: meta.get(seriesKey)?.dimensions ?? {}, buckets: list })),
   };
+}
+
+/** When the earliest bucket starts, or Infinity when there is none. */
+function earliestStart(buckets: SummaryBucket[]): number {
+  let first = Infinity;
+  for (const bucket of buckets) first = Math.min(first, Date.parse(bucket[1]));
+  return first;
 }
 
 /** One product's month blob (`YYYY-MM`) or year blob (`YYYY`) exactly as stored, or undefined when there is none. */
