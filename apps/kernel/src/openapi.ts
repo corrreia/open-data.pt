@@ -299,7 +299,7 @@ export function openApiDocument(origin: string) {
           operationId: "getProductSeriesSummaryFile",
           tags: ["Products"],
           summary: "Download one Lisbon month or year of a time series' summaries, as stored",
-          description: "The files the window endpoint reads. A month (`YYYY-MM`) holds hourly buckets, or daily ones for backfilled history and for a month too large for hours (`resolution`). A year (`YYYY`) holds one bucket per series and Lisbon month. Once a period is over and its last day summarised, its file changes only if late data arrives, and it is cached for a year.",
+          description: "The files the window endpoint reads. A month (`YYYY-MM`) holds hourly buckets, or daily ones for backfilled history and for a month too large for hours (`resolution`). A year (`YYYY`) holds one bucket per series and Lisbon month. Once a period is over and its last day summarised, its file changes only when late data arrives, at most once a day, and it is cached for a day.",
           parameters: [pathParameter("slug", "Stable product slug"), { name: "period", in: "path", required: true, description: "A Lisbon calendar month, YYYY-MM, or year, YYYY.", schema: { type: "string", pattern: "^\\d{4}(-\\d{2})?$" } }],
           responses: { "200": jsonResponse("One month or year of summary buckets", { oneOf: [schemaRef("SeriesSummaryMonth"), schemaRef("SeriesSummaryYear")] }), ...reads(), "404": responseRef("NotFound") },
         },

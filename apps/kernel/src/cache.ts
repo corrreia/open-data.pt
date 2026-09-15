@@ -24,12 +24,12 @@ const SUMMARY_SETTLED_AFTER_MS = 2 * 86_400_000;
 
 /** History windows entirely in the settled past are cached for a day; everything else briefly. */
 export function cacheTtl(url: URL, now = Date.now()): number | undefined {
-  // A month or year file stops changing once its last day is summarised, save for late data: then it is kept for a year.
+  // A month or year file changes daily until its last day is summarised; after that only when late data lands, at most once a day.
   const file = SUMMARY_FILE_PATH.exec(url.pathname);
   if (file) {
     const year = Number(file[1]);
     const end = file[2] ? Date.UTC(year, Number(file[2]), 1) : Date.UTC(year + 1, 0, 1);
-    return end + SUMMARY_SETTLED_AFTER_MS < now ? 31_536_000 : 3_600;
+    return end + SUMMARY_SETTLED_AFTER_MS < now ? 86_400 : 3_600;
   }
   if (SUMMARY_PATH.test(url.pathname)) {
     const to = Date.parse(url.searchParams.get("to") ?? "");
