@@ -475,7 +475,7 @@ export function openApiDocument(origin: string) {
         NotFound: problemResponse("No such product or feed, or it is not public"),
         TooManyRequests: problemResponse("Too many uncached requests from this client, or every history query slot is busy", { "Retry-After": { description: "Seconds to wait", schema: { type: "integer" } } }),
         ServerError: problemResponse("Something failed on our side", { "X-Request-Id": { description: "Quote it when reporting the failure", schema: { type: "string" } } }),
-        HistoryFailed: problemResponse("The history store did not answer", { "X-Request-Id": { description: "Quote it when reporting the failure", schema: { type: "string" } } }),
+        HistoryFailed: problemResponse("The history query failed: the history store refused or could not run it (502), it took longer than 30 seconds (504), or open-data.pt built a query it cannot run (500). The detail says which", { "X-Request-Id": { description: "Quote it when reporting the failure", schema: { type: "string" } } }),
         HistoryUnavailable: problemResponse("History queries are not enabled on this deployment"),
       },
     },
@@ -531,7 +531,7 @@ function reads() {
 
 /** Answers every history window can give besides its own. */
 function historyErrors() {
-  return { ...reads(), "404": responseRef("NotFound"), "502": responseRef("HistoryFailed"), "503": responseRef("HistoryUnavailable") };
+  return { ...reads(), "404": responseRef("NotFound"), "502": responseRef("HistoryFailed"), "503": responseRef("HistoryUnavailable"), "504": responseRef("HistoryFailed") };
 }
 
 /** The slug and the two required ends of a history window. */

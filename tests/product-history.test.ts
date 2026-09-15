@@ -138,6 +138,13 @@ describe("series as known at any moment", () => {
     expect(response.status).toBe(200);
     expect((await historyQueries()).at(-1)).toContain("__ingest_ts >= TIMESTAMP '2026-09-01T00:00:00.000Z'");
   });
+
+  // The site's chart asks for the largest page; the query reads one row more to know whether another page follows.
+  it.each(["series/range", "series/changes/range"])("serves %s's largest page, 1000 points, with the row that says another follows", async (endpoint) => {
+    const response = await server.fetch(`/api/products/revised-series/${endpoint}?${window}&limit=1000`);
+    expect(response.status, await response.clone().text()).toBe(200);
+    expect((await historyQueries()).at(-1)).toMatch(/ LIMIT 1001$/);
+  });
 });
 
 it("keeps flattened nonconflicting event payload fields but authoritative metadata wins collisions", async () => {
@@ -151,7 +158,9 @@ it("reports a provider failure as a bad gateway without leaking the provider's m
   expect(response.status).toBe(502);
   expect(response.headers.get("access-control-allow-origin")).toBe("*");
   expect(response.headers.get("x-request-id")).toBeTruthy();
-  expect(await response.text()).not.toContain("fixture query failure");
+  const body = await response.text();
+  expect(body).not.toContain("fixture query failure");
+  expect(body).toContain("The history store could not run this query");
 });
 
 describe("a read-only, public-only API", () => {

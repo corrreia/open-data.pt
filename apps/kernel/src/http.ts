@@ -13,7 +13,7 @@ import { NotFoundError } from "./errors";
 import type { Acquisition, Feed } from "./feed-model";
 import { ObjectStore } from "./object-store";
 import type { SnapshotStore } from "./ports";
-import { QueryError, runLakeQuery } from "./query";
+import { MAX_HISTORY_PAGE, QueryError, runLakeQuery } from "./query";
 import { ALLOWED_METHODS, MAX_FILTERS, requestIdOf } from "./request-guard";
 import {
   InvalidQueryError,
@@ -205,13 +205,16 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
     if (error instanceof NotFoundError) return problem(404, "Not found", error.message);
     if (error instanceof RequestError) return problem(error.status, error.status === 429 ? "Too many requests" : "Invalid request", error.message, error.headers);
     if (error instanceof InvalidQueryError) return problem(400, "Invalid request", error.message);
-    if (error instanceof QueryError && error.status === 503) return problem(503, "History unavailable", "History queries are not enabled on this deployment.");
+    if (error instanceof QueryError && error.failure === "disabled") return problem(503, "History unavailable", "History queries are not enabled on this deployment.");
     const message = error instanceof Error ? error.message : String(error);
     // Durable Object RPC keeps an error's message but not its class.
     if (/(^|\s)(was not found|not found)$/i.test(message)) return problem(404, "Not found", "The requested resource was not found.");
     const requestId = requestIdOf(request);
     console.error(JSON.stringify({ event: "api_request_failed", requestId, method: request.method, path: url.pathname, error: message }));
-    if (error instanceof QueryError) return problem(502, "History query failed", `The history store did not answer. Request ${requestId}.`, { "X-Request-Id": requestId });
+    if (error instanceof QueryError) {
+      const failed = historyFailure(error.failure);
+      return problem(failed.status, failed.title, `${failed.detail} Request ${requestId}.`, { "X-Request-Id": requestId });
+    }
     return problem(500, "Request failed", `Something went wrong on our side. Request ${requestId}.`, { "X-Request-Id": requestId });
   }
 }
@@ -272,7 +275,7 @@ async function seriesRange(ctx: ApiContext, registry: () => RegistryStub, url: U
   const { from, to } = historyWindow(url);
   const knownAt = optionalTime(url, "knownAt");
   const seriesKey = optionalQuery(url, "seriesKey");
-  const limit = parseInteger(url, "limit", 500, 1, 1000);
+  const limit = parseInteger(url, "limit", 500, 1, MAX_HISTORY_PAGE);
   const cursor = historyCursor(url);
   const start = await lakeStart(ctx, "points");
   const seriesClause = seriesKey ? ` AND series_key = '${sqlString(seriesKey)}'` : "";
@@ -291,7 +294,7 @@ async function seriesRange(ctx: ApiContext, registry: () => RegistryStub, url: U
 async function seriesChangeRange(ctx: ApiContext, registry: () => RegistryStub, url: URL, product: HistoricalProduct, feed: Feed): Promise<Response> {
   const { from, to } = historyWindow(url);
   const seriesKey = optionalQuery(url, "seriesKey");
-  const limit = parseInteger(url, "limit", 500, 1, 1000);
+  const limit = parseInteger(url, "limit", 500, 1, MAX_HISTORY_PAGE);
   const cursor = historyCursor(url);
   const start = await lakeStart(ctx, "points");
   const seriesClause = seriesKey ? ` AND series_key = '${sqlString(seriesKey)}'` : "";
@@ -585,6 +588,14 @@ export function problem(status: number, title: string, detail: string, headers: 
     { type: "about:blank", title, status, detail },
     { status, headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store", "Content-Type": "application/problem+json", ...headers } },
   );
+}
+
+/** A failed history query told as the caller can act on it; the store's own message stays in the log. */
+function historyFailure(failure: QueryError["failure"]) {
+  if (failure === "timeout") return { status: 504, title: "History query timed out", detail: "The history store took too long to answer. Ask for a shorter window." };
+  if (failure === "refused") return { status: 500, title: "History query failed", detail: "open-data.pt built a history query that its own safety check refused. That is a bug on our side, not in your request." };
+  if (failure === "unreadable") return { status: 502, title: "History query failed", detail: "The history store answered with something open-data.pt could not read." };
+  return { status: 502, title: "History query failed", detail: "The history store could not run this query. Try again, or ask for a shorter window." };
 }
 
 export class RequestError extends Error {
