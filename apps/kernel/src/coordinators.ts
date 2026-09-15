@@ -11,6 +11,7 @@ import { digest } from "./hash";
 import { PipelinesLake, lakeStreams, type LakeTable } from "./lake";
 import { ObjectStore } from "./object-store";
 import { runLakeQuery } from "./query";
+import { SUMMARY_DAYS_PER_WAKE, SUMMARY_DUE_STATE_KEY, summariseSettledDays } from "./summaries";
 import { R2SnapshotStore } from "./r2-snapshot-store";
 import { RegistryStore } from "./registry-store";
 import type { ActivityWindow } from "./registry-store";
@@ -135,16 +136,46 @@ export class Registry extends DurableObject<Env> {
       retryIn = 60_000;
       console.error(JSON.stringify({ event: "example_sync_failed", error: String(error) }));
     }
+    // After the sync, so keeping feeds equal to the examples never waits on the lake.
+    if (this.env.CATALOG_TOKEN) await this.summariseIfDue();
     await this.ctx.storage.setAlarm(Math.max(Date.now() + retryIn, this.nextWake()));
   }
 
-  /** Now while sync operations are queued, else the next catalog check or lake audit. */
+  /** Now while sync operations are queued, else the next catalog check, lake audit or series summary. */
   private nextWake(): number {
     const now = Date.now();
     const sync = this.store.getState<SyncState>(SYNC_STATE_KEY);
     let wake = sync === undefined || sync.queue.length > 0 ? now : sync.nextCheckAt;
-    if (this.env.CATALOG_TOKEN) wake = Math.min(wake, this.store.getState<number>(AUDIT_DUE_KEY) ?? nextAuditTime(now));
+    if (this.env.CATALOG_TOKEN) {
+      wake = Math.min(wake, this.store.getState<number>(AUDIT_DUE_KEY) ?? nextAuditTime(now));
+      wake = Math.min(wake, this.store.getState<number>(SUMMARY_DUE_STATE_KEY) ?? nextAuditTime(now));
+    }
     return wake;
+  }
+
+  /**
+   * Summarises the days of every public time series that are over and
+   * settled, a few per wake, into the R2 blobs the summary endpoints and
+   * charts read instead of the lake. A failure waits an hour; a backlog, a minute.
+   */
+  private async summariseIfDue(): Promise<void> {
+    const now = Date.now();
+    const due = this.store.getState<number>(SUMMARY_DUE_STATE_KEY);
+    if (due === undefined) {
+      // A fresh or reset Registry settles first: the first run waits ten minutes rather than taking its first alarm.
+      this.store.setState(SUMMARY_DUE_STATE_KEY, now + 10 * 60_000);
+      return;
+    }
+    if (due > now) return;
+    const products = new Set(this.listProducts().filter((product) => product.role === "time-series" && product.exposeHistory).map((product) => product.slug));
+    try {
+      const run = await summariseSettledDays({ env: this.env, objects: new ObjectStore(new R2SnapshotStore(this.env.DATA_OBJECTS)), products }, now, SUMMARY_DAYS_PER_WAKE);
+      this.store.setState(SUMMARY_DUE_STATE_KEY, run.backlog ? now + 60_000 : run.nextDue);
+      if (run.summarised.length > 0) console.log(JSON.stringify({ event: "series_summaries", days: run.summarised, bytesScanned: run.bytesScanned }));
+    } catch (error) {
+      this.store.setState(SUMMARY_DUE_STATE_KEY, now + 3_600_000);
+      console.error(JSON.stringify({ event: "series_summary_failed", error: String(error) }));
+    }
   }
 
   private async auditIfDue(): Promise<void> {

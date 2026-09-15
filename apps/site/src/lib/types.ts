@@ -115,6 +115,24 @@ export interface SeriesPoint {
   ingestedAt?: string;
 }
 
+export type SummaryResolution = "hour" | "day" | "month";
+
+/** GET /series/summary: each series' count, mean, lowest and highest value per hour, Lisbon day or Lisbon month. */
+export interface SeriesSummary {
+  resolution: SummaryResolution;
+  timeZone: string;
+  from: string;
+  to: string;
+  /** The first and last Lisbon days summarised; later days are only in the live window. */
+  coverage: { firstDay: string | null; through: string | null };
+  series: Array<{
+    seriesKey: string;
+    unit: string;
+    dimensions: JsonValue;
+    buckets: Array<{ start: string; count: number; mean: number; min: number; max: number }>;
+  }>;
+}
+
 export interface Change {
   revisionId?: string;
   entityKey: string;

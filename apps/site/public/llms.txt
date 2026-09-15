@@ -33,6 +33,7 @@ A product is one table. Its `role` says how it changes:
 5. GET /api/products/{slug}/events?from=<ISO>&to=<ISO>&limit=200 — applicable event revisions in a bounded UTC interval. Optional: knownAt, cursor.
 6. GET /api/products/{slug}/changes/range?from=<ISO>&to=<ISO>&limit=200 — durable changes in a bounded knowledge-time interval. Optional: cursor.
 7. GET /api/products/{slug}/series/range?from=<ISO>&to=<ISO>&limit=1000 — deduplicated historical points. Optional: seriesKey, cursor.
+   For long spans use GET /api/products/{slug}/series/summary?from=<ISO>&to=<ISO> instead: count, mean, min and max per hour, Lisbon day or Lisbon month (optional resolution, repeatable seriesKey), read from summary files rather than history queries. GET /api/products/{slug}/series/summary/YYYY-MM is one month's file.
 8. GET /api/products/{slug}/changes?limit=500 — bounded recent record changes.
 9. GET /api/products/{slug}/series/changes?limit=500 — bounded recent series corrections.
 10. GET /api/products/{slug}.geojson — current geospatial records as GeoJSON.

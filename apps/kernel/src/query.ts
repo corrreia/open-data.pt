@@ -22,11 +22,15 @@ export interface LakeQueryResult {
   sql: string;
 }
 
-export async function runLakeQuery(env: Pick<Env, "CATALOG_TOKEN" | "LAKE_BUCKET" | "CLOUDFLARE_ACCOUNT_ID">, sql: string, clientKey: string, fetcher: typeof fetch = (input, init) => fetch(input, init)): Promise<LakeQueryResult> {
+/**
+ * One read query. `maxRows` bounds its LIMIT: a public history page and its
+ * lookahead row by default; the internal summary batch pages wider.
+ */
+export async function runLakeQuery(env: Pick<Env, "CATALOG_TOKEN" | "LAKE_BUCKET" | "CLOUDFLARE_ACCOUNT_ID">, sql: string, clientKey: string, fetcher: typeof fetch = (input, init) => fetch(input, init), maxRows = MAX_LIMIT): Promise<LakeQueryResult> {
   if (!env.CATALOG_TOKEN || !env.LAKE_BUCKET) {
     throw new QueryError("Lake queries are not enabled on this deployment", "disabled");
   }
-  const cleaned = validate(sql);
+  const cleaned = validate(sql, maxRows);
   void clientKey;
   const started = Date.now();
   const aborter = new AbortController();
@@ -73,7 +77,7 @@ export async function runLakeQuery(env: Pick<Env, "CATALOG_TOKEN" | "LAKE_BUCKET
  * and semicolons are looked for outside quoted literals only, so a series key
  * or cursor that contains "update" or ";" is still a valid value.
  */
-export function validate(sql: string): string {
+export function validate(sql: string, maxRows = MAX_LIMIT): string {
   const cleaned = sql.trim().replace(/;\s*$/, "");
   if (cleaned.length === 0 || cleaned.length > MAX_SQL_LENGTH) throw new QueryError("sql must be between 1 and 4000 characters", "refused");
   const unquoted = withoutStringLiterals(cleaned);
@@ -84,8 +88,8 @@ export function validate(sql: string): string {
     throw new QueryError("Only read queries are allowed", "refused");
   }
   const limit = cleaned.match(/\blimit\s+(\d+)\s*$/i);
-  if (!limit) throw new QueryError(`Add LIMIT n (n ≤ ${MAX_LIMIT}) at the end of the query`, "refused");
-  if (Number(limit[1]) > MAX_LIMIT) throw new QueryError(`LIMIT must be at most ${MAX_LIMIT}`, "refused");
+  if (!limit) throw new QueryError(`Add LIMIT n (n ≤ ${maxRows}) at the end of the query`, "refused");
+  if (Number(limit[1]) > maxRows) throw new QueryError(`LIMIT must be at most ${maxRows}`, "refused");
   return cleaned;
 }
 

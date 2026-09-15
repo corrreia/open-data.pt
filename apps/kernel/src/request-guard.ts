@@ -31,6 +31,9 @@ const ROUTES: readonly RouteRule[] = [
   { pattern: /^\/api\/products\/[^/]+\/(series|series\/changes)$/, params: ["seriesKey", "from", "to", "limit"] },
   { pattern: /^\/api\/products\/[^/]+\/events$/, params: [...HISTORY_WINDOW, "knownAt"], costly: true },
   { pattern: /^\/api\/products\/[^/]+\/changes\/range$/, params: [...HISTORY_WINDOW, "seriesKey"], costly: true },
+  // Summaries are read from R2 alone, never the lake, so they are not costly.
+  { pattern: /^\/api\/products\/[^/]+\/series\/summary$/, params: ["from", "to", "resolution", "seriesKey"], repeatable: ["seriesKey"] },
+  { pattern: /^\/api\/products\/[^/]+\/series\/summary\/\d{4}-\d{2}$/, params: [] },
   { pattern: /^\/api\/products\/[^/]+\/series\/range$/, params: [...HISTORY_WINDOW, "knownAt", "seriesKey"], costly: true },
   { pattern: /^\/api\/products\/[^/]+\/series\/changes\/range$/, params: [...HISTORY_WINDOW, "seriesKey"], costly: true },
   { pattern: /^\/api\/products\/[^/]+$/, params: [] },

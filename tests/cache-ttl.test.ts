@@ -29,6 +29,14 @@ describe("edge cache lifetimes", () => {
     expect(at("/api/transform-runs")).toBeUndefined();
   });
 
+  it("keeps a closed month's summary for a year, and a summary window that may still grow for an hour", () => {
+    expect(at("/api/products/load/series/summary/2026-07")).toBe(31_536_000);
+    expect(at("/api/products/load/series/summary/2026-08")).toBe(31_536_000);
+    expect(at("/api/products/load/series/summary/2026-09")).toBe(3_600);
+    expect(at("/api/products/load/series/summary?from=2026-06-01T00:00:00Z&to=2026-09-01T00:00:00Z")).toBe(86_400);
+    expect(at("/api/products/load/series/summary?from=2026-09-01T00:00:00Z&to=2026-09-10T00:00:00Z")).toBe(3_600);
+  });
+
   it("keeps a product that changes rarely for a quarter of its cadence, never past five minutes", () => {
     expect(productTtl(15, 60)).toBe(15);
     expect(productTtl(15, 600)).toBe(150);

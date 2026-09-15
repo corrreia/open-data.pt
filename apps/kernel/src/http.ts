@@ -14,6 +14,7 @@ import type { Acquisition, Feed } from "./feed-model";
 import { ObjectStore } from "./object-store";
 import type { SnapshotStore } from "./ports";
 import { MAX_HISTORY_PAGE, QueryError, runLakeQuery } from "./query";
+import { readSummaryMonth, readSummaryRange, type SummaryResolution } from "./summaries";
 import { ALLOWED_METHODS, MAX_FILTERS, requestIdOf } from "./request-guard";
 import {
   InvalidQueryError,
@@ -149,8 +150,9 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
     const geoJsonMatch = url.pathname.match(/^\/api\/products\/([^/]+)\.geojson$/);
     const allRecordsMatch = url.pathname.match(/^\/api\/products\/([^/]+)\/records\/all$/);
     const historyMatch = url.pathname.match(/^\/api\/products\/([^/]+)\/(events|changes\/range|series\/range|series\/changes\/range)$/);
+    const summaryMatch = url.pathname.match(/^\/api\/products\/([^/]+)\/series\/summary(?:\/(\d{4}-\d{2}))?$/);
     const productMatch = url.pathname.match(/^\/api\/products\/([^/]+)(?:\/(records|changes|series|series\/changes))?$/);
-    const slug = geoJsonMatch?.[1] ?? allRecordsMatch?.[1] ?? historyMatch?.[1] ?? productMatch?.[1];
+    const slug = geoJsonMatch?.[1] ?? allRecordsMatch?.[1] ?? historyMatch?.[1] ?? summaryMatch?.[1] ?? productMatch?.[1];
     if (slug) {
       // One Registry call answers every product read: the entry, its chunk list, and whether the public may see it.
       const service = serving();
@@ -165,6 +167,10 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
         return withCadence(new Response(await service.allRecords(product, rowFilters(url)), {
           headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json; charset=utf-8" },
         }), product);
+      }
+      if (summaryMatch) {
+        requireHistory(product, "time-series");
+        return await seriesSummary(ctx, url, product, summaryMatch[2]);
       }
       if (historyMatch?.[2]) return await history(ctx, registry, url, product, historyMatch[2]);
       const view = productMatch?.[2];
@@ -217,6 +223,24 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
     }
     return problem(500, "Request failed", `Something went wrong on our side. Request ${requestId}.`, { "X-Request-Id": requestId });
   }
+}
+
+/* ---------- Series summaries ---------- */
+
+const RESOLUTIONS = new Set(["hour", "day", "month"]);
+const isResolution = (value: string): value is SummaryResolution => RESOLUTIONS.has(value);
+
+/** A time series' summaries: one Lisbon month's file as stored, or any window by hour, Lisbon day or Lisbon month. Both read R2 alone, never the lake. */
+async function seriesSummary(ctx: ApiContext, url: URL, product: ProductDetail, month: string | undefined): Promise<Response> {
+  const objects = new ObjectStore(ctx.snapshots);
+  if (month) {
+    const stored = await readSummaryMonth(objects, product.slug, month);
+    if (!stored) throw new NotFoundError("No summary exists for that month");
+    return json(stored);
+  }
+  const resolution = optionalQuery(url, "resolution");
+  if (resolution !== undefined && !isResolution(resolution)) throw new RequestError("resolution must be hour, day or month", 400);
+  return json(await readSummaryRange(objects, product.slug, { from: requiredDate(url, "from"), to: requiredDate(url, "to"), resolution, seriesKeys: url.searchParams.getAll("seriesKey") }));
 }
 
 /* ---------- History ---------- */

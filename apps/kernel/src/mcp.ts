@@ -50,6 +50,7 @@ const GUIDE = `open-data.pt is a free, keyless, read-only JSON API over Portugue
 - The role says how to read a product. reference, current-state, event-log and summary: GET /api/products/{slug}/records (limit up to 500; pass nextCursor back as cursor), or /records/all for every row at once. time-series: GET /api/products/{slug}/series (seriesKey, from, to, limit up to 1000).
 - Filter records with where=field:value (up to five, all must match) and bbox=minLon,minLat,maxLon,maxLat. Pass several where filters as an array: query: { where: ["line:1", "status:open"] }.
 - History: /events, /series/range, /changes/range and /series/changes/range take from and to (ISO 8601, at most 366 days apart), page with nextCursor, and report their coverage.
+- For a time series over weeks, months or years, prefer GET /api/products/{slug}/series/summary?from&to: count, mean, min and max per hour, Lisbon day or Lisbon month, read from summary files, so it is fast and cheap. Name series with seriesKey (repeatable, up to ten).
 - GET /api/feeds says where each dataset comes from and who publishes it; GET /api/outages says when a source was down.
 - A failed read throws an Error carrying the HTTP status and detail. After a 429, wait before retrying. Answers over 8 MB are refused: page or filter instead.
 - What you return is cut to about 6,000 tokens, so return only what the answer needs.

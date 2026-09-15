@@ -147,6 +147,23 @@ describe("series as known at any moment", () => {
   });
 });
 
+describe("series summaries", () => {
+  const window = "from=2026-09-01T00:00:00Z&to=2026-09-06T00:00:00Z";
+
+  it("answers a window from summary files, empty until the first day is summarised", async () => {
+    const response = await server.fetch(`/api/products/revised-series/series/summary?${window}&seriesKey=a&seriesKey=b`);
+    expect(response.status, await response.clone().text()).toBe(200);
+    expect(await response.json()).toEqual({ resolution: "hour", timeZone: "Europe/Lisbon", from: "2026-09-01T00:00:00.000Z", to: "2026-09-06T00:00:00.000Z", coverage: { firstDay: null, through: null }, series: [] });
+  });
+
+  it("404s a month without a file and a product without public history, and refuses what it cannot answer", async () => {
+    expect((await server.fetch("/api/products/revised-series/series/summary/2026-09")).status).toBe(404);
+    expect((await server.fetch(`/api/products/private-events/series/summary?${window}`)).status).toBe(404);
+    expect((await server.fetch(`/api/products/revised-series/series/summary?${window}&resolution=week`)).status).toBe(400);
+    expect((await server.fetch(`/api/products/revised-series/series/summary?${window}&limit=5`)).status).toBe(400);
+  });
+});
+
 it("keeps flattened nonconflicting event payload fields but authoritative metadata wins collisions", async () => {
   const response = await server.fetch(`/api/products/shared-events/events?${bounds}`);
   expect(response.status).toBe(200);

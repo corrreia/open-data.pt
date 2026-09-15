@@ -278,6 +278,32 @@ export function openApiDocument(origin: string) {
           responses: { "200": jsonResponse("Point revisions with freshness and coverage", schemaRef("HistoryPage")), ...historyErrors() },
         },
       },
+      "/api/products/{slug}/series/summary": {
+        get: {
+          operationId: "getProductSeriesSummary",
+          tags: ["Products"],
+          summary: "Read any window of a time series by hour, Lisbon day or Lisbon month",
+          description: "The count, mean, lowest and highest of each point's latest value per bucket, read from summary files rather than the lake, so long windows cost little. Summaries cover the Lisbon days from `coverage.firstDay` to `coverage.through`; each day is summarised a day after it ends, so today and yesterday are read from `/series`. Without `resolution`, windows up to 14 days come back by the hour, up to about three years by the day, and longer ones by the month.",
+          parameters: [
+            pathParameter("slug", "Stable product slug"),
+            requiredQueryParameter("from", "Inclusive RFC 3339 lower bound.", { type: "string", format: "date-time" }),
+            requiredQueryParameter("to", "Exclusive RFC 3339 upper bound. The summarised months between the two may number at most 36.", { type: "string", format: "date-time" }),
+            { name: "resolution", in: "query", required: false, description: "`hour`, `day` or `month`. A month kept by day answers `day` when asked for hours.", schema: { type: "string", enum: ["hour", "day", "month"] } },
+            { name: "seriesKey", in: "query", required: false, description: "Up to ten series; repeat the parameter for each. Without it, every series, up to 20,000 buckets in all.", style: "form", explode: true, schema: { type: "array", maxItems: 10, items: { type: "string" } } },
+          ],
+          responses: { "200": jsonResponse("Buckets per series", schemaRef("SeriesSummary")), ...reads(), "404": responseRef("NotFound") },
+        },
+      },
+      "/api/products/{slug}/series/summary/{month}": {
+        get: {
+          operationId: "getProductSeriesSummaryMonth",
+          tags: ["Products"],
+          summary: "Download one Lisbon month of a time series' summaries, as stored",
+          description: "The file the window endpoint reads: hourly buckets, or daily ones for a month too large for hours (`resolution`). Once the month is over and its last day summarised, it no longer changes and is cached for a year.",
+          parameters: [pathParameter("slug", "Stable product slug"), { name: "month", in: "path", required: true, description: "A Lisbon calendar month, YYYY-MM.", schema: { type: "string", pattern: "^\\d{4}-\\d{2}$" } }],
+          responses: { "200": jsonResponse("One month of summary buckets", schemaRef("SeriesSummaryMonth")), ...reads(), "404": responseRef("NotFound") },
+        },
+      },
     },
     components: {
       schemas: {
@@ -359,6 +385,66 @@ export function openApiDocument(origin: string) {
             observedAt: time(),
             ingestedAt: time(),
             acquisitionId: { type: "string" },
+          },
+        },
+        SeriesSummary: {
+          type: "object",
+          required: ["resolution", "timeZone", "from", "to", "coverage", "series"],
+          properties: {
+            resolution: { type: "string", enum: ["hour", "day", "month"] },
+            timeZone: { type: "string", const: "Europe/Lisbon", description: "Days and months are Lisbon calendar days and months; every bucket start is a UTC instant." },
+            from: { type: "string", format: "date-time" },
+            to: { type: "string", format: "date-time" },
+            coverage: {
+              type: "object",
+              required: ["firstDay", "through"],
+              properties: {
+                firstDay: { type: ["string", "null"], format: "date", description: "The first Lisbon day summarised." },
+                through: { type: ["string", "null"], format: "date", description: "The last Lisbon day summarised." },
+              },
+            },
+            series: {
+              type: "array",
+              items: {
+                type: "object",
+                required: ["seriesKey", "unit", "dimensions", "buckets"],
+                properties: {
+                  seriesKey: { type: "string" },
+                  unit: { type: "string" },
+                  dimensions: { type: "object" },
+                  buckets: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      required: ["start", "count", "mean", "min", "max"],
+                      properties: { start: { type: "string", format: "date-time" }, count: { type: "integer" }, mean: { type: "number" }, min: { type: "number" }, max: { type: "number" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        SeriesSummaryMonth: {
+          type: "object",
+          required: ["version", "product", "month", "timeZone", "resolution", "days", "series", "buckets", "updatedAt"],
+          properties: {
+            version: { type: "integer", const: 1, description: "The file format. A change that breaks readers gets a new version." },
+            product: { type: "string" },
+            month: { type: "string", pattern: "^\\d{4}-\\d{2}$" },
+            timeZone: { type: "string", const: "Europe/Lisbon" },
+            resolution: { type: "string", enum: ["hour", "day"] },
+            days: { type: "array", items: { type: "string", format: "date" }, description: "The Lisbon days summarised so far, oldest first." },
+            series: {
+              type: "array",
+              items: { type: "object", required: ["key", "unit", "dimensions"], properties: { key: { type: "string" }, unit: { type: "string" }, dimensions: { type: "object" } } },
+            },
+            buckets: {
+              type: "array",
+              description: "`[seriesKey, start, count, mean, min, max]`, by start and then series key. `start` is a UTC instant.",
+              items: { type: "array", minItems: 6, maxItems: 6, prefixItems: [{ type: "string" }, { type: "string", format: "date-time" }, { type: "integer" }, { type: "number" }, { type: "number" }, { type: "number" }] },
+            },
+            updatedAt: { type: "string", format: "date-time" },
           },
         },
         SeriesPoint: {
