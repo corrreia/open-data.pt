@@ -33,6 +33,8 @@ describe("edge cache lifetimes", () => {
     expect(at("/api/products/load/series/summary/2026-07")).toBe(31_536_000);
     expect(at("/api/products/load/series/summary/2026-08")).toBe(31_536_000);
     expect(at("/api/products/load/series/summary/2026-09")).toBe(3_600);
+    expect(at("/api/products/load/series/summary/2025")).toBe(31_536_000);
+    expect(at("/api/products/load/series/summary/2026")).toBe(3_600);
     expect(at("/api/products/load/series/summary?from=2026-06-01T00:00:00Z&to=2026-09-01T00:00:00Z")).toBe(86_400);
     expect(at("/api/products/load/series/summary?from=2026-09-01T00:00:00Z&to=2026-09-10T00:00:00Z")).toBe(3_600);
   });

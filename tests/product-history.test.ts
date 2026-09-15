@@ -153,11 +153,12 @@ describe("series summaries", () => {
   it("answers a window from summary files, empty until the first day is summarised", async () => {
     const response = await server.fetch(`/api/products/revised-series/series/summary?${window}&seriesKey=a&seriesKey=b`);
     expect(response.status, await response.clone().text()).toBe(200);
-    expect(await response.json()).toEqual({ resolution: "hour", timeZone: "Europe/Lisbon", from: "2026-09-01T00:00:00.000Z", to: "2026-09-06T00:00:00.000Z", coverage: { firstDay: null, through: null }, series: [] });
+    expect(await response.json()).toEqual({ resolution: "hour", timeZone: "Europe/Lisbon", from: "2026-09-01T00:00:00.000Z", to: "2026-09-06T00:00:00.000Z", coverage: { firstDay: null, through: null, until: null }, series: [] });
   });
 
-  it("404s a month without a file and a product without public history, and refuses what it cannot answer", async () => {
+  it("404s a month or year without a file and a product without public history, and refuses what it cannot answer", async () => {
     expect((await server.fetch("/api/products/revised-series/series/summary/2026-09")).status).toBe(404);
+    expect((await server.fetch("/api/products/revised-series/series/summary/2026")).status).toBe(404);
     expect((await server.fetch(`/api/products/private-events/series/summary?${window}`)).status).toBe(404);
     expect((await server.fetch(`/api/products/revised-series/series/summary?${window}&resolution=week`)).status).toBe(400);
     expect((await server.fetch(`/api/products/revised-series/series/summary?${window}&limit=5`)).status).toBe(400);

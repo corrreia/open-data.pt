@@ -18,15 +18,19 @@ const HISTORY_PATH = /^\/api\/products\/[^/]+\/(events|changes\/range|series\/ra
 const SETTLED_AFTER_MS = 60 * 60_000;
 
 const SUMMARY_PATH = /^\/api\/products\/[^/]+\/series\/summary$/;
-const SUMMARY_MONTH_PATH = /^\/api\/products\/[^/]+\/series\/summary\/(\d{4})-(\d{2})$/;
+const SUMMARY_FILE_PATH = /^\/api\/products\/[^/]+\/series\/summary\/(\d{4})(?:-(\d{2}))?$/;
 /** Summaries gain a day once that day is a day old; a range ending before that no longer changes. */
 const SUMMARY_SETTLED_AFTER_MS = 2 * 86_400_000;
 
 /** History windows entirely in the settled past are cached for a day; everything else briefly. */
 export function cacheTtl(url: URL, now = Date.now()): number | undefined {
-  // A month's summary blob stops changing once its last day is summarised: then it is kept for a year.
-  const month = SUMMARY_MONTH_PATH.exec(url.pathname);
-  if (month) return Date.UTC(Number(month[1]), Number(month[2]), 1) + SUMMARY_SETTLED_AFTER_MS < now ? 31_536_000 : 3_600;
+  // A month or year file stops changing once its last day is summarised, save for late data: then it is kept for a year.
+  const file = SUMMARY_FILE_PATH.exec(url.pathname);
+  if (file) {
+    const year = Number(file[1]);
+    const end = file[2] ? Date.UTC(year, Number(file[2]), 1) : Date.UTC(year + 1, 0, 1);
+    return end + SUMMARY_SETTLED_AFTER_MS < now ? 31_536_000 : 3_600;
+  }
   if (SUMMARY_PATH.test(url.pathname)) {
     const to = Date.parse(url.searchParams.get("to") ?? "");
     return Number.isFinite(to) && to < now - SUMMARY_SETTLED_AFTER_MS ? 86_400 : 3_600;

@@ -283,25 +283,25 @@ export function openApiDocument(origin: string) {
           operationId: "getProductSeriesSummary",
           tags: ["Products"],
           summary: "Read any window of a time series by hour, Lisbon day or Lisbon month",
-          description: "The count, mean, lowest and highest of each point's latest value per bucket, read from summary files rather than the lake, so long windows cost little. Summaries cover the Lisbon days from `coverage.firstDay` to `coverage.through`; each day is summarised a day after it ends, so today and yesterday are read from `/series`. Without `resolution`, windows up to 14 days come back by the hour, up to about three years by the day, and longer ones by the month.",
+          description: "The count, mean, lowest and highest of each point's latest value per bucket, read from summary files rather than the lake, so long windows cost little. Summaries cover the Lisbon days from `coverage.firstDay`, back into backfilled history, to `coverage.through`; each day is summarised a day after it ends, and history published late is added the day after it arrives. Points after `coverage.until` are read from `/series`. Without `resolution`, windows up to 14 days come back by the hour, up to about three years by the day, and longer ones by the month. Backfilled history before the service began is kept by Lisbon day, so it comes back by the day when asked for hours.",
           parameters: [
             pathParameter("slug", "Stable product slug"),
             requiredQueryParameter("from", "Inclusive RFC 3339 lower bound.", { type: "string", format: "date-time" }),
-            requiredQueryParameter("to", "Exclusive RFC 3339 upper bound. The summarised months between the two may number at most 36.", { type: "string", format: "date-time" }),
+            requiredQueryParameter("to", "Exclusive RFC 3339 upper bound. The summarised span between the two may cover at most 36 months by hour or day, or 50 years by month.", { type: "string", format: "date-time" }),
             { name: "resolution", in: "query", required: false, description: "`hour`, `day` or `month`. A month kept by day answers `day` when asked for hours.", schema: { type: "string", enum: ["hour", "day", "month"] } },
             { name: "seriesKey", in: "query", required: false, description: "Up to ten series; repeat the parameter for each. Without it, every series, up to 20,000 buckets in all.", style: "form", explode: true, schema: { type: "array", maxItems: 10, items: { type: "string" } } },
           ],
           responses: { "200": jsonResponse("Buckets per series", schemaRef("SeriesSummary")), ...reads(), "404": responseRef("NotFound") },
         },
       },
-      "/api/products/{slug}/series/summary/{month}": {
+      "/api/products/{slug}/series/summary/{period}": {
         get: {
-          operationId: "getProductSeriesSummaryMonth",
+          operationId: "getProductSeriesSummaryFile",
           tags: ["Products"],
-          summary: "Download one Lisbon month of a time series' summaries, as stored",
-          description: "The file the window endpoint reads: hourly buckets, or daily ones for a month too large for hours (`resolution`). Once the month is over and its last day summarised, it no longer changes and is cached for a year.",
-          parameters: [pathParameter("slug", "Stable product slug"), { name: "month", in: "path", required: true, description: "A Lisbon calendar month, YYYY-MM.", schema: { type: "string", pattern: "^\\d{4}-\\d{2}$" } }],
-          responses: { "200": jsonResponse("One month of summary buckets", schemaRef("SeriesSummaryMonth")), ...reads(), "404": responseRef("NotFound") },
+          summary: "Download one Lisbon month or year of a time series' summaries, as stored",
+          description: "The files the window endpoint reads. A month (`YYYY-MM`) holds hourly buckets, or daily ones for backfilled history and for a month too large for hours (`resolution`). A year (`YYYY`) holds one bucket per series and Lisbon month. Once a period is over and its last day summarised, its file changes only if late data arrives, and it is cached for a year.",
+          parameters: [pathParameter("slug", "Stable product slug"), { name: "period", in: "path", required: true, description: "A Lisbon calendar month, YYYY-MM, or year, YYYY.", schema: { type: "string", pattern: "^\\d{4}(-\\d{2})?$" } }],
+          responses: { "200": jsonResponse("One month or year of summary buckets", { oneOf: [schemaRef("SeriesSummaryMonth"), schemaRef("SeriesSummaryYear")] }), ...reads(), "404": responseRef("NotFound") },
         },
       },
     },
@@ -397,10 +397,11 @@ export function openApiDocument(origin: string) {
             to: { type: "string", format: "date-time" },
             coverage: {
               type: "object",
-              required: ["firstDay", "through"],
+              required: ["firstDay", "through", "until"],
               properties: {
-                firstDay: { type: ["string", "null"], format: "date", description: "The first Lisbon day summarised." },
+                firstDay: { type: ["string", "null"], format: "date", description: "The oldest Lisbon day any summary holds, back into backfilled history." },
                 through: { type: ["string", "null"], format: "date", description: "The last Lisbon day summarised." },
+                until: { type: ["string", "null"], format: "date-time", description: "The instant that day ends. Points after it are only in `/series`." },
               },
             },
             series: {
@@ -442,6 +443,27 @@ export function openApiDocument(origin: string) {
             buckets: {
               type: "array",
               description: "`[seriesKey, start, count, mean, min, max]`, by start and then series key. `start` is a UTC instant.",
+              items: { type: "array", minItems: 6, maxItems: 6, prefixItems: [{ type: "string" }, { type: "string", format: "date-time" }, { type: "integer" }, { type: "number" }, { type: "number" }, { type: "number" }] },
+            },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
+        SeriesSummaryYear: {
+          type: "object",
+          required: ["version", "product", "year", "timeZone", "resolution", "series", "buckets", "updatedAt"],
+          properties: {
+            version: { type: "integer", const: 1, description: "The file format. A change that breaks readers gets a new version." },
+            product: { type: "string" },
+            year: { type: "string", pattern: "^\\d{4}$" },
+            timeZone: { type: "string", const: "Europe/Lisbon" },
+            resolution: { type: "string", const: "month", description: "One bucket per series and Lisbon month, rolled up from that year's month files." },
+            series: {
+              type: "array",
+              items: { type: "object", required: ["key", "unit", "dimensions"], properties: { key: { type: "string" }, unit: { type: "string" }, dimensions: { type: "object" } } },
+            },
+            buckets: {
+              type: "array",
+              description: "`[seriesKey, start, count, mean, min, max]`, by start and then series key. `start` is the UTC instant the Lisbon month begins.",
               items: { type: "array", minItems: 6, maxItems: 6, prefixItems: [{ type: "string" }, { type: "string", format: "date-time" }, { type: "integer" }, { type: "number" }, { type: "number" }, { type: "number" }] },
             },
             updatedAt: { type: "string", format: "date-time" },

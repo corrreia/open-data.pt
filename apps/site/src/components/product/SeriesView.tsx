@@ -8,8 +8,9 @@ import { apiGet, productPath } from "../../lib/api";
 import { echarts } from "../../lib/echarts";
 import { SERIES_COLORS } from "../../lib/palette";
 import { fmt } from "../../lib/format";
+import { periodStart } from "../../lib/lisbon";
 import { useQuery } from "../../lib/query";
-import type { Page, Product, SeriesPoint, SeriesSummary, SummaryResolution } from "../../lib/types";
+import type { Page, Product, SeriesPoint, SeriesSummary, SummaryBucket, SummaryResolution } from "../../lib/types";
 import { seriesLabel } from "./cells";
 
 const CHARTED = 10;
@@ -34,8 +35,8 @@ const PRESETS: Preset[] = [
   { id: "7d", label: "7 days", ms: 7 * DAY },
   { id: "30d", label: "30 days", ms: 30 * DAY },
   { id: "1y", label: "1 year", ms: 365 * DAY },
-  // Summaries answer at most three years at once, clamped to where history begins.
-  { id: "all", label: "All", ms: 3 * 365 * DAY },
+  // By month, summaries reach back decades; the chart starts where the product's history does.
+  { id: "all", label: "All", ms: 40 * 365 * DAY },
 ];
 
 interface TimeWindow {
@@ -67,12 +68,31 @@ function periodLabel(start: string, resolution: SummaryResolution) {
 
 const escapeHtml = (text: string) => text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 
-/** One charted series: its summary buckets, then the live points past the last summarised day. */
+/** One charted series: its summary buckets, with the live points past the last summarised day folded in. */
 interface SummaryLine {
   key: string;
   label: string;
-  buckets: SeriesSummary["series"][number]["buckets"];
-  tail: SeriesPoint[];
+  buckets: SummaryBucket[];
+  /** Whether live points reached it. */
+  live: boolean;
+}
+
+function combine(a: SummaryBucket, b: SummaryBucket): SummaryBucket {
+  const count = a.count + b.count;
+  return { start: a.start, count, mean: (a.mean * a.count + b.mean * b.count) / count, min: Math.min(a.min, b.min), max: Math.max(a.max, b.max) };
+}
+
+/** Summary buckets with live points added, each to the hour, Lisbon day or Lisbon month it falls in. */
+function withLive(buckets: SummaryBucket[], points: SeriesPoint[], resolution: SummaryResolution): SummaryBucket[] {
+  const merged = new Map(buckets.map((bucket) => [bucket.start, bucket]));
+  for (const point of points) {
+    if (point.value === null) continue;
+    const start = periodStart(Date.parse(point.eventTime), resolution);
+    const bucket = { start, count: 1, mean: point.value, min: point.value, max: point.value };
+    const held = merged.get(start);
+    merged.set(start, held ? combine(held, bucket) : bucket);
+  }
+  return [...merged.values()].sort((a, b) => a.start.localeCompare(b.start));
 }
 
 /** A chart row: time, mean, lowest, highest and how many points the bucket holds. */
@@ -89,10 +109,7 @@ interface SummaryRow {
 }
 
 function summaryOptions(lines: SummaryLine[], palette: readonly string[], unit: string, resolution: SummaryResolution): EChartsOption {
-  const rows = lines.map((line) => [
-    ...line.buckets.map((bucket): ChartRow => [Date.parse(bucket.start), bucket.mean, bucket.min, bucket.max, bucket.count]),
-    ...line.tail.map((point): ChartRow => [Date.parse(point.eventTime), point.value ?? 0, point.value ?? 0, point.value ?? 0, 1]),
-  ]);
+  const rows = lines.map((line) => line.buckets.map((bucket): ChartRow => [Date.parse(bucket.start), bucket.mean, bucket.min, bucket.max, bucket.count]));
   const suffix = unit ? ` ${unit}` : "";
   return {
     grid: { left: 8, right: 16, top: lines.length > 1 ? 36 : 16, bottom: 8, containLabel: true },
@@ -119,12 +136,12 @@ function summaryOptions(lines: SummaryLine[], palette: readonly string[], unit: 
     },
     series: lines.flatMap((line, index) => {
       const color = palette[index % palette.length] ?? "#1b7a4f";
-      const bucketRows = rows[index]?.slice(0, line.buckets.length) ?? [];
+      const bucketRows = rows[index] ?? [];
       return [
         // The band: the lowest value, then the height up to the highest, stacked and shaded.
         { name: `${line.label} low`, type: "line", stack: `band-${index}`, data: bucketRows.map((row) => [row[0], row[2]]), symbol: "none", lineStyle: { opacity: 0 }, silent: true },
         { name: `${line.label} range`, type: "line", stack: `band-${index}`, data: bucketRows.map((row) => [row[0], row[3] - row[2]]), symbol: "none", lineStyle: { opacity: 0 }, areaStyle: { color, opacity: 0.15 }, silent: true },
-        { name: line.label, type: "line", data: (rows[index] ?? []).map((row) => [row[0], row[1]]), color, showSymbol: false, lineStyle: { width: 2 } },
+        { name: line.label, type: "line", data: bucketRows.map((row) => [row[0], row[1]]), color, showSymbol: false, lineStyle: { width: 2 } },
       ];
     }),
   };
@@ -169,26 +186,30 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
   const summaryKeys = series.length > CHARTED ? charted.map((each) => each.key) : [];
   const summaryPath = timeWindow ? productPath(product.slug, `/series/summary?${summaryQuery(timeWindow, summaryKeys)}`) : null;
   const summary = useQuery(summaryPath, () => apiGet<SeriesSummary>(summaryPath ?? ""));
+  const lineKeys = useMemo(
+    () => (summary.data && summary.data.series.length > 0 ? summary.data.series.map((each) => each.seriesKey) : charted.map((each) => each.key)).slice(0, CHARTED),
+    [summary.data, charted],
+  );
+
+  // Summaries end with the last summarised Lisbon day; each line's own live points carry it on from there.
+  const until = summary.data?.coverage.until ?? null;
+  const tailFrom = timeWindow && summary.data ? (until && until > timeWindow.from ? until : timeWindow.from) : undefined;
+  const tailKey = timeWindow && tailFrom && tailFrom < timeWindow.to && lineKeys.length > 0 ? `series-tail:${product.slug}:${tailFrom}:${timeWindow.to}:${lineKeys.join("|")}` : null;
+  const tail = useQuery(tailKey, () =>
+    Promise.all(lineKeys.map((key) => apiGet<Page<SeriesPoint>>(productPath(product.slug, `/series?${new URLSearchParams({ seriesKey: key, from: tailFrom ?? "", to: timeWindow?.to ?? "", limit: "1000" })}`)).then((page) => page.data))).then((pages) => pages.flat()),
+  );
 
   const lines = useMemo<SummaryLine[]>(() => {
-    if (!timeWindow || !summary.data) return [];
-    const through = summary.data.coverage.through;
-    // Summaries end with the last summarised Lisbon day; live points carry the line on from there.
-    const liveFrom = through ? Date.parse(`${through}T00:00:00Z`) + DAY : Date.parse(timeWindow.from);
-    const to = Date.parse(timeWindow.to);
-    const tailOf = (key: string) =>
-      (series.find((each) => each.key === key)?.points ?? []).filter((point) => {
-        const at = Date.parse(point.eventTime);
-        return at >= liveFrom && at < to;
-      });
-    const keys = summary.data.series.length > 0 ? summary.data.series.map((each) => each.seriesKey) : charted.map((each) => each.key);
-    return keys.slice(0, CHARTED).map((key) => ({
-      key,
-      label: series.find((each) => each.key === key)?.label ?? key,
-      buckets: summary.data?.series.find((each) => each.seriesKey === key)?.buckets ?? [],
-      tail: tailOf(key),
-    })).filter((line) => line.buckets.length > 0 || line.tail.length > 0);
-  }, [timeWindow, summary.data, series, charted]);
+    const data = summary.data;
+    if (!timeWindow || !data) return [];
+    return lineKeys
+      .map((key) => {
+        const points = (tail.data ?? []).filter((point) => point.seriesKey === key);
+        const buckets = data.series.find((each) => each.seriesKey === key)?.buckets ?? [];
+        return { key, label: series.find((each) => each.key === key)?.label ?? key, buckets: withLive(buckets, points, data.resolution), live: points.length > 0 };
+      })
+      .filter((line) => line.buckets.length > 0);
+  }, [timeWindow, summary.data, tail.data, lineKeys, series]);
 
   const summaryRows = useMemo<SummaryRow[]>(() => lines.flatMap((line) => line.buckets.map((bucket) => ({ key: line.key, label: line.label, ...bucket }))), [lines]);
 
@@ -241,13 +262,16 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
 
   const oldest = points.map((point) => point.eventTime).sort()[0];
   const coverage = summary.data?.coverage;
+  // A span reaching well before the product's history is labelled from where its history begins.
+  const firstStart = lines.map((line) => line.buckets[0]?.start ?? "").filter(Boolean).sort()[0];
+  const shownFrom = timeWindow && firstStart && Date.parse(firstStart) - Date.parse(timeWindow.from) > 31 * DAY ? firstStart : undefined;
   const coverageNote = (() => {
     if (!timeWindow) return snapshot ? `Latest value of the ${Math.min(BARS, bars.length)} largest series` : series.length > CHARTED ? `${CHARTED} of ${fmt.int(series.length)} series drawn; the table has all of them` : "Hover for values";
     if (summary.error) return `Could not load this span: ${summary.error.message}`;
     if (!coverage) return "";
-    if (!coverage.firstDay) return "Summaries appear a day after each day ends; until then the chart shows live points.";
-    if (Date.parse(timeWindow.from) < Date.parse(`${coverage.firstDay}T00:00:00Z`)) return `History starts on ${dayLabel(`${coverage.firstDay}T12:00:00Z`)}`;
-    return lines.some((line) => line.tail.length > 0) ? "The last day or two come from live points" : "";
+    if (!coverage.through) return "Summaries appear a day after each day ends; until then the chart shows live points.";
+    if (tail.error) return `Could not load the latest points: ${tail.error.message}`;
+    return lines.some((line) => line.live) ? "The last day or two come from live points" : "";
   })();
 
   return (
@@ -292,7 +316,7 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
         <LayerCard.Secondary className="flex flex-wrap items-center justify-between gap-2 text-xs">
           <span>
             {timeWindow
-              ? `${summary.data ? RESOLUTION_LABEL[summary.data.resolution] : "Loading"} · ${dayLabel(timeWindow.from)} – ${dayLabel(Date.parse(timeWindow.to) - 1)}${unit ? ` · ${unit}` : ""}`
+              ? `${summary.data ? RESOLUTION_LABEL[summary.data.resolution] : "Loading"} · ${shownFrom ? periodLabel(shownFrom, resolution) : dayLabel(timeWindow.from)} – ${dayLabel(Date.parse(timeWindow.to) - 1)}${unit ? ` · ${unit}` : ""}`
               : `${unit || "Value"} · ${fmt.int(points.length)} points in ${fmt.int(series.length)} series${oldest ? ` · since ${fmt.date(oldest)}` : ""}`}
           </span>
           <span className="text-kumo-subtle">{coverageNote}</span>

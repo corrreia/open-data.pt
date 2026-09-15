@@ -171,7 +171,7 @@ export class Registry extends DurableObject<Env> {
     try {
       const run = await summariseSettledDays({ env: this.env, objects: new ObjectStore(new R2SnapshotStore(this.env.DATA_OBJECTS)), products }, now, SUMMARY_DAYS_PER_WAKE);
       this.store.setState(SUMMARY_DUE_STATE_KEY, run.backlog ? now + 60_000 : run.nextDue);
-      if (run.summarised.length > 0) console.log(JSON.stringify({ event: "series_summaries", days: run.summarised, bytesScanned: run.bytesScanned }));
+      if (run.summarised.length > 0 || run.late.length > 0 || run.backlog) console.log(JSON.stringify({ event: "series_summaries", days: run.summarised, lateDays: run.late, backlog: run.backlog, bytesScanned: run.bytesScanned }));
     } catch (error) {
       this.store.setState(SUMMARY_DUE_STATE_KEY, now + 3_600_000);
       console.error(JSON.stringify({ event: "series_summary_failed", error: String(error) }));

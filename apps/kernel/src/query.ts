@@ -23,14 +23,15 @@ export interface LakeQueryResult {
 }
 
 /**
- * One read query. `maxRows` bounds its LIMIT: a public history page and its
- * lookahead row by default; the internal summary batch pages wider.
+ * One read query. `maxRows` bounds its LIMIT and `maxChars` its length: a
+ * public history page and its lookahead row by default; the internal summary
+ * batch pages wider and names every clock change since 1996.
  */
-export async function runLakeQuery(env: Pick<Env, "CATALOG_TOKEN" | "LAKE_BUCKET" | "CLOUDFLARE_ACCOUNT_ID">, sql: string, clientKey: string, fetcher: typeof fetch = (input, init) => fetch(input, init), maxRows = MAX_LIMIT): Promise<LakeQueryResult> {
+export async function runLakeQuery(env: Pick<Env, "CATALOG_TOKEN" | "LAKE_BUCKET" | "CLOUDFLARE_ACCOUNT_ID">, sql: string, clientKey: string, fetcher: typeof fetch = (input, init) => fetch(input, init), maxRows = MAX_LIMIT, maxChars = MAX_SQL_LENGTH): Promise<LakeQueryResult> {
   if (!env.CATALOG_TOKEN || !env.LAKE_BUCKET) {
     throw new QueryError("Lake queries are not enabled on this deployment", "disabled");
   }
-  const cleaned = validate(sql, maxRows);
+  const cleaned = validate(sql, maxRows, maxChars);
   void clientKey;
   const started = Date.now();
   const aborter = new AbortController();
@@ -77,9 +78,9 @@ export async function runLakeQuery(env: Pick<Env, "CATALOG_TOKEN" | "LAKE_BUCKET
  * and semicolons are looked for outside quoted literals only, so a series key
  * or cursor that contains "update" or ";" is still a valid value.
  */
-export function validate(sql: string, maxRows = MAX_LIMIT): string {
+export function validate(sql: string, maxRows = MAX_LIMIT, maxChars = MAX_SQL_LENGTH): string {
   const cleaned = sql.trim().replace(/;\s*$/, "");
-  if (cleaned.length === 0 || cleaned.length > MAX_SQL_LENGTH) throw new QueryError("sql must be between 1 and 4000 characters", "refused");
+  if (cleaned.length === 0 || cleaned.length > maxChars) throw new QueryError(`sql must be between 1 and ${maxChars} characters`, "refused");
   const unquoted = withoutStringLiterals(cleaned);
   if (unquoted === undefined) throw new QueryError("A string literal is not closed", "refused");
   if (unquoted.includes(";")) throw new QueryError("Only one statement is allowed", "refused");

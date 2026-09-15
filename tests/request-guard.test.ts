@@ -34,7 +34,7 @@ describe("canonical routes", () => {
 
   it("accepts every query parameter the OpenAPI document publishes", () => {
     for (const [path, item] of Object.entries(openApiDocument("https://open-data.pt").paths)) {
-      const url = new URL(`https://open-data.pt${path.replace("{slug}", "stops").replace("{feedId}", "feed_1").replace("{month}", "2026-09")}`);
+      const url = new URL(`https://open-data.pt${path.replace("{slug}", "stops").replace("{feedId}", "feed_1").replace("{period}", "2026-09")}`);
       for (const parameter of item.get.parameters) if (parameter.in === "query") url.searchParams.set(parameter.name, "1");
       expect(() => canonicalRoute(url), path).not.toThrow();
       expect(canonicalRoute(url), path).toBeDefined();
