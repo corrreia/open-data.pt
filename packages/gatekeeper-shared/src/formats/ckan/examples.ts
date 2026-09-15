@@ -1,0 +1,281 @@
+import type { ExampleFeed } from "../../index";
+
+const SERVING = {
+  licence: "Creative Commons CCZero",
+  attribution: "Câmara Municipal do Porto via opendata.porto.digital",
+} as const;
+
+const DAILY_REFERENCE = {
+  name: "Porto CKAN daily reference snapshot",
+  version: 1,
+  collection: {
+    cadenceSeconds: 86_400,
+    timeoutSeconds: 60,
+    maxBytes: 10 * 1024 * 1024,
+    historyMode: "changes",
+  },
+  serving: SERVING,
+} as const;
+
+const CASCAIS_DAILY_REFERENCE = {
+  ...DAILY_REFERENCE,
+  name: "Cascais CKAN daily reference snapshot",
+  serving: {
+    ...SERVING,
+    licence: "Creative Commons Attribution (CC BY)",
+    attribution: "Câmara Municipal de Cascais via dadosabertos.cascais.pt",
+  },
+} as const;
+
+const DAILY_CHANGES = {
+  ...DAILY_REFERENCE,
+  name: "Porto CKAN daily event changes",
+} as const;
+
+export const CKAN_EXAMPLES: ExampleFeed[] = [
+  {
+    slug: "porto-municipal-parking-feed",
+    title: "Porto municipal car parks",
+    description: "Municipal car parks, capacities, management, and opening hours.",
+    config: {
+      source: "ckan",
+      host: "opendata.porto.digital",
+      dataset: "parques-de-estacionamento-municipais",
+      resource: "418c7837-95ee-4943-be22-3d9d09e5b4e9",
+    },
+    policy: DAILY_REFERENCE,
+    staleAfterSeconds: 172_800,
+    publisher: "Câmara Municipal do Porto",
+    topics: ["cities", "mobility"],
+  },
+  {
+    slug: "porto-municipal-trees-feed",
+    title: "Porto municipal trees",
+    description: "Identified municipal trees with species, age range, and source geometry.",
+    config: {
+      source: "ckan",
+      host: "opendata.porto.digital",
+      dataset: "identificacao-e-caracterizacao-do-arvoredo-do-municipio-do-porto",
+      resource: "99733a6e-ca5c-4061-82e7-b21741929492",
+    },
+    // About 72,000 trees: the 6.5 MB CSV normalizes to more than the 16 MiB default output cap.
+    policy: {
+      ...DAILY_REFERENCE,
+      name: "Porto CKAN daily large reference snapshot",
+      collection: { ...DAILY_REFERENCE.collection, timeoutSeconds: 180, maxOutputBytes: 64 * 1024 * 1024 },
+    },
+    staleAfterSeconds: 604_800,
+    publisher: "Câmara Municipal do Porto",
+    topics: ["cities", "environment"],
+  },
+  {
+    slug: "porto-museums-feed",
+    title: "Porto museums and thematic centres",
+    description: "Museums and thematic centres with descriptions, addresses, and coordinates.",
+    config: {
+      source: "ckan",
+      host: "opendata.porto.digital",
+      dataset: "cultura-cultura-museus",
+      resource: "08824bb1-b9ed-40ee-9b23-2ccebb962a92",
+    },
+    policy: DAILY_REFERENCE,
+    staleAfterSeconds: 604_800,
+    publisher: "Câmara Municipal do Porto",
+    topics: ["culture", "cities"],
+  },
+  {
+    slug: "porto-cultural-agenda-feed",
+    title: "Porto cultural agenda",
+    description: "Published cultural events with descriptions, schedules, and locations.",
+    config: {
+      source: "ckan",
+      host: "opendata.porto.digital",
+      dataset: "pontos-de-interesse-cultura-e-patrimonio-agenda-cultural",
+      resource: "35172eff-c68d-4162-93e5-528b95011584",
+    },
+    policy: DAILY_CHANGES,
+    staleAfterSeconds: 172_800,
+    publisher: "Câmara Municipal do Porto",
+    topics: ["culture", "cities"],
+  },
+  {
+    slug: "porto-loading-zones-feed",
+    title: "Porto loading and unloading zones",
+    description: "Kerbside loading and unloading bays with their location and rules.",
+    config: {
+      source: "ckan",
+      host: "opendata.porto.digital",
+      dataset: "cargas-e-descargas",
+      resource: "66f17a25-f12e-47bb-a5fa-7903206fb3d8",
+    },
+    policy: DAILY_REFERENCE,
+    staleAfterSeconds: 172_800,
+    publisher: "Câmara Municipal do Porto",
+    topics: ["cities", "mobility"],
+  },
+  cascaisExample(
+    "cascais-pharmacies-feed",
+    "Cascais pharmacies",
+    "Pharmacies in Cascais with addresses and locations.",
+    "geocascais-farmacias",
+    "94238d3f-4832-4927-977e-22e82940a9d9",
+    ["health", "cities"],
+  ),
+  cascaisExample(
+    "cascais-defibrillators-feed",
+    "Cascais public defibrillators",
+    "Locations of automated external defibrillators available to the public in Cascais.",
+    "geocascais-desfibrilhador",
+    "073e2257-3bb8-4065-a503-a901dff66295",
+    ["health", "cities"],
+  ),
+  cascaisExample(
+    "cascais-health-facilities-feed",
+    "Cascais health facilities",
+    "Health centres, hospitals, and other health facilities in Cascais.",
+    "geocascais-equipamentosaude",
+    "1f32f448-7ea4-4d16-a64b-9e4eb4fffa12",
+    ["health", "cities"],
+  ),
+  cascaisExample(
+    "cascais-shared-mobility-stations-feed",
+    "Cascais shared mobility stations",
+    "Stations for shared bicycles and scooters in Cascais.",
+    "geocascais-estacaopartilhamicromobilidade",
+    "6b19cc5b-7e82-4ba5-b5b0-747725a99b4e",
+    ["mobility", "cities"],
+  ),
+  cascaisExample(
+    "cascais-bus-stops-feed",
+    "Cascais bus stops",
+    "Bus stops in Cascais with their location and shelter details.",
+    "geocascais-paragemautocarro",
+    "a5375dc1-824a-48ec-b7e3-8030d5543285",
+    ["mobility", "cities"],
+  ),
+  cascaisExample(
+    "cascais-train-stations-feed",
+    "Cascais train stations",
+    "Railway stations on the Cascais line within the municipality.",
+    "geocascais-estacaocomboios",
+    "86545ad5-30a4-45c6-a311-e4a6d01d6762",
+    ["mobility", "cities"],
+  ),
+  cascaisExample(
+    "cascais-taxi-ranks-feed",
+    "Cascais taxi ranks",
+    "Taxi ranks in Cascais with their location and number of places.",
+    "geocascais-pracataxis",
+    "7c2f6153-f9f9-488d-867c-ceb050e48d43",
+    ["mobility", "cities"],
+  ),
+  cascaisExample(
+    "cascais-cycle-paths-feed",
+    "Cascais cycle paths",
+    "Cycle path segments in Cascais.",
+    "geocascais-ciclovia",
+    "74649057-6245-4214-a68c-d4acc3753b7d",
+    ["mobility", "cities"],
+  ),
+  cascaisExample(
+    "cascais-forest-fires-feed",
+    "Cascais forest fire areas",
+    "Areas burnt by recorded forest fires in Cascais, with their dates.",
+    "geocascais-incendioflorestal",
+    "062d1d34-dce0-4a5a-bae1-99cc7f124bcf",
+    ["environment", "cities"],
+  ),
+  cascaisExample(
+    "cascais-fire-stations-feed",
+    "Cascais fire stations",
+    "Fire brigade stations in Cascais.",
+    "geocascais-quartelbombeiros",
+    "8b4c8466-3df8-439c-9b3d-c5419395e916",
+    ["society", "cities"],
+  ),
+  cascaisExample(
+    "cascais-tsunami-meeting-points-feed",
+    "Cascais tsunami meeting points",
+    "Evacuation meeting points to use in case of a tsunami warning in Cascais.",
+    "geocascais-pontosencontrotsunami",
+    "f6c7b517-7663-4f7c-bcd9-2db8cfab5036",
+    ["environment", "society"],
+  ),
+  cascaisExample(
+    "cascais-beaches-feed",
+    "Cascais beaches",
+    "Beaches in Cascais with their location and facilities.",
+    "geocascais-praia",
+    "0ba066ff-383d-484b-baf6-a7769c2316dd",
+    ["environment", "cities"],
+  ),
+  cascaisExample(
+    "cascais-drinking-fountains-feed",
+    "Cascais drinking fountains",
+    "Public drinking fountains in Cascais.",
+    "geocascais-bebedouro",
+    "271d3e44-c0d0-4123-85ff-5c5fc2db6c22",
+    ["cities"],
+  ),
+  cascaisExample(
+    "cascais-markets-feed",
+    "Cascais fairs and markets",
+    "Municipal fairs and markets in Cascais with their location.",
+    "geocascais-feiramercado",
+    "52ac6f20-e436-4270-93c7-35d2529da157",
+    ["economy", "cities"],
+  ),
+  cascaisExample(
+    "cascais-playgrounds-feed",
+    "Cascais playgrounds",
+    "Public playgrounds in Cascais.",
+    "geocascais-parqueinfantil",
+    "684f9e58-2c4f-4f5b-b0a1-a5455acbed64",
+    ["cities"],
+  ),
+  cascaisExample(
+    "cascais-public-schools-feed",
+    "Cascais public schools",
+    "Public schools in Cascais with their education level and location.",
+    "geocascais-estabelecimentoescolar",
+    "b7b1fef2-960c-4934-a912-92f026ffd000",
+    ["society", "cities"],
+  ),
+  cascaisExample(
+    "cascais-hotels-feed",
+    "Cascais hotels",
+    "Hotels and other tourist accommodation units in Cascais.",
+    "geocascais-unidadehoteleira",
+    "16f33130-4504-4304-9517-e02b1442025d",
+    ["economy", "cities"],
+  ),
+  cascaisExample(
+    "cascais-cultural-venues-feed",
+    "Cascais cultural venues",
+    "Museums, theatres, libraries, and other cultural venues in Cascais.",
+    "geocascais-equipamentocultural",
+    "9b899d53-8e7f-4d61-bac1-86449853a87b",
+    ["culture", "cities"],
+  ),
+];
+
+/** One GeoJSON resource from the Cascais open data portal, collected daily. */
+function cascaisExample(
+  slug: string,
+  title: string,
+  description: string,
+  dataset: string,
+  resource: string,
+  topics: string[],
+): ExampleFeed {
+  return {
+    slug,
+    title,
+    description,
+    config: { source: "ckan", host: "dadosabertos.cascais.pt", dataset, resource },
+    policy: CASCAIS_DAILY_REFERENCE,
+    staleAfterSeconds: 172_800,
+    publisher: "Câmara Municipal de Cascais",
+    topics,
+  };
+}

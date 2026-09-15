@@ -1,0 +1,155 @@
+{
+  "dataset": {
+    "dataset_id": "taxa-de-cobertura-da-vacina-antigripal-sazonal-na-populacao-em-portugal-continen",
+    "fields": [
+      {
+        "name": "epoca_sazonal",
+        "description": null,
+        "annotations": {
+          "timeserie_precision": "year",
+          "facet": true,
+          "timerangeFilter": true,
+          "facetsort": "-alphanum"
+        },
+        "label": "Época sazonal ",
+        "type": "date",
+        "label_pt": "Época sazonal ",
+        "label_en": "Época sazonal ",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "ponto_ou_localizacao_geografica",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Localização Geográfica",
+        "type": "geo_point_2d",
+        "label_pt": "Localização Geográfica",
+        "label_en": "Localização Geográfica",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "taxa_de_cobertura_da_vacina_antigripal_sazonal_nos_individuos_da_amostra_ecos",
+        "description": null,
+        "annotations": {
+          "unit": "%",
+          "decimals": 1
+        },
+        "label": "Taxa de cobertura da vacina antigripal sazonal nos indivíduos da amostra ECOS (%)",
+        "type": "double",
+        "label_pt": "Taxa de cobertura da vacina antigripal sazonal nos indivíduos da amostra ECOS (%)",
+        "label_en": "Taxa de cobertura da vacina antigripal sazonal nos indivíduos da amostra ECOS (%)",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "taxa_de_cobertura_da_vacina_antigripal_sazonal_nos_individuos_da_amostra_ecos_com_idade_inferior_a_1",
+        "description": null,
+        "annotations": {
+          "unit": "%",
+          "decimals": 1
+        },
+        "label": "Taxa de cobertura da vacina antigripal sazonal nos indivíduos da amostra ECOS com idade inferior a 15 anos (%)",
+        "type": "double",
+        "label_pt": "Taxa de cobertura da vacina antigripal sazonal nos indivíduos da amostra ECOS com idade inferior a 15 anos (%)",
+        "label_en": "Taxa de cobertura da vacina antigripal sazonal nos indivíduos da amostra ECOS com idade inferior a 15 anos (%)",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "taxa_de_cobertura_da_vacina_antigripal_sazonal_nos_individuos_da_amostra_ecos_com_idade_entre_15_44_",
+        "description": null,
+        "annotations": {
+          "unit": "%",
+          "decimals": 1
+        },
+        "label": "Taxa de cobertura da vacina antigripal sazonal nos indivíduos da amostra ECOS com idade entre 15-44 anos (%)",
+        "type": "double",
+        "label_pt": "Taxa de cobertura da vacina antigripal sazonal nos indivíduos da amostra ECOS com idade entre 15-44 anos (%)",
+        "label_en": "Taxa de cobertura da vacina antigripal sazonal nos indivíduos da amostra ECOS com idade entre 15-44 anos (%)",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "taxa_de_cobertura_da_vacina_antigripal_sazonal_nos_individuos_da_amostra_ecos_com_idade_entre_45_64_",
+        "description": null,
+        "annotations": {
+          "unit": "%",
+          "decimals": 1
+        },
+        "label": "Taxa de cobertura da vacina antigripal sazonal nos indivíduos da amostra ECOS com idade entre 45-64 anos (%)",
+        "type": "double",
+        "label_pt": "Taxa de cobertura da vacina antigripal sazonal nos indivíduos da amostra ECOS com idade entre 45-64 anos (%)",
+        "label_en": "Taxa de cobertura da vacina antigripal sazonal nos indivíduos da amostra ECOS com idade entre 45-64 anos (%)",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "taxa_de_cobertura_da_vacina_antigripal_sazonal_nos_individuos_da_amostra_ecos_com_idade_superior_ou_",
+        "description": null,
+        "annotations": {
+          "unit": "%",
+          "decimals": 1
+        },
+        "label": "Taxa de cobertura da vacina antigripal sazonal nos indivíduos da amostra ECOS com idade superior ou igual a 65 anos (%)",
+        "type": "double",
+        "label_pt": "Taxa de cobertura da vacina antigripal sazonal nos indivíduos da amostra ECOS com idade superior ou igual a 65 anos (%)",
+        "label_en": "Taxa de cobertura da vacina antigripal sazonal nos indivíduos da amostra ECOS com idade superior ou igual a 65 anos (%)",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "metas": {
+      "default": {
+        "title": "Taxa de Cobertura da Vacina Antigripal Sazonal",
+        "description": "<p>Taxa de cobertura da vacina antigripal sazonal na população em Portugal Continental por grupo etário.</p><p>Monitorização da evolução da taxa de cobertura da vacina antigripal sazonal na população em Portugal Continental, por grupo etário, com base nos dados provenientes da amostra ECOS (Em Casa Observamos Saúde).</p><p><strong>Época Sazonal:</strong> Período entre Outubro Ano N-1 e Maio Ano N.</p>",
+        "publisher": "INSA",
+        "license": null,
+        "modified": "2024-12-17T17:39:52.377000+00:00",
+        "data_processed": "2024-12-17T17:39:52.377000+00:00",
+        "records_count": 21
+      }
+    }
+  },
+  "records": [
+    {
+      "epoca_sazonal": "2022",
+      "ponto_ou_localizacao_geografica": {
+        "lon": -9.1644375,
+        "lat": 38.7643755
+      },
+      "taxa_de_cobertura_da_vacina_antigripal_sazonal_nos_individuos_da_amostra_ecos": 34.9,
+      "taxa_de_cobertura_da_vacina_antigripal_sazonal_nos_individuos_da_amostra_ecos_com_idade_inferior_a_1": 4.1,
+      "taxa_de_cobertura_da_vacina_antigripal_sazonal_nos_individuos_da_amostra_ecos_com_idade_entre_15_44_": 12.1,
+      "taxa_de_cobertura_da_vacina_antigripal_sazonal_nos_individuos_da_amostra_ecos_com_idade_entre_45_64_": 29.0,
+      "taxa_de_cobertura_da_vacina_antigripal_sazonal_nos_individuos_da_amostra_ecos_com_idade_superior_ou_": 75.8
+    },
+    {
+      "epoca_sazonal": "2021",
+      "ponto_ou_localizacao_geografica": {
+        "lon": -9.1644375,
+        "lat": 38.7643755
+      },
+      "taxa_de_cobertura_da_vacina_antigripal_sazonal_nos_individuos_da_amostra_ecos": 25.4,
+      "taxa_de_cobertura_da_vacina_antigripal_sazonal_nos_individuos_da_amostra_ecos_com_idade_inferior_a_1": 2.1,
+      "taxa_de_cobertura_da_vacina_antigripal_sazonal_nos_individuos_da_amostra_ecos_com_idade_entre_15_44_": 9.3,
+      "taxa_de_cobertura_da_vacina_antigripal_sazonal_nos_individuos_da_amostra_ecos_com_idade_entre_45_64_": 22.7,
+      "taxa_de_cobertura_da_vacina_antigripal_sazonal_nos_individuos_da_amostra_ecos_com_idade_superior_ou_": 66.2
+    },
+    {
+      "epoca_sazonal": "2020",
+      "ponto_ou_localizacao_geografica": {
+        "lon": -9.1644375,
+        "lat": 38.7643755
+      },
+      "taxa_de_cobertura_da_vacina_antigripal_sazonal_nos_individuos_da_amostra_ecos": 20.4,
+      "taxa_de_cobertura_da_vacina_antigripal_sazonal_nos_individuos_da_amostra_ecos_com_idade_inferior_a_1": 0.0,
+      "taxa_de_cobertura_da_vacina_antigripal_sazonal_nos_individuos_da_amostra_ecos_com_idade_entre_15_44_": 5.7,
+      "taxa_de_cobertura_da_vacina_antigripal_sazonal_nos_individuos_da_amostra_ecos_com_idade_entre_45_64_": 15.3,
+      "taxa_de_cobertura_da_vacina_antigripal_sazonal_nos_individuos_da_amostra_ecos_com_idade_superior_ou_": 60.7
+    }
+  ]
+}

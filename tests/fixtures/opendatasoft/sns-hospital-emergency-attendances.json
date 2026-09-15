@@ -1,0 +1,198 @@
+{
+  "dataset": {
+    "dataset_id": "atendimentos-por-tipo-de-urgencia-hospitalar-link",
+    "fields": [
+      {
+        "name": "tempo",
+        "description": null,
+        "annotations": {
+          "timeserie_precision": "month",
+          "facetsort": "-alphanum",
+          "facet": true,
+          "timerangeFilter": true
+        },
+        "label": "Período",
+        "type": "date",
+        "label_pt": "Período",
+        "label_en": "Período",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "periodoformat2",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Período.Format.2",
+        "type": "text",
+        "label_pt": "Período.Format.2",
+        "label_en": "Período.Format.2",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "regiao",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "Região",
+        "type": "text",
+        "label_pt": "Região",
+        "label_en": "Região",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "instituicao",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "Instituição",
+        "type": "text",
+        "label_pt": "Instituição",
+        "label_en": "Instituição",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "localizacao_geografica",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Localização Geográfica",
+        "type": "geo_point_2d",
+        "label_pt": "Localização Geográfica",
+        "label_en": "Localização Geográfica",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "urgencias_geral",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Urgências Geral",
+        "type": "int",
+        "label_pt": "Urgências Geral",
+        "label_en": "Urgências Geral",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "urgencias_pediatricas",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Urgências Pediátricas",
+        "type": "int",
+        "label_pt": "Urgências Pediátricas",
+        "label_en": "Urgências Pediátricas",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "urgencia_obstetricia",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Urgência Obstetricia",
+        "type": "int",
+        "label_pt": "Urgência Obstetricia",
+        "label_en": "Urgência Obstetricia",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "urgencia_psiquiatrica",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Urgência Psiquiátrica",
+        "type": "int",
+        "label_pt": "Urgência Psiquiátrica",
+        "label_en": "Urgência Psiquiátrica",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "total_urgencias",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Total Urgências",
+        "type": "int",
+        "label_pt": "Total Urgências",
+        "label_en": "Total Urgências",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "metas": {
+      "default": {
+        "title": "Atendimentos por Tipo de Urgência Hospitalar",
+        "description": "<p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Monitorização do número de atendimentos em urgência, com detalhe por tipo de urgência, mês e entidade hospitalar.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">O dataset contem dados relativos à evolução mensal dos atendimentos em urgência, discriminando os diferentes tipos de urgência: Geral, Pediátrica, Obstétrica e Psiquiátrica.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\"><b>Observações:</b></span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span style=\"font-family: Arial, sans-serif; font-size: 14.6667px;\">Os dados relativos ao mês n-2, publicados até ao último dia útil do mês n, têm caráter provisório, sujeitos a eventuais atualizações.</span></p>",
+        "publisher": "DE-SNS",
+        "license": null,
+        "modified": "2026-08-31T16:34:04.042000+00:00",
+        "data_processed": "2026-08-31T16:34:04.042000+00:00",
+        "records_count": 6481
+      }
+    }
+  },
+  "records": [
+    {
+      "tempo": "2026-06",
+      "periodoformat2": "2026/06/01",
+      "regiao": "Região de Saúde LVT",
+      "instituicao": "Hospital de Cascais, PPP",
+      "localizacao_geografica": {
+        "lon": -9.418207,
+        "lat": 38.730076
+      },
+      "urgencias_geral": 40121,
+      "urgencias_pediatricas": 17740,
+      "urgencia_obstetricia": 6210,
+      "urgencia_psiquiatrica": 0,
+      "total_urgencias": 64071
+    },
+    {
+      "tempo": "2026-06",
+      "periodoformat2": "2026/06/01",
+      "regiao": "Região de Saúde do Centro",
+      "instituicao": "Unidade Local de Saúde Castelo Branco, EPE",
+      "localizacao_geografica": {
+        "lon": -7.499876,
+        "lat": 39.822737
+      },
+      "urgencias_geral": 24074,
+      "urgencias_pediatricas": 7885,
+      "urgencia_obstetricia": 1745,
+      "urgencia_psiquiatrica": 130,
+      "total_urgencias": 33834
+    },
+    {
+      "tempo": "2026-06",
+      "periodoformat2": "2026/06/01",
+      "regiao": "Região de Saúde LVT",
+      "instituicao": "Unidade Local de Saúde da Arrábida, EPE",
+      "localizacao_geografica": {
+        "lon": -8.881073,
+        "lat": 38.529351
+      },
+      "urgencias_geral": 40912,
+      "urgencias_pediatricas": 15089,
+      "urgencia_obstetricia": 2058,
+      "urgencia_psiquiatrica": null,
+      "total_urgencias": 58059
+    }
+  ]
+}

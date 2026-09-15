@@ -1,0 +1,86 @@
+{
+  "uv": [
+    {
+      "idPeriodo": 2,
+      "intervaloHora": "13h-15h",
+      "data": "2026-09-07",
+      "globalIdLocal": 3480200,
+      "iUv": "6.8"
+    },
+    {
+      "idPeriodo": 3,
+      "intervaloHora": "12h-15h",
+      "data": "2026-09-07",
+      "globalIdLocal": 3470100,
+      "iUv": "7.0"
+    },
+    {
+      "idPeriodo": 2,
+      "intervaloHora": "13h-15h",
+      "data": "2026-09-08",
+      "globalIdLocal": 3480200,
+      "iUv": "7.2"
+    },
+    {
+      "idPeriodo": 3,
+      "intervaloHora": "12h-15h",
+      "data": "2026-09-08",
+      "globalIdLocal": 3470100,
+      "iUv": "6.7"
+    },
+    {
+      "idPeriodo": 2,
+      "intervaloHora": "13h-15h",
+      "data": "2026-09-09",
+      "globalIdLocal": 3480200,
+      "iUv": "6.9"
+    },
+    {
+      "idPeriodo": 2,
+      "intervaloHora": "13h-15h",
+      "data": "2026-09-09",
+      "globalIdLocal": 3470100,
+      "iUv": "7.4"
+    },
+    {
+      "idPeriodo": 2,
+      "intervaloHora": "13h-15h",
+      "data": "2026-09-10",
+      "globalIdLocal": 3480200,
+      "iUv": "7.1"
+    },
+    {
+      "idPeriodo": 2,
+      "intervaloHora": "13h-15h",
+      "data": "2026-09-10",
+      "globalIdLocal": 3470100,
+      "iUv": "7.3"
+    }
+  ],
+  "cities": {
+    "owner": "IPMA",
+    "country": "PT",
+    "data": [
+      {
+        "idRegiao": 3,
+        "idAreaAviso": "ACE",
+        "idConcelho": 1,
+        "globalIdLocal": 3470100,
+        "latitude": "38.5363",
+        "idDistrito": 47,
+        "local": "Horta",
+        "longitude": "-28.6315"
+      },
+      {
+        "idRegiao": 3,
+        "idAreaAviso": "AOC",
+        "idConcelho": 2,
+        "globalIdLocal": 3480200,
+        "latitude": "39.4500",
+        "idDistrito": 48,
+        "local": "Santa Cruz das Flores",
+        "longitude": "-31.1300"
+      }
+    ]
+  }
+}

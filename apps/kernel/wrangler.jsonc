@@ -1,0 +1,91 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "open-data-pt-kernel",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-09",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    {
+      "pattern": "open-data.pt",
+      "custom_domain": true
+    }
+  ],
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "../site/dist",
+    // The Worker answers the API, the MCP server, the discovery documents and every
+    // page (Link headers, and Markdown for agents that ask for it). Scripts, styles
+    // and other files go straight to the assets.
+    "run_worker_first": [
+      "/api", "/api/*", "/docs", "/docs/*", "/openapi.json", "/mcp", "/mcp/server-card", "/.well-known/*", "/sitemap.xml",
+      "/", "/index.html", "/catalog/*", "/publisher/*", "/product/*", "/start/*", "/status/*", "/operations/*", "/contribute/*"
+    ]
+  },
+  "r2_buckets": [
+    {
+      "binding": "DATA_OBJECTS",
+      "bucket_name": "open-data-pt-data"
+    }
+  ],
+  // Only meaningful revisions go to the lake. Acquisition outcomes stay in runner
+  // SQLite and the Registry's activity mirror; they are not history.
+  "pipelines": [
+    { "binding": "LAKE_RECORDS", "stream": "c9c95b5a25814d379cc4fbeb7f68f544" },
+    { "binding": "LAKE_POINTS", "stream": "8eca86758fe941d28c807a62cb0c1e83" }
+  ],
+  // No cron: every FeedRunner schedules itself with a Durable Object alarm.
+  // An explicit empty list keeps old triggers detached.
+  "triggers": { "crons": [] },
+  // Collections run as Workflow instances: waiting on sources costs Workflow CPU
+  // and steps, not Durable Object wall-clock duration.
+  "workflows": [
+    { "name": "open-data-pt-collections", "binding": "COLLECTIONS", "class_name": "CollectionWorkflow" }
+  ],
+  "durable_objects": {
+    "bindings": [
+      { "name": "Registry", "class_name": "Registry" },
+      { "name": "FeedRunner", "class_name": "FeedRunner" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v2-bounded-foundation-reset", "new_sqlite_classes": ["RegistryV2", "FeedRunnerV2"] },
+    { "tag": "v3-normalized-reset", "renamed_classes": [{ "from": "RegistryV2", "to": "Registry" }, { "from": "FeedRunnerV2", "to": "FeedRunner" }] }
+  ],
+  // One Worker per catalog topic; the kernel discovers them by binding prefix.
+  "services": [
+    { "binding": "GATEKEEPER_CITIES", "service": "open-data-pt-gatekeeper-cities" },
+    { "binding": "GATEKEEPER_ENERGY", "service": "open-data-pt-gatekeeper-energy" },
+    { "binding": "GATEKEEPER_ENVIRONMENT", "service": "open-data-pt-gatekeeper-environment" },
+    { "binding": "GATEKEEPER_HEALTH", "service": "open-data-pt-gatekeeper-health" },
+    { "binding": "GATEKEEPER_MOBILITY", "service": "open-data-pt-gatekeeper-mobility" },
+    { "binding": "GATEKEEPER_STATISTICS", "service": "open-data-pt-gatekeeper-statistics" }
+  ],
+  // Per-client limits on uncached API reads, keyed by cf-connecting-ip; cache hits
+  // never count. History windows and GeoJSON exports scan the lake or every
+  // chunk, so they have their own tighter limit on top of the general one.
+  "ratelimits": [
+    { "name": "API_RATE_LIMIT", "namespace_id": "4201", "simple": { "limit": 240, "period": 60 } },
+    { "name": "HISTORY_RATE_LIMIT", "namespace_id": "4202", "simple": { "limit": 30, "period": 60 } },
+    // Every MCP code run is a fresh Dynamic Worker, and Cloudflare bills each one.
+    { "name": "MCP_RATE_LIMIT", "namespace_id": "4203", "simple": { "limit": 20, "period": 60 } }
+  ],
+  // The MCP server's code runs (Code Mode): one Dynamic Worker each, with no
+  // network access; they read the API only through the kernel.
+  "worker_loaders": [{ "binding": "LOADER" }],
+  "vars": {
+    // Lake: set when the Pipelines streams exist.
+    "CLOUDFLARE_ACCOUNT_ID": "cc05ea77c39684419e087c3b78b5177d",
+    "LAKE_BUCKET": "open-data-pt-history"
+  },
+  // Secret (wrangler secret put): CATALOG_TOKEN, for R2 SQL. The API is
+  // read-only; nothing takes an operator credential.
+  // A first baseline of a large product applies its whole index in one runner
+  // transaction; Workflow steps also run under this CPU limit.
+  "limits": { "cpu_ms": 120000 },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  }
+}

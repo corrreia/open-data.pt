@@ -1,0 +1,158 @@
+{
+  "forecasts": [
+    {
+      "owner": "IPMA",
+      "country": "PT",
+      "forecastDate": "2026-09-07",
+      "data": [
+        {
+          "precipitaProb": "0.0",
+          "tMin": 17,
+          "tMax": 25,
+          "predWindDir": "N",
+          "idWeatherType": 3,
+          "classWindSpeed": 2,
+          "longitude": "-8.6535",
+          "globalIdLocal": 1010500,
+          "latitude": "40.6413"
+        },
+        {
+          "precipitaProb": "0.0",
+          "tMin": 21,
+          "tMax": 38,
+          "predWindDir": "NW",
+          "idWeatherType": 2,
+          "classWindSpeed": 2,
+          "longitude": "-7.8700",
+          "globalIdLocal": 1020500,
+          "latitude": "38.0200"
+        }
+      ],
+      "dataUpdate": "2026-09-07T16:31:03"
+    },
+    {
+      "owner": "IPMA",
+      "country": "PT",
+      "forecastDate": "2026-09-08",
+      "data": [
+        {
+          "precipitaProb": "69.0",
+          "tMin": 18,
+          "tMax": 25,
+          "predWindDir": "NW",
+          "idWeatherType": 7,
+          "classWindSpeed": 1,
+          "longitude": "-8.6535",
+          "classPrecInt": 1,
+          "globalIdLocal": 1010500,
+          "latitude": "40.6413"
+        },
+        {
+          "precipitaProb": "0.0",
+          "tMin": 18,
+          "tMax": 34,
+          "predWindDir": "NW",
+          "idWeatherType": 2,
+          "classWindSpeed": 2,
+          "longitude": "-7.8700",
+          "globalIdLocal": 1020500,
+          "latitude": "38.0200"
+        }
+      ],
+      "dataUpdate": "2026-09-07T16:31:03"
+    },
+    {
+      "owner": "IPMA",
+      "country": "PT",
+      "forecastDate": "2026-09-09",
+      "data": [
+        {
+          "precipitaProb": "0.0",
+          "tMin": 18,
+          "tMax": 24,
+          "predWindDir": "N",
+          "idWeatherType": 2,
+          "classWindSpeed": 2,
+          "longitude": "-8.6535",
+          "globalIdLocal": 1010500,
+          "latitude": "40.6413"
+        },
+        {
+          "precipitaProb": "0.0",
+          "tMin": 18,
+          "tMax": 30,
+          "predWindDir": "NW",
+          "idWeatherType": 2,
+          "classWindSpeed": 2,
+          "longitude": "-7.8700",
+          "globalIdLocal": 1020500,
+          "latitude": "38.0200"
+        }
+      ],
+      "dataUpdate": "2026-09-07T16:31:03"
+    }
+  ],
+  "cities": {
+    "owner": "IPMA",
+    "country": "PT",
+    "data": [
+      {
+        "idRegiao": 1,
+        "idAreaAviso": "AVR",
+        "idConcelho": 5,
+        "globalIdLocal": 1010500,
+        "latitude": "40.6413",
+        "idDistrito": 1,
+        "local": "Aveiro",
+        "longitude": "-8.6535"
+      },
+      {
+        "idRegiao": 1,
+        "idAreaAviso": "BJA",
+        "idConcelho": 5,
+        "globalIdLocal": 1020500,
+        "latitude": "38.0200",
+        "idDistrito": 2,
+        "local": "Beja",
+        "longitude": "-7.8700"
+      }
+    ]
+  },
+  "weatherTypes": {
+    "owner": "IPMA",
+    "country": "PT",
+    "data": [
+      {
+        "descWeatherTypeEN": "Partly cloudy",
+        "descWeatherTypePT": "Céu pouco nublado",
+        "idWeatherType": 2
+      },
+      {
+        "descWeatherTypeEN": "Sunny intervals",
+        "descWeatherTypePT": "Céu parcialmente nublado",
+        "idWeatherType": 3
+      },
+      {
+        "descWeatherTypeEN": "Light showers/rain",
+        "descWeatherTypePT": "Aguaceiros/chuva fracos",
+        "idWeatherType": 7
+      }
+    ]
+  },
+  "windSpeedClasses": {
+    "owner": "IPMA",
+    "country": "PT",
+    "data": [
+      {
+        "descClassWindSpeedDailyEN": "Weak",
+        "descClassWindSpeedDailyPT": "Fraco",
+        "classWindSpeed": "1"
+      },
+      {
+        "descClassWindSpeedDailyEN": "Moderate",
+        "descClassWindSpeedDailyPT": "Moderado",
+        "classWindSpeed": "2"
+      }
+    ]
+  }
+}

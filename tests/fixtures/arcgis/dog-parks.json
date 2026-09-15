@@ -1,0 +1,231 @@
+{
+  "type": "FeatureCollection",
+  "arcgis": {
+    "layerUrl": "https://services.arcgis.com/1dSrzEWVQn5kHHyK/arcgis/rest/services/ParquesCaninos/FeatureServer/0",
+    "name": "Parques Caninos",
+    "description": "serviço de mapa relativo a Layer com localização e informação referente aos parque caninos da cidade de Lisboa",
+    "copyrightText": "2026",
+    "geometryType": "esriGeometryPolygon",
+    "objectIdField": "OBJECTID",
+    "globalIdField": "GlobalID",
+    "fields": [
+      {
+        "name": "OBJECTID",
+        "alias": "Object ID",
+        "type": "esriFieldTypeOID",
+        "nullable": false
+      },
+      {
+        "name": "COD_SIG",
+        "alias": "Código SIG",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "IDTIPO",
+        "alias": "ID Tipo",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "DESIGNACAO",
+        "alias": "Designação",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "MORADA",
+        "alias": "Morada",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "FREGUESIA",
+        "alias": "Freguesia",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "SITUACAO",
+        "alias": "Situação",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "GESTAO",
+        "alias": "Gestão",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "CONTACTOS",
+        "alias": "Contactos",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "GlobalID",
+        "alias": "GlobalID",
+        "type": "esriFieldTypeGlobalID",
+        "nullable": false
+      },
+      {
+        "name": "Shape__Area",
+        "alias": "Shape__Area",
+        "type": "esriFieldTypeDouble",
+        "nullable": true
+      },
+      {
+        "name": "Shape__Length",
+        "alias": "Shape__Length",
+        "type": "esriFieldTypeDouble",
+        "nullable": true
+      }
+    ]
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": 113,
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -9.12921416300013,
+              38.7374707095016
+            ],
+            [
+              -9.12920656998795,
+              38.7373623321776
+            ],
+            [
+              -9.12934958968039,
+              38.7373623033035
+            ],
+            [
+              -9.1293555988354,
+              38.7374705707083
+            ],
+            [
+              -9.12921416300013,
+              38.7374707095016
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "OBJECTID": 113,
+        "COD_SIG": "1",
+        "IDTIPO": "3078",
+        "DESIGNACAO": "Parque Canino do Jardim Alameda Dom Afonso Henriques",
+        "MORADA": "Alameda Dom Afonso Henriques",
+        "FREGUESIA": "Areeiro",
+        "SITUACAO": "Projecto em apreciação",
+        "GESTAO": " ",
+        "CONTACTOS": " ",
+        "GlobalID": "f9de5139-dc45-4ea2-9c7d-8ea434ad0a65",
+        "Shape__Area": 244.767578125,
+        "Shape__Length": 62.621090348256054
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 114,
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -9.15353201914079,
+              38.714068949697
+            ],
+            [
+              -9.1534813343275,
+              38.7139275873018
+            ],
+            [
+              -9.15365048154663,
+              38.7139499412918
+            ],
+            [
+              -9.15360508204795,
+              38.7140584330412
+            ],
+            [
+              -9.15360336028739,
+              38.7140587939724
+            ],
+            [
+              -9.15353201914079,
+              38.714068949697
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "OBJECTID": 114,
+        "COD_SIG": "12",
+        "IDTIPO": "3078",
+        "DESIGNACAO": "Parque Canino do Jardim da Assembleia da República",
+        "MORADA": "Praça de São Bento",
+        "FREGUESIA": "Estrela",
+        "SITUACAO": "Projecto em apreciação",
+        "GESTAO": " ",
+        "CONTACTOS": " ",
+        "GlobalID": "76d95dc3-b4c7-4ed4-908b-274a20870284",
+        "Shape__Area": 240.09375,
+        "Shape__Length": 64.59314599660156
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 115,
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -9.15989178000139,
+              38.7140867885218
+            ],
+            [
+              -9.15989200245163,
+              38.7140833716821
+            ],
+            [
+              -9.16016733668344,
+              38.7141046241669
+            ],
+            [
+              -9.16014749689348,
+              38.7142060884181
+            ],
+            [
+              -9.15988248386443,
+              38.7141810105798
+            ],
+            [
+              -9.15989178000139,
+              38.7140867885218
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "OBJECTID": 115,
+        "COD_SIG": "14",
+        "IDTIPO": "3078",
+        "DESIGNACAO": "Parque Canino do Jardim da Estrela",
+        "MORADA": "Rua Domingos Sequeira",
+        "FREGUESIA": "Estrela",
+        "SITUACAO": "Concluido",
+        "GESTAO": "JF",
+        "CONTACTOS": " ",
+        "GlobalID": "23938258-9f67-4579-bda0-0f6fae5ffa6e",
+        "Shape__Area": 432.4697265625,
+        "Shape__Length": 89.13026860763667
+      }
+    }
+  ]
+}

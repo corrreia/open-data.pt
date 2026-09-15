@@ -1,0 +1,281 @@
+{
+  "service": "production-breakdown",
+  "days": [
+    {
+      "day": "2026-09-06",
+      "response": {
+        "xAxis": {
+          "title": {
+            "text": "Hour"
+          },
+          "max": 97,
+          "categories": [
+            "00:00",
+            "00:15",
+            "00:30",
+            "00:45"
+          ],
+          "export": [
+            "00:00",
+            "00:15",
+            "00:30",
+            "00:45"
+          ],
+          "tickInterval": 4
+        },
+        "yAxis": {
+          "title": {
+            "text": "MW"
+          }
+        },
+        "chart": {
+          "marginLeft": 60
+        },
+        "series": [
+          {
+            "type": "line",
+            "name": "Consumption + Storage",
+            "data": [
+              5526.9,
+              5435,
+              5393.3,
+              5328.2
+            ],
+            "color": "#494949",
+            "zIndex": 21,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#494949"
+            },
+            "lineWidth": 1
+          },
+          {
+            "type": "line",
+            "name": "Consumption",
+            "data": [
+              5526.4,
+              5434.2,
+              5393.1,
+              5327.5
+            ],
+            "color": "#0D2965",
+            "zIndex": 22,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#0D2965"
+            },
+            "lineWidth": 2
+          },
+          {
+            "type": "area",
+            "name": "Battery Injection",
+            "data": [
+              0.1,
+              0,
+              0.2,
+              1.5
+            ],
+            "color": "#0B204C",
+            "zIndex": 3,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#0B204C"
+            }
+          },
+          {
+            "type": "area",
+            "name": "Hydro",
+            "data": [
+              1825.6,
+              1812.4,
+              1776,
+              1688.7
+            ],
+            "color": "#3074C0",
+            "zIndex": 4,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#3074C0"
+            }
+          },
+          {
+            "type": "area",
+            "name": "Solar",
+            "data": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "color": "#FDD73C",
+            "zIndex": 5,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#FDD73C"
+            }
+          },
+          {
+            "type": "area",
+            "name": "Wind",
+            "data": [
+              408.1,
+              398.5,
+              391.2,
+              365.5
+            ],
+            "color": "#BEE200",
+            "zIndex": 6,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#BEE200"
+            }
+          },
+          {
+            "type": "area",
+            "name": "Import Balance",
+            "data": [
+              2077.6,
+              2004,
+              2005.2,
+              2080.8
+            ],
+            "color": "#F98D2D",
+            "zIndex": 7,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#F98D2D"
+            }
+          },
+          {
+            "type": "area",
+            "name": "Natural Gas",
+            "data": [
+              847.7,
+              855.7,
+              857.2,
+              825
+            ],
+            "color": "#91AEBD",
+            "zIndex": 8,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#91AEBD"
+            }
+          },
+          {
+            "type": "area",
+            "name": "Other Thermal",
+            "data": [
+              29.7,
+              29.7,
+              28.7,
+              29.2
+            ],
+            "color": "#747474",
+            "zIndex": 9,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#747474"
+            }
+          },
+          {
+            "type": "area",
+            "name": "Biomass",
+            "data": [
+              345.9,
+              344,
+              343.1,
+              346
+            ],
+            "color": "#8FA30D",
+            "zIndex": 10,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#8FA30D"
+            }
+          },
+          {
+            "type": "area",
+            "name": "Coal",
+            "data": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "color": "#800000",
+            "zIndex": 11,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#800000"
+            }
+          },
+          {
+            "type": "area",
+            "name": "Wave",
+            "data": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "color": "#32CCCD",
+            "zIndex": 12,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#32CCCD"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

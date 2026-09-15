@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Use the data
+    url: https://open-data.pt/start/
+    about: The API, the MCP server, and how to read each kind of product.

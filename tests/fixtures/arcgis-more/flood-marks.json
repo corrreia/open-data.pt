@@ -1,0 +1,99 @@
+{
+  "type": "FeatureCollection",
+  "arcgis": {
+    "layerUrl": "https://sniambgeoogc.apambiente.pt/getogc/rest/services/SNIAmb/Marcas_cheias/MapServer/0",
+    "name": "Marca de cheia SNIRH",
+    "description": "",
+    "copyrightText": "",
+    "geometryType": "esriGeometryPoint",
+    "objectIdField": "objectid",
+    "fields": [
+      {
+        "name": "objectid",
+        "alias": "OBJECTID",
+        "type": "esriFieldTypeOID"
+      },
+      {
+        "name": "descricao",
+        "alias": "Descrição",
+        "type": "esriFieldTypeString"
+      },
+      {
+        "name": "data",
+        "alias": "Data",
+        "type": "esriFieldTypeDate"
+      },
+      {
+        "name": "cota_inundacao",
+        "alias": "Cota de inundação",
+        "type": "esriFieldTypeDouble"
+      },
+      {
+        "name": "fonte",
+        "alias": "Fonte",
+        "type": "esriFieldTypeString"
+      },
+      {
+        "name": "shape",
+        "alias": "Shape",
+        "type": "esriFieldTypeGeometry"
+      }
+    ]
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": 363591,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8.613011559213371,
+          41.14086962890437
+        ]
+      },
+      "properties": {
+        "objectid": 363591,
+        "descricao": "Porto - Praça da Ribeira",
+        "data": -1894233600000,
+        "cota_inundacao": 9.54,
+        "fonte": "PDM Porto"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 363592,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8.66576094743807,
+          41.147984467962964
+        ]
+      },
+      "properties": {
+        "objectid": 363592,
+        "descricao": "Porto Rua dos Olivais Cantareira",
+        "data": -252288000000,
+        "cota_inundacao": 4.16,
+        "fonte": "PDM Porto"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 363593,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8.652956776807553,
+          41.14809718586515
+        ]
+      },
+      "properties": {
+        "objectid": 363593,
+        "descricao": "Porto ISNaufragos Largo Antonio Calem",
+        "data": -252288000000,
+        "cota_inundacao": 4.98,
+        "fonte": "PDM Porto"
+      }
+    }
+  ]
+}

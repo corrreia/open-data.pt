@@ -1,0 +1,16 @@
+{
+  "fields": [
+    { "name": "batch_id", "type": "string", "required": true },
+    { "name": "feed_id", "type": "string", "required": true },
+    { "name": "acquisition_id", "type": "string", "required": true },
+    { "name": "status", "type": "string", "required": true },
+    { "name": "trigger", "type": "string", "required": true },
+    { "name": "requested_at", "type": "timestamp", "required": true },
+    { "name": "completed_at", "type": "timestamp", "required": false },
+    { "name": "content_hash", "type": "string", "required": false },
+    { "name": "size_bytes", "type": "int64", "required": false },
+    { "name": "accepted_records", "type": "int64", "required": false },
+    { "name": "rejected_records", "type": "int64", "required": false },
+    { "name": "error", "type": "string", "required": false }
+  ]
+}

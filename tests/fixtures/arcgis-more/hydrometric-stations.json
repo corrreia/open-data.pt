@@ -1,0 +1,107 @@
+{
+  "type": "FeatureCollection",
+  "arcgis": {
+    "layerUrl": "https://sniambgeoogc.apambiente.pt/getogc/rest/services/SNIAmb/Estacoes_hidrometricas/MapServer/0",
+    "name": "Estação hidrométrica",
+    "description": "",
+    "copyrightText": "",
+    "geometryType": "esriGeometryPoint",
+    "objectIdField": "id",
+    "fields": [
+      {
+        "name": "id",
+        "alias": "id",
+        "type": "esriFieldTypeOID"
+      },
+      {
+        "name": "codigo",
+        "alias": "Código",
+        "type": "esriFieldTypeString"
+      },
+      {
+        "name": "nome",
+        "alias": "Nome",
+        "type": "esriFieldTypeString"
+      },
+      {
+        "name": "tipo",
+        "alias": "Tipo",
+        "type": "esriFieldTypeString"
+      },
+      {
+        "name": "estado",
+        "alias": "Estado",
+        "type": "esriFieldTypeString"
+      },
+      {
+        "name": "url",
+        "alias": "URL",
+        "type": "esriFieldTypeString"
+      },
+      {
+        "name": "shape",
+        "alias": "Shape",
+        "type": "esriFieldTypeGeometry"
+      }
+    ]
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": 100000001,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -7.968999999999937,
+          41.79500000000007
+        ]
+      },
+      "properties": {
+        "id": 100000001,
+        "codigo": "03J/02H",
+        "nome": "ABELHEIRA CANAL (R.E.)",
+        "tipo": "Limnigráfica",
+        "estado": "ATIVA",
+        "url": "http://snirh.pt/snirh/_dadosbase/site/simplex.php?FILTRA_COVER=920123705&FILTRA_SIMBOLO=03J/02H"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 100000003,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -7.08099999999996,
+          40.152000000000044
+        ]
+      },
+      "properties": {
+        "id": 100000003,
+        "codigo": "13O/02A",
+        "nome": "AÇUDE DA BEZÁGUEDA",
+        "tipo": null,
+        "estado": "ATIVA",
+        "url": "http://snirh.pt/snirh/_dadosbase/site/simplex.php?FILTRA_COVER=920123705&FILTRA_SIMBOLO=13O/02A"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 100000006,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8.19599999999997,
+          41.56800000000004
+        ]
+      },
+      "properties": {
+        "id": 100000006,
+        "codigo": "04H/02A",
+        "nome": "AÇUDE DAS ANDORINHAS (R.E.)",
+        "tipo": "Escala",
+        "estado": "ATIVA",
+        "url": "http://snirh.pt/snirh/_dadosbase/site/simplex.php?FILTRA_COVER=920123705&FILTRA_SIMBOLO=04H/02A"
+      }
+    }
+  ]
+}

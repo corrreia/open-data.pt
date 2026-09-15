@@ -1,0 +1,100 @@
+{
+  "stations": [
+    {
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -7.821,
+          37.033
+        ]
+      },
+      "type": "Feature",
+      "properties": {
+        "idEstacao": 1210881,
+        "localEstacao": "Olhão, EPPO"
+      }
+    },
+    {
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -7.62050375,
+          37.12166968
+        ]
+      },
+      "type": "Feature",
+      "properties": {
+        "idEstacao": 1210883,
+        "localEstacao": "Tavira"
+      }
+    }
+  ],
+  "observations": {
+    "2026-09-07T14:00": {
+      "1210881": {
+        "intensidadeVentoKM": 7.6,
+        "temperatura": 31.1,
+        "radiacao": 0,
+        "idDireccVento": 4,
+        "precAcumulada": 0,
+        "intensidadeVento": 2.1,
+        "humidade": 43,
+        "pressao": 1021.1
+      },
+      "1210883": {
+        "intensidadeVentoKM": 8.6,
+        "temperatura": 30.9,
+        "radiacao": -99,
+        "idDireccVento": 5,
+        "precAcumulada": 0,
+        "intensidadeVento": 2.4,
+        "humidade": 44,
+        "pressao": 1021.3
+      }
+    },
+    "2026-09-07T15:00": {
+      "1210881": {
+        "intensidadeVentoKM": 11.5,
+        "temperatura": 30.8,
+        "radiacao": 0,
+        "idDireccVento": 5,
+        "precAcumulada": 0,
+        "intensidadeVento": 3.2,
+        "humidade": 45,
+        "pressao": 1020.5
+      },
+      "1210883": {
+        "intensidadeVentoKM": 10.4,
+        "temperatura": 31.9,
+        "radiacao": -99,
+        "idDireccVento": 6,
+        "precAcumulada": 0,
+        "intensidadeVento": 2.9,
+        "humidade": 39,
+        "pressao": 1020.7
+      }
+    },
+    "2026-09-07T16:00": {
+      "1210881": {
+        "intensidadeVentoKM": 16.2,
+        "temperatura": 31.4,
+        "radiacao": 0,
+        "idDireccVento": 5,
+        "precAcumulada": 0,
+        "intensidadeVento": 4.5,
+        "humidade": 42,
+        "pressao": 1020.1
+      },
+      "1210883": {
+        "intensidadeVentoKM": 14,
+        "temperatura": 32.4,
+        "radiacao": -99,
+        "idDireccVento": 6,
+        "precAcumulada": 0,
+        "intensidadeVento": 3.9,
+        "humidade": 40,
+        "pressao": 1020.2
+      }
+    }
+  }
+}

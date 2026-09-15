@@ -1,0 +1,163 @@
+{
+  "type": "FeatureCollection",
+  "arcgis": {
+    "layerUrl": "https://services.arcgis.com/1dSrzEWVQn5kHHyK/arcgis/rest/services/POISaude/FeatureServer/0",
+    "name": "Centros de Saúde",
+    "description": "",
+    "copyrightText": "",
+    "geometryType": "esriGeometryPoint",
+    "objectIdField": "OBJECTID",
+    "globalIdField": "GlobalID",
+    "fields": [
+      {
+        "name": "OBJECTID",
+        "alias": "Object ID",
+        "type": "esriFieldTypeOID",
+        "nullable": false
+      },
+      {
+        "name": "COD_SIG",
+        "alias": "Código SIG",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "INF_NOME",
+        "alias": "Nome",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "INF_MORADA",
+        "alias": "Morada",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "FREGUESIA",
+        "alias": "Freguesia",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "INF_TELEFONE",
+        "alias": "Telefone",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "INF_EMAIL",
+        "alias": "Email",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "INF_SITE",
+        "alias": "Site",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "INF_DESCRICAO",
+        "alias": "Descrição",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "INF_FONTE",
+        "alias": "Fonte",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "INF_ACTIVO",
+        "alias": "ACTIVO(S/N)",
+        "type": "esriFieldTypeSmallInteger",
+        "nullable": true
+      },
+      {
+        "name": "GlobalID",
+        "alias": "GlobalID",
+        "type": "esriFieldTypeGlobalID",
+        "nullable": false
+      }
+    ]
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": 1,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -9.22057461809579,
+          38.6952163475631
+        ]
+      },
+      "properties": {
+        "OBJECTID": 1,
+        "COD_SIG": "3620",
+        "INF_NOME": "USF Descobertas/SAP ULS Lisboa Ocidental - Polo Descobertas",
+        "INF_MORADA": "Rua Fernão Mendes Pinto 19  1400-145 LISBOA",
+        "FREGUESIA": "Belém",
+        "INF_TELEFONE": "+351 213 039 090",
+        "INF_EMAIL": "usf.descobertas@ulslo.min-saude.pt; urap.lxocidoeiras@ulslo.min-saude.pt",
+        "INF_SITE": "https://bicsp.min-saude.pt/pt/biufs/3/832/30036/3110371/Pages/default.aspx; Ver Site SAP campo Descrição",
+        "INF_DESCRICAO": "ULS Lisboa Ocidental, EPE (ex-ACES Lisboa Ocidental e Oeiras); Data de abertura: 28-10-2009; Site SAP: https://bicsp.min-saude.pt/pt/biufs/3/832/30036/3111582/Pages/default.aspx",
+        "INF_FONTE": "CML/DDS; SNS - Serviço Nacional de Saúde",
+        "INF_ACTIVO": 1,
+        "GlobalID": "3b8a818f-a353-423f-9292-7326dba94ded"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 3,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -9.18511523017785,
+          38.7058780252906
+        ]
+      },
+      "properties": {
+        "OBJECTID": 3,
+        "COD_SIG": "3622",
+        "INF_NOME": "USF Ribeira Nova (Instalada aqui provisoriamente)",
+        "INF_MORADA": "Calçada da Tapada, 126  1349-049 LISBOA (Instalada aqui provisoriamente)",
+        "FREGUESIA": "Alcântara",
+        "INF_TELEFONE": "+351 213 405 550",
+        "INF_EMAIL": "usf.ribeiranova@arslvt.min-saude.pt",
+        "INF_SITE": "https://bicsp.min-saude.pt/pt/biufs/3/30027/3112271/Pages/default.aspx",
+        "INF_DESCRICAO": "ULS São José, EPE (ex-ACES Lisboa Central); Data de abertura: 11-03-2014",
+        "INF_FONTE": "CML/DDS; SNS; Secretariado ACES Lisboa Central (raquel.justo@csmarvila.min-saude.pt)",
+        "INF_ACTIVO": 1,
+        "GlobalID": "096d5704-c3ba-40e9-997d-4c9a08b1fee9"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 5,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -9.14499791321434,
+          38.7071583383204
+        ]
+      },
+      "properties": {
+        "OBJECTID": 5,
+        "COD_SIG": "3624",
+        "INF_NOME": "USF Ribeira Nova (Edifício em obras, foi transferida temporariamente para Cç. Tapada 126)",
+        "INF_MORADA": "Rua da Ribeira Nova, 1  1200-375 LISBOA (provisoriamente instalada na Cç. Tapada 126)",
+        "FREGUESIA": "Misericórdia",
+        "INF_TELEFONE": "+351 213 405 550",
+        "INF_EMAIL": "usf.ribeiranova@arslvt.min-saude.pt",
+        "INF_SITE": "https://bicsp.min-saude.pt/pt/biufs/3/30027/3112271/Pages/default.aspx",
+        "INF_DESCRICAO": "ULS São José, EPE (ex-ACES Lisboa Central); Data de abertura: 11-03-2014",
+        "INF_FONTE": "CML/DDS; SNS; Secretariado ACES Lisboa Central (raquel.justo@csmarvila.min-saude.pt)",
+        "INF_ACTIVO": 1,
+        "GlobalID": "51a5da9c-0c9c-4f0b-bdfa-b056dda44812"
+      }
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+{
+  "service": "gas-consumption",
+  "days": [
+    {
+      "day": "2026-09-06",
+      "response": {
+        "xAxis": {
+          "title": {
+            "text": "Hour"
+          },
+          "max": 25,
+          "categories": [
+            "05:00",
+            "06:00",
+            "07:00",
+            "08:00"
+          ],
+          "export": [
+            "05:00",
+            "06:00",
+            "07:00",
+            "08:00"
+          ],
+          "tickInterval": 1
+        },
+        "yAxis": {
+          "title": {
+            "text": "MW"
+          },
+          "tickInterval": 1000
+        },
+        "chart": {
+          "marginLeft": 60
+        },
+        "series": [
+          {
+            "type": "area",
+            "name": "Electricity Market",
+            "data": [
+              1338.885,
+              1365.286,
+              1242.014,
+              1083.965
+            ],
+            "color": "#D9D9D9",
+            "zIndex": 0,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#D9D9D9"
+            }
+          },
+          {
+            "type": "area",
+            "name": "High Pressure Clients",
+            "data": [
+              891.21,
+              904.111,
+              895.861,
+              884.194
+            ],
+            "color": "#1D9379",
+            "zIndex": 1,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#1D9379"
+            }
+          },
+          {
+            "type": "area",
+            "name": "GRMS – Distribution",
+            "data": [
+              1246.432,
+              1267.268,
+              1324.78,
+              1445.345
+            ],
+            "color": "#CFE2F0",
+            "zIndex": 2,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#CFE2F0"
+            }
+          },
+          {
+            "type": "area",
+            "name": "Autonomous Gas Units",
+            "data": [
+              220.142,
+              223.62,
+              228.691,
+              239.903
+            ],
+            "color": "#C6EFE1",
+            "zIndex": 3,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#C6EFE1"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

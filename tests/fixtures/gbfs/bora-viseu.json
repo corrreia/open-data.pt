@@ -1,0 +1,277 @@
+{
+  "discovery": {
+    "last_updated": "2026-09-07T20:50:06.076Z",
+    "ttl": 300,
+    "version": "3.0",
+    "data": {
+      "feeds": [
+        {
+          "name": "system_information",
+          "url": "https://gbfs.primelayer.pt/gbfs-smartmobility/gbfs/v3/system_information.json"
+        },
+        {
+          "name": "vehicle_types",
+          "url": "https://gbfs.primelayer.pt/gbfs-smartmobility/gbfs/v3/vehicle_types.json"
+        },
+        {
+          "name": "station_information",
+          "url": "https://gbfs.primelayer.pt/gbfs-smartmobility/gbfs/v3/station_information.json"
+        },
+        {
+          "name": "station_status",
+          "url": "https://gbfs.primelayer.pt/gbfs-smartmobility/gbfs/v3/station_status.json"
+        },
+        {
+          "name": "vehicle_status",
+          "url": "https://gbfs.primelayer.pt/gbfs-smartmobility/gbfs/v3/vehicle_status.json"
+        }
+      ]
+    }
+  },
+  "system_information": {
+    "last_updated": "2026-09-07T20:50:06.076Z",
+    "ttl": 86400,
+    "version": "3.0",
+    "data": {
+      "system_id": "bora_viseu",
+      "languages": [
+        "en",
+        "pt"
+      ],
+      "name": [
+        {
+          "text": "Bora",
+          "language": "en"
+        },
+        {
+          "text": "Bora",
+          "language": "pt"
+        }
+      ],
+      "short_name": [
+        {
+          "text": "Bora",
+          "language": "en"
+        },
+        {
+          "text": "Bora",
+          "language": "pt"
+        }
+      ],
+      "opening_hours": "24/7",
+      "timezone": "Europe/Lisbon",
+      "feed_contact_email": "info@cimvdl.pt",
+      "url": "https://www.cimvdl.pt/contactos/",
+      "terms_url": [
+        {
+          "text": "https://diariodarepublica.pt/dr/detalhe/regulamento/526-2025-916175938",
+          "language": "pt"
+        }
+      ],
+      "terms_last_updated": "2025-10-09",
+      "privacy_url": [
+        {
+          "text": "https://bikesharing.soltrafego.pt/files/029/privacidade.pdf",
+          "language": "pt"
+        }
+      ],
+      "privacy_last_updated": "2025-10-09"
+    }
+  },
+  "vehicle_types": {
+    "last_updated": "2026-09-07T20:50:06.076Z",
+    "ttl": 86400,
+    "version": "3.0",
+    "data": {
+      "vehicle_types": [
+        {
+          "vehicle_type_id": "bora_bike",
+          "form_factor": "bicycle",
+          "propulsion_type": "electric_assist",
+          "name": "Bora Electric Bike",
+          "wheel_count": 2,
+          "max_range_meters": 50000,
+          "default_reserve_time": 0,
+          "return_type": "roundtrip"
+        }
+      ]
+    }
+  },
+  "station_information": {
+    "last_updated": "2026-09-07T20:50:06.076Z",
+    "ttl": 3600,
+    "version": "3.0",
+    "data": {
+      "stations": [
+        {
+          "station_id": "378",
+          "name": [
+            {
+              "text": "Aguiar Beira - Esc. Padre J. Fonseca",
+              "language": "en"
+            },
+            {
+              "text": "Aguiar Beira - Esc. Padre J. Fonseca",
+              "language": "pt"
+            }
+          ],
+          "short_name": [
+            {
+              "text": "0029-P01",
+              "language": "en"
+            },
+            {
+              "text": "0029-P01",
+              "language": "pt"
+            }
+          ],
+          "lat": 40.8221,
+          "lon": -7.54,
+          "address": "Rua Frei Joaquim Santa Viterbo",
+          "capacity": 5
+        },
+        {
+          "station_id": "379",
+          "name": [
+            {
+              "text": "Aguiar Beira - Compl. D. Municipal",
+              "language": "en"
+            },
+            {
+              "text": "Aguiar Beira - Compl. D. Municipal",
+              "language": "pt"
+            }
+          ],
+          "short_name": [
+            {
+              "text": "0029-P02",
+              "language": "en"
+            },
+            {
+              "text": "0029-P02",
+              "language": "pt"
+            }
+          ],
+          "lat": 40.8146,
+          "lon": -7.53482,
+          "address": "Avenida Europa ",
+          "capacity": 5
+        },
+        {
+          "station_id": "380",
+          "name": [
+            {
+              "text": "Carregal do Sal - Albergaria",
+              "language": "en"
+            },
+            {
+              "text": "Carregal do Sal - Albergaria",
+              "language": "pt"
+            }
+          ],
+          "short_name": [
+            {
+              "text": "0029-P03",
+              "language": "en"
+            },
+            {
+              "text": "0029-P03",
+              "language": "pt"
+            }
+          ],
+          "lat": 40.4369,
+          "lon": -7.98678,
+          "address": "Arruamento Urbano Sul Vila  (oeste)",
+          "capacity": 5
+        }
+      ]
+    }
+  },
+  "station_status": {
+    "last_updated": "2026-09-07T20:50:06.076Z",
+    "ttl": 0,
+    "version": "3.0",
+    "data": {
+      "stations": [
+        {
+          "station_id": "378",
+          "num_vehicles_available": 4,
+          "num_docks_available": 1,
+          "num_vehicles_disabled": 0,
+          "num_docks_disabled": 0,
+          "is_installed": true,
+          "is_renting": true,
+          "is_returning": true,
+          "last_reported": "2026-09-07T20:49:38.000Z"
+        },
+        {
+          "station_id": "379",
+          "num_vehicles_available": 3,
+          "num_docks_available": 2,
+          "num_vehicles_disabled": 0,
+          "num_docks_disabled": 0,
+          "is_installed": true,
+          "is_renting": true,
+          "is_returning": true,
+          "last_reported": "2026-09-07T20:49:40.000Z"
+        },
+        {
+          "station_id": "380",
+          "num_vehicles_available": 3,
+          "num_docks_available": 2,
+          "num_vehicles_disabled": 0,
+          "num_docks_disabled": 0,
+          "is_installed": true,
+          "is_renting": true,
+          "is_returning": true,
+          "last_reported": "2026-09-07T20:49:40.000Z"
+        }
+      ]
+    }
+  },
+  "free_bike_status": {
+    "last_updated": "2026-09-07T20:50:06.076Z",
+    "ttl": 0,
+    "version": "3.0",
+    "data": {
+      "vehicles": [
+        {
+          "vehicle_id": "bike_190481_1788814206077",
+          "lat": 40.5344,
+          "lon": -7.86415,
+          "is_reserved": false,
+          "is_disabled": false,
+          "vehicle_type_id": "bora_bike",
+          "last_reported": "2026-09-07T20:50:06.076Z"
+        },
+        {
+          "vehicle_id": "bike_190488_1788814206077",
+          "lat": 40.4305,
+          "lon": -7.99792,
+          "is_reserved": false,
+          "is_disabled": false,
+          "vehicle_type_id": "bora_bike",
+          "last_reported": "2026-09-07T20:50:06.076Z"
+        },
+        {
+          "vehicle_id": "bike_190489_1788814206077",
+          "lat": 40.6793,
+          "lon": -7.69608,
+          "is_reserved": false,
+          "is_disabled": false,
+          "vehicle_type_id": "bora_bike",
+          "last_reported": "2026-09-07T20:50:06.076Z"
+        },
+        {
+          "vehicle_id": "bike_190490_1788814206077",
+          "lat": 40.4305,
+          "lon": -7.99796,
+          "is_reserved": false,
+          "is_disabled": false,
+          "vehicle_type_id": "bora_bike",
+          "last_reported": "2026-09-07T20:50:06.076Z"
+        }
+      ]
+    }
+  }
+}

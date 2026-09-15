@@ -1,0 +1,126 @@
+{
+  "meta": [
+    {
+      "IndicadorCod": "0012094",
+      "IndicadorNome": "Nados-vivos (N.º) por Local de residência da mãe (NUTS - 2024) e Sexo; Mensal - INE, Nados-vivos",
+      "Periodic": "Mensal",
+      "UnidadeMedida": "Número (N.º)",
+      "DataUltimaAtualizacao": "2026-08-14",
+      "Dimensoes": {
+        "Descricao_Dim": [
+          {
+            "dim_num": "1",
+            "abrv": "Período de referência dos dados (Mês)",
+            "versao": "XXXXX",
+            "nota_dsg": "Dados preliminares apurados com base em informação registada nas Conservatórias do Registo Civil até 7 de agosto de 2026."
+          },
+          {
+            "dim_num": "2",
+            "abrv": "Local de residência da mãe (NUTS - 2024)",
+            "versao": "05398"
+          },
+          {
+            "dim_num": "3",
+            "abrv": "Sexo",
+            "versao": "00305"
+          }
+        ],
+        "Categoria_Dim": [
+          {
+            "period": [
+              {
+                "dim_num": "1",
+                "cat_id": "S3A202601",
+                "categ_cod": "S3A202601",
+                "categ_dsg": "Janeiro de 2026",
+                "categ_ord": "20260101",
+                "categ_nivel": "1"
+              },
+              {
+                "dim_num": "1",
+                "cat_id": "S3A202606",
+                "categ_cod": "S3A202606",
+                "categ_dsg": "Junho de 2026",
+                "categ_ord": "20260601",
+                "categ_nivel": "1"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "data": [
+    {
+      "IndicadorCod": "0012094",
+      "IndicadorDsg": "Nados-vivos (N.º) por Local de residência da mãe (NUTS - 2024) e Sexo; Mensal - INE, Nados-vivos",
+      "DataUltimoAtualizacao": "2026-08-14",
+      "Dados": {
+        "Janeiro de 2026": [
+          {
+            "geocod": "0",
+            "geodsg": "Estrangeiro",
+            "dim_3": "T",
+            "dim_3_t": "HM",
+            "sinal_conv": "//",
+            "sinal_conv_desc": "Dado preliminar",
+            "ind_string": "10 //",
+            "valor": "10"
+          },
+          {
+            "geocod": "00",
+            "geodsg": "Estrangeiro",
+            "dim_3": "T",
+            "dim_3_t": "HM",
+            "sinal_conv": "//",
+            "sinal_conv_desc": "Dado preliminar",
+            "ind_string": "10 //",
+            "valor": "10"
+          },
+          {
+            "geocod": "000",
+            "geodsg": "Estrangeiro",
+            "dim_3": "T",
+            "dim_3_t": "HM",
+            "sinal_conv": "//",
+            "sinal_conv_desc": "Dado preliminar",
+            "ind_string": "10 //",
+            "valor": "10"
+          }
+        ],
+        "Junho de 2026": [
+          {
+            "geocod": "0",
+            "geodsg": "Estrangeiro",
+            "dim_3": "T",
+            "dim_3_t": "HM",
+            "sinal_conv": "//",
+            "sinal_conv_desc": "Dado preliminar",
+            "ind_string": "22 //",
+            "valor": "22"
+          },
+          {
+            "geocod": "00",
+            "geodsg": "Estrangeiro",
+            "dim_3": "T",
+            "dim_3_t": "HM",
+            "sinal_conv": "//",
+            "sinal_conv_desc": "Dado preliminar",
+            "ind_string": "22 //",
+            "valor": "22"
+          },
+          {
+            "geocod": "000",
+            "geodsg": "Estrangeiro",
+            "dim_3": "T",
+            "dim_3_t": "HM",
+            "sinal_conv": "//",
+            "sinal_conv_desc": "Dado preliminar",
+            "ind_string": "22 //",
+            "valor": "22"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "fuelType": {
+    "Descritivo": "Gasolina simples 95",
+    "UnidadeMedida": "litro",
+    "fl_ViewWebSite": true,
+    "fl_rodoviario": true,
+    "fl_ativo": true,
+    "BackGroundColor": null,
+    "Id": 3201
+  },
+  "district": {
+    "Descritivo": "Lisboa",
+    "Id": 11
+  },
+  "fetchedPages": 1,
+  "stations": [
+    {
+      "Id": 66364,
+      "Nome": "PA Casal Aranha",
+      "TipoPosto": "Outro",
+      "Municipio": "Torres Vedras",
+      "Preco": "1,889 €",
+      "Marca": "PRIO",
+      "Combustivel": "Gasolina simples 95",
+      "DataAtualizacao": "2026-09-01 08:35",
+      "Distrito": "Lisboa",
+      "Morada": "Rua Dr. Manuel Pacheco Nobre, 7",
+      "Localidade": "Azenha Velha",
+      "CodPostal": "2560-192",
+      "Latitude": 39.08039,
+      "Longitude": -9.37184,
+      "Quantidade": 390
+    },
+    {
+      "Id": 95147,
+      "Nome": "PETROPRIX Loures 1 - Frielas",
+      "TipoPosto": "Outro",
+      "Municipio": "Loures",
+      "Preco": "1,899 €",
+      "Marca": "PETROPRIX ",
+      "Combustivel": "Gasolina simples 95",
+      "DataAtualizacao": "2026-09-01 11:15",
+      "Distrito": "Lisboa",
+      "Morada": "EN 250 AO KM 29,230, LADO ESQUERDO",
+      "Localidade": "Frielas",
+      "CodPostal": "2660-001",
+      "Latitude": 38.823288,
+      "Longitude": -9.145805,
+      "Quantidade": 390
+    },
+    {
+      "Id": 94923,
+      "Nome": "PLENERGY - LOURES I ",
+      "TipoPosto": "Outro",
+      "Municipio": "Loures",
+      "Preco": "1,899 €",
+      "Marca": "PLENERGY",
+      "Combustivel": "Gasolina simples 95",
+      "DataAtualizacao": "2026-09-07 10:00",
+      "Distrito": "Lisboa",
+      "Morada": "Rua 28 de Setembro / E.N.250 ao km 29,120 (lado esquerdo)",
+      "Localidade": "Frielas",
+      "CodPostal": "2660-018",
+      "Latitude": 38.82265,
+      "Longitude": -9.146076,
+      "Quantidade": 390
+    },
+    {
+      "Id": 94864,
+      "Nome": "PETROPRIX Castanheira - Vila Franca de Xira",
+      "TipoPosto": "Outro",
+      "Municipio": "Vila Franca de Xira",
+      "Preco": "1,919 €",
+      "Marca": "PETROPRIX ",
+      "Combustivel": "Gasolina simples 95",
+      "DataAtualizacao": "2026-08-31 23:25",
+      "Distrito": "Lisboa",
+      "Morada": "Rua do Carril - Casal do Machado, Lote 1",
+      "Localidade": "Castanheira do Ribatejo",
+      "CodPostal": "2600-661",
+      "Latitude": 39.00038,
+      "Longitude": -8.970995,
+      "Quantidade": 390
+    },
+    {
+      "Id": 93159,
+      "Nome": "Transforpel Combustíveis Chão de Sapo",
+      "TipoPosto": "Outro",
+      "Municipio": "Cadaval",
+      "Preco": "1,939 €",
+      "Marca": "TRANSFORPEL",
+      "Combustivel": "Gasolina simples 95",
+      "DataAtualizacao": "2026-09-04 20:05",
+      "Distrito": "Lisboa",
+      "Morada": "Rua 25 de Abril",
+      "Localidade": "Chão de Sapo",
+      "CodPostal": "2550-362",
+      "Latitude": 39.223868,
+      "Longitude": -9.076041,
+      "Quantidade": 390
+    }
+  ]
+}

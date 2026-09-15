@@ -1,0 +1,20 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "open-data-pt-gatekeeper-energy",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-09",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "vars": {
+    "REN_API_ORIGIN": "https://datahub.ren.pt",
+    "OMIE_API_ORIGIN": "https://www.omie.es",
+    "DGEG_API_ORIGIN": "https://precoscombustiveis.dgeg.gov.pt",
+    "OPENDATASOFT_ALLOWED_HOSTS": "e-redes.opendatasoft.com,transparencia.sns.gov.pt"
+  },
+  "observability": {
+    "enabled": true,
+    // The kernel records every acquisition's outcome; a tenth of invocations is enough to debug.
+    "head_sampling_rate": 0.1
+  }
+}

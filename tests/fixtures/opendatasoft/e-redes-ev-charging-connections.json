@@ -1,0 +1,169 @@
+{
+  "dataset": {
+    "dataset_id": "postos_carregamento_ves",
+    "fields": [
+      {
+        "name": "trimestre",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "facetsort": "-count"
+        },
+        "label": "Quarter",
+        "type": "text",
+        "label_en": "Quarter",
+        "label_pt": "Trimestre",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "distrito",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "District",
+        "type": "text",
+        "label_en": "District",
+        "label_pt": "Distrito",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "concelho",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "Municipality",
+        "type": "text",
+        "label_en": "Municipality",
+        "label_pt": "Concelho",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "freguesia",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "Parish",
+        "type": "text",
+        "label_en": "Parish",
+        "label_pt": "Freguesia",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "potencia_maxima_admissivel",
+        "description": null,
+        "annotations": {
+          "unit": "kW"
+        },
+        "label": "Maximum Admissible Power (kW)",
+        "type": "double",
+        "label_en": "Maximum Admissible Power (kW)",
+        "label_pt": "Potência Máxima Admissível (kW)",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "num_instalacoes",
+        "description": null,
+        "annotations": {},
+        "label": "Connection points for electric vehicles charging stations",
+        "type": "int",
+        "label_en": "Connection points for electric vehicles charging stations",
+        "label_pt": "Pontos de ligação para instalações de PCVE",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "coddistrito",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "DistrictCode",
+        "type": "text",
+        "label_en": "DistrictCode",
+        "label_pt": "CodDistrito",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "coddistritoconcelho",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "DistrictMunicipalityCode",
+        "type": "text",
+        "label_en": "DistrictMunicipalityCode",
+        "label_pt": "CodDistritoConcelho",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "coddistritoconcelhofreguesia",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "DistrictMunicipalityParishCode",
+        "type": "text",
+        "label_en": "DistrictMunicipalityParishCode",
+        "label_pt": "CodDistritoConcelhoFreguesia",
+        "description_en": null,
+        "description_pt": null
+      }
+    ],
+    "metas": {
+      "default": {
+        "title": " Connection points for Electric Vehicle Charging Stations",
+        "description": "<p>Location by region of connection points for Electric Vehicle Charging Stations. Information on the number of connection points for charging stations and maximum admissible connection power.</p><p><br></p><p>1. The information made available by E-REDES constitutes an approximation to the values taken from the system and is based on the moment in which it is collected. Given that the connection points, the electricity distribution network, and the consumption and production values themselves are naturally very dynamic, it is safeguarded that the information made available may be subject to subsequent changes and updates, with the exception of any omissions and/or occasional inaccuracies of location that the information may contain.<br></p><p>2. In this way, E-REDES is not liable to third parties, namely, partners, service providers, contractors, users and customers, for damages that may arise as a result, direct or indirect, of the use of this Information, in particular when carrying out interventions, calculations and/or estimates, without confirming the accuracy and updating of the data, whereby it is duly noted that the consultation of this information does not affect the duty to promote a direct consultation with E-REDES in order to obtain updated information.</p><p><br></p><p><span style=\"font-size: inherit;\">The data provided by the E-REDES Open Data Portal is covered by open licenses (CC BY 4.0). There are no restrictions on access, under the commitment that data users cite the publisher. Therefore, we suggest that you cite the Open Data E-REDES Portal as:</span></p><p><span style=\"font-size: inherit;\">E-REDES – Distribuição de Eletricidade, “E-REDES Open Data Portal”. Accessed in “Data”. [Online] Available at </span><a aria-label=\"Link https://e-redes.opendatasoft.com/pages/homepage/\" class=\"fui-Link ___1rxvrpe f2hkw1w f3rmtva f1ewtqcl fyind8e f1k6fduh f1w7gpdv fk6fouc fjoy568 figsok6 f1hu3pq6 f11qmguv f19f4twv f1tyq0we f1g0x7ka fhxju0i f1qch9an f1cnd47f fqv5qza f1vmzxwi f1o700av f13mvf36 f1cmlufx f9n3di6 f1ids18y f1tx3yz7 f1deo86v f1eh06m1 f1iescvh fhgqx19 f1olyrje f1p93eir f1nev41a f1h8hb77 f1lqvz6u f10aw75t fsle3fq f17ae5zn\" href=\"https://e-redes.opendatasoft.com/pages/homepage/\" rel=\"noreferrer noopener\" target=\"_blank\" title=\"https://e-redes.opendatasoft.com/pages/homepage/\"><span style=\"font-size: inherit;\">https://e-redes.opendatasoft.com/pages/homepage/</span></a></p><p class=\"MsoNormal\" style=\"margin-bottom: 0cm; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span lang=\"EN-US\" style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\"><o:p><span class=\"ui-provider a b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak\" dir=\"ltr\"></span></o:p></span></p><p class=\"\"><span style=\"font-size: inherit;\">If you share on social media, please add #PortalOpenData_E_REDES</span></p><p><span style=\"font-size: inherit;\"><br></span></p>",
+        "publisher": "E-REDES",
+        "license": "CC BY 4.0",
+        "modified": "2026-09-03T12:37:53+00:00",
+        "data_processed": "2026-08-06T07:04:39+00:00",
+        "records_count": 57324
+      }
+    }
+  },
+  "records": [
+    {
+      "trimestre": "2026T2",
+      "distrito": "Aveiro",
+      "concelho": "Águeda",
+      "freguesia": "Aguada de Cima",
+      "potencia_maxima_admissivel": 17.25,
+      "num_instalacoes": 1,
+      "coddistrito": "01",
+      "coddistritoconcelho": "0101",
+      "coddistritoconcelhofreguesia": "010103"
+    },
+    {
+      "trimestre": "2026T2",
+      "distrito": "Aveiro",
+      "concelho": "Águeda",
+      "freguesia": "Aguada de Cima",
+      "potencia_maxima_admissivel": 41.4,
+      "num_instalacoes": 1,
+      "coddistrito": "01",
+      "coddistritoconcelho": "0101",
+      "coddistritoconcelhofreguesia": "010103"
+    },
+    {
+      "trimestre": "2026T2",
+      "distrito": "Aveiro",
+      "concelho": "Águeda",
+      "freguesia": "Aguada de Cima",
+      "potencia_maxima_admissivel": 92.0,
+      "num_instalacoes": 1,
+      "coddistrito": "01",
+      "coddistritoconcelho": "0101",
+      "coddistritoconcelhofreguesia": "010103"
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "dataset": {
+    "dataset_id": "evolucao-da-dispensa-de-medicamentos",
+    "fields": [
+      {
+        "name": "tempo",
+        "description": null,
+        "annotations": {
+          "timeserie_precision": "month",
+          "facet": true,
+          "timerangeFilter": true,
+          "facetsort": "-alphanum"
+        },
+        "label": "Período",
+        "type": "date",
+        "label_pt": "Período",
+        "label_en": "Período",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "regiao_de_saude",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "sortable": true,
+          "facetsort": "alphanum",
+          "disjunctive": true
+        },
+        "label": "Região",
+        "type": "text",
+        "label_pt": "Região",
+        "label_en": "Região",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "no_de_receitas_eletronicas_dispensadas",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Nº Receitas Eletrónicas Dispensadas",
+        "type": "int",
+        "label_pt": "Nº Receitas Eletrónicas Dispensadas",
+        "label_en": "Nº Receitas Eletrónicas Dispensadas",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "no_de_receitas_manuais_dispensadas",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Nº Receitas Manuais Dispensadas",
+        "type": "int",
+        "label_pt": "Nº Receitas Manuais Dispensadas",
+        "label_en": "Nº Receitas Manuais Dispensadas",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "valor_comparticipado_pelo_sns",
+        "description": null,
+        "annotations": {
+          "unit": "€"
+        },
+        "label": "Valor Comparticipado pelo SNS",
+        "type": "double",
+        "label_pt": "Valor Comparticipado pelo SNS",
+        "label_en": "Valor Comparticipado pelo SNS",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "metas": {
+      "default": {
+        "title": "Dispensa de Medicamentos",
+        "description": "<p>Monitorizar mensalmente o volume de prescrições de medicamentos dispensadas.</p><p>Devido à necessidade de consolidação, os dados disponibilizados mensalmente respeitam ao período temporal n-3.</p><p><strong>Observações: </strong></p><ul><li>Métricas calculadas com base na Administração Regional de Saúde (ARS) de faturação.  A métrica \"Valor Comparticipado pelo SNS\" para a Região de Saúde do Algarve só apresenta registos a partir de  novembro 2015. Devido a questões técnicas, para os registos de novembro 2016, os dados não incluem registos da Região de Saúde LVT. </li><li><p class=\"MsoNormal\"><span lang=\"PT\">Os dados\nrelativos a este indicador são de caráter temporário para o mês publicado mais\nrecente. Por regra, no último dia do mês N+1 (N=\"último mês\npublicado\"), existirá uma atualização dos mesmos, sendo provável o seu\naumento a nível nacional.</span></p><p class=\"MsoNormal\"><br></p></li></ul>",
+        "publisher": "ACSS",
+        "license": null,
+        "modified": "2026-09-01T16:26:13.498000+00:00",
+        "data_processed": "2026-08-14T16:10:48.677000+00:00",
+        "records_count": 687
+      }
+    }
+  },
+  "records": [
+    {
+      "tempo": "2026-06",
+      "regiao_de_saude": "Alentejo",
+      "no_de_receitas_eletronicas_dispensadas": 421089,
+      "no_de_receitas_manuais_dispensadas": 6207,
+      "valor_comparticipado_pelo_sns": 8777281.89
+    },
+    {
+      "tempo": "2026-06",
+      "regiao_de_saude": "Algarve",
+      "no_de_receitas_eletronicas_dispensadas": 331591,
+      "no_de_receitas_manuais_dispensadas": 7298,
+      "valor_comparticipado_pelo_sns": 7226236.46
+    },
+    {
+      "tempo": "2026-06",
+      "regiao_de_saude": "Centro",
+      "no_de_receitas_eletronicas_dispensadas": 1601176,
+      "no_de_receitas_manuais_dispensadas": 20614,
+      "valor_comparticipado_pelo_sns": 35475666.73
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+﻿Nome,Tipo,Ordenacao,Morada,CodigoPostal,Telefone,FAX,Email,Posicao_Lat,Posicao_Lng,DadosAtividade
+"Supremo Tribunal de Justiça","1","1","Praça do Comércio","1149-012 Lisboa","213218900","213474919","correio@lisboa.stj.pt","38.708537","-9.136274",""
+"T.Jud. Comarca Açores - Praia da Vitória - Juízo Local Cível","1","1","Palácio da Justiça - Largo do Conde da Praia da Vitória","9760-438 Praia da Vitória","295540360","295093519","praiav.judicial@tribunais.org.pt","38.7286521206653","-27.06632137298584",""
+"T.Jud. Comarca Açores - Praia da Vitória - Juízo Local Criminal","1","2","Palácio da Justiça - Largo do Conde da Praia da Vitória","9760-438 Praia da Vitória","295540360","295093519","praiav.judicial@tribunais.org.pt","38.7286521206653","-27.06632137298584",""

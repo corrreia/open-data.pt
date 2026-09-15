@@ -1,0 +1,89 @@
+{
+  "forecasts": [
+    {
+      "dataPrev": "2026-09-07",
+      "dataRun": "2026-09-06",
+      "fileDate": "2026-09-07 09:35:01",
+      "local": {
+        "0105": {
+          "data": {
+            "rcm": 1
+          },
+          "dico": "0105",
+          "latitude": 40.6413,
+          "longitude": -8.6535
+        },
+        "0101": {
+          "data": {
+            "rcm": 2
+          },
+          "dico": "0101",
+          "latitude": 40.58,
+          "longitude": -8.44
+        }
+      }
+    },
+    {
+      "dataPrev": "2026-09-08",
+      "dataRun": "2026-09-06",
+      "fileDate": "2026-09-07 09:35:02",
+      "local": {
+        "0105": {
+          "data": {
+            "rcm": 1
+          },
+          "dico": "0105",
+          "latitude": 40.6413,
+          "longitude": -8.6535
+        },
+        "0101": {
+          "data": {
+            "rcm": 2
+          },
+          "dico": "0101",
+          "latitude": 40.58,
+          "longitude": -8.44
+        }
+      }
+    },
+    {
+      "dataPrev": "2026-09-09",
+      "dataRun": "2026-09-06",
+      "fileDate": "2026-09-07 09:35:02",
+      "local": {
+        "0105": {
+          "data": {
+            "rcm": 1
+          },
+          "dico": "0105",
+          "latitude": 40.6413,
+          "longitude": -8.6535
+        },
+        "0101": {
+          "data": {
+            "rcm": 1
+          },
+          "dico": "0101",
+          "latitude": 40.58,
+          "longitude": -8.44
+        }
+      }
+    }
+  ],
+  "municipalities": {
+    "owner": "IPMA",
+    "country": "PT",
+    "data": [
+      {
+        "idRegiao": 1,
+        "idAreaAviso": "AVR",
+        "idConcelho": 5,
+        "globalIdLocal": 1010500,
+        "latitude": "40.6413",
+        "idDistrito": 1,
+        "local": "Aveiro",
+        "longitude": "-8.6535"
+      }
+    ]
+  }
+}

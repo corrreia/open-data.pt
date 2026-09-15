@@ -1,0 +1,28 @@
+import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../index";
+import { REN_FEEDS, collectRenFeed, collectRenHistory, validateRenFeedConfig } from "./ren";
+import { RenTransformer } from "./transform";
+
+/** What a Worker hands this library: the feed's configuration, its API origin, and the fetch it may use. */
+export interface RenCollectorOptions {
+  config: SourceConfig;
+  /** `REN_API_ORIGIN`. */
+  apiOrigin: string;
+  fetcher: typeof fetch;
+}
+
+const transformer = new RenTransformer();
+
+export function resolveRenFeed(config: SourceConfig): Promise<ResolvedFeed> {
+  return resolveFeed(config, { gatekeeperKind: "ren", kinds: REN_FEEDS, validate: validateRenFeedConfig });
+}
+
+export function renCollector(options: RenCollectorOptions): NormalizedCollector {
+  return {
+    normalizer: { id: transformer.id, version: transformer.version },
+    resolve: (value) => resolveRenFeed(value),
+    source: (state, mode, signal) => mode.kind === "history"
+      ? collectRenHistory(options.config, mode.cursor, options.apiOrigin, (input, init) => options.fetcher(input, { ...init, signal }))
+      : collectRenFeed(options.config, sourceValidator(state), options.apiOrigin, (input, init) => options.fetcher(input, { ...init, signal })),
+    normalize: { kind: "buffered", transform: (bytes, context) => runTransformer(transformer, bytes, context) },
+  };
+}

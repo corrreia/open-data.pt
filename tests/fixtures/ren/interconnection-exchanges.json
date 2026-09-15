@@ -1,0 +1,80 @@
+{
+  "service": "interconnection-exchanges",
+  "days": [
+    {
+      "day": "2026-09-06",
+      "response": {
+        "xAxis": {
+          "title": {
+            "text": "Hour"
+          },
+          "max": 97,
+          "categories": [
+            "00:00",
+            "00:15",
+            "00:30",
+            "00:45"
+          ],
+          "export": [
+            "00:00",
+            "00:15",
+            "00:30",
+            "00:45"
+          ],
+          "tickInterval": 4
+        },
+        "yAxis": {
+          "title": {
+            "text": "MW"
+          },
+          "min": null
+        },
+        "chart": {
+          "marginLeft": 60
+        },
+        "series": [
+          {
+            "type": "area",
+            "name": "Imports",
+            "data": [
+              2077.6,
+              2004,
+              2005.2,
+              2080.8
+            ],
+            "color": "#FDBF35",
+            "zIndex": 1,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#FDBF35"
+            }
+          },
+          {
+            "type": "area",
+            "name": "Exports",
+            "data": [
+              null,
+              null,
+              null,
+              null
+            ],
+            "color": "#F98D2D",
+            "zIndex": 1,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#F98D2D"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

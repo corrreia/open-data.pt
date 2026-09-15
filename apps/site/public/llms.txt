@@ -1,0 +1,59 @@
+# open-data.pt
+
+> Free, keyless JSON API over normalized Portuguese public data. Original source responses are not retained. Every product carries the licence and attribution of the institution that published it.
+
+Base URL: https://open-data.pt
+Contract: https://open-data.pt/openapi.json (OpenAPI 3.1)
+MCP server: https://open-data.pt/mcp (Streamable HTTP, no key). Built with Cloudflare Code Mode: the `search` tool runs your JavaScript against the OpenAPI document, `execute` runs it against the API through `codemode.request()`.
+Human guide: https://open-data.pt/start/
+Catalog for people: https://open-data.pt/
+Catalog: https://open-data.pt/catalog/ · Publishers: https://open-data.pt/publisher/
+Status and downtime: https://open-data.pt/status/ · Every run: https://open-data.pt/operations/
+Discovery: https://open-data.pt/.well-known/ai-catalog.json (MCP server card, OpenAPI, agent skill, DCAT) · https://open-data.pt/.well-known/api-catalog · https://open-data.pt/sitemap.xml
+Pages as Markdown: send `Accept: text/markdown` to any page above.
+Source code: https://github.com/corrreia/open-data.pt · Contribute: https://open-data.pt/contribute/
+
+## What is here
+
+Products from Portuguese public institutions and operators: energy, mobility, weather and environment, health, economy and statistics, cities, culture and society. `GET /api/products` lists every public product; `GET /api/feeds` lists sources with their publisher and topics.
+
+A product is one table. Its `role` says how it changes:
+- reference: complete slow-changing set
+- current-state: latest state of each entity
+- event-log: events with ordered corrections and retractions
+- time-series: numeric points keyed by seriesKey and eventTime
+- summary: small aggregate derived from a sibling product
+
+## How to use it
+
+1. GET /api/products — list products with slug, role, schema, rowCount, watermark, stale, and updatedAt.
+2. GET /api/products/{slug} — one product's metadata.
+3. GET /api/products/{slug}/records?limit=500 — current rows. Follow `nextCursor`, or take every row at once from /api/products/{slug}/records/all.
+4. GET /api/products/{slug}/series?limit=1000 — the bounded current series window.
+5. GET /api/products/{slug}/events?from=<ISO>&to=<ISO>&limit=200 — applicable event revisions in a bounded UTC interval. Optional: knownAt, cursor.
+6. GET /api/products/{slug}/changes/range?from=<ISO>&to=<ISO>&limit=200 — durable changes in a bounded knowledge-time interval. Optional: cursor.
+7. GET /api/products/{slug}/series/range?from=<ISO>&to=<ISO>&limit=1000 — deduplicated historical points. Optional: seriesKey, cursor.
+8. GET /api/products/{slug}/changes?limit=500 — bounded recent record changes.
+9. GET /api/products/{slug}/series/changes?limit=500 — bounded recent series corrections.
+10. GET /api/products/{slug}.geojson — current geospatial records as GeoJSON.
+11. GET /api/catalog.dcat.json — DCAT 3 JSON-LD.
+12. GET /api/feeds, /api/acquisitions (optional feedId, day=YYYY-MM-DD), /api/outages?days=90 — where each source comes from, its collection runs, and when it was unavailable.
+
+Historical range responses include freshness and coverage information. Follow the opaque `nextCursor`; do not manufacture or edit cursors. Ranges may not exceed 366 days. There is no public arbitrary-SQL endpoint.
+
+Responses are JSON with CORS enabled. Errors are application/problem+json with `status` and `detail`.
+
+## Rules
+
+- Responses are cached at the edge for 10 to 300 seconds, and history windows that ended over an hour ago for a day. Refresh on demand or at the product's cadence; do not poll continuously.
+- The API is read-only and needs no key: every method other than GET, HEAD and OPTIONS answers 405. Feeds install and collect themselves.
+- Requests are rate limited per client (tighter for history windows and GeoJSON). A 429 carries Retry-After; wait that long. Unknown query parameters answer 400.
+- Attribute the publisher named in product metadata, not open-data.pt.
+- Times are ISO 8601 UTC. Each current record carries a `_time` object: event, validity, source-publication and observation times when available.
+- Coverage may be incomplete. Check the `coverage` object instead of inferring completeness from returned rows or a serving watermark.
+
+## Example
+
+curl https://open-data.pt/api/products
+curl "https://open-data.pt/api/products/{slug}/series/range?from=2026-01-01T00%3A00%3A00Z&to=2027-01-01T00%3A00%3A00Z&limit=500"
+curl "https://open-data.pt/api/products/{slug}/events?from=2026-01-01T00%3A00%3A00Z&to=2027-01-01T00%3A00%3A00Z&limit=200"

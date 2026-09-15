@@ -1,0 +1,132 @@
+{
+  "forecasts": [
+    {
+      "owner": "IPMA",
+      "country": "PT",
+      "forecastDate": "2026-09-07",
+      "data": [
+        {
+          "wavePeriodMin": "5.4",
+          "globalIdLocal": 1060526,
+          "totalSeaMax": 2.0,
+          "waveHighMax": "1.7",
+          "waveHighMin": "1.4",
+          "longitude": "-8.8783",
+          "wavePeriodMax": "6.3",
+          "latitude": "40.1417",
+          "totalSeaMin": 1.5,
+          "sstMax": "20.0",
+          "predWaveDir": "NW",
+          "sstMin": "19.8"
+        },
+        {
+          "wavePeriodMin": "3.6",
+          "globalIdLocal": 1080526,
+          "totalSeaMax": 0.5,
+          "waveHighMax": "0.6",
+          "waveHighMin": "0.5",
+          "longitude": "-8.0000",
+          "wavePeriodMax": "5.0",
+          "latitude": "37.1933",
+          "totalSeaMin": 0.5,
+          "sstMax": "20.8",
+          "predWaveDir": "SW",
+          "sstMin": "20.1"
+        }
+      ],
+      "dataUpdate": "2026-09-07T20:31:01"
+    },
+    {
+      "owner": "IPMA",
+      "country": "PT",
+      "forecastDate": "2026-09-08",
+      "data": [
+        {
+          "wavePeriodMin": "5.3",
+          "globalIdLocal": 1060526,
+          "totalSeaMax": 1.5,
+          "waveHighMax": "1.4",
+          "waveHighMin": "1.0",
+          "longitude": "-8.8783",
+          "wavePeriodMax": "6.1",
+          "latitude": "40.1417",
+          "totalSeaMin": 1.0,
+          "sstMax": "20.0",
+          "predWaveDir": "NW",
+          "sstMin": "19.7"
+        },
+        {
+          "wavePeriodMin": "2.6",
+          "globalIdLocal": 1080526,
+          "totalSeaMax": 0.5,
+          "waveHighMax": "0.5",
+          "waveHighMin": "0.3",
+          "longitude": "-8.0000",
+          "wavePeriodMax": "4.5",
+          "latitude": "37.1933",
+          "totalSeaMin": 0.5,
+          "sstMax": "20.5",
+          "predWaveDir": "W",
+          "sstMin": "19.8"
+        }
+      ],
+      "dataUpdate": "2026-09-07T20:31:01"
+    },
+    {
+      "owner": "IPMA",
+      "country": "PT",
+      "forecastDate": "2026-09-09",
+      "data": [
+        {
+          "wavePeriodMin": "4.3",
+          "globalIdLocal": 1060526,
+          "totalSeaMax": 2.0,
+          "waveHighMax": "1.8",
+          "waveHighMin": "1.0",
+          "longitude": "-8.8783",
+          "wavePeriodMax": "5.2",
+          "latitude": "40.1417",
+          "totalSeaMin": 1.0,
+          "sstMax": "19.9",
+          "predWaveDir": "N",
+          "sstMin": "19.1"
+        },
+        {
+          "wavePeriodMin": "2.2",
+          "globalIdLocal": 1080526,
+          "totalSeaMax": 1.0,
+          "waveHighMax": "0.5",
+          "waveHighMin": "0.1",
+          "longitude": "-8.0000",
+          "wavePeriodMax": "3.0",
+          "latitude": "37.1933",
+          "totalSeaMin": 0.5,
+          "sstMax": "19.7",
+          "predWaveDir": "W",
+          "sstMin": "18.7"
+        }
+      ],
+      "dataUpdate": "2026-09-07T20:31:01"
+    }
+  ],
+  "locations": [
+    {
+      "idRegiao": 1,
+      "idAreaAviso": "CBR",
+      "globalIdLocal": 1060526,
+      "idLocal": 302,
+      "latitude": "40.1417",
+      "local": "Figueira da Foz, Costa",
+      "longitude": "-8.8783"
+    },
+    {
+      "idRegiao": 1,
+      "idAreaAviso": "FAR",
+      "globalIdLocal": 1080526,
+      "idLocal": 306,
+      "latitude": "37.0017",
+      "local": "Faro, costa",
+      "longitude": "-8.0"
+    }
+  ]
+}

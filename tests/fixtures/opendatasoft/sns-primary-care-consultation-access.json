@@ -1,0 +1,174 @@
+{
+  "dataset": {
+    "dataset_id": "acesso-de-consultas-medicas-pela-populacao-inscrita",
+    "fields": [
+      {
+        "name": "tempo",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "timeserie_precision": "month",
+          "facetsort": "-alphanum",
+          "timerangeFilter": true
+        },
+        "label": "Período",
+        "type": "date",
+        "label_pt": "Período",
+        "label_en": "Período",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "regiao",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "sortable": true,
+          "facetsort": "-alphanum",
+          "disjunctive": true
+        },
+        "label": "Região",
+        "type": "text",
+        "label_pt": "Região",
+        "label_en": "Região",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "entidade",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "sortable": true,
+          "disjunctive": true,
+          "facetsort": "alphanum"
+        },
+        "label": "Entidade",
+        "type": "text",
+        "label_pt": "Entidade",
+        "label_en": "Entidade",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "localizacao_geografica",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Localização Geográfica",
+        "type": "geo_point_2d",
+        "label_pt": "Localização Geográfica",
+        "label_en": "Localização Geográfica",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "taxa_de_utilizacao_global_de_consultas_medicas_1_ano",
+        "description": null,
+        "annotations": {
+          "unit": "%",
+          "decimals": 2
+        },
+        "label": "Taxa de Utilização Global de Consultas Médicas -1 Ano",
+        "type": "double",
+        "label_pt": "Taxa de Utilização Global de Consultas Médicas -1 Ano",
+        "label_en": "Taxa de Utilização Global de Consultas Médicas -1 Ano",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "no_utentes_pelo_menos_1_consulta_medicas_presencial_ou_nao_presencial_1_ano",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Nº Utentes com pelo menos uma Consulta Médicas Presencial ou Não Presencial - 1 Ano",
+        "type": "int",
+        "label_pt": "Nº Utentes com pelo menos uma Consulta Médicas Presencial ou Não Presencial - 1 Ano",
+        "label_en": "Nº Utentes com pelo menos uma Consulta Médicas Presencial ou Não Presencial - 1 Ano",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "taxa_de_utilizacao_de_consultas_medicas_3_anos",
+        "description": null,
+        "annotations": {
+          "unit": "%",
+          "decimals": 2
+        },
+        "label": "Taxa de Utilização de Consultas Médicas - 3 Anos",
+        "type": "double",
+        "label_pt": "Taxa de Utilização de Consultas Médicas - 3 Anos",
+        "label_en": "Taxa de Utilização de Consultas Médicas - 3 Anos",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "no_utentes_com_pelo_menos_1_consulta_medica_em_3_anos",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Nº Utentes com pelo menos uma Consulta Médica em 3 Anos.",
+        "type": "int",
+        "label_pt": "Nº Utentes com pelo menos uma Consulta Médica em 3 Anos.",
+        "label_en": "Nº Utentes com pelo menos uma Consulta Médica em 3 Anos.",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "metas": {
+      "default": {
+        "title": "Acesso a Consultas Médicas pela População Inscrita",
+        "description": "<p>Taxas de utilização e quantidades de acesso a consultas médicas pela população inscrita, apresentando a proporção de utentes inscritos que tiveram consulta médica nos cuidados de saúde primários, no período em análise.</p><p><strong>Fórmula:</strong></p><ol><li>Taxa de utilização global de consultas médicas -1 ano  = (numerador / denominador) * 100. Referente ao indicador 2013.002.01. O BI do indicador está disponível em <a href=\"https://sdm.min-saude.pt/bi.aspx?id=2&amp;clusters=S\" target=\"_blank\">https://sdm.min-saude.pt/bi.aspx?id=2&amp;clusters=S</a>.</li><li>Nº Utentes  pelo menos 1 consulta médicas presencial ou não presencial - 1 ano  = numerador. Referente ao numerador do indicador 2013.002.01. O BI do indicador está disponível em <a href=\"https://sdm.min-saude.pt/bi.aspx?id=2&amp;clusters=S\" target=\"_blank\">https://sdm.min-saude.pt/bi.aspx?id=2&amp;clusters=S</a>.</li><li>Taxa de utilização de consultas médicas - 3 anos  = (numerador / denominador) * 100. Referente ao indicador 2013.006.01. O BI do indicador está disponível em <a href=\"https://sdm.min-saude.pt/bi.aspx?id=6&amp;clusters=S\" target=\"_blank\">https://sdm.min-saude.pt/bi.aspx?id=6&amp;clusters=S</a>.</li><li>Nº Utentes com pelo menos 1 consulta médica em 3 anos = numerador. Referente ao numerador do indicador 2013.006.01. O BI do indicador está disponível em <a href=\"https://sdm.min-saude.pt/bi.aspx?id=6&amp;clusters=S\" target=\"_blank\">https://sdm.min-saude.pt/bi.aspx?id=6&amp;clusters=S</a>.</li><li>As métricas a 1 ano são acumuladas desde o inicio do ano em análise até à data de referência do indicador.</li><li>As métricas a 3 anos são acumuladas desde o inicio do ano n-2 até à data de referência do indicador. (ex: análise do mês jun-2015,  corresponde ao acumulado desde jan-2013 a jun-2015).</li></ol><p><strong>Observações:</strong> </p><ul><li>No calculo das métricas deste indicador, não foram consideradas as consultas do sistema Vitacare. Devido a questões técnicas, para os registos de novembro 2016, os dados não incluem registos da Região de Saúde LVT.</li><li><p class=\"MsoNormal\"><span lang=\"PT\">Os dados\nrelativos a este indicador são de caráter temporário para o mês publicado mais\nrecente. Por regra, no último dia do mês N+1 (N=\"último mês\npublicado\"), existirá uma atualização dos mesmos, sendo provável o seu\naumento a nível nacional.</span></p><p class=\"MsoNormal\"><br></p></li></ul>",
+        "publisher": "DE-SNS",
+        "license": null,
+        "modified": "2026-08-14T15:43:21.853000+00:00",
+        "data_processed": "2026-08-14T15:43:21.853000+00:00",
+        "records_count": 7145
+      }
+    }
+  },
+  "records": [
+    {
+      "tempo": "2026-07",
+      "regiao": "Alentejo",
+      "entidade": "Área dos CSP da ULS Alentejo Central",
+      "localizacao_geografica": {
+        "lon": -7.903064,
+        "lat": 38.568838
+      },
+      "taxa_de_utilizacao_global_de_consultas_medicas_1_ano": 69.11486,
+      "no_utentes_pelo_menos_1_consulta_medicas_presencial_ou_nao_presencial_1_ano": 111964,
+      "taxa_de_utilizacao_de_consultas_medicas_3_anos": 90.62452,
+      "no_utentes_com_pelo_menos_1_consulta_medica_em_3_anos": 146809
+    },
+    {
+      "tempo": "2026-07",
+      "regiao": "Algarve",
+      "entidade": "Área dos CSP da ULS Algarve",
+      "localizacao_geografica": {
+        "lon": -7.937649,
+        "lat": 37.02745056
+      },
+      "taxa_de_utilizacao_global_de_consultas_medicas_1_ano": 51.78996,
+      "no_utentes_pelo_menos_1_consulta_medicas_presencial_ou_nao_presencial_1_ano": 285025,
+      "taxa_de_utilizacao_de_consultas_medicas_3_anos": 76.07914,
+      "no_utentes_com_pelo_menos_1_consulta_medica_em_3_anos": 418700
+    },
+    {
+      "tempo": "2026-07",
+      "regiao": "Lisboa e Vale do Tejo",
+      "entidade": "Área dos CSP da ULS Almada / Seixal",
+      "localizacao_geografica": {
+        "lon": -9.11368350111247,
+        "lat": 38.6276044797217
+      },
+      "taxa_de_utilizacao_global_de_consultas_medicas_1_ano": 54.46197,
+      "no_utentes_pelo_menos_1_consulta_medicas_presencial_ou_nao_presencial_1_ano": 203050,
+      "taxa_de_utilizacao_de_consultas_medicas_3_anos": 78.28683,
+      "no_utentes_com_pelo_menos_1_consulta_medica_em_3_anos": 291876
+    }
+  ]
+}

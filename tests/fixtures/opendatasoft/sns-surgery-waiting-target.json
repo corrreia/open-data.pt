@@ -1,0 +1,148 @@
+{
+  "dataset": {
+    "dataset_id": "inscritos-em-lic-dentro-do-tmrg-180-dias",
+    "fields": [
+      {
+        "name": "tempo",
+        "description": null,
+        "annotations": {
+          "timeserie_precision": "month",
+          "facet": true,
+          "facetsort": "-alphanum",
+          "timerangeFilter": true
+        },
+        "label": "Período",
+        "type": "date",
+        "label_pt": "Período",
+        "label_en": "Período",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "regiao",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "disjunctive": true
+        },
+        "label": "Região",
+        "type": "text",
+        "label_pt": "Região",
+        "label_en": "Região",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "instituicao",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "facetsort": "alphanum",
+          "disjunctive": true
+        },
+        "label": "Instituição",
+        "type": "text",
+        "label_pt": "Instituição",
+        "label_en": "Instituição",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "localizacao_geografica",
+        "description": null,
+        "annotations": {},
+        "label": "Localização Geográfica",
+        "type": "geo_point_2d",
+        "label_pt": "Localização Geográfica",
+        "label_en": "Localização Geográfica",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "no_de_doentes_inscritos_dentro_do_tmrg_sigic",
+        "description": null,
+        "annotations": {},
+        "label": "Nº de Doentes Inscritos dentro do TMRG SIGIC",
+        "type": "int",
+        "label_pt": "Nº de Doentes Inscritos dentro do TMRG SIGIC",
+        "label_en": "Nº de Doentes Inscritos dentro do TMRG SIGIC",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "no_de_doentes_inscritos_sigic",
+        "description": null,
+        "annotations": {},
+        "label": "Nº de Doentes Inscritos SIGIC",
+        "type": "int",
+        "label_pt": "Nº de Doentes Inscritos SIGIC",
+        "label_en": "Nº de Doentes Inscritos SIGIC",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "de_inscritos_em_lic_dentro_do_tmrg",
+        "description": null,
+        "annotations": {
+          "decimals": 1,
+          "unit": "%"
+        },
+        "label": "% de Inscritos em LIC dentro do TMRG",
+        "type": "double",
+        "label_pt": "% de Inscritos em LIC dentro do TMRG",
+        "label_en": "% de Inscritos em LIC dentro do TMRG",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "metas": {
+      "default": {
+        "title": "Inscritos em LIC dentro do TMRG (180 dias)",
+        "description": "<p class=\"MsoNormal\"><span lang=\"PT\">Monitorização da percentagem de inscritos na\nLIC (Lista de Inscritos para Cirurgia) com tempo de espera inferior ao Tempo\nMáximo de Resposta Garantida (TMRG).<o:p></o:p></span></p><p class=\"MsoNormal\"><span lang=\"PT\">Este conjunto de dados apresenta, em valor\npercentual, a proporção de doentes inscritos para cirurgia que, no final do\nperíodo em análise, se encontram a aguardar intervenção cirúrgica dentro dos\ntempos máximos de resposta garantida, em relação ao total de doentes inscritos.<o:p></o:p></span></p><p class=\"MsoNormal\"><b><span lang=\"PT\">Observações:</span></b><span lang=\"PT\"><o:p></o:p></span></p><p class=\"MsoNormal\"><span lang=\"PT\">A partir de janeiro de 2018, aplica-se o prazo\nde 180 dias a contar da indicação para cirurgia, conforme estabelecido na\nPortaria n.º 153/2017, de 4 de maio.<o:p></o:p></span></p><p>\n</p><p class=\"MsoNormal\"><span lang=\"PT\">Os dados relativos ao mês n-2, publicados até\nao último dia útil do mês n, têm caráter provisório, sujeitos a eventuais\natualizações.<o:p></o:p></span></p>",
+        "publisher": "DE-SNS",
+        "license": null,
+        "modified": "2026-08-31T16:34:41.143000+00:00",
+        "data_processed": "2026-08-31T16:34:41.143000+00:00",
+        "records_count": 4602
+      }
+    }
+  },
+  "records": [
+    {
+      "tempo": "2026-06",
+      "regiao": "Região de Saúde LVT",
+      "instituicao": "Hospital de Cascais, PPP",
+      "localizacao_geografica": {
+        "lon": -9.418207,
+        "lat": 38.730076
+      },
+      "no_de_doentes_inscritos_dentro_do_tmrg_sigic": 2835,
+      "no_de_doentes_inscritos_sigic": 3137,
+      "de_inscritos_em_lic_dentro_do_tmrg": 90.4
+    },
+    {
+      "tempo": "2026-06",
+      "regiao": "Região de Saúde do Centro",
+      "instituicao": "Instituto Português Oncologia  F. Gentil - Centro, E.P.E.",
+      "localizacao_geografica": {
+        "lon": -8.40991,
+        "lat": 40.217
+      },
+      "no_de_doentes_inscritos_dentro_do_tmrg_sigic": 930,
+      "no_de_doentes_inscritos_sigic": 1081,
+      "de_inscritos_em_lic_dentro_do_tmrg": 86.0
+    },
+    {
+      "tempo": "2026-06",
+      "regiao": "Região de Saúde LVT",
+      "instituicao": "Instituto Português Oncologia  F. Gentil - Lisboa, E.P.E.",
+      "localizacao_geografica": {
+        "lon": -9.161139,
+        "lat": 38.739946
+      },
+      "no_de_doentes_inscritos_dentro_do_tmrg_sigic": 1247,
+      "no_de_doentes_inscritos_sigic": 1536,
+      "de_inscritos_em_lic_dentro_do_tmrg": 81.2
+    }
+  ]
+}

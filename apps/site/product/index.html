@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="One dataset table on open-data.pt: its records, map or chart, schema, history and where it comes from." />
+    <title>Product · open-data.pt</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="api-catalog" href="/.well-known/api-catalog" />
+    <link rel="ai-catalog" href="/.well-known/ai-catalog.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400..600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" />
+    <script>
+      // Kumo reads the colour mode from this attribute; follow the visitor's system setting.
+      document.documentElement.dataset.mode = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>open-data.pt needs JavaScript for its pages. The API works without it: <a href="/api/products">/api/products</a>.</noscript>
+    <script type="module" src="/src/pages/product.tsx"></script>
+  </body>
+</html>

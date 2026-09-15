@@ -1,0 +1,10 @@
+# The pages are for everyone. The API answers people and programs that ask for
+# data on purpose: crawling it would only re-read history windows and exports.
+# The API is described for machines at /llms.txt and /openapi.json; the AI
+# catalog below lists the MCP server, the API, the agent skill and the datasets.
+User-agent: *
+Disallow: /api/
+Allow: /
+
+Sitemap: https://open-data.pt/sitemap.xml
+Agentmap: https://open-data.pt/.well-known/ai-catalog.json

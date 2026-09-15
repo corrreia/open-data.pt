@@ -1,0 +1,116 @@
+{
+  "discovery": {
+    "last_updated": 1788814554,
+    "ttl": 0,
+    "version": "1.0",
+    "data": {
+      "en": {
+        "feeds": [
+          {
+            "name": "system_information",
+            "url": "https://data.lime.bike/api/partners/v1/gbfs/lisbon/system_information"
+          },
+          {
+            "name": "station_information",
+            "url": "https://data.lime.bike/api/partners/v1/gbfs/lisbon/station_information"
+          },
+          {
+            "name": "station_status",
+            "url": "https://data.lime.bike/api/partners/v1/gbfs/lisbon/station_status"
+          },
+          {
+            "name": "free_bike_status",
+            "url": "https://data.lime.bike/api/partners/v1/gbfs/lisbon/free_bike_status"
+          }
+        ]
+      }
+    }
+  },
+  "system_information": {
+    "last_updated": 1788814617,
+    "ttl": 0,
+    "version": "1.0",
+    "data": {
+      "system_id": "lime_lisbon",
+      "language": "en",
+      "name": "Lime Lisbon",
+      "timezone": "Europe/Lisbon",
+      "license_url": "https://www.li.me/gbfs-terms",
+      "attribution_organization_name": "Lime"
+    }
+  },
+  "station_information": {
+    "last_updated": 1788814617,
+    "ttl": 0,
+    "version": "1.0",
+    "data": {
+      "stations": [
+        {
+          "station_id": "lisbon",
+          "name": "Lisbon",
+          "lat": 38.6779,
+          "lon": -9.1598
+        }
+      ]
+    }
+  },
+  "station_status": {
+    "last_updated": 1788814618,
+    "ttl": 0,
+    "version": "1.0",
+    "data": {
+      "stations": [
+        {
+          "station_id": "lisbon",
+          "num_vehicles_available": 2548,
+          "num_docks_available": 999999,
+          "is_installed": true,
+          "is_renting": true,
+          "is_returning": true,
+          "last_reported": 1788814618
+        }
+      ]
+    }
+  },
+  "free_bike_status": {
+    "last_updated": 1788814620,
+    "ttl": 0,
+    "version": "1.0",
+    "data": {
+      "bikes": [
+        {
+          "bike_id": "a4c0e016-e09e-4a9f-a739-efde975cf697",
+          "lat": 38.7144,
+          "lon": -9.1442,
+          "is_reserved": 0,
+          "is_disabled": 0,
+          "vehicle_type": "scooter"
+        },
+        {
+          "bike_id": "b2f0484e-a691-47e7-a38f-e683b5cb6c67",
+          "lat": 38.706,
+          "lon": -9.1409,
+          "is_reserved": 0,
+          "is_disabled": 0,
+          "vehicle_type": "scooter"
+        },
+        {
+          "bike_id": "9535e1cd-9adf-4acb-bf4b-5ca7710f16a9",
+          "lat": 38.7246,
+          "lon": -9.1502,
+          "is_reserved": 0,
+          "is_disabled": 0,
+          "vehicle_type": "scooter"
+        },
+        {
+          "bike_id": "55834295-512d-4f57-a31b-fac127bfd6e3",
+          "lat": 38.7747,
+          "lon": -9.1026,
+          "is_reserved": 0,
+          "is_disabled": 0,
+          "vehicle_type": "scooter"
+        }
+      ]
+    }
+  }
+}

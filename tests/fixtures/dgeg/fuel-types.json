@@ -1,0 +1,43 @@
+{
+  "status": true,
+  "mensagem": "sucesso",
+  "resultado": [
+    {
+      "Descritivo": "Gasóleo simples",
+      "UnidadeMedida": "litro",
+      "fl_ViewWebSite": true,
+      "fl_rodoviario": true,
+      "fl_ativo": true,
+      "BackGroundColor": null,
+      "Id": 2101
+    },
+    {
+      "Descritivo": "Gasolina 98",
+      "UnidadeMedida": "litro",
+      "fl_ViewWebSite": true,
+      "fl_rodoviario": true,
+      "fl_ativo": true,
+      "BackGroundColor": null,
+      "Id": 3400
+    },
+    {
+      "Descritivo": "Gasolina simples 95",
+      "UnidadeMedida": "litro",
+      "fl_ViewWebSite": true,
+      "fl_rodoviario": true,
+      "fl_ativo": true,
+      "BackGroundColor": null,
+      "Id": 3201
+    },
+    {
+      "Descritivo": "GPL Auto",
+      "UnidadeMedida": "litro",
+      "fl_ViewWebSite": true,
+      "fl_rodoviario": true,
+      "fl_ativo": true,
+      "BackGroundColor": null,
+      "Id": 1120
+    }
+  ],
+  "token": null
+}

@@ -1,0 +1,204 @@
+/* open-data.pt on Kumo: Cloudflare's components, this site's green palette and type. */
+@source "../node_modules/@cloudflare/kumo/dist/**/*.{js,jsx}";
+@import "@cloudflare/kumo/styles";
+@import "tailwindcss";
+
+/*
+ * The palette the site had before Kumo, mapped onto Kumo's semantic tokens: a green-tinted
+ * neutral scale, one green accent, and status colours that keep their meaning in both modes.
+ * Kumo resolves every token with light-dark(), so each pair is written once.
+ */
+@theme {
+  --font-sans: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  --font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+
+  --text-color-kumo-default: light-dark(oklch(0.22 0.02 160), oklch(0.94 0.008 150));
+  --text-color-kumo-strong: light-dark(oklch(0.16 0.02 160), oklch(0.985 0.005 150));
+  --text-color-kumo-subtle: light-dark(oklch(0.44 0.02 160), oklch(0.74 0.012 150));
+  --text-color-kumo-placeholder: light-dark(oklch(0.58 0.014 160), oklch(0.6 0.012 150));
+  --text-color-kumo-inactive: light-dark(oklch(0.7 0.014 150), oklch(0.5 0.012 160));
+  --text-color-kumo-brand: light-dark(oklch(0.44 0.11 158), oklch(0.78 0.13 158));
+  --text-color-kumo-link: light-dark(oklch(0.4 0.1 158), oklch(0.8 0.12 158));
+  --text-color-kumo-success: light-dark(#1b7a4f, #4fc98a);
+  --text-color-kumo-warning: light-dark(#a85400, #f0a25a);
+  --text-color-kumo-danger: light-dark(#b3261e, #f08a80);
+  --text-color-kumo-info: light-dark(#2f66c4, #7fa6f0);
+
+  --color-kumo-canvas: light-dark(oklch(0.965 0.006 150), oklch(0.19 0.01 160));
+  --color-kumo-base: light-dark(oklch(0.992 0.003 150), oklch(0.235 0.011 160));
+  --color-kumo-elevated: light-dark(oklch(0.975 0.005 150), oklch(0.215 0.01 160));
+  --color-kumo-recessed: light-dark(oklch(0.945 0.008 150), oklch(0.205 0.01 160));
+  --color-kumo-control: light-dark(oklch(0.995 0.002 150), oklch(0.25 0.011 160));
+  --color-kumo-tint: light-dark(oklch(0.935 0.02 158), oklch(0.3 0.03 158));
+  --color-kumo-fill: light-dark(oklch(0.92 0.01 150), oklch(0.31 0.012 160));
+  --color-kumo-fill-hover: light-dark(oklch(0.88 0.012 150), oklch(0.36 0.013 160));
+  --color-kumo-line: light-dark(oklch(0.87 0.012 150), oklch(0.36 0.012 160));
+  --color-kumo-hairline: light-dark(oklch(0.9 0.01 150), oklch(0.31 0.012 160));
+  --color-kumo-focus: light-dark(oklch(0.44 0.11 158), oklch(0.78 0.13 158));
+  --color-kumo-brand: light-dark(oklch(0.44 0.11 158), oklch(0.6 0.12 158));
+  --color-kumo-brand-hover: light-dark(oklch(0.36 0.1 158), oklch(0.66 0.13 158));
+  --color-kumo-contrast: light-dark(oklch(0.24 0.03 160), oklch(0.94 0.02 150));
+  --color-kumo-success: light-dark(#1b7a4f, #4fc98a);
+  --color-kumo-success-tint: light-dark(oklch(0.94 0.05 158), oklch(0.3 0.05 158));
+  --color-kumo-warning: light-dark(#a85400, #f0a25a);
+  --color-kumo-warning-tint: light-dark(oklch(0.95 0.06 75), oklch(0.32 0.06 70));
+  --color-kumo-danger: light-dark(#b3261e, #f08a80);
+  --color-kumo-danger-tint: light-dark(oklch(0.95 0.05 25), oklch(0.32 0.06 25));
+  --color-kumo-info: light-dark(#2f66c4, #7fa6f0);
+  --color-kumo-info-tint: light-dark(oklch(0.94 0.04 262), oklch(0.3 0.05 262));
+
+  /* Categorical order for charts and map legends: green, blue, orange, violet, teal. */
+  --color-series-1: light-dark(#1b7a4f, #33a86c);
+  --color-series-2: light-dark(#2f66c4, #6690e6);
+  --color-series-3: light-dark(#c46a1b, #e08a3c);
+  --color-series-4: light-dark(#7a4fd1, #a88af0);
+  --color-series-5: light-dark(#1391a6, #3fb6c9);
+}
+
+:root {
+  color-scheme: light dark;
+}
+:root[data-mode="light"] {
+  color-scheme: light;
+}
+:root[data-mode="dark"] {
+  color-scheme: dark;
+}
+
+html {
+  background: var(--color-kumo-canvas);
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  background: var(--color-kumo-canvas);
+  color: var(--text-color-kumo-default);
+  text-rendering: optimizeLegibility;
+}
+
+/* The display face carries headings; everything else stays in Plex. */
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  letter-spacing: -0.015em;
+}
+h1,
+h2 {
+  text-wrap: balance;
+}
+
+.skip-link {
+  position: absolute;
+  inset-inline-start: 1rem;
+  top: -3rem;
+  z-index: 60;
+  padding: 0.5rem 0.8rem;
+  border-radius: 0.5rem;
+  background: var(--color-kumo-brand);
+  color: var(--text-color-kumo-inverse);
+}
+.skip-link:focus {
+  top: 0.75rem;
+}
+
+/* A day bar on the status page, and its legend keys. */
+.uptime-bar[data-level="ok"] {
+  background: var(--color-kumo-success);
+}
+.uptime-bar[data-level="minor"] {
+  background: color-mix(in srgb, var(--color-kumo-warning) 50%, var(--color-kumo-base));
+}
+.uptime-bar[data-level="major"] {
+  background: var(--color-kumo-warning);
+}
+.uptime-bar[data-level="severe"] {
+  background: var(--color-kumo-danger);
+}
+.uptime-bar[data-level="none"] {
+  background: var(--color-kumo-line);
+}
+
+/*
+ * Leaflet sits inside a Kumo card: its controls follow the theme. Its panes and controls carry
+ * z-index 200 to 1000; `isolation` keeps them inside the map's own stacking context, so dropdowns,
+ * tooltips and the sticky header always paint above the map.
+ */
+.leaflet-container {
+  isolation: isolate;
+  z-index: 0;
+  font-family: var(--font-sans);
+  background: var(--color-kumo-recessed);
+}
+/*
+ * Quiet the basemap so the data reads first; in dark mode, turn the same tiles into a dark map.
+ * The filter sits on each tile, not on the pane: a filtered pane is resampled as one layer and
+ * leaves hairline seams between tiles on high-density screens.
+ */
+.leaflet-tile-container img.leaflet-tile {
+  filter: saturate(0.55) contrast(0.95);
+}
+:root[data-mode="dark"] .leaflet-tile-container img.leaflet-tile {
+  filter: invert(1) hue-rotate(180deg) saturate(0.35) brightness(0.9) contrast(0.9);
+}
+.leaflet-bar a,
+.leaflet-bar a:hover {
+  background: var(--color-kumo-base);
+  color: var(--text-color-kumo-default);
+  border-color: var(--color-kumo-line);
+}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--color-kumo-base);
+  color: var(--text-color-kumo-default);
+  box-shadow: 0 8px 24px -12px oklch(0.2 0.02 160 / 0.35);
+}
+.leaflet-popup-content {
+  margin: 0.75rem 0.9rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+.leaflet-popup-content dl {
+  display: grid;
+  grid-template-columns: minmax(0, 8.5rem) minmax(0, 1fr);
+  gap: 0.15rem 0.75rem;
+  margin-top: 0.4rem;
+}
+.leaflet-popup-content dt {
+  color: var(--text-color-kumo-subtle);
+}
+.leaflet-popup-content dt,
+.leaflet-popup-content dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.leaflet-control-attribution {
+  background: color-mix(in srgb, var(--color-kumo-base) 85%, transparent) !important;
+  color: var(--text-color-kumo-subtle);
+}
+.leaflet-control-attribution a {
+  color: var(--text-color-kumo-link);
+}
+.leaflet-control-scale-line {
+  background: color-mix(in srgb, var(--color-kumo-base) 80%, transparent);
+  border-color: var(--text-color-kumo-subtle);
+  color: var(--text-color-kumo-default);
+}
+
+/* iOS Safari zooms the whole page when a focused field's text is under 16px, so fields on phones use 16px. */
+@media (max-width: 40rem) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea {
+    font-size: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

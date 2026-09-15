@@ -1,0 +1,13 @@
+{
+  "name": "@open-data-pt/kernel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@cfworker/json-schema": "^4.1.1",
+    "@cloudflare/codemode": "0.5.2",
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "@open-data-pt/gatekeeper-shared": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

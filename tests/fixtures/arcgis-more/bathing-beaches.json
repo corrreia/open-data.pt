@@ -1,0 +1,323 @@
+{
+  "type": "FeatureCollection",
+  "arcgis": {
+    "layerUrl": "https://sniambgeoogc.apambiente.pt/getogc/rest/services/SNIAmb/Praias/MapServer/0",
+    "name": "Praia",
+    "description": "",
+    "copyrightText": "",
+    "geometryType": "esriGeometryPoint",
+    "objectIdField": "objectid",
+    "fields": [
+      {
+        "name": "objectid",
+        "alias": "objectid",
+        "type": "esriFieldTypeOID"
+      },
+      {
+        "name": "codigo_praia",
+        "alias": "codigo praia",
+        "type": "esriFieldTypeDouble"
+      },
+      {
+        "name": "nome_praia",
+        "alias": "nome praia",
+        "type": "esriFieldTypeString"
+      },
+      {
+        "name": "codigo_agua_balnear",
+        "alias": "codigo_agua_balnear",
+        "type": "esriFieldTypeString"
+      },
+      {
+        "name": "nome_agua_balnear",
+        "alias": "nome_agua_balnear",
+        "type": "esriFieldTypeString"
+      },
+      {
+        "name": "arh",
+        "alias": "arh",
+        "type": "esriFieldTypeString"
+      },
+      {
+        "name": "concelho",
+        "alias": "concelho",
+        "type": "esriFieldTypeString"
+      },
+      {
+        "name": "data_inicio_epoca_balnear",
+        "alias": "data_inicio_epoca_balnear",
+        "type": "esriFieldTypeDate"
+      },
+      {
+        "name": "data_fim_epoca_balnear",
+        "alias": "data_fim_epoca_balnear",
+        "type": "esriFieldTypeDate"
+      },
+      {
+        "name": "categoria_agua_balnear",
+        "alias": "categoria_agua_balnear",
+        "type": "esriFieldTypeInteger"
+      },
+      {
+        "name": "classificacao_agua_balnear",
+        "alias": "classificacao_agua_balnear",
+        "type": "esriFieldTypeInteger"
+      },
+      {
+        "name": "qualidade_agua_balnear_dsc",
+        "alias": "qualidade_agua_balnear_dsc",
+        "type": "esriFieldTypeString"
+      },
+      {
+        "name": "vigilancia",
+        "alias": "vigilancia",
+        "type": "esriFieldTypeInteger"
+      },
+      {
+        "name": "posto_socorros",
+        "alias": "posto_socorros",
+        "type": "esriFieldTypeInteger"
+      },
+      {
+        "name": "sanitarios",
+        "alias": "sanitarios",
+        "type": "esriFieldTypeInteger"
+      },
+      {
+        "name": "duche",
+        "alias": "duche",
+        "type": "esriFieldTypeInteger"
+      },
+      {
+        "name": "recolha_lixo",
+        "alias": "recolha_lixo",
+        "type": "esriFieldTypeInteger"
+      },
+      {
+        "name": "limpeza_praia",
+        "alias": "limpeza_praia",
+        "type": "esriFieldTypeInteger"
+      },
+      {
+        "name": "painel_informativo",
+        "alias": "painel_informativo",
+        "type": "esriFieldTypeInteger"
+      },
+      {
+        "name": "apoio_balnear",
+        "alias": "apoio_balnear",
+        "type": "esriFieldTypeInteger"
+      },
+      {
+        "name": "apoio_praia",
+        "alias": "apoio_praia",
+        "type": "esriFieldTypeInteger"
+      },
+      {
+        "name": "estacionamento",
+        "alias": "estacionamento",
+        "type": "esriFieldTypeInteger"
+      },
+      {
+        "name": "bandeira_azul",
+        "alias": "bandeira_azul",
+        "type": "esriFieldTypeInteger"
+      },
+      {
+        "name": "acessivel",
+        "alias": "acessivel",
+        "type": "esriFieldTypeInteger"
+      },
+      {
+        "name": "cadeira_anfibia",
+        "alias": "cadeira_anfibia",
+        "type": "esriFieldTypeInteger"
+      },
+      {
+        "name": "ondas_especial_valor",
+        "alias": "ondas_especial_valor",
+        "type": "esriFieldTypeInteger"
+      },
+      {
+        "name": "obras_em_curso",
+        "alias": "obras_em_curso",
+        "type": "esriFieldTypeInteger"
+      },
+      {
+        "name": "risco_derrocada",
+        "alias": "risco_derrocada",
+        "type": "esriFieldTypeInteger"
+      },
+      {
+        "name": "url_infopraia",
+        "alias": "url_infopraia",
+        "type": "esriFieldTypeString"
+      },
+      {
+        "name": "url_snirh",
+        "alias": "url_snirh",
+        "type": "esriFieldTypeString"
+      },
+      {
+        "name": "url_webcam",
+        "alias": "url_webcam",
+        "type": "esriFieldTypeString"
+      },
+      {
+        "name": "motivo_desacons_interdicao",
+        "alias": "motivo_desacons_interdicao",
+        "type": "esriFieldTypeInteger"
+      },
+      {
+        "name": "motivo_desacons_interdicao_dsc",
+        "alias": "motivo_desacons_interdicao_dsc",
+        "type": "esriFieldTypeString"
+      },
+      {
+        "name": "shape",
+        "alias": "shape",
+        "type": "esriFieldTypeGeometry"
+      }
+    ]
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": 100000001,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8.746688999999945,
+          41.95681599906196
+        ]
+      },
+      "properties": {
+        "objectid": 100000001,
+        "codigo_praia": 8979629970,
+        "nome_praia": "Lenta",
+        "codigo_agua_balnear": "PTCF7N",
+        "nome_agua_balnear": "LENTA",
+        "arh": "ARH-NORTE",
+        "concelho": "VILA NOVA DE CERVEIRA",
+        "data_inicio_epoca_balnear": 1782518400000,
+        "data_fim_epoca_balnear": 1788048000000,
+        "categoria_agua_balnear": 2,
+        "classificacao_agua_balnear": 1,
+        "qualidade_agua_balnear_dsc": "Água adequada a banhos",
+        "vigilancia": 1,
+        "posto_socorros": 0,
+        "sanitarios": 1,
+        "duche": 1,
+        "recolha_lixo": 1,
+        "limpeza_praia": 1,
+        "painel_informativo": 1,
+        "apoio_balnear": 0,
+        "apoio_praia": 1,
+        "estacionamento": 1,
+        "bandeira_azul": 0,
+        "acessivel": 0,
+        "cadeira_anfibia": 0,
+        "ondas_especial_valor": 0,
+        "obras_em_curso": 0,
+        "risco_derrocada": 0,
+        "url_infopraia": "https://infoagua.apambiente.pt/pt/praias/praia-detalhe/8979629970",
+        "url_snirh": "https://snirh.apambiente.pt/snirh/_dadossintese/zbalnear/janela/par_graficos.php?code_cee=PTCF7N&ano=2026",
+        "url_webcam": null,
+        "motivo_desacons_interdicao": 0,
+        "motivo_desacons_interdicao_dsc": null
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 100000002,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8.82547999999997,
+          41.89058999906217
+        ]
+      },
+      "properties": {
+        "objectid": 100000002,
+        "codigo_praia": 10146368834,
+        "nome_praia": "Pedras Ruivas",
+        "codigo_agua_balnear": "PTCW9H",
+        "nome_agua_balnear": "PEDRAS RUIVAS",
+        "arh": "ARH-NORTE",
+        "concelho": "CAMINHA",
+        "data_inicio_epoca_balnear": 1782518400000,
+        "data_fim_epoca_balnear": 1788048000000,
+        "categoria_agua_balnear": 3,
+        "classificacao_agua_balnear": 2,
+        "qualidade_agua_balnear_dsc": "Água adequada a banhos",
+        "vigilancia": 1,
+        "posto_socorros": 1,
+        "sanitarios": 1,
+        "duche": 1,
+        "recolha_lixo": 1,
+        "limpeza_praia": 1,
+        "painel_informativo": 1,
+        "apoio_balnear": 0,
+        "apoio_praia": 0,
+        "estacionamento": 1,
+        "bandeira_azul": 0,
+        "acessivel": 0,
+        "cadeira_anfibia": 0,
+        "ondas_especial_valor": 0,
+        "obras_em_curso": 0,
+        "risco_derrocada": 0,
+        "url_infopraia": "https://infoagua.apambiente.pt/pt/praias/praia-detalhe/10146368834",
+        "url_snirh": "https://snirh.apambiente.pt/snirh/_dadossintese/zbalnear/janela/par_graficos.php?code_cee=PTCW9H&ano=2026",
+        "url_webcam": null,
+        "motivo_desacons_interdicao": 0,
+        "motivo_desacons_interdicao_dsc": null
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 100000003,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8.783619999999926,
+          41.88888999906221
+        ]
+      },
+      "properties": {
+        "objectid": 100000003,
+        "codigo_praia": 8979629782,
+        "nome_praia": "Azenhas - Vilar de Mouros",
+        "codigo_agua_balnear": "PTCD2X",
+        "nome_agua_balnear": "AZENHAS - VILAR DE MOUROS",
+        "arh": "ARH-NORTE",
+        "concelho": "CAMINHA",
+        "data_inicio_epoca_balnear": 1782518400000,
+        "data_fim_epoca_balnear": 1788048000000,
+        "categoria_agua_balnear": 2,
+        "classificacao_agua_balnear": 1,
+        "qualidade_agua_balnear_dsc": "Água adequada a banhos",
+        "vigilancia": 1,
+        "posto_socorros": 1,
+        "sanitarios": 1,
+        "duche": 1,
+        "recolha_lixo": 1,
+        "limpeza_praia": 1,
+        "painel_informativo": 1,
+        "apoio_balnear": 0,
+        "apoio_praia": 1,
+        "estacionamento": 0,
+        "bandeira_azul": 1,
+        "acessivel": 0,
+        "cadeira_anfibia": 0,
+        "ondas_especial_valor": 0,
+        "obras_em_curso": 0,
+        "risco_derrocada": 0,
+        "url_infopraia": "https://infoagua.apambiente.pt/pt/praias/praia-detalhe/8979629782",
+        "url_snirh": "https://snirh.apambiente.pt/snirh/_dadossintese/zbalnear/janela/par_graficos.php?code_cee=PTCD2X&ano=2026",
+        "url_webcam": null,
+        "motivo_desacons_interdicao": 0,
+        "motivo_desacons_interdicao_dsc": null
+      }
+    }
+  ]
+}

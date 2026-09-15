@@ -1,0 +1,22 @@
+{
+  "fields": [
+    { "name": "batch_id", "type": "string", "required": true },
+    { "name": "revision_id", "type": "string", "required": true },
+    { "name": "feed_id", "type": "string", "required": true },
+    { "name": "product_slug", "type": "string", "required": true },
+    { "name": "product_version", "type": "int64", "required": true },
+    { "name": "normalizer_id", "type": "string", "required": true },
+    { "name": "normalizer_version", "type": "string", "required": true },
+    { "name": "schema", "type": "json", "required": true },
+    { "name": "entity_key", "type": "string", "required": true },
+    { "name": "operation", "type": "string", "required": true },
+    { "name": "event_time", "type": "timestamp", "required": false },
+    { "name": "valid_from", "type": "timestamp", "required": false },
+    { "name": "valid_to", "type": "timestamp", "required": false },
+    { "name": "source_published_at", "type": "timestamp", "required": false },
+    { "name": "observed_at", "type": "timestamp", "required": true },
+    { "name": "ingested_at", "type": "timestamp", "required": true },
+    { "name": "acquisition_id", "type": "string", "required": true },
+    { "name": "payload", "type": "json", "required": true }
+  ]
+}

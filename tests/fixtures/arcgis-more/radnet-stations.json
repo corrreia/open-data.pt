@@ -1,0 +1,91 @@
+{
+  "type": "FeatureCollection",
+  "arcgis": {
+    "layerUrl": "https://sniambgeoogc.apambiente.pt/getogc/rest/services/SNIAmb/RADNET/MapServer/0",
+    "name": "Rede nacional de alerta de radioatividade no ar (RADNET)",
+    "description": "Localização das estações RADNET",
+    "copyrightText": "Agência Portuguesa do Ambiente, I.P.",
+    "geometryType": "esriGeometryPoint",
+    "objectIdField": "rede_m_id",
+    "fields": [
+      {
+        "name": "rede_m_id",
+        "alias": "rede_m_id",
+        "type": "esriFieldTypeOID"
+      },
+      {
+        "name": "nome",
+        "alias": "nome",
+        "type": "esriFieldTypeString"
+      },
+      {
+        "name": "local_impl",
+        "alias": "local_impl",
+        "type": "esriFieldTypeString"
+      },
+      {
+        "name": "limite",
+        "alias": "limite",
+        "type": "esriFieldTypeDouble"
+      },
+      {
+        "name": "shape",
+        "alias": "shape",
+        "type": "esriFieldTypeGeometry"
+      }
+    ]
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": 1201,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8.413299999999936,
+          40.20750000000004
+        ]
+      },
+      "properties": {
+        "rede_m_id": 1201,
+        "nome": "Coimbra",
+        "local_impl": "IGUC - Observatório Metereológico",
+        "limite": 689
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 1252,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8.838899999999967,
+          37.95360000000005
+        ]
+      },
+      "properties": {
+        "rede_m_id": 1252,
+        "nome": "Sines",
+        "local_impl": "CCDR - Alentejo (Monte Chãos)",
+        "limite": 599
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 1302,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -7.950599999999952,
+          37.04440000000005
+        ]
+      },
+      "properties": {
+        "rede_m_id": 1302,
+        "nome": "Faro",
+        "local_impl": "Direcão Regional de Agricultura do Algarve (Patacão)",
+        "limite": 689
+      }
+    }
+  ]
+}

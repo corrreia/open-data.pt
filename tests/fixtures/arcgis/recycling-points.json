@@ -1,0 +1,163 @@
+{
+  "type": "FeatureCollection",
+  "arcgis": {
+    "layerUrl": "https://services.arcgis.com/1dSrzEWVQn5kHHyK/arcgis/rest/services/Amb_EcopontosSubterraneos/FeatureServer/0",
+    "name": "Ecoilhas Subterrâneas",
+    "description": "",
+    "copyrightText": "",
+    "geometryType": "esriGeometryPoint",
+    "objectIdField": "OBJECTID",
+    "globalIdField": "GlobalID",
+    "fields": [
+      {
+        "name": "OBJECTID",
+        "alias": "Object ID",
+        "type": "esriFieldTypeOID",
+        "nullable": false
+      },
+      {
+        "name": "COD_SIG",
+        "alias": "Código SIG",
+        "type": "esriFieldTypeInteger",
+        "nullable": false
+      },
+      {
+        "name": "IDTIPO",
+        "alias": "ID Tipo",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "TPRS_ID",
+        "alias": "TPRS_ID",
+        "type": "esriFieldTypeSmallInteger",
+        "nullable": false
+      },
+      {
+        "name": "TPRS_DESC",
+        "alias": "TPRS_DESC",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "FRE_AB",
+        "alias": "FRE_AB",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "TOP_MOD_1",
+        "alias": "TOP_MOD_1",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "PRSL_X",
+        "alias": "PRSL_X",
+        "type": "esriFieldTypeInteger",
+        "nullable": true
+      },
+      {
+        "name": "PRSL_Y",
+        "alias": "PRSL_Y",
+        "type": "esriFieldTypeInteger",
+        "nullable": true
+      },
+      {
+        "name": "PRSL_LOCAL",
+        "alias": "PRSL_LOCAL",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "PRODUTOR",
+        "alias": "Produtor",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "GlobalID",
+        "alias": "GlobalID",
+        "type": "esriFieldTypeGlobalID",
+        "nullable": false
+      }
+    ]
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": 1,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -9.14301026891279,
+          38.707288678883
+        ]
+      },
+      "properties": {
+        "OBJECTID": 1,
+        "COD_SIG": 63,
+        "IDTIPO": "9210",
+        "TPRS_ID": 17,
+        "TPRS_DESC": "Ecoilha Subterrânea",
+        "FRE_AB": "Misericórdia",
+        "TOP_MOD_1": "Rua Nova Carvalho",
+        "PRSL_X": -87847,
+        "PRSL_Y": -106203,
+        "PRSL_LOCAL": "Ft  nº 5",
+        "PRODUTOR": "n.a.",
+        "GlobalID": "7a9927ae-9aea-47eb-bac5-02c72d352cd0"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 2,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -9.15557715941908,
+          38.7186822632504
+        ]
+      },
+      "properties": {
+        "OBJECTID": 2,
+        "COD_SIG": 1957,
+        "IDTIPO": "9210",
+        "TPRS_ID": 17,
+        "TPRS_DESC": "Ecoilha Subterrânea",
+        "FRE_AB": "StoAntónio",
+        "TOP_MOD_1": "Largo Hintze Ribeiro",
+        "PRSL_X": -88926,
+        "PRSL_Y": -104926,
+        "PRSL_LOCAL": "Ft 339 da R São Bento (esquerda)",
+        "PRODUTOR": "n.a.",
+        "GlobalID": "883a3a12-2e5e-4a67-8db0-f20183b7b432"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 3,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -9.1426600133009,
+          38.7232265466379
+        ]
+      },
+      "properties": {
+        "OBJECTID": 3,
+        "COD_SIG": 21509,
+        "IDTIPO": "9210",
+        "TPRS_ID": 17,
+        "TPRS_DESC": "Ecoilha Subterrânea",
+        "FRE_AB": "StoAntónio",
+        "TOP_MOD_1": "Calcada Santo Antonio",
+        "PRSL_X": -87797,
+        "PRSL_Y": -104434,
+        "PRSL_LOCAL": "Crz c/ Alameda Santo António dos Capuchos",
+        "PRODUTOR": "n.a.",
+        "GlobalID": "e9b33c8f-a684-4e85-8aab-691e02cfb6b8"
+      }
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "meta": [
+    {
+      "IndicadorCod": "0004167",
+      "IndicadorNome": "População residente (N.º) por Local de residência, Sexo e Grupo etário (Por ciclos de vida); Anual - INE, Estimativas anuais da população residente",
+      "Periodic": "Anual",
+      "UnidadeMedida": "Número (N.º)",
+      "DataUltimaAtualizacao": "2026-06-22",
+      "Dimensoes": {
+        "Descricao_Dim": [
+          { "dim_num": "1", "abrv": "Período de referência dos dados", "versao": "XXXXX" },
+          { "dim_num": "2", "abrv": "Local de residência (Distrito/ Região)", "versao": "00879" },
+          { "dim_num": "3", "abrv": "Sexo", "versao": "00305" },
+          { "dim_num": "4", "abrv": "Grupo etário (Por ciclos de vida)", "versao": "00315" }
+        ],
+        "Categoria_Dim": [
+          {
+            "period": [
+              {
+                "dim_num": "1",
+                "cat_id": "S7A2025",
+                "categ_cod": "S7A2025",
+                "categ_dsg": "2025",
+                "categ_ord": "20250101",
+                "categ_nivel": "1"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "data": [
+    {
+      "IndicadorCod": "0004167",
+      "IndicadorDsg": "População residente (N.º) por Local de residência, Sexo e Grupo etário (Por ciclos de vida); Anual - INE, Estimativas anuais da população residente",
+      "DataUltimoAtualizacao": "2026-06-22",
+      "Dados": {
+        "2025": [
+          {
+            "geocod": "01",
+            "geodsg": "Aveiro",
+            "dim_3": "1",
+            "dim_3_t": "H",
+            "dim_4": "1",
+            "dim_4_t": "0 - 14 anos",
+            "ind_string": "46 425",
+            "valor": "46425"
+          },
+          {
+            "geocod": "02",
+            "geodsg": "Beja",
+            "dim_3": "1",
+            "dim_3_t": "H",
+            "dim_4": "1",
+            "dim_4_t": "0 - 14 anos",
+            "ind_string": "10 043",
+            "valor": "10043"
+          },
+          {
+            "geocod": "03",
+            "geodsg": "Braga",
+            "dim_3": "1",
+            "dim_3_t": "H",
+            "dim_4": "1",
+            "dim_4_t": "0 - 14 anos",
+            "ind_string": "58 091",
+            "valor": "58091"
+          }
+        ]
+      }
+    }
+  ]
+}

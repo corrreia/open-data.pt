@@ -1,0 +1,5 @@
+/** DGEG's fuel-price service, read once for every Worker that needs it. */
+export { dgegCollector, resolveDgegFeed, type DgegCollectorOptions } from "./collector";
+export { DGEG_API_ORIGIN, DGEG_FEEDS, FUEL_PRICES_MAX_BYTES, FUEL_TYPES_MAX_BYTES, collectDgegFeed, dgegDateTime, validateDgegFeedConfig } from "./dgeg";
+export { DGEG_EXAMPLES } from "./examples";
+export { DgegTransformer } from "./transform";

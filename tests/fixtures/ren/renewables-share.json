@@ -1,0 +1,141 @@
+{
+  "service": "renewables-share",
+  "days": [
+    {
+      "day": "2026-09-06",
+      "response": {
+        "xAxis": {
+          "title": {
+            "text": "Hour"
+          },
+          "max": 97,
+          "categories": [
+            "00:00",
+            "00:15",
+            "00:30",
+            "00:45"
+          ],
+          "export": [
+            "00:00",
+            "00:15",
+            "00:30",
+            "00:45"
+          ],
+          "tickInterval": 4
+        },
+        "yAxis": {
+          "title": {
+            "text": "MW"
+          }
+        },
+        "chart": {
+          "marginLeft": 60
+        },
+        "series": [
+          {
+            "type": "line",
+            "name": "Consumption + Storage",
+            "data": [
+              5526.9,
+              5435,
+              5393.3,
+              5328.2
+            ],
+            "color": "#494949",
+            "zIndex": 21,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#494949"
+            },
+            "lineWidth": 1
+          },
+          {
+            "type": "line",
+            "name": "Consumption",
+            "data": [
+              5526.4,
+              5434.2,
+              5393.1,
+              5327.5
+            ],
+            "color": "#0B204C",
+            "zIndex": 22,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#0B204C"
+            },
+            "lineWidth": 2
+          },
+          {
+            "type": "area",
+            "name": "Import Balance",
+            "data": [
+              2077.6,
+              2004,
+              2005.2,
+              2080.8
+            ],
+            "color": "#FDBF35",
+            "zIndex": 3,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#FDBF35"
+            }
+          },
+          {
+            "type": "area",
+            "name": "Non-Renewable",
+            "data": [
+              877.4,
+              885.4,
+              885.9,
+              854.2
+            ],
+            "color": "#477A81",
+            "zIndex": 4,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#477A81"
+            }
+          },
+          {
+            "type": "area",
+            "name": "Renewable",
+            "data": [
+              2579.6,
+              2554.9,
+              2510.3,
+              2400.2
+            ],
+            "color": "#2BC37E",
+            "zIndex": 5,
+            "tooltipOptions": {
+              "style": {
+                "color": "#FFFFFF"
+              }
+            },
+            "marker": {
+              "lineColor": "#2BC37E"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

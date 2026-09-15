@@ -1,0 +1,342 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "cod_instalacao",
+        "description": null,
+        "annotations": {},
+        "label": "Installation Code",
+        "type": "text",
+        "label_en": "Installation Code",
+        "label_pt": "Código de Instalação",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "dis_name",
+        "description": null,
+        "annotations": {},
+        "label": "District",
+        "type": "text",
+        "label_en": "District",
+        "label_pt": "Distrito",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "con_name",
+        "description": null,
+        "annotations": {},
+        "label": "Municipality",
+        "type": "text",
+        "label_en": "Municipality",
+        "label_pt": "Concelho",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "coordenadas_geo",
+        "description": null,
+        "annotations": {},
+        "label": "Geographic Coordinates",
+        "type": "geo_point_2d",
+        "label_en": "Geographic Coordinates",
+        "label_pt": "Coordenadas Geográficas",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "potencia_transformacao_kva",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "Installed Power [kVA]",
+        "type": "int",
+        "label_en": "Installed Power [kVA]",
+        "label_pt": "Potência instalada [kVA]",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "nivel_utilizacao",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "Usage Level [%]",
+        "type": "text",
+        "label_en": "Usage Level [%]",
+        "label_pt": "Nível de Utilização [%]",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "tipo_construtivo",
+        "description": null,
+        "annotations": {},
+        "label": "Construction Type",
+        "type": "text",
+        "label_en": "Construction Type",
+        "label_pt": "Tipo Construtivo",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "potencia_contratada",
+        "description": null,
+        "annotations": {},
+        "label": "Contracted Power [kVA]",
+        "type": "text",
+        "label_en": "Contracted Power [kVA]",
+        "label_pt": "Potência Contratada [kVA]",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "num_clientes",
+        "description": null,
+        "annotations": {},
+        "label": "Number of Clients",
+        "type": "text",
+        "label_en": "Number of Clients",
+        "label_pt": "Número de Clientes",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "potencia_geracao",
+        "description": null,
+        "annotations": {},
+        "label": "Power Generation [kW]",
+        "type": "text",
+        "label_en": "Power Generation [kW]",
+        "label_pt": "Potência Geração [kW]",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "num_produtores",
+        "description": null,
+        "annotations": {},
+        "label": "Number of Client Producers",
+        "type": "text",
+        "label_en": "Number of Client Producers",
+        "label_pt": "Número de Clientes Produtores",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "histogram",
+        "description": null,
+        "annotations": {},
+        "label": "Usage Histogram",
+        "type": "text",
+        "label_en": "Usage Histogram",
+        "label_pt": "Histograma de Utilização",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "coddistrito",
+        "description": null,
+        "annotations": {},
+        "label": "DistrictCode",
+        "type": "text",
+        "label_en": "DistrictCode",
+        "label_pt": "CodDistrito",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "coddistritoconcelho",
+        "description": null,
+        "annotations": {},
+        "label": "DistrictMunicipalityCode",
+        "type": "text",
+        "label_en": "DistrictMunicipalityCode",
+        "label_pt": "CodDistritoConcelho",
+        "description_en": null,
+        "description_pt": null
+      }
+    ],
+    "dataset_id": "postos-transformacao-distribuicao",
+    "dataset_uid": "da_ipoy9d",
+    "has_records": true,
+    "features": [
+      "geo",
+      "analyze",
+      "custom_view"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "default": {
+        "title": "Secondary Substations (PTD)",
+        "title_en": "Secondary Substations (PTD)",
+        "title_pt": "Postos de Transformação Distribuição (PTD)",
+        "description": "<p class=\"MsoNormal\">Localização geográfica dos postos de transformação MT/BT da rede de distribuição com informação da potência instalada e percentagem de utilização.</p><p class=\"MsoNormal\"><b>Campos que constituem o dataset:</b></p><ul><li>Código de Instalação: Identificador único do posto de distribuição</li><li>Potência Instalada [kVA]: Representa a potência total instalada no posto. No caso de existirem vários transformadores, diz respeito à soma da potência de todos.</li><li>Nível de Utilização [%]: Indica quanto da potência instalada foi utilizada nos últimos 12 meses, em intervalos de 19%. Por exemplo, se um posto tem 100 kVA de potência instalada e o seu nível de utilização é \"20%-39%\", significa que a potência máxima utilizada esteve entre 20 kVA e 39 kVA nesse período.</li><li>Tipo Construtivo: Indica o tipo construtivo do posto — se é aéreo, subterrâneo, etc.</li><li>Potência Contratada [kVA]: Soma da potência contratada pelos clientes com contrato ativo, ligados ao posto.</li><li>Número de Clientes: Número de clientes com contrato ativo, ligados ao posto.</li><li>Potência Geração [kW]: Soma da potência instalada das unidades de produção, ligadas ao posto.</li><li>Número de Clientes Produtores: Número de clientes com contrato ativo e com unidade(s) de produção, ligados ao posto.</li><li>Histograma: Horas de Utilização da Potência Instalada no posto, nos últimos 12 meses, em intervalos de 10%. Começa no intervalo [≤ -110%] e termina em [≥110%].</li></ul><p class=\"MsoNormal\">          Por exemplo, se o histograma é \"(0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;22.25;450.75;773.25;2239.75;2352.75;1678.75;682.75;347.5;167.75;37.5;3.75;0.0;0.0)\" significa que:</p><p class=\"MsoNormal\">          Durante 22.25 horas, o nível de utilização do posto esteve no intervalo [ -10% ; 0% [</p><p class=\"MsoNormal\">          Durante 450.75 horas, o nível de utilização do posto esteve no intervalo [ 0% ; 10%[</p><ul><li>Coordenadas Geográficas: A localização exata do posto no mapa — latitude e longitude em formato WGS84.</li></ul><p class=\"MsoNormal\"><br></p><p class=\"MsoNormal\">1. A Informação disponibilizada pela E-REDES constitui uma aproximação aos valores relativos à potência dos ativos de rede que estão instalados e respetiva percentagem da sua utilização, conforme são retirados dos sistemas e têm por referência o momento em que a informação é recolhida. Por questões de segurança, proteção ou ausência de dados, alguns dos postos de transformação não tem a disponibilização de informação relativa ao nível de utilização.</p><p class=\"MsoNormal\">2. Atendendo a que os pontos de ligação, a rede de distribuição de eletricidade, e os próprios valores de consumo e de produção são naturalmente muito dinâmicos, salvaguarda-se que a informação disponibilizada poderá ser objeto de subsequentes alterações e atualizações, ficando igualmente ressalvadas eventuais omissões e/ou pontuais imprecisões de localização que a informação poderá conter.</p><p class=\"MsoNormal\">3. A informação disponibilizada pela E-REDES consiste apenas numa aproximação quanto à capacidade disponivel, das redes, a cada momento, pelo que não consubstancia uma proposta contratual, nem dispensa a consulta da E-REDES para efeitos da formulação dos habituais pedidos de ligação à rede (PLR).</p><p class=\"MsoNormal\">4. A E-REDES salvaguarda que a informação disponibilizada não vincula à ligação a qualquer ponto ou ativo específico da rede, ou sequer a uma solução específica no âmbito dos PLR que venham a ser colocados, reservando-se a E-REDES a avaliar caso a caso, em face dos respetivos pedidos, a solução técnica que seja a mais adequada, de acordo com os princípios a que está legalmente obrigada.</p><p class=\"MsoNormal\">5. A E-REDES não se responsabiliza perante terceiros, nomeadamente, parceiros, prestadores de serviços, empreiteiros, utentes e clientes, pelos danos que possam surgir em consequência, direta ou indireta, do uso da presente Informação, em particular aquando da realização de intervenções, cálculos e/ou estimativas, sem confirmação da exatidão e atualização dos dados, pelo que devidamente se ressalva de que a consulta da presente informação não prejudica o dever de se promover uma consulta direta à E-REDES para obter informação atualizada.</p><p class=\"MsoNormal\">6. A informação disponibilizada é, para os devidos efeitos legais, propriedade da E-REDES, não devendo ser copiada, reproduzida, adaptada, modificada, alterada, apagada, destruída, difundida, transmitida, divulgada ou por qualquer outra forma ser colocada à disposição de terceiros, sem que para tal tenha sido expressamente validada pela E-REDES. A sua reprodução, comercialização ou cedência a terceiros, mesmo que a título gratuito, fora dos pressupostos indicados ou sem autorização expressa da E-REDES é interdita nos termos legais aplicáveis e poderá implicar responsabilidade civil e criminal.</p><p class=\"MsoNormal\"><br></p><p class=\"MsoNormal\">Os dados fornecidos pelo Portal Open Data da E-REDES são abrangidos por licenças abertas (CC BY 4.0). Não existem restrições ao seu acesso, sob o compromisso de os utilizadores dos dados citarem o publicador. Assim, sugerimos que cite o Portal Open Data E-REDES como:</p><p class=\"MsoNormal\">E-REDES – Distribuição de eletricidade, “Portal Open Data E-REDES”. Acedido em “Data”. [Online] Disponível em https://e-redes.opendatasoft.com/pages/homepage/</p><p class=\"MsoNormal\">Se partilhar nas redes sociais, por favor acrescente #PortalOpenData_E_REDES</p>\n<u5:p></u5:p>",
+        "description_en": "<p class=\"MsoNormal\">Localização geográfica dos postos de transformação MT/BT da rede de distribuição com informação da potência instalada e percentagem de utilização.</p><p class=\"MsoNormal\"><b>Campos que constituem o dataset:</b></p><ul><li>Código de Instalação: Identificador único do posto de distribuição</li><li>Potência Instalada [kVA]: Representa a potência total instalada no posto. No caso de existirem vários transformadores, diz respeito à soma da potência de todos.</li><li>Nível de Utilização [%]: Indica quanto da potência instalada foi utilizada nos últimos 12 meses, em intervalos de 19%. Por exemplo, se um posto tem 100 kVA de potência instalada e o seu nível de utilização é \"20%-39%\", significa que a potência máxima utilizada esteve entre 20 kVA e 39 kVA nesse período.</li><li>Tipo Construtivo: Indica o tipo construtivo do posto — se é aéreo, subterrâneo, etc.</li><li>Potência Contratada [kVA]: Soma da potência contratada pelos clientes com contrato ativo, ligados ao posto.</li><li>Número de Clientes: Número de clientes com contrato ativo, ligados ao posto.</li><li>Potência Geração [kW]: Soma da potência instalada das unidades de produção, ligadas ao posto.</li><li>Número de Clientes Produtores: Número de clientes com contrato ativo e com unidade(s) de produção, ligados ao posto.</li><li>Histograma: Horas de Utilização da Potência Instalada no posto, nos últimos 12 meses, em intervalos de 10%. Começa no intervalo [≤ -110%] e termina em [≥110%].</li></ul><p class=\"MsoNormal\">          Por exemplo, se o histograma é \"(0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;22.25;450.75;773.25;2239.75;2352.75;1678.75;682.75;347.5;167.75;37.5;3.75;0.0;0.0)\" significa que:</p><p class=\"MsoNormal\">          Durante 22.25 horas, o nível de utilização do posto esteve no intervalo [ -10% ; 0% [</p><p class=\"MsoNormal\">          Durante 450.75 horas, o nível de utilização do posto esteve no intervalo [ 0% ; 10%[</p><ul><li>Coordenadas Geográficas: A localização exata do posto no mapa — latitude e longitude em formato WGS84.</li></ul><p class=\"MsoNormal\"><br></p><p class=\"MsoNormal\">1. A Informação disponibilizada pela E-REDES constitui uma aproximação aos valores relativos à potência dos ativos de rede que estão instalados e respetiva percentagem da sua utilização, conforme são retirados dos sistemas e têm por referência o momento em que a informação é recolhida. Por questões de segurança, proteção ou ausência de dados, alguns dos postos de transformação não tem a disponibilização de informação relativa ao nível de utilização.</p><p class=\"MsoNormal\">2. Atendendo a que os pontos de ligação, a rede de distribuição de eletricidade, e os próprios valores de consumo e de produção são naturalmente muito dinâmicos, salvaguarda-se que a informação disponibilizada poderá ser objeto de subsequentes alterações e atualizações, ficando igualmente ressalvadas eventuais omissões e/ou pontuais imprecisões de localização que a informação poderá conter.</p><p class=\"MsoNormal\">3. A informação disponibilizada pela E-REDES consiste apenas numa aproximação quanto à capacidade disponivel, das redes, a cada momento, pelo que não consubstancia uma proposta contratual, nem dispensa a consulta da E-REDES para efeitos da formulação dos habituais pedidos de ligação à rede (PLR).</p><p class=\"MsoNormal\">4. A E-REDES salvaguarda que a informação disponibilizada não vincula à ligação a qualquer ponto ou ativo específico da rede, ou sequer a uma solução específica no âmbito dos PLR que venham a ser colocados, reservando-se a E-REDES a avaliar caso a caso, em face dos respetivos pedidos, a solução técnica que seja a mais adequada, de acordo com os princípios a que está legalmente obrigada.</p><p class=\"MsoNormal\">5. A E-REDES não se responsabiliza perante terceiros, nomeadamente, parceiros, prestadores de serviços, empreiteiros, utentes e clientes, pelos danos que possam surgir em consequência, direta ou indireta, do uso da presente Informação, em particular aquando da realização de intervenções, cálculos e/ou estimativas, sem confirmação da exatidão e atualização dos dados, pelo que devidamente se ressalva de que a consulta da presente informação não prejudica o dever de se promover uma consulta direta à E-REDES para obter informação atualizada.</p><p class=\"MsoNormal\">6. A informação disponibilizada é, para os devidos efeitos legais, propriedade da E-REDES, não devendo ser copiada, reproduzida, adaptada, modificada, alterada, apagada, destruída, difundida, transmitida, divulgada ou por qualquer outra forma ser colocada à disposição de terceiros, sem que para tal tenha sido expressamente validada pela E-REDES. A sua reprodução, comercialização ou cedência a terceiros, mesmo que a título gratuito, fora dos pressupostos indicados ou sem autorização expressa da E-REDES é interdita nos termos legais aplicáveis e poderá implicar responsabilidade civil e criminal.</p><p class=\"MsoNormal\"><br></p><p class=\"MsoNormal\">Os dados fornecidos pelo Portal Open Data da E-REDES são abrangidos por licenças abertas (CC BY 4.0). Não existem restrições ao seu acesso, sob o compromisso de os utilizadores dos dados citarem o publicador. Assim, sugerimos que cite o Portal Open Data E-REDES como:</p><p class=\"MsoNormal\">E-REDES – Distribuição de eletricidade, “Portal Open Data E-REDES”. Acedido em “Data”. [Online] Disponível em https://e-redes.opendatasoft.com/pages/homepage/</p><p class=\"MsoNormal\">Se partilhar nas redes sociais, por favor acrescente #PortalOpenData_E_REDES</p>\n<u5:p></u5:p>",
+        "description_pt": "<p class=\"MsoNormal\">Localização geográfica dos postos de transformação MT/BT da rede de distribuição com informação da potência instalada e percentagem de utilização.</p><p class=\"MsoNormal\"><b>Campos que constituem o dataset:</b></p><ul><li>Código de Instalação: Identificador único do posto de distribuição</li><li>Potência Instalada [kVA]: Representa a potência total instalada no posto. No caso de existirem vários transformadores, diz respeito à soma da potência de todos.</li><li>Nível de Utilização [%]: Indica quanto da potência instalada foi utilizada nos últimos 12 meses, em intervalos de 19%. Por exemplo, se um posto tem 100 kVA de potência instalada e o seu nível de utilização é \"20%-39%\", significa que a potência máxima utilizada esteve entre 20 kVA e 39 kVA nesse período.</li><li>Tipo Construtivo: Indica o tipo construtivo do posto — se é aéreo, subterrâneo, etc.</li><li>Potência Contratada [kVA]: Soma da potência contratada pelos clientes com contrato ativo, ligados ao posto.</li><li>Número de Clientes: Número de clientes com contrato ativo, ligados ao posto.</li><li>Potência Geração [kW]: Soma da potência instalada das unidades de produção, ligadas ao posto.</li><li>Número de Clientes Produtores: Número de clientes com contrato ativo e com unidade(s) de produção, ligados ao posto.</li><li>Histograma: Horas de Utilização da Potência Instalada no posto, nos últimos 12 meses, em intervalos de 10%. Começa no intervalo [≤ -110%] e termina em [≥110%].</li></ul><p class=\"MsoNormal\">          Por exemplo, se o histograma é \"(0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;22.25;450.75;773.25;2239.75;2352.75;1678.75;682.75;347.5;167.75;37.5;3.75;0.0;0.0)\" significa que:</p><p class=\"MsoNormal\">          Durante 22.25 horas, o nível de utilização do posto esteve no intervalo [ -10% ; 0% [</p><p class=\"MsoNormal\">          Durante 450.75 horas, o nível de utilização do posto esteve no intervalo [ 0% ; 10%[</p><ul><li>Coordenadas Geográficas: A localização exata do posto no mapa — latitude e longitude em formato WGS84.</li></ul><p class=\"MsoNormal\"><br></p><p class=\"MsoNormal\">1. A Informação disponibilizada pela E-REDES constitui uma aproximação aos valores relativos à potência dos ativos de rede que estão instalados e respetiva percentagem da sua utilização, conforme são retirados dos sistemas e têm por referência o momento em que a informação é recolhida. Por questões de segurança, proteção ou ausência de dados, alguns dos postos de transformação não tem a disponibilização de informação relativa ao nível de utilização.</p><p class=\"MsoNormal\">2. Atendendo a que os pontos de ligação, a rede de distribuição de eletricidade, e os próprios valores de consumo e de produção são naturalmente muito dinâmicos, salvaguarda-se que a informação disponibilizada poderá ser objeto de subsequentes alterações e atualizações, ficando igualmente ressalvadas eventuais omissões e/ou pontuais imprecisões de localização que a informação poderá conter.</p><p class=\"MsoNormal\">3. A informação disponibilizada pela E-REDES consiste apenas numa aproximação quanto à capacidade disponivel, das redes, a cada momento, pelo que não consubstancia uma proposta contratual, nem dispensa a consulta da E-REDES para efeitos da formulação dos habituais pedidos de ligação à rede (PLR).</p><p class=\"MsoNormal\">4. A E-REDES salvaguarda que a informação disponibilizada não vincula à ligação a qualquer ponto ou ativo específico da rede, ou sequer a uma solução específica no âmbito dos PLR que venham a ser colocados, reservando-se a E-REDES a avaliar caso a caso, em face dos respetivos pedidos, a solução técnica que seja a mais adequada, de acordo com os princípios a que está legalmente obrigada.</p><p class=\"MsoNormal\">5. A E-REDES não se responsabiliza perante terceiros, nomeadamente, parceiros, prestadores de serviços, empreiteiros, utentes e clientes, pelos danos que possam surgir em consequência, direta ou indireta, do uso da presente Informação, em particular aquando da realização de intervenções, cálculos e/ou estimativas, sem confirmação da exatidão e atualização dos dados, pelo que devidamente se ressalva de que a consulta da presente informação não prejudica o dever de se promover uma consulta direta à E-REDES para obter informação atualizada.</p><p class=\"MsoNormal\">6. A informação disponibilizada é, para os devidos efeitos legais, propriedade da E-REDES, não devendo ser copiada, reproduzida, adaptada, modificada, alterada, apagada, destruída, difundida, transmitida, divulgada ou por qualquer outra forma ser colocada à disposição de terceiros, sem que para tal tenha sido expressamente validada pela E-REDES. A sua reprodução, comercialização ou cedência a terceiros, mesmo que a título gratuito, fora dos pressupostos indicados ou sem autorização expressa da E-REDES é interdita nos termos legais aplicáveis e poderá implicar responsabilidade civil e criminal.</p><p class=\"MsoNormal\"><br></p><p class=\"MsoNormal\">Os dados fornecidos pelo Portal Open Data da E-REDES são abrangidos por licenças abertas (CC BY 4.0). Não existem restrições ao seu acesso, sob o compromisso de os utilizadores dos dados citarem o publicador. Assim, sugerimos que cite o Portal Open Data E-REDES como:</p><p class=\"MsoNormal\">E-REDES – Distribuição de eletricidade, “Portal Open Data E-REDES”. Acedido em “Data”. [Online] Disponível em https://e-redes.opendatasoft.com/pages/homepage/</p><p class=\"MsoNormal\">Se partilhar nas redes sociais, por favor acrescente #PortalOpenData_E_REDES</p>\n<u5:p></u5:p>",
+        "theme": [
+          "Electrical Network",
+          "Electric Mobility"
+        ],
+        "theme_en": [
+          "Electrical Network",
+          "Electric Mobility"
+        ],
+        "theme_pt": [
+          "Rede Elétrica",
+          "Mobilidade Elétrica"
+        ],
+        "keyword": [
+          "homepage"
+        ],
+        "keyword_en": [
+          "homepage"
+        ],
+        "keyword_pt": [
+          "homepage"
+        ],
+        "license": "CC BY 4.0",
+        "license_en": "CC BY 4.0",
+        "license_pt": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_url_en": "https://creativecommons.org/licenses/by/4.0/",
+        "license_url_pt": "https://creativecommons.org/licenses/by/4.0/",
+        "language": "pt",
+        "metadata_languages": [
+          "pt",
+          "en"
+        ],
+        "timezone": "Europe/London",
+        "modified": "2026-07-16T09:04:18+00:00",
+        "modified_updates_on_metadata_change": false,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2026-07-16T09:04:18+00:00",
+        "metadata_processed": "2026-09-03T09:54:05.701000+00:00",
+        "geographic_reference": [
+          "world_pt"
+        ],
+        "geographic_reference_auto": false,
+        "territory": [
+          "Portugal"
+        ],
+        "geometry_types": [
+          "Point"
+        ],
+        "bbox": {
+          "type": "Feature",
+          "geometry": {
+            "coordinates": [
+              [
+                [
+                  -6.214943574741483,
+                  42.14984375517815
+                ],
+                [
+                  -9.505183305591345,
+                  42.14984375517815
+                ],
+                [
+                  -9.505183305591345,
+                  36.9745893124491
+                ],
+                [
+                  -6.214943574741483,
+                  36.9745893124491
+                ],
+                [
+                  -6.214943574741483,
+                  42.14984375517815
+                ]
+              ]
+            ],
+            "type": "Polygon"
+          },
+          "properties": {}
+        },
+        "publisher": "E-REDES",
+        "publisher_en": "E-REDES",
+        "publisher_pt": "E-REDES",
+        "references": null,
+        "records_count": 72434,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": null
+      },
+      "custom": {
+        "perfis-de-utilizacao": null,
+        "atualizado": "Trimestral"
+      }
+    }
+  },
+  "records": [
+    {
+      "cod_instalacao": "0801D2059600",
+      "dis_name": "Faro",
+      "con_name": "Albufeira",
+      "coordenadas_geo": {
+        "lon": -8.248545818839204,
+        "lat": 37.087648290720594
+      },
+      "potencia_transformacao_kva": 400,
+      "nivel_utilizacao": "20%-39%",
+      "tipo_construtivo": "Cabine pré-fabricada",
+      "potencia_contratada": "N/D",
+      "num_clientes": "<20",
+      "potencia_geracao": "N/D",
+      "num_produtores": "<20",
+      "histogram": "(0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;4717.75;3527.5;65.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0)",
+      "coddistrito": "08",
+      "coddistritoconcelho": "0801"
+    },
+    {
+      "cod_instalacao": "1407D3025500",
+      "dis_name": "Santarém",
+      "con_name": "Chamusca",
+      "coordenadas_geo": {
+        "lon": -8.373732115733779,
+        "lat": 39.38453797279015
+      },
+      "potencia_transformacao_kva": 50,
+      "nivel_utilizacao": "0%-19%",
+      "tipo_construtivo": "Aéreo - AS",
+      "potencia_contratada": "N/D",
+      "num_clientes": "<20",
+      "potencia_geracao": "N/D",
+      "num_produtores": "<20",
+      "histogram": "(0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;8644.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0)",
+      "coddistrito": "14",
+      "coddistritoconcelho": "1407"
+    },
+    {
+      "cod_instalacao": "1418D3002600",
+      "dis_name": "Santarém",
+      "con_name": "Tomar",
+      "coordenadas_geo": {
+        "lon": -8.40198319943334,
+        "lat": 39.52415729557072
+      },
+      "potencia_transformacao_kva": 160,
+      "nivel_utilizacao": "60%-79%",
+      "tipo_construtivo": "Cabine alta",
+      "potencia_contratada": "1139.65",
+      "num_clientes": "191",
+      "potencia_geracao": "N/D",
+      "num_produtores": "<20",
+      "histogram": "(0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.5;20.25;2775.75;3153.25;1436.0;676.25;171.0;0.0;0.0;0.0;0.0;0.0)",
+      "coddistrito": "14",
+      "coddistritoconcelho": "1418"
+    }
+  ]
+}

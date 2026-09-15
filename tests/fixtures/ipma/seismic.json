@@ -1,0 +1,77 @@
+{
+  "mainlandMadeira": {
+    "idArea": 7,
+    "country": "PT",
+    "lastSismicActivityDate": "2026-09-07T08:27:29",
+    "updateDate": "2026-09-07T16:36:02",
+    "owner": "IPMA",
+    "data": [
+      {
+        "googlemapref": "http://maps.google.com/maps?output=classic&q=37.5710+-8.4290(M3.4%20-%20E%20%20ODEMIRA-2026%20Ago%2010%20%2002:08:24%20UTC)&ll=37.5710,-8.4290&spn=2,2&f=d&t=h&hl=e",
+        "degree": "IV",
+        "sismoId": "20260810020824C",
+        "dataUpdate": "2026-08-16T18:00:00",
+        "magType": "L",
+        "obsRegion": "E  Odemira",
+        "lon": "-8.4290",
+        "source": "IPMA",
+        "depth": 14,
+        "tensorRef": "",
+        "sensed": true,
+        "shakemapid": "2026081002082401",
+        "time": "2026-08-10T02:08:25",
+        "lat": "37.5710",
+        "shakemapref": "http://shakemap.ipma.pt/2026081002082401/intensity.html",
+        "local": "Odemira (Beja)",
+        "magnitud": "3.4"
+      },
+      {
+        "googlemapref": "",
+        "degree": null,
+        "sismoId": "",
+        "dataUpdate": "2026-08-15T18:00:00",
+        "magType": "L",
+        "obsRegion": "SE Mora",
+        "lon": "-8.1130",
+        "source": "IPMA",
+        "depth": 3,
+        "tensorRef": "",
+        "sensed": null,
+        "shakemapid": "0",
+        "time": "2026-08-08T18:16:05",
+        "lat": "38.8470",
+        "shakemapref": "",
+        "local": null,
+        "magnitud": "0.6"
+      }
+    ]
+  },
+  "azores": {
+    "idArea": 3,
+    "country": "PT",
+    "lastSismicActivityDate": "2026-09-07T15:50:30",
+    "updateDate": "2026-09-07T16:36:02",
+    "owner": "IPMA",
+    "data": [
+      {
+        "googlemapref": "",
+        "degree": null,
+        "sismoId": "",
+        "dataUpdate": "2099-12-31T00:00:00",
+        "magType": "L",
+        "obsRegion": "SE Terceira",
+        "lon": "-26.7540",
+        "source": "IPMA",
+        "depth": 10,
+        "tensorRef": "",
+        "sensed": null,
+        "shakemapid": "0",
+        "time": "2026-08-09T17:55:20",
+        "lat": "38.5500",
+        "shakemapref": "",
+        "local": null,
+        "magnitud": "2.1"
+      }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "@open-data-pt/gatekeeper-health",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@open-data-pt/gatekeeper-shared": "workspace:*"
+  }
+}

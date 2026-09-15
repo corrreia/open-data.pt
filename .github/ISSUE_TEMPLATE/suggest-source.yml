@@ -1,0 +1,48 @@
+name: Suggest a source
+description: Public data from a Portuguese institution or operator that open-data.pt should collect.
+title: "Source: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        No code needed: say where the data is published and who publishes it. If you would rather add it yourself, a dataset from a source we already read is one example entry; see [CONTRIBUTING.md](https://github.com/corrreia/open-data.pt/blob/main/CONTRIBUTING.md).
+  - type: input
+    id: url
+    attributes:
+      label: Where it is published
+      description: The dataset's page, or its API address.
+      placeholder: https://dados.gov.pt/pt/datasets/…
+    validations:
+      required: true
+  - type: input
+    id: publisher
+    attributes:
+      label: Publisher
+      placeholder: Câmara Municipal do Porto
+    validations:
+      required: true
+  - type: dropdown
+    id: format
+    attributes:
+      label: How it is published
+      options:
+        - dados.gov.pt
+        - CKAN
+        - ArcGIS
+        - Opendatasoft
+        - GTFS or GBFS
+        - The publisher's own API
+        - Files only (CSV, spreadsheets, PDF)
+        - I don't know
+    validations:
+      required: true
+  - type: input
+    id: licence
+    attributes:
+      label: Licence
+      description: If the publisher states one, such as CC BY 4.0.
+  - type: textarea
+    id: use
+    attributes:
+      label: What you would use it for
+      description: Optional. It helps decide what to collect first.

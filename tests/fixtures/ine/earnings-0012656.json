@@ -1,0 +1,124 @@
+{
+  "meta": [
+    {
+      "IndicadorCod": "0012656",
+      "IndicadorNome": "Ganho médio mensal (€) por Localização geográfica (NUTS - 2024); Anual - MTSSS/GEP, Quadros de pessoal",
+      "Periodic": "Anual",
+      "UnidadeMedida": "Euro (€)",
+      "DataUltimaAtualizacao": "2026-03-27",
+      "Dimensoes": {
+        "Descricao_Dim": [
+          {
+            "dim_num": "1",
+            "abrv": "Período de referência dos dados",
+            "versao": "XXXXX"
+          },
+          {
+            "dim_num": "2",
+            "abrv": "Localização geográfica (NUTS - 2024)",
+            "versao": "05257"
+          }
+        ],
+        "Categoria_Dim": [
+          {
+            "period": [
+              {
+                "dim_num": "1",
+                "cat_id": "S7A2022",
+                "categ_cod": "S7A2022",
+                "categ_dsg": "2022",
+                "categ_ord": "20220101",
+                "categ_nivel": "1"
+              },
+              {
+                "dim_num": "1",
+                "cat_id": "S7A2023",
+                "categ_cod": "S7A2023",
+                "categ_dsg": "2023",
+                "categ_ord": "20230101",
+                "categ_nivel": "1"
+              },
+              {
+                "dim_num": "1",
+                "cat_id": "S7A2024",
+                "categ_cod": "S7A2024",
+                "categ_dsg": "2024",
+                "categ_ord": "20240101",
+                "categ_nivel": "1"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "data": [
+    {
+      "IndicadorCod": "0012656",
+      "IndicadorDsg": "Ganho médio mensal (€) por Localização geográfica (NUTS - 2024); Anual - MTSSS/GEP, Quadros de pessoal",
+      "DataUltimoAtualizacao": "2026-03-27",
+      "Dados": {
+        "2022": [
+          {
+            "geocod": "1191705",
+            "geodsg": "Mondim de Basto",
+            "ind_string": "902,8",
+            "valor": "902.8"
+          },
+          {
+            "geocod": "1C31210",
+            "geodsg": "Marvão",
+            "ind_string": "903,7",
+            "valor": "903.7"
+          },
+          {
+            "geocod": "11D1812",
+            "geodsg": "Penedono",
+            "ind_string": "903,9",
+            "valor": "903.9"
+          }
+        ],
+        "2023": [
+          {
+            "geocod": "11D1812",
+            "geodsg": "Penedono",
+            "ind_string": "952,9",
+            "valor": "952.9"
+          },
+          {
+            "geocod": "1C31210",
+            "geodsg": "Marvão",
+            "ind_string": "972,4",
+            "valor": "972.4"
+          },
+          {
+            "geocod": "1191705",
+            "geodsg": "Mondim de Basto",
+            "ind_string": "976,1",
+            "valor": "976.1"
+          }
+        ],
+        "2024": [
+          {
+            "geocod": "11D1812",
+            "geodsg": "Penedono",
+            "ind_string": "1 034,1",
+            "valor": "1034.1"
+          },
+          {
+            "geocod": "1C31210",
+            "geodsg": "Marvão",
+            "ind_string": "1 055,2",
+            "valor": "1055.2"
+          },
+          {
+            "geocod": "3003106",
+            "geodsg": "Porto Moniz",
+            "ind_string": "1 056,7",
+            "valor": "1056.7"
+          }
+        ]
+      }
+    }
+  ]
+}

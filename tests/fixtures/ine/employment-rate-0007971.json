@@ -1,0 +1,120 @@
+{
+  "meta": [
+    {
+      "IndicadorCod": "0007971",
+      "IndicadorNome": "Taxa de emprego (%) da população residente com idade entre 16 e 74 anos por Sexo; Mensal - INE, Estatísticas Mensais de Emprego e Desemprego com base no Inquérito ao Emprego",
+      "Periodic": "Mensal",
+      "UnidadeMedida": "Percentagem (%)",
+      "DataUltimaAtualizacao": "2026-08-31",
+      "Dimensoes": {
+        "Descricao_Dim": [
+          {
+            "dim_num": "1",
+            "abrv": "Período de referência dos dados (Mês)",
+            "versao": "XXXXX",
+            "nota_dsg": "Os valores de fevereiro de 1998 a janeiro de 2011 foram obtidos a partir de ponderadores calibrados com base nas Estimativas Mensais de População Residente, calculadas especificamente para o Inquérito ao Emprego em função dos resultados definitivos dos Censos 2011.<br>Os valores de fevereiro 2011 em diante foram obtidos a partir de ponderadores calibrados com base nas Estimativas Mensais de População Residente, calculadas especificamente para o Inquérito ao Emprego em função dos resultados definitivos dos Censos 2021."
+          },
+          {
+            "dim_num": "2",
+            "abrv": "Local de residência (Portugal)",
+            "versao": "05361"
+          },
+          {
+            "dim_num": "3",
+            "abrv": "Sexo",
+            "versao": "00305"
+          }
+        ],
+        "Categoria_Dim": [
+          {
+            "period": [
+              {
+                "dim_num": "1",
+                "cat_id": "S3A202602",
+                "categ_cod": "S3A202602",
+                "categ_dsg": "Fevereiro de 2026",
+                "categ_ord": "20260201",
+                "categ_nivel": "1"
+              },
+              {
+                "dim_num": "1",
+                "cat_id": "S3A202607",
+                "categ_cod": "S3A202607",
+                "categ_dsg": "Julho de 2026",
+                "categ_ord": "20260701",
+                "categ_nivel": "1"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "data": [
+    {
+      "IndicadorCod": "0007971",
+      "IndicadorDsg": "Taxa de emprego (%) da população residente com idade entre 16 e 74 anos por Sexo; Mensal - INE, Estatísticas Mensais de Emprego e Desemprego com base no Inquérito ao Emprego",
+      "DataUltimoAtualizacao": "2026-08-31",
+      "Dados": {
+        "Fevereiro de 2026": [
+          {
+            "geocod": "PT",
+            "geodsg": "Portugal",
+            "dim_3": "1",
+            "dim_3_t": "H",
+            "ind_string": "68,7",
+            "valor": "68.7"
+          },
+          {
+            "geocod": "PT",
+            "geodsg": "Portugal",
+            "dim_3": "2",
+            "dim_3_t": "M",
+            "ind_string": "62,3",
+            "valor": "62.3"
+          },
+          {
+            "geocod": "PT",
+            "geodsg": "Portugal",
+            "dim_3": "T",
+            "dim_3_t": "HM",
+            "ind_string": "65,4",
+            "valor": "65.4"
+          }
+        ],
+        "Julho de 2026": [
+          {
+            "geocod": "PT",
+            "geodsg": "Portugal",
+            "dim_3": "1",
+            "dim_3_t": "H",
+            "sinal_conv": "&",
+            "sinal_conv_desc": "Dado provisório",
+            "ind_string": "70,0 &",
+            "valor": "70"
+          },
+          {
+            "geocod": "PT",
+            "geodsg": "Portugal",
+            "dim_3": "2",
+            "dim_3_t": "M",
+            "sinal_conv": "&",
+            "sinal_conv_desc": "Dado provisório",
+            "ind_string": "63,2 &",
+            "valor": "63.2"
+          },
+          {
+            "geocod": "PT",
+            "geodsg": "Portugal",
+            "dim_3": "T",
+            "dim_3_t": "HM",
+            "sinal_conv": "&",
+            "sinal_conv_desc": "Dado provisório",
+            "ind_string": "66,5 &",
+            "valor": "66.5"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,498 @@
+{
+  "type": "FeatureCollection",
+  "arcgis": {
+    "layerUrl": "https://services.arcgis.com/1dSrzEWVQn5kHHyK/arcgis/rest/services/Ciclovias/FeatureServer/0",
+    "name": "Rede Ciclável",
+    "description": "",
+    "copyrightText": "",
+    "geometryType": "esriGeometryPolyline",
+    "objectIdField": "OBJECTID",
+    "globalIdField": "GlobalID",
+    "fields": [
+      {
+        "name": "OBJECTID",
+        "alias": "OBJECTID",
+        "type": "esriFieldTypeOID",
+        "nullable": false
+      },
+      {
+        "name": "COD_SIG",
+        "alias": "COD_SIG",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "COD_VIA",
+        "alias": "COD_VIA",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "COD_CICLOVIA",
+        "alias": "COD_CICLOVIA",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "DESIGNACAO",
+        "alias": "DESIGNACAO",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "NOME_PROJETO",
+        "alias": "NOME_PROJETO",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "HIERARQUIA",
+        "alias": "HIERARQUIA",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "EIXO",
+        "alias": "EIXO",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "TIPOLOGIA",
+        "alias": "TIPOLOGIA",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "NIVEL_SEGREGACAO",
+        "alias": "NIVEL_SEGREGACAO",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "TIPO_INTERVENCAO",
+        "alias": "TIPO_INTERVENCAO",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "SITUACAO",
+        "alias": "SITUACAO",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "ANO",
+        "alias": "ANO",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "ENTIDADE_RESP",
+        "alias": "ENTIDADE_RESPONSAVEL",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "FREGUESIA",
+        "alias": "FREGUESIA",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "COMPRIMENTO",
+        "alias": "COMP_M",
+        "type": "esriFieldTypeDouble",
+        "nullable": true
+      },
+      {
+        "name": "COMP_KM",
+        "alias": "COMP_KM",
+        "type": "esriFieldTypeDouble",
+        "nullable": true
+      },
+      {
+        "name": "IDTIPO",
+        "alias": "IDTIPO",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "ZONAMENTO",
+        "alias": "ZONAMENTO",
+        "type": "esriFieldTypeString",
+        "nullable": true
+      },
+      {
+        "name": "GlobalID",
+        "alias": "GlobalID",
+        "type": "esriFieldTypeGlobalID",
+        "nullable": false
+      },
+      {
+        "name": "Shape__Length",
+        "alias": "Shape__Length",
+        "type": "esriFieldTypeDouble",
+        "nullable": true
+      }
+    ]
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": 146890,
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -9.2035471894998,
+            38.7497129896501
+          ],
+          [
+            -9.20363360544183,
+            38.7497437885301
+          ],
+          [
+            -9.2036665188315,
+            38.7497553359231
+          ],
+          [
+            -9.20375555719573,
+            38.7497865727923
+          ],
+          [
+            -9.20391844423035,
+            38.7498437186565
+          ],
+          [
+            -9.20400748282408,
+            38.7498749562308
+          ],
+          [
+            -9.20417037140406,
+            38.7499321017267
+          ],
+          [
+            -9.20425940905023,
+            38.7499633382154
+          ],
+          [
+            -9.20442229802544,
+            38.7500204833536
+          ],
+          [
+            -9.20451133590112,
+            38.7500517205474
+          ],
+          [
+            -9.20467422525808,
+            38.7501088644273
+          ],
+          [
+            -9.20476326449995,
+            38.750140101415
+          ],
+          [
+            -9.20496089166571,
+            38.7502094328048
+          ],
+          [
+            -9.20502855214045,
+            38.7502331693811
+          ],
+          [
+            -9.20518543612002,
+            38.7502882066481
+          ],
+          [
+            -9.20519165397649,
+            38.7502903132873
+          ]
+        ]
+      },
+      "properties": {
+        "OBJECTID": 146890,
+        "COD_SIG": "0000980",
+        "COD_VIA": "100615",
+        "COD_CICLOVIA": "0112",
+        "DESIGNACAO": "Rua de Nossa Senhora do Amparo",
+        "NOME_PROJETO": "Bairros 30+Bici - Bairro de Santa Cruz de Benfica",
+        "HIERARQUIA": "Local",
+        "EIXO": null,
+        "TIPOLOGIA": "30+Bici",
+        "NIVEL_SEGREGACAO": "Via banalizada (coexistência)",
+        "TIPO_INTERVENCAO": "Definitiva",
+        "SITUACAO": "Executado",
+        "ANO": "2025",
+        "ENTIDADE_RESP": "CML/DMM; EMEL",
+        "FREGUESIA": "Benfica",
+        "COMPRIMENTO": 156.68,
+        "COMP_KM": 0.15667978,
+        "IDTIPO": "9196",
+        "ZONAMENTO": "Bairro de Santa Cruz Benfica",
+        "GlobalID": "67085c23-c702-4cda-886b-2e6a407d1e15",
+        "Shape__Length": 200.75408320143566
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 146891,
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -9.20067003935785,
+            38.7457465119111
+          ],
+          [
+            -9.20071986556384,
+            38.745750322911
+          ],
+          [
+            -9.20076135796815,
+            38.7457530281889
+          ],
+          [
+            -9.20084131284439,
+            38.7457582691078
+          ],
+          [
+            -9.20093570029861,
+            38.7457643987048
+          ],
+          [
+            -9.20111429002329,
+            38.7457760463248
+          ],
+          [
+            -9.20121066052893,
+            38.7457823305297
+          ],
+          [
+            -9.20123978284661,
+            38.7457842298798
+          ],
+          [
+            -9.20138988878161,
+            38.7457943682363
+          ],
+          [
+            -9.20148574454772,
+            38.7458008415785
+          ],
+          [
+            -9.20166374419748,
+            38.7458128630712
+          ],
+          [
+            -9.20176060403033,
+            38.7458194044755
+          ],
+          [
+            -9.20186622483816,
+            38.7458265376743
+          ],
+          [
+            -9.20196990440426,
+            38.7458335389997
+          ],
+          [
+            -9.20197015304937,
+            38.7458335520392
+          ],
+          [
+            -9.20205175989,
+            38.745837716804
+          ],
+          [
+            -9.20209762243203,
+            38.745840056459
+          ],
+          [
+            -9.20221459832109,
+            38.7458460261744
+          ],
+          [
+            -9.20231059407089,
+            38.7458509247965
+          ],
+          [
+            -9.20249005575844,
+            38.7458600824871
+          ],
+          [
+            -9.20258597466158,
+            38.7458657643638
+          ],
+          [
+            -9.20276522072362,
+            38.7458773485047
+          ],
+          [
+            -9.20286107714599,
+            38.7458835423702
+          ],
+          [
+            -9.2030403232872,
+            38.7458951260879
+          ],
+          [
+            -9.20313617976534,
+            38.7459013206278
+          ],
+          [
+            -9.20328536316517,
+            38.7459109605551
+          ],
+          [
+            -9.20331527789096,
+            38.7459148491618
+          ],
+          [
+            -9.20336109757744,
+            38.7459257814124
+          ],
+          [
+            -9.20340444938639,
+            38.7459416992261
+          ],
+          [
+            -9.20344174172612,
+            38.7459613937064
+          ],
+          [
+            -9.20347501473144,
+            38.7459850664451
+          ],
+          [
+            -9.20350357659764,
+            38.7460122252405
+          ],
+          [
+            -9.20352683347297,
+            38.7460423054094
+          ],
+          [
+            -9.20356492490517,
+            38.7461114850799
+          ],
+          [
+            -9.20359263759397,
+            38.746180882297
+          ],
+          [
+            -9.20361075424334,
+            38.7462104835535
+          ],
+          [
+            -9.20362187212794,
+            38.7462286378384
+          ]
+        ]
+      },
+      "properties": {
+        "OBJECTID": 146891,
+        "COD_SIG": "0000977",
+        "COD_VIA": "67321",
+        "COD_CICLOVIA": "0112",
+        "DESIGNACAO": "Rua do Parque",
+        "NOME_PROJETO": "Bairros 30+Bici - Bairro de Santa Cruz de Benfica",
+        "HIERARQUIA": "Local",
+        "EIXO": null,
+        "TIPOLOGIA": "30+Bici",
+        "NIVEL_SEGREGACAO": "Via banalizada (coexistência)",
+        "TIPO_INTERVENCAO": "Definitiva",
+        "SITUACAO": "Executado",
+        "ANO": "2025",
+        "ENTIDADE_RESP": "CML/DMM; EMEL",
+        "FREGUESIA": "Benfica",
+        "COMPRIMENTO": 277.06,
+        "COMP_KM": 0.27705932,
+        "IDTIPO": "9196",
+        "ZONAMENTO": "Bairro de Santa Cruz Benfica",
+        "GlobalID": "f206ac16-77cf-455d-8cd2-4c0a6f8146a1",
+        "Shape__Length": 354.8902372817515
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 146892,
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -9.20592440235452,
+            38.7521192202606
+          ],
+          [
+            -9.20595320007504,
+            38.7520494608215
+          ],
+          [
+            -9.20597403537665,
+            38.7519985439981
+          ],
+          [
+            -9.20600380847042,
+            38.7519257868074
+          ],
+          [
+            -9.20605827522241,
+            38.7517926831248
+          ],
+          [
+            -9.20608827445942,
+            38.7517199823857
+          ],
+          [
+            -9.20609281697403,
+            38.7517090628756
+          ],
+          [
+            -9.20611273082923,
+            38.7516611531784
+          ],
+          [
+            -9.20614345566525,
+            38.7515870594637
+          ],
+          [
+            -9.20617358867947,
+            38.7515143926033
+          ],
+          [
+            -9.20621752738732,
+            38.7514084304909
+          ],
+          [
+            -9.20621761619102,
+            38.7514082152901
+          ]
+        ]
+      },
+      "properties": {
+        "OBJECTID": 146892,
+        "COD_SIG": "0000975",
+        "COD_VIA": "66252",
+        "COD_CICLOVIA": "0112",
+        "DESIGNACAO": "Estrada de A-da-Maia",
+        "NOME_PROJETO": "Bairros 30+Bici - Bairro de Santa Cruz de Benfica",
+        "HIERARQUIA": "Local",
+        "EIXO": null,
+        "TIPOLOGIA": "30+Bici",
+        "NIVEL_SEGREGACAO": "Via banalizada (coexistência)",
+        "TIPO_INTERVENCAO": "Definitiva",
+        "SITUACAO": "Executado",
+        "ANO": "2025",
+        "ENTIDADE_RESP": "CML/DMM; EMEL",
+        "FREGUESIA": "Benfica",
+        "COMPRIMENTO": 82.95,
+        "COMP_KM": 0.08295168,
+        "IDTIPO": "9196",
+        "ZONAMENTO": "Bairro de Santa Cruz Benfica",
+        "GlobalID": "f76ab5cb-0032-4f1b-ae5c-9e3a529097ec",
+        "Shape__Length": 106.61005131455568
+      }
+    }
+  ]
+}

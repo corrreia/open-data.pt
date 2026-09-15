@@ -1,0 +1,280 @@
+{
+  "dataset": {
+    "dataset_id": "8-total-upac-mensal",
+    "fields": [
+      {
+        "name": "data",
+        "description": null,
+        "annotations": {
+          "timeserie_precision": "month"
+        },
+        "label": "Date",
+        "type": "date",
+        "label_en": "Date",
+        "label_pt": "Data",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "ano",
+        "description": null,
+        "annotations": {},
+        "label": "Year",
+        "type": "text",
+        "label_en": "Year",
+        "label_pt": "Ano",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "mes",
+        "description": null,
+        "annotations": {},
+        "label": "Month",
+        "type": "text",
+        "label_en": "Month",
+        "label_pt": "Mês",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "distrito",
+        "description": null,
+        "annotations": {},
+        "label": "District",
+        "type": "text",
+        "label_en": "District",
+        "label_pt": "Distrito",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "concelho",
+        "description": null,
+        "annotations": {},
+        "label": "Municipality",
+        "type": "text",
+        "label_en": "Municipality",
+        "label_pt": "Concelho",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "freguesia",
+        "description": null,
+        "annotations": {},
+        "label": "Parish",
+        "type": "text",
+        "label_en": "Parish",
+        "label_pt": "Freguesia",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "codigo_postal",
+        "description": null,
+        "annotations": {},
+        "label": "Zip Code",
+        "type": "text",
+        "label_en": "Zip Code",
+        "label_pt": "Código Postal",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "tipo_de_tecnologia",
+        "description": null,
+        "annotations": {},
+        "label": "Technology Type",
+        "type": "text",
+        "label_en": "Technology Type",
+        "label_pt": "Tipo de Tecnologia",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "nivel_de_tensao",
+        "description": null,
+        "annotations": {},
+        "label": "Voltage level",
+        "type": "text",
+        "label_en": "Voltage level",
+        "label_pt": "Nível de Tensão",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "escalao_de_potencia_instalada",
+        "description": null,
+        "annotations": {},
+        "label": "Installed Power Range (kW)",
+        "type": "text",
+        "label_en": "Installed Power Range (kW)",
+        "label_pt": "Escalão de Potência Instalada (kW)",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "numero_de_instalacoes",
+        "description": null,
+        "annotations": {},
+        "label": "Number of Installations",
+        "type": "double",
+        "label_en": "Number of Installations",
+        "label_pt": "Número de Instalações",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "potencia_instalada_upac_kw",
+        "description": null,
+        "annotations": {},
+        "label": "Total installed power (kW)",
+        "type": "double",
+        "label_en": "Total installed power (kW)",
+        "label_pt": "Potência Total Instalada UPAC (kW)",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "coddistrito",
+        "description": null,
+        "annotations": {},
+        "label": "District Code",
+        "type": "text",
+        "label_en": "District Code",
+        "label_pt": "Código Distrito",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "codconcelho",
+        "description": null,
+        "annotations": {},
+        "label": "Municipality Code",
+        "type": "text",
+        "label_en": "Municipality Code",
+        "label_pt": "Código Concelho",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "codfreguesia",
+        "description": null,
+        "annotations": {},
+        "label": "Parish Code",
+        "type": "text",
+        "label_en": "Parish Code",
+        "label_pt": "Código Freguesia",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "cpes",
+        "description": null,
+        "annotations": {},
+        "label": "CPE's",
+        "type": "int",
+        "label_en": "CPE's",
+        "label_pt": "CPE's",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "relacao_instalacoes_por_cpe",
+        "description": null,
+        "annotations": {},
+        "label": "Installations/CPE",
+        "type": "double",
+        "label_en": "Installations/CPE",
+        "label_pt": "Instalações/CPE",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "relacao_potencia_por_cpe",
+        "description": null,
+        "annotations": {},
+        "label": "Power/CPE",
+        "type": "double",
+        "label_en": "Power/CPE",
+        "label_pt": "Potência/CPE",
+        "description_en": null,
+        "description_pt": null
+      }
+    ],
+    "metas": {
+      "default": {
+        "title": "Total production Units for Self-Consumption - Monthly",
+        "description": "<p>This dataset presents the number of certified Self-Consumption Production Units (UPACs) connected to the E-REDES-operated grid and holding an active contract on the last day of the month under analysis.</p><p>The data are organized by geographical location (district, municipality, parish, and postal code), installed capacity range, total installed capacity, voltage level, and technology type.</p><p>UPACs are electricity generation installations intended for self-consumption. The energy produced may be consumed locally and, where applicable, surplus energy may be injected into the grid.</p><p>The dataset enables monitoring of the evolution and geographical distribution of self-consumption units connected to the grid, identifying installation and capacity concentration patterns, and supporting analyses related to renewable energy integration, energy communities, and electricity network planning.</p><p><br></p><p><b>Use cases:</b></p><ul><li><span style=\"white-space: normal;\">Assess the distribution of UPACs by district, municipality, parish, and postal code.</span></li><li><span style=\"white-space: normal;\">Monitor the monthly evolution of the number of self-consumption installations connected to the grid.</span></li><li><span style=\"white-space: normal;\">Analyze installed capacity by capacity range, voltage level, and technology type.</span></li><li><span style=\"white-space: normal;\">Identify areas with a higher concentration of distributed generation.</span></li><li><span style=\"white-space: normal;\">Support studies related to electricity network planning, expansion, and reinforcement.</span></li></ul><p><br></p><p><b>Update frequency: </b>Monthly</p><p><br></p><p><b>Included variables:</b></p><ul><li><span style=\"white-space: normal;\"><b>Date </b>— Reference date of the information.</span></li><li><span style=\"white-space: normal;\"><b>Year </b>— Year corresponding to the analysis period.</span></li><li><span style=\"white-space: normal;\"><b>Month </b>— Month corresponding to the analysis period.</span></li><li><span style=\"white-space: normal;\"><b>Postal Code</b> — Postal code associated with the location of the generation installation.</span></li><li><span style=\"white-space: normal;\"><b>District </b>— Name of the district where the generation installation is located.</span></li><li><span style=\"white-space: normal;\"><b>Municipality </b>— Name of the municipality where the generation installation is located.</span></li><li><span style=\"white-space: normal;\"><b>Parish </b>— Name of the parish where the generation installation is located.</span></li><li><span style=\"white-space: normal;\"><b>Installed Capacity Range</b> — Installed capacity interval in which the UPAC is classified.</span></li><li><span style=\"white-space: normal;\"><b>Number of Installations</b> — Number of certified UPACs connected to the grid and holding an active contract.</span></li><li><span style=\"white-space: normal;\"><b>Total Installed Capacity (kW)</b> — Sum of the installed capacities of the UPACs, representing the maximum generation capacity of the installations.</span></li><li><span style=\"white-space: normal;\"><b>Voltage Level</b> — Voltage level at the installation’s point of connection to the grid, such as Low Voltage or Medium Voltage.</span></li><li><span style=\"white-space: normal;\"><b>Technology Type</b> — Generation technology used by the UPAC, such as solar photovoltaic.</span></li></ul><p><span style=\"white-space: normal;\"><br></span></p><p>1. The information provided by E-REDES is an approximation of the values obtained from the system and is based on the time at which it was collected. Given that connection points, the electricity distribution network, and the consumption and production values themselves are naturally very dynamic, please note that the information provided may be subject to subsequent changes and updates. We also reserve the right to exclude any omissions and/or occasional location inaccuracies that the information may contain.</p><p>2. Therefore, E-REDES is not liable to third parties, namely partners, service providers, contractors, users, and customers, for any damages that may arise directly or indirectly from the use of this Information, particularly when performing interventions, calculations, and/or estimates without confirmation of the accuracy and updating of the data. Therefore, it is duly noted that consulting this information does not prejudice the obligation to consult E-REDES directly for updated information.</p><p><br></p><p>The data provided by the E-REDES Open Data Portal is covered by open licenses (CC BY 4.0). There are no restrictions on access, provided that data users must cite the publisher. Therefore, we suggest that you cite the E-REDES Open Data Portal as:</p><p><br></p><p>E-REDES – Electricity Distribution, \"E-REDES Open Data Portal.\" Accessed under \"Data.\" [Online] Available at https://e-redes.opendatasoft.com/pages/homepage/</p><p><br></p><p>If you share on social media, please add #PortalOpenData_E_REDES</p><p><br></p><div><br></div>",
+        "publisher": "E-REDES",
+        "license": "CC BY 4.0",
+        "modified": "2026-09-02T14:07:04+00:00",
+        "data_processed": "2026-09-02T14:07:04+00:00",
+        "records_count": 504382
+      }
+    }
+  },
+  "records": [
+    {
+      "data": "2026-07",
+      "ano": "2026",
+      "mes": "07",
+      "distrito": "Aveiro",
+      "concelho": "Águeda",
+      "freguesia": "Aguada de Cima",
+      "codigo_postal": "3750",
+      "tipo_de_tecnologia": "Solar",
+      "nivel_de_tensao": "BTE",
+      "escalao_de_potencia_instalada": "]4, 20.7]",
+      "numero_de_instalacoes": 1.0,
+      "potencia_instalada_upac_kw": 11.93,
+      "coddistrito": "01",
+      "codconcelho": "0101",
+      "codfreguesia": "010103",
+      "cpes": 25211,
+      "relacao_instalacoes_por_cpe": 3.966522549680695e-05,
+      "relacao_potencia_por_cpe": 0.0004732061401769069
+    },
+    {
+      "data": "2026-07",
+      "ano": "2026",
+      "mes": "07",
+      "distrito": "Aveiro",
+      "concelho": "Águeda",
+      "freguesia": "Aguada de Cima",
+      "codigo_postal": "3750",
+      "tipo_de_tecnologia": "Solar",
+      "nivel_de_tensao": "BTE",
+      "escalao_de_potencia_instalada": "]20.7, 30]",
+      "numero_de_instalacoes": 3.0,
+      "potencia_instalada_upac_kw": 89.92,
+      "coddistrito": "01",
+      "codconcelho": "0101",
+      "codfreguesia": "010103",
+      "cpes": 25211,
+      "relacao_instalacoes_por_cpe": 0.00011899567649042085,
+      "relacao_potencia_por_cpe": 0.003566697076672881
+    },
+    {
+      "data": "2026-07",
+      "ano": "2026",
+      "mes": "07",
+      "distrito": "Aveiro",
+      "concelho": "Águeda",
+      "freguesia": "Aguada de Cima",
+      "codigo_postal": "3750",
+      "tipo_de_tecnologia": "Solar",
+      "nivel_de_tensao": "BTE",
+      "escalao_de_potencia_instalada": "]30, 1000]",
+      "numero_de_instalacoes": 2.0,
+      "potencia_instalada_upac_kw": 120.0,
+      "coddistrito": "01",
+      "codconcelho": "0101",
+      "codfreguesia": "010103",
+      "cpes": 25211,
+      "relacao_instalacoes_por_cpe": 7.93304509936139e-05,
+      "relacao_potencia_por_cpe": 0.0047598270596168335
+    }
+  ]
+}

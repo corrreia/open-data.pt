@@ -1,0 +1,102 @@
+{
+  "warnings": [
+    {
+      "text": "",
+      "awarenessTypeName": "Agitação Marítima",
+      "idAreaAviso": "BGC",
+      "startTime": "2026-09-07T18:36:00",
+      "awarenessLevelID": "green",
+      "endTime": "2026-09-10T18:00:00"
+    },
+    {
+      "text": "",
+      "awarenessTypeName": "Nevoeiro",
+      "idAreaAviso": "BGC",
+      "startTime": "2026-09-07T18:36:00",
+      "awarenessLevelID": "green",
+      "endTime": "2026-09-10T18:00:00"
+    },
+    {
+      "text": "Valores elevados da temperatura máxima.",
+      "awarenessTypeName": "Tempo Quente",
+      "idAreaAviso": "EVR",
+      "startTime": "2026-09-07T18:36:00",
+      "awarenessLevelID": "yellow",
+      "endTime": "2026-09-07T21:00:00"
+    },
+    {
+      "text": "Persistência de valores elevados da temperatura máxima.",
+      "awarenessTypeName": "Tempo Quente",
+      "idAreaAviso": "FAR",
+      "startTime": "2026-09-07T18:36:00",
+      "awarenessLevelID": "yellow",
+      "endTime": "2026-09-07T21:00:00"
+    }
+  ],
+  "areas": {
+    "owner": "IPMA",
+    "country": "PT",
+    "data": [
+      {
+        "idRegiao": 1,
+        "idAreaAviso": "BGC",
+        "idConcelho": 2,
+        "globalIdLocal": 1040200,
+        "latitude": "41.8076",
+        "idDistrito": 4,
+        "local": "Bragança",
+        "longitude": "-6.7606"
+      },
+      {
+        "idRegiao": 1,
+        "idAreaAviso": "EVR",
+        "idConcelho": 5,
+        "globalIdLocal": 1070500,
+        "latitude": "38.5701",
+        "idDistrito": 7,
+        "local": "Évora",
+        "longitude": "-7.9104"
+      },
+      {
+        "idRegiao": 1,
+        "idAreaAviso": "FAR",
+        "idConcelho": 5,
+        "globalIdLocal": 1080500,
+        "latitude": "37.0146",
+        "idDistrito": 8,
+        "local": "Faro",
+        "longitude": "-7.9331"
+      },
+      {
+        "idRegiao": 1,
+        "idAreaAviso": "FAR",
+        "globalIdLocal": 1081505,
+        "idConcelho": 15,
+        "latitude": "37.0168",
+        "idDistrito": 8,
+        "local": "Sagres",
+        "longitude": "-8.9403"
+      },
+      {
+        "idRegiao": 1,
+        "idAreaAviso": "FAR",
+        "globalIdLocal": 1081100,
+        "idConcelho": 11,
+        "latitude": "37.1500",
+        "idDistrito": 8,
+        "local": "Portimão",
+        "longitude": "-8.5200"
+      },
+      {
+        "idRegiao": 1,
+        "idAreaAviso": "FAR",
+        "globalIdLocal": 1080800,
+        "idConcelho": 8,
+        "latitude": "37.1397",
+        "idDistrito": 8,
+        "local": "Loulé",
+        "longitude": "-8.0202"
+      }
+    ]
+  }
+}

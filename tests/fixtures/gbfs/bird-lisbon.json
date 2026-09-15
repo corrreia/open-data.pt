@@ -1,0 +1,448 @@
+{
+  "discovery": {
+    "version": "2.3",
+    "data": {
+      "en": {
+        "feeds": [
+          {
+            "name": "free_bike_status",
+            "url": "https://mds.bird.co/gbfs/v2/public/lisbon/free_bike_status.json"
+          },
+          {
+            "name": "station_information",
+            "url": "https://mds.bird.co/gbfs/v2/public/lisbon/station_information.json"
+          },
+          {
+            "name": "station_status",
+            "url": "https://mds.bird.co/gbfs/v2/public/lisbon/station_status.json"
+          },
+          {
+            "name": "system_information",
+            "url": "https://mds.bird.co/gbfs/v2/public/lisbon/system_information.json"
+          },
+          {
+            "name": "vehicle_types",
+            "url": "https://mds.bird.co/gbfs/v2/public/lisbon/vehicle_types.json"
+          }
+        ]
+      }
+    },
+    "last_updated": 1788814695,
+    "ttl": 60
+  },
+  "system_information": {
+    "version": "2.3",
+    "data": {
+      "system_id": "bird-lisbon",
+      "name": "bird lisbon",
+      "language": "en",
+      "timezone": "Europe/Lisbon",
+      "license_url": "https://www.bird.co/wp-content/uploads/2019/03/GBFS-Data-License-Agreement-2018-09-25.pdf",
+      "operator": "Bird Rides, Inc.",
+      "rental_apps": {
+        "android": {
+          "discovery_uri": "bird://charger-onboarding",
+          "store_uri": "https://play.google.com/store/apps/details?id=co.bird.android"
+        },
+        "ios": {
+          "discovery_uri": "bird://",
+          "store_uri": "https://apps.apple.com/us/app/bird-be-free-enjoy-the-ride/id1260842311"
+        }
+      }
+    },
+    "last_updated": 1788814698,
+    "ttl": 60
+  },
+  "vehicle_types": {
+    "version": "2.3",
+    "data": {
+      "vehicle_types": [
+        {
+          "vehicle_type_id": "bae2102b-56ba-42ba-9097-720e5990b4b2",
+          "form_factor": "scooter",
+          "propulsion_type": "electric",
+          "max_range_meters": 24000.0
+        },
+        {
+          "vehicle_type_id": "2ea3c8b2-ed07-4c53-b87e-638c08471309",
+          "form_factor": "bicycle",
+          "propulsion_type": "electric_assist",
+          "max_range_meters": 60000.0
+        }
+      ]
+    },
+    "last_updated": 1788814699,
+    "ttl": 60
+  },
+  "station_information": {
+    "version": "2.3",
+    "data": {
+      "stations": [
+        {
+          "station_id": "66b481fb-e590-413e-a587-7e2ca2f8ce64",
+          "name": "Rua General Garcia Rosado, 2",
+          "lat": 38.72927500000001,
+          "lon": -9.140525265,
+          "address": "Rua General Garcia Rosado, 2",
+          "is_virtual_station": true,
+          "station_area": {
+            "coordinates": [
+              [
+                [
+                  [
+                    -9.140456173586076,
+                    38.729275
+                  ],
+                  [
+                    -9.140461432856803,
+                    38.72929562612823
+                  ],
+                  [
+                    -9.140476409992692,
+                    38.729313112115406
+                  ],
+                  [
+                    -9.140498824860574,
+                    38.729324795878505
+                  ],
+                  [
+                    -9.140525265,
+                    38.7293288986705
+                  ],
+                  [
+                    -9.140551705139428,
+                    38.729324795878505
+                  ],
+                  [
+                    -9.14057412000731,
+                    38.729313112115406
+                  ],
+                  [
+                    -9.140589097143199,
+                    38.72929562612823
+                  ],
+                  [
+                    -9.140594356413926,
+                    38.729275
+                  ],
+                  [
+                    -9.140589097143199,
+                    38.729254373871775
+                  ],
+                  [
+                    -9.14057412000731,
+                    38.729236887884596
+                  ],
+                  [
+                    -9.140551705139428,
+                    38.7292252041215
+                  ],
+                  [
+                    -9.140525265,
+                    38.7292211013295
+                  ],
+                  [
+                    -9.140498824860574,
+                    38.7292252041215
+                  ],
+                  [
+                    -9.140476409992692,
+                    38.729236887884596
+                  ],
+                  [
+                    -9.140461432856803,
+                    38.729254373871775
+                  ],
+                  [
+                    -9.140456173586076,
+                    38.729275
+                  ]
+                ]
+              ]
+            ],
+            "type": "MultiPolygon"
+          }
+        },
+        {
+          "station_id": "a681d925-5845-4002-b687-db7966ab86fe",
+          "name": "Rua José Estevão, 2C",
+          "lat": 38.72749975,
+          "lon": -9.137490513,
+          "address": "Rua José Estevão, 2C",
+          "is_virtual_station": true,
+          "station_area": {
+            "coordinates": [
+              [
+                [
+                  [
+                    -9.13742142330284,
+                    38.72749975
+                  ],
+                  [
+                    -9.137426682442886,
+                    38.727520376128226
+                  ],
+                  [
+                    -9.137441659206628,
+                    38.727537862115405
+                  ],
+                  [
+                    -9.137464073517549,
+                    38.7275495458785
+                  ],
+                  [
+                    -9.137490513,
+                    38.7275536486705
+                  ],
+                  [
+                    -9.13751695248245,
+                    38.7275495458785
+                  ],
+                  [
+                    -9.137539366793371,
+                    38.727537862115405
+                  ],
+                  [
+                    -9.137554343557113,
+                    38.727520376128226
+                  ],
+                  [
+                    -9.13755960269716,
+                    38.72749975
+                  ],
+                  [
+                    -9.137554343557113,
+                    38.727479123871774
+                  ],
+                  [
+                    -9.137539366793371,
+                    38.727461637884595
+                  ],
+                  [
+                    -9.13751695248245,
+                    38.7274499541215
+                  ],
+                  [
+                    -9.137490513,
+                    38.7274458513295
+                  ],
+                  [
+                    -9.137464073517549,
+                    38.7274499541215
+                  ],
+                  [
+                    -9.137441659206628,
+                    38.727461637884595
+                  ],
+                  [
+                    -9.137426682442886,
+                    38.727479123871774
+                  ],
+                  [
+                    -9.13742142330284,
+                    38.72749975
+                  ]
+                ]
+              ]
+            ],
+            "type": "MultiPolygon"
+          }
+        },
+        {
+          "station_id": "89d523a7-4ff6-405e-8bdd-24e92f15a25c",
+          "name": "Avenida Coronel Eduardo Galhardo, 30",
+          "lat": 38.72807359000001,
+          "lon": -9.127661919000001,
+          "address": "Avenida Coronel Eduardo Galhardo, 30",
+          "is_virtual_station": true,
+          "station_area": {
+            "coordinates": [
+              [
+                [
+                  [
+                    -9.127592828747922,
+                    38.72807359
+                  ],
+                  [
+                    -9.12759808793021,
+                    38.72809421612823
+                  ],
+                  [
+                    -9.127613064814241,
+                    38.728111702115406
+                  ],
+                  [
+                    -9.12763547930519,
+                    38.728123385878504
+                  ],
+                  [
+                    -9.127661919,
+                    38.7281274886705
+                  ],
+                  [
+                    -9.127688358694808,
+                    38.728123385878504
+                  ],
+                  [
+                    -9.127710773185758,
+                    38.728111702115406
+                  ],
+                  [
+                    -9.12772575006979,
+                    38.72809421612823
+                  ],
+                  [
+                    -9.127731009252077,
+                    38.72807359
+                  ],
+                  [
+                    -9.12772575006979,
+                    38.728052963871775
+                  ],
+                  [
+                    -9.127710773185758,
+                    38.728035477884596
+                  ],
+                  [
+                    -9.127688358694808,
+                    38.7280237941215
+                  ],
+                  [
+                    -9.127661919,
+                    38.7280196913295
+                  ],
+                  [
+                    -9.12763547930519,
+                    38.7280237941215
+                  ],
+                  [
+                    -9.127613064814241,
+                    38.728035477884596
+                  ],
+                  [
+                    -9.12759808793021,
+                    38.728052963871775
+                  ],
+                  [
+                    -9.127592828747922,
+                    38.72807359
+                  ]
+                ]
+              ]
+            ],
+            "type": "MultiPolygon"
+          }
+        }
+      ]
+    },
+    "last_updated": 1788814696,
+    "ttl": 60
+  },
+  "station_status": {
+    "version": "2.3",
+    "data": {
+      "stations": [
+        {
+          "station_id": "66b481fb-e590-413e-a587-7e2ca2f8ce64",
+          "num_bikes_available": 0,
+          "vehicle_types_available": [
+            {
+              "vehicle_type_id": "bae2102b-56ba-42ba-9097-720e5990b4b2",
+              "count": 0
+            }
+          ],
+          "num_docks_available": 9,
+          "is_installed": true,
+          "is_renting": true,
+          "is_returning": true,
+          "last_reported": 1788814697
+        },
+        {
+          "station_id": "a681d925-5845-4002-b687-db7966ab86fe",
+          "num_bikes_available": 0,
+          "vehicle_types_available": [
+            {
+              "vehicle_type_id": "bae2102b-56ba-42ba-9097-720e5990b4b2",
+              "count": 0
+            }
+          ],
+          "num_docks_available": 9,
+          "is_installed": true,
+          "is_renting": true,
+          "is_returning": true,
+          "last_reported": 1788814697
+        },
+        {
+          "station_id": "89d523a7-4ff6-405e-8bdd-24e92f15a25c",
+          "num_bikes_available": 0,
+          "vehicle_types_available": [
+            {
+              "vehicle_type_id": "bae2102b-56ba-42ba-9097-720e5990b4b2",
+              "count": 0
+            }
+          ],
+          "num_docks_available": 4,
+          "is_installed": true,
+          "is_renting": true,
+          "is_returning": true,
+          "last_reported": 1788814697
+        }
+      ]
+    },
+    "last_updated": 1788814697,
+    "ttl": 60
+  },
+  "free_bike_status": {
+    "version": "2.3",
+    "data": {
+      "bikes": [
+        {
+          "bike_id": "864a3cdb-a1b9-4aee-a129-08dba8134b68",
+          "lat": 38.70027541666666,
+          "lon": -9.190482133333335,
+          "is_disabled": false,
+          "is_reserved": true,
+          "vehicle_type_id": "bae2102b-56ba-42ba-9097-720e5990b4b2",
+          "last_reported": 1788814674,
+          "current_range_meters": 26496.0,
+          "current_fuel_percent": 0.78409094
+        },
+        {
+          "bike_id": "ea98e9a6-ad8d-4454-8bf9-efa5ece03543",
+          "lat": 38.7447052,
+          "lon": -9.200067516666667,
+          "is_disabled": false,
+          "is_reserved": true,
+          "vehicle_type_id": "bae2102b-56ba-42ba-9097-720e5990b4b2",
+          "last_reported": 1788814687,
+          "current_range_meters": 27406.0,
+          "current_fuel_percent": 0.8068182
+        },
+        {
+          "bike_id": "b7b10746-4f45-4c60-89af-8c3355df22e5",
+          "lat": 38.692950333333336,
+          "lon": -9.210053499999999,
+          "is_disabled": false,
+          "is_reserved": false,
+          "vehicle_type_id": "bae2102b-56ba-42ba-9097-720e5990b4b2",
+          "last_reported": 1788814610,
+          "current_range_meters": 12738.0,
+          "current_fuel_percent": 0.375
+        },
+        {
+          "bike_id": "0b80fdd3-3419-4932-99e7-11f4fbc7c67c",
+          "lat": 38.69578551666667,
+          "lon": -9.207346916666667,
+          "is_disabled": false,
+          "is_reserved": false,
+          "vehicle_type_id": "bae2102b-56ba-42ba-9097-720e5990b4b2",
+          "last_reported": 1788814627,
+          "current_range_meters": 6528.0,
+          "current_fuel_percent": 0.19318181
+        }
+      ]
+    },
+    "last_updated": 1788814687,
+    "ttl": 60
+  }
+}

@@ -1,0 +1,151 @@
+import type { ExampleFeed } from "../../index";
+
+const SERVING = {
+  licence: "Source terms apply",
+  attribution: "Instituto Português do Mar e da Atmosfera (IPMA)",
+} as const;
+
+export const IPMA_EXAMPLES: ExampleFeed[] = [
+  {
+    slug: "ipma-station-observations-feed",
+    title: "IPMA hourly station observations",
+    description: "The last 24 hours of temperature, humidity, wind, precipitation, and pressure readings from IPMA stations.",
+    config: { source: "ipma", feed: "station-observations" },
+    policy: {
+      name: "IPMA hourly observations",
+      version: 4,
+      collection: {
+        cadenceSeconds: 3_600,
+        timeoutSeconds: 30,
+        maxBytes: 3 * 1024 * 1024,
+        historyMode: "changes",
+        // The latest reading per station repeats values the observations series already records.
+        withoutHistory: ["stations-latest"],
+      },
+      serving: SERVING,
+    },
+    staleAfterSeconds: 7_200,
+    publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
+    topics: ["weather"],
+  },
+  {
+    slug: "ipma-daily-forecast-feed",
+    title: "IPMA three-day city forecast",
+    description: "Daily weather forecasts for Portuguese district capitals and islands for today and the following two days.",
+    config: { source: "ipma", feed: "daily-forecast" },
+    policy: {
+      name: "IPMA forecast reference",
+      version: 2,
+      collection: {
+        cadenceSeconds: 3_600,
+        timeoutSeconds: 30,
+        maxBytes: 2 * 1024 * 1024,
+        historyMode: "changes",
+      },
+      serving: SERVING,
+    },
+    staleAfterSeconds: 3_600,
+    publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
+    topics: ["weather"],
+  },
+  {
+    slug: "ipma-seismic-feed",
+    title: "IPMA seismic events",
+    description: "The latest 30-day seismic event lists for mainland Portugal, Madeira, and the Azores.",
+    config: { source: "ipma", feed: "seismic" },
+    policy: {
+      name: "IPMA seismic changes",
+      version: 2,
+      collection: {
+        cadenceSeconds: 3_600,
+        timeoutSeconds: 30,
+        maxBytes: 2 * 1024 * 1024,
+        historyMode: "changes",
+      },
+      serving: SERVING,
+    },
+    staleAfterSeconds: 7_200,
+    publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
+    topics: ["environment"],
+  },
+  {
+    slug: "ipma-weather-warnings-feed",
+    title: "IPMA weather warnings",
+    description: "Weather warnings by district or island, with severity and validity periods.",
+    config: { source: "ipma", feed: "warnings" },
+    policy: {
+      name: "IPMA warning changes",
+      version: 2,
+      collection: {
+        cadenceSeconds: 1_800,
+        timeoutSeconds: 30,
+        maxBytes: 128 * 1024,
+        historyMode: "changes",
+      },
+      serving: SERVING,
+    },
+    staleAfterSeconds: 3_600,
+    publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
+    topics: ["weather"],
+  },
+  {
+    slug: "ipma-uv-index-feed",
+    title: "IPMA UV index forecast",
+    description: "Daily UV index forecasts by IPMA forecast location and period.",
+    config: { source: "ipma", feed: "uv-index" },
+    policy: {
+      name: "IPMA UV forecast reference",
+      version: 1,
+      collection: {
+        cadenceSeconds: 14_400,
+        timeoutSeconds: 30,
+        maxBytes: 128 * 1024,
+        historyMode: "changes",
+      },
+      serving: SERVING,
+    },
+    staleAfterSeconds: 28_800,
+    publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
+    topics: ["weather"],
+  },
+  {
+    slug: "ipma-fire-risk-feed",
+    title: "IPMA municipal fire risk",
+    description: "Three-day rural fire danger forecasts by municipality code.",
+    config: { source: "ipma", feed: "fire-risk" },
+    policy: {
+      name: "IPMA fire-risk current state",
+      version: 1,
+      collection: {
+        cadenceSeconds: 14_400,
+        timeoutSeconds: 30,
+        maxBytes: 128 * 1024,
+        historyMode: "latest",
+      },
+      serving: SERVING,
+    },
+    staleAfterSeconds: 28_800,
+    publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
+    topics: ["environment"],
+  },
+  {
+    slug: "ipma-sea-forecast-feed",
+    title: "IPMA three-day sea forecast",
+    description: "Wave and sea-surface forecasts for Portuguese coastal locations for today and the following two days.",
+    config: { source: "ipma", feed: "sea-forecast" },
+    policy: {
+      name: "IPMA sea forecast reference",
+      version: 2,
+      collection: {
+        cadenceSeconds: 3_600,
+        timeoutSeconds: 30,
+        maxBytes: 64 * 1024,
+        historyMode: "changes",
+      },
+      serving: SERVING,
+    },
+    staleAfterSeconds: 7_200,
+    publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
+    topics: ["weather"],
+  },
+];

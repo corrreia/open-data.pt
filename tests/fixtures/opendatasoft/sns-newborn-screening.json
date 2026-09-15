@@ -1,0 +1,224 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "tempo",
+        "description": null,
+        "annotations": {
+          "timeserie_precision": "year",
+          "facet": true,
+          "facetsort": "-alphanum",
+          "timerangeFilter": true
+        },
+        "label": "Ano",
+        "type": "date",
+        "label_pt": "Ano",
+        "label_en": "Ano",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "entidade",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count",
+          "facet": true
+        },
+        "label": "Entidade",
+        "type": "text",
+        "label_pt": "Entidade",
+        "label_en": "Entidade",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "recem_nascidos_analisados",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Recém-Nascidos Analisados",
+        "type": "int",
+        "label_pt": "Recém-Nascidos Analisados",
+        "label_en": "Recém-Nascidos Analisados",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "casos_detetados",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Casos Detetados",
+        "type": "int",
+        "label_pt": "Casos Detetados",
+        "label_en": "Casos Detetados",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "amostras_recebidas",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Amostras Recebidas",
+        "type": "int",
+        "label_pt": "Amostras Recebidas",
+        "label_en": "Amostras Recebidas",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "tempo_medio_de_inicio_de_tratamento_dias_apos_o_diagnostico",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Tempo médio de início de tratamento (dias após o diagnóstico)",
+        "type": "double",
+        "label_pt": "Tempo médio de início de tratamento (dias após o diagnóstico)",
+        "label_en": "Tempo médio de início de tratamento (dias após o diagnóstico)",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "dataset_id": "programa-nacional-de-diagnostico-precoce",
+    "dataset_uid": "da_mrdxzd",
+    "has_records": true,
+    "features": [
+      "analyze",
+      "timeserie"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "dcat": {
+        "created": "2016-01-29",
+        "issued": "2017-12-31",
+        "creator": "SPMS",
+        "contributor": "INSA",
+        "contact_name": null,
+        "contact_email": null,
+        "accrualperiodicity": "Anual",
+        "spatial": "Portugal Continental",
+        "temporal": "2011 a 2025",
+        "granularity": null,
+        "dataquality": null,
+        "publisher_type": null,
+        "conforms_to": null,
+        "temporal_coverage_start": null,
+        "temporal_coverage_end": null,
+        "accessRights": null,
+        "relation": null
+      },
+      "default": {
+        "title": "Programa Nacional de Diagnóstico Precoce",
+        "title_pt": "Programa Nacional de Diagnóstico Precoce",
+        "title_en": "Programa Nacional de Diagnóstico Precoce",
+        "description": "<p>Evolução do desempenho do Programa Nacional de Diagnóstico Precoce.</p>",
+        "description_pt": "<p>Evolução do desempenho do Programa Nacional de Diagnóstico Precoce.</p>",
+        "description_en": "<p>Evolução do desempenho do Programa Nacional de Diagnóstico Precoce.</p>",
+        "theme": [
+          "Qualidade"
+        ],
+        "theme_pt": [
+          "Qualidade"
+        ],
+        "theme_en": [
+          "Qualidade"
+        ],
+        "keyword": [
+          "Programa Nacional de Saúde",
+          "Diagnósticos",
+          "Diagnóstico Precoce"
+        ],
+        "keyword_pt": [
+          "Programa Nacional de Saúde",
+          "Diagnósticos",
+          "Diagnóstico Precoce"
+        ],
+        "keyword_en": [
+          "Programa Nacional de Saúde",
+          "Diagnósticos",
+          "Diagnóstico Precoce"
+        ],
+        "license": null,
+        "license_pt": null,
+        "license_en": null,
+        "license_url": null,
+        "license_url_pt": null,
+        "license_url_en": null,
+        "language": "pt",
+        "metadata_languages": [
+          "pt"
+        ],
+        "timezone": null,
+        "modified": "2026-07-08T08:32:49.911000+00:00",
+        "modified_updates_on_metadata_change": true,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2026-07-08T08:32:49.911000+00:00",
+        "metadata_processed": "2026-07-08T08:32:49.961000+00:00",
+        "geographic_reference": [
+          "world_pt"
+        ],
+        "geographic_reference_auto": true,
+        "territory": [
+          "Portugal"
+        ],
+        "geometry_types": null,
+        "bbox": null,
+        "publisher": "INSA",
+        "publisher_pt": "INSA",
+        "publisher_en": "INSA",
+        "references": null,
+        "records_count": 15,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": null
+      },
+      "custom": {
+        "dataset-id-number": "81",
+        "measure-unit": "Número de dias",
+        "source-data": "Relatório de atividade",
+        "version": null,
+        "formula": null
+      }
+    }
+  },
+  "records": [
+    {
+      "tempo": "2011",
+      "entidade": "Instituto Nacional de Saúde Doutor Ricardo Jorge, IP",
+      "recem_nascidos_analisados": 97116,
+      "casos_detetados": 75,
+      "amostras_recebidas": 102419,
+      "tempo_medio_de_inicio_de_tratamento_dias_apos_o_diagnostico": 11.1
+    },
+    {
+      "tempo": "2012",
+      "entidade": "Instituto Nacional de Saúde Doutor Ricardo Jorge, IP",
+      "recem_nascidos_analisados": 90112,
+      "casos_detetados": 79,
+      "amostras_recebidas": 91489,
+      "tempo_medio_de_inicio_de_tratamento_dias_apos_o_diagnostico": 10.1
+    },
+    {
+      "tempo": "2013",
+      "entidade": "Instituto Nacional de Saúde Doutor Ricardo Jorge, IP",
+      "recem_nascidos_analisados": 82571,
+      "casos_detetados": 60,
+      "amostras_recebidas": 83641,
+      "tempo_medio_de_inicio_de_tratamento_dias_apos_o_diagnostico": 10.1
+    }
+  ]
+}

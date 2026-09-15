@@ -1,0 +1,149 @@
+{
+  "meta": [
+    {
+      "IndicadorCod": "0008074",
+      "IndicadorNome": "Taxa de criminalidade (‰) por Localização geográfica (NUTS - 2013) e Categoria de crime; Anual - Direcção-Geral da Política de Justiça",
+      "Periodic": "Anual",
+      "UnidadeMedida": "Permilagem (‰)",
+      "DataUltimaAtualizacao": "2026-06-30",
+      "Dimensoes": {
+        "Descricao_Dim": [
+          {
+            "dim_num": "1",
+            "abrv": "Período de referência dos dados",
+            "versao": "XXXXX",
+            "nota_dsg": "Dados revistos para o período de 2021 a 2022, na sequência da revisão das Estimativas Anuais de População Residente, divulgada pelo INE em 22 de junho de 2026. Os totais contemplam os dados da Polícia Judiciária (PJ), da Polícia de Segurança Pública (PSP), da Guarda Nacional Republicana (GNR), da Autoridade Tributária e Aduaneira (AT), da Polícia Municipal (PM), da Polícia Marítima (PM), da Polícia Judiciária Militar (PJM), do Serviço de Estrangeiros e Fronteiras (SEF), da Autoridade de Segurança Alimentar e Económica (ASAE) e incluem crimes de localização desconhecida ou não classificável, registados por entidades que operam a nível nacional - Polícia Judiciária (PJ), Autoridade de Segurança Alimentar e Económica (ASAE), Serviço de Estrangeiros e Fronteiras (SEF), Autoridade Tributária e Aduaneira (AT), Direções Distritais de Finanças (DDF), Direção de Serviços Antifraude (DSAF), Polícia de Segurança Pública (PSP), Direção Nacional da Polícia de Segurança Pública (PSP), Unidade Especial de Polícia, Guarda Nacional Republicana (GNR), Comandos Territoriais, Unidade Nacional de Trânsito, Unidade de Segurança e Honras de Estado, Unidade de Intervenção, Unidade de Controlo Costeiro e Unidade de Ação Fiscal da Guarda Nacional Republicana (GNR)."
+          },
+          {
+            "dim_num": "2",
+            "abrv": "Localização geográfica (NUTS - 2013)",
+            "versao": "03505",
+            "nota_dsg": "A partir de 1 de janeiro de 2015 entrou em vigor uma nova versão das NUTS (NUTS 2013). Ao nível da NUTS II ocorreu apenas uma alteração de designação em \"Lisboa\" que passou a ser designada por \"Área Metropolitana de Lisboa\"."
+          },
+          {
+            "dim_num": "3",
+            "abrv": "Categoria de crime",
+            "versao": "00902"
+          }
+        ],
+        "Categoria_Dim": [
+          {
+            "period": [
+              {
+                "dim_num": "1",
+                "cat_id": "S7A2020",
+                "categ_cod": "S7A2020",
+                "categ_dsg": "2020",
+                "categ_ord": "20200101",
+                "categ_nivel": "1"
+              },
+              {
+                "dim_num": "1",
+                "cat_id": "S7A2021",
+                "categ_cod": "S7A2021",
+                "categ_dsg": "2021",
+                "categ_ord": "20210101",
+                "categ_nivel": "1"
+              },
+              {
+                "dim_num": "1",
+                "cat_id": "S7A2022",
+                "categ_cod": "S7A2022",
+                "categ_dsg": "2022",
+                "categ_ord": "20220101",
+                "categ_nivel": "1"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "data": [
+    {
+      "IndicadorCod": "0008074",
+      "IndicadorDsg": "Taxa de criminalidade (‰) por Localização geográfica (NUTS - 2013) e Categoria de crime; Anual - Direcção-Geral da Política de Justiça",
+      "DataUltimoAtualizacao": "2026-06-30",
+      "Dados": {
+        "2020": [
+          {
+            "geocod": "1111601",
+            "geodsg": "Arcos de Valdevez",
+            "dim_3": "2",
+            "dim_3_t": "Furto/roubo por esticão e na via pública",
+            "ind_string": "0,0",
+            "valor": "0"
+          },
+          {
+            "geocod": "1111604",
+            "geodsg": "Monção",
+            "dim_3": "2",
+            "dim_3_t": "Furto/roubo por esticão e na via pública",
+            "ind_string": "0,0",
+            "valor": "0"
+          },
+          {
+            "geocod": "1111605",
+            "geodsg": "Paredes de Coura",
+            "dim_3": "2",
+            "dim_3_t": "Furto/roubo por esticão e na via pública",
+            "ind_string": "0,0",
+            "valor": "0"
+          }
+        ],
+        "2021": [
+          {
+            "geocod": "1111603",
+            "geodsg": "Melgaço",
+            "dim_3": "2",
+            "dim_3_t": "Furto/roubo por esticão e na via pública",
+            "ind_string": "0,0",
+            "valor": "0"
+          },
+          {
+            "geocod": "1111604",
+            "geodsg": "Monção",
+            "dim_3": "2",
+            "dim_3_t": "Furto/roubo por esticão e na via pública",
+            "ind_string": "0,0",
+            "valor": "0"
+          },
+          {
+            "geocod": "1111606",
+            "geodsg": "Ponte da Barca",
+            "dim_3": "2",
+            "dim_3_t": "Furto/roubo por esticão e na via pública",
+            "ind_string": "0,0",
+            "valor": "0"
+          }
+        ],
+        "2022": [
+          {
+            "geocod": "1111603",
+            "geodsg": "Melgaço",
+            "dim_3": "2",
+            "dim_3_t": "Furto/roubo por esticão e na via pública",
+            "ind_string": "0,0",
+            "valor": "0"
+          },
+          {
+            "geocod": "1111606",
+            "geodsg": "Ponte da Barca",
+            "dim_3": "2",
+            "dim_3_t": "Furto/roubo por esticão e na via pública",
+            "ind_string": "0,0",
+            "valor": "0"
+          },
+          {
+            "geocod": "1120301",
+            "geodsg": "Amares",
+            "dim_3": "2",
+            "dim_3_t": "Furto/roubo por esticão e na via pública",
+            "ind_string": "0,0",
+            "valor": "0"
+          }
+        ]
+      }
+    }
+  ]
+}

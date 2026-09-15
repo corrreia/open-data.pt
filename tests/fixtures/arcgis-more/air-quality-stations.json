@@ -1,0 +1,91 @@
+{
+  "type": "FeatureCollection",
+  "arcgis": {
+    "layerUrl": "https://sniambgeoogc.apambiente.pt/getogc/rest/services/SNIAmb/Qualidade_do_Ar/MapServer/0",
+    "name": "Estações",
+    "description": "Localização das estações da Rede de monitorização de qualidade do ar ambiente",
+    "copyrightText": "Agência Portuguesa do Ambiente, I.P.",
+    "geometryType": "esriGeometryPoint",
+    "objectIdField": "rede_m_id",
+    "fields": [
+      {
+        "name": "rede_m_id",
+        "alias": "ID da estação",
+        "type": "esriFieldTypeOID"
+      },
+      {
+        "name": "nome",
+        "alias": "Nome",
+        "type": "esriFieldTypeString"
+      },
+      {
+        "name": "local_impl",
+        "alias": "Local de implantação",
+        "type": "esriFieldTypeString"
+      },
+      {
+        "name": "limite",
+        "alias": "Limite",
+        "type": "esriFieldTypeDouble"
+      },
+      {
+        "name": "shape",
+        "alias": "shape",
+        "type": "esriFieldTypeGeometry"
+      }
+    ]
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": 1021,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8.644843999999978,
+          41.199805000000026
+        ]
+      },
+      "properties": {
+        "rede_m_id": 1021,
+        "nome": "Custóias-Matosinhos",
+        "local_impl": "Rua Nova de São Gens",
+        "limite": 1.976e-321
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 1023,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8.552599999999927,
+          41.206605000000025
+        ]
+      },
+      "properties": {
+        "rede_m_id": 1023,
+        "nome": "Ermesinde-Valongo",
+        "local_impl": "Rua 25 de Abril",
+        "limite": 1.976e-321
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 1024,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8.618714999999952,
+          41.23556300000007
+        ]
+      },
+      "properties": {
+        "rede_m_id": 1024,
+        "nome": "D.Manuel II-Vermoim",
+        "local_impl": "Avenida D. Manuel II",
+        "limite": 1.976e-321
+      }
+    }
+  ]
+}

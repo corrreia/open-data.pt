@@ -1,0 +1,99 @@
+{
+  "package": {
+    "author": "Departamento Municipal de Espaços Verdes e Gestão de Infraestruturas",
+    "author_email": "dmevgi@cm-porto.pt",
+    "creator_user_id": "7d855beb-ddb8-4d57-864f-cb6f56432e7a",
+    "frequency": "as_needed",
+    "id": "7991ece6-0793-4702-ad23-570e76627a82",
+    "is_opendata": "yes",
+    "isopen": true,
+    "license_id": "cc-zero",
+    "license_title": "Creative Commons CCZero",
+    "license_url": "http://www.opendefinition.org/licenses/cc-zero",
+    "maintainer": "Departamento Municipal de Espaços Verdes e Gestão de Infraestruturas",
+    "maintainer_email": "dmevgi@cm-porto.pt",
+    "metadata_created": "2025-05-16T14:56:55.352386",
+    "metadata_modified": "2026-03-05T03:59:05.381717",
+    "name": "identificacao-e-caracterizacao-do-arvoredo-do-municipio-do-porto",
+    "notes": "Identificação, caracterização e localização de todas as árvores existentes em áreas de domínio público do Município do Porto. Inclui, nomeadamente, a espécie arbórea e a data de plantação.",
+    "num_resources": 2,
+    "num_tags": 4,
+    "organization": {
+      "id": "a3b725e0-7e5d-4f9c-bba7-502429ed6aa9",
+      "name": "camara-municipal-do-porto",
+      "title": "Câmara Municipal do Porto",
+      "type": "organization",
+      "description": "Órgão colegial do tipo executivo a que está atribuída a gestão permanente dos assuntos municipais do Concelho do Porto.",
+      "image_url": "https://www.cm-porto.pt/assets/misc/img/logos/cmp.png",
+      "created": "2022-03-18T04:54:34.880739",
+      "is_organization": true,
+      "approval_status": "approved",
+      "state": "active"
+    },
+    "owner_org": "a3b725e0-7e5d-4f9c-bba7-502429ed6aa9",
+    "private": false,
+    "state": "active",
+    "title": "Identificação e caracterização do arvoredo do Município do Porto",
+    "type": "dataset",
+    "url": "",
+    "version": "1.0",
+    "tags": [
+      {
+        "display_name": "Arvoredo",
+        "id": "e759668b-ebfc-4c68-afe9-8cd30429a733",
+        "name": "Arvoredo",
+        "state": "active",
+        "vocabulary_id": null
+      },
+      {
+        "display_name": "Inventário arbóreo",
+        "id": "6b8e9915-538e-4258-9ce8-6afef92ebf70",
+        "name": "Inventário arbóreo",
+        "state": "active",
+        "vocabulary_id": null
+      },
+      {
+        "display_name": "Património arbóreoo",
+        "id": "33c7fced-7fb6-4e85-9346-8106aeaef84b",
+        "name": "Património arbóreoo",
+        "state": "active",
+        "vocabulary_id": null
+      },
+      {
+        "display_name": "Árvore",
+        "id": "5c3dc4f7-9b27-4fb1-9cfb-b665d507fbfb",
+        "name": "Árvore",
+        "state": "active",
+        "vocabulary_id": null
+      }
+    ],
+    "groups": []
+  },
+  "resource": {
+    "cache_last_updated": null,
+    "cache_url": null,
+    "created": "2025-05-16T14:56:56.907450",
+    "datastore_active": false,
+    "format": "CSV",
+    "hash": "",
+    "id": "99733a6e-ca5c-4061-82e7-b21741929492",
+    "is_opendata": "yes",
+    "last_data_update": "",
+    "last_modified": "2026-03-05T03:59:03.355554",
+    "metadata_modified": "2026-03-05T03:59:03.366008",
+    "mimetype": "text/csv",
+    "mimetype_inner": null,
+    "name": "Inventário Arbóreo",
+    "package_id": "7991ece6-0793-4702-ad23-570e76627a82",
+    "position": 0,
+    "resource_type": null,
+    "restricted": "{\"level\": \"public\", \"allowed_users\": \"\"}",
+    "size": 6530866,
+    "source_url": "",
+    "state": "active",
+    "url": "https://opendata.porto.digital/dataset/7991ece6-0793-4702-ad23-570e76627a82/resource/99733a6e-ca5c-4061-82e7-b21741929492/download/identificacao-e-caracterizacao-do-arvoredo-do-municipio-do-porto.csv",
+    "url_type": "upload"
+  },
+  "format": "csv",
+  "body": "'objectid','Espécie da árvore','Nome comum','Idade da árvore','esriGeometryPoint'\r\n'1','Tilia platyphyllos','Tília-de-folha-grande','41-50','-44325.17430000007,165193.4166000001'\r\n'2','Platanus x acerifolia','Plataneiro','21-30','-45791.89070000034,165528.32389999926'\r\n'6','Chamaecyparis lawsoniana','Camacíparis-do-Orégão','21-30','-38053.96480000019,165540.5197999999'\r\n"
+}

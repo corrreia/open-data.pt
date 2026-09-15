@@ -1,0 +1,160 @@
+{
+  "dataset": {
+    "dataset_id": "network-scheduling-work",
+    "fields": [
+      {
+        "name": "zipcode",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "ZipCode",
+        "type": "text",
+        "label_en": "ZipCode",
+        "label_pt": "Código Postal",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "municipality",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "Municipality",
+        "type": "text",
+        "label_en": "Municipality",
+        "label_pt": "Concelho",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "parish",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "Parish",
+        "type": "text",
+        "label_en": "Parish",
+        "label_pt": "Freguesia",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "startdatetime",
+        "description": null,
+        "annotations": {},
+        "label": "Start Date Time",
+        "type": "text",
+        "label_en": "Start Date Time",
+        "label_pt": "Data de início",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "enddatetime",
+        "description": null,
+        "annotations": {},
+        "label": "End Date Time",
+        "type": "text",
+        "label_en": "End Date Time",
+        "label_pt": "Data de Fim",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "durationallocation",
+        "description": null,
+        "annotations": {},
+        "label": "Duration Allocation",
+        "type": "text",
+        "label_en": "Duration Allocation",
+        "label_pt": "Duração estimada",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "interrupcao_programada",
+        "description": "Exists Scheduled Interruption (1 - Yes)",
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Scheduled Interruption",
+        "type": "int",
+        "label_en": "Scheduled Interruption",
+        "label_pt": "Interrupção Programada",
+        "description_en": "Exists Scheduled Interruption (1 - Yes)",
+        "description_pt": "Existe interrupção programada (1 - sim)"
+      },
+      {
+        "name": "updatedatetime",
+        "description": null,
+        "annotations": {},
+        "label": "Update Date Time",
+        "type": "date",
+        "label_en": "Update Date Time",
+        "label_pt": "Data de atualização",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "data",
+        "description": null,
+        "annotations": {},
+        "label": "Date",
+        "type": "text",
+        "label_en": "Date",
+        "label_pt": "Data",
+        "description_en": null,
+        "description_pt": null
+      }
+    ],
+    "metas": {
+      "default": {
+        "title": "Scheduled Energy interruptions",
+        "description": "<p>This dataset presents information about scheduled power outages on the electricity distribution network operated by E-REDES, organized by geographic location and time period.</p><p>The data allows identification of the locations, dates and time slots in which power supply interruptions are planned, associated with planned work on the electrical network.</p><p><br></p><p><b>Planned interventions for a safer and more reliable network. </b>Scheduled power supply interruptions allow E-REDES to carry out, in a planned and safe manner, maintenance, modernization and reinforcement work on the electrical network. These interventions help improve service quality and reduce the risk of faults.</p><p><br></p><p><b>Interrupting for safety reasons or when there is no alternative. </b>This procedure is only used when the intervention requires temporary interruption of supply for safety reasons or after all technical alternatives that would allow power supply to be maintained have been exhausted.</p><p><br></p><p><b>Interventions limited to small areas. </b>Each intervention is confined to a delimited geographic area. In the list below, complete seven-digit postal codes are indicated, identifying small areas — often a street, a section of a street, or a small group of buildings. The indication of a parish or locality therefore does not mean that the entire area is affected.</p><p><br></p><p><b>A very reduced impact on the customer base.</b> On average, these interventions affect around 2,000 of the 6.5 million customers served by E-REDES each week.</p><p><br></p><p><b>Advance information for affected customers. </b>Potentially affected customers are informed in advance by text message and email, provided their contact details are available.</p><p><br></p><p>1. The information provided by E-REDES constitutes an approximation of values taken from the system and refers to the moment at which it was collected. Given that connection points, the electricity distribution network, and consumption and production values themselves are naturally highly dynamic, it is noted that the information provided may be subject to subsequent changes and updates, and any omissions and/or occasional location inaccuracies that the information may contain are also reserved.</p><p><br></p><p>2. Accordingly, E-REDES is not liable to third parties, namely partners, service providers, contractors, users and customers, for damages that may arise as a direct or indirect consequence of the use of this Information, particularly when carrying out interventions, calculations and/or estimates without confirming the accuracy and currency of the data. It is therefore noted that consulting this information does not remove the obligation to consult E-REDES directly for up-to-date information.</p><p><br></p><p>The data provided by the E-REDES Open Data Portal is covered by open licenses (CC BY 4.0). There are no restrictions on access, provided that data users cite the publisher. We therefore suggest citing the E-REDES Open Data Portal as follows:</p><p>E-REDES – Electricity Distribution, \"E-REDES Open Data Portal\". Accessed on \"Date\". [Online] Available at https://e-redes.opendatasoft.com/pages/homepage/</p><p><br></p><p>If sharing on social media, please add #PortalOpenData_E_REDES</p>",
+        "publisher": "E-REDES",
+        "license": "CC BY 4.0",
+        "modified": "2026-09-07T06:30:34+00:00",
+        "data_processed": "2026-09-07T06:30:34+00:00",
+        "records_count": 404
+      }
+    }
+  },
+  "records": [
+    {
+      "zipcode": "2705-133",
+      "municipality": "Sintra",
+      "parish": "Colares",
+      "startdatetime": "2026-09-08T05:00:00",
+      "enddatetime": "2026-09-08T06:00:00",
+      "durationallocation": "60",
+      "interrupcao_programada": 1,
+      "updatedatetime": "2026-09-07",
+      "data": "2026-09-08"
+    },
+    {
+      "zipcode": "2705-135",
+      "municipality": "Sintra",
+      "parish": "Colares",
+      "startdatetime": "2026-09-08T05:00:00",
+      "enddatetime": "2026-09-08T06:00:00",
+      "durationallocation": "60",
+      "interrupcao_programada": 1,
+      "updatedatetime": "2026-09-07",
+      "data": "2026-09-08"
+    },
+    {
+      "zipcode": "2705-136",
+      "municipality": "Sintra",
+      "parish": "Colares",
+      "startdatetime": "2026-09-08T05:00:00",
+      "enddatetime": "2026-09-08T06:00:00",
+      "durationallocation": "60",
+      "interrupcao_programada": 1,
+      "updatedatetime": "2026-09-07",
+      "data": "2026-09-08"
+    }
+  ]
+}

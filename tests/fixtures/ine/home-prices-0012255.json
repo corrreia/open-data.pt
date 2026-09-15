@@ -1,0 +1,148 @@
+{
+  "meta": [
+    {
+      "IndicadorCod": "0012255",
+      "IndicadorNome": "Valor mediano das vendas de alojamentos familiares (Metodologia 2022 - €/ m²) por Localização geográfica (NUTS - 2024) e Categoria do alojamento familiar; Anual - INE, Estatísticas de preços da habitação ao nível local (Metodologia 2022)",
+      "Periodic": "Anual",
+      "UnidadeMedida": "Euro/ Metro quadrado (€/ m²)",
+      "DataUltimaAtualizacao": "2026-04-24",
+      "Dimensoes": {
+        "Descricao_Dim": [
+          {
+            "dim_num": "1",
+            "abrv": "Período de referência dos dados",
+            "versao": "XXXXX"
+          },
+          {
+            "dim_num": "2",
+            "abrv": "Localização geográfica (NUTS - 2024)",
+            "versao": "05431",
+            "nota_dsg": "A desagregação geográfica ao nível da freguesia ocorre apenas nos municípios das áreas metropolitanas de Lisboa e Porto, região do Algarve e outros municípios com mais de 100 mil habitantes (Censos 2021)."
+          },
+          {
+            "dim_num": "3",
+            "abrv": "Categoria do alojamento familiar",
+            "versao": "03484"
+          }
+        ],
+        "Categoria_Dim": [
+          {
+            "period": [
+              {
+                "dim_num": "1",
+                "cat_id": "S7A2023",
+                "categ_cod": "S7A2023",
+                "categ_dsg": "2023",
+                "categ_ord": "20230101",
+                "categ_nivel": "1"
+              },
+              {
+                "dim_num": "1",
+                "cat_id": "S7A2024",
+                "categ_cod": "S7A2024",
+                "categ_dsg": "2024",
+                "categ_ord": "20240101",
+                "categ_nivel": "1"
+              },
+              {
+                "dim_num": "1",
+                "cat_id": "S7A2025",
+                "categ_cod": "S7A2025",
+                "categ_dsg": "2025",
+                "categ_ord": "20250101",
+                "categ_nivel": "1"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "data": [
+    {
+      "IndicadorCod": "0012255",
+      "IndicadorDsg": "Valor mediano das vendas de alojamentos familiares (Metodologia 2022 - €/ m²) por Localização geográfica (NUTS - 2024) e Categoria do alojamento familiar; Anual - INE, Estatísticas de preços da habitação ao nível local (Metodologia 2022)",
+      "DataUltimoAtualizacao": "2026-04-24",
+      "Dados": {
+        "2023": [
+          {
+            "geocod": "1960904",
+            "geodsg": "Figueira de Castelo Rodrigo",
+            "dim_3": "H12",
+            "dim_3_t": "Existentes",
+            "ind_string": "138",
+            "valor": "138"
+          },
+          {
+            "geocod": "1960909",
+            "geodsg": "Mêda",
+            "dim_3": "H1",
+            "dim_3_t": "Total",
+            "ind_string": "156",
+            "valor": "156"
+          },
+          {
+            "geocod": "1960909",
+            "geodsg": "Mêda",
+            "dim_3": "H12",
+            "dim_3_t": "Existentes",
+            "ind_string": "156",
+            "valor": "156"
+          }
+        ],
+        "2024": [
+          {
+            "geocod": "11D1801",
+            "geodsg": "Armamar",
+            "dim_3": "H12",
+            "dim_3_t": "Existentes",
+            "ind_string": "200",
+            "valor": "200"
+          },
+          {
+            "geocod": "11D1801",
+            "geodsg": "Armamar",
+            "dim_3": "H1",
+            "dim_3_t": "Total",
+            "ind_string": "208",
+            "valor": "208"
+          },
+          {
+            "geocod": "1960904",
+            "geodsg": "Figueira de Castelo Rodrigo",
+            "dim_3": "H12",
+            "dim_3_t": "Existentes",
+            "ind_string": "238",
+            "valor": "238"
+          }
+        ],
+        "2025": [
+          {
+            "geocod": "11D1818",
+            "geodsg": "Sernancelhe",
+            "dim_3": "H12",
+            "dim_3_t": "Existentes",
+            "ind_string": "219",
+            "valor": "219"
+          },
+          {
+            "geocod": "11D1818",
+            "geodsg": "Sernancelhe",
+            "dim_3": "H1",
+            "dim_3_t": "Total",
+            "ind_string": "245",
+            "valor": "245"
+          },
+          {
+            "geocod": "1960904",
+            "geodsg": "Figueira de Castelo Rodrigo",
+            "dim_3": "H12",
+            "dim_3_t": "Existentes",
+            "ind_string": "250",
+            "valor": "250"
+          }
+        ]
+      }
+    }
+  ]
+}
