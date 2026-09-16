@@ -1,6 +1,6 @@
 import { Badge, Banner, Button, LayerCard, Loader, Meter } from "@cloudflare/kumo";
 import { ArrowSquareOutIcon, CaretRightIcon, CheckCircleIcon, WarningCircleIcon, WarningIcon } from "@phosphor-icons/react";
-import { useEffect, useMemo, useState, type PointerEvent, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { ErrorNote, PageHead, SectionHead } from "../components/common";
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
@@ -8,25 +8,19 @@ import { apiGet, productHref } from "../lib/api";
 import { fetchFeeds, fetchProducts, publisherHref, slugify } from "../lib/catalog";
 import { fmt, plural } from "../lib/format";
 import { useQuery } from "../lib/query";
+import { STATUS_DAYS as DAYS, STATUS_HOURS, statusHours, measureStatus as measure, outageSpan as spanOf, type StatusBar as Bar, type StatusIncident as Incident, type StatusLevel as Level, type StatusMeasurement as Measured, type StatusMember as Member } from "../lib/status-history";
 import type { Feed, Outage, OutageCause, OutagesResponse, Product } from "../lib/types";
 
-const DAYS = 3;
 const INCIDENTS_SHOWN = 25;
 const DAY_MS = 86_400_000;
-/** A day's colour follows its longest outage: a short blip, a real outage, most of the day. */
-const MINOR_MS = 30 * 60_000;
-const SEVERE_MS = 6 * 3_600_000;
 /** Real-time feeds run every minute; nothing attempted for this long means collection has stopped. */
 const STALL_MS = 10 * 60_000;
 
-type Level = "ok" | "minor" | "major" | "severe" | "none";
-
 const LEVELS: { level: Level; label: string }[] = [
-  { level: "ok", label: "No downtime" },
-  { level: "minor", label: "Under 30 min" },
-  { level: "major", label: "Under 6 h" },
-  { level: "severe", label: "6 h or more" },
-  { level: "none", label: "Not recorded yet" },
+  { level: "ok", label: "No recorded issues" },
+  { level: "major", label: "Partly affected" },
+  { level: "severe", label: "All tracked time affected" },
+  { level: "none", label: "Not tracked" },
 ];
 
 const CAUSE_TEXT = {
@@ -37,85 +31,17 @@ const CAUSE_TEXT = {
 const CAUSE_BADGE = { source: "warning", collection: "error", platform: "neutral" } as const;
 const CAUSE_LABEL = { source: "Source unavailable", collection: "Collection error", platform: "Platform paused" } as const;
 
-interface Day {
-  start: number;
-  end: number;
-}
-
-interface Incident {
-  label: string;
-  outage: Outage;
-  ms: number;
-}
-
-interface Bar {
-  day: Day;
-  level: Level;
-  longest: number;
-  affected: number;
-  incidents: Incident[];
-}
-
-interface Measured {
-  bars: Bar[];
-  uptime: number | null;
-}
-
-/** The last `count` local calendar days, oldest first. */
-function calendarDays(count: number, now: number): Day[] {
-  const today = new Date(now);
-  return Array.from({ length: count }, (_, index) => {
-    const start = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (count - 1 - index));
-    return { start: start.getTime(), end: new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1).getTime() };
-  });
-}
-
-const spanOf = (outage: Outage, now: number): [number, number] => [Date.parse(outage.startedAt), outage.endedAt ? Date.parse(outage.endedAt) : now];
-const overlap = ([start, end]: [number, number], from: number, to: number) => Math.max(0, Math.min(end, to) - Math.max(start, from));
-const levelOf = (longest: number): Level => (longest === 0 ? "ok" : longest < MINOR_MS ? "minor" : longest < SEVERE_MS ? "major" : "severe");
-
-interface Member {
-  label: string;
-  outages: Outage[];
-}
-
-/**
- * One row of bars for a group of members (a publisher's datasets, or the platform): per day, the longest
- * outage of any member; over the window, the share of member-time that was collected.
- */
-function measure(members: Member[], days: Day[], now: number, tracked: number): Measured {
-  const windowStart = Math.max(days[0]?.start ?? now, tracked);
-  const trackedMs = Math.max(0, now - windowStart);
-  let down = 0;
-  const bars = days.map((day): Bar => {
-    if (day.end <= tracked) return { day, level: "none", longest: 0, affected: 0, incidents: [] };
-    const from = Math.max(day.start, tracked);
-    const to = Math.min(day.end, now);
-    let longest = 0;
-    const incidents: Incident[] = [];
-    const affected = new Set<string>();
-    for (const member of members) {
-      let memberDown = 0;
-      for (const outage of member.outages) {
-        const ms = overlap(spanOf(outage, now), from, to);
-        if (ms > 0) {
-          memberDown += ms;
-          incidents.push({ label: member.label, outage, ms });
-          affected.add(member.label);
-        }
-      }
-      longest = Math.max(longest, memberDown);
-      down += memberDown;
-    }
-    return { day, level: levelOf(longest), longest, affected: affected.size, incidents };
-  });
-  return { bars, uptime: trackedMs > 0 && members.length > 0 ? 1 - down / (trackedMs * members.length) : null };
+function feedMember(feed: Feed, outages: Outage[]): Member {
+  const member: Member = { label: feed.title, outages };
+  const created = feed.createdAt ? Date.parse(feed.createdAt) : Number.NaN;
+  if (Number.isFinite(created)) member.since = created;
+  return member;
 }
 
 function uptimeText(uptime: number | null) {
   if (uptime === null) return "no record yet";
-  if (uptime >= 0.99995) return "100% collected";
-  return `${(Math.floor(uptime * 10_000) / 100).toFixed(2)}% collected`;
+  if (uptime >= 0.99995) return "100% issue-free";
+  return `${(Math.floor(uptime * 10_000) / 100).toFixed(2)}% issue-free`;
 }
 
 /* ---------- One tooltip for every bar on the page ---------- */
@@ -126,14 +52,26 @@ interface TipState {
   content: ReactNode;
 }
 
-function barTip(bar: Bar, describe: (incident: Incident) => string): ReactNode {
-  const summary =
-    bar.level === "none" ? "Not recorded yet" : bar.level === "ok" ? "Collected all day" : bar.affected > 1 ? `${bar.affected} datasets affected, longest ${fmt.duration(bar.longest)}` : `Down for ${fmt.duration(bar.longest)}`;
+const HOUR_LABEL = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "shortOffset" });
+
+function hourLabel(bar: Bar): string {
+  return `${HOUR_LABEL.format(bar.hour.start)} to ${HOUR_LABEL.format(bar.hour.end)}`;
+}
+
+function hourSummary(bar: Bar): string {
+  if (bar.level === "none") return "No tracked collection history";
+  if (bar.level === "ok") return "No recorded collection issues during tracked time";
+  return `${bar.affected} of ${bar.trackedMembers} tracked datasets affected, up to ${fmt.duration(bar.longest)} in this hour`;
+}
+
+function barTip(bar: Bar, describe: (incident: Incident) => string, now: number): ReactNode {
   const lines = bar.incidents.map(describe);
   return (
     <>
-      <strong className="text-kumo-strong">{fmt.date(bar.day.start)}</strong>
-      <span>{summary}</span>
+      <strong className="text-kumo-strong">{hourLabel(bar)}</strong>
+      {bar.hour.end > now ? <span>Current hour, in progress</span> : null}
+      <span>{hourSummary(bar)}</span>
+      {bar.observedMs > 0 && bar.observedMs < Math.min(bar.hour.end, now) - bar.hour.start ? <span>Tracking began during this hour.</span> : null}
       {lines.slice(0, 4).map((line, index) => (
         <span key={index} className="text-kumo-subtle">
           {line}
@@ -144,16 +82,36 @@ function barTip(bar: Bar, describe: (incident: Incident) => string): ReactNode {
   );
 }
 
-function Bars({ measured, label, describe, onTip, height = "h-8" }: { measured: Measured; label: string; describe: (incident: Incident) => string; onTip: (tip: TipState | null) => void; height?: string }) {
-  const show = (event: PointerEvent<HTMLSpanElement>, bar: Bar) => {
-    const box = event.currentTarget.getBoundingClientRect();
-    onTip({ x: box.left + box.width / 2, y: box.bottom + 8, content: barTip(bar, describe) });
+function Bars({ measured, label, describe, onTip, now, height = "h-8" }: { measured: Measured; label: string; describe: (incident: Incident) => string; onTip: (tip: TipState | null) => void; now: number; height?: string }) {
+  const root = useRef<HTMLSpanElement>(null);
+  const instructions = useId();
+  const [active, setActive] = useState(STATUS_HOURS - 1);
+  const show = (element: HTMLButtonElement, bar: Bar) => {
+    const box = element.getBoundingClientRect();
+    onTip({ x: box.left + box.width / 2, y: box.bottom + 8, content: barTip(bar, describe, now) });
   };
   return (
-    <span role="img" aria-label={`${label}: ${uptimeText(measured.uptime)} over the last ${DAYS} days`} className={`flex ${height} gap-[2px]`} onPointerLeave={() => onTip(null)}>
-      {measured.bars.map((bar) => (
-        <span key={bar.day.start} data-level={bar.level} onPointerEnter={(event) => show(event, bar)} className="uptime-bar min-w-0 flex-1 rounded-[2px] transition-opacity hover:opacity-60" />
-      ))}
+    <span>
+      <span id={instructions} className="sr-only">One bar per hour. Use left and right arrows to inspect hours, Home and End to jump, and Escape to dismiss details.</span>
+      <span ref={root} role="group" data-status-timeline aria-describedby={instructions} aria-label={`${label}: ${uptimeText(measured.uptime)} over ${STATUS_HOURS} hourly slots`} className={`flex ${height} gap-px sm:gap-[2px]`}
+        onPointerLeave={(event) => { if (event.pointerType === "mouse" && !root.current?.contains(document.activeElement)) onTip(null); }}
+        onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) onTip(null); }}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") { onTip(null); return; }
+          const next = event.key === "ArrowLeft" ? Math.max(0, active - 1) : event.key === "ArrowRight" ? Math.min(STATUS_HOURS - 1, active + 1) : event.key === "Home" ? 0 : event.key === "End" ? STATUS_HOURS - 1 : undefined;
+          if (next === undefined) return;
+          event.preventDefault();
+          root.current?.querySelectorAll<HTMLButtonElement>("button")[next]?.focus();
+        }}>
+        {measured.bars.map((bar, index) => (
+          <button key={bar.hour.start} type="button" tabIndex={active === index ? 0 : -1} data-level={bar.level} data-hour-start={bar.hour.start} data-current={bar.hour.end > now}
+            aria-label={`${hourLabel(bar)}: ${hourSummary(bar)}${bar.hour.end > now ? "; current hour in progress" : ""}`}
+            onPointerEnter={(event) => { if (event.pointerType === "mouse") show(event.currentTarget, bar); }}
+            onFocus={(event) => { setActive(index); show(event.currentTarget, bar); }}
+            onClick={(event) => { setActive(index); show(event.currentTarget, bar); }}
+            className="uptime-bar min-w-0 flex-1 rounded-[2px] border-0 p-0 transition-opacity hover:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kumo-strong" />
+        ))}
+      </span>
     </span>
   );
 }
@@ -177,11 +135,21 @@ function StatusPage() {
   const [tip, setTip] = useState<TipState | null>(null);
   const [open, setOpen] = useState<Set<string>>(() => new Set(window.location.hash ? [window.location.hash.slice(1)] : []));
   const [showAll, setShowAll] = useState(false);
+  const tipHalfWidth = Math.min(176, (window.innerWidth - 16) / 2);
+
+  useEffect(() => {
+    if (!tip) return;
+    const dismiss = (event: PointerEvent) => {
+      if (!(event.target instanceof Element) || !event.target.closest("[data-status-timeline]")) setTip(null);
+    };
+    document.addEventListener("pointerdown", dismiss);
+    return () => document.removeEventListener("pointerdown", dismiss);
+  }, [tip]);
 
   const model = useMemo(() => {
     if (!outages.data || !feeds.data) return undefined;
     const tracked = outages.data.trackedSince ? Date.parse(outages.data.trackedSince) : now;
-    const days = calendarDays(DAYS, now);
+    const hours = statusHours(now);
     const enabled = feeds.data.filter((feed) => feed.enabled);
     const byFeed = new Map<string, Outage[]>();
     const platform: Outage[] = [];
@@ -198,17 +166,17 @@ function StatusPage() {
         slug: slugify(name),
         members,
         failing: members.filter(openOf),
-        measured: measure(members.map((feed) => ({ label: feed.title, outages: byFeed.get(feed.id) ?? [] })), days, now, tracked),
+        measured: measure(members.map((feed) => feedMember(feed, byFeed.get(feed.id) ?? [])), hours, now, tracked),
       }))
       .sort((a, b) => Number(b.failing.length > 0) - Number(a.failing.length > 0) || a.name.localeCompare(b.name));
     return {
       tracked,
-      days,
+      hours,
       enabled,
       byFeed,
       openOf,
       rows,
-      platform: measure([{ label: "Collection", outages: platform }], days, now, tracked),
+      platform: measure([{ label: "Collection", outages: platform }], hours, now, tracked),
       lastAttempt: enabled.map((feed) => feed.lastAttemptAt).filter((value): value is string => Boolean(value)).sort().at(-1),
     };
   }, [outages.data, feeds.data, now]);
@@ -240,7 +208,7 @@ function StatusPage() {
         <ErrorNote error={outages.error ?? feeds.error} />
         {model ? <StateBanner model={model} now={now} /> : <div className="flex items-center gap-2 text-sm text-kumo-subtle"><Loader size="sm" /> Checking collection…</div>}
         <p className="text-xs text-kumo-subtle">
-          {outages.data?.trackedSince ? `Downtime has been recorded since ${fmt.dateTime(outages.data.trackedSince)}; earlier days show as not recorded. Updated every minute.` : "No downtime has been recorded yet."}
+          {outages.data?.trackedSince ? `Collection incidents have been recorded since ${fmt.dateTime(outages.data.trackedSince)}; earlier hours are not tracked. Updated every minute.` : "No collection history has been recorded yet."}
         </p>
       </section>
 
@@ -259,16 +227,16 @@ function StatusPage() {
                     <span className="font-mono text-xs text-kumo-subtle">{uptimeText(model.platform.uptime)}</span>
                   </span>
                 </div>
-                <Bars measured={model.platform} label="Collection runs" onTip={setTip} describe={(incident) => `Stopped for ${fmt.duration(incident.ms)}`} />
+                <Bars now={now} measured={model.platform} label="Collection runs" onTip={setTip} describe={(incident) => `Stopped for ${fmt.duration(incident.ms)}`} />
               </LayerCard.Primary>
             </LayerCard>
           </section>
 
           <section aria-labelledby="sources-title">
-            <SectionHead eyebrow="Sources" title="Each publisher, day by day" id="sources-title">
-              A day turns amber or red when one of the publisher's datasets could not be collected, because their service did not answer or collection failed here. Open a publisher to see each dataset.
+            <SectionHead eyebrow="Sources" title="Each publisher, hour by hour" id="sources-title">
+              One bar per hour across {DAYS} days, including the current hour in progress. Colours summarize recorded collection issues, not independent website uptime checks. Percentages exclude untracked time. Dataset collection schedules are unchanged.
             </SectionHead>
-            <Legend />
+            <Legend start={model.hours[0]?.start ?? now} />
             <LayerCard className="overflow-hidden p-0">
               <ul className="divide-y divide-kumo-hairline">
                 {model.rows.map((row) => {
@@ -290,7 +258,7 @@ function StatusPage() {
                             <span className="hidden font-mono text-xs text-kumo-subtle sm:inline">{uptimeText(row.measured.uptime)}</span>
                           </span>
                         </div>
-                        <Bars measured={row.measured} label={row.name} onTip={setTip} describe={(incident) => `${incident.label}: ${fmt.duration(incident.ms)}, ${CAUSE_TEXT[incident.outage.cause](row.name).toLowerCase()}`} />
+                        <Bars now={now} measured={row.measured} label={row.name} onTip={setTip} describe={(incident) => `${incident.label}: ${fmt.duration(incident.ms)}, ${CAUSE_TEXT[incident.outage.cause](row.name).toLowerCase()}`} />
                       </div>
                       {expanded ? (
                         <div className="grid gap-4 border-t border-kumo-hairline bg-kumo-recessed px-4 py-4 sm:pl-9">
@@ -301,7 +269,7 @@ function StatusPage() {
                             {row.members.map((feed) => {
                               const current = model.openOf(feed);
                               const product = firstProduct.get(feed.id);
-                              const measured = measure([{ label: feed.title, outages: model.byFeed.get(feed.id) ?? [] }], model.days, now, model.tracked);
+                              const measured = measure([feedMember(feed, model.byFeed.get(feed.id) ?? [])], model.hours, now, model.tracked);
                               return (
                                 <li key={feed.id} className="grid gap-2">
                                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
@@ -311,7 +279,7 @@ function StatusPage() {
                                       <span className="hidden font-mono text-xs text-kumo-subtle sm:inline">{uptimeText(measured.uptime)}</span>
                                     </span>
                                   </div>
-                                  <Bars measured={measured} label={feed.title} height="h-5" onTip={setTip} describe={(incident) => `${fmt.duration(incident.ms)}, ${CAUSE_TEXT[incident.outage.cause](feed.publisher).toLowerCase()}`} />
+                                  <Bars now={now} measured={measured} label={feed.title} height="h-5" onTip={setTip} describe={(incident) => `${fmt.duration(incident.ms)}, ${CAUSE_TEXT[incident.outage.cause](feed.publisher).toLowerCase()}`} />
                                 </li>
                               );
                             })}
@@ -335,7 +303,7 @@ function StatusPage() {
       ) : null}
 
       {tip ? (
-        <div role="tooltip" className="pointer-events-none fixed z-50 grid max-w-[min(22rem,calc(100vw-1rem))] -translate-x-1/2 gap-0.5 rounded-lg bg-kumo-base px-3 py-2 text-xs shadow-lg ring-1 ring-kumo-line" style={{ left: Math.min(window.innerWidth - 180, Math.max(180, tip.x)), top: tip.y }}>
+        <div role="tooltip" className="pointer-events-none fixed z-50 grid max-h-[min(240px,calc(100vh-1rem))] max-w-[min(22rem,calc(100vw-1rem))] -translate-x-1/2 gap-0.5 overflow-hidden rounded-lg bg-kumo-base px-3 py-2 text-xs shadow-lg ring-1 ring-kumo-line" style={{ left: Math.max(tipHalfWidth + 8, Math.min(window.innerWidth - tipHalfWidth - 8, tip.x)), top: Math.max(8, Math.min(window.innerHeight - 248, tip.y)) }}>
           {tip.content}
         </div>
       ) : null}
@@ -376,10 +344,10 @@ function StateBanner({ model, now }: { model: Model; now: number }) {
   );
 }
 
-function Legend() {
+function Legend({ start }: { start: number }) {
   return (
     <div aria-hidden="true" className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 font-mono text-[0.7rem] text-kumo-subtle">
-      <span>Last {DAYS} days</span>
+      <span>{fmt.dateTime(start)}</span>
       <span className="flex flex-wrap gap-x-4 gap-y-1 font-sans text-xs">
         {LEVELS.map(({ level, label }) => (
           <span key={level} className="inline-flex items-center gap-1.5">
@@ -388,7 +356,7 @@ function Legend() {
           </span>
         ))}
       </span>
-      <span>Today</span>
+      <span>Now · {STATUS_HOURS} hourly bars</span>
     </div>
   );
 }
