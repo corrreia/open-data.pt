@@ -27,7 +27,7 @@ A topic is what the data is about, never who publishes it or how it is published
 - A library several topics need is wired into each of those Workers, with the same var values, and each Worker's `examples.ts` selects its share.
 - A new source whose topic has no Worker gets a new package under `packages/gatekeeper-<topic>/`, not a place in the nearest existing Worker.
 - Telecommunications data (INE's telecom surveys, RIPEstat routing, PeeringDB exchanges) is `gatekeeper-telecom`.
-- A source under a publication hold (`research/source-publication-holds.json`: Parliament, RIPEstat, PeeringDB) is wired into its topic Worker's `libraries()` with its vars, but its examples stay out of that Worker's `examples.ts` until the owner lifts the hold. Every library must be wired into some Worker; the consistency test checks that too.
+- A source under a publication hold (`packages/gatekeeper-shared/src/publication-holds.json`: Parliament, RIPEstat, PeeringDB) is wired into its topic Worker's `libraries()` with its vars, but its examples stay out of that Worker's `examples.ts` until the owner lifts the hold. Every library must be wired into some Worker; the consistency test checks that too.
 
 Feed slugs never change: a feed's ID derives from its slug, so moving a feed between Workers keeps its history.
 

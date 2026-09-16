@@ -59,7 +59,7 @@ async function libraryExamples(): Promise<Map<string, readonly ExampleFeed[]>> {
 
 /** Explicit review holds are not runtime feature flags: their examples must stay out of Worker install lists. */
 function publicationHolds(): Map<string, string> {
-  const rows = parseJson(readFileSync(new URL("../research/source-publication-holds.json", import.meta.url), "utf8"));
+  const rows = parseJson(readFileSync(new URL("../packages/gatekeeper-shared/src/publication-holds.json", import.meta.url), "utf8"));
   if (!Array.isArray(rows)) throw new Error("Publication holds must be an array");
   const result = new Map<string, string>();
   for (const row of rows) {

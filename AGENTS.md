@@ -21,7 +21,7 @@ Where code lives
 1. A library per format: anything with a standard (GTFS, GBFS, ArcGIS, CKAN, Opendatasoft, uData) is parsed once, under `formats/`. A Worker never contains parsing.
 2. A library per bespoke source, under `sources/`: Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, RIPEstat, PeeringDB.
 3. One Worker per topic, named for what the data is about, never for who publishes it or how (there is no `statistics` Worker). A Worker is wiring: its libraries, its vars and secrets, its example feeds. A feed lives in a Worker whose topic its `topics` carry (INE and Eurostat select by first topic); a library several topics need is wired into each. The publisher is a label on each feed, shown on the site; it is not a code boundary. Telecom is `gatekeeper-telecom`: INE's telecommunications indicators, with RIPEstat and PeeringDB wired in but held.
-4. A held source (`research/source-publication-holds.json`) is wired into its topic Worker, but its examples stay out of that Worker's `examples.ts` until the hold is lifted.
+4. A held source (`packages/gatekeeper-shared/src/publication-holds.json`) is wired into its topic Worker, but its examples stay out of that Worker's `examples.ts` until the hold is lifted.
 5. Feed slugs never change: a feed's ID derives from its slug, so moving a feed between Workers keeps its history.
 
 What a Worker sends
