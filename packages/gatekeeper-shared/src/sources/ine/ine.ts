@@ -19,7 +19,7 @@ import {
 } from "../../index";
 
 export const INE_MAX_BYTES = 8 * 1024 * 1024;
-export const INE_HISTORY_MAX_BYTES = 2 * 1024 * 1024;
+export const INE_HISTORY_MAX_BYTES = INE_MAX_BYTES;
 
 /**
  * INE indicators have different periodicities, so history uses period-count
@@ -28,7 +28,8 @@ export const INE_HISTORY_MAX_BYTES = 2 * 1024 * 1024;
  * dimension cardinalities can lower that maximum to keep a slice at roughly
  * 3,000 observations; this makes wide indicators such as crime rate use one
  * annual period while narrow monthly indicators still use all 12. Responses
- * also have a hard 2 MiB cap, safely below the feed policy's 8 MiB limit.
+ * also share the live feed's hard 8 MiB source cap. A single annual income
+ * distribution already exceeds 2 MiB and cannot be split at a period boundary.
  */
 const HISTORY_PERIODS = {
   annual: 10,
@@ -418,7 +419,7 @@ function invalidHistoryMetadata(): GatekeeperError {
 }
 
 function historyTooLarge(): GatekeeperError {
-  return new GatekeeperError("INE history response exceeded 2 MiB", "response-too-large");
+  return new GatekeeperError(`INE history response exceeded ${INE_HISTORY_MAX_BYTES} bytes`, "response-too-large");
 }
 
 function normalizeDims(value: string): string {

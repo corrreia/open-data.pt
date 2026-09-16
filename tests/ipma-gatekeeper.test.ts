@@ -19,7 +19,7 @@ describe("IPMA Gatekeeper", () => {
     expect(validateIpmaFeedConfig({ feed: "station-observations" })).toEqual({ feed: "station-observations" });
     expect(validateIpmaFeedConfig({ feed: "daily-forecast" })).toEqual({ feed: "daily-forecast" });
     expect(validateIpmaFeedConfig({ feed: "seismic" })).toEqual({ feed: "seismic" });
-    expect(() => validateIpmaFeedConfig({ feed: "unknown" })).toThrow("feed=station-observations, daily-forecast, seismic, warnings, uv-index, fire-risk, or sea-forecast");
+    expect(() => validateIpmaFeedConfig({ feed: "unknown" })).toThrow("IPMA feeds require feed=");
   });
 
   it("rejects caller-provided hosts and a misconfigured Worker origin", async () => {

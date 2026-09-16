@@ -104,7 +104,7 @@ describe("Opendatasoft transformers", () => {
 
     expect({ id: transformer.id, version: transformer.version }).toEqual({
       id: "opendatasoft-explore-v2.1",
-      version: "5",
+      version: "6",
     });
     expect(product).toMatchObject({
       slug: "e-redes-secondary-substations",

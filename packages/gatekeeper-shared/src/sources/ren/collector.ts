@@ -1,12 +1,15 @@
 import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../index";
 import { REN_FEEDS, collectRenFeed, collectRenHistory, validateRenFeedConfig } from "./ren";
 import { RenTransformer } from "./transform";
+import { isRenPeriodicService, REN_PERIODIC_ORIGIN, renPeriodicCollector } from "./periodic";
 
 /** What a Worker hands this library: the feed's configuration, its API origin, and the fetch it may use. */
 export interface RenCollectorOptions {
   config: SourceConfig;
   /** `REN_API_ORIGIN`. */
   apiOrigin: string;
+  /** `REN_DATA_API_ORIGIN`, for the documented daily/monthly API. */
+  dataApiOrigin?: string;
   fetcher: typeof fetch;
 }
 
@@ -17,6 +20,9 @@ export function resolveRenFeed(config: SourceConfig): Promise<ResolvedFeed> {
 }
 
 export function renCollector(options: RenCollectorOptions): NormalizedCollector {
+  if (isRenPeriodicService(options.config.service ?? options.config.feed)) {
+    return renPeriodicCollector({ config: options.config, apiOrigin: options.dataApiOrigin ?? REN_PERIODIC_ORIGIN, fetcher: options.fetcher });
+  }
   return {
     normalizer: { id: transformer.id, version: transformer.version },
     resolve: (value) => resolveRenFeed(value),

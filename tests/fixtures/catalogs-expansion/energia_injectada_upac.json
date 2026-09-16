@@ -1,0 +1,251 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "data",
+        "description": null,
+        "annotations": {
+          "timeserie_precision": "month"
+        },
+        "label": "Date",
+        "type": "date",
+        "label_en": "Date",
+        "label_pt": "Data",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "ano",
+        "description": null,
+        "annotations": {},
+        "label": "Year",
+        "type": "text",
+        "label_en": "Year",
+        "label_pt": "Ano",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "mes",
+        "description": null,
+        "annotations": {},
+        "label": "Month",
+        "type": "text",
+        "label_en": "Month",
+        "label_pt": "Mês",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "ano_mes",
+        "description": null,
+        "annotations": {},
+        "label": "ano_mes",
+        "type": "text",
+        "label_en": "ano_mes",
+        "label_pt": "ano_mes",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "distrito",
+        "description": null,
+        "annotations": {},
+        "label": "District",
+        "type": "text",
+        "label_en": "District",
+        "label_pt": "Distrito",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "con_name",
+        "description": null,
+        "annotations": {},
+        "label": "Municipality",
+        "type": "text",
+        "label_en": "Municipality",
+        "label_pt": "Concelho",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "nivel_tensao",
+        "description": null,
+        "annotations": {},
+        "label": "Voltage level",
+        "type": "text",
+        "label_en": "Voltage level",
+        "label_pt": "Nível de Tensão",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "potencia_instalada",
+        "description": null,
+        "annotations": {},
+        "label": "Installed Power",
+        "type": "double",
+        "label_en": "Installed Power",
+        "label_pt": "Potência Instalada (kW)",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "numero_de_instalacoes",
+        "description": null,
+        "annotations": {},
+        "label": "Number of Installations",
+        "type": "int",
+        "label_en": "Number of Installations",
+        "label_pt": "Número de Instalações",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "energia",
+        "description": null,
+        "annotations": {},
+        "label": "Energy Injected kWh ",
+        "type": "double",
+        "label_en": "Energy Injected kWh ",
+        "label_pt": "Energia Injetada (kWh)",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "codigo_distrito",
+        "description": null,
+        "annotations": {},
+        "label": "District Code",
+        "type": "text",
+        "label_en": "District Code",
+        "label_pt": "Código Distrito",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "codigo_concelho",
+        "description": null,
+        "annotations": {},
+        "label": "Municipality Code",
+        "type": "text",
+        "label_en": "Municipality Code",
+        "label_pt": "Código Concelho",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "codigo_freguesia",
+        "description": null,
+        "annotations": {},
+        "label": "Parish Code",
+        "type": "text",
+        "label_en": "Parish Code",
+        "label_pt": "Código Freguesia",
+        "description_en": null,
+        "description_pt": null
+      }
+    ],
+    "dataset_id": "energia_injectada_upac",
+    "dataset_uid": "da_8fxg6t",
+    "has_records": true,
+    "features": [
+      "analyze",
+      "timeserie",
+      "custom_view"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "default": {
+        "title": "Energy Injected by Installations with Self-Consumption Generation Units",
+        "title_en": "Energy Injected by Installations with Self-Consumption Generation Units",
+        "title_pt": "Energia Injetada pelas Instalações que têm Unidades de Produção de Autoconsumo",
+        "description": "<p>This dataset presents the amount of electrical energy injected into the grid by Self-Consumption Production Units (UPACs), organized by state and municipality.</p><p>Data relating to registered UPACs.</p><p>The energy injected into the grid is the energy produced minus the energy self-consumed at the installation.</p><p>It provides a detailed view of the contribution of these units to the electrical system, allowing for the evaluation of the role of self-consumption in the energy transition and the increase in distributed renewable production.</p><p>Through this data, it is possible to identify production patterns, monitor the penetration of UPACs in different regions, and support the planning of energy networks and communities.</p><p>Use cases:</p><ul><li>Evaluate the energy injected into the grid by UPACs in different geographic areas.</li><li>Support the analysis of local energy balances for energy communities and collective self-consumption projects.</li><li>Study the impact of self-consumption on the electrical grid and the integration of renewable energies.</li><li>Assist in the planning of expansion and strengthening of infrastructure for better integration of distributed production.</li></ul><p>Update frequency: monthly</p><p>Variables included:</p><p><b>Date </b>— Date of the information</p><p><b>District </b>— Name of the district where the production facility is located</p><p><b>Municipality </b>— Name of the municipality corresponding to the production facility</p><p><b>Voltage Level</b> — Electrical voltage level at the connection point of the facility (e.g., Low Voltage, Medium Voltage), indicating the stage of connection of the UPAC to the grid.</p><p><b>Installed Power kW</b> — Sum of the installed electrical power of the production units (in kilowatts), reflecting the maximum generation capacity of the UPACs.</p><p><b>Number of Installations</b> — Number of Self-Consumption Production Units (UPACs).</p><p><b>Energy Injected kWh</b> — Total amount of electrical energy injected into the public grid by the UPACs (in kilowatt-hours).</p><p><br></p><p>1. The information provided by E-REDES is an approximation of the values ​​retrieved from the system and refers to the moment it is collected. Given that connection points, the electricity distribution network, and consumption and production values ​​themselves are naturally very dynamic, it is understood that the information provided may be subject to subsequent changes and updates, and any omissions and/or occasional location inaccuracies that the information may contain are also reserved.</p><p>2. Therefore, E-REDES is not liable to third parties, namely partners, service providers, contractors, users and customers, for any damages that may arise as a direct or indirect consequence of the use of this Information, particularly when carrying out interventions, calculations and/or estimates, without confirmation of the accuracy and updating of the data. It is duly noted that consulting this information does not prejudice the obligation to directly contact E-REDES to obtain updated information.</p><p><br></p><p>The data provided by the E-REDES Open Data Portal is covered by open licenses (CC BY 4.0). There are no restrictions on your access, provided that data users cite the publisher. Therefore, we suggest that you cite the E-REDES Open Data Portal as:</p><p>E-REDES – Electricity Distribution, “E-REDES Open Data Portal”. Accessed on “Date”. [Online] Available at https://e-redes.opendatasoft.com/pages/homepage/</p><p>If you share on social media, please add #PortalOpenData_E_REDES</p>",
+        "description_en": "<p>This dataset presents the amount of electrical energy injected into the grid by Self-Consumption Production Units (UPACs), organized by state and municipality.</p><p>Data relating to registered UPACs.</p><p>The energy injected into the grid is the energy produced minus the energy self-consumed at the installation.</p><p>It provides a detailed view of the contribution of these units to the electrical system, allowing for the evaluation of the role of self-consumption in the energy transition and the increase in distributed renewable production.</p><p>Through this data, it is possible to identify production patterns, monitor the penetration of UPACs in different regions, and support the planning of energy networks and communities.</p><p>Use cases:</p><ul><li>Evaluate the energy injected into the grid by UPACs in different geographic areas.</li><li>Support the analysis of local energy balances for energy communities and collective self-consumption projects.</li><li>Study the impact of self-consumption on the electrical grid and the integration of renewable energies.</li><li>Assist in the planning of expansion and strengthening of infrastructure for better integration of distributed production.</li></ul><p>Update frequency: monthly</p><p>Variables included:</p><p><b>Date </b>— Date of the information</p><p><b>District </b>— Name of the district where the production facility is located</p><p><b>Municipality </b>— Name of the municipality corresponding to the production facility</p><p><b>Voltage Level</b> — Electrical voltage level at the connection point of the facility (e.g., Low Voltage, Medium Voltage), indicating the stage of connection of the UPAC to the grid.</p><p><b>Installed Power kW</b> — Sum of the installed electrical power of the production units (in kilowatts), reflecting the maximum generation capacity of the UPACs.</p><p><b>Number of Installations</b> — Number of Self-Consumption Production Units (UPACs).</p><p><b>Energy Injected kWh</b> — Total amount of electrical energy injected into the public grid by the UPACs (in kilowatt-hours).</p><p><br></p><p>1. The information provided by E-REDES is an approximation of the values ​​retrieved from the system and refers to the moment it is collected. Given that connection points, the electricity distribution network, and consumption and production values ​​themselves are naturally very dynamic, it is understood that the information provided may be subject to subsequent changes and updates, and any omissions and/or occasional location inaccuracies that the information may contain are also reserved.</p><p>2. Therefore, E-REDES is not liable to third parties, namely partners, service providers, contractors, users and customers, for any damages that may arise as a direct or indirect consequence of the use of this Information, particularly when carrying out interventions, calculations and/or estimates, without confirmation of the accuracy and updating of the data. It is duly noted that consulting this information does not prejudice the obligation to directly contact E-REDES to obtain updated information.</p><p><br></p><p>The data provided by the E-REDES Open Data Portal is covered by open licenses (CC BY 4.0). There are no restrictions on your access, provided that data users cite the publisher. Therefore, we suggest that you cite the E-REDES Open Data Portal as:</p><p>E-REDES – Electricity Distribution, “E-REDES Open Data Portal”. Accessed on “Date”. [Online] Available at https://e-redes.opendatasoft.com/pages/homepage/</p><p>If you share on social media, please add #PortalOpenData_E_REDES</p>",
+        "description_pt": "<p>Este dataset apresenta a quantidade de energia elétrica injetada na rede por Unidades de Produção para Autoconsumo (UPAC’s), organizada por distrito e concelho.</p><p>Dados relativos a UPAC's registadas.</p><p>A energia injetada na rede é a energia produzida menos a energia autoconsumida na instalação.</p><p>Fornece uma visão detalhada da contribuição destas unidades para o sistema elétrico, permitindo avaliar o papel do autoconsumo na transição energética e no aumento da produção distribuída renovável.</p><p>Através destes dados, é possível identificar padrões de produção, monitorizar a penetração de UPAC’s em diferentes regiões e apoiar o planeamento de redes e comunidades de energia.</p><p>Casos de uso:</p><ul><li>Avaliar a energia injetada na rede por UPAC’s em diferentes áreas geográficas.</li><li>Apoiar a análise de balanços energéticos locais para comunidades de energia e projetos de autoconsumo coletivo.</li><li>Estudar o impacto do autoconsumo na rede elétrica e na integração de energias renováveis.</li><li>Auxiliar no planeamento de expansão e reforço da infraestrutura para melhor integração da produção distribuída.</li></ul><p>Periodicidade de atualização: <span style=\"font-family: inherit;\">mensal</span></p><p>Variáveis incluídas:</p><p><b>Data</b> — Data da informação </p><p><b>Distrito</b> — Nome do distrito onde se localiza a instalação de produção</p><p><b>Concelho</b> — Nome do concelho correspondente à instalação de produção</p><p><b>Nível de Tensão</b> — Nível de tensão elétrica no ponto de ligação da instalação (ex.: Baixa Tensão, Média Tensão), indicando o escalão de ligação da UPAC à rede.</p><p><b>Potência Instalada kW</b> — Soma das potências elétricas instaladas das unidades de produção (em quilowatts), refletindo a capacidade máxima de geração das UPAC’s.</p><p><b>Número Instalações</b> — Quantidade de Unidades de Produção para Autoconsumo (UPAC’s).</p><p><b>Energia Injetada KWh</b> — Quantidade total de energia elétrica injetada na rede pública pelas UPAC’s (em quilowatt-hora).</p><p><br></p><div><div>1. A Informação disponibilizada pela E-REDES constitui uma aproximação aos valores retirados de sistema e tem por referência o momento em que a mesma é recolhida. Atendendo a que os pontos de ligação, a rede de distribuição de eletricidade, e os próprios valores de consumo e de produção são naturalmente muito dinâmicos, salvaguarda-se que a informação disponibilizada poderá ser objeto de subsequentes alterações e atualizações, ficando igualmente ressalvadas eventuais omissões e/ou pontuais imprecisões de localização que a informação poderá conter.</div><div><br></div><div>2. Desta forma a E-REDES não se responsabiliza perante terceiros, nomeadamente, parceiros, prestadores de serviços, empreiteiros, utentes e clientes, pelos danos que possam surgir em consequência, direta ou indireta, do uso da presente Informação, em particular aquando da realização de intervenções, cálculos e/ou estimativas, sem confirmação da exatidão e atualização dos dados, pelo que devidamente se ressalva de que a consulta da presente informação não prejudica o dever de se promover uma consulta direta à E-REDES para obter informação atualizada.</div><div><br></div><div><br></div><div><br></div><div>Os dados fornecidos pelo Portal Open Data da E-REDES são abrangidos por licenças abertas (CC BY 4.0). Não existem restrições ao seu acesso, sob o compromisso de os utilizadores dos dados citarem o publicador. Assim, sugerimos que cite o Portal Open Data E-REDES como:</div><div><br></div><div>E-REDES – Distribuição de eletricidade, “Portal Open Data E-REDES”. Acedido em “Data”. [Online] Disponível em https://e-redes.opendatasoft.com/pages/homepage/</div><div><br></div><div>Se partilhar nas redes sociais, por favor acrescente #PortalOpenData_E_REDES</div></div>",
+        "theme": [
+          "Renewables",
+          "Consumption and Energy"
+        ],
+        "theme_en": [
+          "Renewables",
+          "Consumption and Energy"
+        ],
+        "theme_pt": [
+          "Renováveis",
+          "Consumos e Energia"
+        ],
+        "keyword": null,
+        "keyword_en": null,
+        "keyword_pt": null,
+        "license": "CC BY 4.0",
+        "license_en": "CC BY 4.0",
+        "license_pt": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_url_en": "https://creativecommons.org/licenses/by/4.0/",
+        "license_url_pt": "https://creativecommons.org/licenses/by/4.0/",
+        "language": "pt",
+        "metadata_languages": [
+          "pt",
+          "en"
+        ],
+        "timezone": null,
+        "modified": "2025-11-28T12:12:33+00:00",
+        "modified_updates_on_metadata_change": false,
+        "modified_updates_on_data_change": false,
+        "data_processed": "2026-08-12T21:03:02+00:00",
+        "metadata_processed": "2026-09-03T12:39:11.284000+00:00",
+        "geographic_reference": null,
+        "geographic_reference_auto": false,
+        "territory": null,
+        "geometry_types": null,
+        "bbox": null,
+        "publisher": "E-REDES",
+        "publisher_en": "E-REDES",
+        "publisher_pt": "E-REDES",
+        "references": null,
+        "records_count": 20406,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": null
+      },
+      "custom": {
+        "perfis-de-utilizacao": null,
+        "atualizado": null
+      }
+    }
+  },
+  "records": [
+    {
+      "data": "2026-03-01T00:00:00+00:00",
+      "codigo_concelho": null,
+      "con_name": null,
+      "nivel_tensao": "MT/AT",
+      "energia": 11594.5
+    },
+    {
+      "data": "2026-03-01T00:00:00+00:00",
+      "codigo_concelho": "02----",
+      "con_name": null,
+      "nivel_tensao": "MT/AT",
+      "energia": 2139.75
+    },
+    {
+      "data": "2026-03-01T00:00:00+00:00",
+      "codigo_concelho": "04----",
+      "con_name": null,
+      "nivel_tensao": "MT/AT",
+      "energia": 6835.25
+    }
+  ]
+}

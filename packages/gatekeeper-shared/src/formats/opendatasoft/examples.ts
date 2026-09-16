@@ -1,4 +1,5 @@
 import type { ExampleFeed } from "../../index";
+import { CATALOG_EXAMPLES } from "./catalog-examples";
 
 const E_REDES_SERVING = {
   licence: "CC BY 4.0",
@@ -483,6 +484,7 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
     E_REDES_PERIODIC_SERIES,
     1_209_600,
   ),
+  ...CATALOG_EXAMPLES,
 ];
 
 /** An SNS dataset published day by day, collected twice a day. */

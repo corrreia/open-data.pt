@@ -19,7 +19,6 @@ const ALLOWED_HOSTS =
   "data.lime.bike,mds.bird.co,gbfs.primelayer.pt,gbfs.nextbike.net";
 const allowedHosts = new Set(ALLOWED_HOSTS.split(","));
 const newExampleSlugs = new Set([
-  "bird-braga",
   "bird-cascais",
   "bird-matosinhos",
   "bird-porto",
@@ -145,14 +144,18 @@ describe("GBFS Gatekeeper", () => {
 
   it("ships every working additional Portuguese system", () => {
     expect(newExamples.map((example) => example.slug)).toEqual([
-      "bird-braga",
       "bird-cascais",
       "bird-matosinhos",
       "bird-porto",
       "tubabike-barcelos",
     ]);
+    expect(GBFS_EXAMPLES.some((example) => example.slug === "bird-braga")).toBe(true);
     expect(newExamples.every((example) =>
-      example.policy.collection.cadenceSeconds === 180
+      example.policy.collection.cadenceSeconds === (example.publisher === "Bird" ? 300 : 180)
+    )).toBe(true);
+    expect(newExamples.filter((example) => example.publisher === "Bird").every((example) =>
+      example.policy.collection.withoutHistory?.includes("vehicles")
+      && example.policy.collection.withoutHistory.includes("stations")
     )).toBe(true);
   });
 

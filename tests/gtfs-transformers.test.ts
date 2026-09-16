@@ -88,7 +88,7 @@ describe("GTFS transformer", () => {
       context("carris-metropolitana-gtfs-feed", "Carris Metropolitana GTFS", CARRIS_FILES),
     );
 
-    expect(GTFS_NORMALIZER).toEqual({ id: "gtfs-schedule", version: "2" });
+    expect(GTFS_NORMALIZER).toEqual({ id: "gtfs-schedule", version: "3" });
     expect(result.products.map((product) => product.slug)).toEqual([
       "carris-metropolitana-gtfs-stops",
       "carris-metropolitana-gtfs-routes",

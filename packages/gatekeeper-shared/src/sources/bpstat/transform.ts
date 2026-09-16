@@ -43,7 +43,7 @@ interface DecodedCell {
 
 // Version 2 publishes the series product only; version 1 also repeated every
 // value in an "observations" record product.
-const TRANSFORMER = { id: "bpstat-jsonstat-dataset", version: "3" } as const;
+const TRANSFORMER = { id: "bpstat-jsonstat-dataset", version: "4" } as const;
 
 export function transformBpstatDataset(
   bytes: Uint8Array,
@@ -134,6 +134,11 @@ export function transformBpstatDataset(
         left.eventTime.localeCompare(right.eventTime) ||
         left.seriesKey.localeCompare(right.seriesKey),
     );
+  if (context.feed.config.lastN) {
+    const counts = new Map<string, number>();
+    for (const point of points) counts.set(point.seriesKey, (counts.get(point.seriesKey) ?? 0) + 1);
+    if ([...counts.values()].some((count) => count > Number(context.feed.config.lastN))) throw invalidResponse("BPstat exceeded the requested latest-observation window");
+  }
   const units = new Set(cells.map(({ unit }) => unit));
   const sharedUnit = units.size === 1 ? cells[0]?.unit : undefined;
   const constantsNote = constants.length === 0
@@ -157,12 +162,12 @@ export function transformBpstatDataset(
       slug: `${context.feed.slug}-series`,
       title,
       description:
-        `BPstat values grouped into a series for each non-time dimension combination.${constantsNote}`,
+        `${context.feed.description} BPstat values grouped into a series for each non-time dimension combination.${constantsNote}`,
       role: "time-series",
       schema: seriesSchema,
       kind: "series",
       points,
-      updateMode: "authoritative-snapshot",
+      updateMode: context.feed.config.lastN ? "source-window" : "authoritative-snapshot",
       completeness: "complete",
     },
   ];
@@ -374,7 +379,7 @@ function decodeCell(
     entityKey: allCodes.join(":"),
     signature: JSON.stringify([rawValue, statusAt(page.status, flatIndex)]),
     point: {
-      seriesKey: seriesCodes.join(":"),
+      seriesKey: seriesCodes.join(":") || "all",
       eventTime,
       value: rawValue,
       unit,

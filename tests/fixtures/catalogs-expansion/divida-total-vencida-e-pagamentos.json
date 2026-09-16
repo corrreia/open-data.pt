@@ -1,0 +1,292 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "periodo",
+        "description": null,
+        "annotations": {
+          "timeserie_precision": "month",
+          "facet": true,
+          "facetsort": "-alphanum",
+          "timerangeFilter": true
+        },
+        "label": "Período",
+        "type": "date",
+        "label_pt": "Período",
+        "label_en": "Período",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "regiao",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "sortable": true,
+          "facetsort": "alphanum"
+        },
+        "label": "Região",
+        "type": "text",
+        "label_pt": "Região",
+        "label_en": "Região",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "entidade",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "sortable": true,
+          "facetsort": "alphanum"
+        },
+        "label": "Entidade",
+        "type": "text",
+        "label_pt": "Entidade",
+        "label_en": "Entidade",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "localizacao_geografica",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Localização Geográfica",
+        "type": "geo_point_2d",
+        "label_pt": "Localização Geográfica",
+        "label_en": "Localização Geográfica",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "divida_total_fornecedores_externos",
+        "description": null,
+        "annotations": {
+          "unit": "€",
+          "facetsort": "-count"
+        },
+        "label": "Dívida Total (Fornecedores Externos)",
+        "type": "double",
+        "label_pt": "Dívida Total (Fornecedores Externos)",
+        "label_en": "Dívida Total (Fornecedores Externos)",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "divida_vencida_fornecedores_externos",
+        "description": null,
+        "annotations": {
+          "unit": "€"
+        },
+        "label": "Dívida Vencida (Fornecedores Externos)",
+        "type": "double",
+        "label_pt": "Dívida Vencida (Fornecedores Externos)",
+        "label_en": "Dívida Vencida (Fornecedores Externos)",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "pagamentos_em_atraso",
+        "description": null,
+        "annotations": {
+          "unit": "€"
+        },
+        "label": "Pagamentos em Atraso",
+        "type": "double",
+        "label_pt": "Pagamentos em Atraso",
+        "label_en": "Pagamentos em Atraso",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "dataset_id": "divida-total-vencida-e-pagamentos",
+    "dataset_uid": "da_swikrj",
+    "has_records": true,
+    "features": [
+      "geo",
+      "analyze",
+      "timeserie"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "dcat": {
+        "created": "2016-01-30",
+        "issued": "2019-01-31",
+        "creator": "SPMS",
+        "contributor": "ACSS",
+        "contact_name": null,
+        "contact_email": null,
+        "accrualperiodicity": "Mensal",
+        "spatial": "Portugal Continental",
+        "temporal": "janeiro 2014 a maio 2026",
+        "granularity": null,
+        "dataquality": null,
+        "publisher_type": null,
+        "conforms_to": null,
+        "temporal_coverage_start": null,
+        "temporal_coverage_end": null,
+        "accessRights": null,
+        "relation": null
+      },
+      "default": {
+        "title": "Dívida Total, Vencida e Pagamentos em Atraso",
+        "title_pt": "Dívida Total, Vencida e Pagamentos em Atraso",
+        "title_en": "Dívida Total, Vencida e Pagamentos em Atraso",
+        "description": "<p>Evolução mensal de valores para a dívida das instituições do SNS a fornecedores externos.</p><p><strong>Métricas: </strong>Dívida Total, Dívida Vencida e Pagamentos em Atraso (Arrears).</p>",
+        "description_pt": "<p>Evolução mensal de valores para a dívida das instituições do SNS a fornecedores externos.</p><p><strong>Métricas: </strong>Dívida Total, Dívida Vencida e Pagamentos em Atraso (Arrears).</p>",
+        "description_en": "<p>Evolução mensal de valores para a dívida das instituições do SNS a fornecedores externos.</p><p><strong>Métricas: </strong>Dívida Total, Dívida Vencida e Pagamentos em Atraso (Arrears).</p>",
+        "theme": [
+          "Eficiência"
+        ],
+        "theme_pt": [
+          "Eficiência"
+        ],
+        "theme_en": [
+          "Eficiência"
+        ],
+        "keyword": [
+          "Dívidas",
+          "Fornecedores",
+          "Pagamentos",
+          "Gestão Financeira",
+          "Privado"
+        ],
+        "keyword_pt": [
+          "Dívidas",
+          "Fornecedores",
+          "Pagamentos",
+          "Gestão Financeira",
+          "Privado"
+        ],
+        "keyword_en": [
+          "Dívidas",
+          "Fornecedores",
+          "Pagamentos",
+          "Gestão Financeira",
+          "Privado"
+        ],
+        "license": null,
+        "license_pt": null,
+        "license_en": null,
+        "license_url": null,
+        "license_url_pt": null,
+        "license_url_en": null,
+        "language": "pt",
+        "metadata_languages": [
+          "pt"
+        ],
+        "timezone": null,
+        "modified": "2026-09-10T10:38:10.780000+00:00",
+        "modified_updates_on_metadata_change": true,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2026-08-31T16:34:48.525000+00:00",
+        "metadata_processed": "2026-09-10T10:38:15.278000+00:00",
+        "geographic_reference": [
+          "world_pt"
+        ],
+        "geographic_reference_auto": true,
+        "territory": [
+          "Portugal"
+        ],
+        "geometry_types": [
+          "Point"
+        ],
+        "bbox": {
+          "type": "Feature",
+          "geometry": {
+            "coordinates": [
+              [
+                [
+                  -6.788819711655378,
+                  41.80565318092704
+                ],
+                [
+                  -9.22648343257606,
+                  41.80565318092704
+                ],
+                [
+                  -9.22648343257606,
+                  37.02389728277922
+                ],
+                [
+                  -6.788819711655378,
+                  37.02389728277922
+                ],
+                [
+                  -6.788819711655378,
+                  41.80565318092704
+                ]
+              ]
+            ],
+            "type": "Polygon"
+          },
+          "properties": {}
+        },
+        "publisher": "ACSS",
+        "publisher_pt": "ACSS",
+        "publisher_en": "ACSS",
+        "references": null,
+        "records_count": 8043,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": null
+      },
+      "custom": {
+        "dataset-id-number": "139",
+        "measure-unit": "Euros",
+        "source-data": "SIGEF",
+        "version": null,
+        "formula": null
+      }
+    }
+  },
+  "records": [
+    {
+      "periodo": "2026-06",
+      "regiao": "Região de Saúde do Alentejo",
+      "entidade": "Administração Regional de Saúde do Alentejo",
+      "localizacao_geografica": {
+        "lon": -7.9136262,
+        "lat": 38.5658579
+      },
+      "divida_total_fornecedores_externos": 0.0,
+      "divida_vencida_fornecedores_externos": 0.0,
+      "pagamentos_em_atraso": 0.0
+    },
+    {
+      "periodo": "2026-06",
+      "regiao": "Região de Saúde do Alentejo",
+      "entidade": "Unidade Local de Saúde do Alentejo Central, E. P. E.",
+      "localizacao_geografica": {
+        "lon": -7.9032848,
+        "lat": 38.5684861
+      },
+      "divida_total_fornecedores_externos": 20297293.64,
+      "divida_vencida_fornecedores_externos": 6484755.8,
+      "pagamentos_em_atraso": -413888.26
+    },
+    {
+      "periodo": "2026-06",
+      "regiao": "Região de Saúde do Alentejo",
+      "entidade": "Unidade Local de Saúde do Alto Alentejo, E. P. E.",
+      "localizacao_geografica": {
+        "lon": -7.4263845,
+        "lat": 39.3003425
+      },
+      "divida_total_fornecedores_externos": 15968047.72,
+      "divida_vencida_fornecedores_externos": 6101400.83,
+      "pagamentos_em_atraso": 204559.73
+    }
+  ]
+}

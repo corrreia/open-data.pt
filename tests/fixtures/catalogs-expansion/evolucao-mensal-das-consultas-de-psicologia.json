@@ -1,0 +1,271 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "tempo",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "facetsort": "-alphanum",
+          "timeserie_precision": "month"
+        },
+        "label": "Período",
+        "type": "date",
+        "label_pt": "Período",
+        "label_en": "Período",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "regiao",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "facetsort": "-alphanum"
+        },
+        "label": "Região",
+        "type": "text",
+        "label_pt": "Região",
+        "label_en": "Região",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "instituicao",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "facetsort": "alphanum"
+        },
+        "label": "Instituição",
+        "type": "text",
+        "label_pt": "Instituição",
+        "label_en": "Instituição",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "localizacao_geografica",
+        "description": null,
+        "annotations": {},
+        "label": "Localização Geográfica",
+        "type": "geo_point_2d",
+        "label_pt": "Localização Geográfica",
+        "label_en": "Localização Geográfica",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "psicologia_primeiras_consultas",
+        "description": null,
+        "annotations": {},
+        "label": "Primeiras Consultas",
+        "type": "int",
+        "label_pt": "Primeiras Consultas",
+        "label_en": "Primeiras Consultas",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "psicologia_consultas_subsequentes",
+        "description": null,
+        "annotations": {},
+        "label": "Consultas Subsequentes",
+        "type": "int",
+        "label_pt": "Consultas Subsequentes",
+        "label_en": "Consultas Subsequentes",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "psicologia_total_de_consultas",
+        "description": null,
+        "annotations": {},
+        "label": "Total de Consultas",
+        "type": "int",
+        "label_pt": "Total de Consultas",
+        "label_en": "Total de Consultas",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "dataset_id": "evolucao-mensal-das-consultas-de-psicologia",
+    "dataset_uid": "da_49w1k4",
+    "has_records": true,
+    "features": [
+      "timeserie",
+      "geo",
+      "analyze"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "dcat": {
+        "created": "2023-02-22",
+        "issued": null,
+        "creator": "SPMS",
+        "contributor": "DE-SNS",
+        "contact_name": null,
+        "contact_email": null,
+        "accrualperiodicity": "Mensal",
+        "spatial": "Portugal Continental",
+        "temporal": "De janeiro de 2018 ao mês n-2 anterior ao atual (valores acumulados)",
+        "granularity": null,
+        "dataquality": null,
+        "publisher_type": null,
+        "conforms_to": null,
+        "temporal_coverage_start": null,
+        "temporal_coverage_end": null,
+        "accessRights": null,
+        "relation": null
+      },
+      "default": {
+        "title": "Evolução Mensal das Consultas de Psicologia",
+        "title_pt": "Evolução Mensal das Consultas de Psicologia",
+        "title_en": "Evolução Mensal das Consultas de Psicologia",
+        "description": "<p class=\"MsoNormal\"><span lang=\"PT\">Monitorização do número de consultas de\nPsicologia.</span></p><p class=\"MsoNormal\"><span lang=\"PT\">Apresenta-se a evolução mensal do número de\nprimeiras consultas e de consultas subsequentes na especialidade de Psicologia,\nregistadas pelas entidades hospitalares do Serviço Nacional de Saúde (SNS).<o:p></o:p></span></p><p class=\"MsoNormal\"><span lang=\"PT\">Primeiras Consultas: Consultas externas em que\no utente é atendido pela primeira vez num serviço de especialidade, no âmbito\nde um episódio clínico.<o:p></o:p></span></p><p class=\"MsoNormal\"><span lang=\"PT\">Consultas Subsequentes: Consultas destinadas\nao acompanhamento da evolução do estado de saúde do utente, bem como à\nprescrição terapêutica e/ou preventiva, tendo como referência uma primeira\nconsulta previamente realizada.<o:p></o:p></span></p><p class=\"MsoNormal\"><b><span lang=\"PT\">Observações:</span></b><span lang=\"PT\"><o:p></o:p></span></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\">\n</p><p class=\"MsoNormal\"><span lang=\"PT\">Os dados relativos ao mês n-2, publicados até\nao último dia útil do mês n, têm caráter provisório, sujeitos a eventuais\natualizações.<o:p></o:p></span></p>",
+        "description_pt": "<p class=\"MsoNormal\"><span lang=\"PT\">Monitorização do número de consultas de\nPsicologia.</span></p><p class=\"MsoNormal\"><span lang=\"PT\">Apresenta-se a evolução mensal do número de\nprimeiras consultas e de consultas subsequentes na especialidade de Psicologia,\nregistadas pelas entidades hospitalares do Serviço Nacional de Saúde (SNS).<o:p></o:p></span></p><p class=\"MsoNormal\"><span lang=\"PT\">Primeiras Consultas: Consultas externas em que\no utente é atendido pela primeira vez num serviço de especialidade, no âmbito\nde um episódio clínico.<o:p></o:p></span></p><p class=\"MsoNormal\"><span lang=\"PT\">Consultas Subsequentes: Consultas destinadas\nao acompanhamento da evolução do estado de saúde do utente, bem como à\nprescrição terapêutica e/ou preventiva, tendo como referência uma primeira\nconsulta previamente realizada.<o:p></o:p></span></p><p class=\"MsoNormal\"><b><span lang=\"PT\">Observações:</span></b><span lang=\"PT\"><o:p></o:p></span></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\">\n</p><p class=\"MsoNormal\"><span lang=\"PT\">Os dados relativos ao mês n-2, publicados até\nao último dia útil do mês n, têm caráter provisório, sujeitos a eventuais\natualizações.<o:p></o:p></span></p>",
+        "description_en": "<p class=\"MsoNormal\"><span lang=\"PT\">Monitorização do número de consultas de\nPsicologia.</span></p><p class=\"MsoNormal\"><span lang=\"PT\">Apresenta-se a evolução mensal do número de\nprimeiras consultas e de consultas subsequentes na especialidade de Psicologia,\nregistadas pelas entidades hospitalares do Serviço Nacional de Saúde (SNS).<o:p></o:p></span></p><p class=\"MsoNormal\"><span lang=\"PT\">Primeiras Consultas: Consultas externas em que\no utente é atendido pela primeira vez num serviço de especialidade, no âmbito\nde um episódio clínico.<o:p></o:p></span></p><p class=\"MsoNormal\"><span lang=\"PT\">Consultas Subsequentes: Consultas destinadas\nao acompanhamento da evolução do estado de saúde do utente, bem como à\nprescrição terapêutica e/ou preventiva, tendo como referência uma primeira\nconsulta previamente realizada.<o:p></o:p></span></p><p class=\"MsoNormal\"><b><span lang=\"PT\">Observações:</span></b><span lang=\"PT\"><o:p></o:p></span></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\">\n</p><p class=\"MsoNormal\"><span lang=\"PT\">Os dados relativos ao mês n-2, publicados até\nao último dia útil do mês n, têm caráter provisório, sujeitos a eventuais\natualizações.<o:p></o:p></span></p>",
+        "theme": [
+          "Acesso"
+        ],
+        "theme_pt": [
+          "Acesso"
+        ],
+        "theme_en": [
+          "Acesso"
+        ],
+        "keyword": [
+          "Consultas de Psicologia",
+          "Consultas Hospitalares"
+        ],
+        "keyword_pt": [
+          "Consultas de Psicologia",
+          "Consultas Hospitalares"
+        ],
+        "keyword_en": [
+          "Consultas de Psicologia",
+          "Consultas Hospitalares"
+        ],
+        "license": null,
+        "license_pt": null,
+        "license_en": null,
+        "license_url": null,
+        "license_url_pt": null,
+        "license_url_en": null,
+        "language": "pt",
+        "metadata_languages": [
+          "pt"
+        ],
+        "timezone": null,
+        "modified": "2026-08-31T16:34:48.682000+00:00",
+        "modified_updates_on_metadata_change": true,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2026-08-31T16:34:48.682000+00:00",
+        "metadata_processed": "2026-08-31T16:34:48.731000+00:00",
+        "geographic_reference": [
+          "world_pt"
+        ],
+        "geographic_reference_auto": true,
+        "territory": [
+          "Portugal"
+        ],
+        "geometry_types": [
+          "Point"
+        ],
+        "bbox": {
+          "type": "Feature",
+          "geometry": {
+            "coordinates": [
+              [
+                [
+                  -6.768198050558567,
+                  41.80565318092704
+                ],
+                [
+                  -9.418267076835036,
+                  41.80565318092704
+                ],
+                [
+                  -9.418267076835036,
+                  37.02389728277922
+                ],
+                [
+                  -6.768198050558567,
+                  37.02389728277922
+                ],
+                [
+                  -6.768198050558567,
+                  41.80565318092704
+                ]
+              ]
+            ],
+            "type": "Polygon"
+          },
+          "properties": {}
+        },
+        "publisher": "DE-SNS",
+        "publisher_pt": "DE-SNS",
+        "publisher_en": "DE-SNS",
+        "references": null,
+        "records_count": 4652,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": null
+      },
+      "custom": {
+        "dataset-id-number": "206",
+        "measure-unit": "Nº de Consultas",
+        "source-data": "SICA",
+        "version": null,
+        "formula": null
+      }
+    }
+  },
+  "records": [
+    {
+      "tempo": "2026-06",
+      "regiao": "Região de Saúde do Alentejo",
+      "instituicao": "Unidade Local de Saúde do Alentejo Central, EPE",
+      "localizacao_geografica": {
+        "lon": -7.903064,
+        "lat": 38.568838
+      },
+      "psicologia_primeiras_consultas": 366,
+      "psicologia_consultas_subsequentes": 2701,
+      "psicologia_total_de_consultas": 3067
+    },
+    {
+      "tempo": "2026-06",
+      "regiao": "Região de Saúde do Alentejo",
+      "instituicao": "Unidade Local de Saúde do Alto Alentejo, EPE",
+      "localizacao_geografica": {
+        "lon": -7.4267,
+        "lat": 39.2999
+      },
+      "psicologia_primeiras_consultas": 773,
+      "psicologia_consultas_subsequentes": 1488,
+      "psicologia_total_de_consultas": 2261
+    },
+    {
+      "tempo": "2026-06",
+      "regiao": "Região de Saúde do Alentejo",
+      "instituicao": "Unidade Local de Saúde do Baixo Alentejo, EPE",
+      "localizacao_geografica": {
+        "lon": -7.86863,
+        "lat": 38.0146
+      },
+      "psicologia_primeiras_consultas": 500,
+      "psicologia_consultas_subsequentes": 2189,
+      "psicologia_total_de_consultas": 2689
+    }
+  ]
+}

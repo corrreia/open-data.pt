@@ -1,0 +1,249 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "registo",
+        "description": null,
+        "annotations": {
+          "id": true
+        },
+        "label": "Registo",
+        "type": "int",
+        "label_pt": "Registo",
+        "label_en": "Registo",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "periodo",
+        "description": null,
+        "annotations": {
+          "timeserie_precision": "year"
+        },
+        "label": "Período",
+        "type": "date",
+        "label_pt": "Período",
+        "label_en": "Período",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "regiao",
+        "description": null,
+        "annotations": {},
+        "label": "Região",
+        "type": "text",
+        "label_pt": "Região",
+        "label_en": "Região",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "especialidade",
+        "description": null,
+        "annotations": {},
+        "label": "Especialidade",
+        "type": "text",
+        "label_pt": "Especialidade",
+        "label_en": "Especialidade",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "instituicao",
+        "description": null,
+        "annotations": {},
+        "label": "Instituição",
+        "type": "text",
+        "label_pt": "Instituição",
+        "label_en": "Instituição",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "vagas_disponiveis",
+        "description": null,
+        "annotations": {},
+        "label": "Vagas Disponíveis",
+        "type": "int",
+        "label_pt": "Vagas Disponíveis",
+        "label_en": "Vagas Disponíveis",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "vagas_ocupadas",
+        "description": null,
+        "annotations": {},
+        "label": "Vagas Ocupadas",
+        "type": "int",
+        "label_pt": "Vagas Ocupadas",
+        "label_en": "Vagas Ocupadas",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "vagas_nao_ocupadas",
+        "description": null,
+        "annotations": {},
+        "label": "Vagas Não Ocupadas",
+        "type": "int",
+        "label_pt": "Vagas Não Ocupadas",
+        "label_en": "Vagas Não Ocupadas",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "dataset_id": "vagas-formacao-especializada-internato",
+    "dataset_uid": "da_rytvsi",
+    "has_records": true,
+    "features": [
+      "timeserie",
+      "analyze"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "dcat": {
+        "created": "2026-03-10",
+        "issued": null,
+        "creator": "SPMS",
+        "contributor": "Ordem dos Médicos; CNIM; ACSS",
+        "contact_name": null,
+        "contact_email": null,
+        "accrualperiodicity": "annual",
+        "spatial": "Portugal Continental",
+        "temporal": "2020 a 2026",
+        "granularity": "Anual",
+        "dataquality": null,
+        "publisher_type": null,
+        "conforms_to": null,
+        "temporal_coverage_start": null,
+        "temporal_coverage_end": null,
+        "accessRights": null,
+        "relation": null
+      },
+      "default": {
+        "title": "Formação Médica | Vagas para Formação Especializada (Internato Médico)",
+        "title_pt": "Formação Médica | Vagas para Formação Especializada (Internato Médico)",
+        "title_en": "Formação Médica | Vagas para Formação Especializada (Internato Médico)",
+        "description": "<p>Monitorizar a evolução e a distribuição das vagas a concurso e as vagas ocupadas da Formação Especializada do Internato Médico, por especialidade médica e instituição de formação.</p><p>O conjunto de dados contabiliza o número de vagas a concurso, ocupadas e não ocupadas para a Formação Especializada do Internato Médico, discriminadas por especialidade médica e por instituição de formação reconhecida.<br><span style=\"font-family: inherit;\">As vagas correspondem às posições disponibilizadas anualmente nos procedimentos concursais nacionais para ingresso na Formação Especializada, conforme publicadas em Diário da República.<br></span><span style=\"font-family: inherit;\">Permite analisar a evolução temporal da oferta formativa, bem como a distribuição geográfica e institucional das vagas por especialidade.</span></p><p><b>Observações</b>: Os dados refletem as vagas a concurso e as vagas ocupadas  publicadas oficialmente. <br><span style=\"font-family: inherit;\">Alterações regulamentares ou excecionais nos procedimentos concursais podem influenciar a comparabilidade entre anos.<br></span><span style=\"font-family: inherit;\">O campo \"Ano\" refere-se ao ano de entrada efetivo na formação, correspondendo ao ano seguinte à identificação do concurso correspondente. <br></span><span style=\"font-family: inherit;\">Exemplo: Os formandos que iniciaram a formação especializada em janeiro de 2026 pertencem ao concurso IM2025FE.</span></p>",
+        "description_pt": "<p>Monitorizar a evolução e a distribuição das vagas a concurso e as vagas ocupadas da Formação Especializada do Internato Médico, por especialidade médica e instituição de formação.</p><p>O conjunto de dados contabiliza o número de vagas a concurso, ocupadas e não ocupadas para a Formação Especializada do Internato Médico, discriminadas por especialidade médica e por instituição de formação reconhecida.<br><span style=\"font-family: inherit;\">As vagas correspondem às posições disponibilizadas anualmente nos procedimentos concursais nacionais para ingresso na Formação Especializada, conforme publicadas em Diário da República.<br></span><span style=\"font-family: inherit;\">Permite analisar a evolução temporal da oferta formativa, bem como a distribuição geográfica e institucional das vagas por especialidade.</span></p><p><b>Observações</b>: Os dados refletem as vagas a concurso e as vagas ocupadas  publicadas oficialmente. <br><span style=\"font-family: inherit;\">Alterações regulamentares ou excecionais nos procedimentos concursais podem influenciar a comparabilidade entre anos.<br></span><span style=\"font-family: inherit;\">O campo \"Ano\" refere-se ao ano de entrada efetivo na formação, correspondendo ao ano seguinte à identificação do concurso correspondente. <br></span><span style=\"font-family: inherit;\">Exemplo: Os formandos que iniciaram a formação especializada em janeiro de 2026 pertencem ao concurso IM2025FE.</span></p>",
+        "description_en": "<p>Monitorizar a evolução e a distribuição das vagas a concurso e as vagas ocupadas da Formação Especializada do Internato Médico, por especialidade médica e instituição de formação.</p><p>O conjunto de dados contabiliza o número de vagas a concurso, ocupadas e não ocupadas para a Formação Especializada do Internato Médico, discriminadas por especialidade médica e por instituição de formação reconhecida.<br><span style=\"font-family: inherit;\">As vagas correspondem às posições disponibilizadas anualmente nos procedimentos concursais nacionais para ingresso na Formação Especializada, conforme publicadas em Diário da República.<br></span><span style=\"font-family: inherit;\">Permite analisar a evolução temporal da oferta formativa, bem como a distribuição geográfica e institucional das vagas por especialidade.</span></p><p><b>Observações</b>: Os dados refletem as vagas a concurso e as vagas ocupadas  publicadas oficialmente. <br><span style=\"font-family: inherit;\">Alterações regulamentares ou excecionais nos procedimentos concursais podem influenciar a comparabilidade entre anos.<br></span><span style=\"font-family: inherit;\">O campo \"Ano\" refere-se ao ano de entrada efetivo na formação, correspondendo ao ano seguinte à identificação do concurso correspondente. <br></span><span style=\"font-family: inherit;\">Exemplo: Os formandos que iniciaram a formação especializada em janeiro de 2026 pertencem ao concurso IM2025FE.</span></p>",
+        "theme": [
+          "Acesso"
+        ],
+        "theme_pt": [
+          "Acesso"
+        ],
+        "theme_en": [
+          "Acesso"
+        ],
+        "keyword": [
+          "Internato Médico",
+          "Formação Especializada",
+          "Vagas a Concurso",
+          "Especialidades Médicas",
+          "Instituições de Formação",
+          "Recursos Humanos em Saúde"
+        ],
+        "keyword_pt": [
+          "Internato Médico",
+          "Formação Especializada",
+          "Vagas a Concurso",
+          "Especialidades Médicas",
+          "Instituições de Formação",
+          "Recursos Humanos em Saúde"
+        ],
+        "keyword_en": [
+          "Internato Médico",
+          "Formação Especializada",
+          "Vagas a Concurso",
+          "Especialidades Médicas",
+          "Instituições de Formação",
+          "Recursos Humanos em Saúde"
+        ],
+        "license": null,
+        "license_pt": null,
+        "license_en": null,
+        "license_url": null,
+        "license_url_pt": null,
+        "license_url_en": null,
+        "language": "pt",
+        "metadata_languages": [
+          "pt"
+        ],
+        "timezone": null,
+        "modified": "2026-08-14T09:50:13.762000+00:00",
+        "modified_updates_on_metadata_change": true,
+        "modified_updates_on_data_change": false,
+        "data_processed": "2026-04-08T14:52:52.129000+00:00",
+        "metadata_processed": "2026-08-14T09:50:24.890000+00:00",
+        "geographic_reference": [
+          "world_pt"
+        ],
+        "geographic_reference_auto": true,
+        "territory": [
+          "Portugal"
+        ],
+        "geometry_types": null,
+        "bbox": null,
+        "publisher": "ACSS",
+        "publisher_pt": "ACSS",
+        "publisher_en": "ACSS",
+        "references": null,
+        "records_count": 7141,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": null
+      },
+      "custom": {
+        "dataset-id-number": "16",
+        "measure-unit": "Número de vagas",
+        "source-data": "Plataforma do Internato Médico",
+        "version": null,
+        "formula": "Número total de vagas disponíveis/ocupadas na Formação Especializada do Internato Médico, por especialidade e instituição, valores anuais."
+      }
+    }
+  },
+  "records": [
+    {
+      "registo": 374,
+      "periodo": "2026",
+      "regiao": "Açores",
+      "especialidade": "Medicina Geral e Familiar",
+      "instituicao": "Centro de Saúde de Angra do Heroísmo",
+      "vagas_disponiveis": 2,
+      "vagas_ocupadas": 0,
+      "vagas_nao_ocupadas": 2
+    },
+    {
+      "registo": 375,
+      "periodo": "2026",
+      "regiao": "Açores",
+      "especialidade": "Medicina Geral e Familiar",
+      "instituicao": "Centro de Saúde de Horta",
+      "vagas_disponiveis": 1,
+      "vagas_ocupadas": 0,
+      "vagas_nao_ocupadas": 1
+    },
+    {
+      "registo": 376,
+      "periodo": "2026",
+      "regiao": "Açores",
+      "especialidade": "Medicina Geral e Familiar",
+      "instituicao": "Centro de Saúde de Ponta Delgada",
+      "vagas_disponiveis": 5,
+      "vagas_ocupadas": 5,
+      "vagas_nao_ocupadas": 0
+    }
+  ]
+}

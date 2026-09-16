@@ -1,0 +1,245 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "n_o_registos",
+        "description": null,
+        "annotations": {
+          "id": true
+        },
+        "label": "N.º Registos",
+        "type": "double",
+        "label_pt": "N.º Registos",
+        "label_en": "N.º Registos",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "tempo",
+        "description": null,
+        "annotations": {
+          "timeserie_precision": "month",
+          "facetsort": "-alphanum",
+          "timerangeFilter": true,
+          "facet": true
+        },
+        "label": "Período",
+        "type": "date",
+        "label_pt": "Período",
+        "label_en": "Período",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "estabelecimento",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "facetsort": "alphanum"
+        },
+        "label": "Estabelecimento",
+        "type": "text",
+        "label_pt": "Estabelecimento",
+        "label_en": "Estabelecimento",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "estabelecimento_especificado",
+        "description": null,
+        "annotations": {},
+        "label": "Estabelecimento - Especificado",
+        "type": "text",
+        "label_pt": "Estabelecimento - Especificado",
+        "label_en": "Estabelecimento - Especificado",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "tipo_de_entidade_estabelecimento",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "facetsort": "alphanum"
+        },
+        "label": "Tipo de Entidade Estabelecimento",
+        "type": "text",
+        "label_pt": "Tipo de Entidade Estabelecimento",
+        "label_en": "Tipo de Entidade Estabelecimento",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "morada_estabelecimento",
+        "description": null,
+        "annotations": {},
+        "label": "Morada Estabelecimento",
+        "type": "text",
+        "label_pt": "Morada Estabelecimento",
+        "label_en": "Morada Estabelecimento",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "codigopostalestabelecimento",
+        "description": null,
+        "annotations": {},
+        "label": "Codigo Postal Estabelecimento",
+        "type": "text",
+        "label_pt": "Codigo Postal Estabelecimento",
+        "label_en": "Codigo Postal Estabelecimento",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "localidade_estabelecimento",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "facetsort": "alphanum"
+        },
+        "label": "Localidade Estabelecimento",
+        "type": "text",
+        "label_pt": "Localidade Estabelecimento",
+        "label_en": "Localidade Estabelecimento",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "dataset_id": "evolucao-programas-dae-licenciados-em-espacos-publicos",
+    "dataset_uid": "da_vv3534",
+    "has_records": true,
+    "features": [
+      "timeserie",
+      "analyze"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "dcat": {
+        "created": "2023-07-31",
+        "issued": null,
+        "creator": "SPMS",
+        "contributor": "INEM",
+        "contact_name": null,
+        "contact_email": null,
+        "accrualperiodicity": "Semestral",
+        "spatial": "Portugal Continental",
+        "temporal": "Janeiro 2009 a Junho 2026 (valores acumulados)",
+        "granularity": "Mensal",
+        "dataquality": null,
+        "publisher_type": null,
+        "conforms_to": null,
+        "temporal_coverage_start": null,
+        "temporal_coverage_end": null,
+        "accessRights": null,
+        "relation": null
+      },
+      "default": {
+        "title": "Evolução do número de Programas DAE licenciados em Espaços Públicos",
+        "title_pt": "Evolução do número de Programas DAE licenciados em Espaços Públicos",
+        "title_en": "Evolução do número de Programas DAE licenciados em Espaços Públicos",
+        "description": "<p>Monitorizar o número de Programas DAE licenciados em Espaços Públicos.</p><ul><li>Neste indicador podem ser consultados os Espaços Públicos que dispõem de Programa de DAE licenciado pelo INEM.</li></ul><p><b><br></b></p><p><b>Observações: </b> Programas suspensos pelo INEM.</p><p><br></p>",
+        "description_pt": "<p>Monitorizar o número de Programas DAE licenciados em Espaços Públicos.</p><ul><li>Neste indicador podem ser consultados os Espaços Públicos que dispõem de Programa de DAE licenciado pelo INEM.</li></ul><p><b><br></b></p><p><b>Observações: </b> Programas suspensos pelo INEM.</p><p><br></p>",
+        "description_en": "<p>Monitorizar o número de Programas DAE licenciados em Espaços Públicos.</p><ul><li>Neste indicador podem ser consultados os Espaços Públicos que dispõem de Programa de DAE licenciado pelo INEM.</li></ul><p><b><br></b></p><p><b>Observações: </b> Programas suspensos pelo INEM.</p><p><br></p>",
+        "theme": [
+          "Acesso"
+        ],
+        "theme_pt": [
+          "Acesso"
+        ],
+        "theme_en": [
+          "Acesso"
+        ],
+        "keyword": [
+          "INEM",
+          "DAE"
+        ],
+        "keyword_pt": [
+          "INEM",
+          "DAE"
+        ],
+        "keyword_en": [
+          "INEM",
+          "DAE"
+        ],
+        "license": null,
+        "license_pt": null,
+        "license_en": null,
+        "license_url": null,
+        "license_url_pt": null,
+        "license_url_en": null,
+        "language": "pt",
+        "metadata_languages": [
+          "pt"
+        ],
+        "timezone": null,
+        "modified": "2023-07-31T08:23:17+00:00",
+        "modified_updates_on_metadata_change": false,
+        "modified_updates_on_data_change": false,
+        "data_processed": "2026-08-31T10:26:26.086000+00:00",
+        "metadata_processed": "2026-08-31T10:26:26.138000+00:00",
+        "geographic_reference": null,
+        "geographic_reference_auto": false,
+        "territory": null,
+        "geometry_types": null,
+        "bbox": null,
+        "publisher": "INEM",
+        "publisher_pt": "INEM",
+        "publisher_en": "INEM",
+        "references": null,
+        "records_count": 7136,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": null
+      },
+      "custom": {
+        "dataset-id-number": "207",
+        "measure-unit": "Valor numérico inteiro",
+        "source-data": "Base de Dados do Programa Nacional DAE",
+        "version": null,
+        "formula": "Número total de Programas DAE licenciados em Espaços Públicos"
+      }
+    }
+  },
+  "records": [
+    {
+      "n_o_registos": 6598.0,
+      "tempo": "2026-06",
+      "estabelecimento": "Multi Portugal, S.A.",
+      "estabelecimento_especificado": "Sintra Retail Park",
+      "tipo_de_entidade_estabelecimento": "Áreas Comerciais c/ área bruta locável ≥ 8000 m2",
+      "morada_estabelecimento": "Rua Elias Garcia 209 Alto do Forte (IC 19), Rio de Mouro",
+      "codigopostalestabelecimento": "2635-008",
+      "localidade_estabelecimento": "Rio Mouro"
+    },
+    {
+      "n_o_registos": 6599.0,
+      "tempo": "2026-06",
+      "estabelecimento": "Du Tage - Animação Turística E Lazer, Lda",
+      "estabelecimento_especificado": "SANA SUD",
+      "tipo_de_entidade_estabelecimento": "outras empresas",
+      "morada_estabelecimento": "Av. Brasilia, Pavilhão Poente",
+      "codigopostalestabelecimento": "1300-598",
+      "localidade_estabelecimento": "Lisboa"
+    },
+    {
+      "n_o_registos": 6600.0,
+      "tempo": "2026-06",
+      "estabelecimento": "Summer Ria, S.A.",
+      "estabelecimento_especificado": "Quinta da Ria - Campo de Golfe",
+      "tipo_de_entidade_estabelecimento": "Outras Empresas",
+      "morada_estabelecimento": "Quinta da Ria, Vila Nova de Cacela",
+      "codigopostalestabelecimento": "8900-057",
+      "localidade_estabelecimento": "Vila Nova de Cacela"
+    }
+  ]
+}

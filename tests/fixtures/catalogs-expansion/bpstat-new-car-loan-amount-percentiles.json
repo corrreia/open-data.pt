@@ -1,0 +1,888 @@
+{
+  "version": "2.0",
+  "label": "Credit purpose; Source; Flows, stocks and prices; Metrics; Periodicity; Item; Counterparty institutional sector; Reference institutional sector; Counterparty territory; Reference territory; Data type; Type of interest rate; Unit of measure; Commercialization channel; Type of institution",
+  "id": [
+    "17",
+    "18",
+    "19",
+    "29",
+    "40",
+    "48",
+    "54",
+    "56",
+    "59",
+    "63",
+    "66",
+    "69",
+    "70",
+    "83",
+    "85",
+    "reference_date"
+  ],
+  "size": [
+    3,
+    1,
+    1,
+    3,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    2
+  ],
+  "extension": {
+    "num_series": 64,
+    "obs_updated_at": "2026-09-02T09:30:00Z",
+    "series": [
+      {
+        "id": 13168888,
+        "label": "New car loan contracts for used vehicles – 25th percentile (1st quartile)",
+        "dimension_category": [
+          {
+            "dimension_id": 17,
+            "category_id": 5679
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 7
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3612
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3777
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3108
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 5682
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 310
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 5397
+          },
+          {
+            "dimension_id": 69,
+            "category_id": 4451
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3338
+          },
+          {
+            "dimension_id": 83,
+            "category_id": 5697
+          },
+          {
+            "dimension_id": 85,
+            "category_id": 5684
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=13168888&lang=EN"
+      },
+      {
+        "id": 13168889,
+        "label": "New car loan contracts for new vehicles – 25th percentile (1st quartile)",
+        "dimension_category": [
+          {
+            "dimension_id": 17,
+            "category_id": 5678
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 7
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3612
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3777
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3108
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 5682
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 310
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 5397
+          },
+          {
+            "dimension_id": 69,
+            "category_id": 4451
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3338
+          },
+          {
+            "dimension_id": 83,
+            "category_id": 5697
+          },
+          {
+            "dimension_id": 85,
+            "category_id": 5684
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=13168889&lang=EN"
+      },
+      {
+        "id": 13168890,
+        "label": "New car loan contracts – 25th percentile (1st quartile)",
+        "dimension_category": [
+          {
+            "dimension_id": 17,
+            "category_id": 4834
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 7
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3612
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3777
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3108
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 5682
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 310
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 5397
+          },
+          {
+            "dimension_id": 69,
+            "category_id": 4451
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3338
+          },
+          {
+            "dimension_id": 83,
+            "category_id": 5697
+          },
+          {
+            "dimension_id": 85,
+            "category_id": 5684
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=13168890&lang=EN"
+      },
+      {
+        "id": 13168893,
+        "label": "New car loan contracts for used vehicles – 50th percentile (2nd quartile)",
+        "dimension_category": [
+          {
+            "dimension_id": 17,
+            "category_id": 5679
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 7
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3613
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3777
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3108
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 5682
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 310
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 5397
+          },
+          {
+            "dimension_id": 69,
+            "category_id": 4451
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3338
+          },
+          {
+            "dimension_id": 83,
+            "category_id": 5697
+          },
+          {
+            "dimension_id": 85,
+            "category_id": 5684
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=13168893&lang=EN"
+      },
+      {
+        "id": 13168894,
+        "label": "New car loan contracts for new vehicles – 50th percentile (2nd quartile)",
+        "dimension_category": [
+          {
+            "dimension_id": 17,
+            "category_id": 5678
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 7
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3613
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3777
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3108
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 5682
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 310
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 5397
+          },
+          {
+            "dimension_id": 69,
+            "category_id": 4451
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3338
+          },
+          {
+            "dimension_id": 83,
+            "category_id": 5697
+          },
+          {
+            "dimension_id": 85,
+            "category_id": 5684
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=13168894&lang=EN"
+      },
+      {
+        "id": 13168895,
+        "label": "New car loan contracts – 50th percentile (2nd quartile)",
+        "dimension_category": [
+          {
+            "dimension_id": 17,
+            "category_id": 4834
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 7
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3613
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3777
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3108
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 5682
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 310
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 5397
+          },
+          {
+            "dimension_id": 69,
+            "category_id": 4451
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3338
+          },
+          {
+            "dimension_id": 83,
+            "category_id": 5697
+          },
+          {
+            "dimension_id": 85,
+            "category_id": 5684
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=13168895&lang=EN"
+      },
+      {
+        "id": 13168898,
+        "label": "New car loan contracts for used vehicles – 75th percentile (3rd quartile)",
+        "dimension_category": [
+          {
+            "dimension_id": 17,
+            "category_id": 5679
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 7
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3618
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3777
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3108
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 5682
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 310
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 5397
+          },
+          {
+            "dimension_id": 69,
+            "category_id": 4451
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3338
+          },
+          {
+            "dimension_id": 83,
+            "category_id": 5697
+          },
+          {
+            "dimension_id": 85,
+            "category_id": 5684
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=13168898&lang=EN"
+      },
+      {
+        "id": 13168899,
+        "label": "New car loan contracts for new vehicles – 75th percentile (3rd quartile)",
+        "dimension_category": [
+          {
+            "dimension_id": 17,
+            "category_id": 5678
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 7
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3618
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3777
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3108
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 5682
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 310
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 5397
+          },
+          {
+            "dimension_id": 69,
+            "category_id": 4451
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3338
+          },
+          {
+            "dimension_id": 83,
+            "category_id": 5697
+          },
+          {
+            "dimension_id": 85,
+            "category_id": 5684
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=13168899&lang=EN"
+      },
+      {
+        "id": 13168900,
+        "label": "New car loan contracts – 75th percentile (3rd quartile)",
+        "dimension_category": [
+          {
+            "dimension_id": 17,
+            "category_id": 4834
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 7
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3618
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3777
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3108
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 5682
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 310
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 5397
+          },
+          {
+            "dimension_id": 69,
+            "category_id": 4451
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3338
+          },
+          {
+            "dimension_id": 83,
+            "category_id": 5697
+          },
+          {
+            "dimension_id": 85,
+            "category_id": 5684
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=13168900&lang=EN"
+      }
+    ]
+  },
+  "value": [
+    8708.0,
+    8816.8,
+    14912.5,
+    14857.0,
+    21898.6,
+    21732.5,
+    6748.0,
+    6667.0,
+    17124.0,
+    17158.4,
+    27000.0,
+    26921.2,
+    9200.0,
+    9263.0,
+    14456.4,
+    14454.0,
+    20256.5,
+    20145.2
+  ],
+  "status": [
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F"
+  ],
+  "dimension": {
+    "17": {
+      "label": "Credit purpose",
+      "category": {
+        "index": [
+          "4834",
+          "5678",
+          "5679"
+        ],
+        "label": {
+          "4834": "Car loans",
+          "5678": "New vehicles",
+          "5679": "Used vehicles"
+        }
+      }
+    },
+    "18": {
+      "label": "Source",
+      "category": {
+        "index": [
+          "35"
+        ],
+        "label": {
+          "35": "Banco de Portugal"
+        }
+      }
+    },
+    "19": {
+      "label": "Flows, stocks and prices",
+      "category": {
+        "index": [
+          "7"
+        ],
+        "label": {
+          "7": "Transactions"
+        }
+      }
+    },
+    "40": {
+      "label": "Periodicity",
+      "category": {
+        "index": [
+          "4264"
+        ],
+        "label": {
+          "4264": "Monthly"
+        }
+      }
+    },
+    "48": {
+      "label": "Item",
+      "category": {
+        "index": [
+          "3777"
+        ],
+        "label": {
+          "3777": "Loans"
+        }
+      }
+    },
+    "54": {
+      "label": "Counterparty institutional sector",
+      "category": {
+        "index": [
+          "3108"
+        ],
+        "label": {
+          "3108": "Households"
+        }
+      }
+    },
+    "56": {
+      "label": "Reference institutional sector",
+      "category": {
+        "index": [
+          "5682"
+        ],
+        "label": {
+          "5682": "Deposit taking corporations and other financial intermediaries"
+        }
+      }
+    },
+    "66": {
+      "label": "Data type",
+      "category": {
+        "index": [
+          "5397"
+        ],
+        "label": {
+          "5397": "New pure operations"
+        }
+      }
+    },
+    "69": {
+      "label": "Type of interest rate",
+      "category": {
+        "index": [
+          "4451"
+        ],
+        "label": {
+          "4451": "All type of interest rate"
+        }
+      }
+    },
+    "70": {
+      "label": "Unit of measure",
+      "category": {
+        "index": [
+          "3338"
+        ],
+        "label": {
+          "3338": "Euro"
+        }
+      }
+    },
+    "83": {
+      "label": "Commercialization channel",
+      "category": {
+        "index": [
+          "5697"
+        ],
+        "label": {
+          "5697": "Total"
+        }
+      }
+    },
+    "85": {
+      "label": "Type of institution",
+      "category": {
+        "index": [
+          "5684"
+        ],
+        "label": {
+          "5684": "Total"
+        }
+      }
+    },
+    "reference_date": {
+      "label": "Date",
+      "category": {
+        "index": [
+          "2026-06-30",
+          "2026-07-31"
+        ]
+      }
+    },
+    "29": {
+      "label": "Metrics",
+      "category": {
+        "index": [
+          "3612",
+          "3613",
+          "3618"
+        ],
+        "label": {
+          "3612": "1st Quartile",
+          "3613": "2nd Quartile (median)",
+          "3618": "3rd Quartile"
+        }
+      }
+    },
+    "59": {
+      "label": "Counterparty territory",
+      "category": {
+        "index": [
+          "310"
+        ],
+        "label": {
+          "310": "All countries"
+        }
+      }
+    },
+    "63": {
+      "label": "Reference territory",
+      "category": {
+        "index": [
+          "349"
+        ],
+        "label": {
+          "349": "Portugal"
+        }
+      }
+    }
+  },
+  "class": "dataset",
+  "href": "https://bpstat.bportugal.pt/data/v1/domains/209/datasets/023d7ab3054d8a0d2db8de50c0ca394b/?lang=EN&series_ids=13168888%2C13168889%2C13168890%2C13168893%2C13168894%2C13168895%2C13168898%2C13168899%2C13168900&obs_last_n=2&page_size=100",
+  "source": "Bank of Portugal",
+  "role": {
+    "time": [
+      "reference_date"
+    ],
+    "metric": [
+      "29"
+    ],
+    "geo": [
+      "59",
+      "63"
+    ]
+  }
+}

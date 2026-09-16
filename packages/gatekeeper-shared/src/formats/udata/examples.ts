@@ -28,6 +28,42 @@ function withOutputCap(policy: ExampleFeed["policy"], maxOutputBytes: number): E
   return { ...policy, collection: { ...policy.collection, maxOutputBytes } };
 }
 
+interface GovernmentDistribution {
+  slug: string;
+  title: string;
+  description: string;
+  dataset: string;
+  distributionId: string;
+  format: "csv" | "json";
+  publisher: string;
+  licence: string;
+  cadenceSeconds: number;
+  maxBytes: number;
+  maxOutputBytes: number;
+  keyField?: string;
+  eventTimeField?: string;
+}
+
+function governmentExample(source: GovernmentDistribution): ExampleFeed {
+  const config: ExampleFeed["config"] = {
+    source: "udata", feed: "distribution", transformer: "tabular", baseUrl: "https://dados.gov.pt",
+    dataset: source.dataset, distributionId: source.distributionId, format: source.format,
+    productSlug: source.slug.replace(/-feed$/, ""), productTitle: source.title,
+  };
+  if (source.keyField) config.keyField = source.keyField;
+  if (source.eventTimeField) config.eventTimeField = source.eventTimeField;
+  return {
+    slug: source.slug, title: source.title, description: source.description, config,
+    policy: {
+      name: source.title, version: 1,
+      collection: { cadenceSeconds: source.cadenceSeconds, timeoutSeconds: 240,
+        maxBytes: source.maxBytes, maxOutputBytes: source.maxOutputBytes, historyMode: "changes" },
+      serving: { licence: source.licence, attribution: source.publisher },
+    },
+    staleAfterSeconds: source.cadenceSeconds * 3, publisher: source.publisher, topics: ["government"],
+  };
+}
+
 export const UDATA_EXAMPLES: ExampleFeed[] = [
   {
     slug: "municipal-accessibility-feed",
@@ -239,4 +275,44 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
     publisher: "DGS · Direção-Geral da Saúde",
     topics: ["health"],
   },
+  governmentExample({
+    slug: "cada-opinions-2025-feed", title: "CADA administrative-document access opinions for 2025",
+    description: "Opinions on access to administrative documents issued in 2025. This is a historical annual publication, not a live legal feed.",
+    dataset: "6a886960e18b67254bb6b93b", distributionId: "e10e5071-90ea-42cc-aea3-8710222339ba",
+    format: "csv", keyField: "N.º Parecer", eventTimeField: "Data Parecer",
+    publisher: "CADA · Comissão de Acesso aos Documentos Administrativos", licence: "CC BY 4.0",
+    cadenceSeconds: 30 * 86_400, maxBytes: 2 * MIB, maxOutputBytes: 8 * MIB,
+  }),
+  governmentExample({
+    slug: "recognised-startups-feed", title: "Companies recognised with startup status",
+    description: "The recognised-startup registry snapshot published by ARTE and Startup Portugal, including the source's file date. Publication licence is not specified in the dataset metadata.",
+    dataset: "660c3c451ee8ad9bd6b60608", distributionId: "7ab4544e-66b0-4d40-9d1f-904f74e7e770",
+    format: "json", keyField: "titularNipc", eventTimeField: "fileDate",
+    publisher: "ARTE · Agência para a Reforma Tecnológica do Estado", licence: "Source terms not stated in the dataset metadata",
+    cadenceSeconds: 604_800, maxBytes: 2 * MIB, maxOutputBytes: 8 * MIB,
+  }),
+  governmentExample({
+    slug: "base-contract-modifications-2026-feed", title: "Public-contract modifications published in 2026",
+    description: "Contract modifications in IMPIC's 2026 publication. The source has no distinct amendment identifier; repeated contract IDs use row-content identities rather than claiming a stable amendment ID.",
+    dataset: "668d65dbcb1b953e80198435", distributionId: "d6d13c09-418e-443b-bbf4-b9bd77097571",
+    format: "json", keyField: "idcontrato", eventTimeField: "modifDataPublicacao",
+    publisher: "IMPIC · Instituto dos Mercados Públicos, do Imobiliário e da Construção", licence: "Public domain (other-pd in dados.gov.pt); IMPIC source conditions apply",
+    cadenceSeconds: 604_800, maxBytes: 8 * MIB, maxOutputBytes: 32 * MIB,
+  }),
+  governmentExample({
+    slug: "base-procurement-notices-2026-feed", title: "Public-procurement notices published in 2026",
+    description: "IMPIC's 2026 procurement notices, including contracting authorities, base prices, procedures, deadlines and source links. One current record per notice; not a duplicate of signed contracts.",
+    dataset: "66d72fbc58cd7a63dae28712", distributionId: "1002987e-8985-492f-9215-e732fffdbc83",
+    format: "json", keyField: "nAnuncio", eventTimeField: "dataPublicacao",
+    publisher: "IMPIC · Instituto dos Mercados Públicos, do Imobiliário e da Construção", licence: "Public domain (other-pd in dados.gov.pt); IMPIC source conditions apply",
+    cadenceSeconds: 604_800, maxBytes: 48 * MIB, maxOutputBytes: 96 * MIB,
+  }),
+  governmentExample({
+    slug: "base-procurement-entities-feed", title: "Public-procurement entities",
+    description: "Entities in IMPIC's public-procurement registry, with source-published cumulative participation totals. Collected monthly as a large reference snapshot, not a live company-register lookup.",
+    dataset: "67d80b2c4750b888116940fb", distributionId: "d85c49f0-b6ab-4cb7-afbe-4e103016b9a0",
+    format: "json", keyField: "nifEntidade",
+    publisher: "IMPIC · Instituto dos Mercados Públicos, do Imobiliário e da Construção", licence: "Public domain (other-pd in dados.gov.pt); IMPIC source conditions apply",
+    cadenceSeconds: 30 * 86_400, maxBytes: 80 * MIB, maxOutputBytes: 160 * MIB,
+  }),
 ];

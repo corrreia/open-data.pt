@@ -1,0 +1,9 @@
+{
+  "AtividadesGerais":{"Atividades":[],"Relatorios":[]},
+  "Audicoes":[{"IDAudicao":90000001,"Assunto":"Synthetic public hearing","Data":"2026-07-01","NumeroAudicao":"1","Legislatura":"XVII","SessaoLegislativa":"1","Entidades":"Example public institution"}],
+  "Audiencias":[{"IDAudiencia":90000001,"Assunto":"Synthetic public audience","Data":"2026-07-02","NumeroAudiencia":"1","Legislatura":"XVII","SessaoLegislativa":"1","Entidades":"Example association","Concedida":"Sim"}],
+  "Debates":[{"DebateId":"90000001","Assunto":"Synthetic debate","DataDebate":"2026-07-03","DataEntrada":"2026-06-30","TipoDebateDesig":"Debate temático","Legislatura":"XVII","Sessao":"1"},{"DebateId":"90000002","Assunto":"Synthetic unscheduled debate","DataDebate":null,"DataEntrada":"2026-07-04","TipoDebateDesig":"Debate temático","Legislatura":"XVII","Sessao":"1"}],
+  "Deslocacoes":[{"IDDeslocacao":90000001,"Designacao":"Synthetic institutional visit","DataIni":"2026-07-05","DataFim":"2026-07-06","LocalEvento":"Example venue","Tipo":"Visita","Legislatura":"XVII","SessaoLegislativa":"1"}],
+  "Eventos":[{"IDEvento":90000001,"Designacao":"Synthetic public event","Data":"2026-07-07","LocalEvento":"Example venue","TipoEvento":"Conferência","Legislatura":"XVII","SessaoLegislativa":"1"}],
+  "OrcamentoContasGerencia":[]
+}

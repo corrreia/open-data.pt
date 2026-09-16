@@ -1,0 +1,3046 @@
+{
+  "baselineCount": 170,
+  "addedCount": 84,
+  "additions": [
+    {
+      "topic": "cities",
+      "slug": "agueda-flood-marks-feed",
+      "title": "Águeda flood-level reference marks",
+      "description": "Surveyed flood-height reference marks, not current river levels or flood warnings.",
+      "config": {
+        "source": "ckan",
+        "host": "dadosabertos.cm-agueda.pt",
+        "dataset": "cotas-de-cheia",
+        "resource": "51ebb54b-0249-46b6-8aa9-edf5365a9976",
+        "idField": "gid",
+        "crs": "EPSG:3763"
+      },
+      "policy": {
+        "name": "Águeda municipal reference inventory, monthly",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 90,
+          "maxBytes": 4194304,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Creative Commons Attribution (CC BY)",
+          "attribution": "Câmara Municipal de Águeda via dadosabertos.cm-agueda.pt"
+        }
+      },
+      "staleAfterSeconds": 7776000,
+      "publisher": "Câmara Municipal de Águeda",
+      "topics": [
+        "environment",
+        "cities"
+      ]
+    },
+    {
+      "topic": "cities",
+      "slug": "agueda-waste-bins-feed",
+      "title": "Águeda municipal waste-bin locations",
+      "description": "Municipal solid-waste container location inventory. No live bin fullness is provided.",
+      "config": {
+        "source": "ckan",
+        "host": "dadosabertos.cm-agueda.pt",
+        "dataset": "contentores-rsu",
+        "resource": "5ec1ab1d-998b-41f5-b35d-860d63ec869c",
+        "idField": "id",
+        "crs": "EPSG:3763"
+      },
+      "policy": {
+        "name": "Águeda municipal reference inventory, monthly",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 90,
+          "maxBytes": 4194304,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Creative Commons CCZero",
+          "attribution": "Câmara Municipal de Águeda via dadosabertos.cm-agueda.pt"
+        }
+      },
+      "staleAfterSeconds": 7776000,
+      "publisher": "Câmara Municipal de Águeda",
+      "topics": [
+        "cities",
+        "environment"
+      ]
+    },
+    {
+      "topic": "cities",
+      "slug": "agueda-textile-bins-feed",
+      "title": "Águeda textile collection-bin locations",
+      "description": "Textile recycling container location inventory, not live capacity or fullness.",
+      "config": {
+        "source": "ckan",
+        "host": "dadosabertos.cm-agueda.pt",
+        "dataset": "f2f9d71f-ffab-4678-b4a1-6a2709879020",
+        "resource": "df073fc9-441e-4385-b50e-0290881a5729",
+        "idField": "id",
+        "crs": "EPSG:3763"
+      },
+      "policy": {
+        "name": "Águeda municipal reference inventory, monthly",
+        "version": 2,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 90,
+          "maxBytes": 4194304,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Creative Commons Attribution (CC BY)",
+          "attribution": "Câmara Municipal de Águeda via dadosabertos.cm-agueda.pt"
+        }
+      },
+      "staleAfterSeconds": 7776000,
+      "publisher": "Câmara Municipal de Águeda",
+      "topics": [
+        "cities",
+        "environment"
+      ]
+    },
+    {
+      "topic": "cities",
+      "slug": "agueda-electronics-bins-feed",
+      "title": "Águeda electronics collection-bin locations",
+      "description": "Electrical and electronic waste collection points, not live capacity or fullness.",
+      "config": {
+        "source": "ckan",
+        "host": "dadosabertos.cm-agueda.pt",
+        "dataset": "contentores-reee",
+        "resource": "a7963739-44fd-47ec-b9bf-481141cfcda5",
+        "idField": "id",
+        "crs": "EPSG:3763"
+      },
+      "policy": {
+        "name": "Águeda municipal reference inventory, monthly",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 90,
+          "maxBytes": 4194304,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Creative Commons Attribution (CC BY)",
+          "attribution": "Câmara Municipal de Águeda via dadosabertos.cm-agueda.pt"
+        }
+      },
+      "staleAfterSeconds": 7776000,
+      "publisher": "Câmara Municipal de Águeda",
+      "topics": [
+        "cities",
+        "environment"
+      ]
+    },
+    {
+      "topic": "cities",
+      "slug": "agueda-waste-operators-feed",
+      "title": "Águeda waste-management operators",
+      "description": "Reference locations and published details of waste-management establishments.",
+      "config": {
+        "source": "ckan",
+        "host": "dadosabertos.cm-agueda.pt",
+        "dataset": "b2d1563d-683f-4dff-a472-a68789c9df74",
+        "resource": "4a836cd0-eed9-4ecd-b9fc-ebeee1323aae",
+        "idField": "id_ogr"
+      },
+      "policy": {
+        "name": "Águeda municipal reference inventory, monthly",
+        "version": 2,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 90,
+          "maxBytes": 4194304,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Creative Commons CCZero",
+          "attribution": "Câmara Municipal de Águeda via dadosabertos.cm-agueda.pt"
+        }
+      },
+      "staleAfterSeconds": 7776000,
+      "publisher": "Câmara Municipal de Águeda",
+      "topics": [
+        "cities",
+        "environment"
+      ]
+    },
+    {
+      "topic": "cities",
+      "slug": "agueda-charging-locations-feed",
+      "title": "Águeda electric-vehicle charging locations",
+      "description": "Published charging-point location inventory and technical details. This is not live charging availability.",
+      "config": {
+        "source": "ckan",
+        "host": "dadosabertos.cm-agueda.pt",
+        "dataset": "ponto-de-carregamento-de-veiculos-eletricos",
+        "resource": "8a0e420f-ebe4-452c-956f-870427811bcd",
+        "idField": "id_pontocve"
+      },
+      "policy": {
+        "name": "Águeda municipal reference inventory, monthly",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 90,
+          "maxBytes": 4194304,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Creative Commons CCZero",
+          "attribution": "Câmara Municipal de Águeda via dadosabertos.cm-agueda.pt"
+        }
+      },
+      "staleAfterSeconds": 7776000,
+      "publisher": "Câmara Municipal de Águeda",
+      "topics": [
+        "mobility",
+        "energy",
+        "cities"
+      ]
+    },
+    {
+      "topic": "cities",
+      "slug": "agueda-beagueda-stations-feed",
+      "title": "beÁgueda bicycle station locations",
+      "description": "Reference locations and dock capacities of beÁgueda bicycle stations, not live bicycle or dock availability.",
+      "config": {
+        "source": "ckan",
+        "host": "dadosabertos.cm-agueda.pt",
+        "dataset": "estacoes-beagueda",
+        "resource": "c6da7509-f4b1-4a3c-a39b-5af5e4908288",
+        "idField": "id"
+      },
+      "policy": {
+        "name": "Águeda municipal reference inventory, monthly",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 90,
+          "maxBytes": 4194304,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Creative Commons CCZero",
+          "attribution": "Câmara Municipal de Águeda via dadosabertos.cm-agueda.pt"
+        }
+      },
+      "staleAfterSeconds": 7776000,
+      "publisher": "Câmara Municipal de Águeda",
+      "topics": [
+        "mobility",
+        "cities"
+      ]
+    },
+    {
+      "topic": "cities",
+      "slug": "oeiras-hourly-environment-feed",
+      "title": "Oeiras hourly air quality, noise and weather",
+      "description": "Hourly QART station measurements from the latest published monthly CSV. Monthly publication, not live observations; timestamps and units are those supplied by the municipality.",
+      "config": {
+        "source": "ckan",
+        "host": "oeirasinterativa.oeiras.pt",
+        "apiPath": "/dadosabertos",
+        "dataset": "sensorizacao-relatorios-mensais-com-dados-de-qualidade-do-ar-pressao-sonora-e-meteorologia",
+        "resourceSelection": "latest-month",
+        "resourcePrefix": "qart_dados_medias_1h_",
+        "timeField": "Date",
+        "delimiter": ";",
+        "decimal": ",",
+        "measures": "{\"CO - µg/m3\":\"µg/m³\",\"O3 - µg/m3\":\"µg/m³\",\"NO - µg/m3\":\"µg/m³\",\"NO2 - µg/m3\":\"µg/m³\",\"SO2 - µg/m3\":\"µg/m³\",\"Humidade - %\":\"%\",\"Temperatura - ℃\":\"°C\",\"PM 0.5 - µg/m3\":\"µg/m³\",\"PM 0.7 - µg/m3\":\"µg/m³\",\"PM 1 - µg/m3\":\"µg/m³\",\"PM 2.5 - µg/m3\":\"µg/m³\",\"PM 10 - µg/m3\":\"µg/m³\",\"LAeq,T - dB(A)\":\"dB(A)\",\"Velocidade do Vento - m/s\":\"m/s\",\"Direção do Vento - °\":\"°\",\"Pressão - mbar\":\"mbar\",\"Precipitação - mm\":\"mm\"}"
+      },
+      "policy": {
+        "name": "Oeiras monthly observations checked weekly",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 90,
+          "maxBytes": 2097152,
+          "maxOutputBytes": 8388608,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Creative Commons Attribution (CC BY)",
+          "attribution": "Câmara Municipal de Oeiras via oeirasinterativa.oeiras.pt"
+        }
+      },
+      "staleAfterSeconds": 3888000,
+      "publisher": "Câmara Municipal de Oeiras",
+      "topics": [
+        "environment",
+        "cities"
+      ]
+    },
+    {
+      "topic": "energy",
+      "slug": "ren-installed-capacity-feed",
+      "title": "REN installed generating capacity",
+      "description": "Installed generating capacity by source for the latest three completed calendar months available from REN. Unpublished and null observations are not reported as zero.",
+      "config": {
+        "source": "ren",
+        "service": "installed-capacity"
+      },
+      "policy": {
+        "name": "REN monthly capacity",
+        "version": 2,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 90,
+          "maxBytes": 524288,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "REN Data Hub terms of use",
+          "attribution": "REN — Redes Energéticas Nacionais"
+        }
+      },
+      "staleAfterSeconds": 1209600,
+      "publisher": "REN · Redes Energéticas Nacionais",
+      "topics": [
+        "energy"
+      ]
+    },
+    {
+      "topic": "energy",
+      "slug": "ren-lng-terminal-balance-feed",
+      "title": "REN LNG terminal daily balance",
+      "description": "Total inputs, outputs, stored energy and fullness at Portugal's LNG terminal for the latest seven completed calendar days available. Daily reports may be published with a lag; missing reports are not zero.",
+      "config": {
+        "source": "ren",
+        "service": "lng-terminal-balance"
+      },
+      "policy": {
+        "name": "REN daily storage balance",
+        "version": 2,
+        "collection": {
+          "cadenceSeconds": 86400,
+          "timeoutSeconds": 120,
+          "maxBytes": 524288,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "REN Data Hub terms of use",
+          "attribution": "REN — Redes Energéticas Nacionais"
+        }
+      },
+      "staleAfterSeconds": 259200,
+      "publisher": "REN · Redes Energéticas Nacionais",
+      "topics": [
+        "energy"
+      ]
+    },
+    {
+      "topic": "energy",
+      "slug": "ren-gas-storage-feed",
+      "title": "REN underground natural gas storage",
+      "description": "Total injections, withdrawals, stored energy and fullness at underground gas storage for the latest seven completed calendar days available. Daily reports may be published with a lag; missing reports are not zero.",
+      "config": {
+        "source": "ren",
+        "service": "gas-storage"
+      },
+      "policy": {
+        "name": "REN daily storage balance",
+        "version": 2,
+        "collection": {
+          "cadenceSeconds": 86400,
+          "timeoutSeconds": 120,
+          "maxBytes": 524288,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "REN Data Hub terms of use",
+          "attribution": "REN — Redes Energéticas Nacionais"
+        }
+      },
+      "staleAfterSeconds": 259200,
+      "publisher": "REN · Redes Energéticas Nacionais",
+      "topics": [
+        "energy"
+      ]
+    },
+    {
+      "topic": "energy",
+      "slug": "e-redes-service-continuity-feed",
+      "title": "Electricity service continuity by municipality",
+      "description": "Annual SAIFI, SAIDI, MAIFI, TIEPI and energy-not-distributed indicators for all E-REDES municipalities, municipality-wide RQS zone only, in the latest three reporting years. These are reliability statistics, not live outages.",
+      "publisher": "E-REDES",
+      "topics": [
+        "energy"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "e-redes.opendatasoft.com",
+        "limit": "10000",
+        "dataset": "12-continuidade-de-servico-indicadores-gerais-de-continuidade-de-servico",
+        "timeField": "ano",
+        "period": "year",
+        "windowPeriods": "3",
+        "where": "zona_rqs = 'Concelho'",
+        "orderBy": "ano DESC,codigo_concelho,zona_rqs",
+        "dimensions": "codigo_concelho,zona_rqs",
+        "series": "saifi_at_num,saidi_at_min,maifi_at_num,tiepi_mt_min,end_mt_mwh,saifi_mt_num,saidi_mt_min,maifi_mt_num,saifi_bt_num,saidi_bt_min",
+        "units": "saifi_at_num=interruptions,saidi_at_min=min,maifi_at_num=interruptions,tiepi_mt_min=min,end_mt_mwh=MWh,saifi_mt_num=interruptions,saidi_mt_min=min,maifi_mt_num=interruptions,saifi_bt_num=interruptions,saidi_bt_min=min"
+      },
+      "policy": {
+        "name": "E-REDES bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "CC BY 4.0",
+          "attribution": "E-REDES"
+        }
+      },
+      "staleAfterSeconds": 5184000
+    },
+    {
+      "topic": "energy",
+      "slug": "e-redes-municipal-monthly-consumption-feed",
+      "title": "Monthly electricity consumption by municipality and voltage",
+      "description": "E-REDES billed active energy, summed by the source from parish rows into municipality and voltage-level totals. All published municipalities, latest twelve reporting months; Includes source-suppressed OUTROS district groups rather than attributing them to a municipality; not island consumption outside E-REDES coverage.",
+      "publisher": "E-REDES",
+      "topics": [
+        "energy"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "e-redes.opendatasoft.com",
+        "limit": "10000",
+        "dataset": "3-consumos-faturados-por-municipio-ultimos-10-anos",
+        "timeField": "data",
+        "period": "month",
+        "windowPeriods": "12",
+        "select": "data,coddistritoconcelho,concelho,nivel_de_tensao,sum(energia_ativa_kwh) as energia_ativa_kwh",
+        "groupBy": "data,coddistritoconcelho,concelho,nivel_de_tensao",
+        "orderBy": "data DESC,coddistritoconcelho,concelho,nivel_de_tensao",
+        "dimensions": "coddistritoconcelho,concelho,nivel_de_tensao",
+        "series": "energia_ativa_kwh",
+        "units": "energia_ativa_kwh=kWh"
+      },
+      "policy": {
+        "name": "E-REDES bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "CC BY 4.0",
+          "attribution": "E-REDES"
+        }
+      },
+      "staleAfterSeconds": 1209600
+    },
+    {
+      "topic": "energy",
+      "slug": "e-redes-active-smart-meter-contracts-feed",
+      "title": "Active electricity contracts by meter type and district",
+      "description": "Active delivery-point contracts with and without smart meters, summed by E-REDES from parish rows into district totals. All districts in its service area, latest twelve reporting months; inactive contracts excluded.",
+      "publisher": "E-REDES",
+      "topics": [
+        "energy"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "e-redes.opendatasoft.com",
+        "limit": "10000",
+        "dataset": "21-contadores-de-energia",
+        "timeField": "data",
+        "period": "month",
+        "windowPeriods": "12",
+        "where": "contrato_ativo = 'Sim'",
+        "select": "data,coddistrito,distrito,inclui_emi,sum(cpes) as cpes",
+        "groupBy": "data,coddistrito,distrito,inclui_emi",
+        "orderBy": "data DESC,coddistrito,distrito,inclui_emi",
+        "dimensions": "coddistrito,distrito,inclui_emi",
+        "series": "cpes",
+        "units": "cpes=delivery points"
+      },
+      "policy": {
+        "name": "E-REDES bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "CC BY 4.0",
+          "attribution": "E-REDES"
+        }
+      },
+      "staleAfterSeconds": 1209600
+    },
+    {
+      "topic": "energy",
+      "slug": "e-redes-municipal-contracted-capacity-feed",
+      "title": "Contracted electricity capacity by municipality",
+      "description": "Contracted capacity summed by the source from parish rows for every E-REDES municipality, latest twelve reporting months. Contract counts are not repeated here.",
+      "publisher": "E-REDES",
+      "topics": [
+        "energy"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "e-redes.opendatasoft.com",
+        "limit": "10000",
+        "dataset": "potencia-contratada-contratos-ativos-municipio",
+        "timeField": "data",
+        "period": "month",
+        "windowPeriods": "12",
+        "select": "data,con_code,con_name,sum(potencia_contratada) as potencia_contratada",
+        "groupBy": "data,con_code,con_name",
+        "orderBy": "data DESC,con_code,con_name",
+        "dimensions": "con_code,con_name",
+        "series": "potencia_contratada",
+        "units": "potencia_contratada=kVA"
+      },
+      "policy": {
+        "name": "E-REDES bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "CC BY 4.0",
+          "attribution": "E-REDES"
+        }
+      },
+      "staleAfterSeconds": 1209600
+    },
+    {
+      "topic": "energy",
+      "slug": "e-redes-contracts-by-power-band-feed",
+      "title": "Electricity contracts by district and power band",
+      "description": "Contract counts by district and contracted-power band, aggregated by the source from parish detail. All E-REDES districts, latest twelve reporting months; no arbitrary parish sample.",
+      "publisher": "E-REDES",
+      "topics": [
+        "energy"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "e-redes.opendatasoft.com",
+        "limit": "10000",
+        "dataset": "clientes-por-escalao-de-potencia",
+        "timeField": "data",
+        "period": "month",
+        "windowPeriods": "12",
+        "select": "data,dis_code,segmento_de_potencia_contratada,sum(numero_de_contratos) as numero_de_contratos",
+        "groupBy": "data,dis_code,segmento_de_potencia_contratada",
+        "orderBy": "data DESC,dis_code,segmento_de_potencia_contratada",
+        "dimensions": "dis_code,segmento_de_potencia_contratada",
+        "series": "numero_de_contratos",
+        "units": "numero_de_contratos=contracts"
+      },
+      "policy": {
+        "name": "E-REDES bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "CC BY 4.0",
+          "attribution": "E-REDES"
+        }
+      },
+      "staleAfterSeconds": 1209600
+    },
+    {
+      "topic": "energy",
+      "slug": "e-redes-municipal-transformer-capacity-feed",
+      "title": "Distribution transformer stations by municipality",
+      "description": "A source-computed count of distribution transformer stations and their total installed capacity by municipality across the E-REDES service area. This is a municipal inventory summary, not individual station locations.",
+      "publisher": "E-REDES",
+      "topics": [
+        "energy"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "e-redes.opendatasoft.com",
+        "limit": "1000",
+        "dataset": "postos-transformacao-distribuicao",
+        "select": "coddistritoconcelho,con_name,count(cod_instalacao) as station_count,sum(potencia_transformacao_kva) as potencia_transformacao_kva",
+        "groupBy": "coddistritoconcelho,con_name",
+        "orderBy": "coddistritoconcelho,con_name",
+        "idFields": "coddistritoconcelho,con_name"
+      },
+      "policy": {
+        "name": "E-REDES bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "CC BY 4.0",
+          "attribution": "E-REDES"
+        }
+      },
+      "staleAfterSeconds": 5184000
+    },
+    {
+      "topic": "energy",
+      "slug": "e-redes-self-consumption-exported-energy-feed",
+      "title": "Energy exported by self-consumption installations",
+      "description": "Monthly energy injected by self-consumption installations, summed by E-REDES into municipality and voltage-level totals for the latest six reporting months. Does not repeat the existing installation-count products.",
+      "publisher": "E-REDES",
+      "topics": [
+        "energy"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "e-redes.opendatasoft.com",
+        "limit": "10000",
+        "dataset": "energia_injectada_upac",
+        "timeField": "data",
+        "period": "month",
+        "windowPeriods": "6",
+        "select": "data,codigo_concelho,con_name,nivel_tensao,sum(energia) as energia",
+        "groupBy": "data,codigo_concelho,con_name,nivel_tensao",
+        "orderBy": "data DESC,codigo_concelho,con_name,nivel_tensao",
+        "dimensions": "codigo_concelho,con_name,nivel_tensao",
+        "series": "energia",
+        "units": "energia=kWh"
+      },
+      "policy": {
+        "name": "E-REDES bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "CC BY 4.0",
+          "attribution": "E-REDES"
+        }
+      },
+      "staleAfterSeconds": 1209600
+    },
+    {
+      "topic": "energy",
+      "slug": "e-redes-hourly-consumption-lisbon-porto-postcodes-feed",
+      "title": "Historical hourly electricity consumption in postal areas 1000 and 4000",
+      "description": "Source-reported hourly consumption for four-digit postal areas 1000 (Lisbon) and 4000 (Porto), latest 168 source reporting hours. A fixed two-area comparison, not national consumption or a claim of real-time freshness.",
+      "publisher": "E-REDES",
+      "topics": [
+        "energy"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "e-redes.opendatasoft.com",
+        "limit": "1000",
+        "dataset": "consumos_horario_codigo_postal",
+        "timeField": "datahora",
+        "period": "hour",
+        "windowPeriods": "168",
+        "where": "codigo_postal IN ('1000','4000')",
+        "select": "datahora,codigo_postal,consumo",
+        "orderBy": "datahora DESC,codigo_postal",
+        "dimensions": "codigo_postal",
+        "series": "consumo",
+        "units": "consumo=kWh"
+      },
+      "policy": {
+        "name": "E-REDES bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "CC BY 4.0",
+          "attribution": "E-REDES"
+        }
+      },
+      "staleAfterSeconds": 5184000
+    },
+    {
+      "topic": "energy",
+      "slug": "e-redes-monthly-postal-consumption-feed",
+      "title": "Monthly electricity consumption by four-digit postal area",
+      "description": "Billed active energy for every four-digit postal area published by E-REDES, latest six reporting months. These are postal areas, not seven-digit delivery addresses.",
+      "publisher": "E-REDES",
+      "topics": [
+        "energy"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "e-redes.opendatasoft.com",
+        "limit": "10000",
+        "dataset": "02-consumos-faturados-por-codigo-postal-ultimos-5-anos",
+        "timeField": "date",
+        "period": "month",
+        "windowPeriods": "6",
+        "select": "date,codigopostal,energiaativa",
+        "orderBy": "date DESC,codigopostal",
+        "dimensions": "codigopostal",
+        "series": "energiaativa",
+        "units": "energiaativa=kWh"
+      },
+      "policy": {
+        "name": "E-REDES bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "CC BY 4.0",
+          "attribution": "E-REDES"
+        }
+      },
+      "staleAfterSeconds": 1209600
+    },
+    {
+      "topic": "energy",
+      "slug": "e-redes-municipal-tariff-consumption-feed",
+      "title": "Municipal electricity consumption by tariff period",
+      "description": "Billed active energy in the source's six tariff-period categories, summed across parishes for every E-REDES municipality, latest six reporting months. The overall energy total is not repeated.",
+      "publisher": "E-REDES",
+      "topics": [
+        "energy"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "e-redes.opendatasoft.com",
+        "limit": "10000",
+        "dataset": "consumos-faturados-por-periodo-tarifario",
+        "timeField": "data",
+        "period": "month",
+        "windowPeriods": "6",
+        "select": "data,con_code,sum(energia_ativa_simples_kwh) as energia_ativa_simples_kwh,sum(energia_ativa_vazio_kwh) as energia_ativa_vazio_kwh,sum(energia_ativa_fora_de_vazio_kwh) as energia_ativa_fora_de_vazio_kwh,sum(energia_ativa_super_vazio_kwh) as energia_ativa_super_vazio_kwh,sum(energia_ativa_ponta_kwh) as energia_ativa_ponta_kwh,sum(energia_ativa_cheias_kwh) as energia_ativa_cheias_kwh",
+        "groupBy": "data,con_code",
+        "orderBy": "data DESC,con_code",
+        "dimensions": "con_code",
+        "series": "energia_ativa_simples_kwh,energia_ativa_vazio_kwh,energia_ativa_fora_de_vazio_kwh,energia_ativa_super_vazio_kwh,energia_ativa_ponta_kwh,energia_ativa_cheias_kwh"
+      },
+      "policy": {
+        "name": "E-REDES bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "CC BY 4.0",
+          "attribution": "E-REDES"
+        }
+      },
+      "staleAfterSeconds": 1209600
+    },
+    {
+      "topic": "energy",
+      "slug": "e-redes-municipal-street-lighting-feed",
+      "title": "Public street lighting by municipality and lamp type",
+      "description": "E-REDES public-lighting counts and installed power, summed by the source from parish aggregates into municipality and lamp-type totals. The reporting clock is the published year and month, not collection time; this is not a map of individual lamps.",
+      "publisher": "E-REDES",
+      "topics": [
+        "energy"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "e-redes.opendatasoft.com",
+        "limit": "10000",
+        "dataset": "cadastro_iluminacao_publica",
+        "timeField": "ano",
+        "monthField": "mes",
+        "select": "ano,mes,coddistritoconcelho,tipo_de_lampada,sum(luminarias) as luminarias,sum(lampadas) as lampadas,sum(potencia_instalada_total) as potencia_instalada_total",
+        "groupBy": "ano,mes,coddistritoconcelho,tipo_de_lampada",
+        "orderBy": "ano DESC,mes DESC,coddistritoconcelho,tipo_de_lampada",
+        "dimensions": "coddistritoconcelho,tipo_de_lampada",
+        "series": "luminarias,lampadas,potencia_instalada_total",
+        "units": "luminarias=luminaires,lampadas=lamps,potencia_instalada_total=W"
+      },
+      "policy": {
+        "name": "E-REDES bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "CC BY 4.0",
+          "attribution": "E-REDES"
+        }
+      },
+      "staleAfterSeconds": 5184000
+    },
+    {
+      "topic": "environment",
+      "slug": "ipma-municipal-precipitation-feed",
+      "title": "IPMA daily municipal precipitation",
+      "description": "Spatial municipal means of interpolated daily precipitation totals and maximum precipitation rates in mainland Portugal. Collects the full 20-day source window; the bounded current-series view can contain fewer days, with the full collected window retained in history after delivery. Other source statistics, including spatial dispersion and quantiles, are not republished.",
+      "config": {
+        "source": "ipma",
+        "feed": "municipal-precipitation"
+      },
+      "policy": {
+        "name": "IPMA daily municipal climate",
+        "version": 2,
+        "collection": {
+          "cadenceSeconds": 86400,
+          "timeoutSeconds": 120,
+          "maxBytes": 2097152,
+          "maxOutputBytes": 16777216,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms apply",
+          "attribution": "Instituto Português do Mar e da Atmosfera (IPMA)"
+        }
+      },
+      "staleAfterSeconds": 259200,
+      "publisher": "IPMA · Instituto Português do Mar e da Atmosfera",
+      "topics": [
+        "weather",
+        "environment"
+      ]
+    },
+    {
+      "topic": "environment",
+      "slug": "ipma-municipal-temperature-feed",
+      "title": "IPMA daily municipal temperature",
+      "description": "Spatial municipal means of interpolated daily minimum, mean and maximum air temperature in mainland Portugal. Collects the full 20-day source window; the bounded current-series view can contain fewer days, with the full collected window retained in history after delivery. Other source statistics, including spatial dispersion and quantiles, are not republished.",
+      "config": {
+        "source": "ipma",
+        "feed": "municipal-temperature"
+      },
+      "policy": {
+        "name": "IPMA daily municipal climate",
+        "version": 2,
+        "collection": {
+          "cadenceSeconds": 86400,
+          "timeoutSeconds": 120,
+          "maxBytes": 2097152,
+          "maxOutputBytes": 16777216,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms apply",
+          "attribution": "Instituto Português do Mar e da Atmosfera (IPMA)"
+        }
+      },
+      "staleAfterSeconds": 259200,
+      "publisher": "IPMA · Instituto Português do Mar e da Atmosfera",
+      "topics": [
+        "weather",
+        "environment"
+      ]
+    },
+    {
+      "topic": "environment",
+      "slug": "ipma-shellfish-restrictions-feed",
+      "title": "IPMA shellfish harvesting restrictions",
+      "description": "Production-zone polygons and the latest published permissions and restrictions by marine species. Partially open zones retain their separate open and closed species lists; consult IPMA's official bulletin before harvesting.",
+      "config": {
+        "source": "ipma",
+        "feed": "shellfish-restrictions"
+      },
+      "policy": {
+        "name": "IPMA shellfish bulletin",
+        "version": 2,
+        "collection": {
+          "cadenceSeconds": 21600,
+          "timeoutSeconds": 90,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 1048576,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms apply",
+          "attribution": "Instituto Português do Mar e da Atmosfera (IPMA)"
+        }
+      },
+      "staleAfterSeconds": 86400,
+      "publisher": "IPMA · Instituto Português do Mar e da Atmosfera",
+      "topics": [
+        "environment",
+        "health"
+      ]
+    },
+    {
+      "topic": "environment",
+      "slug": "azores-farois-feed",
+      "title": "Azores lighthouses",
+      "description": "Lighthouses of the Azores archipelago, located from coastal management plans and orthophoto interpretation.",
+      "config": {
+        "source": "ogc",
+        "host": "ambiente.azores.gov.pt",
+        "basePath": "idea-api",
+        "collection": "Farois",
+        "geometry": "include",
+        "pageSize": "500",
+        "maxPages": "4"
+      },
+      "policy": {
+        "name": "OGC weekly attribute table",
+        "version": 3,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 120,
+          "maxBytes": 4194304,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "CC BY 4.0",
+          "attribution": "Secretaria Regional do Ambiente e Ação Climática — Governo dos Açores (IDEA)"
+        }
+      },
+      "staleAfterSeconds": 1209600,
+      "publisher": "Governo dos Açores",
+      "topics": [
+        "mobility"
+      ]
+    },
+    {
+      "topic": "environment",
+      "slug": "azores-operadores-residuos-feed",
+      "title": "Azores waste management operators",
+      "description": "Installations of licensed waste management operators in the Azores, with address, island and the regional waste information system listing each entry came from.",
+      "config": {
+        "source": "ogc",
+        "host": "ambiente.azores.gov.pt",
+        "basePath": "idea-api",
+        "collection": "Operadores_GestaoResiduos",
+        "geometry": "include",
+        "pageSize": "500",
+        "maxPages": "4"
+      },
+      "policy": {
+        "name": "OGC weekly attribute table",
+        "version": 3,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 120,
+          "maxBytes": 4194304,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "CC BY 4.0",
+          "attribution": "Secretaria Regional do Ambiente e Ação Climática — Governo dos Açores (IDEA)"
+        }
+      },
+      "staleAfterSeconds": 1209600,
+      "publisher": "Governo dos Açores",
+      "topics": [
+        "environment"
+      ]
+    },
+    {
+      "topic": "environment",
+      "slug": "azores-estacoes-qualidade-ar-feed",
+      "title": "Azores air quality monitoring stations",
+      "description": "Where the Azores air quality monitoring stations are, who runs them, and when each entry was last updated. This is the station inventory, not the measurements those stations take.",
+      "config": {
+        "source": "ogc",
+        "host": "ambiente.azores.gov.pt",
+        "basePath": "idea-api",
+        "collection": "RedeMonitorizacao_QualidadeAr",
+        "geometry": "include",
+        "pageSize": "500",
+        "maxPages": "4"
+      },
+      "policy": {
+        "name": "OGC weekly attribute table",
+        "version": 3,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 120,
+          "maxBytes": 4194304,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "CC BY 4.0",
+          "attribution": "Secretaria Regional do Ambiente e Ação Climática — Governo dos Açores (IDEA)"
+        }
+      },
+      "staleAfterSeconds": 1209600,
+      "publisher": "Governo dos Açores",
+      "topics": [
+        "environment"
+      ]
+    },
+    {
+      "topic": "environment",
+      "slug": "azores-rede-hidrometeorologica-feed",
+      "title": "Azores hydrometeorological monitoring stations",
+      "description": "The rain gauges, weather posts and stream gauges of the Azores hydrometeorological network, with type, operator and operating state. This is the station inventory, not the measurements those stations take.",
+      "config": {
+        "source": "ogc",
+        "host": "ambiente.azores.gov.pt",
+        "basePath": "idea-api",
+        "collection": "Rede_Hidrometeorologica",
+        "geometry": "include",
+        "pageSize": "500",
+        "maxPages": "4"
+      },
+      "policy": {
+        "name": "OGC weekly attribute table",
+        "version": 3,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 120,
+          "maxBytes": 4194304,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "CC BY 4.0",
+          "attribution": "Secretaria Regional do Ambiente e Ação Climática — Governo dos Açores (IDEA)"
+        }
+      },
+      "staleAfterSeconds": 1209600,
+      "publisher": "Governo dos Açores",
+      "topics": [
+        "environment",
+        "weather"
+      ]
+    },
+    {
+      "topic": "environment",
+      "slug": "azores-lagoas-feed",
+      "title": "Azores lakes and lagoons",
+      "description": "Lakes and lagoons of Corvo, Faial, Flores, Pico, São Jorge, Terceira and São Miguel, with altitude, depth, volume and outline.",
+      "config": {
+        "source": "ogc",
+        "host": "ambiente.azores.gov.pt",
+        "basePath": "idea-api",
+        "collection": "Lagoas",
+        "geometry": "include",
+        "pageSize": "100",
+        "maxPages": "6"
+      },
+      "policy": {
+        "name": "OGC weekly feature outlines",
+        "version": 3,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 8388608,
+          "maxRecordBytes": 1048576,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "CC BY 4.0",
+          "attribution": "Secretaria Regional do Ambiente e Ação Climática — Governo dos Açores (IDEA)"
+        }
+      },
+      "staleAfterSeconds": 1209600,
+      "publisher": "Governo dos Açores",
+      "topics": [
+        "environment"
+      ]
+    },
+    {
+      "topic": "environment",
+      "slug": "azores-zonas-especiais-conservacao-feed",
+      "title": "Azores special areas of conservation",
+      "description": "The Natura 2000 special areas of conservation of the Azores, with their site codes, the instruments that designated them, and their outlines.",
+      "config": {
+        "source": "ogc",
+        "host": "ambiente.azores.gov.pt",
+        "basePath": "idea-api",
+        "collection": "Zonas_EspeciaisConservacao",
+        "geometry": "include",
+        "pageSize": "50",
+        "maxPages": "6"
+      },
+      "policy": {
+        "name": "OGC monthly feature outlines",
+        "version": 3,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 180,
+          "maxBytes": 16777216,
+          "maxOutputBytes": 8388608,
+          "maxRecordBytes": 1048576,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "CC BY 4.0",
+          "attribution": "Secretaria Regional do Ambiente e Ação Climática — Governo dos Açores (IDEA)"
+        }
+      },
+      "staleAfterSeconds": 5184000,
+      "publisher": "Governo dos Açores",
+      "topics": [
+        "environment"
+      ]
+    },
+    {
+      "topic": "environment",
+      "slug": "azores-geossitios-feed",
+      "title": "Azores geosites",
+      "description": "The geosites of the Açores UNESCO Global Geopark across the nine islands and two marine areas, with relevance, uses, vulnerability ratings, description and outline.",
+      "config": {
+        "source": "ogc",
+        "host": "ambiente.azores.gov.pt",
+        "basePath": "idea-api",
+        "collection": "Geositios",
+        "geometry": "include",
+        "pageSize": "50",
+        "maxPages": "8"
+      },
+      "policy": {
+        "name": "OGC monthly feature outlines",
+        "version": 3,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 180,
+          "maxBytes": 33554432,
+          "maxOutputBytes": 12582912,
+          "maxRecordBytes": 1048576,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "CC BY 4.0",
+          "attribution": "Secretaria Regional do Ambiente e Ação Climática — Governo dos Açores (IDEA)"
+        }
+      },
+      "staleAfterSeconds": 5184000,
+      "publisher": "Governo dos Açores",
+      "topics": [
+        "environment",
+        "culture"
+      ]
+    },
+    {
+      "topic": "environment",
+      "slug": "azores-parques-naturais-feed",
+      "title": "Azores island natural parks",
+      "description": "The protected areas of the island natural parks of the Azores, with IUCN category, the regional decree that created each one, its World Database on Protected Areas identifier, and its outline.",
+      "config": {
+        "source": "ogc",
+        "host": "ambiente.azores.gov.pt",
+        "basePath": "idea-api",
+        "collection": "Parques_NaturaisIlha",
+        "geometry": "include",
+        "pageSize": "50",
+        "maxPages": "8"
+      },
+      "policy": {
+        "name": "OGC monthly feature outlines",
+        "version": 3,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 180,
+          "maxBytes": 50331648,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 1048576,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "CC BY 4.0",
+          "attribution": "Secretaria Regional do Ambiente e Ação Climática — Governo dos Açores (IDEA)"
+        }
+      },
+      "staleAfterSeconds": 5184000,
+      "publisher": "Governo dos Açores",
+      "topics": [
+        "environment"
+      ]
+    },
+    {
+      "topic": "health",
+      "slug": "sns-health-procurement-feed",
+      "title": "Public health-sector contracts",
+      "description": "Health-sector procurement published in SNS Transparência's Portal BASE extract, latest sixty source publication days. Rows have provisional content-derived identities because this extract omits contract IDs; it is not the complete national BASE register.",
+      "publisher": "SNS Transparência",
+      "topics": [
+        "health"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "transparencia.sns.gov.pt",
+        "limit": "10000",
+        "dataset": "portal-base",
+        "timeField": "data_de_publicacao",
+        "period": "day",
+        "windowPeriods": "60",
+        "orderBy": "data_de_publicacao DESC,data_de_celebracao_do_contrato,nifs_dos_adjudicantes,nifs_das_adjudicatarias,objeto_do_contrato,preco_contratual"
+      },
+      "policy": {
+        "name": "SNS Transparência bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 86400,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms not stated in the dataset metadata",
+          "attribution": "SNS Transparência"
+        }
+      },
+      "staleAfterSeconds": 172800
+    },
+    {
+      "topic": "health",
+      "slug": "sns-psychology-consultations-feed",
+      "title": "Psychology consultations by hospital",
+      "description": "First, subsequent and total psychology consultations by hospital and month, latest twenty-four reporting months.",
+      "publisher": "SNS Transparência",
+      "topics": [
+        "health"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "transparencia.sns.gov.pt",
+        "limit": "10000",
+        "dataset": "evolucao-mensal-das-consultas-de-psicologia",
+        "timeField": "tempo",
+        "period": "month",
+        "windowPeriods": "24",
+        "orderBy": "tempo DESC,regiao,instituicao",
+        "dimensions": "regiao,instituicao",
+        "series": "psicologia_primeiras_consultas,psicologia_consultas_subsequentes,psicologia_total_de_consultas",
+        "units": "psicologia_primeiras_consultas=consultations,psicologia_consultas_subsequentes=consultations,psicologia_total_de_consultas=consultations"
+      },
+      "policy": {
+        "name": "SNS Transparência bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms not stated in the dataset metadata",
+          "attribution": "SNS Transparência"
+        }
+      },
+      "staleAfterSeconds": 1209600
+    },
+    {
+      "topic": "health",
+      "slug": "sns-medicine-package-prices-feed",
+      "title": "Average medicine-package prices",
+      "description": "Average outpatient and generic medicine-package prices by health region, latest thirty-six reporting months. Not pharmacy-level retail prices; underlying expenditure and package counts are not republished here.",
+      "publisher": "SNS Transparência",
+      "topics": [
+        "health"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "transparencia.sns.gov.pt",
+        "limit": "10000",
+        "dataset": "preco-medio-por-embalagem",
+        "timeField": "tempo",
+        "period": "month",
+        "windowPeriods": "36",
+        "orderBy": "tempo DESC,regiao",
+        "dimensions": "regiao",
+        "series": "preco_medio_por_embalagem_ambulatorio,preco_medio_por_embalagem_genericos"
+      },
+      "policy": {
+        "name": "SNS Transparência bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms not stated in the dataset metadata",
+          "attribution": "SNS Transparência"
+        }
+      },
+      "staleAfterSeconds": 1209600
+    },
+    {
+      "topic": "health",
+      "slug": "sns-sickness-self-declarations-feed",
+      "title": "Sickness self-declarations by channel, sex and age",
+      "description": "Daily counts of sickness self-declarations, partitioned by source channel, sex and age group, latest sixty source reporting days. No individual health records.",
+      "publisher": "SNS Transparência",
+      "topics": [
+        "health"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "transparencia.sns.gov.pt",
+        "limit": "10000",
+        "dataset": "autodeclaracoes-de-doenca-dos-utentes",
+        "timeField": "des_dia",
+        "period": "day",
+        "windowPeriods": "60",
+        "orderBy": "des_dia DESC,tipo_origem,des_sexo,grupo_etario",
+        "dimensions": "tipo_origem,des_sexo,grupo_etario",
+        "series": "qtd_add",
+        "units": "qtd_add=declarations"
+      },
+      "policy": {
+        "name": "SNS Transparência bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 86400,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms not stated in the dataset metadata",
+          "attribution": "SNS Transparência"
+        }
+      },
+      "staleAfterSeconds": 172800
+    },
+    {
+      "topic": "health",
+      "slug": "sns-emergency-calls-transferred-sns24-feed",
+      "title": "Emergency calls transferred to SNS 24",
+      "description": "Monthly emergency calls transferred to the SNS 24 health line, latest sixty reporting months. Distinct from INEM's total calls answered.",
+      "publisher": "SNS Transparência",
+      "topics": [
+        "health"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "transparencia.sns.gov.pt",
+        "limit": "10000",
+        "dataset": "sns24",
+        "timeField": "data",
+        "period": "month",
+        "windowPeriods": "60",
+        "orderBy": "data DESC",
+        "dimensions": "",
+        "series": "n_o_de_chamadas_de_emergencia_transferidas_para_a_saude_24",
+        "units": "n_o_de_chamadas_de_emergencia_transferidas_para_a_saude_24=calls"
+      },
+      "policy": {
+        "name": "SNS Transparência bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms not stated in the dataset metadata",
+          "attribution": "SNS Transparência"
+        }
+      },
+      "staleAfterSeconds": 1209600
+    },
+    {
+      "topic": "health",
+      "slug": "sns-blood-collection-feed",
+      "title": "Historical blood collection by institution and blood group",
+      "description": "Monthly blood units collected, including donors under 25, by region, institution and blood group, latest twelve reporting months. Null source measurements remain missing rather than becoming zero.",
+      "publisher": "SNS Transparência",
+      "topics": [
+        "health"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "transparencia.sns.gov.pt",
+        "limit": "10000",
+        "dataset": "colheita-de-sangue-total",
+        "timeField": "periodo",
+        "period": "month",
+        "windowPeriods": "12",
+        "orderBy": "periodo DESC,regiao,entidade,grupo_sanguineo",
+        "dimensions": "regiao,entidade,grupo_sanguineo",
+        "series": "no_total_de_unidades_de_sangue_colhidas,no_total_de_unidades_de_sangue_colhidas_no_grupo_etario_25_anos",
+        "units": "no_total_de_unidades_de_sangue_colhidas=blood units,no_total_de_unidades_de_sangue_colhidas_no_grupo_etario_25_anos=blood units"
+      },
+      "policy": {
+        "name": "SNS Transparência bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms not stated in the dataset metadata",
+          "attribution": "SNS Transparência"
+        }
+      },
+      "staleAfterSeconds": 5184000
+    },
+    {
+      "topic": "health",
+      "slug": "sns-generic-medicine-dispensing-feed",
+      "title": "Generic medicine dispensing and market share",
+      "description": "Generic medicine expenditure, units dispensed and market shares by health region, latest thirty-six reporting months. Market shares are source fractions (0 to 1), despite percent annotations in the portal; no scaling is inferred.",
+      "publisher": "SNS Transparência",
+      "topics": [
+        "health"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "transparencia.sns.gov.pt",
+        "limit": "10000",
+        "dataset": "genericos",
+        "timeField": "tempo",
+        "period": "month",
+        "windowPeriods": "36",
+        "orderBy": "tempo DESC,regiao",
+        "dimensions": "regiao",
+        "series": "valor_pvp_genericos,unidades_dispensadas_genericos,qm_genericos_valor_pvp,qm_genericos_unidades_dispensadas",
+        "units": "unidades_dispensadas_genericos=dispensed units,qm_genericos_valor_pvp=ratio,qm_genericos_unidades_dispensadas=ratio"
+      },
+      "policy": {
+        "name": "SNS Transparência bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms not stated in the dataset metadata",
+          "attribution": "SNS Transparência"
+        }
+      },
+      "staleAfterSeconds": 1209600
+    },
+    {
+      "topic": "health",
+      "slug": "sns-supplier-debt-and-arrears-feed",
+      "title": "Health-service supplier debt and payment arrears",
+      "description": "Total external-supplier debt, overdue debt and payment arrears by region and institution, latest twenty-four reporting months, in euros.",
+      "publisher": "SNS Transparência",
+      "topics": [
+        "health"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "transparencia.sns.gov.pt",
+        "limit": "10000",
+        "dataset": "divida-total-vencida-e-pagamentos",
+        "timeField": "periodo",
+        "period": "month",
+        "windowPeriods": "24",
+        "orderBy": "periodo DESC,regiao,entidade",
+        "dimensions": "regiao,entidade",
+        "series": "divida_total_fornecedores_externos,divida_vencida_fornecedores_externos,pagamentos_em_atraso"
+      },
+      "policy": {
+        "name": "SNS Transparência bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms not stated in the dataset metadata",
+          "attribution": "SNS Transparência"
+        }
+      },
+      "staleAfterSeconds": 1209600
+    },
+    {
+      "topic": "health",
+      "slug": "sns-pregnancy-line-triage-feed",
+      "title": "SNS Grávida pregnancy-line triage",
+      "description": "Monthly pregnancy-line triages and referral destinations by local health unit, latest twenty-four reporting months.",
+      "publisher": "SNS Transparência",
+      "topics": [
+        "health"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "transparencia.sns.gov.pt",
+        "limit": "10000",
+        "dataset": "evolucao-mensal-linha-sns-gravida",
+        "timeField": "mes",
+        "period": "month",
+        "windowPeriods": "24",
+        "orderBy": "mes DESC,uls",
+        "dimensions": "uls",
+        "series": "n_tt_triag_snsgrav,n_triag_snsgrav_ac,n_triag_snsgrav_csp,n_triag_snsgrav_cah,n_triag_snsgrav_su,n_triag_snsgrav_inem",
+        "units": "n_tt_triag_snsgrav=triages,n_triag_snsgrav_ac=triages,n_triag_snsgrav_csp=triages,n_triag_snsgrav_cah=triages,n_triag_snsgrav_su=triages,n_triag_snsgrav_inem=triages"
+      },
+      "policy": {
+        "name": "SNS Transparência bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms not stated in the dataset metadata",
+          "attribution": "SNS Transparência"
+        }
+      },
+      "staleAfterSeconds": 1209600
+    },
+    {
+      "topic": "health",
+      "slug": "sns-poison-information-calls-feed",
+      "title": "Poison information centre calls",
+      "description": "Monthly calls answered by the national poison information centre (CIAV), latest sixty reporting months.",
+      "publisher": "SNS Transparência",
+      "topics": [
+        "health"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "transparencia.sns.gov.pt",
+        "limit": "10000",
+        "dataset": "evolucao-mensal-do-no-de-chamadas-atendidas-no-centro-de-informacao-antivenenos",
+        "timeField": "periodo",
+        "period": "month",
+        "windowPeriods": "60",
+        "orderBy": "periodo DESC",
+        "dimensions": "",
+        "series": "no_de_chamadas_atendidas_no_centro_de_informacao_antivenenos",
+        "units": "no_de_chamadas_atendidas_no_centro_de_informacao_antivenenos=calls"
+      },
+      "policy": {
+        "name": "SNS Transparência bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms not stated in the dataset metadata",
+          "attribution": "SNS Transparência"
+        }
+      },
+      "staleAfterSeconds": 1209600
+    },
+    {
+      "topic": "health",
+      "slug": "sns-licensed-public-defibrillator-programmes-feed",
+      "title": "Licensed public-space defibrillator programmes",
+      "description": "The complete published register of public-space defibrillator programmes, with establishment, address and reporting month. The portal's numeric record field is an identifier, not a count or a live AED availability measurement.",
+      "publisher": "SNS Transparência",
+      "topics": [
+        "health"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "transparencia.sns.gov.pt",
+        "limit": "10000",
+        "dataset": "evolucao-programas-dae-licenciados-em-espacos-publicos",
+        "timeField": "tempo",
+        "orderBy": "tempo DESC,n_o_registos",
+        "idFields": "n_o_registos"
+      },
+      "policy": {
+        "name": "SNS Transparência bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms not stated in the dataset metadata",
+          "attribution": "SNS Transparência"
+        }
+      },
+      "staleAfterSeconds": 5184000
+    },
+    {
+      "topic": "health",
+      "slug": "sns-medical-specialty-training-vacancies-feed",
+      "title": "Medical specialty training vacancies",
+      "description": "Available, filled and unfilled medical-internship specialty training places, latest three reporting years, preserved as records using the publisher's unique registo IDs. Some historical records share year, region, institution and specialty but report different counts without a cohort or revision label; these remain separate records rather than arbitrarily selected or summed series points.",
+      "publisher": "SNS Transparência",
+      "topics": [
+        "health"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "transparencia.sns.gov.pt",
+        "limit": "10000",
+        "dataset": "vagas-formacao-especializada-internato",
+        "timeField": "periodo",
+        "period": "year",
+        "windowPeriods": "3",
+        "orderBy": "periodo DESC,regiao,instituicao,especialidade,registo",
+        "idFields": "registo",
+        "units": "vagas_disponiveis=places,vagas_ocupadas=places,vagas_nao_ocupadas=places"
+      },
+      "policy": {
+        "name": "SNS Transparência bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms not stated in the dataset metadata",
+          "attribution": "SNS Transparência"
+        }
+      },
+      "staleAfterSeconds": 5184000
+    },
+    {
+      "topic": "health",
+      "slug": "sns-hospital-beds-by-type-feed",
+      "title": "Acute hospital beds by type",
+      "description": "Reported acute-care beds by hospital and bed type, latest twelve reporting months. A capacity breakdown, not the existing inpatient occupancy-rate product.",
+      "publisher": "SNS Transparência",
+      "topics": [
+        "health"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "transparencia.sns.gov.pt",
+        "limit": "10000",
+        "dataset": "lotacao-praticada-por-tipo-de-cama",
+        "timeField": "tempo",
+        "period": "month",
+        "windowPeriods": "12",
+        "orderBy": "tempo DESC,regiao,instituicao,tipo_de_camas",
+        "dimensions": "regiao,instituicao,tipo_de_camas",
+        "series": "lotacao",
+        "units": "lotacao=beds"
+      },
+      "policy": {
+        "name": "SNS Transparência bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms not stated in the dataset metadata",
+          "attribution": "SNS Transparência"
+        }
+      },
+      "staleAfterSeconds": 1209600
+    },
+    {
+      "topic": "health",
+      "slug": "sns-legionella-environmental-monitoring-feed",
+      "title": "Environmental Legionella monitoring",
+      "description": "Annual INSA environmental Legionella sample counts by sampling context and test outcome. All published years; source totals and positive-result figures are preserved as reported.",
+      "publisher": "SNS Transparência",
+      "topics": [
+        "health"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "transparencia.sns.gov.pt",
+        "limit": "10000",
+        "dataset": "monitorizacao-ambiental-de-legionella",
+        "timeField": "tempo",
+        "orderBy": "tempo DESC,ponto_ou_localizacao_geografica",
+        "dimensions": "ponto_ou_localizacao_geografica",
+        "series": "no_total_amostras_analisadas,no_total_amostras_rede_predial,no_total_amostras_aguas_de_processo_torres_de_arrefecimento,no_total_amostras_minerais_naturais_agua_termais,no_total_amostras_piscinas,no_total_amostras_positivas,no_total_amostras_positivas_que_excedem_o_valor_parametrico",
+        "units": "no_total_amostras_analisadas=samples,no_total_amostras_rede_predial=samples,no_total_amostras_aguas_de_processo_torres_de_arrefecimento=samples,no_total_amostras_minerais_naturais_agua_termais=samples,no_total_amostras_piscinas=samples,no_total_amostras_positivas=samples,no_total_amostras_positivas_que_excedem_o_valor_parametrico=samples"
+      },
+      "policy": {
+        "name": "SNS Transparência bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms not stated in the dataset metadata",
+          "attribution": "SNS Transparência"
+        }
+      },
+      "staleAfterSeconds": 5184000
+    },
+    {
+      "topic": "health",
+      "slug": "sns-lvt-hospital-morbidity-mortality-feed",
+      "title": "Reported hospital morbidity and mortality figures in Lisbon and Tagus Valley",
+      "description": "Distinct source-reported inpatient days, hospitalisation rates and mortality rates by institution and diagnostic chapter in Região de Saúde LVT, latest reporting year. The portal includes conflicting unlabelled revisions for the same year/quarter/institution/chapter: these are preserved as separate figure records, not arbitrarily selected as a single time series. Report dates are discharge quarters; revision times and which figure is newest are unknown.",
+      "publisher": "SNS Transparência",
+      "topics": [
+        "health"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "transparencia.sns.gov.pt",
+        "limit": "10000",
+        "dataset": "morbilidade-e-mortalidade-hospitalar",
+        "timeField": "ano",
+        "quarterField": "trimestre",
+        "period": "year",
+        "windowPeriods": "1",
+        "where": "regiao = 'Região de Saúde LVT'",
+        "select": "ano,trimestre,regiao,instituicao,cod_capitulo,desc_capitulo,taxa_internamento,dias_internamento,taxa_mortalidade",
+        "groupBy": "ano,trimestre,regiao,instituicao,cod_capitulo,desc_capitulo,taxa_internamento,dias_internamento,taxa_mortalidade",
+        "orderBy": "ano DESC,trimestre,regiao,instituicao,cod_capitulo,desc_capitulo,taxa_internamento,dias_internamento,taxa_mortalidade",
+        "idFields": "ano,trimestre,regiao,instituicao,cod_capitulo,desc_capitulo,taxa_internamento,dias_internamento,taxa_mortalidade",
+        "units": "dias_internamento=days"
+      },
+      "policy": {
+        "name": "SNS Transparência bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms not stated in the dataset metadata",
+          "attribution": "SNS Transparência"
+        }
+      },
+      "staleAfterSeconds": 1209600
+    },
+    {
+      "topic": "health",
+      "slug": "sns-first-consultations-within-target-feed",
+      "title": "First hospital consultations within the response target",
+      "description": "First hospital consultations delivered within the maximum response time, registered first consultations and the reported proportion within target, latest twenty-four reporting months by hospital.",
+      "publisher": "SNS Transparência",
+      "topics": [
+        "health"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "transparencia.sns.gov.pt",
+        "limit": "10000",
+        "dataset": "consultas-em-tempo-real",
+        "timeField": "tempo",
+        "period": "month",
+        "windowPeriods": "24",
+        "orderBy": "tempo DESC,regiao,instituicao",
+        "dimensions": "regiao,instituicao",
+        "series": "no_primeiras_ce_prestadas_dentro_do_tmrg,no_primeiras_ce_realizadas_com_registo_no_cth,1as_consultas_realizadas_em_tempo_adequado",
+        "units": "no_primeiras_ce_prestadas_dentro_do_tmrg=consultations,no_primeiras_ce_realizadas_com_registo_no_cth=consultations"
+      },
+      "policy": {
+        "name": "SNS Transparência bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms not stated in the dataset metadata",
+          "attribution": "SNS Transparência"
+        }
+      },
+      "staleAfterSeconds": 1209600
+    },
+    {
+      "topic": "health",
+      "slug": "sns-cancer-screening-feed",
+      "title": "Cancer screening in primary care",
+      "description": "Reported breast, cervical and colorectal screening counts and proportions by primary-care area, latest twenty-four reporting months. Eligibility and look-back periods follow the source definitions.",
+      "publisher": "SNS Transparência",
+      "topics": [
+        "health"
+      ],
+      "config": {
+        "source": "opendatasoft",
+        "host": "transparencia.sns.gov.pt",
+        "limit": "10000",
+        "dataset": "rastreios-oncologicos",
+        "timeField": "tempo",
+        "period": "month",
+        "windowPeriods": "24",
+        "orderBy": "tempo DESC,regiao,area_csp",
+        "dimensions": "regiao,area_csp",
+        "series": "contagem_de_mulheres_com_registo_de_mamografia_nos_ultimos_dois_anos,proporcao_mulheres_50_70_a_c_mamogr_2_anos,contagem_de_mulheres_com_colpocitologia_atualizada,proporcao_mulheres_25_60_a_c_colpoc_atuali,contagem_de_utentes_inscritos_com_rastreio_do_cancro_do_colon_e_reto_efetuado,proporcao_utentes_50_75_a_c_rastreio_cancro_cr",
+        "units": "contagem_de_mulheres_com_registo_de_mamografia_nos_ultimos_dois_anos=women,contagem_de_mulheres_com_colpocitologia_atualizada=women,contagem_de_utentes_inscritos_com_rastreio_do_cancro_do_colon_e_reto_efetuado=patients"
+      },
+      "policy": {
+        "name": "SNS Transparência bounded reporting-period collection",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 180,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 16777216,
+          "maxRecordBytes": 524288,
+          "maxRecords": 20000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms not stated in the dataset metadata",
+          "attribution": "SNS Transparência"
+        }
+      },
+      "staleAfterSeconds": 1209600
+    },
+    {
+      "topic": "mobility",
+      "slug": "cp-gtfs-feed",
+      "title": "CP GTFS",
+      "description": "Stops, routes, agencies and service days from CP's current static schedule archive. Not live service or delay information.",
+      "config": {
+        "source": "gtfs",
+        "url": "https://publico.cp.pt/gtfs/gtfs.zip",
+        "files": "agency,stops,routes,calendar,calendar_dates"
+      },
+      "policy": {
+        "name": "Daily GTFS static snapshot",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 86400,
+          "timeoutSeconds": 600,
+          "maxBytes": 134217728,
+          "maxOutputBytes": 50331648,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms apply",
+          "attribution": "Published by the named transit operator"
+        }
+      },
+      "staleAfterSeconds": 259200,
+      "publisher": "CP",
+      "topics": [
+        "mobility"
+      ]
+    },
+    {
+      "topic": "mobility",
+      "slug": "fertagus-gtfs-feed",
+      "title": "Fertagus GTFS",
+      "description": "Stops, routes, agencies and service days, with route shapes, from Fertagus's current static schedule archive. Not live service or delay information.",
+      "config": {
+        "source": "gtfs",
+        "url": "https://www.fertagus.pt/GTFSTMLzip/Fertagus_GTFS.zip",
+        "files": "agency,stops,routes,calendar,calendar_dates,shapes"
+      },
+      "policy": {
+        "name": "Daily GTFS static snapshot",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 86400,
+          "timeoutSeconds": 600,
+          "maxBytes": 134217728,
+          "maxOutputBytes": 50331648,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms apply",
+          "attribution": "Published by the named transit operator"
+        }
+      },
+      "staleAfterSeconds": 259200,
+      "publisher": "Fertagus",
+      "topics": [
+        "mobility"
+      ]
+    },
+    {
+      "topic": "mobility",
+      "slug": "tub-braga-gtfs-feed",
+      "title": "TUB Braga GTFS",
+      "description": "Stops, routes, agencies and service days, with route shapes, from TUB Braga's current static schedule archive. Not live service or delay information.",
+      "config": {
+        "source": "gtfs",
+        "url": "https://www.tub.pt/developer/gtfs/feed/tub.zip",
+        "files": "agency,stops,routes,calendar,calendar_dates,shapes"
+      },
+      "policy": {
+        "name": "Daily GTFS static snapshot",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 86400,
+          "timeoutSeconds": 600,
+          "maxBytes": 134217728,
+          "maxOutputBytes": 50331648,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms apply",
+          "attribution": "Published by the named transit operator"
+        }
+      },
+      "staleAfterSeconds": 259200,
+      "publisher": "TUB Braga",
+      "topics": [
+        "mobility"
+      ]
+    },
+    {
+      "topic": "mobility",
+      "slug": "tcb-barreiro-gtfs-feed",
+      "title": "Transportes Colectivos do Barreiro GTFS",
+      "description": "Stops, routes, agencies and service days, with route shapes, from Transportes Colectivos do Barreiro's current static schedule archive. Not live service or delay information.",
+      "config": {
+        "source": "gtfs",
+        "url": "https://backend.tcbarreiro.pt/download-gtfs",
+        "files": "agency,stops,routes,calendar,calendar_dates,shapes"
+      },
+      "policy": {
+        "name": "Daily GTFS static snapshot",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 86400,
+          "timeoutSeconds": 600,
+          "maxBytes": 134217728,
+          "maxOutputBytes": 50331648,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms apply",
+          "attribution": "Published by the named transit operator"
+        }
+      },
+      "staleAfterSeconds": 259200,
+      "publisher": "Transportes Colectivos do Barreiro",
+      "topics": [
+        "mobility"
+      ]
+    },
+    {
+      "topic": "mobility",
+      "slug": "horarios-do-funchal-gtfs-feed",
+      "title": "Horários do Funchal GTFS",
+      "description": "Stops, routes, agencies and service days, with route shapes, from Horários do Funchal's current static schedule archive. Not live service or delay information.",
+      "config": {
+        "source": "gtfs",
+        "url": "https://www.horariosdofunchal.pt/googletransit.zip",
+        "files": "agency,stops,routes,calendar_dates,shapes"
+      },
+      "policy": {
+        "name": "Daily GTFS static snapshot",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 86400,
+          "timeoutSeconds": 600,
+          "maxBytes": 134217728,
+          "maxOutputBytes": 50331648,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms apply",
+          "attribution": "Published by the named transit operator"
+        }
+      },
+      "staleAfterSeconds": 259200,
+      "publisher": "Horários do Funchal",
+      "topics": [
+        "mobility"
+      ]
+    },
+    {
+      "topic": "statistics",
+      "slug": "ine-taxpayer-income-distribution",
+      "title": "Declared income after assessed tax by income quintile",
+      "description": "Annual distribution of taxpayers' gross declared income less assessed income tax, by NUTS 2024 geography and income quintile. Uses the current indicator, not the discontinued NUTS 2013 series.",
+      "config": {
+        "source": "ine",
+        "indicator": "0012759",
+        "lang": "PT"
+      },
+      "policy": {
+        "name": "INE annual indicator series",
+        "version": 2,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 120,
+          "maxBytes": 8388608,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+          "attribution": "Instituto Nacional de Estatística (INE)"
+        }
+      },
+      "staleAfterSeconds": 5184000,
+      "publisher": "INE · Instituto Nacional de Estatística",
+      "topics": [
+        "economy",
+        "society"
+      ]
+    },
+    {
+      "topic": "statistics",
+      "slug": "ine-median-household-income-after-tax",
+      "title": "Median declared household income after assessed tax",
+      "description": "Latest annual median gross declared income less assessed income tax per tax household, by NUTS 2024 geography.",
+      "config": {
+        "source": "ine",
+        "indicator": "0012741",
+        "lang": "PT"
+      },
+      "policy": {
+        "name": "INE annual indicator series",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 120,
+          "maxBytes": 8388608,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+          "attribution": "Instituto Nacional de Estatística (INE)"
+        }
+      },
+      "staleAfterSeconds": 5184000,
+      "publisher": "INE · Instituto Nacional de Estatística",
+      "topics": [
+        "economy",
+        "society"
+      ]
+    },
+    {
+      "topic": "statistics",
+      "slug": "ine-household-income-gini",
+      "title": "Household income inequality: Gini coefficient",
+      "description": "Latest annual Gini coefficient of declared household income less assessed income tax, by NUTS 2024 geography.",
+      "config": {
+        "source": "ine",
+        "indicator": "0012744",
+        "lang": "PT"
+      },
+      "policy": {
+        "name": "INE annual indicator series",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 120,
+          "maxBytes": 8388608,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+          "attribution": "Instituto Nacional de Estatística (INE)"
+        }
+      },
+      "staleAfterSeconds": 5184000,
+      "publisher": "INE · Instituto Nacional de Estatística",
+      "topics": [
+        "economy",
+        "society"
+      ]
+    },
+    {
+      "topic": "statistics",
+      "slug": "ine-declared-income-per-inhabitant",
+      "title": "Declared income after assessed tax per inhabitant",
+      "description": "Latest annual gross declared income less assessed income tax per inhabitant, by NUTS 2024 geography.",
+      "config": {
+        "source": "ine",
+        "indicator": "0012672",
+        "lang": "PT"
+      },
+      "policy": {
+        "name": "INE annual indicator series",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 120,
+          "maxBytes": 8388608,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+          "attribution": "Instituto Nacional de Estatística (INE)"
+        }
+      },
+      "staleAfterSeconds": 5184000,
+      "publisher": "INE · Instituto Nacional de Estatística",
+      "topics": [
+        "economy",
+        "society"
+      ]
+    },
+    {
+      "topic": "statistics",
+      "slug": "ine-household-income-p90-p10",
+      "title": "Household income inequality: P90/P10 ratio",
+      "description": "Latest annual ratio between the 90th and 10th percentiles of declared household income less assessed income tax, by NUTS 2024 geography.",
+      "config": {
+        "source": "ine",
+        "indicator": "0012746",
+        "lang": "PT"
+      },
+      "policy": {
+        "name": "INE annual indicator series",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 120,
+          "maxBytes": 8388608,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+          "attribution": "Instituto Nacional de Estatística (INE)"
+        }
+      },
+      "staleAfterSeconds": 5184000,
+      "publisher": "INE · Instituto Nacional de Estatística",
+      "topics": [
+        "economy",
+        "society"
+      ]
+    },
+    {
+      "topic": "statistics",
+      "slug": "ine-fixed-broadband-accesses",
+      "title": "Fixed-location broadband accesses",
+      "description": "Latest annual number of fixed-location broadband accesses by NUTS 2024 geography, published through INE's telecommunications survey. These are accesses, not individual users or real-time availability.",
+      "config": {
+        "source": "ine",
+        "indicator": "0013140",
+        "lang": "PT"
+      },
+      "policy": {
+        "name": "INE annual indicator series",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 120,
+          "maxBytes": 8388608,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+          "attribution": "Instituto Nacional de Estatística (INE)"
+        }
+      },
+      "staleAfterSeconds": 5184000,
+      "publisher": "INE · Instituto Nacional de Estatística",
+      "topics": [
+        "telecom",
+        "society"
+      ]
+    },
+    {
+      "topic": "statistics",
+      "slug": "ine-fixed-broadband-accesses-per-100",
+      "title": "Fixed broadband accesses per 100 inhabitants by technology",
+      "description": "Latest annual fixed-location broadband access rate by NUTS 2024 geography and access technology. This measures subscription penetration, not network coverage or customer outages.",
+      "config": {
+        "source": "ine",
+        "indicator": "0013424",
+        "lang": "PT"
+      },
+      "policy": {
+        "name": "INE annual indicator series",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 120,
+          "maxBytes": 8388608,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+          "attribution": "Instituto Nacional de Estatística (INE)"
+        }
+      },
+      "staleAfterSeconds": 5184000,
+      "publisher": "INE · Instituto Nacional de Estatística",
+      "topics": [
+        "telecom",
+        "society"
+      ]
+    },
+    {
+      "topic": "statistics",
+      "slug": "ine-broadband-accesses-per-100",
+      "title": "Broadband accesses per 100 inhabitants by segment",
+      "description": "Latest annual broadband accesses per 100 inhabitants by NUTS 2024 geography and access segment. The subscription rate is not a count of unique people connected.",
+      "config": {
+        "source": "ine",
+        "indicator": "0013135",
+        "lang": "PT"
+      },
+      "policy": {
+        "name": "INE annual indicator series",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 120,
+          "maxBytes": 8388608,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+          "attribution": "Instituto Nacional de Estatística (INE)"
+        }
+      },
+      "staleAfterSeconds": 5184000,
+      "publisher": "INE · Instituto Nacional de Estatística",
+      "topics": [
+        "telecom",
+        "society"
+      ]
+    },
+    {
+      "topic": "statistics",
+      "slug": "ine-household-broadband-access",
+      "title": "Households with broadband internet access",
+      "description": "Latest annual proportion of private households with at least one resident aged 16 to 74 and a home broadband connection, by NUTS 2024 area. These are aggregate survey statistics, not household-level records.",
+      "config": {
+        "source": "ine",
+        "indicator": "0013826",
+        "lang": "PT"
+      },
+      "policy": {
+        "name": "INE annual indicator series",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 120,
+          "maxBytes": 8388608,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+          "attribution": "Instituto Nacional de Estatística (INE)"
+        }
+      },
+      "staleAfterSeconds": 5184000,
+      "publisher": "INE · Instituto Nacional de Estatística",
+      "topics": [
+        "telecom",
+        "society"
+      ]
+    },
+    {
+      "topic": "statistics",
+      "slug": "ine-fixed-telephone-clients",
+      "title": "Fixed-telephone service clients",
+      "description": "Latest annual number of direct-access fixed-telephone service clients by access segment, from INE's telecommunications survey.",
+      "config": {
+        "source": "ine",
+        "indicator": "0006851",
+        "lang": "PT"
+      },
+      "policy": {
+        "name": "INE annual indicator series",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 120,
+          "maxBytes": 8388608,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+          "attribution": "Instituto Nacional de Estatística (INE)"
+        }
+      },
+      "staleAfterSeconds": 5184000,
+      "publisher": "INE · Instituto Nacional de Estatística",
+      "topics": [
+        "telecom",
+        "society"
+      ]
+    },
+    {
+      "topic": "statistics",
+      "slug": "ine-broadband-data-traffic",
+      "title": "Broadband internet data traffic by network type",
+      "description": "Latest annual broadband internet traffic in gigabytes by network type, from INE's telecommunications survey. Traffic volume is not connection speed or outage information.",
+      "config": {
+        "source": "ine",
+        "indicator": "0006868",
+        "lang": "PT"
+      },
+      "policy": {
+        "name": "INE annual indicator series",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 120,
+          "maxBytes": 8388608,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+          "attribution": "Instituto Nacional de Estatística (INE)"
+        }
+      },
+      "staleAfterSeconds": 5184000,
+      "publisher": "INE · Instituto Nacional de Estatística",
+      "topics": [
+        "telecom",
+        "society"
+      ]
+    },
+    {
+      "topic": "statistics",
+      "slug": "dgt-caop-distritos-feed",
+      "title": "Mainland Portugal district reference table (CAOP 2025)",
+      "description": "The 18 districts of mainland Portugal in the official administrative charter: code, name, NUTS 1 region, area, perimeter, and how many municipalities and parishes each holds. Attributes only, without boundary outlines. The Azores and Madeira are not part of this collection.",
+      "config": {
+        "source": "ogc",
+        "host": "ogcapi.dgterritorio.gov.pt",
+        "collection": "distritos",
+        "geometry": "skip",
+        "pageSize": "1000",
+        "maxPages": "5"
+      },
+      "policy": {
+        "name": "OGC weekly attribute table",
+        "version": 3,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 120,
+          "maxBytes": 4194304,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms apply",
+          "attribution": "Direção-Geral do Território — Carta Administrativa Oficial de Portugal (CAOP) 2025"
+        }
+      },
+      "staleAfterSeconds": 1209600,
+      "publisher": "DGT · Direção-Geral do Território",
+      "topics": [
+        "society"
+      ]
+    },
+    {
+      "topic": "statistics",
+      "slug": "dgt-caop-municipios-feed",
+      "title": "Mainland Portugal municipality reference table (CAOP 2025)",
+      "description": "The 278 municipalities of mainland Portugal in the official administrative charter: DTMN code, name, district, the three NUTS levels, area, perimeter, and parish count. Attributes only, without boundary outlines. The Azores and Madeira are not part of this collection.",
+      "config": {
+        "source": "ogc",
+        "host": "ogcapi.dgterritorio.gov.pt",
+        "collection": "municipios",
+        "geometry": "skip",
+        "pageSize": "1000",
+        "maxPages": "5"
+      },
+      "policy": {
+        "name": "OGC weekly attribute table",
+        "version": 3,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 120,
+          "maxBytes": 4194304,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms apply",
+          "attribution": "Direção-Geral do Território — Carta Administrativa Oficial de Portugal (CAOP) 2025"
+        }
+      },
+      "staleAfterSeconds": 1209600,
+      "publisher": "DGT · Direção-Geral do Território",
+      "topics": [
+        "society"
+      ]
+    },
+    {
+      "topic": "statistics",
+      "slug": "dgt-caop-freguesias-feed",
+      "title": "Mainland Portugal parish reference table (CAOP 2025)",
+      "description": "The 3,049 civil parishes of mainland Portugal in the official administrative charter: DTMNFR code, name, municipality, district, the three NUTS levels, area and perimeter. Attributes only, without boundary outlines. The Azores and Madeira are not part of this collection.",
+      "config": {
+        "source": "ogc",
+        "host": "ogcapi.dgterritorio.gov.pt",
+        "collection": "freguesias",
+        "geometry": "skip",
+        "pageSize": "1000",
+        "maxPages": "5"
+      },
+      "policy": {
+        "name": "OGC weekly attribute table",
+        "version": 3,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 120,
+          "maxBytes": 8388608,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms apply",
+          "attribution": "Direção-Geral do Território — Carta Administrativa Oficial de Portugal (CAOP) 2025"
+        }
+      },
+      "staleAfterSeconds": 1209600,
+      "publisher": "DGT · Direção-Geral do Território",
+      "topics": [
+        "society"
+      ]
+    },
+    {
+      "topic": "statistics",
+      "slug": "bpstat-banknotes-issued",
+      "title": "Euro banknotes put into circulation by Banco de Portugal",
+      "description": "Monthly number and euro value of banknotes put into circulation by Banco de Portugal, latest sixty observations per series. Excludes euro-area totals, coins and annual repetitions.",
+      "config": {
+        "source": "bpstat",
+        "domain": "9",
+        "dataset": "002abf63d5a4efb3e35ab5321251d7c5",
+        "lang": "EN",
+        "seriesIds": "12468838,12468839",
+        "lastN": "60"
+      },
+      "publisher": "Banco de Portugal",
+      "topics": [
+        "economy"
+      ],
+      "staleAfterSeconds": 1209600,
+      "policy": {
+        "name": "BPstat selected series and latest observations",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 120,
+          "maxBytes": 2097152,
+          "maxOutputBytes": 8388608,
+          "maxRecordBytes": 65536,
+          "maxRecords": 10000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Banco de Portugal information reuse conditions",
+          "attribution": "Banco de Portugal, BPstat"
+        }
+      }
+    },
+    {
+      "topic": "statistics",
+      "slug": "bpstat-construction-business-financial-health",
+      "title": "Construction-sector business financial health",
+      "description": "Twelve quarterly ratios for private non-financial construction companies in Portugal: capital, profitability, debt, trade credit and payment periods. Latest twenty observations per series; not every business sector in the broader dataset.",
+      "config": {
+        "source": "bpstat",
+        "domain": "168",
+        "dataset": "332441c9d65de71a0c842ac6496c1ee2",
+        "lang": "EN",
+        "seriesIds": "12587167,12587168,12587169,12587170,12587171,12587172,12587173,12587174,12587175,12587176,12587177,12587178",
+        "lastN": "20"
+      },
+      "publisher": "Banco de Portugal",
+      "topics": [
+        "economy"
+      ],
+      "staleAfterSeconds": 5184000,
+      "policy": {
+        "name": "BPstat selected series and latest observations",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 120,
+          "maxBytes": 2097152,
+          "maxOutputBytes": 8388608,
+          "maxRecordBytes": 65536,
+          "maxRecords": 10000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Banco de Portugal information reuse conditions",
+          "attribution": "Banco de Portugal, BPstat"
+        }
+      }
+    },
+    {
+      "topic": "statistics",
+      "slug": "bpstat-ecb-policy-rates",
+      "title": "ECB policy interest rates",
+      "description": "Main refinancing, marginal lending and deposit-facility rates applying to the euro area, including Portugal. Latest 366 daily observations for each of the three policy rates; other market-rate series are excluded.",
+      "config": {
+        "source": "bpstat",
+        "domain": "22",
+        "dataset": "471186a839daf97d9280419fc06c8579",
+        "lang": "EN",
+        "seriesIds": "12504589,12504590,12504591",
+        "lastN": "366"
+      },
+      "publisher": "Banco de Portugal",
+      "topics": [
+        "economy"
+      ],
+      "staleAfterSeconds": 172800,
+      "policy": {
+        "name": "BPstat selected series and latest observations",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 86400,
+          "timeoutSeconds": 120,
+          "maxBytes": 2097152,
+          "maxOutputBytes": 8388608,
+          "maxRecordBytes": 65536,
+          "maxRecords": 10000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Banco de Portugal information reuse conditions",
+          "attribution": "Banco de Portugal, BPstat"
+        }
+      }
+    },
+    {
+      "topic": "statistics",
+      "slug": "bpstat-goods-trade-growth",
+      "title": "Growth in Portuguese exports and imports of goods",
+      "description": "Cumulative year-on-year percentage changes in the nominal value of Portuguese goods exports and imports, latest sixty monthly observations. These are cumulative growth rates, not month-on-month changes or vehicle registrations.",
+      "config": {
+        "source": "bpstat",
+        "domain": "53",
+        "dataset": "34e4f2e4ddae13cba3e74c926fc23f48",
+        "lang": "EN",
+        "seriesIds": "12587117,12587123",
+        "lastN": "60"
+      },
+      "publisher": "Banco de Portugal",
+      "topics": [
+        "economy"
+      ],
+      "staleAfterSeconds": 1209600,
+      "policy": {
+        "name": "BPstat selected series and latest observations",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 120,
+          "maxBytes": 2097152,
+          "maxOutputBytes": 8388608,
+          "maxRecordBytes": 65536,
+          "maxRecords": 10000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Banco de Portugal information reuse conditions",
+          "attribution": "Banco de Portugal, BPstat"
+        }
+      }
+    },
+    {
+      "topic": "statistics",
+      "slug": "bpstat-household-indebtedness",
+      "title": "Household indebtedness and loan growth",
+      "description": "Portuguese household indebtedness and housing/consumer-loan amounts in millions of euros, plus source annual rates of change for housing and consumption/other-purpose loans. Latest sixty monthly observations; this particular dataset does not contain business indebtedness.",
+      "config": {
+        "source": "bpstat",
+        "domain": "18",
+        "dataset": "56ebacd8518e60ef58c85cb8185b4818",
+        "lang": "EN",
+        "seriesIds": "12457868,12457869,12457924,12458130,12458133",
+        "lastN": "60"
+      },
+      "publisher": "Banco de Portugal",
+      "topics": [
+        "economy"
+      ],
+      "staleAfterSeconds": 1209600,
+      "policy": {
+        "name": "BPstat selected series and latest observations",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 120,
+          "maxBytes": 2097152,
+          "maxOutputBytes": 8388608,
+          "maxRecordBytes": 65536,
+          "maxRecords": 10000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Banco de Portugal information reuse conditions",
+          "attribution": "Banco de Portugal, BPstat"
+        }
+      }
+    },
+    {
+      "topic": "statistics",
+      "slug": "bpstat-new-car-loan-amount-percentiles",
+      "title": "New car-loan contract amount percentiles",
+      "description": "25th, 50th and 75th percentiles of new car-loan amounts, separately for new vehicles, used vehicles and all car loans in Portugal. Values are euros, not contract counts or APRs; latest thirty-six monthly observations.",
+      "config": {
+        "source": "bpstat",
+        "domain": "209",
+        "dataset": "023d7ab3054d8a0d2db8de50c0ca394b",
+        "lang": "EN",
+        "seriesIds": "13168888,13168889,13168890,13168893,13168894,13168895,13168898,13168899,13168900",
+        "lastN": "36"
+      },
+      "publisher": "Banco de Portugal",
+      "topics": [
+        "economy"
+      ],
+      "staleAfterSeconds": 1209600,
+      "policy": {
+        "name": "BPstat selected series and latest observations",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 120,
+          "maxBytes": 2097152,
+          "maxOutputBytes": 8388608,
+          "maxRecordBytes": 65536,
+          "maxRecords": 10000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Banco de Portugal information reuse conditions",
+          "attribution": "Banco de Portugal, BPstat"
+        }
+      }
+    },
+    {
+      "topic": "statistics",
+      "slug": "bpstat-portuguese-treasury-yields",
+      "title": "Portuguese Treasury-bond yields",
+      "description": "Daily fixed-rate Portuguese Treasury-bond yields for residual maturities of two, three, four, five, seven and ten years. Latest 366 observations per maturity; excludes monthly repetitions and German/US yields.",
+      "config": {
+        "source": "bpstat",
+        "domain": "26",
+        "dataset": "690b7b36fd36c0dbe249c48cbbc39524",
+        "lang": "EN",
+        "seriesIds": "12099454,12099455,12099456,12099457,12099458,12099459",
+        "lastN": "366"
+      },
+      "publisher": "Banco de Portugal",
+      "topics": [
+        "economy"
+      ],
+      "staleAfterSeconds": 172800,
+      "policy": {
+        "name": "BPstat selected series and latest observations",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 86400,
+          "timeoutSeconds": 120,
+          "maxBytes": 2097152,
+          "maxOutputBytes": 8388608,
+          "maxRecordBytes": 65536,
+          "maxRecords": 10000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Banco de Portugal information reuse conditions",
+          "attribution": "Banco de Portugal, BPstat"
+        }
+      }
+    },
+    {
+      "topic": "statistics",
+      "slug": "bpstat-government-deposit-assets",
+      "title": "Regional, local government and social-security deposits",
+      "description": "Monthly deposit assets held by regional government, local government and social-security funds in Portugal, in millions of euros. Latest sixty observations; these are deposit assets, not public-debt liabilities.",
+      "config": {
+        "source": "bpstat",
+        "domain": "28",
+        "dataset": "10470e6b60c710218dd2a0e6a20fb040",
+        "lang": "EN",
+        "seriesIds": "13168814,13168815,13168816",
+        "lastN": "60"
+      },
+      "publisher": "Banco de Portugal",
+      "topics": [
+        "economy"
+      ],
+      "staleAfterSeconds": 1209600,
+      "policy": {
+        "name": "BPstat selected series and latest observations",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 120,
+          "maxBytes": 2097152,
+          "maxOutputBytes": 8388608,
+          "maxRecordBytes": 65536,
+          "maxRecords": 10000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Banco de Portugal information reuse conditions",
+          "attribution": "Banco de Portugal, BPstat"
+        }
+      }
+    },
+    {
+      "topic": "statistics",
+      "slug": "bpstat-emigrant-deposits-by-region",
+      "title": "Emigrant deposits by Portuguese NUTS II region",
+      "description": "Emigrant deposits domiciled in the nine Portuguese NUTS II regions, in millions of euros, latest thirty-six monthly observations. Excludes overlapping NUTS III totals, other depositors and accounts not assigned to a physical branch.",
+      "config": {
+        "source": "bpstat",
+        "domain": "206",
+        "dataset": "d5bf6198a39f1e77b0d14dda97103de0",
+        "lang": "EN",
+        "seriesIds": "12996746,12996695,12996702,12996706,12996708,12996710,12996715,12996717,12996719",
+        "lastN": "36"
+      },
+      "publisher": "Banco de Portugal",
+      "topics": [
+        "economy"
+      ],
+      "staleAfterSeconds": 1209600,
+      "policy": {
+        "name": "BPstat selected series and latest observations",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 120,
+          "maxBytes": 2097152,
+          "maxOutputBytes": 8388608,
+          "maxRecordBytes": 65536,
+          "maxRecords": 10000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Banco de Portugal information reuse conditions",
+          "attribution": "Banco de Portugal, BPstat"
+        }
+      }
+    },
+    {
+      "topic": "statistics",
+      "slug": "bpstat-overdue-household-borrowers-by-region",
+      "title": "Household borrowers with overdue loans by region and purpose",
+      "description": "Percentage of household/NPISH borrowers with overdue housing or consumption/other-purpose loans in each of Portugal's nine NUTS II regions. Latest thirty-six monthly observations; these are borrower shares, not overdue loan balances or loan-value ratios.",
+      "config": {
+        "source": "bpstat",
+        "domain": "188",
+        "dataset": "961306c1ed49daf795a53dc5fea4a04b",
+        "lang": "EN",
+        "seriesIds": "12759854,12759855,12759861,12759866,12759871,12759872,12759884,12760149,12760153,12760173,12760174,12760196,12760197,12760199,12760204,12760206,12760515,12760516",
+        "lastN": "36"
+      },
+      "publisher": "Banco de Portugal",
+      "topics": [
+        "economy"
+      ],
+      "staleAfterSeconds": 1209600,
+      "policy": {
+        "name": "BPstat selected series and latest observations",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 120,
+          "maxBytes": 2097152,
+          "maxOutputBytes": 8388608,
+          "maxRecordBytes": 65536,
+          "maxRecords": 10000,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Banco de Portugal information reuse conditions",
+          "attribution": "Banco de Portugal, BPstat"
+        }
+      }
+    },
+    {
+      "topic": "statistics",
+      "slug": "cada-opinions-2025-feed",
+      "title": "CADA administrative-document access opinions for 2025",
+      "description": "Opinions on access to administrative documents issued in 2025. This is a historical annual publication, not a live legal feed.",
+      "config": {
+        "source": "udata",
+        "feed": "distribution",
+        "transformer": "tabular",
+        "baseUrl": "https://dados.gov.pt",
+        "dataset": "6a886960e18b67254bb6b93b",
+        "distributionId": "e10e5071-90ea-42cc-aea3-8710222339ba",
+        "format": "csv",
+        "productSlug": "cada-opinions-2025",
+        "productTitle": "CADA administrative-document access opinions for 2025",
+        "keyField": "N.º Parecer",
+        "eventTimeField": "Data Parecer"
+      },
+      "policy": {
+        "name": "CADA administrative-document access opinions for 2025",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 240,
+          "maxBytes": 2097152,
+          "maxOutputBytes": 8388608,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "CC BY 4.0",
+          "attribution": "CADA · Comissão de Acesso aos Documentos Administrativos"
+        }
+      },
+      "staleAfterSeconds": 7776000,
+      "publisher": "CADA · Comissão de Acesso aos Documentos Administrativos",
+      "topics": [
+        "government"
+      ]
+    },
+    {
+      "topic": "statistics",
+      "slug": "recognised-startups-feed",
+      "title": "Companies recognised with startup status",
+      "description": "The recognised-startup registry snapshot published by ARTE and Startup Portugal, including the source's file date. Publication licence is not specified in the dataset metadata.",
+      "config": {
+        "source": "udata",
+        "feed": "distribution",
+        "transformer": "tabular",
+        "baseUrl": "https://dados.gov.pt",
+        "dataset": "660c3c451ee8ad9bd6b60608",
+        "distributionId": "7ab4544e-66b0-4d40-9d1f-904f74e7e770",
+        "format": "json",
+        "productSlug": "recognised-startups",
+        "productTitle": "Companies recognised with startup status",
+        "keyField": "titularNipc",
+        "eventTimeField": "fileDate"
+      },
+      "policy": {
+        "name": "Companies recognised with startup status",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 240,
+          "maxBytes": 2097152,
+          "maxOutputBytes": 8388608,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Source terms not stated in the dataset metadata",
+          "attribution": "ARTE · Agência para a Reforma Tecnológica do Estado"
+        }
+      },
+      "staleAfterSeconds": 1814400,
+      "publisher": "ARTE · Agência para a Reforma Tecnológica do Estado",
+      "topics": [
+        "government"
+      ]
+    },
+    {
+      "topic": "statistics",
+      "slug": "base-contract-modifications-2026-feed",
+      "title": "Public-contract modifications published in 2026",
+      "description": "Contract modifications in IMPIC's 2026 publication. The source has no distinct amendment identifier; repeated contract IDs use row-content identities rather than claiming a stable amendment ID.",
+      "config": {
+        "source": "udata",
+        "feed": "distribution",
+        "transformer": "tabular",
+        "baseUrl": "https://dados.gov.pt",
+        "dataset": "668d65dbcb1b953e80198435",
+        "distributionId": "d6d13c09-418e-443b-bbf4-b9bd77097571",
+        "format": "json",
+        "productSlug": "base-contract-modifications-2026",
+        "productTitle": "Public-contract modifications published in 2026",
+        "keyField": "idcontrato",
+        "eventTimeField": "modifDataPublicacao"
+      },
+      "policy": {
+        "name": "Public-contract modifications published in 2026",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 240,
+          "maxBytes": 8388608,
+          "maxOutputBytes": 33554432,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Public domain (other-pd in dados.gov.pt); IMPIC source conditions apply",
+          "attribution": "IMPIC · Instituto dos Mercados Públicos, do Imobiliário e da Construção"
+        }
+      },
+      "staleAfterSeconds": 1814400,
+      "publisher": "IMPIC · Instituto dos Mercados Públicos, do Imobiliário e da Construção",
+      "topics": [
+        "government"
+      ]
+    },
+    {
+      "topic": "statistics",
+      "slug": "base-procurement-notices-2026-feed",
+      "title": "Public-procurement notices published in 2026",
+      "description": "IMPIC's 2026 procurement notices, including contracting authorities, base prices, procedures, deadlines and source links. One current record per notice; not a duplicate of signed contracts.",
+      "config": {
+        "source": "udata",
+        "feed": "distribution",
+        "transformer": "tabular",
+        "baseUrl": "https://dados.gov.pt",
+        "dataset": "66d72fbc58cd7a63dae28712",
+        "distributionId": "1002987e-8985-492f-9215-e732fffdbc83",
+        "format": "json",
+        "productSlug": "base-procurement-notices-2026",
+        "productTitle": "Public-procurement notices published in 2026",
+        "keyField": "nAnuncio",
+        "eventTimeField": "dataPublicacao"
+      },
+      "policy": {
+        "name": "Public-procurement notices published in 2026",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 604800,
+          "timeoutSeconds": 240,
+          "maxBytes": 50331648,
+          "maxOutputBytes": 100663296,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Public domain (other-pd in dados.gov.pt); IMPIC source conditions apply",
+          "attribution": "IMPIC · Instituto dos Mercados Públicos, do Imobiliário e da Construção"
+        }
+      },
+      "staleAfterSeconds": 1814400,
+      "publisher": "IMPIC · Instituto dos Mercados Públicos, do Imobiliário e da Construção",
+      "topics": [
+        "government"
+      ]
+    },
+    {
+      "topic": "statistics",
+      "slug": "base-procurement-entities-feed",
+      "title": "Public-procurement entities",
+      "description": "Entities in IMPIC's public-procurement registry, with source-published cumulative participation totals. Collected monthly as a large reference snapshot, not a live company-register lookup.",
+      "config": {
+        "source": "udata",
+        "feed": "distribution",
+        "transformer": "tabular",
+        "baseUrl": "https://dados.gov.pt",
+        "dataset": "67d80b2c4750b888116940fb",
+        "distributionId": "d85c49f0-b6ab-4cb7-afbe-4e103016b9a0",
+        "format": "json",
+        "productSlug": "base-procurement-entities",
+        "productTitle": "Public-procurement entities",
+        "keyField": "nifEntidade"
+      },
+      "policy": {
+        "name": "Public-procurement entities",
+        "version": 1,
+        "collection": {
+          "cadenceSeconds": 2592000,
+          "timeoutSeconds": 240,
+          "maxBytes": 83886080,
+          "maxOutputBytes": 167772160,
+          "historyMode": "changes"
+        },
+        "serving": {
+          "licence": "Public domain (other-pd in dados.gov.pt); IMPIC source conditions apply",
+          "attribution": "IMPIC · Instituto dos Mercados Públicos, do Imobiliário e da Construção"
+        }
+      },
+      "staleAfterSeconds": 7776000,
+      "publisher": "IMPIC · Instituto dos Mercados Públicos, do Imobiliário e da Construção",
+      "topics": [
+        "government"
+      ]
+    }
+  ]
+}

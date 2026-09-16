@@ -1,0 +1,285 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "tempo",
+        "description": null,
+        "annotations": {
+          "timeserie_precision": "month",
+          "facet": true,
+          "facetsort": "-alphanum",
+          "timerangeFilter": true
+        },
+        "label": "Período",
+        "type": "date",
+        "label_pt": "Período",
+        "label_en": "Período",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "regiao",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "disjunctive": true,
+          "sortable": true,
+          "facetsort": "alphanum"
+        },
+        "label": "Região",
+        "type": "text",
+        "label_pt": "Região",
+        "label_en": "Região",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "instituicao",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "facetsort": "alphanum",
+          "disjunctive": true,
+          "sortable": true
+        },
+        "label": "Instituição",
+        "type": "text",
+        "label_pt": "Instituição",
+        "label_en": "Instituição",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "localizacao_geografica",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Localização Geográfica",
+        "type": "geo_point_2d",
+        "label_pt": "Localização Geográfica",
+        "label_en": "Localização Geográfica",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "no_primeiras_ce_prestadas_dentro_do_tmrg",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Nº Primeiras CE prestadas dentro do TMRG",
+        "type": "int",
+        "label_pt": "Nº Primeiras CE prestadas dentro do TMRG",
+        "label_en": "Nº Primeiras CE prestadas dentro do TMRG",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "no_primeiras_ce_realizadas_com_registo_no_cth",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Nº Primeiras CE realizadas com registo no CTH",
+        "type": "int",
+        "label_pt": "Nº Primeiras CE realizadas com registo no CTH",
+        "label_en": "Nº Primeiras CE realizadas com registo no CTH",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "1as_consultas_realizadas_em_tempo_adequado",
+        "description": null,
+        "annotations": {
+          "unit": "%",
+          "decimals": 1
+        },
+        "label": "% 1ªs Consultas Realizadas em Tempo Adequado",
+        "type": "double",
+        "label_pt": "% 1ªs Consultas Realizadas em Tempo Adequado",
+        "label_en": "% 1ªs Consultas Realizadas em Tempo Adequado",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "dataset_id": "consultas-em-tempo-real",
+    "dataset_uid": "da_c0nr8v",
+    "has_records": true,
+    "features": [
+      "timeserie",
+      "geo",
+      "analyze"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "dcat": {
+        "created": "2016-05-05",
+        "issued": "2017-10-31",
+        "creator": "SPMS",
+        "contributor": "DE-SNS",
+        "contact_name": null,
+        "contact_email": null,
+        "accrualperiodicity": "Mensal",
+        "spatial": "Portugal Continental",
+        "temporal": "De janeiro de 2013 ao mês n-2 anterior ao atual  (valores acumulados)",
+        "granularity": null,
+        "dataquality": null,
+        "publisher_type": null,
+        "conforms_to": null,
+        "temporal_coverage_start": null,
+        "temporal_coverage_end": null,
+        "accessRights": null,
+        "relation": null
+      },
+      "default": {
+        "title": "Primeiras Consultas em Tempo Adequado",
+        "title_pt": "Primeiras Consultas em Tempo Adequado",
+        "title_en": "Primeiras Consultas em Tempo Adequado",
+        "description": "<p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Monitorização da percentagem de primeiras consultas realizadas dentro do tempo adequado.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Este conjunto de dados apresenta a proporção de utentes referenciados (CTH/SIGA) para a primeira consulta externa (CE), que tiveram a consulta realizada dentro do Tempo Máximo de Resposta Garantido (TMRG), em relação ao total de primeiras consultas externas prestadas no período em análise.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Para períodos superiores a 2022, todos os indicadores relativos a pedidos de primeiras consultas de especialidade hospitalar com origem nos Cuidados de Saúde Primários (CSP) referem-se a pedidos de referenciação inscritos no CTH e SIGA.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\"><b>Observações:</b></span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Os dados relativos ao mês n-2, publicados até ao último dia útil do mês n, têm caráter provisório, sujeitos a eventuais atualizações.</span></font></p>",
+        "description_pt": "<p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Monitorização da percentagem de primeiras consultas realizadas dentro do tempo adequado.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Este conjunto de dados apresenta a proporção de utentes referenciados (CTH/SIGA) para a primeira consulta externa (CE), que tiveram a consulta realizada dentro do Tempo Máximo de Resposta Garantido (TMRG), em relação ao total de primeiras consultas externas prestadas no período em análise.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Para períodos superiores a 2022, todos os indicadores relativos a pedidos de primeiras consultas de especialidade hospitalar com origem nos Cuidados de Saúde Primários (CSP) referem-se a pedidos de referenciação inscritos no CTH e SIGA.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\"><b>Observações:</b></span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Os dados relativos ao mês n-2, publicados até ao último dia útil do mês n, têm caráter provisório, sujeitos a eventuais atualizações.</span></font></p>",
+        "description_en": "<p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Monitorização da percentagem de primeiras consultas realizadas dentro do tempo adequado.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Este conjunto de dados apresenta a proporção de utentes referenciados (CTH/SIGA) para a primeira consulta externa (CE), que tiveram a consulta realizada dentro do Tempo Máximo de Resposta Garantido (TMRG), em relação ao total de primeiras consultas externas prestadas no período em análise.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Para períodos superiores a 2022, todos os indicadores relativos a pedidos de primeiras consultas de especialidade hospitalar com origem nos Cuidados de Saúde Primários (CSP) referem-se a pedidos de referenciação inscritos no CTH e SIGA.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\"><b>Observações:</b></span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Os dados relativos ao mês n-2, publicados até ao último dia útil do mês n, têm caráter provisório, sujeitos a eventuais atualizações.</span></font></p>",
+        "theme": [
+          "Acesso"
+        ],
+        "theme_pt": [
+          "Acesso"
+        ],
+        "theme_en": [
+          "Acesso"
+        ],
+        "keyword": [
+          "Consulta Externa",
+          "Consultas"
+        ],
+        "keyword_pt": [
+          "Consulta Externa",
+          "Consultas"
+        ],
+        "keyword_en": [
+          "Consulta Externa",
+          "Consultas"
+        ],
+        "license": null,
+        "license_pt": null,
+        "license_en": null,
+        "license_url": null,
+        "license_url_pt": null,
+        "license_url_en": null,
+        "language": "pt",
+        "metadata_languages": [
+          "pt"
+        ],
+        "timezone": null,
+        "modified": "2026-08-31T16:34:33.828000+00:00",
+        "modified_updates_on_metadata_change": true,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2026-08-31T16:34:33.828000+00:00",
+        "metadata_processed": "2026-08-31T16:34:33.880000+00:00",
+        "geographic_reference": [
+          "world_pt"
+        ],
+        "geographic_reference_auto": true,
+        "territory": [
+          "Portugal"
+        ],
+        "geometry_types": [
+          "Point"
+        ],
+        "bbox": {
+          "type": "Feature",
+          "geometry": {
+            "coordinates": [
+              [
+                [
+                  -6.768198050558567,
+                  41.80565318092704
+                ],
+                [
+                  -9.418267076835036,
+                  41.80565318092704
+                ],
+                [
+                  -9.418267076835036,
+                  37.02389728277922
+                ],
+                [
+                  -6.768198050558567,
+                  37.02389728277922
+                ],
+                [
+                  -6.768198050558567,
+                  41.80565318092704
+                ]
+              ]
+            ],
+            "type": "Polygon"
+          },
+          "properties": {}
+        },
+        "publisher": "DE-SNS",
+        "publisher_pt": "DE-SNS",
+        "publisher_en": "DE-SNS",
+        "references": null,
+        "records_count": 7771,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": null
+      },
+      "custom": {
+        "dataset-id-number": "161",
+        "measure-unit": "Percentagem (%)",
+        "source-data": "SICA (Integração com sistema fonte CTH/SIGA)",
+        "version": null,
+        "formula": "Nº de primeiras CE dentro do TMRG (CTH/SIGA) / Nº de primeiras CE (CTH/SIGA) x 100"
+      }
+    }
+  },
+  "records": [
+    {
+      "tempo": "2026-06",
+      "regiao": "Região de Saúde do Alentejo",
+      "instituicao": "Unidade Local de Saúde do Alentejo Central, EPE",
+      "localizacao_geografica": {
+        "lon": -7.903064,
+        "lat": 38.568838
+      },
+      "no_primeiras_ce_prestadas_dentro_do_tmrg": 4814,
+      "no_primeiras_ce_realizadas_com_registo_no_cth": 9112,
+      "1as_consultas_realizadas_em_tempo_adequado": 52.8
+    },
+    {
+      "tempo": "2026-06",
+      "regiao": "Região de Saúde do Alentejo",
+      "instituicao": "Unidade Local de Saúde do Alto Alentejo, EPE",
+      "localizacao_geografica": {
+        "lon": -7.4267,
+        "lat": 39.2999
+      },
+      "no_primeiras_ce_prestadas_dentro_do_tmrg": 3212,
+      "no_primeiras_ce_realizadas_com_registo_no_cth": 7283,
+      "1as_consultas_realizadas_em_tempo_adequado": 44.1
+    },
+    {
+      "tempo": "2026-06",
+      "regiao": "Região de Saúde do Alentejo",
+      "instituicao": "Unidade Local de Saúde do Baixo Alentejo, EPE",
+      "localizacao_geografica": {
+        "lon": -7.86863,
+        "lat": 38.0146
+      },
+      "no_primeiras_ce_prestadas_dentro_do_tmrg": 1746,
+      "no_primeiras_ce_realizadas_com_registo_no_cth": 4263,
+      "1as_consultas_realizadas_em_tempo_adequado": 41.0
+    }
+  ]
+}

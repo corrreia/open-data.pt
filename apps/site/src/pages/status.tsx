@@ -10,8 +10,7 @@ import { fmt, plural } from "../lib/format";
 import { useQuery } from "../lib/query";
 import type { Feed, Outage, OutageCause, OutagesResponse, Product } from "../lib/types";
 
-const DAYS = 90;
-const INCIDENT_DAYS = 30;
+const DAYS = 3;
 const INCIDENTS_SHOWN = 25;
 const DAY_MS = 86_400_000;
 /** A day's colour follows its longest outage: a short blip, a real outage, most of the day. */
@@ -152,9 +151,8 @@ function Bars({ measured, label, describe, onTip, height = "h-8" }: { measured: 
   };
   return (
     <span role="img" aria-label={`${label}: ${uptimeText(measured.uptime)} over the last ${DAYS} days`} className={`flex ${height} gap-[2px]`} onPointerLeave={() => onTip(null)}>
-      {measured.bars.map((bar, index) => (
-        // Phones show the last thirty days, as public status pages do.
-        <span key={bar.day.start} data-level={bar.level} onPointerEnter={(event) => show(event, bar)} className={`uptime-bar min-w-0 flex-1 rounded-[2px] transition-opacity hover:opacity-60 ${index < DAYS - 30 ? "hidden sm:block" : ""}`} />
+      {measured.bars.map((bar) => (
+        <span key={bar.day.start} data-level={bar.level} onPointerEnter={(event) => show(event, bar)} className="uptime-bar min-w-0 flex-1 rounded-[2px] transition-opacity hover:opacity-60" />
       ))}
     </span>
   );
@@ -329,7 +327,7 @@ function StatusPage() {
 
           <section aria-labelledby="incidents-title">
             <SectionHead eyebrow="History" title="Past incidents" id="incidents-title">
-              The last {INCIDENT_DAYS} days, newest first. <a href="/operations/#activity" className="font-medium text-kumo-link">Every run, as it happens</a>
+              The last {DAYS} days, newest first. <a href="/operations/#activity" className="font-medium text-kumo-link">Every run, as it happens</a>
             </SectionHead>
             <Incidents outages={outages.data?.data ?? []} feeds={feeds.data ?? []} firstProduct={firstProduct} now={now} showAll={showAll} onShowAll={() => setShowAll(true)} />
           </section>
@@ -381,10 +379,7 @@ function StateBanner({ model, now }: { model: Model; now: number }) {
 function Legend() {
   return (
     <div aria-hidden="true" className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 font-mono text-[0.7rem] text-kumo-subtle">
-      <span>
-        <span className="hidden sm:inline">{DAYS} days ago</span>
-        <span className="sm:hidden">30 days ago</span>
-      </span>
+      <span>Last {DAYS} days</span>
       <span className="flex flex-wrap gap-x-4 gap-y-1 font-sans text-xs">
         {LEVELS.map(({ level, label }) => (
           <span key={level} className="inline-flex items-center gap-1.5">
@@ -400,7 +395,7 @@ function Legend() {
 
 function Incidents({ outages, feeds, firstProduct, now, showAll, onShowAll }: { outages: Outage[]; feeds: Feed[]; firstProduct: Map<string, Product>; now: number; showAll: boolean; onShowAll: () => void }) {
   const feedsById = new Map(feeds.map((feed) => [feed.id, feed]));
-  const since = now - INCIDENT_DAYS * DAY_MS;
+  const since = now - DAYS * DAY_MS;
   const recent = outages
     .filter((outage) => spanOf(outage, now)[1] >= since && (outage.feedId === null || feedsById.has(outage.feedId)))
     .sort((a, b) => b.startedAt.localeCompare(a.startedAt));
@@ -408,7 +403,7 @@ function Incidents({ outages, feeds, firstProduct, now, showAll, onShowAll }: { 
     return (
       <LayerCard>
         <LayerCard.Primary className="flex items-center gap-2 text-sm text-kumo-subtle">
-          <CheckCircleIcon className="text-kumo-success" /> No incidents in the last {INCIDENT_DAYS} days.
+          <CheckCircleIcon className="text-kumo-success" /> No incidents in the last {DAYS} days.
         </LayerCard.Primary>
       </LayerCard>
     );

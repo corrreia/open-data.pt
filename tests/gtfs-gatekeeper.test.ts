@@ -160,7 +160,7 @@ describe("GTFS Gatekeeper", () => {
 
     const header = frames[0];
     if (header?.type !== "header") throw new Error("Expected the header frame first");
-    expect(header.normalizer).toEqual({ id: "gtfs-schedule", version: "2" });
+    expect(header.normalizer).toEqual({ id: "gtfs-schedule", version: "3" });
     expect(header.products.map((product) => product.productKey)).toEqual(["stops", "routes", "agencies", "calendar", "calendar-dates", "trips", "shapes"]);
     expect(header.provenance).toEqual({ sourceUrl: metro.source, sourcePublishedAt: "2026-09-07T15:27:33.000Z" });
     expect(header.completeness).toBe("complete");

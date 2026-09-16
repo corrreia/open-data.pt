@@ -1,0 +1,39 @@
+{
+  "success": true,
+  "result": {
+    "id": "1489a3eb-4489-443f-9780-a411f84d9af2",
+    "name": "sensorizacao-relatorios-mensais-com-dados-de-qualidade-do-ar-pressao-sonora-e-meteorologia",
+    "title": "Sensorização: Relatórios mensais com dados de Qualidade do Ar, Pressão Sonora e Meteorologia",
+    "metadata_modified": "2026-09-01T09:22:50.620783",
+    "license_title": "Creative Commons Attribution",
+    "resources": [
+      {
+        "id": "83cb386f-af0f-4723-8839-bbc7cf2147c4",
+        "name": "Estação QART: Médias 1h - Novembro 2023.csv",
+        "url": "https://oeirasinterativa.oeiras.pt/dadosabertos/dataset/1489a3eb-4489-443f-9780-a411f84d9af2/resource/83cb386f-af0f-4723-8839-bbc7cf2147c4/download/qart_dados_medias_1h_11_23.csv",
+        "format": "CSV",
+        "created": "2024-07-23T10:37:35.946549",
+        "last_modified": "2024-07-23T10:37:35.887281",
+        "datastore_active": null
+      },
+      {
+        "id": "495a0afb-16a9-4447-a22d-de3b88ba5125",
+        "name": "Estação QART: Médias 1h - julho 2026.csv",
+        "url": "https://oeirasinterativa.oeiras.pt/dadosabertos/dataset/1489a3eb-4489-443f-9780-a411f84d9af2/resource/495a0afb-16a9-4447-a22d-de3b88ba5125/download/qart_dados_medias_1h_07_26.csv",
+        "format": "CSV",
+        "created": "2026-08-25T15:14:10.335431",
+        "last_modified": "2026-08-25T15:14:10.150387",
+        "datastore_active": null
+      },
+      {
+        "id": "586742df-e8f2-464a-8202-1c7900597c6f",
+        "name": "Estação QART: Médias 1h - agosto 2026.csv",
+        "url": "https://oeirasinterativa.oeiras.pt/dadosabertos/dataset/1489a3eb-4489-443f-9780-a411f84d9af2/resource/586742df-e8f2-464a-8202-1c7900597c6f/download/qart_dados_medias_1h_08_26.csv",
+        "format": "CSV",
+        "created": "2026-09-01T09:22:37.968854",
+        "last_modified": "2026-09-01T09:22:37.737144",
+        "datastore_active": null
+      }
+    ]
+  }
+}

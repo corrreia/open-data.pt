@@ -15,6 +15,7 @@ import {
   type ProductDeclaration,
   type ProductFinalization,
   type SeriesPoint,
+  type SourceConfig,
   type StreamingSummary,
   type StreamingTransform,
   type TransformContext,
@@ -90,7 +91,7 @@ const DATE_PART_VALUE = /^(\d{1,4}|\d{1,2}:\d{2}(:\d{2})?|\d{4}-\d{2}(-\d{2})?)$
 
 export class OpendatasoftTransformer {
   readonly id = "opendatasoft-explore-v2.1";
-  readonly version = "5";
+  readonly version = "6";
 
   /**
    * Stream `{"dataset": <metadata>, "records": [...]}`. The metadata must come
@@ -121,7 +122,9 @@ export class OpendatasoftTransformer {
         parseCaptured(document.envelope(), exhausted),
         sample.filter(isJsonObject),
         productSlug(context.feed.slug),
-        seriesNames(context.feed.config.series),
+        context.feed.config,
+        context.feed.description,
+        context.feed.title,
       );
     } catch (error) {
       await elements.return?.(undefined);
@@ -154,7 +157,7 @@ class DatasetNormalization {
   private readonly series: SeriesMeasure[];
   /** A dataset is published once: as its table, or as the series an example names, never both. */
   private readonly tablePublished: boolean;
-  private readonly seenPoints = new Set<string>();
+  private readonly seenPoints = new Map<string, number>();
   private total = 0;
   private accepted = 0;
   private rejected = 0;
@@ -165,24 +168,41 @@ class DatasetNormalization {
     captured: CapturedDataset,
     sample: JsonObject[],
     private readonly feedSlug: string,
-    seriesFields: string[],
+    private readonly config: SourceConfig,
+    scope: string,
+    scopedTitle: string,
   ) {
-    this.title = text(captured.metas.title) ?? text(captured.dataset.dataset_id) ?? "Opendatasoft dataset";
-    this.description = stripHtml(text(captured.metas.description) ?? "Opendatasoft dataset.");
+    const seriesFields = seriesNames(config.series);
+    this.title = (config.timeField || config.groupBy) && scopedTitle ? scopedTitle : text(captured.metas.title) ?? text(captured.dataset.dataset_id) ?? "Opendatasoft dataset";
+    this.description = stripHtml(text(captured.metas.description) ?? "Opendatasoft dataset.") + (config.timeField || config.groupBy ? ` Scope: ${scope}` : "");
     this.mapped = buildFieldMapping(captured.fields, sample);
     applyBadgeDisplay(this.mapped.flatMap((field) => field.canonical));
     this.mappedNames = new Set(this.mapped.map((field) => field.source.name));
     this.metadataFields = new Map(captured.fields.map((field) => [field.name, field]));
-    this.idFields = captured.fields.filter(
+    this.idFields = config.idFields ? configuredFields(config.idFields, captured.fields, "idFields") : captured.fields.filter(
       (field) => field.annotations.id === true || field.name === "_id" || field.name === "id",
     );
-    this.timeField = captured.fields.find(
+    this.timeField = config.timeField ? configuredFields(config.timeField, captured.fields, "timeField")[0] : captured.fields.find(
       (field) =>
         temporalType(field, sample) !== undefined &&
         (isJsonString(field.annotations.timeserie_precision) || isLikelySeriesTimeField(field.name)),
     );
-    this.timeType = this.timeField ? temporalType(this.timeField, sample) ?? this.timeField.type : "";
-    this.dimensions = this.timeField ? seriesDimensions(captured.fields, this.timeField, sample) : [];
+    this.timeType = this.timeField ? temporalType(this.timeField, sample) ?? (config.timeField ? "date" : this.timeField.type) : "";
+    this.dimensions = config.dimensions !== undefined
+      ? configuredFields(config.dimensions, captured.fields, "dimensions")
+      : this.timeField ? seriesDimensions(captured.fields, this.timeField, sample) : [];
+    if (config.dimensions !== undefined && this.dimensions.some((field) => field === this.timeField || seriesFields.includes(field.name))) throw new GatekeeperError("Series dimensions must not include its time or measures", "invalid-config");
+    for (const name of [config.monthField, config.quarterField]) if (name) configuredFields(name, captured.fields, "date part");
+    const units = new Map((config.units ?? "").split(",").filter(Boolean).map((pair) => {
+      const split = pair.indexOf("=");
+      return [pair.slice(0, split), pair.slice(split + 1)];
+    }));
+    for (const mapped of this.mapped) {
+      const unit = units.get(mapped.source.name);
+      if (!unit) continue;
+      mapped.source.annotations = { ...mapped.source.annotations, unit };
+      for (const field of mapped.canonical) field.unit = unit;
+    }
     // Series exist only for the fields an example names. Guessing measures from
     // numeric-looking columns published days of the month and phone numbers
     // as series, and publishing table and series together restated every value.
@@ -192,7 +212,7 @@ class DatasetNormalization {
       if (!measure || (measure.type !== "int" && measure.type !== "double")) {
         throw new GatekeeperError(`series field ${name} is not a numeric field of this dataset`, "invalid-config");
       }
-      return { measure, productKey: `series:${measure.name}`, unit: fieldUnit(measure) ?? "value" };
+      return { measure, productKey: `series:${measure.name}`, unit: units.get(measure.name) ?? fieldUnit(measure) ?? "value" };
     });
     if (this.series.length > 0 && !this.timeField) {
       throw new GatekeeperError("series needs a date or time field in this dataset", "invalid-config");
@@ -210,7 +230,7 @@ class DatasetNormalization {
       role: "current-state",
       kind: "record",
       schema: { fields: structuredClone(this.mapped.flatMap((field) => field.canonical)) },
-      updateMode: "authoritative-snapshot",
+      updateMode: this.config.windowPeriods ? "source-window" : "authoritative-snapshot",
       completeness: "complete",
     };
     const declarations = this.series.map(({ measure, productKey, unit }): ProductDeclaration => ({
@@ -269,12 +289,17 @@ class DatasetNormalization {
       observe(mapped, value[mapped.source.name]);
       mapValue(value[mapped.source.name], mapped, payload);
     }
-    const eventTime = this.timeField ? normalizeEventTime(value[this.timeField.name], this.timeType) : undefined;
+    const eventTime = this.timeField ? sourceEventTime(value, this.timeField.name, this.timeType, this.config) : undefined;
+    // Explicit clocks and keys are a contract: incomplete identities must never silently collapse together.
+    if ((this.config.timeField && !eventTime) || (this.config.idFields && this.idFields.some((field) => !nonEmptyPrimitive(value[field.name])))) {
+      this.rejected += 1;
+      return;
+    }
     const keyParts = this.idFields
       .map((field) => value[field.name])
       .filter((part) => part !== null && part !== undefined && String(part) !== "")
       .map(String);
-    const entityKey = keyParts.length > 0 ? keyParts.join("|") : `row-${hashString(stableStringify(value))}`;
+    const entityKey = keyParts.length > 0 ? this.config.idFields ? JSON.stringify(keyParts) : keyParts.join("|") : `row-${hashString(stableStringify(value))}`;
     const record: CanonicalRecord = { entityKey, payload };
     if (eventTime) {
       record.eventTime = eventTime;
@@ -289,7 +314,7 @@ class DatasetNormalization {
       const dimension = value[field.name];
       if (nonEmptyPrimitive(dimension)) dimensions[field.name] = String(dimension);
     }
-    const seriesKey = Object.entries(dimensions).map(([key, item]) => `${key}=${item}`).join("|") || "all";
+    const seriesKey = Object.entries(dimensions).map(([key, item]) => `${key}=${this.config.dimensions !== undefined ? encodeURIComponent(item) : item}`).join("|") || "all";
     for (const series of this.series) {
       const measured = value[series.measure.name];
       if (!isJsonNumber(measured) || !Number.isFinite(measured)) continue;
@@ -298,10 +323,13 @@ class DatasetNormalization {
       // keep the first row in source order, deterministically, and count the rest.
       const key = `${series.productKey}|${seriesKey}|${eventTime}`;
       if (this.seenPoints.has(key)) {
+        if (this.config.dimensions !== undefined && this.seenPoints.get(key) !== measured) {
+          throw new GatekeeperError(`Conflicting values for configured series dimensions at ${eventTime}; source revision order is unknown`, "invalid-response");
+        }
         this.collapsed += 1;
         continue;
       }
-      this.seenPoints.add(key);
+      this.seenPoints.set(key, measured);
       if (series.watermark === undefined || eventTime > series.watermark) series.watermark = eventTime;
       yield { productKey: series.productKey, point: { seriesKey, eventTime, value: measured, unit: series.unit, dimensions } };
     }
@@ -316,6 +344,30 @@ class DatasetNormalization {
       this.mappedNames.add(name);
     }
   }
+}
+
+function configuredFields(value: string, fields: OdsField[], option: string): OdsField[] {
+  return seriesNames(value).map((name) => {
+    const field = fields.find((candidate) => candidate.name === name);
+    if (!field) throw new GatekeeperError(`${option} field ${name} is absent from dataset metadata`, "invalid-config");
+    return field;
+  });
+}
+
+/** Source reporting dates, including inventories with separate calendar parts. */
+function sourceEventTime(row: JsonObject, name: string, type: string, config: SourceConfig): string | undefined {
+  const value = row[name];
+  if (!config.monthField && !config.quarterField) return normalizeEventTime(isJsonNumber(value) ? String(value) : value, type);
+  const year = isJsonString(value) ? value.slice(0, 4) : String(value);
+  let month = config.monthField ? Number(row[config.monthField]) : Number.NaN;
+  if (config.quarterField) {
+    const raw = String(row[config.quarterField]).toLowerCase();
+    const quarters = ["primeiro", "segundo", "terceiro", "quarto"];
+    const quarter = quarters.includes(raw) ? quarters.indexOf(raw) + 1 : Number(raw.replace(/^[tq]/, ""));
+    month = (quarter - 1) * 3 + 1;
+  }
+  if (!/^\d{4}$/.test(year) || !Number.isInteger(month) || month < 1 || month > 12) return undefined;
+  return normalizeEventTime(`${year}-${String(month).padStart(2, "0")}-01`, "date");
 }
 
 function parseCaptured(envelope: JsonObject, exhausted: boolean): CapturedDataset {

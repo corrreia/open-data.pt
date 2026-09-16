@@ -1,0 +1,223 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "data",
+        "description": null,
+        "annotations": {
+          "timeserie_precision": "month"
+        },
+        "label": "Date",
+        "type": "date",
+        "label_en": "Date",
+        "label_pt": "Data",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "ano",
+        "description": null,
+        "annotations": {},
+        "label": "Year",
+        "type": "text",
+        "label_en": "Year",
+        "label_pt": "Ano",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "mes",
+        "description": null,
+        "annotations": {},
+        "label": "Month",
+        "type": "text",
+        "label_en": "Month",
+        "label_pt": "Mês",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "dis_name",
+        "description": null,
+        "annotations": {},
+        "label": "District",
+        "type": "text",
+        "label_en": "District",
+        "label_pt": "Distrito",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "con_name",
+        "description": null,
+        "annotations": {},
+        "label": "Municipality",
+        "type": "text",
+        "label_en": "Municipality",
+        "label_pt": "Concelho",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "fre_name",
+        "description": null,
+        "annotations": {},
+        "label": "Parish",
+        "type": "text",
+        "label_en": "Parish",
+        "label_pt": "Freguesia",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "segmento_de_potencia_contratada",
+        "description": null,
+        "annotations": {},
+        "label": "Contracted Power Segment (kVA)",
+        "type": "text",
+        "label_en": "Contracted Power Segment (kVA)",
+        "label_pt": "Segmento de Potência Contratada (kVA)",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "numero_de_contratos",
+        "description": null,
+        "annotations": {},
+        "label": "Number of Contracts",
+        "type": "double",
+        "label_en": "Number of Contracts",
+        "label_pt": "Número de Contratos",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "dis_code",
+        "description": null,
+        "annotations": {},
+        "label": "District Code",
+        "type": "text",
+        "label_en": "District Code",
+        "label_pt": "Código Distrito",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "con_code",
+        "description": null,
+        "annotations": {},
+        "label": "Municipality Code",
+        "type": "text",
+        "label_en": "Municipality Code",
+        "label_pt": "Código Concelho",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "fre_code",
+        "description": null,
+        "annotations": {},
+        "label": "Parish Code",
+        "type": "text",
+        "label_en": "Parish Code",
+        "label_pt": "Código Freguesia",
+        "description_en": null,
+        "description_pt": null
+      }
+    ],
+    "dataset_id": "clientes-por-escalao-de-potencia",
+    "dataset_uid": "da_ynj4mi",
+    "has_records": true,
+    "features": [
+      "analyze",
+      "timeserie",
+      "custom_view"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "default": {
+        "title": "Customers by Power Capacity Bands",
+        "title_en": "Customers by Power Capacity Bands",
+        "title_pt": "Clientes por Escalões de Potência",
+        "description": "<p>This dataset presents the number of customers grouped by contracted/maximum power consumption segment in the distribution network operated by E-REDES, organized by state, municipality, and parish.</p><p>The data allows for the characterization of customer distribution by contracted/maximum power consumption range in each territory, enabling the identification of potential consumption patterns and electricity grid usage profiles at the local level.</p><p>It allows for monitoring the monthly evolution of the number of customers per power segment, supporting studies on the socioeconomic profile of territories, especially the identification of areas with a higher prevalence of low-power contracts, frequently associated with situations of energy poverty.</p><p><br></p><p><b>Use cases:</b></p><ul><li>Energy poverty.</li><li>Analysis of customer distribution by contracted/maximum power consumption range, by state, municipality, and parish.</li><li>Identification of territories with a higher concentration of low-power contracts.</li><li>Monitoring the monthly evolution of the number of customers per power segment.</li><li>Support for socioeconomic studies and public policies related to access to energy.</li></ul><p><br></p><p><b>Update frequency: </b>monthly</p><p><br></p><p><b>Variables included:</b></p><ul><li><b>Year/Month</b> — Information reference period, in year and month format.</li><li><b style=\"font-family: inherit;\">District</b><span style=\"font-family: inherit;\"> — Name of the district where customers are located.</span></li><li><b style=\"font-family: inherit;\">District Code</b><span style=\"font-family: inherit;\"> — District identifier code.</span></li><li><b style=\"font-family: inherit;\">Municipality </b><span style=\"font-family: inherit;\">— Name of the municipality where customers are located.</span></li><li><b style=\"font-family: inherit;\">Municipality Code</b><span style=\"font-family: inherit;\"> — Municipality identifier code.</span></li><li><b style=\"font-family: inherit;\">Parish</b><span style=\"font-family: inherit;\"> — Name of the parish where customers are located.</span></li><li><b style=\"font-family: inherit;\">Parish Code</b><span style=\"font-family: inherit;\"> — Parish identifier code.</span></li><li><b>Contracted/maximum power segment</b> — Range in which the customers' power falls. For customers with contracted power in normal low voltage (BTN) we have ranges from 1.15 kVA to 41.4 kVA. For customers not in normal low voltage (MAT/AT/MT/BTE) where the contracted power is the maximum value of the power taken in the last 12 months in a 15-minute period we have the steps of [0;10[ … &gt;50000 kVA. For Public Lighting (PL) where the contracted power is the maximum monthly power consumption over a 15-minute period, we have the ranges of [0;10[ … &gt;50000 kVA.</li><li><b>Number of Contracts</b> — Quantity of active customers/contracts associated with the power segment and the territory under analysis.</li></ul><p><br></p><p>1. The information provided by E-REDES is an approximation of the values ​​retrieved from the system and refers to the moment it is collected. Given that the connection points, the electricity distribution network, and the consumption and production values ​​themselves are naturally very dynamic, it is understood that the information provided may be subject to subsequent changes and updates, and any omissions and/or occasional location inaccuracies that the information may contain are also reserved.</p><p><br></p><p>2. Therefore, E-REDES is not liable to third parties, namely partners, service providers, contractors, users and clients, for any damages that may arise as a direct or indirect consequence of the use of this Information, particularly when carrying out interventions, calculations and/or estimates, without confirmation of the accuracy and updating of the data. It is duly noted that consulting this information does not prejudice the obligation to directly contact E-REDES to obtain updated information.</p><p><br></p><p>The data provided by the E-REDES Open Data Portal is covered by open licenses (CC BY 4.0). There are no restrictions on access, provided that users of the data cite the publisher. Therefore, we suggest that you cite the E-REDES Open Data Portal as:</p><p><br></p><p>E-REDES – Electricity Distribution, “E-REDES Open Data Portal”. Accessed on “Date”. [Online] Available at https://e-redes.opendatasoft.com/pages/homepage/</p><p><br></p><p>If you share on social media, please add #PortalOpenData_E_REDES</p>",
+        "description_en": "<p>This dataset presents the number of customers grouped by contracted/maximum power consumption segment in the distribution network operated by E-REDES, organized by state, municipality, and parish.</p><p>The data allows for the characterization of customer distribution by contracted/maximum power consumption range in each territory, enabling the identification of potential consumption patterns and electricity grid usage profiles at the local level.</p><p>It allows for monitoring the monthly evolution of the number of customers per power segment, supporting studies on the socioeconomic profile of territories, especially the identification of areas with a higher prevalence of low-power contracts, frequently associated with situations of energy poverty.</p><p><br></p><p><b>Use cases:</b></p><ul><li>Energy poverty.</li><li>Analysis of customer distribution by contracted/maximum power consumption range, by state, municipality, and parish.</li><li>Identification of territories with a higher concentration of low-power contracts.</li><li>Monitoring the monthly evolution of the number of customers per power segment.</li><li>Support for socioeconomic studies and public policies related to access to energy.</li></ul><p><br></p><p><b>Update frequency: </b>monthly</p><p><br></p><p><b>Variables included:</b></p><ul><li><b>Year/Month</b> — Information reference period, in year and month format.</li><li><b style=\"font-family: inherit;\">District</b><span style=\"font-family: inherit;\"> — Name of the district where customers are located.</span></li><li><b style=\"font-family: inherit;\">District Code</b><span style=\"font-family: inherit;\"> — District identifier code.</span></li><li><b style=\"font-family: inherit;\">Municipality </b><span style=\"font-family: inherit;\">— Name of the municipality where customers are located.</span></li><li><b style=\"font-family: inherit;\">Municipality Code</b><span style=\"font-family: inherit;\"> — Municipality identifier code.</span></li><li><b style=\"font-family: inherit;\">Parish</b><span style=\"font-family: inherit;\"> — Name of the parish where customers are located.</span></li><li><b style=\"font-family: inherit;\">Parish Code</b><span style=\"font-family: inherit;\"> — Parish identifier code.</span></li><li><b>Contracted/maximum power segment</b> — Range in which the customers' power falls. For customers with contracted power in normal low voltage (BTN) we have ranges from 1.15 kVA to 41.4 kVA. For customers not in normal low voltage (MAT/AT/MT/BTE) where the contracted power is the maximum value of the power taken in the last 12 months in a 15-minute period we have the steps of [0;10[ … &gt;50000 kVA. For Public Lighting (PL) where the contracted power is the maximum monthly power consumption over a 15-minute period, we have the ranges of [0;10[ … &gt;50000 kVA.</li><li><b>Number of Contracts</b> — Quantity of active customers/contracts associated with the power segment and the territory under analysis.</li></ul><p><br></p><p>1. The information provided by E-REDES is an approximation of the values ​​retrieved from the system and refers to the moment it is collected. Given that the connection points, the electricity distribution network, and the consumption and production values ​​themselves are naturally very dynamic, it is understood that the information provided may be subject to subsequent changes and updates, and any omissions and/or occasional location inaccuracies that the information may contain are also reserved.</p><p><br></p><p>2. Therefore, E-REDES is not liable to third parties, namely partners, service providers, contractors, users and clients, for any damages that may arise as a direct or indirect consequence of the use of this Information, particularly when carrying out interventions, calculations and/or estimates, without confirmation of the accuracy and updating of the data. It is duly noted that consulting this information does not prejudice the obligation to directly contact E-REDES to obtain updated information.</p><p><br></p><p>The data provided by the E-REDES Open Data Portal is covered by open licenses (CC BY 4.0). There are no restrictions on access, provided that users of the data cite the publisher. Therefore, we suggest that you cite the E-REDES Open Data Portal as:</p><p><br></p><p>E-REDES – Electricity Distribution, “E-REDES Open Data Portal”. Accessed on “Date”. [Online] Available at https://e-redes.opendatasoft.com/pages/homepage/</p><p><br></p><p>If you share on social media, please add #PortalOpenData_E_REDES</p>",
+        "description_pt": "<p>Este dataset apresenta o número de clientes agrupados por segmento de potência contratada/máxima tomada, na rede de distribuição operada pela E-REDES, organizados por distrito, concelho e freguesia.</p><p>Os dados permitem caracterizar a distribuição dos clientes por escalão de potência contratada/máxima tomada em cada território, possibilitando identificar padrões de consumo potencial e perfis de utilização da rede elétrica a nível local.</p><p>Permite acompanhar a evolução mensal do número de clientes por segmento de potência, apoiando estudos sobre o perfil socioeconómico dos territórios, nomeadamente a identificação de zonas com maior prevalência de contratos de baixa potência, frequentemente associados a situações de pobreza energética.</p><p> </p><p><b>Casos de uso:</b></p><ul><li>Pobreza energética.</li><li>Análise da distribuição de clientes por escalão de potência contratada/máxima tomada, por distrito, concelho e freguesia.</li><li>Identificação de territórios com maior concentração de contratos de baixa potência.</li><li>Acompanhamento da evolução mensal do número de clientes por segmento de potência.</li><li>Apoio a estudos socioeconómicos e de políticas públicas relacionadas com o acesso à energia.</li></ul><p> </p><p><b>Periodicidade de atualização:</b> mensal</p><p> </p><p><b>Variáveis incluídas:</b></p><ul><li><b>Ano/Mês</b> — Período de referência da informação, no formato ano e mês.</li><li><b>Distrito</b> — Nome do distrito onde se localizam os clientes.</li><li><b>Código Distrito</b> — Código identificativo do distrito.</li><li><b>Concelho</b> — Nome do concelho onde se localizam os clientes.</li><li><b>Código Concelho</b> — Código identificativo do concelho.</li><li><b>Freguesia</b> — Nome da freguesia onde se localizam os clientes.</li><li><b>Código Freguesia</b> — Código identificativo da freguesia.</li><li><b>Segmento de Potência Contratada/máxima tomada</b> — Escalão em que se enquadra a potência dos clientes. Para Clientes de potência contratada em baixa tensão normal (BTN) temos os escalões de 1,15 kVA até 41,4kVA. Para clientes não baixa tensão normal (MAT/AT/MT/BTE) onde a potência contratada é o valor máximo da potência tomada dos últimos 12 meses num período de 15 minutos temos os escalões de [0;10[ … &gt;50000 kVA. Para Iluminação pública (IP) onde a potência contratada é o valor máximo da potência tomada mensal num período de 15 minutos temos os escalões de [0;10[ … &gt;50000 kVA.</li><li><b>Número de Contratos</b> — Quantidade de clientes/contratos ativos associados ao segmento de potência e ao território em análise.</li></ul><p><br></p><p>1. A Informação disponibilizada pela E-REDES constitui uma aproximação aos valores retirados de sistema e tem por referência o momento em que a mesma é recolhida. Atendendo a que os pontos de ligação, a rede de distribuição de eletricidade, e os próprios valores de consumo e de produção são naturalmente muito dinâmicos, salvaguarda-se que a informação disponibilizada poderá ser objeto de subsequentes alterações e atualizações, ficando igualmente ressalvadas eventuais omissões e/ou pontuais imprecisões de localização que a informação poderá conter.</p><p><br></p><p>2. Desta forma a E-REDES não se responsabiliza perante terceiros, nomeadamente, parceiros, prestadores de serviços, empreiteiros, utentes e clientes, pelos danos que possam surgir em consequência, direta ou indireta, do uso da presente Informação, em particular aquando da realização de intervenções, cálculos e/ou estimativas, sem confirmação da exatidão e atualização dos dados, pelo que devidamente se ressalva de que a consulta da presente informação não prejudica o dever de se promover uma consulta direta à E-REDES para obter informação atualizada.</p><p> </p><p>Os dados fornecidos pelo Portal Open Data da E-REDES são abrangidos por licenças abertas (CC BY 4.0). Não existem restrições ao seu acesso, sob o compromisso de os utilizadores dos dados citarem o publicador. Assim, sugerimos que cite o Portal Open Data E-REDES como:</p><p> </p><p>E-REDES – Distribuição de eletricidade, “Portal Open Data E-REDES”. Acedido em “Data”. [Online] Disponível em https://e-redes.opendatasoft.com/pages/homepage/</p><p> </p><p>Se partilhar nas redes sociais, por favor acrescente #PortalOpenData_E_REDES</p>",
+        "theme": [
+          "Consumption and Energy"
+        ],
+        "theme_en": [
+          "Consumption and Energy"
+        ],
+        "theme_pt": [
+          "Consumos e Energia"
+        ],
+        "keyword": null,
+        "keyword_en": null,
+        "keyword_pt": null,
+        "license": "CC BY 4.0",
+        "license_en": "CC BY 4.0",
+        "license_pt": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_url_en": "https://creativecommons.org/licenses/by/4.0/",
+        "license_url_pt": "https://creativecommons.org/licenses/by/4.0/",
+        "language": "pt",
+        "metadata_languages": [
+          "pt",
+          "en"
+        ],
+        "timezone": "Europe/Lisbon",
+        "modified": "2026-08-18T19:53:23+00:00",
+        "modified_updates_on_metadata_change": false,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2026-08-18T19:53:23+00:00",
+        "metadata_processed": "2026-09-03T12:39:19.353000+00:00",
+        "geographic_reference": null,
+        "geographic_reference_auto": false,
+        "territory": null,
+        "geometry_types": null,
+        "bbox": null,
+        "publisher": "E-REDES",
+        "publisher_en": "E-REDES",
+        "publisher_pt": "E-REDES",
+        "references": null,
+        "records_count": 2185853,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": "MONTHLY"
+      },
+      "custom": {
+        "perfis-de-utilizacao": null,
+        "atualizado": null
+      }
+    }
+  },
+  "records": [
+    {
+      "data": "2026-07-01T00:00:00+00:00",
+      "dis_code": "01",
+      "segmento_de_potencia_contratada": "]0 10]",
+      "numero_de_contratos": 4144.0
+    },
+    {
+      "data": "2026-07-01T00:00:00+00:00",
+      "dis_code": "01",
+      "segmento_de_potencia_contratada": "]10 20]",
+      "numero_de_contratos": 105.0
+    },
+    {
+      "data": "2026-07-01T00:00:00+00:00",
+      "dis_code": "01",
+      "segmento_de_potencia_contratada": "]20 30]",
+      "numero_de_contratos": 109.0
+    }
+  ]
+}

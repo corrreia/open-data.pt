@@ -125,10 +125,13 @@ export class GtfsCsvReader {
     if (!values.some((value) => value !== "")) return undefined;
     const header = this.header;
     if (!header) {
-      if (values.some((name) => name === "") || new Set(values).size !== values.length) {
+      // Some operator exports (TUB's shapes.txt) pad header names after commas.
+      // GTFS field names contain no spaces; data cells remain untouched.
+      const names = values.map((name) => name.trim());
+      if (names.some((name) => name === "") || new Set(names).size !== names.length) {
         throw invalidCsv("CSV header names must be non-empty and unique");
       }
-      this.header = values;
+      this.header = names;
       return undefined;
     }
     return Object.fromEntries(header.map((name, index) => [name, values[index] ?? ""]));

@@ -1,0 +1,267 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "ano",
+        "description": null,
+        "annotations": {},
+        "label": "Year",
+        "type": "text",
+        "label_en": "Year",
+        "label_pt": "Ano",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "mes",
+        "description": null,
+        "annotations": {},
+        "label": "Month",
+        "type": "text",
+        "label_en": "Month",
+        "label_pt": "Mês",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "data",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count",
+          "facet": true,
+          "timeserie_precision": "month",
+          "timerangeFilter": true
+        },
+        "label": "Date",
+        "type": "date",
+        "label_en": "Date",
+        "label_pt": "Data",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "distrito",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "disjunctive": true
+        },
+        "label": "District",
+        "type": "text",
+        "label_en": "District",
+        "label_pt": "Distrito",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "concelho",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "disjunctive": true
+        },
+        "label": "Municipality",
+        "type": "text",
+        "label_en": "Municipality",
+        "label_pt": "Concelho",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "freguesia",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "parish",
+        "type": "text",
+        "label_en": "parish",
+        "label_pt": "Freguesia",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "nivel_de_tensao",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "Voltage level",
+        "type": "text",
+        "label_en": "Voltage level",
+        "label_pt": "Nível de Tensão",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "energia_ativa_kwh",
+        "description": null,
+        "annotations": {
+          "unit": "kWh"
+        },
+        "label": "Energia Ativa",
+        "type": "double",
+        "label_en": "Energia Ativa",
+        "label_pt": "Energia Ativa",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "coddistrito",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "coddistrito",
+        "type": "text",
+        "label_en": "coddistrito",
+        "label_pt": "coddistrito",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "coddistritoconcelho",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "coddistritoconcelho",
+        "type": "text",
+        "label_en": "coddistritoconcelho",
+        "label_pt": "coddistritoconcelho",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "coddistritoconcelhofreguesia",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "DistrictMunicipalityParishCode",
+        "type": "text",
+        "label_en": "DistrictMunicipalityParishCode",
+        "label_pt": "coddistritoconcelhofreguesia",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "mes_int",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "mes_int",
+        "type": "int",
+        "label_en": "mes_int",
+        "label_pt": "mes_int",
+        "description_en": null,
+        "description_pt": null
+      }
+    ],
+    "dataset_id": "3-consumos-faturados-por-municipio-ultimos-10-anos",
+    "dataset_uid": "da_fkfr67",
+    "has_records": true,
+    "features": [
+      "analyze",
+      "timeserie"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "default": {
+        "title": "Monthly consumption by municipality",
+        "title_en": "Monthly consumption by municipality",
+        "title_pt": "Consumos mensais por concelho",
+        "description": "<p>Monthly consumption by district, municipality, parish and voltage level; history since Nov-2020.</p><p>Consumptions (active energy) that were billed since Nov-2020. The year/month refers to the period of consumption (not the time of billing).<br></p><p>For General Data Protection Regulation (GDPR) reasons, some consumptions may appear aggregated in a category identified as \"OUTROS *District Name*\", which includes all consumption in the District that, for the reasons mentioned, cannot be made available in the respective Parish/Municipality.</p><p><br></p><p>1. The information made available by E-REDES constitutes an approximation to the values taken from the system and is based on the moment in which it is collected. Given that the connection points, the electricity distribution network, and the consumption and production values themselves are naturally very dynamic, it is safeguarded that the information made available may be subject to subsequent changes and updates, with the exception of any omissions and/or occasional inaccuracies of location that the information may contain.<br></p><p>2. In this way, E-REDES is not liable to third parties, namely, partners, service providers, contractors, users and customers, for damages that may arise as a result, direct or indirect, of the use of this Information, in particular when carrying out interventions, calculations and/or estimates, without confirming the accuracy and updating of the data, whereby it is duly noted that the consultation of this information does not affect the duty to promote a direct consultation with E-REDES in order to obtain updated information.</p><p><br></p><p><span style=\"font-size: inherit;\">The data provided by the E-REDES Open Data Portal is covered by open licenses (CC BY 4.0). There are no restrictions on access, under the commitment that data users cite the publisher. Therefore, we suggest that you cite the Open Data E-REDES Portal as:</span></p><p><span style=\"font-size: inherit;\">E-REDES – Distribuição de Eletricidade, “E-REDES Open Data Portal”. Accessed in “Data”. [Online] Available at </span><a aria-label=\"Link https://e-redes.opendatasoft.com/pages/homepage/\" class=\"fui-Link ___1rxvrpe f2hkw1w f3rmtva f1ewtqcl fyind8e f1k6fduh f1w7gpdv fk6fouc fjoy568 figsok6 f1hu3pq6 f11qmguv f19f4twv f1tyq0we f1g0x7ka fhxju0i f1qch9an f1cnd47f fqv5qza f1vmzxwi f1o700av f13mvf36 f1cmlufx f9n3di6 f1ids18y f1tx3yz7 f1deo86v f1eh06m1 f1iescvh fhgqx19 f1olyrje f1p93eir f1nev41a f1h8hb77 f1lqvz6u f10aw75t fsle3fq f17ae5zn\" href=\"https://e-redes.opendatasoft.com/pages/homepage/\" rel=\"noreferrer noopener\" target=\"_blank\" title=\"https://e-redes.opendatasoft.com/pages/homepage/\"><span style=\"font-size: inherit;\">https://e-redes.opendatasoft.com/pages/homepage/</span></a></p><p class=\"MsoNormal\" style=\"margin-bottom: 0cm; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span lang=\"EN-US\" style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\"><o:p><span class=\"ui-provider a b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak\" dir=\"ltr\"></span></o:p></span></p><p class=\"\"><span style=\"font-size: inherit;\">If you share on social media, please add #PortalOpenData_E_REDES</span></p><p><span style=\"font-size: inherit;\"><br></span></p>",
+        "description_en": "<p>Monthly consumption by district, municipality, parish and voltage level; history since Nov-2020.</p><p>Consumptions (active energy) that were billed since Nov-2020. The year/month refers to the period of consumption (not the time of billing).<br></p><p>For General Data Protection Regulation (GDPR) reasons, some consumptions may appear aggregated in a category identified as \"OUTROS *District Name*\", which includes all consumption in the District that, for the reasons mentioned, cannot be made available in the respective Parish/Municipality.</p><p><br></p><p>1. The information made available by E-REDES constitutes an approximation to the values taken from the system and is based on the moment in which it is collected. Given that the connection points, the electricity distribution network, and the consumption and production values themselves are naturally very dynamic, it is safeguarded that the information made available may be subject to subsequent changes and updates, with the exception of any omissions and/or occasional inaccuracies of location that the information may contain.<br></p><p>2. In this way, E-REDES is not liable to third parties, namely, partners, service providers, contractors, users and customers, for damages that may arise as a result, direct or indirect, of the use of this Information, in particular when carrying out interventions, calculations and/or estimates, without confirming the accuracy and updating of the data, whereby it is duly noted that the consultation of this information does not affect the duty to promote a direct consultation with E-REDES in order to obtain updated information.</p><p><br></p><p><span style=\"font-size: inherit;\">The data provided by the E-REDES Open Data Portal is covered by open licenses (CC BY 4.0). There are no restrictions on access, under the commitment that data users cite the publisher. Therefore, we suggest that you cite the Open Data E-REDES Portal as:</span></p><p><span style=\"font-size: inherit;\">E-REDES – Distribuição de Eletricidade, “E-REDES Open Data Portal”. Accessed in “Data”. [Online] Available at </span><a aria-label=\"Link https://e-redes.opendatasoft.com/pages/homepage/\" class=\"fui-Link ___1rxvrpe f2hkw1w f3rmtva f1ewtqcl fyind8e f1k6fduh f1w7gpdv fk6fouc fjoy568 figsok6 f1hu3pq6 f11qmguv f19f4twv f1tyq0we f1g0x7ka fhxju0i f1qch9an f1cnd47f fqv5qza f1vmzxwi f1o700av f13mvf36 f1cmlufx f9n3di6 f1ids18y f1tx3yz7 f1deo86v f1eh06m1 f1iescvh fhgqx19 f1olyrje f1p93eir f1nev41a f1h8hb77 f1lqvz6u f10aw75t fsle3fq f17ae5zn\" href=\"https://e-redes.opendatasoft.com/pages/homepage/\" rel=\"noreferrer noopener\" target=\"_blank\" title=\"https://e-redes.opendatasoft.com/pages/homepage/\"><span style=\"font-size: inherit;\">https://e-redes.opendatasoft.com/pages/homepage/</span></a></p><p class=\"MsoNormal\" style=\"margin-bottom: 0cm; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span lang=\"EN-US\" style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\"><o:p><span class=\"ui-provider a b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak\" dir=\"ltr\"></span></o:p></span></p><p class=\"\"><span style=\"font-size: inherit;\">If you share on social media, please add #PortalOpenData_E_REDES</span></p><p><span style=\"font-size: inherit;\"><br></span></p>",
+        "description_pt": "<p>Consumo mensal por distrito, concelho, freguesia e nível tensão; histórico desde Nov-2020.</p><p>Consumos (energia ativa) que foram faturados desde Nov-2020. O ano/mês referem-se ao período de consumo (não ao momento de faturação).<br></p><p></p><p>Por motivos do Regulamento Geral de Proteção de Dados (RGPD), alguns consumos podem aparecer agregados numa categoria identificada como \"OUTROS *Nome do Distrito*\", que engloba todos os consumos do Distrito que, pelos motivos mencionados, não podem ser disponibilizados na respetiva Freguesia/Concelho.</p><p><span style=\"font-family: inherit; font-size: 0.875rem;\"><br></span></p><p>1. A Informação disponibilizada pela E-REDES constitui uma aproximação aos valores retirados de sistema e tem por referência o momento em que a mesma é recolhida. Atendendo a que os pontos de ligação, a rede de distribuição de eletricidade, e os próprios valores de consumo e de produção são naturalmente muito dinâmicos, salvaguarda-se que a informação disponibilizada poderá ser objeto de subsequentes alterações e atualizações, ficando igualmente ressalvadas eventuais omissões e/ou pontuais imprecisões de localização que a informação poderá conter.<br></p><p></p><p>2. Desta forma a E-REDES não se responsabiliza perante terceiros, nomeadamente, parceiros, prestadores de serviços, empreiteiros, utentes e clientes, pelos danos que possam surgir em consequência, direta ou indireta, do uso da presente Informação, em particular aquando da realização de intervenções, cálculos e/ou estimativas, sem confirmação da exatidão e atualização dos dados, pelo que devidamente se ressalva de que a consulta da presente informação não prejudica o dever de se promover uma consulta direta à E-REDES para obter informação atualizada.</p><p><br></p><p><span style=\"font-size: inherit;\">Os dados fornecidos pelo Portal Open Data da E-REDES são abrangidos por licenças abertas (</span><a aria-label=\"Link CC BY 4.0\" class=\"fui-Link ___1rxvrpe f2hkw1w f3rmtva f1ewtqcl fyind8e f1k6fduh f1w7gpdv fk6fouc fjoy568 figsok6 f1hu3pq6 f11qmguv f19f4twv f1tyq0we f1g0x7ka fhxju0i f1qch9an f1cnd47f fqv5qza f1vmzxwi f1o700av f13mvf36 f1cmlufx f9n3di6 f1ids18y f1tx3yz7 f1deo86v f1eh06m1 f1iescvh fhgqx19 f1olyrje f1p93eir f1nev41a f1h8hb77 f1lqvz6u f10aw75t fsle3fq f17ae5zn\" href=\"https://creativecommons.org/licenses/by/4.0/\" rel=\"noreferrer noopener\" target=\"_blank\" title=\"https://creativecommons.org/licenses/by/4.0/\">CC BY 4.0</a><span style=\"font-size: inherit;\">). Não existem restrições ao seu acesso, sob o compromisso de os utilizadores dos dados citarem o publicador. Assim, sugerimos que cite o Portal Open Data E-REDES como:</span></p><p><span style=\"font-size: inherit;\">E-REDES – Distribuição de eletricidade, “Portal Open Data E-REDES”. Acedido em “Data”. [Online] Disponível em </span><a aria-label=\"Link https://e-redes.opendatasoft.com/pages/homepage/\" class=\"fui-Link ___1rxvrpe f2hkw1w f3rmtva f1ewtqcl fyind8e f1k6fduh f1w7gpdv fk6fouc fjoy568 figsok6 f1hu3pq6 f11qmguv f19f4twv f1tyq0we f1g0x7ka fhxju0i f1qch9an f1cnd47f fqv5qza f1vmzxwi f1o700av f13mvf36 f1cmlufx f9n3di6 f1ids18y f1tx3yz7 f1deo86v f1eh06m1 f1iescvh fhgqx19 f1olyrje f1p93eir f1nev41a f1h8hb77 f1lqvz6u f10aw75t fsle3fq f17ae5zn\" href=\"https://e-redes.opendatasoft.com/pages/homepage/\" rel=\"noreferrer noopener\" target=\"_blank\" title=\"https://e-redes.opendatasoft.com/pages/homepage/\"><span style=\"font-size: inherit;\">https://e-redes.opendatasoft.com/pages/homepage/</span></a></p><p><span class=\"ui-provider a b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak\" dir=\"ltr\"></span></p><p><span style=\"font-size: inherit;\">Se partilhar nas redes sociais, por favor acrescente #PortalOpenData_E_REDES</span></p>",
+        "theme": [
+          "Consumption and Energy"
+        ],
+        "theme_en": [
+          "Consumption and Energy"
+        ],
+        "theme_pt": [
+          "Consumos e Energia"
+        ],
+        "keyword": null,
+        "keyword_en": null,
+        "keyword_pt": null,
+        "license": "CC BY 4.0",
+        "license_en": "CC BY 4.0",
+        "license_pt": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_url_en": "https://creativecommons.org/licenses/by/4.0/",
+        "license_url_pt": "https://creativecommons.org/licenses/by/4.0/",
+        "language": "pt",
+        "metadata_languages": [
+          "pt",
+          "en"
+        ],
+        "timezone": "Europe/Lisbon",
+        "modified": "2026-07-20T14:41:54+00:00",
+        "modified_updates_on_metadata_change": false,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2026-07-20T14:41:54+00:00",
+        "metadata_processed": "2026-09-15T18:30:27.233000+00:00",
+        "geographic_reference": [
+          "world_pt"
+        ],
+        "geographic_reference_auto": false,
+        "territory": [
+          "Portugal"
+        ],
+        "geometry_types": null,
+        "bbox": null,
+        "publisher": "E-REDES",
+        "publisher_en": "E-REDES",
+        "publisher_pt": "E-REDES",
+        "references": null,
+        "records_count": 295581,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": null
+      },
+      "custom": {
+        "perfis-de-utilizacao": [
+          "Munícipio",
+          "Academia",
+          "Developer"
+        ],
+        "atualizado": null
+      }
+    }
+  },
+  "records": [
+    {
+      "data": "2026-04-01T00:00:00+00:00",
+      "coddistritoconcelho": "01--",
+      "concelho": "OUTROS AVEIRO",
+      "nivel_de_tensao": "Muito Alta, Alta e Média Tensões",
+      "energia_ativa_kwh": 511891.91
+    },
+    {
+      "data": "2026-04-01T00:00:00+00:00",
+      "coddistritoconcelho": "02--",
+      "concelho": "OUTROS BEJA",
+      "nivel_de_tensao": "Muito Alta, Alta e Média Tensões",
+      "energia_ativa_kwh": 26677303.525
+    },
+    {
+      "data": "2026-04-01T00:00:00+00:00",
+      "coddistritoconcelho": "03--",
+      "concelho": "OUTROS BRAGA",
+      "nivel_de_tensao": "Baixa Tensão",
+      "energia_ativa_kwh": 12938.373
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "unique_id": "fai_1",
+        "tema": "Qualidade do Ar",
+        "designacao": "Estação de Monitorização de Qualidade do Ar dos Espalhafatos",
+        "concelho": "Horta",
+        "ent_resp": "Direção Regional do Ambiente",
+        "fonte": "Portal de Monitorização da Qualidade do Ar dos Açores (2019)",
+        "atualizado": "2019-10-10T13:39:10+00:00"
+      },
+      "id": "fai_1",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -28.631305079410065,
+          38.60502280267587
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "unique_id": "smg_2",
+        "tema": "Qualidade do Ar",
+        "designacao": "Estação de Monitorização de Qualidade do Ar de São Gonçalo",
+        "concelho": "Ponta Delgada",
+        "ent_resp": "Direção Regional do Ambiente",
+        "fonte": "Portal de Monitorização da Qualidade do Ar dos Açores (2019)",
+        "atualizado": "2019-10-10T13:29:48+00:00"
+      },
+      "id": "smg_2",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -25.664016666279604,
+          37.75028611246614
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "unique_id": "smg_3",
+        "tema": "Qualidade do Ar",
+        "designacao": "Estação de Monitorização de Qualidade do Ar da Ribeira Grande",
+        "concelho": "Ribeira Grande",
+        "ent_resp": "Direção Regional do Ambiente",
+        "fonte": "Portal de Monitorização da Qualidade do Ar dos Açores (2019)",
+        "atualizado": "2019-10-10T13:29:48+00:00"
+      },
+      "id": "smg_3",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -25.51946944418005,
+          37.816922222879136
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "unique_id": "ter_2",
+        "tema": "Qualidade do Ar",
+        "designacao": "Estação de Monitorização de\r\nQualidade do Ar de Angra do Heroísmo",
+        "concelho": "Angra do Heroísmo",
+        "ent_resp": "Direção Regional do Ambiente",
+        "fonte": "http://qualidadedoar.azores.gov.pt/indice",
+        "atualizado": "2023-07-24T10:18:41+00:00"
+      },
+      "id": "ter_2",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -27.20427793958739,
+          38.66350302214766
+        ]
+      }
+    }
+  ],
+  "numberMatched": 4,
+  "numberReturned": 4,
+  "links": [
+    {
+      "type": "application/geo+json",
+      "rel": "self",
+      "title": "This document as GeoJSON",
+      "href": "https://ambiente.azores.gov.pt/idea-api/collections/RedeMonitorizacao_QualidadeAr/items?f=json&limit=100"
+    },
+    {
+      "rel": "alternate",
+      "type": "application/ld+json",
+      "title": "This document as RDF (JSON-LD)",
+      "href": "https://ambiente.azores.gov.pt/idea-api/collections/RedeMonitorizacao_QualidadeAr/items?f=jsonld&limit=100"
+    },
+    {
+      "type": "text/html",
+      "rel": "alternate",
+      "title": "This document as HTML",
+      "href": "https://ambiente.azores.gov.pt/idea-api/collections/RedeMonitorizacao_QualidadeAr/items?f=html&limit=100"
+    },
+    {
+      "type": "application/json",
+      "title": "Rede de Monitorização da Qualidade do Ar - Região Autónoma dos Açores (RAA)",
+      "rel": "collection",
+      "href": "https://ambiente.azores.gov.pt/idea-api/collections/RedeMonitorizacao_QualidadeAr"
+    }
+  ],
+  "timeStamp": "2026-09-15T23:46:25.745315Z"
+}

@@ -1,0 +1,331 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "ano",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "Year",
+        "type": "text",
+        "label_en": "Year",
+        "label_pt": "Ano",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "nuts_iii",
+        "description": null,
+        "annotations": {},
+        "label": "NUTS III",
+        "type": "text",
+        "label_en": "NUTS III",
+        "label_pt": "NUTS III",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "codigo_concelho",
+        "description": null,
+        "annotations": {},
+        "label": "Municipality Code",
+        "type": "text",
+        "label_en": "Municipality Code",
+        "label_pt": "Código Concelho",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "concelho",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "Municipality",
+        "type": "text",
+        "label_en": "Municipality",
+        "label_pt": "Concelho",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "zona_rqs",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "sortable": true
+        },
+        "label": "zona rqs",
+        "type": "text",
+        "label_en": "zona rqs",
+        "label_pt": "zona rqs",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "saifi_at_num",
+        "description": null,
+        "annotations": {
+          "decimals": 2
+        },
+        "label": "saifi at num",
+        "type": "double",
+        "label_en": "saifi at num",
+        "label_pt": "saifi at num",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "saidi_at_min",
+        "description": null,
+        "annotations": {
+          "decimals": 2
+        },
+        "label": "saidi at min",
+        "type": "double",
+        "label_en": "saidi at min",
+        "label_pt": "saidi at min",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "maifi_at_num",
+        "description": null,
+        "annotations": {
+          "decimals": 2
+        },
+        "label": "maifi at num",
+        "type": "double",
+        "label_en": "maifi at num",
+        "label_pt": "maifi at num",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "tiepi_mt_min",
+        "description": null,
+        "annotations": {
+          "decimals": 2
+        },
+        "label": "tiepi mt min",
+        "type": "double",
+        "label_en": "tiepi mt min",
+        "label_pt": "tiepi mt min",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "end_mt_mwh",
+        "description": null,
+        "annotations": {
+          "decimals": 2
+        },
+        "label": "end mt mwh",
+        "type": "double",
+        "label_en": "end mt mwh",
+        "label_pt": "end mt mwh",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "saifi_mt_num",
+        "description": null,
+        "annotations": {
+          "decimals": 2
+        },
+        "label": "saifi mt num",
+        "type": "double",
+        "label_en": "saifi mt num",
+        "label_pt": "saifi mt num",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "saidi_mt_min",
+        "description": null,
+        "annotations": {
+          "decimals": 2
+        },
+        "label": "saidi mt min",
+        "type": "double",
+        "label_en": "saidi mt min",
+        "label_pt": "saidi mt min",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "maifi_mt_num",
+        "description": null,
+        "annotations": {
+          "decimals": 2
+        },
+        "label": "maifi mt num",
+        "type": "double",
+        "label_en": "maifi mt num",
+        "label_pt": "maifi mt num",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "saifi_bt_num",
+        "description": null,
+        "annotations": {
+          "decimals": 2
+        },
+        "label": "saifi bt num",
+        "type": "double",
+        "label_en": "saifi bt num",
+        "label_pt": "saifi bt num",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "saidi_bt_min",
+        "description": null,
+        "annotations": {
+          "decimals": 2
+        },
+        "label": "saidi bt min",
+        "type": "double",
+        "label_en": "saidi bt min",
+        "label_pt": "saidi bt min",
+        "description_en": null,
+        "description_pt": null
+      }
+    ],
+    "dataset_id": "12-continuidade-de-servico-indicadores-gerais-de-continuidade-de-servico",
+    "dataset_uid": "da_ucna61",
+    "has_records": true,
+    "features": [
+      "analyze",
+      "custom_view"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "default": {
+        "title": "Service continuity indicators by municipality",
+        "title_en": "Service continuity indicators by municipality",
+        "title_pt": "Indicadores de continuidade de serviço por concelho",
+        "description": "<p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\">General service continuity indicators by municipality, with details of long interruptions (accidental + foreseen) for HV, MV and BT and short interruptions (accidental + foreseen) for HV and MV.</p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><br></p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\">1. The information made available by E-REDES constitutes an approximation to the values ​​taken from the system and is based on the moment in which it is collected. Given that the connection points, the electricity distribution network, and the consumption and production values ​​themselves are naturally very dynamic, it is safeguarded that the information made available may be subject to subsequent changes and updates, with the exception of any omissions and/or occasional inaccuracies of location that the information may contain.</p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"></p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\">2. In this way, E-REDES is not liable to third parties, namely, partners, service providers, contractors, users and customers, for damages that may arise as a result, direct or indirect, of the use of this Information, in particular when carrying out interventions, calculations and/or estimates, without confirming the accuracy and updating of the data, whereby it is duly noted that the consultation of this information does not affect the duty to promote a direct consultation with E-REDES to obtain updated information.</p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><br></p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span style=\"font-family: inherit; font-size: inherit;\">The data provided by the E-REDES Open Data Portal is covered by open licenses (CC BY 4.0). There are no restrictions on access, under the commitment that data users cite the publisher. Therefore, we suggest that you cite the Open Data E-REDES Portal as:</span><br></p><p><span style=\"font-size: inherit;\">E-REDES – Distribuição de Eletricidade, “E-REDES Open Data Portal”. Accessed in “Data”. [Online] Available at </span><a aria-label=\"Link https://e-redes.opendatasoft.com/pages/homepage/\" class=\"fui-Link ___1rxvrpe f2hkw1w f3rmtva f1ewtqcl fyind8e f1k6fduh f1w7gpdv fk6fouc fjoy568 figsok6 f1hu3pq6 f11qmguv f19f4twv f1tyq0we f1g0x7ka fhxju0i f1qch9an f1cnd47f fqv5qza f1vmzxwi f1o700av f13mvf36 f1cmlufx f9n3di6 f1ids18y f1tx3yz7 f1deo86v f1eh06m1 f1iescvh fhgqx19 f1olyrje f1p93eir f1nev41a f1h8hb77 f1lqvz6u f10aw75t fsle3fq f17ae5zn\" href=\"https://e-redes.opendatasoft.com/pages/homepage/\" rel=\"noreferrer noopener\" target=\"_blank\" title=\"https://e-redes.opendatasoft.com/pages/homepage/\"><span style=\"font-size: inherit;\">https://e-redes.opendatasoft.com/pages/homepage/</span></a></p><p class=\"MsoNormal\" style=\"margin-bottom: 0cm; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span lang=\"EN-US\" style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\"><o:p><span class=\"ui-provider a b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak\" dir=\"ltr\"></span></o:p></span></p><p><span style=\"font-size: inherit;\">If you share on social media, please add #PortalOpenData_E_REDES</span></p><p><span style=\"font-size: inherit;\"><br></span></p>",
+        "description_en": "<p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\">General service continuity indicators by municipality, with details of long interruptions (accidental + foreseen) for HV, MV and BT and short interruptions (accidental + foreseen) for HV and MV.</p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><br></p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\">1. The information made available by E-REDES constitutes an approximation to the values ​​taken from the system and is based on the moment in which it is collected. Given that the connection points, the electricity distribution network, and the consumption and production values ​​themselves are naturally very dynamic, it is safeguarded that the information made available may be subject to subsequent changes and updates, with the exception of any omissions and/or occasional inaccuracies of location that the information may contain.</p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"></p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\">2. In this way, E-REDES is not liable to third parties, namely, partners, service providers, contractors, users and customers, for damages that may arise as a result, direct or indirect, of the use of this Information, in particular when carrying out interventions, calculations and/or estimates, without confirming the accuracy and updating of the data, whereby it is duly noted that the consultation of this information does not affect the duty to promote a direct consultation with E-REDES to obtain updated information.</p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><br></p><p class=\"MsoNormal\" style=\"margin-bottom: 12pt; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span style=\"font-family: inherit; font-size: inherit;\">The data provided by the E-REDES Open Data Portal is covered by open licenses (CC BY 4.0). There are no restrictions on access, under the commitment that data users cite the publisher. Therefore, we suggest that you cite the Open Data E-REDES Portal as:</span><br></p><p><span style=\"font-size: inherit;\">E-REDES – Distribuição de Eletricidade, “E-REDES Open Data Portal”. Accessed in “Data”. [Online] Available at </span><a aria-label=\"Link https://e-redes.opendatasoft.com/pages/homepage/\" class=\"fui-Link ___1rxvrpe f2hkw1w f3rmtva f1ewtqcl fyind8e f1k6fduh f1w7gpdv fk6fouc fjoy568 figsok6 f1hu3pq6 f11qmguv f19f4twv f1tyq0we f1g0x7ka fhxju0i f1qch9an f1cnd47f fqv5qza f1vmzxwi f1o700av f13mvf36 f1cmlufx f9n3di6 f1ids18y f1tx3yz7 f1deo86v f1eh06m1 f1iescvh fhgqx19 f1olyrje f1p93eir f1nev41a f1h8hb77 f1lqvz6u f10aw75t fsle3fq f17ae5zn\" href=\"https://e-redes.opendatasoft.com/pages/homepage/\" rel=\"noreferrer noopener\" target=\"_blank\" title=\"https://e-redes.opendatasoft.com/pages/homepage/\"><span style=\"font-size: inherit;\">https://e-redes.opendatasoft.com/pages/homepage/</span></a></p><p class=\"MsoNormal\" style=\"margin-bottom: 0cm; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span lang=\"EN-US\" style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\"><o:p><span class=\"ui-provider a b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak\" dir=\"ltr\"></span></o:p></span></p><p><span style=\"font-size: inherit;\">If you share on social media, please add #PortalOpenData_E_REDES</span></p><p><span style=\"font-size: inherit;\"><br></span></p>",
+        "description_pt": "<p>Indicadores gerais de continuidade de serviço por concelho, com detalhe de interrupções longas (acidentais + previstas) para AT, MT e BT e interrupções breves (acidentais + previstas) para AT e MT.</p><p><br></p><p>1. A Informação disponibilizada pela E-REDES constitui uma aproximação aos valores retirados de sistema e tem por referência o momento em que a mesma é recolhida. Atendendo a que os pontos de ligação, a rede de distribuição de eletricidade, e os próprios valores de consumo e de produção são naturalmente muito dinâmicos, salvaguarda-se que a informação disponibilizada poderá ser objeto de subsequentes alterações e atualizações, ficando igualmente ressalvadas eventuais omissões e/ou pontuais imprecisões de localização que a informação poderá conter.</p><p>2. Desta forma a E-REDES não se responsabiliza perante terceiros, nomeadamente, parceiros, prestadores de serviços, empreiteiros, utentes e clientes, pelos danos que possam surgir em consequência, direta ou indireta, do uso da presente Informação, em particular aquando da realização de intervenções, cálculos e/ou estimativas, sem confirmação da exatidão e atualização dos dados, pelo que devidamente se ressalva de que a consulta da presente informação não prejudica o dever de se promover uma consulta direta à E-REDES para obter informação atualizada.</p><p><br></p><p><span style=\"font-size: inherit;\">Os dados fornecidos pelo Portal Open Data da E-REDES são abrangidos por licenças abertas (</span><a aria-label=\"Link CC BY 4.0\" class=\"fui-Link ___1rxvrpe f2hkw1w f3rmtva f1ewtqcl fyind8e f1k6fduh f1w7gpdv fk6fouc fjoy568 figsok6 f1hu3pq6 f11qmguv f19f4twv f1tyq0we f1g0x7ka fhxju0i f1qch9an f1cnd47f fqv5qza f1vmzxwi f1o700av f13mvf36 f1cmlufx f9n3di6 f1ids18y f1tx3yz7 f1deo86v f1eh06m1 f1iescvh fhgqx19 f1olyrje f1p93eir f1nev41a f1h8hb77 f1lqvz6u f10aw75t fsle3fq f17ae5zn\" href=\"https://creativecommons.org/licenses/by/4.0/\" rel=\"noreferrer noopener\" target=\"_blank\" title=\"https://creativecommons.org/licenses/by/4.0/\">CC BY 4.0</a><span style=\"font-size: inherit;\">). Não existem restrições ao seu acesso, sob o compromisso de os utilizadores dos dados citarem o publicador. Assim, sugerimos que cite o Portal Open Data E-REDES como:</span></p><p><span style=\"font-size: inherit;\">E-REDES – Distribuição de eletricidade, “Portal Open Data E-REDES”. Acedido em “Data”. [Online] Disponível em </span><a aria-label=\"Link https://e-redes.opendatasoft.com/pages/homepage/\" class=\"fui-Link ___1rxvrpe f2hkw1w f3rmtva f1ewtqcl fyind8e f1k6fduh f1w7gpdv fk6fouc fjoy568 figsok6 f1hu3pq6 f11qmguv f19f4twv f1tyq0we f1g0x7ka fhxju0i f1qch9an f1cnd47f fqv5qza f1vmzxwi f1o700av f13mvf36 f1cmlufx f9n3di6 f1ids18y f1tx3yz7 f1deo86v f1eh06m1 f1iescvh fhgqx19 f1olyrje f1p93eir f1nev41a f1h8hb77 f1lqvz6u f10aw75t fsle3fq f17ae5zn\" href=\"https://e-redes.opendatasoft.com/pages/homepage/\" rel=\"noreferrer noopener\" target=\"_blank\" title=\"https://e-redes.opendatasoft.com/pages/homepage/\"><span style=\"font-size: inherit;\">https://e-redes.opendatasoft.com/pages/homepage/</span></a></p><p><span class=\"ui-provider a b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak\" dir=\"ltr\"></span></p><p><span style=\"font-size: inherit;\">Se partilhar nas redes sociais, por favor acrescente #PortalOpenData_E_REDES</span></p><p><span style=\"font-size: inherit;\"><br></span></p>",
+        "theme": [
+          "Operation and Quality of Service"
+        ],
+        "theme_en": [
+          "Operation and Quality of Service"
+        ],
+        "theme_pt": [
+          "Operação e Qualidade de Serviço"
+        ],
+        "keyword": null,
+        "keyword_en": null,
+        "keyword_pt": null,
+        "license": "CC BY 4.0",
+        "license_en": "CC BY 4.0",
+        "license_pt": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_url_en": "https://creativecommons.org/licenses/by/4.0/",
+        "license_url_pt": "https://creativecommons.org/licenses/by/4.0/",
+        "language": "pt",
+        "metadata_languages": [
+          "pt",
+          "en"
+        ],
+        "timezone": "Europe/Lisbon",
+        "modified": "2026-08-14T12:53:55+00:00",
+        "modified_updates_on_metadata_change": false,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2026-08-14T12:53:55+00:00",
+        "metadata_processed": "2026-09-09T22:13:02.487000+00:00",
+        "geographic_reference": [
+          "world_pt"
+        ],
+        "geographic_reference_auto": false,
+        "territory": [
+          "Portugal"
+        ],
+        "geometry_types": null,
+        "bbox": null,
+        "publisher": "E-REDES",
+        "publisher_en": "E-REDES",
+        "publisher_pt": "E-REDES",
+        "references": null,
+        "records_count": 13344,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": null
+      },
+      "custom": {
+        "perfis-de-utilizacao": [
+          "Academia",
+          "Munícipio"
+        ],
+        "atualizado": "Anual"
+      }
+    }
+  },
+  "records": [
+    {
+      "ano": "2025",
+      "nuts_iii": "Região de Aveiro",
+      "codigo_concelho": "0101",
+      "concelho": "Águeda",
+      "zona_rqs": "Concelho",
+      "saifi_at_num": 0.5,
+      "saidi_at_min": 1.566666666666665,
+      "maifi_at_num": 0.0,
+      "tiepi_mt_min": 68.15419959771505,
+      "end_mt_mwh": 33.63793003260266,
+      "saifi_mt_num": 0.9711590045464445,
+      "saidi_mt_min": 64.16496720761334,
+      "maifi_mt_num": 4.252133967056049,
+      "saifi_bt_num": 1.474581397607353,
+      "saidi_bt_min": 84.51367453145305
+    },
+    {
+      "ano": "2025",
+      "nuts_iii": "Região de Aveiro",
+      "codigo_concelho": "0102",
+      "concelho": "Albergaria-a-Velha",
+      "zona_rqs": "Concelho",
+      "saifi_at_num": 0.0,
+      "saidi_at_min": 0.0,
+      "maifi_at_num": 0.0,
+      "tiepi_mt_min": 23.547092395913047,
+      "end_mt_mwh": 5.250880814315519,
+      "saifi_mt_num": 1.0249165614515556,
+      "saidi_mt_min": 31.51879417685754,
+      "maifi_mt_num": 2.6610403894925625,
+      "saifi_bt_num": 1.2842333418418412,
+      "saidi_bt_min": 63.39129528487625
+    },
+    {
+      "ano": "2025",
+      "nuts_iii": "Região de Aveiro",
+      "codigo_concelho": "0103",
+      "concelho": "Anadia",
+      "zona_rqs": "Concelho",
+      "saifi_at_num": 1.0,
+      "saidi_at_min": 366.533333333333,
+      "maifi_at_num": 2.0,
+      "tiepi_mt_min": 44.59002850120171,
+      "end_mt_mwh": 9.055713811055785,
+      "saifi_mt_num": 0.9471845078199274,
+      "saidi_mt_min": 39.3246728052519,
+      "maifi_mt_num": 4.85435644746875,
+      "saifi_bt_num": 1.13160645387153,
+      "saidi_bt_min": 52.19387389480557
+    }
+  ]
+}

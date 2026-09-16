@@ -1,0 +1,264 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "tempo",
+        "description": null,
+        "annotations": {
+          "timeserie_precision": "month",
+          "facet": true,
+          "facetsort": "-alphanum",
+          "timerangeFilter": true
+        },
+        "label": "Período",
+        "type": "date",
+        "label_pt": "Período",
+        "label_en": "Período",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "regiao",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "facetsort": "alphanum",
+          "disjunctive": true,
+          "sortable": true
+        },
+        "label": "Região",
+        "type": "text",
+        "label_pt": "Região",
+        "label_en": "Região",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "valor_pvp_ambulatorio",
+        "description": null,
+        "annotations": {
+          "unit": "€"
+        },
+        "label": "Valor PVP (Ambulatório)",
+        "type": "double",
+        "label_pt": "Valor PVP (Ambulatório)",
+        "label_en": "Valor PVP (Ambulatório)",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "unidades_dispensadas_ambulatorio",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Unidades Dispensadas (Ambulatório)",
+        "type": "int",
+        "label_pt": "Unidades Dispensadas (Ambulatório)",
+        "label_en": "Unidades Dispensadas (Ambulatório)",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "valor_pvp_genericos",
+        "description": null,
+        "annotations": {
+          "unit": "€"
+        },
+        "label": "Valor PVP (Genéricos)",
+        "type": "double",
+        "label_pt": "Valor PVP (Genéricos)",
+        "label_en": "Valor PVP (Genéricos)",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "unidades_dispensadas_genericos",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Unidades Dispensadas (Genéricos)",
+        "type": "int",
+        "label_pt": "Unidades Dispensadas (Genéricos)",
+        "label_en": "Unidades Dispensadas (Genéricos)",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "qm_genericos_valor_pvp",
+        "description": null,
+        "annotations": {
+          "unit": "%",
+          "facetsort": "-count",
+          "decimals": 2
+        },
+        "label": "Quota Mercado Genéricos - Valor PVP",
+        "type": "double",
+        "label_pt": "Quota Mercado Genéricos - Valor PVP",
+        "label_en": "Quota Mercado Genéricos - Valor PVP",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "qm_genericos_unidades_dispensadas",
+        "description": null,
+        "annotations": {
+          "unit": "%",
+          "decimals": 2
+        },
+        "label": "Quota Mercado Genéricos - Unidades dispensadas",
+        "type": "double",
+        "label_pt": "Quota Mercado Genéricos - Unidades dispensadas",
+        "label_en": "Quota Mercado Genéricos - Unidades dispensadas",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "dataset_id": "genericos",
+    "dataset_uid": "da_3et69k",
+    "has_records": true,
+    "features": [
+      "timeserie",
+      "analyze"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "dcat": {
+        "created": "2016-01-27",
+        "issued": "2018-11-30",
+        "creator": "SPMS",
+        "contributor": "INFARMED",
+        "contact_name": null,
+        "contact_email": null,
+        "accrualperiodicity": "Mensal",
+        "spatial": "Portugal Continental",
+        "temporal": "janeiro 2011 a maio 2026",
+        "granularity": null,
+        "dataquality": null,
+        "publisher_type": null,
+        "conforms_to": null,
+        "temporal_coverage_start": null,
+        "temporal_coverage_end": null,
+        "accessRights": null,
+        "relation": null
+      },
+      "default": {
+        "title": "Dispensa de Medicamentos Genéricos",
+        "title_pt": "Dispensa de Medicamentos Genéricos",
+        "title_en": "Dispensa de Medicamentos Genéricos",
+        "description": "<p>Monitorizar a quota de medicamentos genéricos dispensados em farmácias comunitárias a utentes do SNS e subsistemas públicos.</p><p><strong>Observações:</strong> Os dados podem estar sujeitos a atualizações.</p>",
+        "description_pt": "<p>Monitorizar a quota de medicamentos genéricos dispensados em farmácias comunitárias a utentes do SNS e subsistemas públicos.</p><p><strong>Observações:</strong> Os dados podem estar sujeitos a atualizações.</p>",
+        "description_en": "<p>Monitorizar a quota de medicamentos genéricos dispensados em farmácias comunitárias a utentes do SNS e subsistemas públicos.</p><p><strong>Observações:</strong> Os dados podem estar sujeitos a atualizações.</p>",
+        "theme": [
+          "Eficiência"
+        ],
+        "theme_pt": [
+          "Eficiência"
+        ],
+        "theme_en": [
+          "Eficiência"
+        ],
+        "keyword": [
+          "Dispensa",
+          "Genéricos",
+          "Farmácias",
+          "Medicamentos"
+        ],
+        "keyword_pt": [
+          "Dispensa",
+          "Genéricos",
+          "Farmácias",
+          "Medicamentos"
+        ],
+        "keyword_en": [
+          "Dispensa",
+          "Genéricos",
+          "Farmácias",
+          "Medicamentos"
+        ],
+        "license": null,
+        "license_pt": null,
+        "license_en": null,
+        "license_url": null,
+        "license_url_pt": null,
+        "license_url_en": null,
+        "language": "pt",
+        "metadata_languages": [
+          "pt"
+        ],
+        "timezone": null,
+        "modified": "2026-08-13T14:07:11.061000+00:00",
+        "modified_updates_on_metadata_change": true,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2026-08-13T14:07:11.061000+00:00",
+        "metadata_processed": "2026-08-13T14:07:11.119000+00:00",
+        "geographic_reference": [
+          "world_pt"
+        ],
+        "geographic_reference_auto": true,
+        "territory": [
+          "Portugal"
+        ],
+        "geometry_types": null,
+        "bbox": null,
+        "publisher": "INFARMED",
+        "publisher_pt": "INFARMED",
+        "publisher_en": "INFARMED",
+        "references": null,
+        "records_count": 920,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": null
+      },
+      "custom": {
+        "dataset-id-number": "86",
+        "measure-unit": "%",
+        "source-data": "CCF",
+        "version": null,
+        "formula": "Quota de Mercado de Medicamentos Genéricos (Valor PVP) = Valor PVP (Genéricos) / Valor PVP (Ambulatório) ; Quota de Mercado de Medicamentos Genéricos (Unidades Dispensadas) = Unidades Dispensadas (Genéricos) / Unidades Dispensadas (Ambulatório)."
+      }
+    }
+  },
+  "records": [
+    {
+      "tempo": "2026-05",
+      "regiao": "Alentejo",
+      "valor_pvp_ambulatorio": 10153300.26,
+      "unidades_dispensadas_ambulatorio": 26471100,
+      "valor_pvp_genericos": 2952049.97,
+      "unidades_dispensadas_genericos": 13659875,
+      "qm_genericos_valor_pvp": 0.290747825279029,
+      "qm_genericos_unidades_dispensadas": 0.51602974564714
+    },
+    {
+      "tempo": "2026-05",
+      "regiao": "Algarve",
+      "valor_pvp_ambulatorio": 10063002.98,
+      "unidades_dispensadas_ambulatorio": 23846459,
+      "valor_pvp_genericos": 2511776.81,
+      "unidades_dispensadas_genericos": 11099358,
+      "qm_genericos_valor_pvp": 0.249605094522192,
+      "qm_genericos_unidades_dispensadas": 0.465450992115853
+    },
+    {
+      "tempo": "2026-05",
+      "regiao": "Centro",
+      "valor_pvp_ambulatorio": 61470940.44,
+      "unidades_dispensadas_ambulatorio": 156107445,
+      "valor_pvp_genericos": 16477635.25,
+      "unidades_dispensadas_genericos": 77241334,
+      "qm_genericos_valor_pvp": 0.268055688298495,
+      "qm_genericos_unidades_dispensadas": 0.494795965688888
+    }
+  ]
+}

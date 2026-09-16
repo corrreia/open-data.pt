@@ -1,0 +1,20 @@
+[
+  {
+    "source": "parliament",
+    "reason": "Full real-record normalization and validation were denied by the session permission gate. Synthetic tests and public-directory discovery passed, but automatic collection must wait for explicit authorization and successful record validation.",
+    "requiredAction": "Authorize processing the public Parliament record documents, complete bounded live validation, then explicitly wire reviewed examples into a topic Worker.",
+    "references": ["https://www.parlamento.pt/Cidadania/Paginas/DadosAbertos.aspx"]
+  },
+  {
+    "source": "ripestat",
+    "reason": "RIPEstat Service Terms Article 3.3 restrict repackaging, compilation and redistribution of RIPEstat data. Keyless API access does not establish permission for this public republication service.",
+    "requiredAction": "Establish appropriate republication permission or use a differently licensed underlying source before enabling these examples.",
+    "references": ["https://www.ripe.net/about-us/legal/ripestat-service-terms-and-conditions"]
+  },
+  {
+    "source": "peeringdb",
+    "reason": "PeeringDB's acceptable-use policy requires permission for reproduction and bulk sharing outside its approved operational uses. A public general-purpose data API is not assumed to qualify for an exemption.",
+    "requiredAction": "Establish permission for the intended public republication before enabling this example.",
+    "references": ["https://www.peeringdb.com/aup"]
+  }
+]

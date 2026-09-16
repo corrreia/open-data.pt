@@ -40,6 +40,14 @@ const BORA_POLICY = {
   collection: { ...DOCKED_POLICY.collection, cadenceSeconds: 600 },
 } as const;
 
+// Bird advertises a 60-second TTL; a five-minute public snapshot avoids
+// hammering the operator while retaining useful municipal fleet counts.
+const BIRD_POLICY = {
+  ...REALTIME_POLICY,
+  name: "GBFS Bird snapshots, five minutes",
+  collection: { ...REALTIME_POLICY.collection, cadenceSeconds: 300 },
+} as const;
+
 export const GBFS_EXAMPLES: ExampleFeed[] = [
   {
     slug: "lime-lisbon",
@@ -69,6 +77,8 @@ export const GBFS_EXAMPLES: ExampleFeed[] = [
     publisher: "Bird",
     topics: ["mobility"],
   },
+  // Keep the pre-existing Braga definition: removing it would retire published state.
+  // It is not counted among the new verified, nonempty fleet feeds.
   birdExample("braga", "Braga"),
   birdExample("cascais", "Cascais"),
   birdExample("matosinhos", "Matosinhos"),
@@ -113,8 +123,8 @@ function birdExample(slug: string, city: string): ExampleFeed {
       url: `https://mds.bird.co/gbfs/v2/public/${slug}/gbfs.json`,
       language: "en",
     },
-    policy: REALTIME_POLICY,
-    staleAfterSeconds: 600,
+    policy: BIRD_POLICY,
+    staleAfterSeconds: 900,
     publisher: "Bird",
     topics: ["mobility"],
   };

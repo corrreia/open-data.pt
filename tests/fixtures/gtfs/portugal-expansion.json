@@ -1,0 +1,63 @@
+[
+  {
+    "slug": "cp-gtfs-feed",
+    "source": "https://publico.cp.pt/gtfs/gtfs.zip",
+    "files": {
+      "agency.txt": "agency_id,agency_name,agency_url,agency_timezone,agency_lang,agency_phone,agency_fare_url\n1094_CP,CP - Comboios de Portugal,http://www.cp.pt,Europe/Lisbon,pt,+351808109110,\n",
+      "calendar.txt": "service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\n120_20251214,1,1,1,1,1,1,0,20251214,20261212\n121_20251214,1,1,1,1,1,1,1,20251214,20261212\n122_20251214,1,1,1,1,1,1,1,20251214,20261212\n",
+      "calendar_dates.txt": "service_id,date,exception_type\n122_20251214,20251225,2\n122_20251214,20260101,2\n122_20251214,20260217,2\n",
+      "routes.txt": "route_id,agency_id,route_short_name,route_long_name,route_desc,route_type,route_url,route_color,route_text_color\n21-94_2006-94_30007,1094_CP,AP,,,2,,FFFFFF,000000\n21-94_2006-94_73007,1094_CP,AP,,,2,,FFFFFF,000000\n21-94_29157-94_30007,1094_CP,AP,,,2,,FFFFFF,000000\n",
+      "stops.txt": "stop_id,stop_code,stop_name,stop_desc,stop_lat,stop_lon,zone_id,stop_url,location_type,parent_station,stop_timezone,wheelchair_boarding\n94_1008,,Porto Sao Bento,,41.14556679,-8.610221145,,,0,,Europe/Lisbon,0\n94_2006,,Porto Campanha,,41.14871926,-8.584835348,,,0,,Europe/Lisbon,0\n94_3004,,Contumil,,41.16871141,-8.574777658,,,0,,Europe/Lisbon,0\n"
+    }
+  },
+  {
+    "slug": "fertagus-gtfs-feed",
+    "source": "https://www.fertagus.pt/GTFSTMLzip/Fertagus_GTFS.zip",
+    "files": {
+      "agency.txt": "agency_id,agency_name,agency_url,agency_timezone,agency_lang,agency_phone,agency_fare_url,agency_email\n15,Fertagus,https://www.fertagus.pt,Europe/Lisbon,Pt,+351211066363,https://www.fertagus.pt/pt/tarifarios/fertagus,info@fertagus.pt\n",
+      "calendar.txt": "service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\nFdS,0,0,0,0,0,1,1,20260914,20270314\nDS,1,1,1,1,1,0,0,20260914,20270314\nSAB,0,0,0,0,0,1,0,20260914,20270314\n",
+      "calendar_dates.txt": "service_id,date,exception_type\nDS,20261005,2\nFdS,20261005,1\nDOM,20261005,1\n",
+      "feed_info.txt": "feed_type,feed_publisher_name,feed_publisher_url,feed_lang,default_lang,feed_start_date,feed_end_date,feed_version,feed_contact_email,feed_contact_url\n0,Fertagus,https://www.fertagus.pt,pt,pt,20260914,20270314,26.10.20,info@fertagus.pt,https://www.fertagus.pt/GTFSTMLzip/Fertagus_GTFS.zip\n",
+      "routes.txt": "line_id,line_short_name,line_long_name,route_id,agency_id,route_short_name,route_long_name,route_type,path_type,circular,school,route_color,route_text_color,continuous_pickup,continuous_drop_off\n1,Fertagus,Lisboa - Setúbal,A_0,15,Fertagus,Lisboa - Setúbal,2,1,0,0,c74f4f,FFFFFF,1,1\n1,Fertagus,Lisboa - Setúbal,A_1,15,Fertagus,Lisboa - Coina,2,2,0,0,c74f4f,FFFFFF,1,1\n1,Fertagus,Lisboa - Setúbal,A_2,15,Fertagus,Lisboa - Fogueteiro,2,2,0,0,c74f4f,FFFFFF,1,1\n",
+      "shapes.txt": "shape_id,shape_pt_lat,shape_pt_lon,shape_pt_sequence,shape_dist_traveled\nFTShape1,38.74564,-9.13491,1,0\nFTShape1,38.74564,-9.13507,2,14\nFTShape1,38.7456,-9.13573,3,71\n",
+      "stops.txt": "stop_id,stop_code,stop_name,stop_lat,stop_lon,zone_id,location_type,wheelchair_boarding,public_visible,region_id,parish_id,municipality_id\nFTStop8,FTStop8,Roma-Areeiro,38.74543,-9.13479,FTStop8,0,1,1,PT170,110655,1106\nFTStop7,FTStop7,Entrecampos,38.74479,-9.14924,FTStop7,0,1,1,PT170,110657,1106\nFTStop6,FTStop6,Sete-Rios,38.74021,-9.16699,FTStop6,0,1,1,PT170,110639,1106\n"
+    }
+  },
+  {
+    "slug": "tub-braga-gtfs-feed",
+    "source": "https://www.tub.pt/developer/gtfs/feed/tub.zip",
+    "files": {
+      "agency.txt": "agency_id,agency_name,agency_url,agency_timezone,agency_phone,agency_lang,agency_fare_url\nTUB,Transportes Urbanos de Braga,https://www.tub.pt,Europe/Lisbon,253606890,pt,https://tub.pt/tarifario/\n",
+      "calendar.txt": "service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\n7,1,1,1,1,0,0,0,20260911,20270131\n6,0,0,0,0,1,0,0,20260911,20270131\n5,0,0,0,0,0,1,0,20260911,20270131\n",
+      "calendar_dates.txt": "service_id,date,exception_type\n1,20121225,2\n1,20130101,2\n1,20130329,2\n",
+      "routes.txt": "route_id,agency_id,route_short_name,route_long_name,route_type\n2,TUB,2,PONTE DE PRADO - BOM JESUS,3\n3,TUB,3,AVENIDA CENTRAL - RUÃES,3\n5,TUB,5,DUME - QUINTA DA CAPELA,3\n",
+      "shapes.txt": "shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence\n1,41.594060000000006,-8.45931,0\n1,41.593740000000004,-8.45993,1\n1,41.59351,-8.46038,2\n",
+      "stops.txt": "stop_id,stop_name,stop_lat,stop_lon,zone_id\n1,Bom Jesus,41.554462,-8.381193,1\n2,República II,41.553543,-8.383646,1\n3,República I,41.555836,-8.385874,1\n"
+    }
+  },
+  {
+    "slug": "tcb-barreiro-gtfs-feed",
+    "source": "https://backend.tcbarreiro.pt/download-gtfs",
+    "files": {
+      "feed_info.txt": "feed_publisher_name,feed_publisher_url,feed_lang,feed_start_date,feed_end_date,feed_contact_email,feed_contact_url,feed_version,feed_type\nTransportes Colectivos do Barreiro,https://www.tcbarreiro.pt,pt,20260608,20261231,ittcbarreiro@gmail.com,https://www.tcbarreiro.pt,UTC: 14-Sep-2026 08:45,\n",
+      "calendar.txt": "service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\nSAB / Projeto A _26-1789375434525,0,0,0,0,0,1,0,20260613,20261226\nDUPE / Projeto A _26-1789375434525,1,1,1,1,1,0,0,20260608,20261211\nDUPFE / Projeto A _26-1789375434525,1,1,1,1,1,0,0,20260615,20261231\n",
+      "calendar_dates.txt": "service_id,date,exception_type\nSAB / Projeto A _26-1789375434525,20260815,2\nDUPE / Projeto A _26-1789375434525,20260610,2\nDUPE / Projeto A _26-1789375434525,20260615,2\n",
+      "agency.txt": "agency_id,agency_name,agency_url,agency_timezone,agency_lang,agency_phone,agency_fare_url,agency_email\n8,Transportes Colectivos do Barreiro,https://www.tcbarreiro.pt,Europe/Lisbon,pt,212068787,https://www.portalviva.pt,geral@tcbarreiro.pt\n",
+      "routes.txt": "route_id,agency_id,route_short_name,route_long_name,route_desc,route_type,route_url,route_color,route_text_color,continuous_pickup,continuous_drop_off,route_sort_order,line_id,line_short_name,line_long_name,route_origin,route_destination,route_remarks,contract,path_type,circular,school\n1_1-QVB-TER_EA,8,1,QVBB-Terminal (via Estrada da Amizade),,3,,8e1c7d,FFFFFF,,,,1,1,,Terminal - Carreira 1,Terminal do Barreiro,,,2,0,\n1_1-QVBB-TERM,8,1,QVBB-Terminal,,3,,8e1c7d,FFFFFF,,,,1,1,,Terminal - Carreira 1,Terminal do Barreiro,,,2,0,\n1_1-TERM,8,1,Terminal Fluvial (Circulação),,3,,8e1c7d,FFFFFF,,,,1,1,,Terminal - Carreira 1,Terminal do Barreiro,,,1,0,\n",
+      "shapes.txt": "shape_id,shape_pt_lat,shape_pt_lon,shape_pt_sequence,shape_dist_traveled\n1-QVB-TER_EA,38.66110560239877,-9.05023455619812,0,0.0\n1-QVB-TER_EA,38.661139,-9.050176,1,0.0063\n1-QVB-TER_EA,38.661052,-9.049995,2,0.0248\n",
+      "stops.txt": "stop_id,stop_code,stop_name,stop_desc,stop_lat,stop_lon,zone_id,stop_url,location_type,parent_station,stop_timezone,wheelchair_boarding,platform_code,tts_stop_name,stop_id_stepp,stop_remarks,zone_shift,entrance_restriction,exit_restriction,slot,signalling,shelter,bench,network_map,schedule,real_time_information,tariff,preservation_state,equipment,observations,region,municipality,municipality_fare_1,municipality_fare_2\n000012,000012,EN 11 - 1 - Baixa da Banheira - Cruzamento,,38.66110560239877,-9.05023455619812,,,0,,,,,,,,,,,,,,,,,,,,,,,,,\n000013,000013,R. da Amizade - R. Ville Plaisir,,38.65768743486564,-9.049327969551086,,,0,,,,,,,,,,,,,,,,,,,,,,,,,\n000014,000014,R. da Amizade - Rotunda da Amizade,,38.65578558965167,-9.048324823379517,,,0,,,,,,,,,,,,,,,,,,,,,,,,,\n"
+    }
+  },
+  {
+    "slug": "horarios-do-funchal-gtfs-feed",
+    "source": "https://www.horariosdofunchal.pt/googletransit.zip",
+    "files": {
+      "agency.txt": "agency_id,agency_name,agency_url,agency_timezone,agency_lang,agency_phone,agency_fare_url,agency_email\n1,HF,https://www.horariosdofunchal.pt/,Europe/Lisbon,pt,(+351) 291 705 555,https://www.horariosdofunchal.pt/index.php/viajar/titulos-e-tarifas,geral@horariosdofunchal.pt\n",
+      "calendar_dates.txt": "service_id,holiday,period,date,day_type,exception_type\nUE_042,0,0,20260910,1,1\nUE_042,0,0,20260911,1,1\nS_042,0,0,20260912,2,1\n",
+      "feed_info.txt": "feed_type,feed_publisher_name,feed_publisher_url,feed_lang,feed_start_date,feed_end_date,feed_version,feed_desc,feed_remarks,feed_contact_email,feed_contact_url\n,HF,https://www.horariosdofunchal.pt/,pt,20260909,20261130,202609091923,,,geral@horariosdofunchal.pt,https://www.horariosdofunchal.pt/\n",
+      "routes.txt": "line_id,line_short_name,line_long_name,route_id,agency_id,route_origin,route_destination,route_short_name,route_long_name,route_desc,route_remarks,route_type,contract,path_type,circular,school,route_url,route_color,route_text_color,route_sort_order,continuous_pickup,continuous_drop_off\n001,01,Ponta da Laranjeira,001_0,1,AV Mar EEM (00225),Ponta Laranjeira (00871),01,Centro - Ponta Laranjeira,,,3,,0,0,,https://www.horariosdofunchal.pt/carreiras/001.pdf,8CC641,FFFFFF,,,\n001,01,Ponta da Laranjeira,001_A,1,AV Mar EEM (00225),Ponta Laranjeira (00871),01,Centro - Ponta Laranjeira (via Alto Lido),,,3,,0,0,,https://www.horariosdofunchal.pt/carreiras/001.pdf,8CC641,FFFFFF,,,\n001,01,Ponta da Laranjeira,001_B,1,AV Mar EEM (00225),Ponta Laranjeira (00871),01,Ponta Laranjeira - Centro (Ligação Monte C. 020),,,3,,0,0,,https://www.horariosdofunchal.pt/carreiras/001.pdf,8CC641,FFFFFF,,,\n",
+      "shapes.txt": "shape_id,shape_pt_lat,shape_pt_lon,shape_pt_sequence,shape_dist_traveled\n1,32.647136,-16.904277,0,0.0\n1,32.64705,-16.90427,1,0.0096\n1,32.64705,-16.904290000000003,2,0.0115\n",
+      "stops.txt": "stop_id,stop_id_stepp,stop_code,stop_name,stop_desc,stop_remarks,stop_lat,stop_lon,zone_shift,stop_url,location_type,parent_station,stop_timezone,wheelchair_boarding,platform_code,entrance_restriction,exit_restriction,slot,signalling,shelter,bench,network_map,schedule,real_time_information,tariff,preservation_state,equipment,observations,region,municipality,municipality_fare_1,municipality_fare_2\n01588,,641A,Alegria  T-42 (641A),Alegria  T-42 ,ativa,32.67815,-16.92041,,,0,,,,,,,,,,,,,,,,,,PT300,3103,,\n00600,,600,CAM Terça  Antigo T  D (600),CAM Terça  Antigo T  D ,ativa,32.6765876807048,-16.920414084655757,,,0,,,,,,,,,,,,,,,,,,PT300,3103,,\n00602,,602,CAM Terça  Poços CMF  D (602),CAM Terça  Poços CMF  D ,ativa,32.67539055156774,-16.920457449073794,,,0,,,,,,,,,,,,,,,,,,PT300,3103,,\n"
+    }
+  }
+]

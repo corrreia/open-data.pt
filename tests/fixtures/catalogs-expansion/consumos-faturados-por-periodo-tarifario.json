@@ -1,0 +1,290 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "data",
+        "description": null,
+        "annotations": {
+          "timeserie_precision": "month"
+        },
+        "label": "Date",
+        "type": "date",
+        "label_en": "Date",
+        "label_pt": "Data",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "ano",
+        "description": null,
+        "annotations": {},
+        "label": "Year",
+        "type": "text",
+        "label_en": "Year",
+        "label_pt": "Ano",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "mes",
+        "description": null,
+        "annotations": {},
+        "label": "Month",
+        "type": "text",
+        "label_en": "Month",
+        "label_pt": "Mês",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "dis_name",
+        "description": null,
+        "annotations": {},
+        "label": "District ",
+        "type": "text",
+        "label_en": "District ",
+        "label_pt": "Distrito",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "con_name",
+        "description": null,
+        "annotations": {},
+        "label": "Municipality",
+        "type": "text",
+        "label_en": "Municipality",
+        "label_pt": "Concelho",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "fre_name",
+        "description": null,
+        "annotations": {},
+        "label": "Parish",
+        "type": "text",
+        "label_en": "Parish",
+        "label_pt": "Freguesia",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "energia_ativa_simples_kwh",
+        "description": null,
+        "annotations": {},
+        "label": "Active Energy – Single Rate (kWh)",
+        "type": "double",
+        "label_en": "Active Energy – Single Rate (kWh)",
+        "label_pt": "Energia Ativa Simples (kWh)",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "energia_ativa_vazio_kwh",
+        "description": null,
+        "annotations": {},
+        "label": "Active Energy – Off‑Peak (kWh)",
+        "type": "double",
+        "label_en": "Active Energy – Off‑Peak (kWh)",
+        "label_pt": "Energia Ativa Vazio (kWh)",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "energia_ativa_fora_de_vazio_kwh",
+        "description": null,
+        "annotations": {},
+        "label": "Active Energy – Peak (Non Off‑Peak) (kWh)",
+        "type": "double",
+        "label_en": "Active Energy – Peak (Non Off‑Peak) (kWh)",
+        "label_pt": "Energia Ativa Fora de Vazio (kWh)",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "energia_ativa_super_vazio_kwh",
+        "description": null,
+        "annotations": {},
+        "label": "Active Energy – Super Off‑Peak (kWh)",
+        "type": "double",
+        "label_en": "Active Energy – Super Off‑Peak (kWh)",
+        "label_pt": "Energia Ativa Super Vazio (kWh)",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "energia_ativa_ponta_kwh",
+        "description": null,
+        "annotations": {},
+        "label": "Active Energy – Peak Period (kWh)",
+        "type": "double",
+        "label_en": "Active Energy – Peak Period (kWh)",
+        "label_pt": "Energia Ativa Ponta (kWh)",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "energia_ativa_cheias_kwh",
+        "description": null,
+        "annotations": {},
+        "label": "Active Energy – Mid‑Peak Period (kWh)",
+        "type": "double",
+        "label_en": "Active Energy – Mid‑Peak Period (kWh)",
+        "label_pt": "Energia Ativa Cheias (kWh)",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "energia_ativa_total_kwh",
+        "description": null,
+        "annotations": {},
+        "label": "Total Active Energy (kWh)",
+        "type": "double",
+        "label_en": "Total Active Energy (kWh)",
+        "label_pt": "Energia Ativa Total (kWh)",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "dis_code",
+        "description": null,
+        "annotations": {},
+        "label": "District Code",
+        "type": "text",
+        "label_en": "District Code",
+        "label_pt": "Código Distrito",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "con_code",
+        "description": null,
+        "annotations": {},
+        "label": "Municipality Code",
+        "type": "text",
+        "label_en": "Municipality Code",
+        "label_pt": "Código Concelho",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "fre_code",
+        "description": null,
+        "annotations": {},
+        "label": "Parish Code",
+        "type": "text",
+        "label_en": "Parish Code",
+        "label_pt": "Código Freguesia",
+        "description_en": null,
+        "description_pt": null
+      }
+    ],
+    "dataset_id": "consumos-faturados-por-periodo-tarifario",
+    "dataset_uid": "da_88nmgb",
+    "has_records": true,
+    "features": [
+      "analyze",
+      "timeserie",
+      "custom_view"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "default": {
+        "title": "Electricity Consumption by Municipality by Tariff Period",
+        "title_en": "Electricity Consumption by Municipality by Tariff Period",
+        "title_pt": "Consumos por município por período tarifário",
+        "description": "<p>This dataset presents active electricity consumption by municipality, broken down by tariff period, based on the distribution network operated by E-REDES.</p><p>The data is organized by geographic location (district, municipality and parish) and by tariff period, allowing analysis of energy consumption according to the applicable time-of-use cycle (e.g., off-peak, peak or standard hours).</p><p>Tariff periods reflect the different time intervals defined for electricity tariff purposes, used to distinguish consumption recorded during hours of lower demand (off-peak, super off-peak) from hours of higher demand on the network (peak, standard).</p><p>This dataset makes it possible to characterize energy consumption patterns by territory, identify seasonal and hourly variations in consumption, and support studies related to tariff planning, demand management and energy efficiency.</p><p><br></p><p><b>Use cases:</b></p><ul><li>Tariff analysis by municipality.</li><li>Characterization of energy consumption by time-of-use period (off-peak, non off-peak, super off-peak, peak and standard hours).</li><li>Comparison of consumption patterns between different municipalities and regions.</li><li>Support for demand management and energy efficiency studies.</li><li>Identification of seasonality and monthly variations in energy consumption.</li></ul><p><br></p><p><b>Update frequency:</b> monthly</p><p><br></p><p><b>Variables included:</b></p><ul><li><b>Date </b>— Reference date of the information.</li><li><b>Year </b>— Year corresponding to the analysis period.</li><li><b>Month </b>— Month corresponding to the analysis period.</li><li><b>District </b>— Name of the district where the recorded consumption is located.</li><li><b>District Code</b> — Identification code of the district.</li><li><b>Municipality </b>— Name of the municipality where the recorded consumption is located.</li><li><b>Municipality Code</b> — Identification code of the municipality.</li><li><b>Parish </b>— Name of the parish where the recorded consumption is located.</li><li><b>Parish Code</b> — Identification code of the parish.</li><li><b>Simple Active Energy (kWh)</b> — Active energy consumption recorded under a simple tariff (with no distinction by time-of-use period).</li><li><b>Off-Peak Active Energy (kWh) </b>— Active energy consumption recorded during the off-peak period.</li><li><b>Non Off-Peak Active Energy (kWh) </b>— Active energy consumption recorded during the non off-peak period.</li><li><b>Super Off-Peak Active Energy (kWh) </b>— Active energy consumption recorded during the super off-peak period.</li><li><b>Peak Active Energy (kWh)</b> — Active energy consumption recorded during the peak period.</li><li><b>Standard Active Energy (kWh)</b> — Active energy consumption recorded during the standard (cheias) period.</li><li><b>Total Active Energy (kWh)</b> — Total active energy consumption, corresponding to the sum of all tariff periods.</li></ul><p><br></p><p>1. The information made available by E-REDES constitutes an approximation of values taken from the system and refers to the moment at which it was collected. Given that connection points, the electricity distribution network, and the consumption and production values themselves are naturally very dynamic, it is noted that the information provided may be subject to subsequent changes and updates, and any omissions and/or occasional location inaccuracies that the information may contain are also reserved.</p><p><br></p><p>2. Accordingly, E-REDES is not liable to third parties, namely partners, service providers, contractors, users and clients, for any damages that may arise as a direct or indirect consequence of the use of this Information, particularly when carrying out interventions, calculations and/or estimates, without confirming the accuracy and update status of the data. It is therefore noted that consulting this information does not exempt users from the duty to consult E-REDES directly to obtain updated information.</p><p><br></p><p>The data provided through the E-REDES Open Data Portal is covered by open licenses (CC BY 4.0). There are no restrictions on access, provided that data users cite the publisher. We therefore suggest citing the E-REDES Open Data Portal as follows:</p><p><br></p><p>E-REDES – Distribuição de eletricidade, \"Portal Open Data E-REDES\". Accessed on \"Date\". [Online] Available at https://e-redes.opendatasoft.com/pages/homepage/</p><p><br></p><p>If sharing on social media, please add #PortalOpenData_E_REDES</p>",
+        "description_en": "<p>This dataset presents active electricity consumption by municipality, broken down by tariff period, based on the distribution network operated by E-REDES.</p><p>The data is organized by geographic location (district, municipality and parish) and by tariff period, allowing analysis of energy consumption according to the applicable time-of-use cycle (e.g., off-peak, peak or standard hours).</p><p>Tariff periods reflect the different time intervals defined for electricity tariff purposes, used to distinguish consumption recorded during hours of lower demand (off-peak, super off-peak) from hours of higher demand on the network (peak, standard).</p><p>This dataset makes it possible to characterize energy consumption patterns by territory, identify seasonal and hourly variations in consumption, and support studies related to tariff planning, demand management and energy efficiency.</p><p><br></p><p><b>Use cases:</b></p><ul><li>Tariff analysis by municipality.</li><li>Characterization of energy consumption by time-of-use period (off-peak, non off-peak, super off-peak, peak and standard hours).</li><li>Comparison of consumption patterns between different municipalities and regions.</li><li>Support for demand management and energy efficiency studies.</li><li>Identification of seasonality and monthly variations in energy consumption.</li></ul><p><br></p><p><b>Update frequency:</b> monthly</p><p><br></p><p><b>Variables included:</b></p><ul><li><b>Date </b>— Reference date of the information.</li><li><b>Year </b>— Year corresponding to the analysis period.</li><li><b>Month </b>— Month corresponding to the analysis period.</li><li><b>District </b>— Name of the district where the recorded consumption is located.</li><li><b>District Code</b> — Identification code of the district.</li><li><b>Municipality </b>— Name of the municipality where the recorded consumption is located.</li><li><b>Municipality Code</b> — Identification code of the municipality.</li><li><b>Parish </b>— Name of the parish where the recorded consumption is located.</li><li><b>Parish Code</b> — Identification code of the parish.</li><li><b>Simple Active Energy (kWh)</b> — Active energy consumption recorded under a simple tariff (with no distinction by time-of-use period).</li><li><b>Off-Peak Active Energy (kWh) </b>— Active energy consumption recorded during the off-peak period.</li><li><b>Non Off-Peak Active Energy (kWh) </b>— Active energy consumption recorded during the non off-peak period.</li><li><b>Super Off-Peak Active Energy (kWh) </b>— Active energy consumption recorded during the super off-peak period.</li><li><b>Peak Active Energy (kWh)</b> — Active energy consumption recorded during the peak period.</li><li><b>Standard Active Energy (kWh)</b> — Active energy consumption recorded during the standard (cheias) period.</li><li><b>Total Active Energy (kWh)</b> — Total active energy consumption, corresponding to the sum of all tariff periods.</li></ul><p><br></p><p>1. The information made available by E-REDES constitutes an approximation of values taken from the system and refers to the moment at which it was collected. Given that connection points, the electricity distribution network, and the consumption and production values themselves are naturally very dynamic, it is noted that the information provided may be subject to subsequent changes and updates, and any omissions and/or occasional location inaccuracies that the information may contain are also reserved.</p><p><br></p><p>2. Accordingly, E-REDES is not liable to third parties, namely partners, service providers, contractors, users and clients, for any damages that may arise as a direct or indirect consequence of the use of this Information, particularly when carrying out interventions, calculations and/or estimates, without confirming the accuracy and update status of the data. It is therefore noted that consulting this information does not exempt users from the duty to consult E-REDES directly to obtain updated information.</p><p><br></p><p>The data provided through the E-REDES Open Data Portal is covered by open licenses (CC BY 4.0). There are no restrictions on access, provided that data users cite the publisher. We therefore suggest citing the E-REDES Open Data Portal as follows:</p><p><br></p><p>E-REDES – Distribuição de eletricidade, \"Portal Open Data E-REDES\". Accessed on \"Date\". [Online] Available at https://e-redes.opendatasoft.com/pages/homepage/</p><p><br></p><p>If sharing on social media, please add #PortalOpenData_E_REDES</p>",
+        "description_pt": "<div class=\"OutlineElement Ltr SCXW84946739 BCX8\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px; padding: 0px; user-select: text; clear: both; cursor: text; overflow: visible; position: relative; direction: ltr;\"><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\">Este dataset apresenta os consumos de energia elétrica ativa por município, discriminados por período tarifário, com base na rede de distribuição operada pela E-REDES.</p><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\">Os dados estão organizados por localização geográfica (distrito, concelho e freguesia) e por período tarifário, permitindo analisar o consumo de energia consoante o ciclo horário aplicável (ex.: horas de vazio, ponta ou cheias).</p><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\">Os períodos tarifários refletem os diferentes intervalos horários definidos para efeitos de tarifação da energia elétrica, sendo utilizados para distinguir o consumo registado em horas de menor procura (vazio, super vazio) das horas de maior procura na rede (ponta, cheias).</p><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\">Este dataset permite caracterizar os padrões de consumo de energia por território, identificar variações sazonais e horárias de consumo, e apoiar estudos relacionados com o planeamento tarifário, a gestão da procura e a eficiência energética.</p><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><br></p><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><b>Casos de uso:</b></p><ul><li style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\">Análise tarifária por município.</li><li style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\">Caracterização do consumo de energia por período horário (vazio, fora de vazio, super vazio, ponta e cheias).</li><li style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\">Comparação de padrões de consumo entre diferentes municípios e regiões.</li><li style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\">Apoio a estudos de gestão da procura e eficiência energética.</li><li style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\">Identificação de sazonalidade e variações mensais no consumo de energia.</li></ul><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><br></p><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><b>Periodicidade de atualização: </b>mensal</p><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><br></p><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><b>Variáveis incluídas:</b></p><ul><li style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><b>Data </b>— Data de referência da informação.</li><li style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><b>Ano </b>— Ano correspondente ao período de análise.</li><li style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><b>Mês </b>— Mês correspondente ao período de análise.</li><li style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><b>Distrito</b> — Nome do distrito onde se localiza o consumo registado.</li><li style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><b>Código Distrito</b> — Código identificativo do distrito.</li><li style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><b>Concelho </b>— Nome do concelho onde se localiza o consumo registado.</li><li style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><b>Código Concelho</b> — Código identificativo do concelho.</li><li style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><b>Freguesia </b>— Nome da freguesia onde se localiza o consumo registado.</li><li style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><b>Código Freguesia</b> — Código identificativo da freguesia.</li><li style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><b>Energia Ativa Simples (kWh)</b> — Consumo de energia ativa registado em tarifário simples (sem distinção de período horário).</li><li style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><b>Energia Ativa Vazio (kWh)</b> — Consumo de energia ativa registado no período de vazio.</li><li style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><b>Energia Ativa Fora de Vazio (kWh) </b>— Consumo de energia ativa registado no período fora de vazio.</li><li style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><b>Energia Ativa Super Vazio (kWh)</b> — Consumo de energia ativa registado no período de super vazio.</li><li style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><b>Energia Ativa Ponta (kWh)</b> — Consumo de energia ativa registado no período de ponta.</li><li style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><b>Energia Ativa Cheias (kWh) </b>— Consumo de energia ativa registado no período de cheias.</li><li style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><b>Energia Ativa Total (kWh)</b> — Consumo total de energia ativa, correspondente à soma de todos os períodos tarifários.</li></ul><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><br></p><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><br></p><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\">1. A Informação disponibilizada pela E-REDES constitui uma aproximação aos valores retirados de sistema e tem por referência o momento em que a mesma é recolhida. Atendendo a que os pontos de ligação, a rede de distribuição de eletricidade, e os próprios valores de consumo e de produção são naturalmente muito dinâmicos, salvaguarda-se que a informação disponibilizada poderá ser objeto de subsequentes alterações e atualizações, ficando igualmente ressalvadas eventuais omissões e/ou pontuais imprecisões de localização que a informação poderá conter.</p><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><br></p><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><br></p><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><br></p><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\">2. Desta forma a E-REDES não se responsabiliza perante terceiros, nomeadamente, parceiros, prestadores de serviços, empreiteiros, utentes e clientes, pelos danos que possam surgir em consequência, direta ou indireta, do uso da presente Informação, em particular aquando da realização de intervenções, cálculos e/ou estimativas, sem confirmação da exatidão e atualização dos dados, pelo que devidamente se ressalva de que a consulta da presente informação não prejudica o dever de se promover uma consulta direta à E-REDES para obter informação atualizada.</p><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><br></p><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><br></p><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\">Os dados fornecidos pelo Portal Open Data da E-REDES são abrangidos por licenças abertas (CC BY 4.0). Não existem restrições ao seu acesso, sob o compromisso de os utilizadores dos dados citarem o publicador. Assim, sugerimos que cite o Portal Open Data E-REDES como:</p><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><br></p><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\">E-REDES – Distribuição de eletricidade, “Portal Open Data E-REDES”. Acedido em “Data”. [Online] Disponível em https://e-redes.opendatasoft.com/pages/homepage/</p><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\"><br></p><p class=\"Paragraph SCXW84946739 BCX8\" paraeid=\"{92b89a3b-a102-4792-b805-cb8152004842}{8}\" paraid=\"679936465\" style=\"-webkit-user-drag: none; -webkit-tap-highlight-color: transparent; margin: 0px 0px 10.6667px; padding: 0px; user-select: text; overflow-wrap: break-word; vertical-align: baseline; font-kerning: none; background-color: transparent;\">Se partilhar nas redes sociais, por favor acrescente #PortalOpenData_E_REDES</p></div>",
+        "theme": [
+          "Consumption and Energy"
+        ],
+        "theme_en": [
+          "Consumption and Energy"
+        ],
+        "theme_pt": [
+          "Consumos e Energia"
+        ],
+        "keyword": null,
+        "keyword_en": null,
+        "keyword_pt": null,
+        "license": "CC BY 4.0",
+        "license_en": "CC BY 4.0",
+        "license_pt": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_url_en": "https://creativecommons.org/licenses/by/4.0/",
+        "license_url_pt": "https://creativecommons.org/licenses/by/4.0/",
+        "language": "pt",
+        "metadata_languages": [
+          "pt",
+          "en"
+        ],
+        "timezone": "Europe/Lisbon",
+        "modified": "2026-08-13T09:56:06+00:00",
+        "modified_updates_on_metadata_change": false,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2026-08-13T09:56:06+00:00",
+        "metadata_processed": "2026-09-03T12:39:13.595000+00:00",
+        "geographic_reference": null,
+        "geographic_reference_auto": false,
+        "territory": null,
+        "geometry_types": null,
+        "bbox": null,
+        "publisher": "E-REDES",
+        "publisher_en": "E-REDES",
+        "publisher_pt": "E-REDES",
+        "references": null,
+        "records_count": 103760,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": "MONTHLY"
+      },
+      "custom": {
+        "perfis-de-utilizacao": null,
+        "atualizado": null
+      }
+    }
+  },
+  "records": [
+    {
+      "data": "2025-12-01T00:00:00+00:00",
+      "con_code": "0101",
+      "energia_ativa_simples_kwh": 6923932.848,
+      "energia_ativa_vazio_kwh": 4299763.694,
+      "energia_ativa_fora_de_vazio_kwh": 603558.408,
+      "energia_ativa_super_vazio_kwh": 1991865.8159999999,
+      "energia_ativa_ponta_kwh": 3177558.744,
+      "energia_ativa_cheias_kwh": 8257763.2
+    },
+    {
+      "data": "2025-12-01T00:00:00+00:00",
+      "con_code": "0102",
+      "energia_ativa_simples_kwh": 3923902.041,
+      "energia_ativa_vazio_kwh": 3851815.928,
+      "energia_ativa_fora_de_vazio_kwh": 310679.66199999995,
+      "energia_ativa_super_vazio_kwh": 1811521.229,
+      "energia_ativa_ponta_kwh": 1881735.719,
+      "energia_ativa_cheias_kwh": 4990662.662
+    },
+    {
+      "data": "2025-12-01T00:00:00+00:00",
+      "con_code": "0103",
+      "energia_ativa_simples_kwh": 4580568.886,
+      "energia_ativa_vazio_kwh": 1807854.9610000001,
+      "energia_ativa_fora_de_vazio_kwh": 351425.978,
+      "energia_ativa_super_vazio_kwh": 650152.0260000001,
+      "energia_ativa_ponta_kwh": 1130732.1609999998,
+      "energia_ativa_cheias_kwh": 2837794.7860000003
+    }
+  ]
+}

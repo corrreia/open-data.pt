@@ -45,7 +45,7 @@ export function ingestRunnerReport(store: RegistryStore, report: RunnerReport, a
 
 /** Real-time feeds report every minute, failures included; this long without any report means the platform stopped collecting. */
 export const COLLECTION_GAP_MS = 10 * 60_000;
-/** The status page shows ninety days; a little more is kept. */
+/** Keep outage records independently of the status page's shorter display window. */
 export const OUTAGE_KEEP_MS = 120 * 86_400_000;
 export const OUTAGES_SINCE_KEY = "outagesSince";
 /** A feed's failure is downtime once it has repeated and lasted this long; one missed collection the next one repairs is a blip. */

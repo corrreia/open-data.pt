@@ -1,0 +1,279 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "ano",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "year",
+        "type": "text",
+        "label_en": "year",
+        "label_pt": "Ano",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "mes",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "month",
+        "type": "text",
+        "label_en": "month",
+        "label_pt": "Mês",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "distrito",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "district",
+        "type": "text",
+        "label_en": "district",
+        "label_pt": "Distrito",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "concelho",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "municipality",
+        "type": "text",
+        "label_en": "municipality",
+        "label_pt": "Concelho",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "freguesia",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "Parish",
+        "type": "text",
+        "label_en": "Parish",
+        "label_pt": "Freguesia",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "tipo_de_lampada",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "Type of lamp",
+        "type": "text",
+        "label_en": "Type of lamp",
+        "label_pt": "Tipo de Lâmpada",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "luminarias",
+        "description": null,
+        "annotations": {},
+        "label": "luminaire",
+        "type": "double",
+        "label_en": "luminaire",
+        "label_pt": "Luminárias",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "lampadas_por_luminaria",
+        "description": null,
+        "annotations": {},
+        "label": "Lâmpadas por Luminária",
+        "type": "double",
+        "label_en": "Lâmpadas por Luminária",
+        "label_pt": "Lâmpadas por Luminária",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "lampadas",
+        "description": null,
+        "annotations": {},
+        "label": "Lamps",
+        "type": "double",
+        "label_en": "Lamps",
+        "label_pt": "Lâmpadas",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "potencia_instalada_total",
+        "description": "W",
+        "annotations": {},
+        "label": "total installed power (W)",
+        "type": "double",
+        "label_en": "total installed power (W)",
+        "label_pt": "Potência Instalada Total (W)",
+        "description_en": "W",
+        "description_pt": "W"
+      },
+      {
+        "name": "coddistrito",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "facetsort": "-count"
+        },
+        "label": "DistrictCode",
+        "type": "text",
+        "label_en": "DistrictCode",
+        "label_pt": "CodDistrito",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "coddistritoconcelho",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "facetsort": "-count"
+        },
+        "label": "DistrictMunicipalityCode",
+        "type": "text",
+        "label_en": "DistrictMunicipalityCode",
+        "label_pt": "CodDistritoConcelho",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "coddistritoconcelhofreguesia",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "facetsort": "-count"
+        },
+        "label": "DistrictMunicipalityParishCode",
+        "type": "text",
+        "label_en": "DistrictMunicipalityParishCode",
+        "label_pt": "coddistritoconcelhofreguesia",
+        "description_en": null,
+        "description_pt": null
+      }
+    ],
+    "dataset_id": "cadastro_iluminacao_publica",
+    "dataset_uid": "da_825wbj",
+    "has_records": true,
+    "features": [
+      "analyze",
+      "custom_view"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "default": {
+        "title": "Characterization of Public Lighting luminaires",
+        "title_en": "Characterization of Public Lighting luminaires",
+        "title_pt": "Caracterização de luminárias de Iluminação Pública",
+        "description": "<p>Characterization of public lighting by District, county and parish. Identification of the number of luminaires, technology used and installed power.</p><p><br></p><p>1. The information made available by E-REDES constitutes an approximation to the values ​​taken from the system and is based on the moment in which it is collected. Given that the connection points, the electricity distribution network, and the consumption and production values ​​themselves are naturally very dynamic, it is safeguarded that the information made available may be subject to subsequent changes and updates, with the exception of any omissions and/or occasional inaccuracies of location that the information may contain.</p><p>2. In this way, E-REDES is not liable to third parties, namely, partners, service providers, contractors, users and customers, for damages that may arise as a result, direct or indirect, of the use of this Information, in particular when carrying out interventions, calculations and/or estimates, without confirming the accuracy and updating of the data, whereby it is duly noted that the consultation of this information does not affect the duty to promote a direct consultation with E-REDES in order to obtain updated information.</p><p><br></p><p><span style=\"font-size: inherit;\">The data provided by the E-REDES Open Data Portal is covered by open licenses (CC BY 4.0). There are no restrictions on access, under the commitment that data users cite the publisher. Therefore, we suggest that you cite the Open Data E-REDES Portal as:</span></p><p><span style=\"font-size: inherit;\">E-REDES – Distribuição de Eletricidade, “E-REDES Open Data Portal”. Accessed in “Data”. [Online] Available at </span><a aria-label=\"Link https://e-redes.opendatasoft.com/pages/homepage/\" class=\"fui-Link ___1rxvrpe f2hkw1w f3rmtva f1ewtqcl fyind8e f1k6fduh f1w7gpdv fk6fouc fjoy568 figsok6 f1hu3pq6 f11qmguv f19f4twv f1tyq0we f1g0x7ka fhxju0i f1qch9an f1cnd47f fqv5qza f1vmzxwi f1o700av f13mvf36 f1cmlufx f9n3di6 f1ids18y f1tx3yz7 f1deo86v f1eh06m1 f1iescvh fhgqx19 f1olyrje f1p93eir f1nev41a f1h8hb77 f1lqvz6u f10aw75t fsle3fq f17ae5zn\" href=\"https://e-redes.opendatasoft.com/pages/homepage/\" rel=\"noreferrer noopener\" target=\"_blank\" title=\"https://e-redes.opendatasoft.com/pages/homepage/\"><span style=\"font-size: inherit;\">https://e-redes.opendatasoft.com/pages/homepage/</span></a></p><p class=\"MsoNormal\" style=\"margin-bottom: 0cm; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span lang=\"EN-US\" style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\"><o:p><span class=\"ui-provider a b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak\" dir=\"ltr\"></span></o:p></span></p><p class=\"\"><span style=\"font-size: inherit;\">If you share on social media, please add #PortalOpenData_E_REDES</span></p><p><span style=\"font-size: inherit;\"><br></span></p>",
+        "description_en": "<p>Characterization of public lighting by District, county and parish. Identification of the number of luminaires, technology used and installed power.</p><p><br></p><p>1. The information made available by E-REDES constitutes an approximation to the values ​​taken from the system and is based on the moment in which it is collected. Given that the connection points, the electricity distribution network, and the consumption and production values ​​themselves are naturally very dynamic, it is safeguarded that the information made available may be subject to subsequent changes and updates, with the exception of any omissions and/or occasional inaccuracies of location that the information may contain.</p><p>2. In this way, E-REDES is not liable to third parties, namely, partners, service providers, contractors, users and customers, for damages that may arise as a result, direct or indirect, of the use of this Information, in particular when carrying out interventions, calculations and/or estimates, without confirming the accuracy and updating of the data, whereby it is duly noted that the consultation of this information does not affect the duty to promote a direct consultation with E-REDES in order to obtain updated information.</p><p><br></p><p><span style=\"font-size: inherit;\">The data provided by the E-REDES Open Data Portal is covered by open licenses (CC BY 4.0). There are no restrictions on access, under the commitment that data users cite the publisher. Therefore, we suggest that you cite the Open Data E-REDES Portal as:</span></p><p><span style=\"font-size: inherit;\">E-REDES – Distribuição de Eletricidade, “E-REDES Open Data Portal”. Accessed in “Data”. [Online] Available at </span><a aria-label=\"Link https://e-redes.opendatasoft.com/pages/homepage/\" class=\"fui-Link ___1rxvrpe f2hkw1w f3rmtva f1ewtqcl fyind8e f1k6fduh f1w7gpdv fk6fouc fjoy568 figsok6 f1hu3pq6 f11qmguv f19f4twv f1tyq0we f1g0x7ka fhxju0i f1qch9an f1cnd47f fqv5qza f1vmzxwi f1o700av f13mvf36 f1cmlufx f9n3di6 f1ids18y f1tx3yz7 f1deo86v f1eh06m1 f1iescvh fhgqx19 f1olyrje f1p93eir f1nev41a f1h8hb77 f1lqvz6u f10aw75t fsle3fq f17ae5zn\" href=\"https://e-redes.opendatasoft.com/pages/homepage/\" rel=\"noreferrer noopener\" target=\"_blank\" title=\"https://e-redes.opendatasoft.com/pages/homepage/\"><span style=\"font-size: inherit;\">https://e-redes.opendatasoft.com/pages/homepage/</span></a></p><p class=\"MsoNormal\" style=\"margin-bottom: 0cm; line-height: normal; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><span lang=\"EN-US\" style=\"font-size: 10.5pt; font-family: Arial, sans-serif;\"><o:p><span class=\"ui-provider a b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak\" dir=\"ltr\"></span></o:p></span></p><p class=\"\"><span style=\"font-size: inherit;\">If you share on social media, please add #PortalOpenData_E_REDES</span></p><p><span style=\"font-size: inherit;\"><br></span></p>",
+        "description_pt": "<p>Caracterização da luminárias de iluminação pública por Distrito,concelho e freguesia. Identificação da quantidade de luminárias, tecnologia utilizada e potência instalada.</p><p><br></p><p>1. A Informação disponibilizada pela E-REDES constitui uma aproximação aos valores retirados de sistema e tem por referência o momento em que a mesma é recolhida. Atendendo a que os pontos de ligação, a rede de distribuição de eletricidade, e os próprios valores de consumo e de produção são naturalmente muito dinâmicos, salvaguarda-se que a informação disponibilizada poderá ser objeto de subsequentes alterações e atualizações, ficando igualmente ressalvadas eventuais omissões e/ou pontuais imprecisões de localização que a informação poderá conter.</p><p>2. Desta forma a E-REDES não se responsabiliza perante terceiros, nomeadamente, parceiros, prestadores de serviços, empreiteiros, utentes e clientes, pelos danos que possam surgir em consequência, direta ou indireta, do uso da presente Informação, em particular aquando da realização de intervenções, cálculos e/ou estimativas, sem confirmação da exatidão e atualização dos dados, pelo que devidamente se ressalva de que a consulta da presente informação não prejudica o dever de se promover uma consulta direta à E-REDES para obter informação atualizada.</p><p></p><p><br></p><p><span style=\"font-family: inherit; font-size: inherit;\">Os dados fornecidos pelo Portal Open Data da E-REDES são abrangidos por licenças abertas (</span><a aria-label=\"Link CC BY 4.0\" class=\"fui-Link ___1rxvrpe f2hkw1w f3rmtva f1ewtqcl fyind8e f1k6fduh f1w7gpdv fk6fouc fjoy568 figsok6 f1hu3pq6 f11qmguv f19f4twv f1tyq0we f1g0x7ka fhxju0i f1qch9an f1cnd47f fqv5qza f1vmzxwi f1o700av f13mvf36 f1cmlufx f9n3di6 f1ids18y f1tx3yz7 f1deo86v f1eh06m1 f1iescvh fhgqx19 f1olyrje f1p93eir f1nev41a f1h8hb77 f1lqvz6u f10aw75t fsle3fq f17ae5zn\" href=\"https://creativecommons.org/licenses/by/4.0/\" rel=\"noreferrer noopener\" style=\"font-size: 0.875rem; background-color: rgb(255, 255, 255);\" target=\"_blank\" title=\"https://creativecommons.org/licenses/by/4.0/\">CC BY 4.0</a><span style=\"font-family: inherit; font-size: inherit;\">). Não existem restrições ao seu acesso, sob o compromisso de os utilizadores dos dados citarem o publicador. Assim, sugerimos que cite o Portal Open Data E-REDES como:</span><br></p><p><span style=\"font-size: inherit;\">E-REDES – Distribuição de eletricidade, “Portal Open Data E-REDES”. Acedido em “Data”. [Online] Disponível em </span><a aria-label=\"Link https://e-redes.opendatasoft.com/pages/homepage/\" class=\"fui-Link ___1rxvrpe f2hkw1w f3rmtva f1ewtqcl fyind8e f1k6fduh f1w7gpdv fk6fouc fjoy568 figsok6 f1hu3pq6 f11qmguv f19f4twv f1tyq0we f1g0x7ka fhxju0i f1qch9an f1cnd47f fqv5qza f1vmzxwi f1o700av f13mvf36 f1cmlufx f9n3di6 f1ids18y f1tx3yz7 f1deo86v f1eh06m1 f1iescvh fhgqx19 f1olyrje f1p93eir f1nev41a f1h8hb77 f1lqvz6u f10aw75t fsle3fq f17ae5zn\" href=\"https://e-redes.opendatasoft.com/pages/homepage/\" rel=\"noreferrer noopener\" target=\"_blank\" title=\"https://e-redes.opendatasoft.com/pages/homepage/\"><span style=\"font-size: inherit;\">https://e-redes.opendatasoft.com/pages/homepage/</span></a></p><p><span class=\"ui-provider a b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak\" dir=\"ltr\"></span></p><p><span style=\"font-size: inherit;\">Se partilhar nas redes sociais, por favor acrescente #PortalOpenData_E_REDES</span></p>",
+        "theme": [
+          "Electrical Network"
+        ],
+        "theme_en": [
+          "Electrical Network"
+        ],
+        "theme_pt": [
+          "Rede Elétrica"
+        ],
+        "keyword": null,
+        "keyword_en": null,
+        "keyword_pt": null,
+        "license": "CC BY 4.0",
+        "license_en": "CC BY 4.0",
+        "license_pt": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_url_en": "https://creativecommons.org/licenses/by/4.0/",
+        "license_url_pt": "https://creativecommons.org/licenses/by/4.0/",
+        "language": "pt",
+        "metadata_languages": [
+          "pt",
+          "en"
+        ],
+        "timezone": "Europe/Lisbon",
+        "modified": "2026-09-15T15:01:03+00:00",
+        "modified_updates_on_metadata_change": false,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2026-09-15T15:01:03+00:00",
+        "metadata_processed": "2026-09-15T15:01:03.486000+00:00",
+        "geographic_reference": [
+          "world_pt"
+        ],
+        "geographic_reference_auto": false,
+        "territory": [
+          "Portugal"
+        ],
+        "geometry_types": null,
+        "bbox": null,
+        "publisher": "E-REDES",
+        "publisher_en": "E-REDES",
+        "publisher_pt": "E-REDES",
+        "references": null,
+        "records_count": 9866,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": null
+      },
+      "custom": {
+        "perfis-de-utilizacao": [
+          "Academia",
+          "Munícipio"
+        ],
+        "atualizado": null
+      }
+    }
+  },
+  "records": [
+    {
+      "ano": "2026",
+      "mes": "9",
+      "coddistritoconcelho": "0101",
+      "tipo_de_lampada": "Fluorescente",
+      "luminarias": 14.0,
+      "lampadas": 14.0,
+      "potencia_instalada_total": 700.0
+    },
+    {
+      "ano": "2026",
+      "mes": "9",
+      "coddistritoconcelho": "0101",
+      "tipo_de_lampada": "Indução",
+      "luminarias": 14.0,
+      "lampadas": 14.0,
+      "potencia_instalada_total": 700.0
+    },
+    {
+      "ano": "2026",
+      "mes": "9",
+      "coddistritoconcelho": "0101",
+      "tipo_de_lampada": "Iodeto Metálico",
+      "luminarias": 13.0,
+      "lampadas": 13.0,
+      "potencia_instalada_total": 3950.0
+    }
+  ]
+}

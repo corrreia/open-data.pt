@@ -1,0 +1,382 @@
+{
+  "version": "2.0",
+  "label": "Consolidation; Source; Flows, stocks and prices; Financial instrument; Valuation method; Metrics; Periodicity; Residual maturity; Reference institutional sector; Reference territory; Data type; Unit of measure",
+  "id": [
+    "8",
+    "18",
+    "19",
+    "25",
+    "28",
+    "29",
+    "40",
+    "45",
+    "56",
+    "63",
+    "66",
+    "70",
+    "reference_date"
+  ],
+  "size": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    3,
+    1,
+    1,
+    1,
+    2
+  ],
+  "extension": {
+    "num_series": 3,
+    "obs_updated_at": "2026-09-01T09:30:00Z",
+    "series": [
+      {
+        "id": 13168814,
+        "label": "Regional government deposits assets - Monthly - M€",
+        "dimension_category": [
+          {
+            "dimension_id": 8,
+            "category_id": 4129
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 25,
+            "category_id": 3182
+          },
+          {
+            "dimension_id": 28,
+            "category_id": 18
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3609
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 45,
+            "category_id": 4427
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3105
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2779
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3331
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=13168814&lang=EN"
+      },
+      {
+        "id": 13168815,
+        "label": "Local government deposits assets - Monthly - M€",
+        "dimension_category": [
+          {
+            "dimension_id": 8,
+            "category_id": 4129
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 25,
+            "category_id": 3182
+          },
+          {
+            "dimension_id": 28,
+            "category_id": 18
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3609
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 45,
+            "category_id": 4427
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3106
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2779
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3331
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=13168815&lang=EN"
+      },
+      {
+        "id": 13168816,
+        "label": "Social security funds deposits assets - Monthly - M€",
+        "dimension_category": [
+          {
+            "dimension_id": 8,
+            "category_id": 4129
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 25,
+            "category_id": 3182
+          },
+          {
+            "dimension_id": 28,
+            "category_id": 18
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3609
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 45,
+            "category_id": 4427
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3107
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2779
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3331
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=13168816&lang=EN"
+      }
+    ]
+  },
+  "value": [
+    135.22,
+    125.12,
+    5754.29,
+    5564.68,
+    4055.08,
+    4302.36
+  ],
+  "status": [
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F"
+  ],
+  "dimension": {
+    "8": {
+      "label": "Consolidation",
+      "category": {
+        "index": [
+          "4129"
+        ],
+        "label": {
+          "4129": "Consolidated data"
+        }
+      }
+    },
+    "18": {
+      "label": "Source",
+      "category": {
+        "index": [
+          "35"
+        ],
+        "label": {
+          "35": "Banco de Portugal"
+        }
+      }
+    },
+    "19": {
+      "label": "Flows, stocks and prices",
+      "category": {
+        "index": [
+          "12"
+        ],
+        "label": {
+          "12": "Stocks"
+        }
+      }
+    },
+    "25": {
+      "label": "Financial instrument",
+      "category": {
+        "index": [
+          "3182"
+        ],
+        "label": {
+          "3182": "Deposits"
+        }
+      }
+    },
+    "28": {
+      "label": "Valuation method",
+      "category": {
+        "index": [
+          "18"
+        ],
+        "label": {
+          "18": "Nominal value"
+        }
+      }
+    },
+    "40": {
+      "label": "Periodicity",
+      "category": {
+        "index": [
+          "4264"
+        ],
+        "label": {
+          "4264": "Monthly"
+        }
+      }
+    },
+    "45": {
+      "label": "Residual maturity",
+      "category": {
+        "index": [
+          "4427"
+        ],
+        "label": {
+          "4427": "All"
+        }
+      }
+    },
+    "56": {
+      "label": "Reference institutional sector",
+      "category": {
+        "index": [
+          "3105",
+          "3106",
+          "3107"
+        ],
+        "label": {
+          "3105": "Regional government",
+          "3106": "Local government",
+          "3107": "Social security funds"
+        }
+      }
+    },
+    "66": {
+      "label": "Data type",
+      "category": {
+        "index": [
+          "2779"
+        ],
+        "label": {
+          "2779": "Assets"
+        }
+      }
+    },
+    "70": {
+      "label": "Unit of measure",
+      "category": {
+        "index": [
+          "3331"
+        ],
+        "label": {
+          "3331": "Millions of euros"
+        }
+      }
+    },
+    "reference_date": {
+      "label": "Date",
+      "category": {
+        "index": [
+          "2026-06-30",
+          "2026-07-31"
+        ]
+      }
+    },
+    "29": {
+      "label": "Metrics",
+      "category": {
+        "index": [
+          "3609"
+        ],
+        "label": {
+          "3609": "Value"
+        }
+      }
+    },
+    "63": {
+      "label": "Reference territory",
+      "category": {
+        "index": [
+          "349"
+        ],
+        "label": {
+          "349": "Portugal"
+        }
+      }
+    }
+  },
+  "class": "dataset",
+  "href": "https://bpstat.bportugal.pt/data/v1/domains/28/datasets/10470e6b60c710218dd2a0e6a20fb040/?lang=EN&series_ids=13168814%2C13168815%2C13168816&obs_last_n=2&page_size=100",
+  "source": "Bank of Portugal",
+  "role": {
+    "time": [
+      "reference_date"
+    ],
+    "metric": [
+      "29"
+    ],
+    "geo": [
+      "63"
+    ]
+  }
+}

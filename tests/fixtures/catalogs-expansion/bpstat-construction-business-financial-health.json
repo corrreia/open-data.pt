@@ -1,0 +1,813 @@
+{
+  "version": "2.0",
+  "label": "Corporation size; Source; Flows, stocks and prices; Indicators; Metrics; Periodicity; Reference economic activities; Reference institutional sector; Reference territory; Unit of measure",
+  "id": [
+    "11",
+    "18",
+    "19",
+    "23",
+    "29",
+    "40",
+    "52",
+    "56",
+    "63",
+    "70",
+    "reference_date"
+  ],
+  "size": [
+    1,
+    1,
+    1,
+    12,
+    1,
+    1,
+    1,
+    1,
+    1,
+    3,
+    2
+  ],
+  "extension": {
+    "num_series": 147,
+    "obs_updated_at": "2026-07-06T09:30:00Z",
+    "series": [
+      {
+        "id": 12587167,
+        "label": "Equity (% assets) of private non-financial corporations in the construction sector",
+        "dimension_category": [
+          {
+            "dimension_id": 11,
+            "category_id": 4438
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 4884
+          },
+          {
+            "dimension_id": 23,
+            "category_id": 3502
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3609
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4265
+          },
+          {
+            "dimension_id": 52,
+            "category_id": 1758
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3021
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12587167&lang=EN"
+      },
+      {
+        "id": 12587168,
+        "label": "Capital ratio of private non-financial corporations in the construction sector",
+        "dimension_category": [
+          {
+            "dimension_id": 11,
+            "category_id": 4438
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 4884
+          },
+          {
+            "dimension_id": 23,
+            "category_id": 3367
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3609
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4265
+          },
+          {
+            "dimension_id": 52,
+            "category_id": 1758
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3021
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12587168&lang=EN"
+      },
+      {
+        "id": 12587169,
+        "label": "Cost of financial debt of of private non-financial corporations in the construction sector",
+        "dimension_category": [
+          {
+            "dimension_id": 11,
+            "category_id": 4438
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 4884
+          },
+          {
+            "dimension_id": 23,
+            "category_id": 3369
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3609
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4265
+          },
+          {
+            "dimension_id": 52,
+            "category_id": 1758
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3021
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12587169&lang=EN"
+      },
+      {
+        "id": 12587170,
+        "label": "Return on assets of private non-financial corporations in the construction sector",
+        "dimension_category": [
+          {
+            "dimension_id": 11,
+            "category_id": 4438
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 4884
+          },
+          {
+            "dimension_id": 23,
+            "category_id": 3371
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3609
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4265
+          },
+          {
+            "dimension_id": 52,
+            "category_id": 1758
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3021
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12587170&lang=EN"
+      },
+      {
+        "id": 12587171,
+        "label": "EBITDA / invested capital of private non-financial corporations in the construction sector",
+        "dimension_category": [
+          {
+            "dimension_id": 11,
+            "category_id": 4438
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 4884
+          },
+          {
+            "dimension_id": 23,
+            "category_id": 3372
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3609
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4265
+          },
+          {
+            "dimension_id": 52,
+            "category_id": 1758
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3021
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12587171&lang=EN"
+      },
+      {
+        "id": 12587172,
+        "label": "Trade payables (% assets) of private non-financial corporations in the construction sector",
+        "dimension_category": [
+          {
+            "dimension_id": 11,
+            "category_id": 4438
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 4884
+          },
+          {
+            "dimension_id": 23,
+            "category_id": 3373
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3609
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4265
+          },
+          {
+            "dimension_id": 52,
+            "category_id": 1758
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3021
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12587172&lang=EN"
+      },
+      {
+        "id": 12587173,
+        "label": "Other liabilities (% assets) of private non-financial corporations in the construction sector",
+        "dimension_category": [
+          {
+            "dimension_id": 11,
+            "category_id": 4438
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 4884
+          },
+          {
+            "dimension_id": 23,
+            "category_id": 3374
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3609
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4265
+          },
+          {
+            "dimension_id": 52,
+            "category_id": 1758
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3021
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12587173&lang=EN"
+      },
+      {
+        "id": 12587174,
+        "label": "Financing expenses coverage ratio of private non-financial corporations in the construction sector",
+        "dimension_category": [
+          {
+            "dimension_id": 11,
+            "category_id": 4438
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 4884
+          },
+          {
+            "dimension_id": 23,
+            "category_id": 3375
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3609
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4265
+          },
+          {
+            "dimension_id": 52,
+            "category_id": 1758
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3021
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3324
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12587174&lang=EN"
+      },
+      {
+        "id": 12587175,
+        "label": "Financial debt (% assets) of private non-financial corporations in the construction sector",
+        "dimension_category": [
+          {
+            "dimension_id": 11,
+            "category_id": 4438
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 4884
+          },
+          {
+            "dimension_id": 23,
+            "category_id": 3376
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3609
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4265
+          },
+          {
+            "dimension_id": 52,
+            "category_id": 1758
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3021
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12587175&lang=EN"
+      },
+      {
+        "id": 12587176,
+        "label": "Trade receivables (% assets) of private non-financial corporations in the construction sector",
+        "dimension_category": [
+          {
+            "dimension_id": 11,
+            "category_id": 4438
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 4884
+          },
+          {
+            "dimension_id": 23,
+            "category_id": 3377
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3609
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4265
+          },
+          {
+            "dimension_id": 52,
+            "category_id": 1758
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3021
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12587176&lang=EN"
+      },
+      {
+        "id": 12587177,
+        "label": "Days payable outstanding of private non-financial corporations in the construction sector",
+        "dimension_category": [
+          {
+            "dimension_id": 11,
+            "category_id": 4438
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 4884
+          },
+          {
+            "dimension_id": 23,
+            "category_id": 3447
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3609
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4265
+          },
+          {
+            "dimension_id": 52,
+            "category_id": 1758
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3021
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3330
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12587177&lang=EN"
+      },
+      {
+        "id": 12587178,
+        "label": "Days sales outstanding of private non-financial corporations in the construction sector",
+        "dimension_category": [
+          {
+            "dimension_id": 11,
+            "category_id": 4438
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 4884
+          },
+          {
+            "dimension_id": 23,
+            "category_id": 3448
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3609
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4265
+          },
+          {
+            "dimension_id": 52,
+            "category_id": 1758
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3021
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3330
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12587178&lang=EN"
+      }
+    ]
+  },
+  "value": {
+    "7": 38.2,
+    "6": 38.6,
+    "43": 38.2,
+    "42": 38.6,
+    "49": 4.2,
+    "48": 4.4,
+    "61": 8.5,
+    "60": 8.5,
+    "67": 13.5,
+    "66": 13.5,
+    "13": 11.9,
+    "12": 12.3,
+    "25": 24.8,
+    "24": 24.3,
+    "57": 8.0,
+    "56": 7.8,
+    "19": 25.2,
+    "18": 24.8,
+    "1": 13.0,
+    "0": 13.3,
+    "41": 87.0,
+    "40": 86.0,
+    "35": 63.0,
+    "34": 63.0
+  },
+  "status": {
+    "7": "F",
+    "6": "F",
+    "43": "F",
+    "42": "F",
+    "49": "F",
+    "48": "F",
+    "61": "F",
+    "60": "F",
+    "67": "F",
+    "66": "F",
+    "13": "F",
+    "12": "F",
+    "25": "F",
+    "24": "F",
+    "57": "F",
+    "56": "F",
+    "19": "F",
+    "18": "F",
+    "1": "F",
+    "0": "F",
+    "41": "F",
+    "40": "F",
+    "35": "F",
+    "34": "F"
+  },
+  "dimension": {
+    "11": {
+      "label": "Corporation size",
+      "category": {
+        "index": [
+          "4438"
+        ],
+        "label": {
+          "4438": "All size classes"
+        }
+      }
+    },
+    "18": {
+      "label": "Source",
+      "category": {
+        "index": [
+          "35"
+        ],
+        "label": {
+          "35": "Banco de Portugal"
+        }
+      }
+    },
+    "19": {
+      "label": "Flows, stocks and prices",
+      "category": {
+        "index": [
+          "4884"
+        ],
+        "label": {
+          "4884": "Not applicable"
+        }
+      }
+    },
+    "23": {
+      "label": "Indicators",
+      "category": {
+        "index": [
+          "3377",
+          "3502",
+          "3373",
+          "3376",
+          "3374",
+          "3448",
+          "3447",
+          "3367",
+          "3369",
+          "3375",
+          "3371",
+          "3372"
+        ],
+        "label": {
+          "3367": "Capital ratio",
+          "3369": "Cost of financial debt",
+          "3371": "Return on assets",
+          "3372": "EBITDA over invested capital",
+          "3373": "Trade payables as a percentage of assets",
+          "3374": "Other liabilities as a percentage of assets",
+          "3375": "Financing expenses coverage ratio",
+          "3376": "Financial debt as a percentage of assets",
+          "3377": "Trade receivables as a percentage of assets",
+          "3447": "Days payable outstanding",
+          "3448": "Days sales outstanding",
+          "3502": "Equity as a percentage of assets"
+        }
+      }
+    },
+    "40": {
+      "label": "Periodicity",
+      "category": {
+        "index": [
+          "4265"
+        ],
+        "label": {
+          "4265": "Quarterly"
+        }
+      }
+    },
+    "52": {
+      "label": "Reference economic activities",
+      "category": {
+        "index": [
+          "1758"
+        ],
+        "label": {
+          "1758": "Construction"
+        }
+      }
+    },
+    "56": {
+      "label": "Reference institutional sector",
+      "category": {
+        "index": [
+          "3021"
+        ],
+        "label": {
+          "3021": "Private non-financial corporations"
+        }
+      }
+    },
+    "70": {
+      "label": "Unit of measure",
+      "category": {
+        "index": [
+          "3327",
+          "3324",
+          "3330"
+        ],
+        "label": {
+          "3324": "Number",
+          "3327": "Percentage",
+          "3330": "Number of days"
+        }
+      }
+    },
+    "reference_date": {
+      "label": "Date",
+      "category": {
+        "index": [
+          "2025-12-31",
+          "2026-03-31"
+        ]
+      }
+    },
+    "29": {
+      "label": "Metrics",
+      "category": {
+        "index": [
+          "3609"
+        ],
+        "label": {
+          "3609": "Value"
+        }
+      }
+    },
+    "63": {
+      "label": "Reference territory",
+      "category": {
+        "index": [
+          "349"
+        ],
+        "label": {
+          "349": "Portugal"
+        }
+      }
+    }
+  },
+  "class": "dataset",
+  "href": "https://bpstat.bportugal.pt/data/v1/domains/168/datasets/332441c9d65de71a0c842ac6496c1ee2/?lang=EN&series_ids=12587167%2C12587168%2C12587169%2C12587170%2C12587171%2C12587172%2C12587173%2C12587174%2C12587175%2C12587176%2C12587177%2C12587178&obs_last_n=2&page_size=100",
+  "source": "Bank of Portugal",
+  "role": {
+    "time": [
+      "reference_date"
+    ],
+    "metric": [
+      "29"
+    ],
+    "geo": [
+      "63"
+    ]
+  }
+}

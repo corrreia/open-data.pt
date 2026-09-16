@@ -1,0 +1,749 @@
+{
+  "version": "2.0",
+  "label": "Consolidation; Source; Flows, stocks and prices; Metrics; Periodicity; Item; Counterparty institutional sector; Reference institutional sector; Counterparty territory; Reference territory; Data type; Unit of measure",
+  "id": [
+    "8",
+    "18",
+    "19",
+    "29",
+    "40",
+    "48",
+    "54",
+    "56",
+    "59",
+    "63",
+    "66",
+    "70",
+    "reference_date"
+  ],
+  "size": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    9,
+    1,
+    1,
+    2
+  ],
+  "extension": {
+    "num_series": 108,
+    "obs_updated_at": "2026-08-31T09:30:00Z",
+    "series": [
+      {
+        "id": 12996695,
+        "label": "Deposits-Emigrants-Centro",
+        "dimension_category": [
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3635
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3794
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3116
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3079
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 5588
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2780
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3331
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12996695&lang=EN"
+      },
+      {
+        "id": 12996702,
+        "label": "Deposits-Emigrants-Oeste e Vale do Tejo",
+        "dimension_category": [
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3635
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3794
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3116
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3079
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 5595
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2780
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3331
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12996702&lang=EN"
+      },
+      {
+        "id": 12996706,
+        "label": "Deposits-Emigrants-Grande Lisboa NUTS II",
+        "dimension_category": [
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3635
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3794
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3116
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3079
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 5599
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2780
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3331
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12996706&lang=EN"
+      },
+      {
+        "id": 12996708,
+        "label": "Deposits-Emigrants-Península de Setúbal NUTS II",
+        "dimension_category": [
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3635
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3794
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3116
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3079
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 5601
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2780
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3331
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12996708&lang=EN"
+      },
+      {
+        "id": 12996710,
+        "label": "Deposits-Emigrants-Alentejo",
+        "dimension_category": [
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3635
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3794
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3116
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3079
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 5603
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2780
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3331
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12996710&lang=EN"
+      },
+      {
+        "id": 12996715,
+        "label": "Deposits-Emigrants-Algarve NUTS II",
+        "dimension_category": [
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3635
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3794
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3116
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3079
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 5608
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2780
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3331
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12996715&lang=EN"
+      },
+      {
+        "id": 12996717,
+        "label": "Deposits-Emigrants-Região Autónoma dos Açores NUTS II",
+        "dimension_category": [
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3635
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3794
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3116
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3079
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 5611
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2780
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3331
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12996717&lang=EN"
+      },
+      {
+        "id": 12996719,
+        "label": "Deposits-Emigrants-Região Autónoma da Madeira NUTS II",
+        "dimension_category": [
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3635
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3794
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3116
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3079
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 5614
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2780
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3331
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12996719&lang=EN"
+      },
+      {
+        "id": 12996746,
+        "label": "Deposits-Emigrants-Norte",
+        "dimension_category": [
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3635
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3794
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3116
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3079
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 5579
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2780
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3331
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12996746&lang=EN"
+      }
+    ]
+  },
+  "value": [
+    1758.4,
+    1760.9,
+    1248.1,
+    1243.0,
+    222.9,
+    221.5,
+    404.6,
+    403.4,
+    78.5,
+    79.9,
+    96.0,
+    94.9,
+    148.3,
+    146.4,
+    75.2,
+    73.5,
+    117.7,
+    115.6
+  ],
+  "status": [
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F"
+  ],
+  "dimension": {
+    "8": {
+      "label": "Consolidation",
+      "category": {
+        "index": [
+          "4130"
+        ],
+        "label": {
+          "4130": "Non-consolidated data"
+        }
+      }
+    },
+    "18": {
+      "label": "Source",
+      "category": {
+        "index": [
+          "35"
+        ],
+        "label": {
+          "35": "Banco de Portugal"
+        }
+      }
+    },
+    "19": {
+      "label": "Flows, stocks and prices",
+      "category": {
+        "index": [
+          "12"
+        ],
+        "label": {
+          "12": "Stocks"
+        }
+      }
+    },
+    "40": {
+      "label": "Periodicity",
+      "category": {
+        "index": [
+          "4264"
+        ],
+        "label": {
+          "4264": "Monthly"
+        }
+      }
+    },
+    "48": {
+      "label": "Item",
+      "category": {
+        "index": [
+          "3794"
+        ],
+        "label": {
+          "3794": "Deposits and deposit-like instruments"
+        }
+      }
+    },
+    "54": {
+      "label": "Counterparty institutional sector",
+      "category": {
+        "index": [
+          "3116"
+        ],
+        "label": {
+          "3116": "Emigrants"
+        }
+      }
+    },
+    "56": {
+      "label": "Reference institutional sector",
+      "category": {
+        "index": [
+          "3079"
+        ],
+        "label": {
+          "3079": "Deposit-taking corporations except the Central bank"
+        }
+      }
+    },
+    "66": {
+      "label": "Data type",
+      "category": {
+        "index": [
+          "2780"
+        ],
+        "label": {
+          "2780": "Liabilities"
+        }
+      }
+    },
+    "70": {
+      "label": "Unit of measure",
+      "category": {
+        "index": [
+          "3331"
+        ],
+        "label": {
+          "3331": "Millions of euros"
+        }
+      }
+    },
+    "reference_date": {
+      "label": "Date",
+      "category": {
+        "index": [
+          "2026-06-30",
+          "2026-07-31"
+        ]
+      }
+    },
+    "29": {
+      "label": "Metrics",
+      "category": {
+        "index": [
+          "3635"
+        ],
+        "label": {
+          "3635": "End-of-period value"
+        }
+      }
+    },
+    "59": {
+      "label": "Counterparty territory",
+      "category": {
+        "index": [
+          "349"
+        ],
+        "label": {
+          "349": "Portugal"
+        }
+      }
+    },
+    "63": {
+      "label": "Reference territory",
+      "category": {
+        "index": [
+          "5579",
+          "5588",
+          "5595",
+          "5599",
+          "5601",
+          "5603",
+          "5608",
+          "5611",
+          "5614"
+        ],
+        "label": {
+          "5579": "Norte (NUTS II)",
+          "5588": "Centro (NUTS II)",
+          "5595": "Oeste e Vale do Tejo (NUTS II)",
+          "5599": "Grande Lisboa (NUTS II)",
+          "5601": "Península de Setúbal (NUTS II)",
+          "5603": "Alentejo (NUTS II)",
+          "5608": "Algarve (NUTS II)",
+          "5611": "Região Autónoma dos Açores (NUTS II)",
+          "5614": "Região Autónoma da Madeira (NUTS II)"
+        }
+      }
+    }
+  },
+  "class": "dataset",
+  "href": "https://bpstat.bportugal.pt/data/v1/domains/206/datasets/d5bf6198a39f1e77b0d14dda97103de0/?lang=EN&series_ids=12996746%2C12996695%2C12996702%2C12996706%2C12996708%2C12996710%2C12996715%2C12996717%2C12996719&obs_last_n=2&page_size=100",
+  "source": "Bank of Portugal",
+  "role": {
+    "time": [
+      "reference_date"
+    ],
+    "metric": [
+      "29"
+    ],
+    "geo": [
+      "59",
+      "63"
+    ]
+  }
+}

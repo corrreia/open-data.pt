@@ -1,0 +1,156 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "periodo",
+        "description": null,
+        "annotations": {
+          "timeserie_precision": "month",
+          "facet": true,
+          "facetsort": "-alphanum",
+          "timerangeFilter": true
+        },
+        "label": "Período",
+        "type": "date",
+        "label_pt": "Período",
+        "label_en": "Período",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "no_de_chamadas_atendidas_no_centro_de_informacao_antivenenos",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Nº de chamadas atendidas no Centro de Informação Antivenenos",
+        "type": "int",
+        "label_pt": "Nº de chamadas atendidas no Centro de Informação Antivenenos",
+        "label_en": "Nº de chamadas atendidas no Centro de Informação Antivenenos",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "dataset_id": "evolucao-mensal-do-no-de-chamadas-atendidas-no-centro-de-informacao-antivenenos",
+    "dataset_uid": "da_dgb1tr",
+    "has_records": true,
+    "features": [
+      "timeserie",
+      "analyze"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "dcat": {
+        "created": "2017-11-16",
+        "issued": "2019-02-28",
+        "creator": "SPMS",
+        "contributor": "INEM",
+        "contact_name": null,
+        "contact_email": null,
+        "accrualperiodicity": "Mensal",
+        "spatial": "Portugal Continental",
+        "temporal": "janeiro 2012 a junho 2026",
+        "granularity": null,
+        "dataquality": null,
+        "publisher_type": null,
+        "conforms_to": null,
+        "temporal_coverage_start": null,
+        "temporal_coverage_end": null,
+        "accessRights": null,
+        "relation": null
+      },
+      "default": {
+        "title": "Evolução Mensal do N.º de Chamadas Atendidas no Centro de Informação Antivenenos",
+        "title_pt": "Evolução Mensal do N.º de Chamadas Atendidas no Centro de Informação Antivenenos",
+        "title_en": "Evolução Mensal do N.º de Chamadas Atendidas no Centro de Informação Antivenenos",
+        "description": "<p>Contabiliza mensalmente o número de chamadas atendidas no Centro de Informação Antivenenos.</p><p><strong>Objetivo: </strong>Monitorizar numa base mensal o número de chamadas atendidas no Centro de Informação Antivenenos.</p>",
+        "description_pt": "<p>Contabiliza mensalmente o número de chamadas atendidas no Centro de Informação Antivenenos.</p><p><strong>Objetivo: </strong>Monitorizar numa base mensal o número de chamadas atendidas no Centro de Informação Antivenenos.</p>",
+        "description_en": "<p>Contabiliza mensalmente o número de chamadas atendidas no Centro de Informação Antivenenos.</p><p><strong>Objetivo: </strong>Monitorizar numa base mensal o número de chamadas atendidas no Centro de Informação Antivenenos.</p>",
+        "theme": [
+          "Acesso"
+        ],
+        "theme_pt": [
+          "Acesso"
+        ],
+        "theme_en": [
+          "Acesso"
+        ],
+        "keyword": [
+          "Chamadas",
+          "Antivenenos"
+        ],
+        "keyword_pt": [
+          "Chamadas",
+          "Antivenenos"
+        ],
+        "keyword_en": [
+          "Chamadas",
+          "Antivenenos"
+        ],
+        "license": null,
+        "license_pt": null,
+        "license_en": null,
+        "license_url": null,
+        "license_url_pt": null,
+        "license_url_en": null,
+        "language": "pt",
+        "metadata_languages": [
+          "pt"
+        ],
+        "timezone": null,
+        "modified": "2026-07-22T14:23:29.829000+00:00",
+        "modified_updates_on_metadata_change": true,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2026-07-22T14:23:29.829000+00:00",
+        "metadata_processed": "2026-07-22T14:23:29.878000+00:00",
+        "geographic_reference": [
+          "world_pt"
+        ],
+        "geographic_reference_auto": true,
+        "territory": [
+          "Portugal"
+        ],
+        "geometry_types": null,
+        "bbox": null,
+        "publisher": "INEM",
+        "publisher_pt": "INEM",
+        "publisher_en": "INEM",
+        "references": null,
+        "records_count": 174,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": null
+      },
+      "custom": {
+        "dataset-id-number": "234",
+        "measure-unit": "Valor numérico inteiro",
+        "source-data": "CIAV",
+        "version": null,
+        "formula": "Contagem do número de chamadas atendidas no Centro de Informação Antivenenos"
+      }
+    }
+  },
+  "records": [
+    {
+      "periodo": "2026-06",
+      "no_de_chamadas_atendidas_no_centro_de_informacao_antivenenos": 2838
+    },
+    {
+      "periodo": "2026-05",
+      "no_de_chamadas_atendidas_no_centro_de_informacao_antivenenos": 2799
+    },
+    {
+      "periodo": "2026-04",
+      "no_de_chamadas_atendidas_no_centro_de_informacao_antivenenos": 2630
+    }
+  ]
+}

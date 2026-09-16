@@ -1,0 +1,510 @@
+{
+  "version": "2.0",
+  "label": "Consolidation; Credit purpose; Source; Flows, stocks and prices; Financial instrument; Metrics; Periodicity; Counterparty institutional sector; Reference institutional sector; Reference territory; Data type; Unit of measure",
+  "id": [
+    "8",
+    "17",
+    "18",
+    "19",
+    "25",
+    "29",
+    "40",
+    "54",
+    "56",
+    "63",
+    "66",
+    "70",
+    "reference_date"
+  ],
+  "size": [
+    2,
+    3,
+    1,
+    2,
+    2,
+    2,
+    1,
+    1,
+    1,
+    1,
+    1,
+    2,
+    2
+  ],
+  "extension": {
+    "num_series": 16,
+    "obs_updated_at": "2026-08-21T09:31:00Z",
+    "series": [
+      {
+        "id": 12457868,
+        "label": "Indebtedness-Households-Loans-Consumption & other purposes-ARC",
+        "dimension_category": [
+          {
+            "dimension_id": 8,
+            "category_id": 4129
+          },
+          {
+            "dimension_id": 17,
+            "category_id": 2708
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 7
+          },
+          {
+            "dimension_id": 25,
+            "category_id": 3188
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3650
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 4440
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3125
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2780
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12457868&lang=EN"
+      },
+      {
+        "id": 12457869,
+        "label": "Indebtedness-Households-Loans-Housing-ARC",
+        "dimension_category": [
+          {
+            "dimension_id": 8,
+            "category_id": 4129
+          },
+          {
+            "dimension_id": 17,
+            "category_id": 2705
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 7
+          },
+          {
+            "dimension_id": 25,
+            "category_id": 3188
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3650
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 4440
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3125
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2780
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12457869&lang=EN"
+      },
+      {
+        "id": 12457924,
+        "label": "Indebtedness-Households-M€",
+        "dimension_category": [
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 17,
+            "category_id": 4439
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 25,
+            "category_id": 3242
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3609
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 4440
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3125
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2780
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3331
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12457924&lang=EN"
+      },
+      {
+        "id": 12458130,
+        "label": "Indebtedness-Households-Consumption & other purp-M€",
+        "dimension_category": [
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 17,
+            "category_id": 2708
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 25,
+            "category_id": 3242
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3609
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 4440
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3125
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2780
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3331
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12458130&lang=EN"
+      },
+      {
+        "id": 12458133,
+        "label": "Indebtedness-Households-Loans-Housing-M€",
+        "dimension_category": [
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 17,
+            "category_id": 2705
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 25,
+            "category_id": 3188
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3609
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 4440
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3125
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2780
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3331
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12458133&lang=EN"
+      }
+    ]
+  },
+  "value": {
+    "191": 9.26,
+    "190": 9.12,
+    "159": 10.42,
+    "158": 10.34,
+    "1": 181804.83,
+    "0": 180491.32,
+    "65": 61956.85,
+    "64": 61699.75,
+    "41": 119847.98,
+    "40": 118791.56
+  },
+  "status": {
+    "191": "F",
+    "190": "F",
+    "159": "F",
+    "158": "F",
+    "1": "F",
+    "0": "F",
+    "65": "F",
+    "64": "F",
+    "41": "F",
+    "40": "F"
+  },
+  "dimension": {
+    "8": {
+      "label": "Consolidation",
+      "category": {
+        "index": [
+          "4130",
+          "4129"
+        ],
+        "label": {
+          "4129": "Consolidated data",
+          "4130": "Non-consolidated data"
+        }
+      }
+    },
+    "17": {
+      "label": "Credit purpose",
+      "category": {
+        "index": [
+          "4439",
+          "2705",
+          "2708"
+        ],
+        "label": {
+          "2705": "House purchase",
+          "2708": "Consumption and other purposes",
+          "4439": "All credit purpose"
+        }
+      }
+    },
+    "18": {
+      "label": "Source",
+      "category": {
+        "index": [
+          "35"
+        ],
+        "label": {
+          "35": "Banco de Portugal"
+        }
+      }
+    },
+    "19": {
+      "label": "Flows, stocks and prices",
+      "category": {
+        "index": [
+          "12",
+          "7"
+        ],
+        "label": {
+          "7": "Transactions",
+          "12": "Stocks"
+        }
+      }
+    },
+    "25": {
+      "label": "Financial instrument",
+      "category": {
+        "index": [
+          "3242",
+          "3188"
+        ],
+        "label": {
+          "3188": "Loans",
+          "3242": "Debt including trade credits"
+        }
+      }
+    },
+    "40": {
+      "label": "Periodicity",
+      "category": {
+        "index": [
+          "4264"
+        ],
+        "label": {
+          "4264": "Monthly"
+        }
+      }
+    },
+    "54": {
+      "label": "Counterparty institutional sector",
+      "category": {
+        "index": [
+          "4440"
+        ],
+        "label": {
+          "4440": "All sectors"
+        }
+      }
+    },
+    "56": {
+      "label": "Reference institutional sector",
+      "category": {
+        "index": [
+          "3125"
+        ],
+        "label": {
+          "3125": "Households and Non-profit institutions serving households"
+        }
+      }
+    },
+    "66": {
+      "label": "Data type",
+      "category": {
+        "index": [
+          "2780"
+        ],
+        "label": {
+          "2780": "Liabilities"
+        }
+      }
+    },
+    "70": {
+      "label": "Unit of measure",
+      "category": {
+        "index": [
+          "3331",
+          "3327"
+        ],
+        "label": {
+          "3327": "Percentage",
+          "3331": "Millions of euros"
+        }
+      }
+    },
+    "reference_date": {
+      "label": "Date",
+      "category": {
+        "index": [
+          "2026-05-31",
+          "2026-06-30"
+        ]
+      }
+    },
+    "29": {
+      "label": "Metrics",
+      "category": {
+        "index": [
+          "3609",
+          "3650"
+        ],
+        "label": {
+          "3609": "Value",
+          "3650": "Annual rate of change"
+        }
+      }
+    },
+    "63": {
+      "label": "Reference territory",
+      "category": {
+        "index": [
+          "349"
+        ],
+        "label": {
+          "349": "Portugal"
+        }
+      }
+    }
+  },
+  "class": "dataset",
+  "href": "https://bpstat.bportugal.pt/data/v1/domains/18/datasets/56ebacd8518e60ef58c85cb8185b4818/?lang=EN&series_ids=12457868%2C12457869%2C12457924%2C12458130%2C12458133&obs_last_n=2&page_size=100",
+  "source": "Bank of Portugal",
+  "role": {
+    "time": [
+      "reference_date"
+    ],
+    "metric": [
+      "29"
+    ],
+    "geo": [
+      "63"
+    ]
+  }
+}

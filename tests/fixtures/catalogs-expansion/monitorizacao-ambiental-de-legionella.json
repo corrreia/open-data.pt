@@ -1,0 +1,267 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "tempo",
+        "description": null,
+        "annotations": {
+          "timeserie_precision": "year",
+          "facet": true,
+          "timerangeFilter": true,
+          "facetsort": "-alphanum"
+        },
+        "label": "Período",
+        "type": "date",
+        "label_pt": "Período",
+        "label_en": "Período",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "ponto_ou_localizacao_geografica",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Localização Geográfica",
+        "type": "text",
+        "label_pt": "Localização Geográfica",
+        "label_en": "Localização Geográfica",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "no_total_amostras_analisadas",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Nº Total Amostras Analisadas",
+        "type": "int",
+        "label_pt": "Nº Total Amostras Analisadas",
+        "label_en": "Nº Total Amostras Analisadas",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "no_total_amostras_rede_predial",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Nº Total Amostras Rede Predial",
+        "type": "int",
+        "label_pt": "Nº Total Amostras Rede Predial",
+        "label_en": "Nº Total Amostras Rede Predial",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "no_total_amostras_aguas_de_processo_torres_de_arrefecimento",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Nº Total Amostras Águas de processo /Torres de arrefecimento",
+        "type": "int",
+        "label_pt": "Nº Total Amostras Águas de processo /Torres de arrefecimento",
+        "label_en": "Nº Total Amostras Águas de processo /Torres de arrefecimento",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "no_total_amostras_minerais_naturais_agua_termais",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Nº Total Amostras Minerais naturais / água termais",
+        "type": "int",
+        "label_pt": "Nº Total Amostras Minerais naturais / água termais",
+        "label_en": "Nº Total Amostras Minerais naturais / água termais",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "no_total_amostras_piscinas",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Nº total Amostras Piscinas",
+        "type": "int",
+        "label_pt": "Nº total Amostras Piscinas",
+        "label_en": "Nº total Amostras Piscinas",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "no_total_amostras_positivas",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Nº Total Amostras Positivas",
+        "type": "int",
+        "label_pt": "Nº Total Amostras Positivas",
+        "label_en": "Nº Total Amostras Positivas",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "no_total_amostras_positivas_que_excedem_o_valor_parametrico",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Nº Total Amostras Positivas que excedem o valor paramétrico",
+        "type": "int",
+        "label_pt": "Nº Total Amostras Positivas que excedem o valor paramétrico",
+        "label_en": "Nº Total Amostras Positivas que excedem o valor paramétrico",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "dataset_id": "monitorizacao-ambiental-de-legionella",
+    "dataset_uid": "da_s5srf5",
+    "has_records": true,
+    "features": [
+      "analyze",
+      "timeserie"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "dcat": {
+        "created": "2016-03-30",
+        "issued": "2016-12-31",
+        "creator": "SPMS",
+        "contributor": "INSA",
+        "contact_name": null,
+        "contact_email": null,
+        "accrualperiodicity": "Anual",
+        "spatial": null,
+        "temporal": "2013 a 2025 (valores acumulados)",
+        "granularity": null,
+        "dataquality": null,
+        "publisher_type": null,
+        "conforms_to": null,
+        "temporal_coverage_start": null,
+        "temporal_coverage_end": null,
+        "accessRights": null,
+        "relation": null
+      },
+      "default": {
+        "title": "Monitorização Ambiental de Legionella",
+        "title_pt": "Monitorização Ambiental de Legionella",
+        "title_en": "Monitorização Ambiental de Legionella",
+        "description": "<p>Monitorização Ambiental de Legionella species.</p>",
+        "description_pt": "<p>Monitorização Ambiental de Legionella species.</p>",
+        "description_en": "<p>Monitorização Ambiental de Legionella species.</p>",
+        "theme": [
+          "Saúde dos Portugueses"
+        ],
+        "theme_pt": [
+          "Saúde dos Portugueses"
+        ],
+        "theme_en": [
+          "Saúde dos Portugueses"
+        ],
+        "keyword": [
+          "Legionella",
+          "Monitorização Ambiental",
+          "Vigilância Epidemiológica"
+        ],
+        "keyword_pt": [
+          "Legionella",
+          "Monitorização Ambiental",
+          "Vigilância Epidemiológica"
+        ],
+        "keyword_en": [
+          "Legionella",
+          "Monitorização Ambiental",
+          "Vigilância Epidemiológica"
+        ],
+        "license": null,
+        "license_pt": null,
+        "license_en": null,
+        "license_url": null,
+        "license_url_pt": null,
+        "license_url_en": null,
+        "language": "pt",
+        "metadata_languages": [
+          "pt"
+        ],
+        "timezone": null,
+        "modified": "2026-07-20T14:59:40.300000+00:00",
+        "modified_updates_on_metadata_change": true,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2026-07-20T14:59:40.300000+00:00",
+        "metadata_processed": "2026-07-20T14:59:40.352000+00:00",
+        "geographic_reference": null,
+        "geographic_reference_auto": false,
+        "territory": null,
+        "geometry_types": null,
+        "bbox": null,
+        "publisher": "INSA",
+        "publisher_pt": "INSA",
+        "publisher_en": "INSA",
+        "references": null,
+        "records_count": 13,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": null
+      },
+      "custom": {
+        "dataset-id-number": "148",
+        "measure-unit": "Nº de ocorrências",
+        "source-data": "INSA",
+        "version": null,
+        "formula": null
+      }
+    }
+  },
+  "records": [
+    {
+      "tempo": "2025",
+      "ponto_ou_localizacao_geografica": "38.7643755,-9.1644377",
+      "no_total_amostras_analisadas": 4414,
+      "no_total_amostras_rede_predial": 3674,
+      "no_total_amostras_aguas_de_processo_torres_de_arrefecimento": 624,
+      "no_total_amostras_minerais_naturais_agua_termais": 5,
+      "no_total_amostras_piscinas": 253,
+      "no_total_amostras_positivas": 111,
+      "no_total_amostras_positivas_que_excedem_o_valor_parametrico": 474
+    },
+    {
+      "tempo": "2024",
+      "ponto_ou_localizacao_geografica": "38.7643755,-9.1644377",
+      "no_total_amostras_analisadas": 4437,
+      "no_total_amostras_rede_predial": 3727,
+      "no_total_amostras_aguas_de_processo_torres_de_arrefecimento": 324,
+      "no_total_amostras_minerais_naturais_agua_termais": 1,
+      "no_total_amostras_piscinas": 528,
+      "no_total_amostras_positivas": 69,
+      "no_total_amostras_positivas_que_excedem_o_valor_parametrico": 316
+    },
+    {
+      "tempo": "2023",
+      "ponto_ou_localizacao_geografica": "38.7643755,-9.1644377",
+      "no_total_amostras_analisadas": 5169,
+      "no_total_amostras_rede_predial": 4278,
+      "no_total_amostras_aguas_de_processo_torres_de_arrefecimento": 787,
+      "no_total_amostras_minerais_naturais_agua_termais": 18,
+      "no_total_amostras_piscinas": 439,
+      "no_total_amostras_positivas": 86,
+      "no_total_amostras_positivas_que_excedem_o_valor_parametrico": 474
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+[
+  {"PetId":"60000001","PetNr":"1","PetLeg":"XVII","PetAssunto":"Synthetic public transport petition","PetDataEntrada":"2026-06-15","PetNrAssinaturas":"1.234","PetNrAssinaturasInicial":"1000","PetSituacao":"Em apreciação","PetUrlTexto":"https://www.parlamento.pt/example-petition.pdf","DadosComissao":[{"IdComissao":"70000001","Nome":"Example committee","Situacao":"Em apreciação","DataAdmissibilidade":"2026-06-16","DataArquivo":null}]},
+  {"PetId":"60000002","PetNr":"2","PetLeg":"XVII","PetAssunto":"Synthetic public access petition","PetDataEntrada":"2026-06-17","PetNrAssinaturas":"0","PetNrAssinaturasInicial":null,"PetSituacao":"Recebida","PetUrlTexto":null,"DadosComissao":[]}
+]

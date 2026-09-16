@@ -13,7 +13,7 @@
     // proxied CNAME to api.metrolisboa.pt whose origin rule sends it to port 8243 with SSL "full".
     // The token endpoint is fixed on port 443, whose chain is complete.
     "METROLISBOA_API_ORIGIN": "https://lisboa-metro.open-data.pt",
-    "GTFS_ALLOWED_HOSTS": "api.carrismetropolitana.pt,opendata.porto.digital,dados.gov.pt",
+    "GTFS_ALLOWED_HOSTS": "api.carrismetropolitana.pt,opendata.porto.digital,dados.gov.pt,publico.cp.pt,www.fertagus.pt,www.tub.pt,backend.tcbarreiro.pt,www.horariosdofunchal.pt",
     "GBFS_ALLOWED_HOSTS": "data.lime.bike,mds.bird.co,gbfs.primelayer.pt,gbfs.nextbike.net"
   },
   // Secrets (wrangler secret put): ML_CONSUMER_KEY, ML_CONSUMER_SECRET, read by the metrolisboa library.

@@ -1,0 +1,4 @@
+[
+  {"Id":"80000001","Titulo":"Synthetic approved public-service measure","Numero":"1/2026","Numero2":null,"Tipo":"Lei","Tp":"L","AnoCivil":"2026","Legislatura":"XVII","Sessao":"1","LinkTexto":"http://app.parlamento.pt/example-law.pdf","Publicacao":[{"pubdt":"2026-06-20","pubNr":"100","pubTipo":"Diário da República","pubLeg":"XVII","pubSL":"1","URLDiario":"https://diariodarepublica.pt/example-publication"},{"pubdt":"2026-06-22","pubNr":"102","pubTipo":"Retificação","pubLeg":"XVII","pubSL":"1","URLDiario":"https://diariodarepublica.pt/example-correction"}]},
+  {"Id":"80000002","Titulo":"Synthetic approved measure awaiting publication","Numero":"2/2026","Numero2":null,"Tipo":"Resolução","Tp":"R","AnoCivil":"2026","Legislatura":"XVII","Sessao":"1","LinkTexto":null,"Publicacao":null}
+]

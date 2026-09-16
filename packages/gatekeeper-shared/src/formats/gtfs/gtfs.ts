@@ -68,7 +68,7 @@ export async function collectGtfsFeed(
   fetcher: typeof fetch,
 ): Promise<SourceFetch> {
   const validated = validateGtfsFeedConfig(config, allowedHostsValue);
-  const requestHeaders = new Headers({ Accept: "application/zip, application/octet-stream" });
+  const requestHeaders = new Headers({ Accept: "application/zip, application/x-zip-compressed, application/octet-stream;q=0.9, */*;q=0.1" });
   if (checkpoint?.etag) requestHeaders.set("If-None-Match", checkpoint.etag);
   if (checkpoint?.lastModified) requestHeaders.set("If-Modified-Since", checkpoint.lastModified);
 

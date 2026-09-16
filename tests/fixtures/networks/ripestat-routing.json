@@ -1,0 +1,12 @@
+{
+  "messages": [], "version": "0.2", "data_call_name": "country-routing-stats", "data_call_status": "supported - connecting to Flow",
+  "status": "ok", "status_code": 200, "query_id": "synthetic-query", "time": "2026-09-16T12:34:56",
+  "data": {
+    "query_starttime": "2026-09-13T00:00:00", "query_endtime": "2026-09-16T00:00:00",
+    "stats": [
+      { "timeline": [{ "starttime": "2026-09-13T00:00:00", "endtime": "2026-09-14T00:00:00" }], "v4_prefixes_ris": 4, "v6_prefixes_ris": 1, "asns_ris": 2, "v4_prefixes_stats": -1, "v6_prefixes_stats": -1, "asns_stats": 3, "stats_date": "2026-09-13T00:00:00" },
+      { "timeline": [{ "starttime": "2026-09-15T00:00:00", "endtime": "2026-09-15T00:00:00" }], "v4_prefixes_ris": 5, "v6_prefixes_ris": 2, "asns_ris": 3, "v4_prefixes_stats": -1, "v6_prefixes_stats": -1, "asns_stats": 4, "stats_date": "2026-09-15T00:00:00" }
+    ],
+    "resource": "PT", "resolution": "1d", "latest_time": "2026-09-15T21:59:59", "earliest_time": "2004-01-01T00:00:00", "hd_latest_time": "2026-09-15T21:59:59"
+  }
+}

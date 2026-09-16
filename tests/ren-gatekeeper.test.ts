@@ -257,8 +257,10 @@ describe("REN Gatekeeper", () => {
 
 describe("REN history", () => {
   it("declares history reaching back to a stated earliest day on every chart feed", () => {
-    expect(Object.values(REN_FEEDS)).toHaveLength(6);
-    for (const feed of Object.values(REN_FEEDS)) {
+    const chartFeeds = Object.values(REN_FEEDS).filter((feed) => "history" in feed);
+    expect(chartFeeds).toHaveLength(6);
+    expect(Object.values(REN_FEEDS)).toHaveLength(9);
+    for (const feed of chartFeeds) {
       expect(feed.history?.earliest).toMatch(
         /^(?:2010|2014)-01-01T00:00:00\.000Z$/,
       );

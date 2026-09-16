@@ -1,0 +1,25 @@
+{
+  "sourceUrl": "https://transparencia.sns.gov.pt/api/explore/v2.1/catalog/datasets/vagas-formacao-especializada-internato/exports/json",
+  "records": [
+    {
+      "registo": 5913,
+      "periodo": "2022",
+      "regiao": "Centro",
+      "especialidade": "Medicina Legal",
+      "instituicao": "Instituto Nacional Medicina Legal - Delegação do Centro",
+      "vagas_disponiveis": 2,
+      "vagas_ocupadas": 2,
+      "vagas_nao_ocupadas": 0
+    },
+    {
+      "registo": 5914,
+      "periodo": "2022",
+      "regiao": "Centro",
+      "especialidade": "Medicina Legal",
+      "instituicao": "Instituto Nacional Medicina Legal - Delegação do Centro",
+      "vagas_disponiveis": 1,
+      "vagas_ocupadas": 1,
+      "vagas_nao_ocupadas": 0
+    }
+  ]
+}

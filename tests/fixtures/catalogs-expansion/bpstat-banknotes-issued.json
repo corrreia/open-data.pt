@@ -1,0 +1,239 @@
+{
+  "version": "2.0",
+  "label": "Source; Flows, stocks and prices; Metrics; Cash issuance operations; Periodicity; Reference territory; Type of  cash; Unit of measure",
+  "id": [
+    "18",
+    "19",
+    "29",
+    "34",
+    "40",
+    "63",
+    "67",
+    "70",
+    "reference_date"
+  ],
+  "size": [
+    1,
+    1,
+    2,
+    1,
+    1,
+    1,
+    1,
+    2,
+    2
+  ],
+  "extension": {
+    "num_series": 43,
+    "obs_updated_at": "2026-09-14T10:00:00Z",
+    "series": [
+      {
+        "id": 12468838,
+        "label": "Euro banknotes put into circulation by BdP-Monthly-No. banknotes",
+        "dimension_category": [
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3665
+          },
+          {
+            "dimension_id": 34,
+            "category_id": 2905
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 67,
+            "category_id": 4278
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3346
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12468838&lang=EN"
+      },
+      {
+        "id": 12468839,
+        "label": "Euro banknotes put into circulation by BdP-Monthly-€",
+        "dimension_category": [
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3609
+          },
+          {
+            "dimension_id": 34,
+            "category_id": 2905
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 67,
+            "category_id": 4278
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3338
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12468839&lang=EN"
+      }
+    ]
+  },
+  "value": {
+    "7": 202971380.0,
+    "6": 210836665.0,
+    "1": -33521478775.0,
+    "0": -33138455945.0
+  },
+  "status": {
+    "7": "F",
+    "6": "F",
+    "1": "F",
+    "0": "F"
+  },
+  "dimension": {
+    "18": {
+      "label": "Source",
+      "category": {
+        "index": [
+          "35"
+        ],
+        "label": {
+          "35": "Banco de Portugal"
+        }
+      }
+    },
+    "19": {
+      "label": "Flows, stocks and prices",
+      "category": {
+        "index": [
+          "12"
+        ],
+        "label": {
+          "12": "Stocks"
+        }
+      }
+    },
+    "34": {
+      "label": "Cash issuance operations",
+      "category": {
+        "index": [
+          "2905"
+        ],
+        "label": {
+          "2905": "Cash put into circulation by BdP"
+        }
+      }
+    },
+    "40": {
+      "label": "Periodicity",
+      "category": {
+        "index": [
+          "4264"
+        ],
+        "label": {
+          "4264": "Monthly"
+        }
+      }
+    },
+    "67": {
+      "label": "Type of  cash",
+      "category": {
+        "index": [
+          "4278"
+        ],
+        "label": {
+          "4278": "Banknotes"
+        }
+      }
+    },
+    "70": {
+      "label": "Unit of measure",
+      "category": {
+        "index": [
+          "3338",
+          "3346"
+        ],
+        "label": {
+          "3338": "Euro",
+          "3346": "Number of banknotes"
+        }
+      }
+    },
+    "reference_date": {
+      "label": "Date",
+      "category": {
+        "index": [
+          "2026-07-31",
+          "2026-08-31"
+        ]
+      }
+    },
+    "29": {
+      "label": "Metrics",
+      "category": {
+        "index": [
+          "3609",
+          "3665"
+        ],
+        "label": {
+          "3609": "Value",
+          "3665": "Quantity"
+        }
+      }
+    },
+    "63": {
+      "label": "Reference territory",
+      "category": {
+        "index": [
+          "349"
+        ],
+        "label": {
+          "349": "Portugal"
+        }
+      }
+    }
+  },
+  "class": "dataset",
+  "href": "https://bpstat.bportugal.pt/data/v1/domains/9/datasets/002abf63d5a4efb3e35ab5321251d7c5/?lang=EN&series_ids=12468838%2C12468839&obs_last_n=2&page_size=100",
+  "source": "Bank of Portugal",
+  "role": {
+    "time": [
+      "reference_date"
+    ],
+    "metric": [
+      "29"
+    ],
+    "geo": [
+      "63"
+    ]
+  }
+}

@@ -1,0 +1,162 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "data",
+        "description": null,
+        "annotations": {
+          "timeserie_precision": "month",
+          "facet": true,
+          "facetsort": "-alphanum",
+          "timerangeFilter": true
+        },
+        "label": "Período",
+        "type": "date",
+        "label_pt": "Período",
+        "label_en": "Período",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "n_o_de_chamadas_de_emergencia_transferidas_para_a_saude_24",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Nº Chamadas de Emergência Transferidas para a Saúde 24",
+        "type": "int",
+        "label_pt": "Nº Chamadas de Emergência Transferidas para a Saúde 24",
+        "label_en": "Nº Chamadas de Emergência Transferidas para a Saúde 24",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "dataset_id": "sns24",
+    "dataset_uid": "da_gm68rr",
+    "has_records": true,
+    "features": [
+      "timeserie",
+      "analyze"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "dcat": {
+        "created": "2016-01-28",
+        "issued": "2019-02-28",
+        "creator": "SPMS",
+        "contributor": "INEM",
+        "contact_name": null,
+        "contact_email": null,
+        "accrualperiodicity": "Mensal",
+        "spatial": "Portugal Continental",
+        "temporal": "janeiro 2012 a junho 2026",
+        "granularity": null,
+        "dataquality": null,
+        "publisher_type": null,
+        "conforms_to": null,
+        "temporal_coverage_start": null,
+        "temporal_coverage_end": null,
+        "accessRights": null,
+        "relation": null
+      },
+      "default": {
+        "title": "Chamadas de Emergência Transferidas para o SNS24",
+        "title_pt": "Chamadas de Emergência Transferidas para o SNS24",
+        "title_en": "Chamadas de Emergência Transferidas para o SNS24",
+        "description": "<p>Monitorizar mensalmente o volume de chamadas de emergência transferidas pelo Centro de Orientação de Doentes Urgentes (CODU) para a Linha de Apoio Saúde 24.</p>",
+        "description_pt": "<p>Monitorizar mensalmente o volume de chamadas de emergência transferidas pelo Centro de Orientação de Doentes Urgentes (CODU) para a Linha de Apoio Saúde 24.</p>",
+        "description_en": "<p>Monitorizar mensalmente o volume de chamadas de emergência transferidas pelo Centro de Orientação de Doentes Urgentes (CODU) para a Linha de Apoio Saúde 24.</p>",
+        "theme": [
+          "Acesso"
+        ],
+        "theme_pt": [
+          "Acesso"
+        ],
+        "theme_en": [
+          "Acesso"
+        ],
+        "keyword": [
+          "Chamadas",
+          "Emergências",
+          "CODU",
+          "Saúde 24"
+        ],
+        "keyword_pt": [
+          "Chamadas",
+          "Emergências",
+          "CODU",
+          "Saúde 24"
+        ],
+        "keyword_en": [
+          "Chamadas",
+          "Emergências",
+          "CODU",
+          "Saúde 24"
+        ],
+        "license": null,
+        "license_pt": null,
+        "license_en": null,
+        "license_url": null,
+        "license_url_pt": null,
+        "license_url_en": null,
+        "language": "pt",
+        "metadata_languages": [
+          "pt"
+        ],
+        "timezone": null,
+        "modified": "2026-07-22T14:15:38.322000+00:00",
+        "modified_updates_on_metadata_change": true,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2026-07-22T14:15:38.322000+00:00",
+        "metadata_processed": "2026-07-22T14:15:38.372000+00:00",
+        "geographic_reference": [
+          "world_pt"
+        ],
+        "geographic_reference_auto": true,
+        "territory": [
+          "Portugal"
+        ],
+        "geometry_types": null,
+        "bbox": null,
+        "publisher": "INEM",
+        "publisher_pt": "INEM",
+        "publisher_en": "INEM",
+        "references": null,
+        "records_count": 174,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": null
+      },
+      "custom": {
+        "dataset-id-number": "89",
+        "measure-unit": "Nº de chamadas",
+        "source-data": "Avaya CMS",
+        "version": null,
+        "formula": "Total mensal do Nº chamadas transferidas pelo Centro de Orientação de Doentes Urgentes para a Linha de Apoio Saúde 24."
+      }
+    }
+  },
+  "records": [
+    {
+      "data": "2026-06",
+      "n_o_de_chamadas_de_emergencia_transferidas_para_a_saude_24": 6766
+    },
+    {
+      "data": "2026-05",
+      "n_o_de_chamadas_de_emergencia_transferidas_para_a_saude_24": 9439
+    },
+    {
+      "data": "2026-04",
+      "n_o_de_chamadas_de_emergencia_transferidas_para_a_saude_24": 9142
+    }
+  ]
+}

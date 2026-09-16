@@ -24,6 +24,7 @@ import {
 } from "../../index";
 
 import { CKAN_NORMALIZER } from "./transform";
+import { csvSeriesOptions } from "./csv-series";
 export const CKAN_FEEDS = {
   resource: {
     kind: "resource",
@@ -33,6 +34,12 @@ export const CKAN_FEEDS = {
       domainSubject: "reference",
       defaultProductRole: "reference",
     },
+  },
+  observations: {
+    kind: "observations",
+    title: "CKAN CSV observations",
+    description: "Explicit measurements and source timestamps from a published CSV observation window.",
+    semantics: { domainSubject: "observation", defaultProductRole: "time-series" },
   },
 } as const satisfies Record<string, FeedKindDescription>;
 
@@ -117,6 +124,36 @@ export function validateCkanFeedConfig(config: SourceConfig, hosts: ReadonlySet<
 
   const validated: SourceConfig = { host, dataset };
   if (resource) validated.resource = resource;
+  const apiPath = config.apiPath?.trim().replace(/\/$/, "");
+  if (apiPath) {
+    if (!/^\/(?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_-]+$/.test(apiPath)) {
+      throw new GatekeeperError("CKAN apiPath must be a plain absolute path prefix", "invalid-config");
+    }
+    validated.apiPath = apiPath;
+  }
+  if (config.resourceSelection || config.resourcePrefix) {
+    if (resource || config.resourceSelection !== "latest-month" || !config.resourcePrefix || !/^[a-z0-9_-]{1,100}$/i.test(config.resourcePrefix)) {
+      throw new GatekeeperError("CKAN latest-month selection requires a resourcePrefix and no fixed resource", "invalid-config");
+    }
+    validated.resourceSelection = "latest-month";
+    validated.resourcePrefix = config.resourcePrefix;
+  }
+  if (config.idField) {
+    if (!config.idField.trim() || config.idField.length > 200) throw new GatekeeperError("CKAN idField is invalid", "invalid-config");
+    validated.idField = config.idField.trim();
+  }
+  if (config.crs) {
+    if (config.crs !== "EPSG:3763" && config.crs !== "EPSG:4326") throw new GatekeeperError("CKAN crs must be EPSG:3763 or EPSG:4326", "invalid-config");
+    validated.crs = config.crs;
+  }
+  const series = csvSeriesOptions(config);
+  if (series) {
+    if (config.idField || config.crs) throw new GatekeeperError("CKAN CSV series cannot declare reference geometry or row identity", "invalid-config");
+    validated.measures = JSON.stringify(Object.fromEntries(series.measures.map((measure) => [measure.field, measure.unit])));
+    validated.timeField = series.timeField;
+    validated.delimiter = series.delimiter;
+    validated.decimal = series.decimal;
+  }
   return validated;
 }
 
@@ -140,7 +177,7 @@ export class CkanSource {
     checkpoint?: SourceValidator,
   ): Promise<CkanCollected> {
     const validated = this.validateConfig(config);
-    const origin = `https://${validated.host!}`;
+    const origin = `https://${validated.host!}${validated.apiPath ?? ""}/`;
     const packageUrl = actionUrl(origin, "package_show", {
       id: validated.dataset!,
     });
@@ -155,7 +192,8 @@ export class CkanSource {
       "package_show",
     );
     const packageResult = requireActionResult(packageEnvelope, "package_show");
-    const resource = selectResource(packageResult, validated.resource);
+    const resource = selectResource(packageResult, validated.resource, validated.resourcePrefix);
+    if (validated.measures && resource.format !== "csv") throw invalidResponse("CKAN observations require a CSV distribution");
     const publishedAt = sourcePublishedAt(resource.metadata, packageResult);
     const validator: SourceValidator = {};
     if (publishedAt) {
@@ -164,13 +202,17 @@ export class CkanSource {
       validator.lastModified = new Date(publishedAt).toUTCString();
     }
 
-    if (checkpointMatches(checkpoint, validator.etag, validator.lastModified)) {
+    if ((!validated.resourceSelection || checkpoint?.etag) && checkpointMatches(checkpoint, validator.etag, validator.lastModified)) {
       return { fetch: notModified(validator) };
     }
 
+    // Catalogue validators are scoped to a resource. Never forward one (or its
+    // date) to a new distribution when latest-month selection rotates.
+    const fileCheckpoint = checkpoint?.etag?.startsWith('"ckan:') || validated.resourceSelection
+      ? undefined : checkpoint;
     const packageDocument = compactPackage(packageResult);
-    if (resource.datastoreActive) {
-      const datastore = await this.collectDatastore(origin, resource.id, checkpoint);
+    if (resource.datastoreActive && !validated.measures) {
+      const datastore = await this.collectDatastore(origin, resource.id, fileCheckpoint);
       if (datastore.kind === "not-modified") return { fetch: notModified(validator) };
       if (datastore.kind === "rows") {
         return {
@@ -189,9 +231,12 @@ export class CkanSource {
 
     const fileUrl = validateResourceUrl(resource.url, this.allowedHosts);
     const fileResponse = await this.fetchAllowed(fileUrl, {
-      headers: conditionalHeaders(checkpoint, "*/*"),
+      headers: conditionalHeaders(fileCheckpoint, "*/*"),
     });
-    if (fileResponse.status === 304) return { fetch: notModified(validator) };
+    if (fileResponse.status === 304) {
+      if (!fileCheckpoint?.etag && !fileCheckpoint?.lastModified) throw invalidResponse("CKAN resource returned an unsolicited 304");
+      return { fetch: notModified(validator) };
+    }
     if (!fileResponse.ok) {
       throw upstreamError("resource download", fileResponse);
     }
@@ -229,7 +274,10 @@ export class CkanSource {
     const response = await this.fetchAllowed(probe, {
       headers: conditionalHeaders(checkpoint, "application/json"),
     });
-    if (response.status === 304) return { kind: "not-modified" };
+    if (response.status === 304) {
+      if (!checkpoint?.etag && !checkpoint?.lastModified) throw invalidResponse("CKAN DataStore returned an unsolicited 304");
+      return { kind: "not-modified" };
+    }
     if (!response.ok && response.status !== 404) {
       throw upstreamError("datastore_search", response);
     }
@@ -329,7 +377,10 @@ export class CkanSource {
 
   private async fetchAllowed(url: URL, init: RequestInit): Promise<Response> {
     validateResourceUrl(url.toString(), this.allowedHosts);
-    const response = await this.fetcher(url, { ...init, redirect: "manual" });
+    const headers = new Headers(init.headers);
+    headers.set("User-Agent", "open-data.pt/1.0 (+https://open-data.pt)");
+    const response = await this.fetcher(url, { ...init, headers, redirect: "manual" });
+    if (response.status >= 400) console.warn(JSON.stringify({ event: "source_http_status", source: "ckan", host: url.hostname, path: url.pathname, status: response.status, server: response.headers.get("server"), mitigation: response.headers.get("cf-mitigated"), contentType: response.headers.get("content-type") }));
     if (response.status >= 300 && response.status < 400 && response.status !== 304) {
       throw new GatekeeperError(`CKAN redirect from ${url.hostname} was refused`, "source-denied");
     }
@@ -342,7 +393,7 @@ function actionUrl(
   action: "datastore_search" | "package_show",
   parameters: Record<string, string>,
 ): URL {
-  const url = new URL(`/api/3/action/${action}`, origin);
+  const url = new URL(`api/3/action/${action}`, origin);
   for (const [key, value] of Object.entries(parameters)) {
     url.searchParams.set(key, value);
   }
@@ -360,6 +411,7 @@ function datastorePageUrl(origin: string, resourceId: string, offset: number, li
 function selectResource(
   packageResult: JsonObject,
   requestedId: string | undefined,
+  monthlyPrefix?: string,
 ): SelectedResource {
   if (!Array.isArray(packageResult.resources)) {
     throw invalidResponse("package_show omitted resources");
@@ -367,7 +419,9 @@ function selectResource(
   const candidates = packageResult.resources.filter(isJsonObject);
   const selected = requestedId
     ? candidates.find((candidate) => optionalString(candidate, "id")?.toLowerCase() === requestedId)
-    : candidates.find((candidate) => SUPPORTED_FORMATS.has(normalizeFormat(candidate.format)));
+    : monthlyPrefix
+      ? latestMonthlyResource(candidates, monthlyPrefix)
+      : candidates.find((candidate) => SUPPORTED_FORMATS.has(normalizeFormat(candidate.format)));
   if (!selected) {
     throw new GatekeeperError(requestedId ? `Resource ${requestedId} does not belong to this dataset` : "Dataset has no CSV, JSON, or GeoJSON resource", "invalid-config");
   }
@@ -386,6 +440,27 @@ function selectResource(
     format: format as SelectedResource["format"],
     datastoreActive: selected.datastore_active === true,
   };
+}
+
+/** Publication period wins over catalog edits: an old file re-uploaded today is not the latest month. */
+function latestMonthlyResource(candidates: JsonObject[], prefix: string): JsonObject | undefined {
+  const monthly = candidates.flatMap((resource) => {
+    if (normalizeFormat(resource.format) !== "csv") return [];
+    const url = optionalString(resource, "url");
+    if (!url) return [];
+    let basename: string;
+    try { basename = new URL(url).pathname.split("/").at(-1) ?? ""; }
+    catch { return []; }
+    const match = new RegExp(`^${prefix}(0[1-9]|1[0-2])_(\\d{4}|\\d{2})\\.csv$`, "i").exec(basename);
+    if (!match) return [];
+    const year = Number(match[2]) + (match[2]?.length === 2 ? 2000 : 0);
+    const month = Number(match[1]);
+    const modified = metadataTimestamp(resource.last_modified ?? resource.created);
+    return [{ resource, period: year * 12 + month, modified: Number.isFinite(modified) ? modified : 0, id: optionalString(resource, "id") ?? "" }];
+  });
+  monthly.sort((a, b) => b.period - a.period || b.modified - a.modified || a.id.localeCompare(b.id));
+  if (!monthly.length) throw invalidResponse(`CKAN dataset has no monthly CSV matching ${prefix}MM_YY.csv`);
+  return monthly[0]?.resource;
 }
 
 function compactPackage(value: JsonObject): JsonObject {
@@ -433,10 +508,18 @@ function sourcePublishedAt(
 ): string | undefined {
   for (const value of [resource.last_modified, packageResult.metadata_modified]) {
     if (!isJsonString(value)) continue;
-    const milliseconds = Date.parse(value);
+    const milliseconds = metadataTimestamp(value);
     if (!Number.isNaN(milliseconds)) return new Date(milliseconds).toISOString();
   }
   return undefined;
+}
+
+/** CKAN metadata dates are UTC, commonly serialized without a timezone suffix. */
+function metadataTimestamp(value: JsonValue | undefined): number {
+  if (!isJsonString(value)) return Number.NaN;
+  const trimmed = value.trim();
+  const utc = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(trimmed) ? `${trimmed}Z` : trimmed;
+  return Date.parse(utc);
 }
 
 function checkpointMatches(
@@ -481,6 +564,7 @@ function sourceBody(
   if (publishedAt) provenance.sourcePublishedAt = publishedAt;
   const fetch: SourceBody = { kind: "body", body, provenance, completeness };
   if (Object.keys(validator).length > 0) fetch.validator = validator;
+  else fetch.state = {};
   return fetch;
 }
 

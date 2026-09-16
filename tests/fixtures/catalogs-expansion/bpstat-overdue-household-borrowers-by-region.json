@@ -1,0 +1,1367 @@
+{
+  "version": "2.0",
+  "label": "Consolidation; Credit purpose; Source; Flows, stocks and prices; Metrics; Periodicity; Item; Counterparty institutional sector; Reference institutional sector; Counterparty territory; Reference territory; Data type; Unit of measure",
+  "id": [
+    "8",
+    "17",
+    "18",
+    "19",
+    "29",
+    "40",
+    "48",
+    "54",
+    "56",
+    "59",
+    "63",
+    "66",
+    "70",
+    "reference_date"
+  ],
+  "size": [
+    1,
+    2,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    9,
+    1,
+    1,
+    1,
+    2
+  ],
+  "extension": {
+    "num_series": 350,
+    "obs_updated_at": "2026-08-27T16:00:00Z",
+    "series": [
+      {
+        "id": 12759854,
+        "label": "Overdue loans-Households and NPISH-Cons and op-Grande Lisboa NUTS II-% borrowers",
+        "dimension_category": [
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          },
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 17,
+            "category_id": 2708
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 5599
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3617
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3125
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3762
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3118
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2779
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12759854&lang=EN"
+      },
+      {
+        "id": 12759855,
+        "label": "Overdue loans-Households and NPISH-House purchase-Grande Lisboa NUTS II-% borrowers",
+        "dimension_category": [
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          },
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3125
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2779
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3617
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3762
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3118
+          },
+          {
+            "dimension_id": 17,
+            "category_id": 2705
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 5599
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12759855&lang=EN"
+      },
+      {
+        "id": 12759861,
+        "label": "Overdue loans-Households and NPISH-House purchase-Península de Setúbal NUTS II-% borrowers",
+        "dimension_category": [
+          {
+            "dimension_id": 56,
+            "category_id": 3118
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3617
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2779
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3125
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3762
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          },
+          {
+            "dimension_id": 17,
+            "category_id": 2705
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 5601
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12759861&lang=EN"
+      },
+      {
+        "id": 12759866,
+        "label": "Overdue loans-Households and NPISH-Cons and op-Península de Setúbal NUTS II-% borrowers",
+        "dimension_category": [
+          {
+            "dimension_id": 48,
+            "category_id": 3762
+          },
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3125
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3617
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 5601
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3118
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 17,
+            "category_id": 2708
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2779
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12759866&lang=EN"
+      },
+      {
+        "id": 12759871,
+        "label": "Overdue loans-Households and NPISH-Cons and op-Alentejo-% borrowers",
+        "dimension_category": [
+          {
+            "dimension_id": 17,
+            "category_id": 2708
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3617
+          },
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 5603
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3125
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3762
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2779
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3118
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12759871&lang=EN"
+      },
+      {
+        "id": 12759872,
+        "label": "Overdue loans-Households and NPISH-House purchase-Alentejo-% borrowers",
+        "dimension_category": [
+          {
+            "dimension_id": 48,
+            "category_id": 3762
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 5603
+          },
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3125
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2779
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3118
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 17,
+            "category_id": 2705
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3617
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12759872&lang=EN"
+      },
+      {
+        "id": 12759884,
+        "label": "Overdue loans-Households and NPISH-Cons and op-Algarve NUTS II-% borrowers",
+        "dimension_category": [
+          {
+            "dimension_id": 17,
+            "category_id": 2708
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3118
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3617
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2779
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3125
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 5608
+          },
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3762
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12759884&lang=EN"
+      },
+      {
+        "id": 12760149,
+        "label": "Overdue loans-Households and NPISH-Cons and op-Centro-% borrowers",
+        "dimension_category": [
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2779
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3125
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3762
+          },
+          {
+            "dimension_id": 17,
+            "category_id": 2708
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3617
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 5588
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3118
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12760149&lang=EN"
+      },
+      {
+        "id": 12760153,
+        "label": "Overdue loans-Households and NPISH-House purchase-Centro-% borrowers",
+        "dimension_category": [
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 5588
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3118
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 17,
+            "category_id": 2705
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2779
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3125
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3617
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3762
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12760153&lang=EN"
+      },
+      {
+        "id": 12760173,
+        "label": "Overdue loans-Households and NPISH-Cons and op-Oeste e Vale do Tejo-% borrowers",
+        "dimension_category": [
+          {
+            "dimension_id": 56,
+            "category_id": 3118
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 5595
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          },
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 17,
+            "category_id": 2708
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3762
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3125
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3617
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2779
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12760173&lang=EN"
+      },
+      {
+        "id": 12760174,
+        "label": "Overdue loans-Households and NPISH-House purchase-Oeste e Vale do Tejo-% borrowers",
+        "dimension_category": [
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 5595
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3617
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2779
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3125
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3762
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3118
+          },
+          {
+            "dimension_id": 17,
+            "category_id": 2705
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12760174&lang=EN"
+      },
+      {
+        "id": 12760196,
+        "label": "Overdue loans-Households and NPISH-House purchase-Algarve NUTS II-% borrowers",
+        "dimension_category": [
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3617
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3762
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3118
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3125
+          },
+          {
+            "dimension_id": 17,
+            "category_id": 2705
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 5608
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2779
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12760196&lang=EN"
+      },
+      {
+        "id": 12760197,
+        "label": "Overdue loans-Households and NPISH-Cons and op-Região Autónoma dos Açores NUTS II-% borrowers",
+        "dimension_category": [
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3118
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3617
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3125
+          },
+          {
+            "dimension_id": 17,
+            "category_id": 2708
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 5611
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2779
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3762
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12760197&lang=EN"
+      },
+      {
+        "id": 12760199,
+        "label": "Overdue loans-Households and NPISH-House purchase-Região Autónoma dos Açores NUTS II-% borrowers",
+        "dimension_category": [
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 5611
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3617
+          },
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3762
+          },
+          {
+            "dimension_id": 17,
+            "category_id": 2705
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2779
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3118
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3125
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12760199&lang=EN"
+      },
+      {
+        "id": 12760204,
+        "label": "Overdue loans-Households and NPISH-Cons and op-Região Autónoma da Madeira NUTS II-% borrowers",
+        "dimension_category": [
+          {
+            "dimension_id": 17,
+            "category_id": 2708
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3617
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3118
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          },
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3125
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 5614
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3762
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2779
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12760204&lang=EN"
+      },
+      {
+        "id": 12760206,
+        "label": "Overdue loans-Households and NPISH-House purchase-Região Autónoma da Madeira NUTS II-% borrowers",
+        "dimension_category": [
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2779
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 5614
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3762
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3125
+          },
+          {
+            "dimension_id": 17,
+            "category_id": 2705
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3617
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3118
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12760206&lang=EN"
+      },
+      {
+        "id": 12760515,
+        "label": "Overdue loans-Households and NPISH-Cons and op-Norte-% borrowers",
+        "dimension_category": [
+          {
+            "dimension_id": 66,
+            "category_id": 2779
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3125
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 5579
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3617
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3762
+          },
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          },
+          {
+            "dimension_id": 17,
+            "category_id": 2708
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3118
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12760515&lang=EN"
+      },
+      {
+        "id": 12760516,
+        "label": "Overdue loans-Households and NPISH-House purchase-Norte-% borrowers",
+        "dimension_category": [
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 59,
+            "category_id": 5579
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 66,
+            "category_id": 2779
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          },
+          {
+            "dimension_id": 54,
+            "category_id": 3125
+          },
+          {
+            "dimension_id": 56,
+            "category_id": 3118
+          },
+          {
+            "dimension_id": 18,
+            "category_id": 35
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 12
+          },
+          {
+            "dimension_id": 17,
+            "category_id": 2705
+          },
+          {
+            "dimension_id": 48,
+            "category_id": 3762
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3617
+          },
+          {
+            "dimension_id": 8,
+            "category_id": 4130
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12760516&lang=EN"
+      }
+    ]
+  },
+  "value": [
+    1.3,
+    1.2,
+    1.3,
+    1.2,
+    1.5,
+    1.4,
+    1.4,
+    1.3,
+    1.6,
+    1.5,
+    1.7,
+    1.6,
+    1.3,
+    1.3,
+    1.4,
+    1.2,
+    1.2,
+    1.1,
+    7.7,
+    7.6,
+    7.7,
+    7.6,
+    8.1,
+    7.9,
+    9.3,
+    9.2,
+    9.4,
+    9.2,
+    8.3,
+    8.0,
+    8.9,
+    8.8,
+    6.4,
+    6.2,
+    6.9,
+    6.7
+  ],
+  "status": [
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F",
+    "F"
+  ],
+  "dimension": {
+    "8": {
+      "label": "Consolidation",
+      "category": {
+        "index": [
+          "4130"
+        ],
+        "label": {
+          "4130": "Non-consolidated data"
+        }
+      }
+    },
+    "17": {
+      "label": "Credit purpose",
+      "category": {
+        "index": [
+          "2705",
+          "2708"
+        ],
+        "label": {
+          "2705": "House purchase",
+          "2708": "Consumption and other purposes"
+        }
+      }
+    },
+    "18": {
+      "label": "Source",
+      "category": {
+        "index": [
+          "35"
+        ],
+        "label": {
+          "35": "Banco de Portugal"
+        }
+      }
+    },
+    "19": {
+      "label": "Flows, stocks and prices",
+      "category": {
+        "index": [
+          "12"
+        ],
+        "label": {
+          "12": "Stocks"
+        }
+      }
+    },
+    "40": {
+      "label": "Periodicity",
+      "category": {
+        "index": [
+          "4264"
+        ],
+        "label": {
+          "4264": "Monthly"
+        }
+      }
+    },
+    "48": {
+      "label": "Item",
+      "category": {
+        "index": [
+          "3762"
+        ],
+        "label": {
+          "3762": "Overdue loans"
+        }
+      }
+    },
+    "54": {
+      "label": "Counterparty institutional sector",
+      "category": {
+        "index": [
+          "3125"
+        ],
+        "label": {
+          "3125": "Households and Non-profit institutions serving households"
+        }
+      }
+    },
+    "56": {
+      "label": "Reference institutional sector",
+      "category": {
+        "index": [
+          "3118"
+        ],
+        "label": {
+          "3118": "Other Monetary financial institutions"
+        }
+      }
+    },
+    "66": {
+      "label": "Data type",
+      "category": {
+        "index": [
+          "2779"
+        ],
+        "label": {
+          "2779": "Assets"
+        }
+      }
+    },
+    "70": {
+      "label": "Unit of measure",
+      "category": {
+        "index": [
+          "3327"
+        ],
+        "label": {
+          "3327": "Percentage"
+        }
+      }
+    },
+    "reference_date": {
+      "label": "Date",
+      "category": {
+        "index": [
+          "2026-06-30",
+          "2026-07-31"
+        ]
+      }
+    },
+    "29": {
+      "label": "Metrics",
+      "category": {
+        "index": [
+          "3617"
+        ],
+        "label": {
+          "3617": "% Borrowers"
+        }
+      }
+    },
+    "59": {
+      "label": "Counterparty territory",
+      "category": {
+        "index": [
+          "5579",
+          "5588",
+          "5595",
+          "5599",
+          "5601",
+          "5603",
+          "5608",
+          "5611",
+          "5614"
+        ],
+        "label": {
+          "5579": "Norte (NUTS II)",
+          "5588": "Centro (NUTS II)",
+          "5595": "Oeste e Vale do Tejo (NUTS II)",
+          "5599": "Grande Lisboa (NUTS II)",
+          "5601": "Península de Setúbal (NUTS II)",
+          "5603": "Alentejo (NUTS II)",
+          "5608": "Algarve (NUTS II)",
+          "5611": "Região Autónoma dos Açores (NUTS II)",
+          "5614": "Região Autónoma da Madeira (NUTS II)"
+        }
+      }
+    },
+    "63": {
+      "label": "Reference territory",
+      "category": {
+        "index": [
+          "349"
+        ],
+        "label": {
+          "349": "Portugal"
+        }
+      }
+    }
+  },
+  "class": "dataset",
+  "href": "https://bpstat.bportugal.pt/data/v1/domains/188/datasets/961306c1ed49daf795a53dc5fea4a04b/?lang=EN&series_ids=12759854%2C12759855%2C12759861%2C12759866%2C12759871%2C12759872%2C12759884%2C12760149%2C12760153%2C12760173%2C12760174%2C12760196%2C12760197%2C12760199%2C12760204%2C12760206%2C12760515%2C12760516&obs_last_n=2&page_size=100",
+  "source": "Bank of Portugal",
+  "role": {
+    "time": [
+      "reference_date"
+    ],
+    "metric": [
+      "29"
+    ],
+    "geo": [
+      "59",
+      "63"
+    ]
+  }
+}

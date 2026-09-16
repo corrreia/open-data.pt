@@ -187,7 +187,7 @@ describe("uData collection", () => {
     expect(header).toMatchObject({
       type: "header",
       protocol: NORMALIZED_PROTOCOL,
-      normalizer: { id: "tabular-v2", version: "4" },
+      normalizer: { id: "tabular-v2", version: "5" },
       provenance: { sourceUrl: "https://publisher.example/data.csv", sourcePublishedAt: "2026-08-24T20:14:58.444Z" },
       checkpoint: { state: { validators: { default: { etag: '"v2"' } } } },
       products: [{ productKey: "records", suggestedSlug: "population", completeness: "complete" }],
