@@ -26,8 +26,12 @@ jobs:
         include:
           - name: Lint and format
             run: pnpm lint && pnpm format:check
+          # The kernel's Pipelines bindings only generate typed with a Cloudflare login,
+          # so the drift check needs a token; the typecheck against the checked-in types does not.
           - name: Types
-            run: pnpm types:check && pnpm typecheck
+            run: |
+              if [ -n "$CLOUDFLARE_API_TOKEN" ]; then pnpm types:check; else echo "::notice::No CLOUDFLARE_API_TOKEN secret; skipping types:check"; fi
+              pnpm typecheck
           - name: Tests
             run: pnpm test
           - name: Bundles
@@ -43,3 +47,5 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: ${{ matrix.run }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ matrix.name == 'Types' && secrets.CLOUDFLARE_API_TOKEN || '' }}
