@@ -1,10 +1,38 @@
 import { NORMALIZED_PROTOCOL, type JsonObject } from "@open-data-pt/gatekeeper-shared";
 
-export const scope = { collectionId: "batch_1", resourceKey: "fixture:events:config-v1", configHash: "config-v1", feedEpoch: "epoch-1", mode: { kind: "live" as const }, deadline: new Date(Date.now() + 60_000).toISOString() };
+export const scope = {
+  collectionId: "batch_1",
+  resourceKey: "fixture:events:config-v1",
+  configHash: "config-v1",
+  feedEpoch: "epoch-1",
+  mode: { kind: "live" as const },
+  deadline: new Date(Date.now() + 60_000).toISOString(),
+};
 export const limits = { outputBytes: 32_768, frameBytes: 8192, recordBytes: 1024, records: 10, products: 4 };
 
 export function header(): JsonObject {
-  return { type: "header", protocol: NORMALIZED_PROTOCOL, collectionId: scope.collectionId, normalizer: { id: "fixture", version: "1" }, products: [{ productKey: "events", suggestedSlug: "events", title: "Events", description: "", role: "event-log", schema: { fields: [{ id: "x", name: "X", type: "number", nullable: false }] }, kind: "record", updateMode: "authoritative-snapshot", completeness: "complete" }], provenance: { sourceUrl: "https://example.test/data" }, completeness: "complete", checkpoint: { version: 2, resourceKey: scope.resourceKey, configHash: scope.configHash, feedEpoch: scope.feedEpoch, normalizer: { id: "fixture", version: "1" }, state: {} } };
+  return {
+    type: "header",
+    protocol: NORMALIZED_PROTOCOL,
+    collectionId: scope.collectionId,
+    normalizer: { id: "fixture", version: "1" },
+    products: [
+      {
+        productKey: "events",
+        suggestedSlug: "events",
+        title: "Events",
+        description: "",
+        role: "event-log",
+        schema: { fields: [{ id: "x", name: "X", type: "number", nullable: false }] },
+        kind: "record",
+        updateMode: "authoritative-snapshot",
+        completeness: "complete",
+      },
+    ],
+    provenance: { sourceUrl: "https://example.test/data" },
+    completeness: "complete",
+    checkpoint: { version: 2, resourceKey: scope.resourceKey, configHash: scope.configHash, feedEpoch: scope.feedEpoch, normalizer: { id: "fixture", version: "1" }, state: {} },
+  };
 }
 
 /** NDJSON text of the frames followed by a matching completion frame. */
@@ -24,7 +52,10 @@ export function chunked(text: string | Uint8Array, size: number): ReadableStream
   let offset = 0;
   return new ReadableStream<Uint8Array>({
     pull(controller) {
-      if (offset >= bytes.byteLength) { controller.close(); return; }
+      if (offset >= bytes.byteLength) {
+        controller.close();
+        return;
+      }
       controller.enqueue(bytes.slice(offset, offset + size));
       offset += size;
     },

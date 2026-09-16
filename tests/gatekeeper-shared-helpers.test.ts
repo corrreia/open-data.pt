@@ -113,15 +113,19 @@ describe("Europe/Lisbon wall clocks", () => {
   });
 
   it("names both instants of the repeated autumn hour, and none of the skipped spring hour", () => {
-    expect(lisbonInstants("2026-10-25", "01:30").map((instant) => instant.toISOString()))
-      .toEqual(["2026-10-25T00:30:00.000Z", "2026-10-25T01:30:00.000Z"]);
+    expect(lisbonInstants("2026-10-25", "01:30").map((instant) => instant.toISOString())).toEqual(["2026-10-25T00:30:00.000Z", "2026-10-25T01:30:00.000Z"]);
     expect(lisbonToUtc("2026-10-25", "01:30")).toBe("2026-10-25T01:30:00.000Z");
     expect(lisbonInstants("2026-03-29", "01:30")).toEqual([]);
     expect(lisbonToUtc("2026-03-29", "01:30")).toBeUndefined();
   });
 
   it("rejects a reading no calendar or clock shows", () => {
-    for (const [day, time] of [["2026-02-30", "12:00"], ["2026-09-14", "25:00"], ["2026-09-1", "12:00"], ["2026-09-14", "12"]]) {
+    for (const [day, time] of [
+      ["2026-02-30", "12:00"],
+      ["2026-09-14", "25:00"],
+      ["2026-09-1", "12:00"],
+      ["2026-09-14", "12"],
+    ]) {
       expect(lisbonToUtc(day!, time!)).toBeUndefined();
     }
   });
@@ -143,7 +147,12 @@ describe("schema fields and transformer identity", () => {
   it("names a field after its ID, and carries only the unit and label it was given", () => {
     expect(field("stopId", "identifier", false)).toEqual({ id: "stopId", name: "stopId", type: "identifier", nullable: false });
     expect(field("power", "number", true, "MW", "Power")).toEqual({
-      id: "power", name: "power", type: "number", nullable: true, unit: "MW", display: { label: "Power" },
+      id: "power",
+      name: "power",
+      type: "number",
+      nullable: true,
+      unit: "MW",
+      display: { label: "Power" },
     });
     expect(field("power", "number", true, "", "")).toEqual({ id: "power", name: "power", type: "number", nullable: true });
   });
@@ -151,15 +160,27 @@ describe("schema fields and transformer identity", () => {
   it("stamps the translator's identity on what it returned", async () => {
     const context: TransformContext = {
       feed: {
-        id: "feed_1", slug: "fixture", title: "Fixture", description: "",
+        id: "feed_1",
+        slug: "fixture",
+        title: "Fixture",
+        description: "",
         config: {},
-        semantics: { boundedness: "bounded", changeSemantics: "full-snapshot", cadence: "periodic", domainSubject: "reference", defaultProductRole: "reference", completeness: "complete", ordering: "none" },
+        semantics: {
+          boundedness: "bounded",
+          changeSemantics: "full-snapshot",
+          cadence: "periodic",
+          domainSubject: "reference",
+          defaultProductRole: "reference",
+          completeness: "complete",
+          ordering: "none",
+        },
       },
       observedAt: "2026-09-14T00:00:00.000Z",
     };
     const result = await runTransformer(
       {
-        id: "fixture", version: "1",
+        id: "fixture",
+        version: "1",
         transform: () => ({ products: [], quality: { acceptedRecords: 0, rejectedRecords: 0 } }),
       },
       new Uint8Array(),

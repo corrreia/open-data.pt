@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CarrisTransformer } from "../packages/gatekeeper-shared/src/sources/carris/transform";
-import type {
-  JsonValue,
-  TransformContext,
-} from "@open-data-pt/gatekeeper-shared";
+import type { JsonValue, TransformContext } from "@open-data-pt/gatekeeper-shared";
 
 function feed(kind: "alerts" | "lines" | "routes" | "stops" | "vehicles"): TransformContext["feed"] {
   return {
@@ -16,10 +13,8 @@ function feed(kind: "alerts" | "lines" | "routes" | "stops" | "vehicles"): Trans
       boundedness: kind === "lines" ? "bounded" : "unbounded",
       changeSemantics: kind === "alerts" ? "keyed-upsert" : "full-snapshot",
       cadence: kind === "lines" ? "slow-changing" : "near-real-time",
-      domainSubject:
-        kind === "lines" ? "reference" : kind === "alerts" ? "event" : "observation",
-      defaultProductRole:
-        kind === "lines" ? "reference" : kind === "alerts" ? "event-log" : "current-state",
+      domainSubject: kind === "lines" ? "reference" : kind === "alerts" ? "event" : "observation",
+      defaultProductRole: kind === "lines" ? "reference" : kind === "alerts" ? "event-log" : "current-state",
       completeness: "complete",
       ordering: kind === "lines" ? "none" : "per-entity",
     },
@@ -40,10 +35,7 @@ describe("Carris transformers", () => {
   const transformer = new CarrisTransformer();
 
   it("creates a reference product from lines", () => {
-    const result = transformer.transform(
-      bytes([{ id: "1001", long_name: "A - B", short_name: "1001" }]),
-      context("lines"),
-    );
+    const result = transformer.transform(bytes([{ id: "1001", long_name: "A - B", short_name: "1001" }]), context("lines"));
     expect(result.products[0]).toMatchObject({
       slug: "carris-lines",
       role: "reference",
@@ -74,11 +66,7 @@ describe("Carris transformers", () => {
       acceptedRecords: 1,
       rejectedRecords: 1,
     });
-    expect(result.products.map((product) => product.role)).toEqual([
-      "current-state",
-      "summary",
-      "time-series",
-    ]);
+    expect(result.products.map((product) => product.role)).toEqual(["current-state", "summary", "time-series"]);
     expect(result.products[2]?.points?.[0]).toMatchObject({
       seriesKey: "all",
       value: 1,
@@ -112,10 +100,7 @@ describe("Carris transformers", () => {
       ]),
       context("vehicles"),
     );
-    expect(result.products[0]?.records?.map((record) => record.eventTime)).toEqual([
-      "2026-09-06T09:59:00.000Z",
-      "2026-09-06T09:59:00.000Z",
-    ]);
+    expect(result.products[0]?.records?.map((record) => record.eventTime)).toEqual(["2026-09-06T09:59:00.000Z", "2026-09-06T09:59:00.000Z"]);
     expect(result.products[2]?.points?.[0]?.eventTime).toBe("2026-09-06T09:59:00.000Z");
   });
 
@@ -202,7 +187,16 @@ describe("Carris transformers", () => {
     expect(result.products[0]?.watermark).toBe("2026-09-04T03:00:00.000Z");
     // Polled again later, the same alert is the same record: nothing about it changed.
     const later = transformer.transform(
-      bytes([{ alert_id: "alert-1", active_period: [{ start: 1788490800, end: 1788494400 }], header_text: { translation: [{ language: "pt", text: "Desvio" }] }, description_text: { translation: [{ language: "pt", text: "Rua fechada" }] }, cause: "OTHER_CAUSE", effect: "DETOUR" }]),
+      bytes([
+        {
+          alert_id: "alert-1",
+          active_period: [{ start: 1788490800, end: 1788494400 }],
+          header_text: { translation: [{ language: "pt", text: "Desvio" }] },
+          description_text: { translation: [{ language: "pt", text: "Rua fechada" }] },
+          cause: "OTHER_CAUSE",
+          effect: "DETOUR",
+        },
+      ]),
       { ...context("alerts"), observedAt: "2026-09-06T10:05:00Z", sourcePublishedAt: "2026-09-06T10:04:59Z" },
     );
     expect(later.products[0]?.records?.[0]).toEqual(record);

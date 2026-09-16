@@ -5,9 +5,4 @@ import { CARRIS_EXAMPLES } from "@open-data-pt/gatekeeper-shared/sources/carris"
 import { METRO_LISBOA_EXAMPLES } from "@open-data-pt/gatekeeper-shared/sources/metrolisboa";
 
 /** Public transport and shared vehicles: two bespoke operators and two open specifications. */
-export const MOBILITY_EXAMPLES: ExampleFeed[] = [
-  ...CARRIS_EXAMPLES,
-  ...METRO_LISBOA_EXAMPLES,
-  ...GTFS_EXAMPLES,
-  ...GBFS_EXAMPLES,
-];
+export const MOBILITY_EXAMPLES: ExampleFeed[] = [...CARRIS_EXAMPLES, ...METRO_LISBOA_EXAMPLES, ...GTFS_EXAMPLES, ...GBFS_EXAMPLES];

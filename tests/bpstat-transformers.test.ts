@@ -1,15 +1,10 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { TransformContext } from "@open-data-pt/gatekeeper-shared";
-import {
-  normalizeReferenceDate,
-  transformBpstatDataset,
-} from "../packages/gatekeeper-shared/src/sources/bpstat/transform";
+import { normalizeReferenceDate, transformBpstatDataset } from "../packages/gatekeeper-shared/src/sources/bpstat/transform";
 
 function fixture(name: string): Uint8Array {
-  return new Uint8Array(
-    readFileSync(new URL(`./fixtures/bpstat/${name}`, import.meta.url)),
-  );
+  return new Uint8Array(readFileSync(new URL(`./fixtures/bpstat/${name}`, import.meta.url)));
 }
 
 function context(slug: string, title: string): TransformContext {
@@ -43,10 +38,7 @@ function context(slug: string, title: string): TransformContext {
 
 describe("BPstat JSON-stat transformer", () => {
   it("decodes dense row-major values into one typed series product", () => {
-    const result = transformBpstatDataset(
-      fixture("cpi-page.json"),
-      context("bpstat-cpi", "Consumer price index"),
-    );
+    const result = transformBpstatDataset(fixture("cpi-page.json"), context("bpstat-cpi", "Consumer price index"));
 
     expect(result.transformer).toEqual({
       id: "bpstat-jsonstat-dataset",
@@ -57,9 +49,7 @@ describe("BPstat JSON-stat transformer", () => {
       rejectedRecords: 0,
     });
     // Every value is published once: no record product repeats the points.
-    expect(result.products.map(({ role, kind }) => [role, kind])).toEqual([
-      ["time-series", "series"],
-    ]);
+    expect(result.products.map(({ role, kind }) => [role, kind])).toEqual([["time-series", "series"]]);
 
     const series = result.products[0];
     expect(series).toMatchObject({
@@ -84,10 +74,7 @@ describe("BPstat JSON-stat transformer", () => {
   });
 
   it("decodes sparse values without inventing null Cartesian cells", () => {
-    const result = transformBpstatDataset(
-      fixture("interest-rates.json"),
-      context("bpstat-interest", "Housing loan reference rates"),
-    );
+    const result = transformBpstatDataset(fixture("interest-rates.json"), context("bpstat-interest", "Housing loan reference rates"));
 
     expect(result.quality).toMatchObject({
       acceptedRecords: 6,
@@ -102,10 +89,7 @@ describe("BPstat JSON-stat transformer", () => {
   it("accepts paginated envelopes and deduplicates identical page-boundary observations", () => {
     const page = JSON.parse(new TextDecoder().decode(fixture("cpi-page.json")));
     const bytes = new TextEncoder().encode(JSON.stringify({ pages: [page, page] }));
-    const result = transformBpstatDataset(
-      bytes,
-      context("bpstat-cpi", "Consumer price index"),
-    );
+    const result = transformBpstatDataset(bytes, context("bpstat-cpi", "Consumer price index"));
     expect(result.quality).toMatchObject({
       acceptedRecords: 6,
       rejectedRecords: 0,
@@ -121,12 +105,7 @@ describe("BPstat JSON-stat transformer", () => {
   });
 
   it("rejects malformed JSON-stat input", () => {
-    expect(() =>
-      transformBpstatDataset(
-        new TextEncoder().encode('{"class":"dataset"}'),
-        context("bpstat-broken", "Broken"),
-      ),
-    ).toThrow("JSON-stat 2.0");
+    expect(() => transformBpstatDataset(new TextEncoder().encode('{"class":"dataset"}'), context("bpstat-broken", "Broken"))).toThrow("JSON-stat 2.0");
   });
 });
 
@@ -151,7 +130,10 @@ describe("BPstat pagination", () => {
     // original value (a repeat of page 1), metric 1 gets a shifted value.
     const toCoords = (flat: number, size: number[]) => {
       const coords = Array.from<number>({ length: size.length });
-      for (let i = size.length - 1; i >= 0; i -= 1) { coords[i] = flat % size[i]!; flat = Math.floor(flat / size[i]!); }
+      for (let i = size.length - 1; i >= 0; i -= 1) {
+        coords[i] = flat % size[i]!;
+        flat = Math.floor(flat / size[i]!);
+      }
       return coords;
     };
     const toFlat = (coords: number[], size: number[]) => coords.reduce((acc, c, i) => acc * size[i]! + c, 0);
@@ -160,7 +142,8 @@ describe("BPstat pagination", () => {
     for (const [flat, v] of Object.entries(page1.value as Record<string, number>)) {
       const coords = toCoords(Number(flat), oldSize);
       value2[toFlat(coords, newSize)] = v;
-      const shifted = [...coords]; shifted[metricsPos] = 1;
+      const shifted = [...coords];
+      shifted[metricsPos] = 1;
       value2[toFlat(shifted, newSize)] = v + 100;
     }
     page2.value = value2;

@@ -28,7 +28,8 @@ describe("canonical routes", () => {
     expect(route("/api/products/stops/records")?.costly).toBe(false);
     expect(route("/api/config")).toBeUndefined();
     // The API serves data and collection status, not the platform's own machinery.
-    for (const path of ["/api/usage", "/api/sync", "/api/policies", "/api/gatekeepers", "/api/feed-kinds", "/api/activity", "/api/feeds/f1/acquisitions", "/api/feeds/f1/backfill"]) expect(route(path)).toBeUndefined();
+    for (const path of ["/api/usage", "/api/sync", "/api/policies", "/api/gatekeepers", "/api/feed-kinds", "/api/activity", "/api/feeds/f1/acquisitions", "/api/feeds/f1/backfill"])
+      expect(route(path)).toBeUndefined();
     expect(route("/api/acquisitions?day=2026-09-01&feedId=f1&limit=5")?.costly).toBe(false);
   });
 
@@ -50,7 +51,12 @@ describe("methods, limits and request IDs", () => {
 
   it("keys both limiters on the client IP and applies the costly one only to costly routes", async () => {
     const calls: string[] = [];
-    const limiter = (name: string, success: boolean) => ({ limit: async ({ key }: { key: string }) => { calls.push(`${name}:${key}`); return { success }; } });
+    const limiter = (name: string, success: boolean) => ({
+      limit: async ({ key }: { key: string }) => {
+        calls.push(`${name}:${key}`);
+        return { success };
+      },
+    });
     const request = new Request("https://open-data.pt/api/products", { headers: { "cf-connecting-ip": "192.0.2.7" } });
     expect(await withinRateLimit({ api: limiter("api", true), costly: limiter("costly", false) }, request, false)).toBe(true);
     expect(await withinRateLimit({ api: limiter("api", true), costly: limiter("costly", false) }, request, true)).toBe(false);

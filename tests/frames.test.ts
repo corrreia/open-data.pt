@@ -23,8 +23,18 @@ describe("normalized frame reader", () => {
     ["no header", framed([event(1)]), /omitted its header/],
     ["two headers", framed([header(), header()]), /duplicate headers/],
     ["an unknown product", framed([header(), { type: "record", productKey: "other", value: { entityKey: "a", payload: {} } }]), /unknown product/],
-    ["a point for a record product", framed([header(), { type: "point", productKey: "events", value: { seriesKey: "s", eventTime: "2026-09-10T00:00:00.000Z", value: 1, unit: "", dimensions: {} } }]), /disagree/],
-    ["wrong counts", new Response(`${JSON.stringify(header())}\n${JSON.stringify(event(1))}\n${JSON.stringify({ type: "complete", counts: { records: 2, points: 0 }, quality: { acceptedRecords: 2, rejectedRecords: 0 } })}\n`).body!, /counts did not match/],
+    [
+      "a point for a record product",
+      framed([header(), { type: "point", productKey: "events", value: { seriesKey: "s", eventTime: "2026-09-10T00:00:00.000Z", value: 1, unit: "", dimensions: {} } }]),
+      /disagree/,
+    ],
+    [
+      "wrong counts",
+      new Response(
+        `${JSON.stringify(header())}\n${JSON.stringify(event(1))}\n${JSON.stringify({ type: "complete", counts: { records: 2, points: 0 }, quality: { acceptedRecords: 2, rejectedRecords: 0 } })}\n`,
+      ).body!,
+      /counts did not match/,
+    ],
     ["data after completion", new Response(`${framedText([header()])}${JSON.stringify(event(1))}\n`).body!, /after completion/],
     ["a truncated stream", new Response(`${JSON.stringify(header())}\n${JSON.stringify(event(1))}\n`).body!, /truncated/],
     ["a blank line", new Response(`${JSON.stringify(header())}\n\n`).body!, /Blank/],
@@ -33,14 +43,25 @@ describe("normalized frame reader", () => {
     ["a finalized undeclared product", framed([header()], { products: [{ productKey: "other", completeness: "unknown" }] }), /undeclared product/],
     ["history progress on a live stream", framed([header()], { exhausted: true }), /Live collection returned history progress/],
     ["a header for another collection", framed([{ ...header(), collectionId: "other" }]), /did not match the request/],
-    ["a checkpoint for another resource", framed([{ ...header(), checkpoint: { version: 2, resourceKey: "other", configHash: scope.configHash, feedEpoch: scope.feedEpoch, normalizer: { id: "fixture", version: "1" }, state: {} } }]), /Checkpoint scope/],
+    [
+      "a checkpoint for another resource",
+      framed([
+        {
+          ...header(),
+          checkpoint: { version: 2, resourceKey: "other", configHash: scope.configHash, feedEpoch: scope.feedEpoch, normalizer: { id: "fixture", version: "1" }, state: {} },
+        },
+      ]),
+      /Checkpoint scope/,
+    ],
   ])("rejects %s", async (_name, stream, message) => {
     await expect(drain(stream)).rejects.toThrow(message);
   });
 
   it("enforces row, frame and output limits before a frame is handed out", async () => {
     await expect(drain(framed([header(), ...Array.from({ length: 11 }, (_, index) => event(index))]))).rejects.toThrow(/exceeds 10 rows/);
-    await expect(drain(framed([header(), { type: "record", productKey: "events", value: { entityKey: "big", payload: { text: "x".repeat(2000) } } }]))).rejects.toThrow(/exceeds 1024 bytes/);
+    await expect(drain(framed([header(), { type: "record", productKey: "events", value: { entityKey: "big", payload: { text: "x".repeat(2000) } } }]))).rejects.toThrow(
+      /exceeds 1024 bytes/,
+    );
     await expect(drain(framed([header(), event(1)]), { ...limits, outputBytes: 100, frameBytes: 90, recordBytes: 80 })).rejects.toThrow(/exceeds/);
   });
 
@@ -62,7 +83,11 @@ describe("normalized frame reader", () => {
   });
 
   it("stops waiting on a stalled producer at the deadline", async () => {
-    const stalled = new ReadableStream<Uint8Array>({ start(controller) { controller.enqueue(new TextEncoder().encode(`${JSON.stringify(header())}\n`)); } });
+    const stalled = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode(`${JSON.stringify(header())}\n`));
+      },
+    });
     await expect(drain(stalled, limits, { ...scope, deadline: new Date(Date.now() + 150).toISOString() })).rejects.toThrow(/deadline/);
   });
 });

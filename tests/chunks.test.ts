@@ -1,12 +1,38 @@
 import { describe, expect, it } from "vitest";
-import { buildChunks, chunkIndexFor, chunkListProblem, compareKeys, isChunkBoundary, parseChunkRows, regenerateChunks, writeChunk, type ChunkSink, type ServingRow } from "../apps/kernel/src/chunks";
+import {
+  buildChunks,
+  chunkIndexFor,
+  chunkListProblem,
+  compareKeys,
+  isChunkBoundary,
+  parseChunkRows,
+  regenerateChunks,
+  writeChunk,
+  type ChunkSink,
+  type ServingRow,
+} from "../apps/kernel/src/chunks";
 
 describe("chunk list budget", () => {
-  const chunk = (index: number) => ({ key: `serving/feed_0123456789abcdef0123456789ab/some-product/chunks/${String(index).padStart(64, "0")}.json`, rows: 2048, first: `entity-${index}-first`, last: `entity-${index}-last` });
+  const chunk = (index: number) => ({
+    key: `serving/feed_0123456789abcdef0123456789ab/some-product/chunks/${String(index).padStart(64, "0")}.json`,
+    rows: 2048,
+    first: `entity-${index}-first`,
+    last: `entity-${index}-last`,
+  });
 
   it("accepts the chunk list of a million-row product and refuses one too large to store as one value", () => {
-    expect(chunkListProblem(Array.from({ length: 500 }, (_, index) => chunk(index)), "big")).toBeUndefined();
-    expect(chunkListProblem(Array.from({ length: 8_000 }, (_, index) => chunk(index)), "huge")).toMatch(/huge lists 8000 chunks.*1048576-byte limit/);
+    expect(
+      chunkListProblem(
+        Array.from({ length: 500 }, (_, index) => chunk(index)),
+        "big",
+      ),
+    ).toBeUndefined();
+    expect(
+      chunkListProblem(
+        Array.from({ length: 8_000 }, (_, index) => chunk(index)),
+        "huge",
+      ),
+    ).toMatch(/huge lists 8000 chunks.*1048576-byte limit/);
   });
 });
 
@@ -57,7 +83,8 @@ function orderedSource(rows: ServingRow[]) {
     let high = rows.length;
     while (low < high) {
       const middle = (low + high) >> 1;
-      if (compareKeys(rows[middle]!.key, after) <= 0) low = middle + 1; else high = middle;
+      if (compareKeys(rows[middle]!.key, after) <= 0) low = middle + 1;
+      else high = middle;
     }
     return rows.slice(low, low + limit);
   };
@@ -80,7 +107,11 @@ describe("key order", () => {
   });
 
   it("finds the chunk whose range holds a key", () => {
-    const chunks = [{ key: "a", rows: 1, first: "b", last: "c" }, { key: "b", rows: 1, first: "d", last: "f" }, { key: "c", rows: 1, first: "g", last: "h" }];
+    const chunks = [
+      { key: "a", rows: 1, first: "b", last: "c" },
+      { key: "b", rows: 1, first: "d", last: "f" },
+      { key: "c", rows: 1, first: "g", last: "h" },
+    ];
     expect(chunkIndexFor(chunks, "a")).toBe(0);
     expect(chunkIndexFor(chunks, "c")).toBe(0);
     expect(chunkIndexFor(chunks, "d")).toBe(1);
@@ -105,10 +136,16 @@ describe("content-addressed chunks", () => {
 
   it("ends chunks where keys say so, so one insertion changes only nearby chunks", async () => {
     const keys = Array.from({ length: 20_000 }, (_, index) => `entity-${String(index).padStart(6, "0")}`);
-    const before = await buildChunks(keys.map((key) => row(key)), new MemorySink());
+    const before = await buildChunks(
+      keys.map((key) => row(key)),
+      new MemorySink(),
+    );
     for (const chunk of before.slice(0, -1)) expect(isChunkBoundary(chunk.last) || chunk.rows >= 8192).toBe(true);
     const inserted = [...keys, "entity-010000-x"].sort(compareKeys);
-    const after = await buildChunks(inserted.map((key) => row(key)), new MemorySink());
+    const after = await buildChunks(
+      inserted.map((key) => row(key)),
+      new MemorySink(),
+    );
     const beforeKeys = new Set(before.map((chunk) => chunk.key));
     expect(after.filter((chunk) => !beforeKeys.has(chunk.key)).length).toBeLessThanOrEqual(2);
   });
@@ -142,7 +179,8 @@ describe("incremental regeneration", () => {
           changed.add(key);
         } else {
           const existing = before[Math.floor(next() * before.length)]!.key;
-          if (choice < 0.7) current.delete(existing); else current.set(existing, row(existing, 3));
+          if (choice < 0.7) current.delete(existing);
+          else current.set(existing, row(existing, 3));
           changed.add(existing);
         }
       }
@@ -153,7 +191,10 @@ describe("incremental regeneration", () => {
       const sink = new MemorySink(known);
       const regenerated = await regenerateChunks(previous, dirty, orderedSource(after), sink, 7 + Math.floor(next() * 1500));
       const expected = await buildChunks(after, new MemorySink());
-      expect(regenerated.map((chunk) => [chunk.key, chunk.rows]), `seed ${seed}`).toEqual(expected.map((chunk) => [chunk.key, chunk.rows]));
+      expect(
+        regenerated.map((chunk) => [chunk.key, chunk.rows]),
+        `seed ${seed}`,
+      ).toEqual(expected.map((chunk) => [chunk.key, chunk.rows]));
       // Exactly the chunks that did not exist before are uploaded: nothing reused is re-sent.
       expect(new Set(sink.puts), `seed ${seed}`).toEqual(new Set(expected.map((chunk) => chunk.key).filter((key) => !known.has(key))));
     }

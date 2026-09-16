@@ -1,14 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type {
-  CanonicalRecord,
-  CanonicalSchema,
-  ProductDeclaration,
-  SeriesPoint,
-  SourceConfig,
-  TransformContext,
-  TransformQuality,
-} from "@open-data-pt/gatekeeper-shared";
+import type { CanonicalRecord, CanonicalSchema, ProductDeclaration, SeriesPoint, SourceConfig, TransformContext, TransformQuality } from "@open-data-pt/gatekeeper-shared";
 import { libraryConfig } from "@open-data-pt/gatekeeper-shared";
 import { UDATA_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/udata/examples";
 import { chooseTransformer, transformUdata } from "../packages/gatekeeper-shared/src/formats/udata/transform";
@@ -75,10 +67,7 @@ async function transformExample(slug: string, chunkSize = 7): Promise<Transforme
   const example = UDATA_EXAMPLES.find((candidate) => candidate.slug === slug);
   const fixtureName = FIXTURE.get(slug);
   if (!example || !fixtureName) throw new Error(`No example fixture for ${slug}`);
-  const transform = await transformUdata(
-    fixture(fixtureName, chunkSize),
-    context(libraryConfig(example.config), example.slug, example.title, example.description),
-  );
+  const transform = await transformUdata(fixture(fixtureName, chunkSize), context(libraryConfig(example.config), example.slug, example.title, example.description));
   const records = new Map<string, CanonicalRecord[]>();
   const points = new Map<string, SeriesPoint[]>();
   for await (const row of transform.rows) {
@@ -109,7 +98,10 @@ describe("uData curated example transformers", () => {
       expect(result.products.length, slug).toBeGreaterThan(0);
       for (const product of result.products) {
         expect(product.schema.fields.length, product.slug).toBeGreaterThan(0);
-        expect(product.schema.fields.every((field) => Boolean(field.type)), product.slug).toBe(true);
+        expect(
+          product.schema.fields.every((field) => Boolean(field.type)),
+          product.slug,
+        ).toBe(true);
       }
     }
   });

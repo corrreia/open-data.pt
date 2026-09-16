@@ -22,8 +22,7 @@ export const EUROSTAT_EXAMPLES: ExampleFeed[] = [
   {
     slug: "eurostat-portugal-monthly-unemployment",
     title: "Portugal monthly unemployment rate",
-    description:
-      "Seasonally adjusted monthly unemployment rate for Portugal's total labour force.",
+    description: "Seasonally adjusted monthly unemployment rate for Portugal's total labour force.",
     config: {
       source: "eurostat",
       dataset: "une_rt_m",
@@ -39,8 +38,7 @@ export const EUROSTAT_EXAMPLES: ExampleFeed[] = [
   {
     slug: "eurostat-portugal-hicp-annual-rate",
     title: "Portugal harmonised inflation annual rate",
-    description:
-      "Monthly all-items Harmonised Index of Consumer Prices annual rate of change for Portugal.",
+    description: "Monthly all-items Harmonised Index of Consumer Prices annual rate of change for Portugal.",
     config: {
       source: "eurostat",
       dataset: "prc_hicp_manr",
@@ -56,8 +54,7 @@ export const EUROSTAT_EXAMPLES: ExampleFeed[] = [
   {
     slug: "eurostat-portugal-tourism-nights",
     title: "Nights in Portugal tourist accommodation",
-    description:
-      "Monthly nights spent by all residents in Portuguese hotels, short-stay accommodation, and camping sites.",
+    description: "Monthly nights spent by all residents in Portuguese hotels, short-stay accommodation, and camping sites.",
     config: {
       source: "eurostat",
       dataset: "tour_occ_nim",
@@ -73,8 +70,7 @@ export const EUROSTAT_EXAMPLES: ExampleFeed[] = [
   {
     slug: "eurostat-portugal-quarterly-gdp",
     title: "Portugal quarterly gross domestic product",
-    description:
-      "Seasonally and calendar adjusted quarterly GDP for Portugal in chain-linked 2010 million euros.",
+    description: "Seasonally and calendar adjusted quarterly GDP for Portugal in chain-linked 2010 million euros.",
     config: {
       source: "eurostat",
       dataset: "namq_10_gdp",
@@ -90,8 +86,7 @@ export const EUROSTAT_EXAMPLES: ExampleFeed[] = [
   {
     slug: "eurostat-portugal-house-price-index",
     title: "Portugal quarterly house price index",
-    description:
-      "Quarterly index of all residential property purchases in Portugal, with 2015 equal to 100.",
+    description: "Quarterly index of all residential property purchases in Portugal, with 2015 equal to 100.",
     config: {
       source: "eurostat",
       dataset: "prc_hpi_q",
@@ -149,15 +144,7 @@ export const EUROSTAT_EXAMPLES: ExampleFeed[] = [
 ];
 
 /** A single monthly Portugal series, keeping the last ten years. */
-function portugalMonthly(
-  slug: string,
-  title: string,
-  description: string,
-  dataset: string,
-  filters: string,
-  topics: string[],
-  unit?: string,
-): ExampleFeed {
+function portugalMonthly(slug: string, title: string, description: string, dataset: string, filters: string, topics: string[], unit?: string): ExampleFeed {
   // Datasets without a unit dimension state their unit here, as documented by Eurostat.
   const config: ExampleFeed["config"] = { source: "eurostat", dataset, filters, lastTimePeriod: "120", lang: "EN" };
   if (unit) config.unit = unit;

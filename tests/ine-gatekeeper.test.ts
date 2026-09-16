@@ -1,12 +1,6 @@
 import { jsonAs } from "./support";
 import { describe, expect, it, vi } from "vitest";
-import type {
-  JsonObject,
-  JsonValue,
-  SourceBody,
-  SourceFetch,
-  TransformContext,
-} from "@open-data-pt/gatekeeper-shared";
+import type { JsonObject, JsonValue, SourceBody, SourceFetch, TransformContext } from "@open-data-pt/gatekeeper-shared";
 import { libraryConfig } from "@open-data-pt/gatekeeper-shared";
 import {
   INE_FEEDS,
@@ -72,11 +66,7 @@ function monthlyPeriods(from: string, count: number): TestPeriod[] {
   });
 }
 
-function historyMeta(
-  periodic: string,
-  periods: TestPeriod[],
-  otherDimensionSizes: number[] = [],
-): JsonValue[] {
+function historyMeta(periodic: string, periods: TestPeriod[], otherDimensionSizes: number[] = []): JsonValue[] {
   const dimensionGroups = otherDimensionSizes.map((size, index) => {
     const number = index + 2;
     return {
@@ -182,23 +172,14 @@ describe("INE Gatekeeper", () => {
   });
 
   it("rejects malformed indicators, caller-provided hosts, and unsafe origins", async () => {
-    expect(() => validateIneFeedConfig({ indicator: "4167" })).toThrow(
-      "exactly seven digits",
-    );
+    expect(() => validateIneFeedConfig({ indicator: "4167" })).toThrow("exactly seven digits");
     expect(() =>
       validateIneFeedConfig({
         indicator: "0004167",
         host: "attacker.example",
       }),
     ).toThrow("does not accept host");
-    await expect(
-      collectIneIndicator(
-        { indicator: "0004167" },
-        undefined,
-        "https://attacker.example",
-        vi.fn(),
-      ),
-    ).rejects.toThrow("restricted to https://www.ine.pt");
+    await expect(collectIneIndicator({ indicator: "0004167" }, undefined, "https://attacker.example", vi.fn())).rejects.toThrow("restricted to https://www.ine.pt");
   });
 
   it("collects metadata and data into one bounded document with provenance", async () => {
@@ -215,17 +196,11 @@ describe("INE Gatekeeper", () => {
       return jsonResponse(DATA);
     });
 
-    const collected = sourceBody(await collectIneIndicator(
-      { indicator: "0007976", lang: "pt", dims: "Dim3=T" },
-      undefined,
-      "https://www.ine.pt",
-      fetcher,
-    ));
+    const collected = sourceBody(await collectIneIndicator({ indicator: "0007976", lang: "pt", dims: "Dim3=T" }, undefined, "https://www.ine.pt", fetcher));
 
     expect(collected).toMatchObject({
       provenance: {
-        sourceUrl:
-          "https://www.ine.pt/ine/json_indicador/pindica.jsp?op=2&varcd=0007976&lang=PT&Dim3=T",
+        sourceUrl: "https://www.ine.pt/ine/json_indicador/pindica.jsp?op=2&varcd=0007976&lang=PT&Dim3=T",
         sourcePublishedAt: "2026-08-31T00:00:00.000Z",
       },
       completeness: "complete",
@@ -243,12 +218,7 @@ describe("INE Gatekeeper", () => {
       return jsonResponse(META);
     });
 
-    const fetched = await collectIneIndicator(
-      { indicator: "0007976" },
-      { etag: '"2026-08-31"' },
-      "https://www.ine.pt",
-      fetcher,
-    );
+    const fetched = await collectIneIndicator({ indicator: "0007976" }, { etag: '"2026-08-31"' }, "https://www.ine.pt", fetcher);
 
     expect(fetched).toEqual({ kind: "not-modified", validator: { etag: '"2026-08-31"' } });
     expect(fetcher).toHaveBeenCalledOnce();
@@ -263,14 +233,7 @@ describe("INE Gatekeeper", () => {
         },
       ]),
     );
-    await expect(
-      collectIneIndicator(
-        { indicator: "0007976" },
-        { etag: '"2026-08-31"' },
-        "https://www.ine.pt",
-        fetcher,
-      ),
-    ).rejects.toMatchObject({ code: "invalid-response" });
+    await expect(collectIneIndicator({ indicator: "0007976" }, { etag: '"2026-08-31"' }, "https://www.ine.pt", fetcher)).rejects.toMatchObject({ code: "invalid-response" });
   });
 
   it("maps an upstream 304 response to not-modified", async () => {
@@ -281,12 +244,7 @@ describe("INE Gatekeeper", () => {
           headers: { ETag: '"provider-etag"' },
         }),
     );
-    const fetched = await collectIneIndicator(
-      { indicator: "0007976" },
-      { etag: '"provider-etag"' },
-      "https://www.ine.pt",
-      fetcher,
-    );
+    const fetched = await collectIneIndicator({ indicator: "0007976" }, { etag: '"provider-etag"' }, "https://www.ine.pt", fetcher);
     expect(fetched).toEqual({ kind: "not-modified", validator: { etag: '"provider-etag"' } });
   });
 
@@ -297,14 +255,7 @@ describe("INE Gatekeeper", () => {
           headers: { "Content-Length": String(INE_MAX_BYTES + 1) },
         }),
     );
-    await expect(
-      collectIneIndicator(
-        { indicator: "0007976" },
-        undefined,
-        "https://www.ine.pt",
-        fetcher,
-      ),
-    ).rejects.toMatchObject({ code: "response-too-large" });
+    await expect(collectIneIndicator({ indicator: "0007976" }, undefined, "https://www.ine.pt", fetcher)).rejects.toMatchObject({ code: "response-too-large" });
   });
 
   it("rejects a successful data response that omits Dados", async () => {
@@ -320,14 +271,7 @@ describe("INE Gatekeeper", () => {
             },
           ]);
     });
-    await expect(
-      collectIneIndicator(
-        { indicator: "0007976" },
-        undefined,
-        "https://www.ine.pt",
-        fetcher,
-      ),
-    ).rejects.toMatchObject({ code: "invalid-response" });
+    await expect(collectIneIndicator({ indicator: "0007976" }, undefined, "https://www.ine.pt", fetcher)).rejects.toMatchObject({ code: "invalid-response" });
   });
 
   it("collects one annual history slice with its range, next cursor, and a transform-compatible document", async () => {
@@ -339,28 +283,32 @@ describe("INE Gatekeeper", () => {
       if (url.pathname.endsWith("/pindicaMeta.jsp")) return jsonResponse(meta);
       expect(url.searchParams.get("Dim3")).toBe("T");
       const codes = url.searchParams.get("Dim1")?.split(",") ?? [];
-      expect(codes).toEqual(annualPeriods(2014, 2023).reverse().map(({ code }) => code));
+      expect(codes).toEqual(
+        annualPeriods(2014, 2023)
+          .reverse()
+          .map(({ code }) => code),
+      );
       return jsonResponse(historyData(periods, codes));
     });
 
-    const slice = sourceBody(await collectIneIndicatorHistory(
-      {
-        indicator: "0007976",
-        dims: "Dim1=S7A2023&Dim3=T",
-      },
-      { before: "2024-01-01T00:00:00.000Z" },
-      "https://www.ine.pt",
-      fetcher,
-    ));
+    const slice = sourceBody(
+      await collectIneIndicatorHistory(
+        {
+          indicator: "0007976",
+          dims: "Dim1=S7A2023&Dim3=T",
+        },
+        { before: "2024-01-01T00:00:00.000Z" },
+        "https://www.ine.pt",
+        fetcher,
+      ),
+    );
 
     expect(slice).toMatchObject({
       completeness: "complete",
       next: { before: "2014-01-01T00:00:00.000Z" },
     });
     expect(slice.exhausted).toBeUndefined();
-    expect(slice.provenance.sourceUrl).toContain(
-      "Dim1=S7A2023%2CS7A2022%2CS7A2021",
-    );
+    expect(slice.provenance.sourceUrl).toContain("Dim1=S7A2023%2CS7A2022%2CS7A2021");
     const bytes = bodyBytes(slice);
     expect(bytes.byteLength).toBeLessThan(INE_HISTORY_MAX_BYTES);
     const document = jsonAs<{
@@ -383,7 +331,7 @@ describe("INE Gatekeeper", () => {
     const periods = annualPeriods(2023, 2023);
     const meta = historyMeta("Anual", periods);
     const data = [{ ...DATA[0], sourceNotes: "x".repeat(3 * 1024 * 1024), Dados: { "2023": [{ geocod: "PT", geodsg: "Portugal", valor: "1" }] } }];
-    const fetcher = vi.fn(async (input: URL | RequestInfo) => new URL(input.toString()).pathname.endsWith("/pindicaMeta.jsp") ? jsonResponse(meta) : jsonResponse(data));
+    const fetcher = vi.fn(async (input: URL | RequestInfo) => (new URL(input.toString()).pathname.endsWith("/pindicaMeta.jsp") ? jsonResponse(meta) : jsonResponse(data)));
     const fetched = sourceBody(await collectIneIndicatorHistory({ indicator: "0007976" }, { before: "2024-01-01T00:00:00Z" }, "https://www.ine.pt", fetcher));
     expect(bodyBytes(fetched).byteLength).toBeGreaterThan(2 * 1024 * 1024);
     expect(bodyBytes(fetched).byteLength).toBeLessThan(INE_HISTORY_MAX_BYTES);
@@ -403,12 +351,7 @@ describe("INE Gatekeeper", () => {
       return jsonResponse(historyData(periods, requestedCodes));
     });
 
-    const slice = sourceBody(await collectIneIndicatorHistory(
-      { indicator: "0007976" },
-      { before: "2024-01-01T00:00:00Z" },
-      "https://www.ine.pt",
-      fetcher,
-    ));
+    const slice = sourceBody(await collectIneIndicatorHistory({ indicator: "0007976" }, { before: "2024-01-01T00:00:00Z" }, "https://www.ine.pt", fetcher));
 
     expect(requestedCodes).toEqual(["S7A2023"]);
     expect(slice.next).toEqual({ before: "2023-01-01T00:00:00.000Z" });
@@ -416,16 +359,9 @@ describe("INE Gatekeeper", () => {
 
   it("reports exhaustion after the metadata proves the exclusive cursor is at the oldest period", async () => {
     const periods = annualPeriods(2010, 2023);
-    const fetcher = vi.fn(async () =>
-      jsonResponse(historyMeta("Anual", periods)),
-    );
+    const fetcher = vi.fn(async () => jsonResponse(historyMeta("Anual", periods)));
 
-    const fetched = await collectIneIndicatorHistory(
-      { indicator: "0007976" },
-      { before: "2010-01-01T00:00:00.000Z" },
-      "https://www.ine.pt",
-      fetcher,
-    );
+    const fetched = await collectIneIndicatorHistory({ indicator: "0007976" }, { before: "2010-01-01T00:00:00.000Z" }, "https://www.ine.pt", fetcher);
 
     expect(fetched).toEqual({ kind: "exhausted" });
     expect(fetcher).toHaveBeenCalledOnce();
@@ -442,13 +378,15 @@ describe("INE Gatekeeper", () => {
       return jsonResponse(historyData(periods, requestedCodes));
     });
 
-    const slice = sourceBody(await collectIneIndicatorHistory(
-      { indicator: "0007976" },
-      // This offset instant is exactly 2025-01-01T00:00:00Z, so January is excluded.
-      { before: "2025-01-01T01:00:00+01:00" },
-      "https://www.ine.pt",
-      fetcher,
-    ));
+    const slice = sourceBody(
+      await collectIneIndicatorHistory(
+        { indicator: "0007976" },
+        // This offset instant is exactly 2025-01-01T00:00:00Z, so January is excluded.
+        { before: "2025-01-01T01:00:00+01:00" },
+        "https://www.ine.pt",
+        fetcher,
+      ),
+    );
 
     expect(requestedCodes).toHaveLength(12);
     expect(requestedCodes.at(0)).toBe("S3A202412");
@@ -457,17 +395,8 @@ describe("INE Gatekeeper", () => {
   });
 
   it("maps history throttling and server failures to retryable upstream errors", async () => {
-    const throttled = vi.fn(
-      async () => new Response("slow down", { status: 429, headers: { "Retry-After": "60" } }),
-    );
-    await expect(
-      collectIneIndicatorHistory(
-        { indicator: "0007976" },
-        { before: "2024-01-01T00:00:00Z" },
-        "https://www.ine.pt",
-        throttled,
-      ),
-    ).rejects.toMatchObject({
+    const throttled = vi.fn(async () => new Response("slow down", { status: 429, headers: { "Retry-After": "60" } }));
+    await expect(collectIneIndicatorHistory({ indicator: "0007976" }, { before: "2024-01-01T00:00:00Z" }, "https://www.ine.pt", throttled)).rejects.toMatchObject({
       code: "upstream-error",
       retryAfterSeconds: 60,
       message: "INE metadata endpoint returned HTTP 429",
@@ -476,32 +405,16 @@ describe("INE Gatekeeper", () => {
     let calls = 0;
     const unavailable = vi.fn(async () => {
       calls += 1;
-      return calls === 1
-        ? jsonResponse(historyMeta("Anual", annualPeriods(2010, 2023)))
-        : new Response("unavailable", { status: 503 });
+      return calls === 1 ? jsonResponse(historyMeta("Anual", annualPeriods(2010, 2023))) : new Response("unavailable", { status: 503 });
     });
-    await expect(
-      collectIneIndicatorHistory(
-        { indicator: "0007976" },
-        { before: "2024-01-01T00:00:00Z" },
-        "https://www.ine.pt",
-        unavailable,
-      ),
-    ).rejects.toMatchObject({ code: "upstream-error" });
+    await expect(collectIneIndicatorHistory({ indicator: "0007976" }, { before: "2024-01-01T00:00:00Z" }, "https://www.ine.pt", unavailable)).rejects.toMatchObject({
+      code: "upstream-error",
+    });
   });
 
   it("maps HTTP and JSON provider failures to retryable upstream errors", async () => {
-    const httpFailure = vi.fn(
-      async () => new Response("temporary failure", { status: 500 }),
-    );
-    await expect(
-      collectIneIndicator(
-        { indicator: "0007976" },
-        undefined,
-        "https://www.ine.pt",
-        httpFailure,
-      ),
-    ).rejects.toMatchObject({ code: "upstream-error" });
+    const httpFailure = vi.fn(async () => new Response("temporary failure", { status: 500 }));
+    await expect(collectIneIndicator({ indicator: "0007976" }, undefined, "https://www.ine.pt", httpFailure)).rejects.toMatchObject({ code: "upstream-error" });
 
     const jsonFailure = vi.fn(async () =>
       jsonResponse([
@@ -512,14 +425,7 @@ describe("INE Gatekeeper", () => {
         },
       ]),
     );
-    await expect(
-      collectIneIndicator(
-        { indicator: "0007976" },
-        undefined,
-        "https://www.ine.pt",
-        jsonFailure,
-      ),
-    ).rejects.toMatchObject({ code: "upstream-error" });
+    await expect(collectIneIndicator({ indicator: "0007976" }, undefined, "https://www.ine.pt", jsonFailure)).rejects.toMatchObject({ code: "upstream-error" });
   });
 });
 

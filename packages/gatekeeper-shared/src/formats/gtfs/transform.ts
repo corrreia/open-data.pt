@@ -105,11 +105,7 @@ const CALENDAR_SCHEMA = schema([
   field("end_date", "date", false),
 ]);
 
-const CALENDAR_DATES_SCHEMA = schema([
-  field("service_id", "identifier", false),
-  field("date", "date", false),
-  field("exception_type", "category", false),
-]);
+const CALENDAR_DATES_SCHEMA = schema([field("service_id", "identifier", false), field("date", "date", false), field("exception_type", "category", false)]);
 
 const TRIP_SCHEMA = schema([
   field("trip_id", "identifier", false),
@@ -225,12 +221,7 @@ function missingProducts(products: readonly GtfsProduct[], run: GtfsRun): Produc
   return products.filter((product) => !run.seen.has(`${product.file}.txt`)).map((product) => ({ productKey: product.productKey, completeness: "unknown" }));
 }
 
-async function* normalizedRows(
-  body: ReadableStream<Uint8Array>,
-  products: readonly GtfsProduct[],
-  limits: GtfsTransformLimits,
-  run: GtfsRun,
-): AsyncGenerator<NormalizedRow> {
+async function* normalizedRows(body: ReadableStream<Uint8Array>, products: readonly GtfsProduct[], limits: GtfsTransformLimits, run: GtfsRun): AsyncGenerator<NormalizedRow> {
   const byEntry = new Map(products.map((product) => [`${product.file}.txt`, product]));
   const entries = gtfsZipEntries(body, new Set(byEntry.keys()), { maximumEntryBytes: limits.maximumEntryBytes });
   for await (const entry of entries) {
@@ -381,8 +372,7 @@ class PathLines implements EntryNormalizer {
         continue;
       }
       // Stable by file order when two points share a sequence number.
-      const order = Array.from({ length: count }, (_, index) => index)
-        .sort((left, right) => (triples[left * 3] ?? 0) - (triples[right * 3] ?? 0) || left - right);
+      const order = Array.from({ length: count }, (_, index) => index).sort((left, right) => (triples[left * 3] ?? 0) - (triples[right * 3] ?? 0) || left - right);
       const coordinates = order.map((index) => [triples[index * 3 + 1] ?? 0, triples[index * 3 + 2] ?? 0]);
       const latitude = coordinates.reduce((total, point) => total + (point[1] ?? 0), 0) / count;
       const longitude = coordinates.reduce((total, point) => total + (point[0] ?? 0), 0) / count;
@@ -506,7 +496,6 @@ function schema(fields: CanonicalField[]): CanonicalSchema {
   return { fields };
 }
 
-
 function required(value: string | undefined): string | undefined {
   return value?.trim() || undefined;
 }
@@ -552,9 +541,7 @@ function gtfsDate(value: string | undefined): string | null {
 
 function color(value: string | undefined): string | null {
   const candidate = value?.trim().replace(/^#/, "");
-  return candidate && /^(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(candidate)
-    ? `#${candidate.toUpperCase()}`
-    : null;
+  return candidate && /^(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(candidate) ? `#${candidate.toUpperCase()}` : null;
 }
 
 function categoryCode(value: string | undefined, labels: Readonly<Record<string, string>>): string | null {
@@ -565,13 +552,20 @@ function categoryCode(value: string | undefined, labels: Readonly<Record<string,
 
 function routeType(code: string): string {
   const numeric = Number(code);
-  const label = ROUTE_TYPES[code]
-    ?? (numeric >= 100 && numeric < 200 ? "Railway service"
-      : numeric >= 200 && numeric < 300 ? "Coach service"
-        : numeric >= 700 && numeric < 800 ? "Bus service"
-          : numeric >= 900 && numeric < 1000 ? "Tram service"
-            : numeric >= 1000 && numeric < 1100 ? "Water transport service"
-              : numeric >= 1300 && numeric < 1400 ? "Aerial lift service"
+  const label =
+    ROUTE_TYPES[code] ??
+    (numeric >= 100 && numeric < 200
+      ? "Railway service"
+      : numeric >= 200 && numeric < 300
+        ? "Coach service"
+        : numeric >= 700 && numeric < 800
+          ? "Bus service"
+          : numeric >= 900 && numeric < 1000
+            ? "Tram service"
+            : numeric >= 1000 && numeric < 1100
+              ? "Water transport service"
+              : numeric >= 1300 && numeric < 1400
+                ? "Aerial lift service"
                 : "Unknown route type");
   return `${label} (${code})`;
 }

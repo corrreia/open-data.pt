@@ -46,7 +46,14 @@ function Home() {
   const datasets = useMemo(() => (products.data && feeds.data ? buildDatasets(products.data, feeds.data) : []), [products.data, feeds.data]);
   const publishers = useMemo(() => buildPublishers(datasets), [datasets]);
   const live = useMemo(() => datasets.filter((dataset) => dataset.updates === "live").sort((a, b) => emptyLast(a, b) || newest(a, b)), [datasets]);
-  const recent = useMemo(() => datasets.filter((dataset) => dataset.updates !== "live").sort((a, b) => emptyLast(a, b) || newest(a, b)).slice(0, 6), [datasets]);
+  const recent = useMemo(
+    () =>
+      datasets
+        .filter((dataset) => dataset.updates !== "live")
+        .sort((a, b) => emptyLast(a, b) || newest(a, b))
+        .slice(0, 6),
+    [datasets],
+  );
   const failing = outages.data?.data.filter((outage) => !outage.endedAt && outage.feedId).length;
 
   const topics = useMemo(() => {
@@ -71,18 +78,32 @@ function Home() {
             Public data from Portugal, <em className="text-kumo-brand">in one place</em>.
           </h1>
           <p className="max-w-[58ch] text-lg leading-relaxed text-kumo-subtle">
-            Datasets published by Portuguese institutions and operators, collected from where they publish them and served in one consistent format. Free to use, with no key and no account. Every dataset names its publisher and links back to the source.
+            Datasets published by Portuguese institutions and operators, collected from where they publish them and served in one consistent format. Free to use, with no key and no
+            account. Every dataset names its publisher and links back to the source.
           </p>
           <form action="/catalog/" method="get" role="search" className="flex max-w-xl flex-wrap gap-2">
-            <Input name="q" size="lg" className="min-w-0 flex-1 basis-64" placeholder="Search datasets: metro, fuel prices, population…" aria-label="Search datasets" autoComplete="off" />
+            <Input
+              name="q"
+              size="lg"
+              className="min-w-0 flex-1 basis-64"
+              placeholder="Search datasets: metro, fuel prices, population…"
+              aria-label="Search datasets"
+              autoComplete="off"
+            />
             <Button type="submit" variant="primary" size="lg" icon={<MagnifyingGlassIcon />}>
               Search
             </Button>
           </form>
           <p className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-kumo-subtle">
-            <a href="/catalog/" className="font-medium text-kumo-link">Browse the whole catalog</a>
-            <a href="/start/" className="font-medium text-kumo-link">Use the API</a>
-            <a href="/start/#mcp" className="font-medium text-kumo-link">Connect an AI assistant</a>
+            <a href="/catalog/" className="font-medium text-kumo-link">
+              Browse the whole catalog
+            </a>
+            <a href="/start/" className="font-medium text-kumo-link">
+              Use the API
+            </a>
+            <a href="/start/#mcp" className="font-medium text-kumo-link">
+              Connect an AI assistant
+            </a>
             <span className="hidden sm:inline">
               or press <kbd className="rounded border border-kumo-line bg-kumo-base px-1.5 font-mono text-xs">⌘K</kbd> anywhere
             </span>
@@ -136,7 +157,11 @@ function Home() {
         <StatTile
           label="Collection"
           tone={failing === undefined ? undefined : failing === 0 ? "ok" : "warn"}
-          value={<a href="/status/" className="no-underline">{failing === undefined ? "—" : failing === 0 ? "all running" : `${failing} failing`}</a>}
+          value={
+            <a href="/status/" className="no-underline">
+              {failing === undefined ? "—" : failing === 0 ? "all running" : `${failing} failing`}
+            </a>
+          }
           note={failing === 0 ? "every dataset is being collected" : "see the status page"}
         />
       </section>
@@ -155,7 +180,11 @@ function Home() {
                   <span className="font-display text-xl text-kumo-strong">{topicLabel(topic)}</span>
                   <span className="font-mono text-xs text-kumo-subtle">{plural(entry.datasets, "dataset")}</span>
                   <span className="truncate text-xs text-kumo-subtle">
-                    {[...entry.publishers.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([name]) => name).join(" · ")}
+                    {[...entry.publishers.entries()]
+                      .sort((a, b) => b[1] - a[1])
+                      .slice(0, 3)
+                      .map(([name]) => name)
+                      .join(" · ")}
                   </span>
                 </LayerCard.Primary>
               </LayerCard>
@@ -168,24 +197,37 @@ function Home() {
         <SectionHead eyebrow="Live" title="Changing as you read" id="live-title">
           Vehicle positions, waiting times and service alerts, collected every few minutes.
         </SectionHead>
-        <div className="grid gap-3">{live.slice(0, 6).map((dataset) => <DatasetCard key={dataset.feed.id} dataset={dataset} />)}</div>
+        <div className="grid gap-3">
+          {live.slice(0, 6).map((dataset) => (
+            <DatasetCard key={dataset.feed.id} dataset={dataset} />
+          ))}
+        </div>
       </section>
 
       <section aria-labelledby="recent-title">
         <SectionHead eyebrow="Recently updated" title="New from the publishers" id="recent-title">
           Datasets whose publisher released new or changed data most recently.
         </SectionHead>
-        <div className="grid gap-3">{recent.map((dataset) => <DatasetCard key={dataset.feed.id} dataset={dataset} />)}</div>
+        <div className="grid gap-3">
+          {recent.map((dataset) => (
+            <DatasetCard key={dataset.feed.id} dataset={dataset} />
+          ))}
+        </div>
       </section>
 
       <section aria-labelledby="publishers-title">
         <SectionHead eyebrow="Publishers" title="Where the data comes from" id="publishers-title">
-          <a href="/publisher/" className="font-medium text-kumo-link">All publishers</a>
+          <a href="/publisher/" className="font-medium text-kumo-link">
+            All publishers
+          </a>
         </SectionHead>
         <ul className="flex flex-wrap gap-2">
           {publishers.map((publisher) => (
             <li key={publisher.slug}>
-              <a href={publisherHref(publisher.name)} className="inline-flex items-center gap-2 rounded-full bg-kumo-base px-3 py-1.5 text-sm text-kumo-default no-underline ring-1 ring-kumo-line hover:bg-kumo-tint">
+              <a
+                href={publisherHref(publisher.name)}
+                className="inline-flex items-center gap-2 rounded-full bg-kumo-base px-3 py-1.5 text-sm text-kumo-default no-underline ring-1 ring-kumo-line hover:bg-kumo-tint"
+              >
                 {publisher.name}
                 <Badge variant="secondary">{publisher.datasets.length}</Badge>
               </a>

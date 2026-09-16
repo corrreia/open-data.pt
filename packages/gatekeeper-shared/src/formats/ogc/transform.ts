@@ -266,7 +266,9 @@ function collectionSchema(properties: PreparedProperty[], withGeometry: boolean,
     type: !final
       ? property.declared
       : property.published
-        ? (property.declared === "string" ? property.profile.refinedString() : property.declared)
+        ? property.declared === "string"
+          ? property.profile.refinedString()
+          : property.declared
         : property.profile.inferredType(),
     nullable: !final || property.profile.present < total,
   }));
@@ -295,9 +297,7 @@ function parseDescription(value: JsonObject): OgcCollectionDescription {
     description.expected = value.expected;
   }
   if (isJsonArray(value.schema)) {
-    const schema = value.schema.flatMap((entry) => (isJsonObject(entry) && isJsonString(entry.name)
-      ? [parseProperty(entry, entry.name)]
-      : []));
+    const schema = value.schema.flatMap((entry) => (isJsonObject(entry) && isJsonString(entry.name) ? [parseProperty(entry, entry.name)] : []));
     if (schema.length > 0) description.schema = schema.slice(0, MAX_PROPERTIES);
   }
   return description;
@@ -371,16 +371,17 @@ function productDescription(description: OgcCollectionDescription): string {
   const parts = [
     `OGC API Features collection “${description.title}”.`,
     plainText(description.description),
-    description.geometry === "skip"
-      ? "Feature attributes only: this feed asks the service for its records without geometry."
-      : "",
+    description.geometry === "skip" ? "Feature attributes only: this feed asks the service for its records without geometry." : "",
     description.properties ? `Only these properties were requested: ${description.properties.join(", ")}.` : "",
   ];
   return parts.filter(Boolean).join(" ");
 }
 
 function plainText(value: string): string {
-  return value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  return value
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /**

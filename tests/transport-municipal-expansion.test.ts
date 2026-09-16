@@ -1,9 +1,21 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
-  isJsonObject, isJsonArray, isJsonNumber, isJsonString, libraryConfig, parseJson,
-  type CanonicalRecord, type ExampleFeed, type JsonObject, type JsonValue, type NormalizedRow, type SeriesPoint,
-  type SourceConfig, type StreamingSummary, type TransformContext,
+  isJsonObject,
+  isJsonArray,
+  isJsonNumber,
+  isJsonString,
+  libraryConfig,
+  parseJson,
+  type CanonicalRecord,
+  type ExampleFeed,
+  type JsonObject,
+  type JsonValue,
+  type NormalizedRow,
+  type SeriesPoint,
+  type SourceConfig,
+  type StreamingSummary,
+  type TransformContext,
 } from "@open-data-pt/gatekeeper-shared";
 import { CKAN_EXAMPLES, ckanCollector, CkanSource, validateCkanFeedConfig } from "../packages/gatekeeper-shared/src/formats/ckan";
 import { transformCkan, type CkanResourceMetadata } from "../packages/gatekeeper-shared/src/formats/ckan";
@@ -19,26 +31,69 @@ const MONTHLY = object(fixture("ckan/oeiras-monthly-package.json"));
 const AGUEDA = array(fixture("ckan/agueda-locations.json")).map(object);
 const GTFS = array(fixture("gtfs/portugal-expansion.json")).map(object);
 
-function fixture(name: string): JsonValue { return parseJson(readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf8")); }
-function object(value: JsonValue | undefined): JsonObject { if (!isJsonObject(value)) throw new Error("Expected object"); return value; }
-function array(value: JsonValue | undefined): JsonValue[] { if (!isJsonArray(value)) throw new Error("Expected array"); return value; }
-function text(value: JsonValue | undefined): string { if (!isJsonString(value)) throw new Error("Expected string"); return value; }
-function example(slug: string): ExampleFeed { const found = CKAN_EXAMPLES.find((entry) => entry.slug === slug); if (!found) throw new Error(slug); return found; }
+function fixture(name: string): JsonValue {
+  return parseJson(readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf8"));
+}
+function object(value: JsonValue | undefined): JsonObject {
+  if (!isJsonObject(value)) throw new Error("Expected object");
+  return value;
+}
+function array(value: JsonValue | undefined): JsonValue[] {
+  if (!isJsonArray(value)) throw new Error("Expected array");
+  return value;
+}
+function text(value: JsonValue | undefined): string {
+  if (!isJsonString(value)) throw new Error("Expected string");
+  return value;
+}
+function example(slug: string): ExampleFeed {
+  const found = CKAN_EXAMPLES.find((entry) => entry.slug === slug);
+  if (!found) throw new Error(slug);
+  return found;
+}
 function bytesInChunks(bytes: Uint8Array, size: number): ReadableStream<Uint8Array> {
   let offset = 0;
-  return new ReadableStream({ pull(controller) { if (offset === bytes.length) { controller.close(); return; } const chunk = bytes.slice(offset, offset + size); offset += chunk.length; controller.enqueue(chunk); } });
+  return new ReadableStream({
+    pull(controller) {
+      if (offset === bytes.length) {
+        controller.close();
+        return;
+      }
+      const chunk = bytes.slice(offset, offset + size);
+      offset += chunk.length;
+      controller.enqueue(chunk);
+    },
+  });
 }
-function body(value: string, size = 1): ReadableStream<Uint8Array> { return bytesInChunks(new TextEncoder().encode(value), size); }
+function body(value: string, size = 1): ReadableStream<Uint8Array> {
+  return bytesInChunks(new TextEncoder().encode(value), size);
+}
 function context(entry: ExampleFeed, observedAt = "2026-09-15T00:00:00Z"): TransformContext {
-  return { observedAt, feed: { slug: entry.slug, title: entry.title, description: entry.description, config: libraryConfig(entry.config), semantics: { domainSubject: "reference", defaultProductRole: "reference" } } };
+  return {
+    observedAt,
+    feed: {
+      slug: entry.slug,
+      title: entry.title,
+      description: entry.description,
+      config: libraryConfig(entry.config),
+      semantics: { domainSubject: "reference", defaultProductRole: "reference" },
+    },
+  };
 }
-interface Result { records: CanonicalRecord[]; points: SeriesPoint[]; summary: StreamingSummary }
+interface Result {
+  records: CanonicalRecord[];
+  points: SeriesPoint[];
+  summary: StreamingSummary;
+}
 async function normalize(value: string, entry: ExampleFeed, format: "geojson" | "csv", chunkSize = 1, observedAt?: string): Promise<Result> {
   const metadata: CkanResourceMetadata = { package: {}, resource: { id: entry.config.resource ?? "rotating" }, source: { kind: "file", format } };
   const transformed = await transformCkan(body(value, chunkSize), context(entry, observedAt), metadata);
   const records: CanonicalRecord[] = [];
   const points: SeriesPoint[] = [];
-  for await (const row of transformed.rows) { if (row.record) records.push(row.record); else points.push(row.point); }
+  for await (const row of transformed.rows) {
+    if (row.record) records.push(row.record);
+    else points.push(row.point);
+  }
   return { records, points, summary: transformed.finish() };
 }
 
@@ -47,11 +102,15 @@ describe("Portuguese transport expansion", () => {
     const entry = GTFS_EXAMPLES.find((entry) => entry.slug === recorded.slug);
     if (!entry) throw new Error("Missing GTFS example");
     const config = libraryConfig(entry.config);
-    const collector = gtfsCollector({ config, hosts: new URL(text(recorded.source)).hostname, fetcher: async (_input, init) => {
-      // IIS on Fertagus negotiates application/x-zip-compressed, otherwise HTTP 406.
-      expect(new Headers(init?.headers).get("accept")).toContain("application/x-zip-compressed");
-      return new Response(zip(object(recorded.files)));
-    } });
+    const collector = gtfsCollector({
+      config,
+      hosts: new URL(text(recorded.source)).hostname,
+      fetcher: async (_input, init) => {
+        // IIS on Fertagus negotiates application/x-zip-compressed, otherwise HTTP 406.
+        expect(new Headers(init?.headers).get("accept")).toContain("application/x-zip-compressed");
+        return new Response(zip(object(recorded.files)));
+      },
+    });
     const resolved = await collector.resolve(config);
     expect(resolved.config.url).toBe(recorded.source);
     const fetched = await collector.source(undefined, { kind: "live" }, new AbortController().signal);
@@ -70,7 +129,9 @@ describe("Portuguese transport expansion", () => {
 
   it("trims GTFS header padding without trimming values and rejects resulting duplicates", () => {
     const reader = new GtfsCsvReader();
-    expect(reader.push("shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence\n1,41.5,-8.4,0\n")).toEqual([{ "shape_id": "1", "shape_pt_lat": "41.5", "shape_pt_lon": "-8.4", "shape_pt_sequence": "0" }]);
+    expect(reader.push("shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence\n1,41.5,-8.4,0\n")).toEqual([
+      { "shape_id": "1", "shape_pt_lat": "41.5", "shape_pt_lon": "-8.4", "shape_pt_sequence": "0" },
+    ]);
     const duplicate = new GtfsCsvReader();
     expect(() => duplicate.push("id, id\n")).toThrow("unique");
     expect(new GtfsCsvReader().push("id,name\n1, padded name \n")[0]?.name).toBe(" padded name ");
@@ -144,7 +205,15 @@ describe("CKAN monthly discovery and explicit CSV observations", () => {
     const source = new CkanSource(HOSTS, fetch);
     expect(source.validateConfig({ ...MONTHLY_CONFIG, apiPath: "/dadosabertos/" }).apiPath).toBe("/dadosabertos");
     for (const apiPath of ["//attacker.example", "/../internal", "/%2e%2e", "/dados?redirect=x"]) expect(() => source.validateConfig({ ...MONTHLY_CONFIG, apiPath })).toThrow();
-    for (const extra of [{ resource: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa" }, { resourcePrefix: "(.*)" }, { resourceSelection: "latest" }, { decimal: ":" }, { measures: "[]" }, { measures: '{"Date":"s"}' }]) expect(() => source.validateConfig({ ...MONTHLY_CONFIG, ...extra })).toThrow();
+    for (const extra of [
+      { resource: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa" },
+      { resourcePrefix: "(.*)" },
+      { resourceSelection: "latest" },
+      { decimal: ":" },
+      { measures: "[]" },
+      { measures: '{"Date":"s"}' },
+    ])
+      expect(() => source.validateConfig({ ...MONTHLY_CONFIG, ...extra })).toThrow();
     const reference = { host: "dadosabertos.cm-agueda.pt", dataset: "cotas-de-cheia" };
     expect(validateCkanFeedConfig(reference, HOSTS)).toEqual(reference);
     const collector = ckanCollector({ config: MONTHLY_CONFIG, hosts: [...HOSTS].join(","), fetcher: fetch });
@@ -160,7 +229,8 @@ describe("CKAN monthly discovery and explicit CSV observations", () => {
     resources[0].last_modified = "2030-01-01T00:00:00Z";
     const urls: string[] = [];
     const source = new CkanSource(HOSTS, async (input, init) => {
-      const url = input.toString(); urls.push(url);
+      const url = input.toString();
+      urls.push(url);
       if (url.includes("package_show")) return Response.json(document);
       expect(url).toMatch(/qart_dados_medias_1h_08_26\.csv$/);
       expect(new Headers(init?.headers).has("if-modified-since")).toBe(false);
@@ -186,7 +256,8 @@ describe("CKAN monthly discovery and explicit CSV observations", () => {
     let downloadHeaders: Headers | undefined;
     const source = new CkanSource(HOSTS, async (input, init) => {
       if (input.toString().includes("package_show")) return Response.json(document);
-      downloadHeaders = new Headers(init?.headers); return new Response(CSV);
+      downloadHeaders = new Headers(init?.headers);
+      return new Response(CSV);
     });
     const first = await source.collect(MONTHLY_CONFIG);
     if (first.fetch.kind !== "body") throw new Error("Expected source body");
@@ -205,12 +276,12 @@ describe("CKAN monthly discovery and explicit CSV observations", () => {
     object(unavailable.result).resources = [];
     const missing = new CkanSource(HOSTS, async () => Response.json(unavailable));
     await expect(missing.collect(MONTHLY_CONFIG)).rejects.toThrow("no monthly CSV");
-    const unsolicited = new CkanSource(HOSTS, async (input) => input.toString().includes("package_show") ? Response.json(MONTHLY) : new Response(null, { status: 304 }));
+    const unsolicited = new CkanSource(HOSTS, async (input) => (input.toString().includes("package_show") ? Response.json(MONTHLY) : new Response(null, { status: 304 })));
     await expect(unsolicited.collect(MONTHLY_CONFIG)).rejects.toThrow("unsolicited 304");
     const noDates = object(parseJson(JSON.stringify(MONTHLY)));
     delete object(noDates.result).metadata_modified;
     for (const resource of array(object(noDates.result).resources).map(object)) delete resource.last_modified;
-    const uncached = new CkanSource(HOSTS, async (input) => input.toString().includes("package_show") ? Response.json(noDates) : new Response(CSV));
+    const uncached = new CkanSource(HOSTS, async (input) => (input.toString().includes("package_show") ? Response.json(noDates) : new Response(CSV)));
     const result = await uncached.collect(MONTHLY_CONFIG, { etag: '"old"' });
     expect(result.fetch).toMatchObject({ kind: "body", state: {} });
     if (result.fetch.kind === "body") await new Response(result.fetch.body).text();
@@ -226,7 +297,13 @@ describe("CKAN monthly discovery and explicit CSV observations", () => {
     expect(first).toEqual(later);
     expect(first.records).toEqual([]);
     expect(first.points).toHaveLength(3 * 17);
-    expect(first.points.find((point) => point.seriesKey === "CO - µg/m3")).toEqual({ seriesKey: "CO - µg/m3", eventTime: "2026-07-31T23:00:00.000Z", value: 259.05, unit: "µg/m³", dimensions: { measure: "CO - µg/m3" } });
+    expect(first.points.find((point) => point.seriesKey === "CO - µg/m3")).toEqual({
+      seriesKey: "CO - µg/m3",
+      eventTime: "2026-07-31T23:00:00.000Z",
+      value: 259.05,
+      unit: "µg/m³",
+      dimensions: { measure: "CO - µg/m3" },
+    });
     expect(first.points.find((point) => point.seriesKey === "LAeq,T - dB(A)")?.unit).toBe("dB(A)");
     expect(first.summary.quality.rejectedRecords).toBe(0);
     expect(first.summary.products?.[0]?.watermark).toBe("2026-08-01T01:00:00.000Z");
@@ -235,7 +312,11 @@ describe("CKAN monthly discovery and explicit CSV observations", () => {
   it("rejects malformed observations without turning missing measurements into zero or claiming a complete window", async () => {
     const config: SourceConfig = { ...MONTHLY_CONFIG, measures: JSON.stringify({ value: "°C" }) };
     const entry = { ...OEIRAS, config };
-    const result = await normalize("Date;value\n2026-09-01T00:00:00Z;0\n2026-09-01T01:00:00Z;\n2026-09-01T02:00:00Z;NaN\n2026-09-01T03:00:00;1,2\n2026-09-01T04:00:00Z;1;extra\n", entry, "csv");
+    const result = await normalize(
+      "Date;value\n2026-09-01T00:00:00Z;0\n2026-09-01T01:00:00Z;\n2026-09-01T02:00:00Z;NaN\n2026-09-01T03:00:00;1,2\n2026-09-01T04:00:00Z;1;extra\n",
+      entry,
+      "csv",
+    );
     expect(result.points.map((point) => point.value)).toEqual([0]);
     expect(result.summary.quality).toEqual({ acceptedRecords: 1, rejectedRecords: 4 });
     expect(result.summary.products?.[0]?.completeness).toBe("partial");
@@ -251,12 +332,19 @@ function zip(files: JsonObject): Uint8Array {
     const name = new TextEncoder().encode(filename);
     const data = new TextEncoder().encode(text(value));
     const header = new DataView(new ArrayBuffer(30));
-    header.setUint32(0, 0x04034b50, true); header.setUint16(4, 20, true);
-    header.setUint32(18, data.length, true); header.setUint32(22, data.length, true); header.setUint16(26, name.length, true);
+    header.setUint32(0, 0x04034b50, true);
+    header.setUint16(4, 20, true);
+    header.setUint32(18, data.length, true);
+    header.setUint32(22, data.length, true);
+    header.setUint16(26, name.length, true);
     parts.push(new Uint8Array(header.buffer), name, data);
   }
   parts.push(Uint8Array.of(0x50, 0x4b, 0x01, 0x02));
   const bytes = new Uint8Array(parts.reduce((sum, part) => sum + part.length, 0));
-  let offset = 0; for (const part of parts) { bytes.set(part, offset); offset += part.length; }
+  let offset = 0;
+  for (const part of parts) {
+    bytes.set(part, offset);
+    offset += part.length;
+  }
   return bytes;
 }

@@ -82,14 +82,14 @@ export function topicCollector(config: SourceConfig, options: TopicOptions): Nor
   const { library, rest } = route(config, options);
   const inner = library.collector(rest);
   const normalize = inner.normalize;
-  const withoutRoutingKey = (context: TransformContext): TransformContext =>
-    ({ ...context, feed: { ...context.feed, config: rest } });
+  const withoutRoutingKey = (context: TransformContext): TransformContext => ({ ...context, feed: { ...context.feed, config: rest } });
   return {
     normalizer: inner.normalizer,
     resolve: (value) => resolveTopicFeed(value, options),
     source: inner.source,
-    normalize: normalize.kind === "streaming"
-      ? { kind: "streaming", transform: (body, context) => normalize.transform(body, withoutRoutingKey(context)) }
-      : { kind: "buffered", transform: (bytes, context) => normalize.transform(bytes, withoutRoutingKey(context)) },
+    normalize:
+      normalize.kind === "streaming"
+        ? { kind: "streaming", transform: (body, context) => normalize.transform(body, withoutRoutingKey(context)) }
+        : { kind: "buffered", transform: (bytes, context) => normalize.transform(bytes, withoutRoutingKey(context)) },
   };
 }

@@ -25,8 +25,22 @@ const PAGES: SearchItem[] = [
   { id: "page-publishers", title: "Publishers", detail: "Who publishes the data", href: "/publisher/", icon: <BuildingsIcon />, haystack: "publishers institutions" },
   { id: "page-status", title: "Status", detail: "Is everything being collected", href: "/status/", icon: <HeartbeatIcon />, haystack: "status uptime downtime incidents" },
   { id: "page-start", title: "Start here", detail: "Use the API in three requests", href: "/start/", icon: <BookOpenIcon />, haystack: "start api docs curl" },
-  { id: "page-operations", title: "Operations", detail: "Every feed, run and rule", href: "/operations/", icon: <DatabaseIcon />, haystack: "operations feeds runs policies usage" },
-  { id: "page-contribute", title: "Contribute", detail: "Suggest a source, add a dataset, report a problem", href: "/contribute/", icon: <HandHeartIcon />, haystack: "contribute help github source code open source suggest report" },
+  {
+    id: "page-operations",
+    title: "Operations",
+    detail: "Every feed, run and rule",
+    href: "/operations/",
+    icon: <DatabaseIcon />,
+    haystack: "operations feeds runs policies usage",
+  },
+  {
+    id: "page-contribute",
+    title: "Contribute",
+    detail: "Suggest a source, add a dataset, report a problem",
+    href: "/contribute/",
+    icon: <HandHeartIcon />,
+    haystack: "contribute help github source code open source suggest report",
+  },
 ];
 
 const PER_GROUP = 8;
@@ -46,7 +60,14 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
         title: dataset.products.length > 1 ? `${dataset.title} · ${label}` : dataset.title,
         detail: dataset.publisher,
         href: productHref(product.slug),
-        icon: product.role === "time-series" ? <ChartLineIcon /> : product.schema.fields.some((field) => field.type === "geometry" || field.type === "latitude") ? <MapPinIcon /> : <TableIcon />,
+        icon:
+          product.role === "time-series" ? (
+            <ChartLineIcon />
+          ) : product.schema.fields.some((field) => field.type === "geometry" || field.type === "latitude") ? (
+            <MapPinIcon />
+          ) : (
+            <TableIcon />
+          ),
         haystack: `${dataset.title} ${label} ${product.title} ${product.slug} ${dataset.publisher} ${dataset.topics.join(" ")} ${dataset.feed.description}`.toLocaleLowerCase(),
       })),
     );

@@ -130,7 +130,16 @@ export interface DayBounds {
   to: string;
 }
 
-const lisbonClock = new Intl.DateTimeFormat("en-CA", { timeZone: SUMMARY_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" });
+const lisbonClock = new Intl.DateTimeFormat("en-CA", {
+  timeZone: SUMMARY_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hourCycle: "h23",
+});
 
 /** Lisbon's wall-clock time at an instant, written as if it were UTC. */
 function wallClock(instant: number): number {
@@ -193,7 +202,9 @@ function lastSunday(year: number, month: number): string {
 function lisbonWallClockSql(fromYear: number, toYear: number): string {
   const summers: string[] = [];
   for (let year = fromYear; year <= toYear; year += 1) {
-    summers.push(`WHEN event_time >= TIMESTAMP '${lastSunday(year, 3)}T01:00:00Z' AND event_time < TIMESTAMP '${lastSunday(year, 10)}T01:00:00Z' THEN event_time + INTERVAL '1 hour'`);
+    summers.push(
+      `WHEN event_time >= TIMESTAMP '${lastSunday(year, 3)}T01:00:00Z' AND event_time < TIMESTAMP '${lastSunday(year, 10)}T01:00:00Z' THEN event_time + INTERVAL '1 hour'`,
+    );
   }
   return `CASE ${summers.join(" ")} ELSE event_time END`;
 }
@@ -419,7 +430,7 @@ export async function summariseDay(deps: SummaryDeps, day: string, now: number):
   const found = new Map<string, DayFound>();
   let bytesScanned = 0;
   let last: LakeBucket | undefined;
-  for (let more = true; more; ) {
+  for (let more = true; more;) {
     const page = await lakePage(deps, `summary:${day}`, FRESH_PAGE, "hour", freshSql(bounds, ingestTo, last));
     bytesScanned += page.bytesScanned;
     for (const row of page.rows) {
@@ -433,7 +444,9 @@ export async function summariseDay(deps: SummaryDeps, day: string, now: number):
     last = page.rows.at(-1);
   }
   const month = day.slice(0, 7);
-  await eachLimited([...found.entries()], ([slug, product]) => mergeMonth(deps.objects, { slug, month, incoming: product.buckets, resolution: "hour", series: [...product.series.values()], rule: { kind: "replace-day", day } }, now));
+  await eachLimited([...found.entries()], ([slug, product]) =>
+    mergeMonth(deps.objects, { slug, month, incoming: product.buckets, resolution: "hour", series: [...product.series.values()], rule: { kind: "replace-day", day } }, now),
+  );
   return { bytesScanned, products: [...found.keys()] };
 }
 
@@ -446,13 +459,19 @@ interface ProductStream {
 }
 
 /** A late query's rows, product by product: rows come ordered by product, so one product and one page are in memory at a time. */
-async function eachProduct(deps: SummaryDeps, label: string, column: BucketColumn, sqlAfter: (last: LakeBucket | undefined) => string, take: ProductHandler): Promise<ProductStream> {
+async function eachProduct(
+  deps: SummaryDeps,
+  label: string,
+  column: BucketColumn,
+  sqlAfter: (last: LakeBucket | undefined) => string,
+  take: ProductHandler,
+): Promise<ProductStream> {
   let bytesScanned = 0;
   let last: LakeBucket | undefined;
   let slug: string | undefined;
   let buckets: SummaryBucket[] = [];
   let series = new Map<string, SummarySeries>();
-  for (let more = true; more; ) {
+  for (let more = true; more;) {
     const page = await lakePage(deps, label, LATE_PAGE, column, sqlAfter(last));
     bytesScanned += page.bytesScanned;
     for (const row of page.rows) {
@@ -494,7 +513,14 @@ export interface LateOutcome {
  * at a time, until the wake's allowance of R2 calls is spent; the wake's first
  * product goes through whatever it costs, so none is put off forever.
  */
-export async function summariseLateDay(deps: SummaryDeps, ingestDay: string, firstDay: string, cursor: string | undefined, allowance: LateAllowance, now: number): Promise<LateOutcome> {
+export async function summariseLateDay(
+  deps: SummaryDeps,
+  ingestDay: string,
+  firstDay: string,
+  cursor: string | undefined,
+  allowance: LateAllowance,
+  now: number,
+): Promise<LateOutcome> {
   const ingest = lisbonDayBounds(ingestDay);
   // The fresh pass covers each day from the lake's first on, from its own ingest and the next day's; older days are the late pass's.
   const before = lisbonDayBounds(ingestDay === firstDay ? firstDay : addDays(ingestDay, -1)).from;
@@ -505,19 +531,21 @@ export async function summariseLateDay(deps: SummaryDeps, ingestDay: string, fir
   let reached: string | undefined = cursor;
   let earliestDay: string | undefined;
 
-  const merge = (resolution: BucketColumn): ProductHandler => async (slug, buckets, series) => {
-    if (!deps.products.has(slug)) return true;
-    const updates = monthUpdates(slug, buckets, resolution, series);
-    const years = new Set(updates.map((update) => `${slug}|${update.month.slice(0, 4)}`));
-    const cost = updates.length * 2 + years.size * YEAR_REBUILD_OPS;
-    if (allowance.spent > 0 && allowance.spent + cost > allowance.budget) return false;
-    await eachLimited(updates, (update) => mergeMonth(deps.objects, update, now));
-    await rebuildYears(deps.objects, years, now);
-    allowance.spent += cost;
-    reached = `${resolution}|${slug}`;
-    for (const bucket of buckets) earliestDay = earlier(earliestDay, bucketDay(bucket[1]));
-    return true;
-  };
+  const merge =
+    (resolution: BucketColumn): ProductHandler =>
+    async (slug, buckets, series) => {
+      if (!deps.products.has(slug)) return true;
+      const updates = monthUpdates(slug, buckets, resolution, series);
+      const years = new Set(updates.map((update) => `${slug}|${update.month.slice(0, 4)}`));
+      const cost = updates.length * 2 + years.size * YEAR_REBUILD_OPS;
+      if (allowance.spent > 0 && allowance.spent + cost > allowance.budget) return false;
+      await eachLimited(updates, (update) => mergeMonth(deps.objects, update, now));
+      await rebuildYears(deps.objects, years, now);
+      allowance.spent += cost;
+      reached = `${resolution}|${slug}`;
+      for (const bucket of buckets) earliestDay = earlier(earliestDay, bucketDay(bucket[1]));
+      return true;
+    };
 
   let bytesScanned = 0;
   if (stage !== "hour") {
@@ -584,7 +612,7 @@ async function mergeMonth(objects: ObjectStore, update: MonthUpdate, now: number
   const series = new Map((existing?.series ?? []).map((each) => [each.key, each]));
   for (const each of update.series) {
     const held = series.get(each.key);
-    series.set(each.key, { key: each.key, unit: each.unit || held?.unit || "", dimensions: hasFields(each.dimensions) ? each.dimensions : held?.dimensions ?? {} });
+    series.set(each.key, { key: each.key, unit: each.unit || held?.unit || "", dimensions: hasFields(each.dimensions) ? each.dimensions : (held?.dimensions ?? {}) });
   }
   await objects.write<SummaryMonth>(key, {
     version: 1,
@@ -615,7 +643,10 @@ async function rebuildYears(objects: ObjectStore, years: Iterable<string>, now: 
       timeZone: SUMMARY_TIME_ZONE,
       resolution: "month",
       series: [...series.values()].sort((a, b) => a.key.localeCompare(b.key)),
-      buckets: rollUp(blobs.flatMap((blob) => blob.buckets), monthStart).sort(byStartThenKey),
+      buckets: rollUp(
+        blobs.flatMap((blob) => blob.buckets),
+        monthStart,
+      ).sort(byStartThenKey),
       updatedAt: new Date(now).toISOString(),
     });
   });
@@ -674,17 +705,19 @@ export async function readSummaryRange(objects: ObjectStore, slug: string, query
   if (!(from < to)) throw new InvalidQueryError("from must be before to");
   if (query.seriesKeys.length > MAX_SUMMARY_SERIES) throw new InvalidQueryError(`Name at most ${MAX_SUMMARY_SERIES} series with seriesKey`);
   const index = await objects.read<SummaryIndex>(INDEX_KEY);
-  const firstDay = index ? index.earliestDay ?? index.firstDay : undefined;
+  const firstDay = index ? (index.earliestDay ?? index.firstDay) : undefined;
   // Only the periods with summaries are read: a range reaching back before any history reads nothing for those years.
   const readFrom = firstDay ? Math.max(from, Date.parse(lisbonDayBounds(firstDay).from)) : to;
   const readTo = index ? Math.min(to, Date.parse(lisbonDayBounds(index.through).to)) : from;
 
   const wanted = new Set(query.seriesKeys);
   const inRange = (blobs: Array<SummaryMonth | SummaryYear>) =>
-    blobs.flatMap((blob) => blob.buckets).filter((bucket) => {
-      const start = Date.parse(bucket[1]);
-      return start >= from && start < to && (wanted.size === 0 || wanted.has(bucket[0]));
-    });
+    blobs
+      .flatMap((blob) => blob.buckets)
+      .filter((bucket) => {
+        const start = Date.parse(bucket[1]);
+        return start >= from && start < to && (wanted.size === 0 || wanted.has(bucket[0]));
+      });
 
   let resolution = query.resolution ?? autoResolution(to - from);
   let blobs: Array<SummaryMonth | SummaryYear> = [];
@@ -693,7 +726,8 @@ export async function readSummaryRange(objects: ObjectStore, slug: string, query
   let monthsFrom = readFrom;
   if (resolution === "month") {
     const years = readFrom < readTo ? yearsBetween(readFrom, readTo) : [];
-    if (years.length > MAX_SUMMARY_YEARS) throw new InvalidQueryError(`A summary range by month spans at most ${MAX_SUMMARY_YEARS} years of data; read a longer span one window at a time`);
+    if (years.length > MAX_SUMMARY_YEARS)
+      throw new InvalidQueryError(`A summary range by month spans at most ${MAX_SUMMARY_YEARS} years of data; read a longer span one window at a time`);
     blobs = (await mapLimited(years, (year) => objects.read<SummaryYear>(summaryKey(slug, year)))).flatMap((blob) => blob ?? []);
     const first = earliestStart(inRange(blobs));
     if (query.resolution === undefined && first < to && autoResolution(to - first) !== "month") {
@@ -704,7 +738,10 @@ export async function readSummaryRange(objects: ObjectStore, slug: string, query
   }
   if (resolution !== "month") {
     const months = monthsFrom < readTo ? monthsBetween(monthsFrom, readTo) : [];
-    if (months.length > MAX_SUMMARY_MONTHS) throw new InvalidQueryError(`A summary range by ${resolution} spans at most ${MAX_SUMMARY_MONTHS} months of data; ask for resolution=month, or read a longer span one window at a time`);
+    if (months.length > MAX_SUMMARY_MONTHS)
+      throw new InvalidQueryError(
+        `A summary range by ${resolution} spans at most ${MAX_SUMMARY_MONTHS} months of data; ask for resolution=month, or read a longer span one window at a time`,
+      );
     const monthBlobs = (await mapLimited(months, (month) => objects.read<SummaryMonth>(summaryKey(slug, month)))).flatMap((blob) => blob ?? []);
     // A year knows only the month its history begins in; the months know the hour.
     const firstHour = fitted ? earliestStart(inRange(monthBlobs)) : Infinity;
@@ -715,7 +752,8 @@ export async function readSummaryRange(objects: ObjectStore, slug: string, query
 
   const found = inRange(blobs);
   const buckets = resolution === "day" ? rollUp(found, dayStart) : found;
-  if (buckets.length > MAX_SUMMARY_BUCKETS) throw new InvalidQueryError(`That is ${buckets.length} buckets, more than ${MAX_SUMMARY_BUCKETS}: name fewer series with seriesKey, or ask for a coarser resolution`);
+  if (buckets.length > MAX_SUMMARY_BUCKETS)
+    throw new InvalidQueryError(`That is ${buckets.length} buckets, more than ${MAX_SUMMARY_BUCKETS}: name fewer series with seriesKey, or ask for a coarser resolution`);
 
   const meta = new Map<string, SummarySeries>();
   for (const blob of blobs) for (const each of blob.series) meta.set(each.key, each);

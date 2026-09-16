@@ -79,7 +79,10 @@ export function DataTable<Row>(props: DataTableProps<Row>) {
     const words = filter.toLocaleLowerCase().split(/\s+/).filter(Boolean);
     if (words.length === 0) return rows;
     return rows.filter((row) => {
-      const haystack = columns.map((column) => (column.text ? column.text(row) : String(column.sort?.(row) ?? ""))).join(" ").toLocaleLowerCase();
+      const haystack = columns
+        .map((column) => (column.text ? column.text(row) : String(column.sort?.(row) ?? "")))
+        .join(" ")
+        .toLocaleLowerCase();
       return words.every((word) => haystack.includes(word));
     });
   }, [rows, columns, filter]);
@@ -146,9 +149,7 @@ export function DataTable<Row>(props: DataTableProps<Row>) {
         </InputGroup>
         <div className="flex flex-wrap items-center gap-2">
           {props.toolbar}
-          <span className="font-mono text-xs text-kumo-subtle">
-            {filter ? `${fmt.int(sorted.length)} of ${fmt.int(rows.length)}` : fmt.int(rows.length)} rows
-          </span>
+          <span className="font-mono text-xs text-kumo-subtle">{filter ? `${fmt.int(sorted.length)} of ${fmt.int(rows.length)}` : fmt.int(rows.length)} rows</span>
           {exportRow ? (
             <>
               <Button variant="ghost" icon={<DownloadSimpleIcon />} onClick={downloadCsv}>
@@ -176,7 +177,11 @@ export function DataTable<Row>(props: DataTableProps<Row>) {
                       className={`whitespace-nowrap ${column.align === "end" ? "text-right" : ""}`}
                     >
                       {column.sort ? (
-                        <button type="button" onClick={() => toggleSort(column.key)} className={`-my-1 inline-flex min-h-6 items-center gap-1 py-1 font-medium hover:text-kumo-strong ${column.align === "end" ? "flex-row-reverse" : ""}`}>
+                        <button
+                          type="button"
+                          onClick={() => toggleSort(column.key)}
+                          className={`-my-1 inline-flex min-h-6 items-center gap-1 py-1 font-medium hover:text-kumo-strong ${column.align === "end" ? "flex-row-reverse" : ""}`}
+                        >
                           {column.header}
                           {active ? sort.direction === "asc" ? <CaretUpIcon size={12} /> : <CaretDownIcon size={12} /> : <CaretUpDownIcon size={12} className="opacity-40" />}
                         </button>
@@ -209,13 +214,17 @@ export function DataTable<Row>(props: DataTableProps<Row>) {
               ))}
             </Table.Body>
           </Table>
-          {sorted.length === 0 ? <div className="p-6 text-center text-sm text-kumo-subtle">{rows.length === 0 ? props.empty ?? "Nothing to show." : "No row matches that filter."}</div> : null}
+          {sorted.length === 0 ? (
+            <div className="p-6 text-center text-sm text-kumo-subtle">{rows.length === 0 ? (props.empty ?? "Nothing to show.") : "No row matches that filter."}</div>
+          ) : null}
         </div>
       </LayerCard>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3 text-xs text-kumo-subtle">{props.footer}</div>
-        {sorted.length > pageSize ? <Pagination page={page} setPage={setPage} perPage={pageSize} totalCount={sorted.length} labels={{ navigation: `${props.label} pages` }} /> : null}
+        {sorted.length > pageSize ? (
+          <Pagination page={page} setPage={setPage} perPage={pageSize} totalCount={sorted.length} labels={{ navigation: `${props.label} pages` }} />
+        ) : null}
       </div>
     </div>
   );

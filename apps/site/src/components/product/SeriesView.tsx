@@ -55,7 +55,9 @@ function windowOf(span: Span): TimeWindow | undefined {
   return { from: new Date(to - span.preset.ms).toISOString(), to: new Date(to).toISOString() };
 }
 
-const RESOLUTION_LABEL = { hour: "Hourly averages", day: "Daily averages, Lisbon days", month: "Monthly averages, Lisbon months" } satisfies { [resolution in SummaryResolution]: string };
+const RESOLUTION_LABEL = { hour: "Hourly averages", day: "Daily averages, Lisbon days", month: "Monthly averages, Lisbon months" } satisfies {
+  [resolution in SummaryResolution]: string;
+};
 
 const lisbonDate = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Lisbon", day: "numeric", month: "short", year: "numeric" });
 const lisbonMonth = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Lisbon", month: "short", year: "numeric" });
@@ -139,8 +141,25 @@ function summaryOptions(lines: SummaryLine[], palette: readonly string[], unit: 
       const bucketRows = rows[index] ?? [];
       return [
         // The band: the lowest value, then the height up to the highest, stacked and shaded.
-        { name: `${line.label} low`, type: "line", stack: `band-${index}`, data: bucketRows.map((row) => [row[0], row[2]]), symbol: "none", lineStyle: { opacity: 0 }, silent: true },
-        { name: `${line.label} range`, type: "line", stack: `band-${index}`, data: bucketRows.map((row) => [row[0], row[3] - row[2]]), symbol: "none", lineStyle: { opacity: 0 }, areaStyle: { color, opacity: 0.15 }, silent: true },
+        {
+          name: `${line.label} low`,
+          type: "line",
+          stack: `band-${index}`,
+          data: bucketRows.map((row) => [row[0], row[2]]),
+          symbol: "none",
+          lineStyle: { opacity: 0 },
+          silent: true,
+        },
+        {
+          name: `${line.label} range`,
+          type: "line",
+          stack: `band-${index}`,
+          data: bucketRows.map((row) => [row[0], row[3] - row[2]]),
+          symbol: "none",
+          lineStyle: { opacity: 0 },
+          areaStyle: { color, opacity: 0.15 },
+          silent: true,
+        },
         // A lone bucket is drawn as a dot; a line needs two.
         { name: line.label, type: "line", data: bucketRows.map((row) => [row[0], row[1]]), color, showSymbol: bucketRows.length < 2, lineStyle: { width: 2 } },
       ];
@@ -181,7 +200,14 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
     () => [...series].sort((a, b) => b.points.length - a.points.length || Math.abs(b.latest?.value ?? 0) - Math.abs(a.latest?.value ?? 0)).slice(0, CHARTED),
     [series],
   );
-  const bars = useMemo(() => [...series].filter((each) => each.latest).sort((a, b) => (b.latest?.value ?? 0) - (a.latest?.value ?? 0)).slice(0, BARS), [series]);
+  const bars = useMemo(
+    () =>
+      [...series]
+        .filter((each) => each.latest)
+        .sort((a, b) => (b.latest?.value ?? 0) - (a.latest?.value ?? 0))
+        .slice(0, BARS),
+    [series],
+  );
 
   // A span names the series the live chart draws; a product with few series gets every one.
   const summaryKeys = series.length > CHARTED ? charted.map((each) => each.key) : [];
@@ -195,9 +221,16 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
   // Summaries end with the last summarised Lisbon day; each line's own live points carry it on from there.
   const until = summary.data?.coverage.until ?? null;
   const tailFrom = timeWindow && summary.data ? (until && until > timeWindow.from ? until : timeWindow.from) : undefined;
-  const tailKey = timeWindow && tailFrom && tailFrom < timeWindow.to && lineKeys.length > 0 ? `series-tail:${product.slug}:${tailFrom}:${timeWindow.to}:${lineKeys.join("|")}` : null;
+  const tailKey =
+    timeWindow && tailFrom && tailFrom < timeWindow.to && lineKeys.length > 0 ? `series-tail:${product.slug}:${tailFrom}:${timeWindow.to}:${lineKeys.join("|")}` : null;
   const tail = useQuery(tailKey, () =>
-    Promise.all(lineKeys.map((key) => apiGet<Page<SeriesPoint>>(productPath(product.slug, `/series?${new URLSearchParams({ seriesKey: key, from: tailFrom ?? "", to: timeWindow?.to ?? "", limit: "1000" })}`)).then((page) => page.data))).then((pages) => pages.flat()),
+    Promise.all(
+      lineKeys.map((key) =>
+        apiGet<Page<SeriesPoint>>(
+          productPath(product.slug, `/series?${new URLSearchParams({ seriesKey: key, from: tailFrom ?? "", to: timeWindow?.to ?? "", limit: "1000" })}`),
+        ).then((page) => page.data),
+      ),
+    ).then((pages) => pages.flat()),
   );
 
   const lines = useMemo<SummaryLine[]>(() => {
@@ -258,16 +291,28 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
       </div>
     );
   }
-  if (current.error && points.length === 0) return <Empty icon={<ChartLineIcon size={40} className="text-kumo-inactive" />} title="Could not load the series" description={current.error.message} />;
-  if (points.length === 0) return <Empty icon={<ChartLineIcon size={40} className="text-kumo-inactive" />} title="No points yet" description="Series points appear after the first successful collection." />;
+  if (current.error && points.length === 0)
+    return <Empty icon={<ChartLineIcon size={40} className="text-kumo-inactive" />} title="Could not load the series" description={current.error.message} />;
+  if (points.length === 0)
+    return (
+      <Empty icon={<ChartLineIcon size={40} className="text-kumo-inactive" />} title="No points yet" description="Series points appear after the first successful collection." />
+    );
 
   const oldest = points.map((point) => point.eventTime).sort()[0];
   const coverage = summary.data?.coverage;
   // A span reaching well before the product's history is labelled from where its history begins.
-  const firstStart = lines.map((line) => line.buckets[0]?.start ?? "").filter(Boolean).sort()[0];
+  const firstStart = lines
+    .map((line) => line.buckets[0]?.start ?? "")
+    .filter(Boolean)
+    .sort()[0];
   const shownFrom = timeWindow && firstStart && Date.parse(firstStart) - Date.parse(timeWindow.from) > 31 * DAY ? firstStart : undefined;
   const coverageNote = (() => {
-    if (!timeWindow) return snapshot ? `Latest value of the ${Math.min(BARS, bars.length)} largest series` : series.length > CHARTED ? `${CHARTED} of ${fmt.int(series.length)} series drawn; the table has all of them` : "Hover for values";
+    if (!timeWindow)
+      return snapshot
+        ? `Latest value of the ${Math.min(BARS, bars.length)} largest series`
+        : series.length > CHARTED
+          ? `${CHARTED} of ${fmt.int(series.length)} series drawn; the table has all of them`
+          : "Hover for values";
     if (summary.error) return `Could not load this span: ${summary.error.message}`;
     if (!coverage) return "";
     if (!coverage.through) return "Summaries appear a day after each day ends; until then the chart shows live points.";
@@ -291,7 +336,13 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
                 </Button>
               );
             })}
-            <Button size="sm" variant={span.kind === "custom" || picking ? "primary" : "secondary"} icon={<CalendarBlankIcon />} aria-expanded={picking} onClick={() => setPicking((open) => !open)}>
+            <Button
+              size="sm"
+              variant={span.kind === "custom" || picking ? "primary" : "secondary"}
+              icon={<CalendarBlankIcon />}
+              aria-expanded={picking}
+              onClick={() => setPicking((open) => !open)}
+            >
               {span.kind === "custom" ? `${dayLabel(span.window.from)} – ${dayLabel(Date.parse(span.window.to) - DAY)}` : "Dates…"}
             </Button>
           </div>
@@ -329,7 +380,11 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
                 <Loader size="sm" /> Loading this span…
               </div>
             ) : lines.length === 0 ? (
-              <Empty icon={<ChartLineIcon size={40} className="text-kumo-inactive" />} title="Nothing in this span" description="No summarised or live points fall between these dates." />
+              <Empty
+                icon={<ChartLineIcon size={40} className="text-kumo-inactive" />}
+                title="Nothing in this span"
+                description="No summarised or live points fall between these dates."
+              />
             ) : (
               <Chart echarts={echarts} isDarkMode={dark} height={380} options={summaryOptions(lines, palette, unit, summary.data?.resolution ?? "hour")} />
             )
@@ -344,7 +399,12 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
                 // Every bar carries its own value, so narrow screens drop the axis figures instead of crowding them.
                 xAxis: { type: "value", splitNumber: 4, axisLabel: { show: window.innerWidth >= 640, formatter: (value: number) => fmt.compact(value) } },
                 // Labels take at most about a third of a phone screen; the tooltip carries the full name.
-                yAxis: { type: "category", inverse: true, data: bars.map((each) => each.label), axisLabel: { width: Math.min(260, Math.round(window.innerWidth * 0.34)), overflow: "truncate" } },
+                yAxis: {
+                  type: "category",
+                  inverse: true,
+                  data: bars.map((each) => each.label),
+                  axisLabel: { width: Math.min(260, Math.round(window.innerWidth * 0.34)), overflow: "truncate" },
+                },
                 series: [
                   {
                     type: "bar",
@@ -383,7 +443,17 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
           columns={summaryColumns}
           rowKey={(row) => `${row.key}|${row.start}`}
           initialSort={{ key: "start", direction: "desc" }}
-          exportRow={(row) => ({ seriesKey: row.key, series: row.label, start: row.start, resolution, mean: row.mean, min: row.min, max: row.max, count: row.count, unit: unit || null })}
+          exportRow={(row) => ({
+            seriesKey: row.key,
+            series: row.label,
+            start: row.start,
+            resolution,
+            mean: row.mean,
+            min: row.min,
+            max: row.max,
+            count: row.count,
+            unit: unit || null,
+          })}
           downloadName={`${product.slug}-summary-${resolution}`}
         />
       ) : (
@@ -393,7 +463,14 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
           columns={columns}
           rowKey={pointKey}
           initialSort={{ key: "eventTime", direction: "desc" }}
-          exportRow={(point) => ({ seriesKey: point.seriesKey, series: seriesLabel(point), eventTime: point.eventTime, value: point.value, unit: point.unit ?? null, observedAt: point.observedAt ?? null })}
+          exportRow={(point) => ({
+            seriesKey: point.seriesKey,
+            series: seriesLabel(point),
+            eventTime: point.eventTime,
+            value: point.value,
+            unit: point.unit ?? null,
+            observedAt: point.observedAt ?? null,
+          })}
           downloadName={`${product.slug}-series`}
         />
       )}

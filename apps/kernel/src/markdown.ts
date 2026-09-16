@@ -80,8 +80,20 @@ const ROLE_LABEL = new Map([
   ["time-series", "Time series: numeric points keyed by series and event time"],
   ["summary", "Summary: an aggregate rebuilt from the same collection as its source product"],
 ]);
-const FORMAT_LABEL = new Map([["arcgis", "ArcGIS"], ["opendatasoft", "Opendatasoft"], ["ckan", "CKAN"], ["gtfs", "GTFS"], ["gbfs", "GBFS"], ["udata", "dados.gov.pt"]]);
-const UNITS: Array<[number, string]> = [[86_400, "day"], [3600, "hour"], [60, "minute"], [1, "second"]];
+const FORMAT_LABEL = new Map([
+  ["arcgis", "ArcGIS"],
+  ["opendatasoft", "Opendatasoft"],
+  ["ckan", "CKAN"],
+  ["gtfs", "GTFS"],
+  ["gbfs", "GBFS"],
+  ["udata", "dados.gov.pt"],
+]);
+const UNITS: Array<[number, string]> = [
+  [86_400, "day"],
+  [3600, "hour"],
+  [60, "minute"],
+  [1, "second"],
+];
 
 const RENDERERS = new Map<string, Renderer>([
   ["/", home],
@@ -122,7 +134,12 @@ export function prefersMarkdown(accept: string | null): boolean {
 
 /** A publisher's name as the site's links spell it; the site's slugify does the same. */
 export function publisherSlug(name: string): string {
-  return name.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return name
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 
 export const productPage = (slug: string) => `/product/?slug=${encodeURIComponent(slug)}`;
@@ -182,7 +199,8 @@ async function catalog(url: URL, host: SiteHost): Promise<PageText> {
   const words = (url.searchParams.get("q") ?? "").toLocaleLowerCase().split(/\s+/).filter(Boolean);
   const shown = (await readCatalog(host)).filter(({ feed, products }) => {
     if (topic && !(feed.topics ?? []).includes(topic)) return false;
-    const haystack = `${feed.title} ${feed.publisher} ${(feed.topics ?? []).join(" ")} ${feed.description} ${products.map((item) => `${item.title} ${item.slug}`).join(" ")}`.toLocaleLowerCase();
+    const haystack =
+      `${feed.title} ${feed.publisher} ${(feed.topics ?? []).join(" ")} ${feed.description} ${products.map((item) => `${item.title} ${item.slug}`).join(" ")}`.toLocaleLowerCase();
     return words.every((word) => haystack.includes(word));
   });
   const scope = [topic ? `about ${topicLabel(topic).toLocaleLowerCase()}` : "", words.length ? `matching “${words.join(" ")}”` : ""].filter(Boolean).join(" ");
@@ -206,7 +224,8 @@ async function publishers(url: URL, host: SiteHost): Promise<PageText> {
   if (wanted !== null) {
     const own = groups.get(wanted);
     const name = own?.[0]?.feed.publisher;
-    if (!own || !name) return missing(["# Publisher not found", "", `open-data.pt collects nothing from a publisher called “${wanted}”. Every publisher is listed at ${origin}/publisher/.`]);
+    if (!own || !name)
+      return missing(["# Publisher not found", "", `open-data.pt collects nothing from a publisher called “${wanted}”. Every publisher is listed at ${origin}/publisher/.`]);
     return found([
       `# ${name}`,
       "",
@@ -234,7 +253,8 @@ async function product(url: URL, host: SiteHost): Promise<PageText> {
   const slug = url.searchParams.get("slug") ?? "";
   const path = `/api/products/${encodeURIComponent(slug)}`;
   const item = slug ? await readIfFound<CatalogProduct>(host, path) : undefined;
-  if (!item) return missing(["# Product not found", "", `No product has the slug “${slug}”. Every product is listed at ${origin}/catalog/, and as JSON at ${origin}/api/products.`]);
+  if (!item)
+    return missing(["# Product not found", "", `No product has the slug “${slug}”. Every product is listed at ${origin}/catalog/, and as JSON at ${origin}/api/products.`]);
 
   const series = item.role === "time-series";
   const [feed, rows] = await Promise.all([
@@ -274,7 +294,11 @@ async function product(url: URL, host: SiteHost): Promise<PageText> {
     "",
     ...(rows.length === 0
       ? ["The source currently lists nothing."]
-      : [`| ${columns.map(cell).join(" | ")} |`, `| ${columns.map(() => "---").join(" | ")} |`, ...rows.map((row) => `| ${columns.map((column) => cell(value(row[column]))).join(" | ")} |`)]),
+      : [
+          `| ${columns.map(cell).join(" | ")} |`,
+          `| ${columns.map(() => "---").join(" | ")} |`,
+          ...rows.map((row) => `| ${columns.map((column) => cell(value(row[column]))).join(" | ")} |`),
+        ]),
     "",
     "## Read it as JSON",
     "",
@@ -296,11 +320,17 @@ async function start(url: URL, host: SiteHost): Promise<PageText> {
 
 async function status(url: URL, host: SiteHost): Promise<PageText> {
   const days = 3;
-  const [feeds, outages] = await Promise.all([read<{ data: CatalogFeed[] }>(host, "/api/feeds"), read<{ trackedSince: string | null; data: Outage[] }>(host, `/api/outages?days=${days}`)]);
+  const [feeds, outages] = await Promise.all([
+    read<{ data: CatalogFeed[] }>(host, "/api/feeds"),
+    read<{ trackedSince: string | null; data: Outage[] }>(host, `/api/outages?days=${days}`),
+  ]);
   const titles = new Map(feeds.data.map((feed) => [feed.id, feed.title]));
-  const titleOf = (outage: Outage) => (outage.feedId === null ? "The whole platform" : titles.get(outage.feedId) ?? outage.feedId);
+  const titleOf = (outage: Outage) => (outage.feedId === null ? "The whole platform" : (titles.get(outage.feedId) ?? outage.feedId));
   const open = outages.data.filter((outage) => !outage.endedAt);
-  const ended = outages.data.filter((outage) => outage.endedAt).sort((a, b) => b.startedAt.localeCompare(a.startedAt)).slice(0, 30);
+  const ended = outages.data
+    .filter((outage) => outage.endedAt)
+    .sort((a, b) => b.startedAt.localeCompare(a.startedAt))
+    .slice(0, 30);
   return found([
     "# Status",
     "",
@@ -316,7 +346,11 @@ async function status(url: URL, host: SiteHost): Promise<PageText> {
     "",
     ...(ended.length === 0
       ? ["None."]
-      : ["| Dataset | From | To | Cause | Failed attempts |", "| --- | --- | --- | --- | --- |", ...ended.map((outage) => `| ${cell(titleOf(outage))} | ${outage.startedAt} | ${outage.endedAt ?? ""} | ${outage.cause} | ${outage.failures} |`)]),
+      : [
+          "| Dataset | From | To | Cause | Failed attempts |",
+          "| --- | --- | --- | --- | --- |",
+          ...ended.map((outage) => `| ${cell(titleOf(outage))} | ${outage.startedAt} | ${outage.endedAt ?? ""} | ${outage.cause} | ${outage.failures} |`),
+        ]),
   ]);
 }
 
@@ -358,14 +392,19 @@ async function contribute(): Promise<PageText> {
 /* ---------- Pieces ---------- */
 
 function datasetSection(origin: string, { feed, products }: Dataset): string[] {
-  const facts = [feed.publisher, ...(feed.topics ?? []).map(topicLabel), feed.cadenceSeconds ? `collected ${every(feed.cadenceSeconds)}` : "", through(feed)].filter(Boolean).join(" · ");
+  const facts = [feed.publisher, ...(feed.topics ?? []).map(topicLabel), feed.cadenceSeconds ? `collected ${every(feed.cadenceSeconds)}` : "", through(feed)]
+    .filter(Boolean)
+    .join(" · ");
   return [
     `## ${feed.title}`,
     "",
     facts,
     "",
     ...(feed.description ? [feed.description.trim(), ""] : []),
-    ...products.map((item) => `- [${linkText(item.title)}](${origin}${productPage(item.slug)}): ${(ROLE_LABEL.get(item.role) ?? item.role).split(":")[0]}, ${plural(item.rowCount, "row")}, updated ${item.updatedAt}. JSON: ${origin}/api/products/${encodeURIComponent(item.slug)}`),
+    ...products.map(
+      (item) =>
+        `- [${linkText(item.title)}](${origin}${productPage(item.slug)}): ${(ROLE_LABEL.get(item.role) ?? item.role).split(":")[0]}, ${plural(item.rowCount, "row")}, updated ${item.updatedAt}. JSON: ${origin}/api/products/${encodeURIComponent(item.slug)}`,
+    ),
     "",
   ];
 }
@@ -374,7 +413,11 @@ function datasetSection(origin: string, { feed, products }: Dataset): string[] {
 function mainPublishers(datasets: Dataset[]): string {
   const counts = new Map<string, number>();
   for (const dataset of datasets) counts.set(dataset.feed.publisher, (counts.get(dataset.feed.publisher) ?? 0) + 1);
-  return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([name]) => name).join(" · ");
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([name]) => name)
+    .join(" · ");
 }
 
 function through(feed: CatalogFeed): string {

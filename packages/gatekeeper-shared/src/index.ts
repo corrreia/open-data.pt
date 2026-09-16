@@ -10,26 +10,60 @@ import type { JsonObject } from "./json";
  * it stays off this list.
  */
 export {
-  asArray, asArrayOrEmpty, asBoolean, asNumber, asNumberLike, asNumberList, asObject, asString, asStringList,
-  isJsonArray, isJsonBoolean, isJsonNumber, isJsonObject, isJsonString, parseJson, parseJsonBytes, toJsonObject,
-  type JsonObject, type JsonValue,
+  asArray,
+  asArrayOrEmpty,
+  asBoolean,
+  asNumber,
+  asNumberLike,
+  asNumberList,
+  asObject,
+  asString,
+  asStringList,
+  isJsonArray,
+  isJsonBoolean,
+  isJsonNumber,
+  isJsonObject,
+  isJsonString,
+  parseJson,
+  parseJsonBytes,
+  toJsonObject,
+  type JsonObject,
+  type JsonValue,
 } from "./json";
-export {
-  SOURCE_KEY, libraryConfig, resolveTopicFeed, topicCollector, topicFeedKinds,
-  type GatekeeperLibraries, type GatekeeperLibrary, type TopicOptions,
-} from "./library";
+export { SOURCE_KEY, libraryConfig, resolveTopicFeed, topicCollector, topicFeedKinds, type GatekeeperLibraries, type GatekeeperLibrary, type TopicOptions } from "./library";
 export { lisbonDay, lisbonInstants, lisbonOffsetMinutes, lisbonToUtc } from "./lisbon-time";
 export {
-  BUFFERED_SOURCE_MAX_BYTES, bufferedTransform, collectNormalized, hashSourceConfig, resolveFeed, responseValidator,
-  sourceValidator, type NormalizedCollector,
+  BUFFERED_SOURCE_MAX_BYTES,
+  bufferedTransform,
+  collectNormalized,
+  hashSourceConfig,
+  resolveFeed,
+  responseValidator,
+  sourceValidator,
+  type NormalizedCollector,
 } from "./normalized";
 export {
-  NormalizedInputError, assertCollectionResult, assertHistoryProgress, assertResolvedFeed, historyCursorKey,
-  isNormalizedFrame, isPermanentCollectionError, isProductSlug,
+  NormalizedInputError,
+  assertCollectionResult,
+  assertHistoryProgress,
+  assertResolvedFeed,
+  historyCursorKey,
+  isNormalizedFrame,
+  isPermanentCollectionError,
+  isProductSlug,
 } from "./normalized-validation";
 export {
-  allowedHosts, contentEtag, equivalentEtags, fixedOrigin, hashString, invalidResponse, isoDate, readBoundedJson,
-  readBoundedResponse, retryAfterSeconds, sha256Hex,
+  allowedHosts,
+  contentEtag,
+  equivalentEtags,
+  fixedOrigin,
+  hashString,
+  invalidResponse,
+  isoDate,
+  readBoundedJson,
+  readBoundedResponse,
+  retryAfterSeconds,
+  sha256Hex,
 } from "./source-http";
 export { readBoundedBytes, toByteStream } from "./stream";
 export { streamCsvRecords, streamCsvRows, type CsvStreamOptions } from "./stream-csv";
@@ -58,14 +92,7 @@ export interface GatekeeperDescription {
   name: string;
 }
 
-type FeedDomainSubject =
-  | "coverage"
-  | "document"
-  | "event"
-  | "feature"
-  | "media"
-  | "observation"
-  | "reference";
+type FeedDomainSubject = "coverage" | "document" | "event" | "feature" | "media" | "observation" | "reference";
 export type Completeness = "complete" | "partial" | "unknown";
 
 /** What a feed is about, and what its products are by default. Everything else about a feed is its policy's business. */
@@ -149,20 +176,7 @@ export type ProductRole = "current-state" | "event-log" | "reference" | "summary
  * the source: a `color` gets a swatch, a `latitude`/`longitude` pair gets a map,
  * a `category` gets facets, `datetime` gets formatted, `json` gets truncated.
  */
-export type FieldType =
-  | "boolean"
-  | "category"
-  | "color"
-  | "date"
-  | "datetime"
-  | "geometry"
-  | "identifier"
-  | "json"
-  | "latitude"
-  | "longitude"
-  | "number"
-  | "string"
-  | "url";
+export type FieldType = "boolean" | "category" | "color" | "date" | "datetime" | "geometry" | "identifier" | "json" | "latitude" | "longitude" | "number" | "string" | "url";
 
 export interface FieldDisplay {
   /** Render the value as a badge coloured by another field of the same record. */
@@ -272,9 +286,7 @@ export interface TransformResult {
 }
 
 /** One normalized row on its way to the kernel. */
-export type NormalizedRow =
-  | { productKey: string; record: CanonicalRecord; point?: never }
-  | { productKey: string; point: SeriesPoint; record?: never };
+export type NormalizedRow = { productKey: string; record: CanonicalRecord; point?: never } | { productKey: string; point: SeriesPoint; record?: never };
 
 /** Values only known once every row was seen, such as an inferred schema or the newest event time. */
 export interface ProductFinalization {
@@ -443,12 +455,7 @@ export interface FeedGatekeeper extends WorkerEntrypoint {
 export class GatekeeperError extends Error {
   constructor(
     message: string,
-    readonly code:
-      | "invalid-config"
-      | "source-denied"
-      | "upstream-error"
-      | "invalid-response"
-      | "response-too-large",
+    readonly code: "invalid-config" | "source-denied" | "upstream-error" | "invalid-response" | "response-too-large",
     readonly retryAfterSeconds?: number,
   ) {
     super(message);

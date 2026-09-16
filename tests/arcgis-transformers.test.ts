@@ -1,13 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type {
-  CanonicalField,
-  CanonicalRecord,
-  JsonObject,
-  ProductDeclaration,
-  TransformContext,
-  TransformQuality,
-} from "@open-data-pt/gatekeeper-shared";
+import type { CanonicalField, CanonicalRecord, JsonObject, ProductDeclaration, TransformContext, TransformQuality } from "@open-data-pt/gatekeeper-shared";
 import { ArcgisTransformer } from "../packages/gatekeeper-shared/src/formats/arcgis";
 
 const transformer = new ArcgisTransformer();
@@ -84,38 +77,40 @@ async function run(bytes: Uint8Array, feed: TransformContext, chunkSize = 97): P
 }
 
 function typedLayer(features: JsonObject[]): Uint8Array {
-  return new TextEncoder().encode(JSON.stringify({
-    type: "FeatureCollection",
-    arcgis: {
-      layerUrl: "https://services.arcgis.com/a/Layer/FeatureServer/0",
-      name: "Typed layer",
-      description: "Typed fixture",
-      copyrightText: "City",
-      geometryType: "esriGeometryPoint",
-      objectIdField: "OBJECTID",
-      fields: [
-        { name: "OBJECTID", alias: "Object ID", type: "esriFieldTypeOID", nullable: false },
-        {
-          name: "STATUS",
-          alias: "Status",
-          type: "esriFieldTypeInteger",
-          nullable: false,
-          domain: {
-            type: "codedValue",
-            codedValues: [
-              { name: "Open", code: 1 },
-              { name: "Closed", code: 2 },
-            ],
+  return new TextEncoder().encode(
+    JSON.stringify({
+      type: "FeatureCollection",
+      arcgis: {
+        layerUrl: "https://services.arcgis.com/a/Layer/FeatureServer/0",
+        name: "Typed layer",
+        description: "Typed fixture",
+        copyrightText: "City",
+        geometryType: "esriGeometryPoint",
+        objectIdField: "OBJECTID",
+        fields: [
+          { name: "OBJECTID", alias: "Object ID", type: "esriFieldTypeOID", nullable: false },
+          {
+            name: "STATUS",
+            alias: "Status",
+            type: "esriFieldTypeInteger",
+            nullable: false,
+            domain: {
+              type: "codedValue",
+              codedValues: [
+                { name: "Open", code: 1 },
+                { name: "Closed", code: 2 },
+              ],
+            },
           },
-        },
-        { name: "UPDATED", alias: "Updated", type: "esriFieldTypeDate", nullable: false },
-        { name: "LABEL", alias: "Label", type: "esriFieldTypeString", nullable: false },
-        { name: "COLOUR", alias: "Colour", type: "esriFieldTypeString", nullable: false },
-        { name: "WEBSITE", alias: "Website", type: "esriFieldTypeString", nullable: false },
-      ],
-    },
-    features,
-  }));
+          { name: "UPDATED", alias: "Updated", type: "esriFieldTypeDate", nullable: false },
+          { name: "LABEL", alias: "Label", type: "esriFieldTypeString", nullable: false },
+          { name: "COLOUR", alias: "Colour", type: "esriFieldTypeString", nullable: false },
+          { name: "WEBSITE", alias: "Website", type: "esriFieldTypeString", nullable: false },
+        ],
+      },
+      features,
+    }),
+  );
 }
 
 const siteA = {
@@ -133,10 +128,7 @@ const siteA = {
 
 describe("ArcGIS transformers", () => {
   it("turns a live point-layer fixture into a typed reference product", async () => {
-    const result = await run(
-      fixture("recycling-points.json"),
-      context("lisboa-ecoilhas-subterraneas-feed", "Ecoilhas Subterrâneas"),
-    );
+    const result = await run(fixture("recycling-points.json"), context("lisboa-ecoilhas-subterraneas-feed", "Ecoilhas Subterrâneas"));
 
     expect({ id: transformer.id, version: transformer.version }).toEqual({ id: "arcgis-rest-layer", version: "2" });
     expect(result.product).toMatchObject({
@@ -166,10 +158,7 @@ describe("ArcGIS transformers", () => {
   });
 
   it("transforms a live Lisbon health-centre fixture with stable identities", async () => {
-    const result = await run(
-      fixture("lisbon-health-centres.json"),
-      context("lisbon-health-centres-feed", "Lisbon health centres"),
-    );
+    const result = await run(fixture("lisbon-health-centres.json"), context("lisbon-health-centres-feed", "Lisbon health centres"));
 
     expect(result.product).toMatchObject({
       slug: "lisbon-health-centres",
@@ -190,25 +179,15 @@ describe("ArcGIS transformers", () => {
   });
 
   it("adds deterministic centroids for live line and polygon fixtures, whatever the chunking", async () => {
-    const lines = await run(
-      fixture("cycling-lines.json"),
-      context("lisboa-rede-ciclavel-feed"),
-    );
-    const polygons = await run(
-      fixture("dog-parks.json"),
-      context("lisboa-parques-caninos-feed"),
-    );
+    const lines = await run(fixture("cycling-lines.json"), context("lisboa-rede-ciclavel-feed"));
+    const polygons = await run(fixture("dog-parks.json"), context("lisboa-parques-caninos-feed"));
 
     expect(lines.records).toHaveLength(3);
     expect(lines.records[0]?.payload.geometry).toMatchObject({
       type: "LineString",
     });
-    expect(lines.records[0]?.payload.latitude).toEqual(
-      expect.any(Number),
-    );
-    expect(lines.records[0]?.payload.longitude).toEqual(
-      expect.any(Number),
-    );
+    expect(lines.records[0]?.payload.latitude).toEqual(expect.any(Number));
+    expect(lines.records[0]?.payload.longitude).toEqual(expect.any(Number));
     expect(polygons.records[0]?.payload.geometry).toMatchObject({
       type: "Polygon",
     });
@@ -242,11 +221,10 @@ describe("ArcGIS transformers", () => {
   });
 
   it("declares metadata types up front and refines string types and nullability once every feature is read", async () => {
-    const result = await run(typedLayer([
-      siteA,
-      { ...siteA, properties: { ...siteA.properties, OBJECTID: 11, LABEL: null } },
-      { ...siteA, properties: { ...siteA.properties, OBJECTID: null } },
-    ]), context("typed-feed"));
+    const result = await run(
+      typedLayer([siteA, { ...siteA, properties: { ...siteA.properties, OBJECTID: 11, LABEL: null } }, { ...siteA, properties: { ...siteA.properties, OBJECTID: null } }]),
+      context("typed-feed"),
+    );
 
     expect(result.declared.get("COLOUR")).toMatchObject({ type: "string", nullable: false });
     expect(result.declared.get("LABEL")?.display).toBeUndefined();
@@ -262,28 +240,32 @@ describe("ArcGIS transformers", () => {
 
   it("keeps a layer's own latitude and longitude attributes apart from the derived coordinates", async () => {
     // APA's bathing-waters layer has attributes named latitude and longitude.
-    const document = new TextEncoder().encode(JSON.stringify({
-      type: "FeatureCollection",
-      arcgis: {
-        layerUrl: "https://sniambgeoogc.apambiente.pt/getogc/rest/services/SNIAmb/Aguas_Balneares/MapServer/0",
-        name: "Água balnear",
-        description: "",
-        copyrightText: "",
-        geometryType: "esriGeometryPoint",
-        objectIdField: "id",
-        fields: [
-          { name: "codigo", alias: "Código", type: "esriFieldTypeString", nullable: true },
-          { name: "id", alias: "id", type: "esriFieldTypeOID", nullable: true },
-          { name: "latitude", alias: "latitude", type: "esriFieldTypeDouble", nullable: true },
-          { name: "longitude", alias: "longitude", type: "esriFieldTypeDouble", nullable: true },
+    const document = new TextEncoder().encode(
+      JSON.stringify({
+        type: "FeatureCollection",
+        arcgis: {
+          layerUrl: "https://sniambgeoogc.apambiente.pt/getogc/rest/services/SNIAmb/Aguas_Balneares/MapServer/0",
+          name: "Água balnear",
+          description: "",
+          copyrightText: "",
+          geometryType: "esriGeometryPoint",
+          objectIdField: "id",
+          fields: [
+            { name: "codigo", alias: "Código", type: "esriFieldTypeString", nullable: true },
+            { name: "id", alias: "id", type: "esriFieldTypeOID", nullable: true },
+            { name: "latitude", alias: "latitude", type: "esriFieldTypeDouble", nullable: true },
+            { name: "longitude", alias: "longitude", type: "esriFieldTypeDouble", nullable: true },
+          ],
+        },
+        features: [
+          {
+            type: "Feature",
+            properties: { codigo: "PTAD2T", id: 1, latitude: 37.73972, longitude: -25.66111 },
+            geometry: { type: "Point", coordinates: [-25.66111, 37.73972] },
+          },
         ],
-      },
-      features: [{
-        type: "Feature",
-        properties: { codigo: "PTAD2T", id: 1, latitude: 37.73972, longitude: -25.66111 },
-        geometry: { type: "Point", coordinates: [-25.66111, 37.73972] },
-      }],
-    }));
+      }),
+    );
     const result = await run(document, context("apa-bathing-waters-feed"));
     const ids = result.product?.schema.fields.map((field) => field.id) ?? [];
 
@@ -298,7 +280,6 @@ describe("ArcGIS transformers", () => {
     expect(empty.product?.productKey).toBe("features");
     expect(empty.records).toEqual([]);
 
-    await expect(run(new TextEncoder().encode('{"type":"FeatureCollection","features":[]}'), context("typed-feed")))
-      .rejects.toMatchObject({ code: "invalid-response" });
+    await expect(run(new TextEncoder().encode('{"type":"FeatureCollection","features":[]}'), context("typed-feed"))).rejects.toMatchObject({ code: "invalid-response" });
   });
 });

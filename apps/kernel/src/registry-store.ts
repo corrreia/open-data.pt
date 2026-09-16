@@ -44,13 +44,14 @@ export class RegistryStore {
     this.exec(`CREATE INDEX IF NOT EXISTS outages_started ON outages (started_at)`);
     this.exec(`CREATE UNIQUE INDEX IF NOT EXISTS outages_open ON outages (feed_id) WHERE ended_at IS NULL`);
     // Every construction runs this; writing the version only when it is new keeps a warm-up free of row writes.
-    if (current !== String(REGISTRY_SCHEMA_VERSION)) this.exec(`INSERT INTO meta (key, value) VALUES ('schema_version', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`, String(REGISTRY_SCHEMA_VERSION));
+    if (current !== String(REGISTRY_SCHEMA_VERSION))
+      this.exec(`INSERT INTO meta (key, value) VALUES ('schema_version', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`, String(REGISTRY_SCHEMA_VERSION));
   }
 
   getState<T>(key: string): T | undefined {
     const row = this.rows<{ value_json: string }>(`SELECT value_json FROM registry_state WHERE key = ?`, key)[0];
     // SAFETY: values are read under the same owner key and type used by setState.
-    return row ? JSON.parse(row.value_json) as T : undefined;
+    return row ? (JSON.parse(row.value_json) as T) : undefined;
   }
 
   setState<T>(key: string, value: T): void {
@@ -63,7 +64,12 @@ export class RegistryStore {
     this.exec(
       `INSERT INTO policies (id, name, version, collection_json, serving_json, created_at) VALUES (?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET name = excluded.name, version = excluded.version, collection_json = excluded.collection_json, serving_json = excluded.serving_json`,
-      policy.id, policy.name, policy.version, JSON.stringify(policy.collection), JSON.stringify(policy.serving), policy.createdAt,
+      policy.id,
+      policy.name,
+      policy.version,
+      JSON.stringify(policy.collection),
+      JSON.stringify(policy.serving),
+      policy.createdAt,
     );
   }
 
@@ -89,7 +95,12 @@ export class RegistryStore {
     this.exec(
       `INSERT INTO feeds (id, slug, definition_json, policy_id, enabled, title) VALUES (?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET slug = excluded.slug, definition_json = excluded.definition_json, policy_id = excluded.policy_id, enabled = excluded.enabled, title = excluded.title`,
-      feed.id, feed.slug, JSON.stringify(definition), feed.policyId, feed.enabled ? 1 : 0, feed.title,
+      feed.id,
+      feed.slug,
+      JSON.stringify(definition),
+      feed.policyId,
+      feed.enabled ? 1 : 0,
+      feed.title,
     );
   }
 
@@ -122,7 +133,9 @@ export class RegistryStore {
     this.exec(
       `INSERT INTO feed_status (feed_id, status_json, updated_at) VALUES (?, ?, ?)
        ON CONFLICT(feed_id) DO UPDATE SET status_json = excluded.status_json, updated_at = excluded.updated_at WHERE feed_status.status_json != excluded.status_json`,
-      feedId, JSON.stringify(status), now,
+      feedId,
+      JSON.stringify(status),
+      now,
     );
   }
 
@@ -144,7 +157,10 @@ export class RegistryStore {
   /** Replace a feed's complete product set. Caller wraps this in one transaction. */
   replaceFeedProducts(feedId: string, entries: ProductIndexEntry[]): void {
     if (entries.some((entry) => entry.feedId !== feedId)) throw new NormalizedInputError("Publication contains mixed feed owners");
-    this.claimProducts(feedId, entries.map((entry) => entry.slug));
+    this.claimProducts(
+      feedId,
+      entries.map((entry) => entry.slug),
+    );
     const keep = entries.map((entry) => entry.slug);
     this.exec(`DELETE FROM products WHERE feed_id = ? AND slug NOT IN (SELECT value FROM json_each(?))`, feedId, JSON.stringify(keep));
     for (const entry of entries) {
@@ -153,7 +169,12 @@ export class RegistryStore {
         `INSERT INTO products (slug, feed_id, product_key, title, entry_json, chunks_json) VALUES (?, ?, ?, ?, ?, ?)
          ON CONFLICT(slug) DO UPDATE SET product_key = excluded.product_key, title = excluded.title, entry_json = excluded.entry_json, chunks_json = excluded.chunks_json
          WHERE products.entry_json != excluded.entry_json OR products.chunks_json IS NOT excluded.chunks_json`,
-        entry.slug, feedId, entry.productKey, entry.title, JSON.stringify(summary), chunks ? JSON.stringify(chunks) : null,
+        entry.slug,
+        feedId,
+        entry.productKey,
+        entry.title,
+        JSON.stringify(summary),
+        chunks ? JSON.stringify(chunks) : null,
       );
     }
   }
@@ -176,7 +197,10 @@ export class RegistryStore {
     this.exec(
       `INSERT INTO activity (id, feed_id, at, item_json) VALUES (?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET at = excluded.at, item_json = excluded.item_json WHERE activity.item_json != excluded.item_json`,
-      id, feedId, at, JSON.stringify(item),
+      id,
+      feedId,
+      at,
+      JSON.stringify(item),
     );
   }
 
@@ -211,14 +235,27 @@ export class RegistryStore {
   }
 
   startOutage(feedId: string, startedAt: string, cause: OutageCause, failures: number, lastError: string | undefined): void {
-    this.exec(`INSERT INTO outages (feed_id, started_at, ended_at, cause, failures, last_error) VALUES (?, ?, NULL, ?, ?, ?)`, feedId, startedAt, cause, failures, lastError ?? null);
+    this.exec(
+      `INSERT INTO outages (feed_id, started_at, ended_at, cause, failures, last_error) VALUES (?, ?, NULL, ?, ?, ?)`,
+      feedId,
+      startedAt,
+      cause,
+      failures,
+      lastError ?? null,
+    );
   }
 
   /** Writes only when something changed, so a repeated report costs nothing. */
   updateOutage(id: number, cause: OutageCause, failures: number, lastError: string | undefined): void {
     this.exec(
       `UPDATE outages SET cause = ?, failures = ?, last_error = ? WHERE id = ? AND (cause != ? OR failures != ? OR last_error IS NOT ?)`,
-      cause, failures, lastError ?? null, id, cause, failures, lastError ?? null,
+      cause,
+      failures,
+      lastError ?? null,
+      id,
+      cause,
+      failures,
+      lastError ?? null,
     );
   }
 
@@ -233,9 +270,9 @@ export class RegistryStore {
 
   /** Every stretch that overlaps [from, to), newest first. */
   outagesBetween(from: string, to: string, limit = 5_000): Outage[] {
-    return this.rows<OutageRow>(
-      `SELECT * FROM outages WHERE started_at < ? AND (ended_at IS NULL OR ended_at > ?) ORDER BY started_at DESC LIMIT ?`, to, from, limit,
-    ).map(mapOutage);
+    return this.rows<OutageRow>(`SELECT * FROM outages WHERE started_at < ? AND (ended_at IS NULL OR ended_at > ?) ORDER BY started_at DESC LIMIT ?`, to, from, limit).map(
+      mapOutage,
+    );
   }
 
   pruneOutages(before: string): void {
@@ -249,12 +286,17 @@ export class RegistryStore {
       `INSERT INTO backfills (feed_id, gatekeeper_kind, status, updated_at) VALUES (?, ?, ?, ?)
        ON CONFLICT(feed_id) DO UPDATE SET gatekeeper_kind = excluded.gatekeeper_kind, status = excluded.status, updated_at = excluded.updated_at
        WHERE backfills.status != excluded.status OR backfills.updated_at != excluded.updated_at`,
-      feedId, gatekeeperKind, status, updatedAt,
+      feedId,
+      gatekeeperKind,
+      status,
+      updatedAt,
     );
   }
 
   countRunningBackfills(gatekeeperKind: string, since: string): number {
-    return Number(this.rows<{ n: number }>(`SELECT COUNT(*) AS n FROM backfills WHERE gatekeeper_kind = ? AND status = 'running' AND updated_at >= ?`, gatekeeperKind, since)[0]?.n ?? 0);
+    return Number(
+      this.rows<{ n: number }>(`SELECT COUNT(*) AS n FROM backfills WHERE gatekeeper_kind = ? AND status = 'running' AND updated_at >= ?`, gatekeeperKind, since)[0]?.n ?? 0,
+    );
   }
 
   /* ---------- Helpers ---------- */
@@ -341,7 +383,7 @@ function mapFeed(row: FeedRow): Feed {
   // SAFETY: definition_json is written only from a Feed definition by upsertFeed.
   const definition = JSON.parse(row.definition_json) as Omit<Feed, keyof FeedStatus>;
   // SAFETY: status_json is written only from the FeedStatus a runner reported.
-  const status = row.status_json ? JSON.parse(row.status_json) as FeedStatus : {};
+  const status = row.status_json ? (JSON.parse(row.status_json) as FeedStatus) : {};
   return { ...definition, ...status };
 }
 

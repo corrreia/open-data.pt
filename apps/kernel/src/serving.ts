@@ -128,7 +128,10 @@ export class Serving {
         if (matches && !matches(record)) continue;
         data.push(record);
       }
-      if (offset >= rows.length) { chunk += 1; offset = 0; }
+      if (offset >= rows.length) {
+        chunk += 1;
+        offset = 0;
+      }
     }
     const page: RecordPage = { data };
     if (chunk < chunks.length) page.nextCursor = `v${product.version}:${chunk}:${offset}`;
@@ -164,11 +167,16 @@ export class Serving {
   async allRecords(product: ProductDetail, filters?: RowFilters): Promise<ReadableStream<Uint8Array>> {
     const matches = rowMatcher(product.schema, filters);
     const matched = matches ? "" : `"numberMatched":${product.rowCount},`;
-    return this.streamRows(product, `{${matched}"data":[`, (returned) => `],"numberReturned":${returned}}`, (row) => {
-      if (matches && !matches(row)) return undefined;
-      const { _hash: _h, ...record } = row;
-      return JSON.stringify(record);
-    });
+    return this.streamRows(
+      product,
+      `{${matched}"data":[`,
+      (returned) => `],"numberReturned":${returned}}`,
+      (row) => {
+        if (matches && !matches(row)) return undefined;
+        const { _hash: _h, ...record } = row;
+        return JSON.stringify(record);
+      },
+    );
   }
 
   /**
@@ -185,11 +193,16 @@ export class Serving {
     // Filtered, the number of matching features is only known at the end.
     const matched = matches ? "" : `"numberMatched":${product.rowCount},`;
     const head = `{"type":"FeatureCollection",${matched}"timeStamp":${JSON.stringify(new Date().toISOString())},"features":[`;
-    return this.streamRows(product, head, (returned) => `],"numberReturned":${returned}}`, (row) => {
-      if (matches && !matches(row)) return undefined;
-      const feature = toFeature(row, geometryField, latitudeField, longitudeField);
-      return feature ? JSON.stringify(feature) : undefined;
-    });
+    return this.streamRows(
+      product,
+      head,
+      (returned) => `],"numberReturned":${returned}}`,
+      (row) => {
+        if (matches && !matches(row)) return undefined;
+        const feature = toFeature(row, geometryField, latitudeField, longitudeField);
+        return feature ? JSON.stringify(feature) : undefined;
+      },
+    );
   }
 
   /** One JSON document around a product's rows: the head, then each chunk's serialized rows as it is read, then the tail. */
@@ -246,7 +259,9 @@ export class Serving {
           "dct:publisher": feed?.publisher ? { "@type": "foaf:Agent", "foaf:name": feed.publisher } : undefined,
           "dcat:keyword": feed?.topics?.length ? feed.topics : undefined,
           "dct:provenance": feed ? `Generated from ${feed.title} through the ${feed.gatekeeperKind} gatekeeper` : undefined,
-          "dcat:distribution": [{ "@type": "dcat:Distribution", "dct:format": "application/json", "dcat:accessURL": `${origin}/api/products/${encodeURIComponent(product.slug)}/${endpoint}` }],
+          "dcat:distribution": [
+            { "@type": "dcat:Distribution", "dct:format": "application/json", "dcat:accessURL": `${origin}/api/products/${encodeURIComponent(product.slug)}/${endpoint}` },
+          ],
         };
       }),
     };
@@ -334,10 +349,7 @@ function toFeature(row: JsonObject, geometryField: string | undefined, latitudeF
 
 function filterPoints<T extends { seriesKey: string; eventTime: string }>(points: T[], input: { seriesKey?: string; from?: string; to?: string }): T[] {
   return points.filter(
-    (point) =>
-      (!input.seriesKey || point.seriesKey === input.seriesKey) &&
-      (!input.from || point.eventTime >= input.from) &&
-      (!input.to || point.eventTime <= input.to),
+    (point) => (!input.seriesKey || point.seriesKey === input.seriesKey) && (!input.from || point.eventTime >= input.from) && (!input.to || point.eventTime <= input.to),
   );
 }
 

@@ -9,11 +9,11 @@
   "vars": {
     "ARCGIS_ALLOWED_HOSTS": "services.arcgis.com,sniambgeoogc.apambiente.pt",
     "CKAN_ALLOWED_HOSTS": "opendata.porto.digital,dadosabertos.cascais.pt,dadosabertos.cm-agueda.pt,oeirasinterativa.oeiras.pt",
-    "UDATA_ALLOWED_HOSTS": "dados.gov.pt"
+    "UDATA_ALLOWED_HOSTS": "dados.gov.pt",
   },
   "observability": {
     "enabled": true,
     // The kernel records every acquisition's outcome; a tenth of invocations is enough to debug.
-    "head_sampling_rate": 0.1
-  }
+    "head_sampling_rate": 0.1,
+  },
 }

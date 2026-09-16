@@ -1,18 +1,7 @@
 import { jsonAs } from "./support";
 import { describe, expect, it, vi } from "vitest";
-import {
-  retryAfterSeconds,
-  type SourceBody,
-  type SourceFetch,
-  type TransformContext,
-} from "@open-data-pt/gatekeeper-shared";
-import {
-  collectOmieFeed,
-  collectOmieHistory,
-  OMIE_HISTORY_EARLIEST,
-  OMIE_MAX_BYTES,
-  validateOmieFeedConfig,
-} from "../packages/gatekeeper-shared/src/sources/omie/omie";
+import { retryAfterSeconds, type SourceBody, type SourceFetch, type TransformContext } from "@open-data-pt/gatekeeper-shared";
+import { collectOmieFeed, collectOmieHistory, OMIE_HISTORY_EARLIEST, OMIE_MAX_BYTES, validateOmieFeedConfig } from "../packages/gatekeeper-shared/src/sources/omie/omie";
 import { OmieTransformer } from "../packages/gatekeeper-shared/src/sources/omie/transform";
 
 const ORIGIN = "https://www.omie.es";
@@ -73,15 +62,9 @@ describe("OMIE Gatekeeper", () => {
       series: "marginalpdbc",
       days: "2",
     });
-    expect(
-      validateOmieFeedConfig({ series: "marginalpdbcpt", days: "7" }),
-    ).toEqual({ series: "marginalpdbcpt", days: "7" });
-    expect(() => validateOmieFeedConfig({ series: "curva_pbc" })).toThrow(
-      "series=marginalpdbc or marginalpdbcpt",
-    );
-    expect(() =>
-      validateOmieFeedConfig({ series: "marginalpdbc", days: "8" }),
-    ).toThrow("integer from 1 to 7");
+    expect(validateOmieFeedConfig({ series: "marginalpdbcpt", days: "7" })).toEqual({ series: "marginalpdbcpt", days: "7" });
+    expect(() => validateOmieFeedConfig({ series: "curva_pbc" })).toThrow("series=marginalpdbc or marginalpdbcpt");
+    expect(() => validateOmieFeedConfig({ series: "marginalpdbc", days: "8" })).toThrow("integer from 1 to 7");
   });
 
   it("rejects caller-provided hosts and a misconfigured Worker origin", async () => {
@@ -91,15 +74,7 @@ describe("OMIE Gatekeeper", () => {
         host: "evil.example",
       }),
     ).toThrow("does not accept host");
-    await expect(
-      collectOmieFeed(
-        { series: "marginalpdbc", days: "1" },
-        undefined,
-        "https://evil.example",
-        vi.fn(),
-        NOW,
-      ),
-    ).rejects.toMatchObject({ code: "source-denied" });
+    await expect(collectOmieFeed({ series: "marginalpdbc", days: "1" }, undefined, "https://evil.example", vi.fn(), NOW)).rejects.toMatchObject({ code: "source-denied" });
   });
 
   it("collects the requested available days into a deterministic document with provenance", async () => {
@@ -125,13 +100,7 @@ describe("OMIE Gatekeeper", () => {
       throw new Error(`Unexpected file ${filename}`);
     });
 
-    const fetched = sourceBody(await collectOmieFeed(
-      { series: "marginalpdbc" },
-      undefined,
-      ORIGIN,
-      fetcher,
-      NOW,
-    ));
+    const fetched = sourceBody(await collectOmieFeed({ series: "marginalpdbc" }, undefined, ORIGIN, fetcher, NOW));
 
     expect(fetched.validator?.etag).toMatch(/^"sha256-[0-9a-f]{64}"$/u);
     expect(fetched.validator?.lastModified).toBe("Sun, 06 Sep 2026 12:56:00 GMT");
@@ -161,17 +130,9 @@ describe("OMIE Gatekeeper", () => {
   it("marks a window with fewer published days than requested as partial", async () => {
     const fetcher = vi.fn(async (input: URL | RequestInfo) => {
       const filename = new URL(input.toString()).searchParams.get("filename");
-      return filename === "marginalpdbc_20260907.1"
-        ? new Response(priceFile("marginalpdbc", "2026-09-07"))
-        : new Response(null, { status: 404 });
+      return filename === "marginalpdbc_20260907.1" ? new Response(priceFile("marginalpdbc", "2026-09-07")) : new Response(null, { status: 404 });
     });
-    const fetched = sourceBody(await collectOmieFeed(
-      { series: "marginalpdbc", days: "2" },
-      undefined,
-      ORIGIN,
-      fetcher,
-      NOW,
-    ));
+    const fetched = sourceBody(await collectOmieFeed({ series: "marginalpdbc", days: "2" }, undefined, ORIGIN, fetcher, NOW));
     expect(fetched.completeness).toBe("partial");
   });
 
@@ -181,47 +142,24 @@ describe("OMIE Gatekeeper", () => {
       const headers = new Headers(init?.headers);
       if (expectedCheckpoint) {
         expect(headers.get("if-none-match")).toBe(expectedCheckpoint);
-        expect(headers.get("if-modified-since")).toBe(
-          "Mon, 07 Sep 2026 13:27:45 GMT",
-        );
+        expect(headers.get("if-modified-since")).toBe("Mon, 07 Sep 2026 13:27:45 GMT");
       }
       return new Response(priceFile("marginalpdbc", "2026-09-08"));
     });
-    const first = sourceBody(await collectOmieFeed(
-      { series: "marginalpdbc", days: "1" },
-      undefined,
-      ORIGIN,
-      fetcher,
-      NOW,
-    ));
+    const first = sourceBody(await collectOmieFeed({ series: "marginalpdbc", days: "1" }, undefined, ORIGIN, fetcher, NOW));
     const etag = first.validator?.etag;
     if (!etag) throw new Error("Expected a synthetic ETag");
     expectedCheckpoint = etag;
 
-    const second = await collectOmieFeed(
-      { series: "marginalpdbc", days: "1" },
-      { etag, lastModified: "Mon, 07 Sep 2026 13:27:45 GMT" },
-      ORIGIN,
-      fetcher,
-      NOW,
-    );
+    const second = await collectOmieFeed({ series: "marginalpdbc", days: "1" }, { etag, lastModified: "Mon, 07 Sep 2026 13:27:45 GMT" }, ORIGIN, fetcher, NOW);
 
     expect(second).toEqual({ kind: "not-modified", validator: { etag } });
     expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
   it("reports an upstream 304 as not modified, keeping checkpoint validators the provider omitted", async () => {
-    const fetcher = vi.fn(
-      async () =>
-        new Response(null, { status: 304, headers: { ETag: '"provider-v1"' } }),
-    );
-    const fetched = await collectOmieFeed(
-      { series: "marginalpdbcpt", days: "1" },
-      { etag: '"provider-v0"', lastModified: "Mon, 07 Sep 2026 13:27:45 GMT" },
-      ORIGIN,
-      fetcher,
-      NOW,
-    );
+    const fetcher = vi.fn(async () => new Response(null, { status: 304, headers: { ETag: '"provider-v1"' } }));
+    const fetched = await collectOmieFeed({ series: "marginalpdbcpt", days: "1" }, { etag: '"provider-v0"', lastModified: "Mon, 07 Sep 2026 13:27:45 GMT" }, ORIGIN, fetcher, NOW);
     expect(fetched).toEqual({
       kind: "not-modified",
       validator: { etag: '"provider-v1"', lastModified: "Mon, 07 Sep 2026 13:27:45 GMT" },
@@ -235,30 +173,12 @@ describe("OMIE Gatekeeper", () => {
           headers: { "Content-Length": String(OMIE_MAX_BYTES + 1) },
         }),
     );
-    await expect(
-      collectOmieFeed(
-        { series: "marginalpdbc", days: "1" },
-        undefined,
-        ORIGIN,
-        fetcher,
-        NOW,
-      ),
-    ).rejects.toMatchObject({ code: "response-too-large" });
+    await expect(collectOmieFeed({ series: "marginalpdbc", days: "1" }, undefined, ORIGIN, fetcher, NOW)).rejects.toMatchObject({ code: "response-too-large" });
   });
 
   it("reports provider errors with their retry delay and without returning their body", async () => {
-    const fetcher = vi.fn(async () =>
-      new Response("provider details", { status: 503, headers: { "Retry-After": "120" } }),
-    );
-    await expect(
-      collectOmieFeed(
-        { series: "marginalpdbc", days: "1" },
-        undefined,
-        ORIGIN,
-        fetcher,
-        NOW,
-      ),
-    ).rejects.toMatchObject({
+    const fetcher = vi.fn(async () => new Response("provider details", { status: 503, headers: { "Retry-After": "120" } }));
+    await expect(collectOmieFeed({ series: "marginalpdbc", days: "1" }, undefined, ORIGIN, fetcher, NOW)).rejects.toMatchObject({
       code: "upstream-error",
       retryAfterSeconds: 120,
       message: "OMIE returned HTTP 503 for marginalpdbc_20260908.1",
@@ -267,15 +187,7 @@ describe("OMIE Gatekeeper", () => {
 
   it("rejects a successful response that is not an OMIE price file", async () => {
     const fetcher = vi.fn(async () => new Response("<html>maintenance</html>"));
-    await expect(
-      collectOmieFeed(
-        { series: "marginalpdbc", days: "1" },
-        undefined,
-        ORIGIN,
-        fetcher,
-        NOW,
-      ),
-    ).rejects.toMatchObject({ code: "invalid-response" });
+    await expect(collectOmieFeed({ series: "marginalpdbc", days: "1" }, undefined, ORIGIN, fetcher, NOW)).rejects.toMatchObject({ code: "invalid-response" });
   });
 
   it("reads Retry-After as a delay or an HTTP date", () => {
@@ -292,20 +204,13 @@ describe("OMIE history", () => {
   it("collects one seven-day slice with its range, next cursor, and bytes the existing transform accepts", async () => {
     const fetcher = vi.fn(async (input: URL | RequestInfo) => {
       const url = new URL(input.toString());
-      const match = /_(\d{2})_(\d{2})_(\d{4})_\1_\2_\3\.TXT$/u.exec(
-        url.pathname,
-      );
+      const match = /_(\d{2})_(\d{2})_(\d{4})_\1_\2_\3\.TXT$/u.exec(url.pathname);
       if (!match) throw new Error(`Unexpected history URL ${url}`);
       const date = `${match[3]}-${match[2]}-${match[1]}`;
       return new Response(historyPriceReport(date));
     });
 
-    const fetched = sourceBody(await collectOmieHistory(
-      { series: "marginalpdbc" },
-      { before: "2026-09-08T22:00:00.000Z" },
-      ORIGIN,
-      fetcher,
-    ));
+    const fetched = sourceBody(await collectOmieHistory({ series: "marginalpdbc" }, { before: "2026-09-08T22:00:00.000Z" }, ORIGIN, fetcher));
 
     expect(fetcher).toHaveBeenCalledTimes(7);
     expect(fetched.next).toEqual({ before: "2026-09-01T22:00:00.000Z" });
@@ -320,21 +225,11 @@ describe("OMIE history", () => {
       files: Array<{ date: string; filename: string; text: string }>;
     }>(fetched.body);
     expect(document.series).toBe("marginalpdbc");
-    expect(document.files.map((file) => file.date)).toEqual([
-      "2026-09-02",
-      "2026-09-03",
-      "2026-09-04",
-      "2026-09-05",
-      "2026-09-06",
-      "2026-09-07",
-      "2026-09-08",
-    ]);
+    expect(document.files.map((file) => file.date)).toEqual(["2026-09-02", "2026-09-03", "2026-09-04", "2026-09-05", "2026-09-06", "2026-09-07", "2026-09-08"]);
     const transformed = new OmieTransformer().transform(fetched.body, historyContext());
     expect(transformed.products[0]?.points).toHaveLength(14);
     expect(transformed.products[1]?.records).toHaveLength(7);
-    expect(transformed.products[1]?.records?.[0]?.eventTime).toBe(
-      "2026-09-01T22:00:00.000Z",
-    );
+    expect(transformed.products[1]?.records?.[0]?.eventTime).toBe("2026-09-01T22:00:00.000Z");
   });
 
   it("skips a missing file and crosses a DST month boundary without losing cursor progress", async () => {
@@ -349,12 +244,7 @@ describe("OMIE history", () => {
       return new Response(historyPriceReport(date, periods));
     });
 
-    const fetched = sourceBody(await collectOmieHistory(
-      { series: "marginalpdbc", days: "7" },
-      { before: "2026-04-03T22:00:00.000Z" },
-      ORIGIN,
-      fetcher,
-    ));
+    const fetched = sourceBody(await collectOmieHistory({ series: "marginalpdbc", days: "7" }, { before: "2026-04-03T22:00:00.000Z" }, ORIGIN, fetcher));
     expect(fetched.completeness).toBe("partial");
     expect(fetched.next).toEqual({ before: "2026-03-27T23:00:00.000Z" });
     expect(fetchedPaths[0]).toContain("03_04_2026");
@@ -365,24 +255,12 @@ describe("OMIE history", () => {
 
   it("reports exhaustion when the known boundary is reached or a whole slice is missing", async () => {
     const unusedFetcher = vi.fn();
-    const boundary = await collectOmieHistory(
-      { series: "marginalpdbc" },
-      { before: OMIE_HISTORY_EARLIEST },
-      ORIGIN,
-      unusedFetcher,
-    );
+    const boundary = await collectOmieHistory({ series: "marginalpdbc" }, { before: OMIE_HISTORY_EARLIEST }, ORIGIN, unusedFetcher);
     expect(boundary).toEqual({ kind: "exhausted" });
     expect(unusedFetcher).not.toHaveBeenCalled();
 
-    const missingFetcher = vi.fn(
-      async () => new Response(null, { status: 404 }),
-    );
-    const missing = await collectOmieHistory(
-      { series: "marginalpdbc" },
-      { before: "2007-07-08T22:00:00.000Z" },
-      ORIGIN,
-      missingFetcher,
-    );
+    const missingFetcher = vi.fn(async () => new Response(null, { status: 404 }));
+    const missing = await collectOmieHistory({ series: "marginalpdbc" }, { before: "2007-07-08T22:00:00.000Z" }, ORIGIN, missingFetcher);
     expect(missing).toEqual({ kind: "exhausted" });
     expect(missingFetcher).toHaveBeenCalledTimes(7);
   });

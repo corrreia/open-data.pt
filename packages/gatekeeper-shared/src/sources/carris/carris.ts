@@ -67,12 +67,7 @@ export function validateCarrisFeedConfig(config: SourceConfig): SourceConfig {
   return { feed };
 }
 
-export async function collectCarrisFeed(
-  config: SourceConfig,
-  checkpoint: SourceValidator | undefined,
-  apiOrigin: string,
-  fetcher: typeof fetch,
-): Promise<SourceFetch> {
+export async function collectCarrisFeed(config: SourceConfig, checkpoint: SourceValidator | undefined, apiOrigin: string, fetcher: typeof fetch): Promise<SourceFetch> {
   const validated = validateCarrisFeedConfig(config);
   // SAFETY: `validateCarrisFeedConfig` has just confirmed `feed` names one of
   // the feeds this Gatekeeper offers.

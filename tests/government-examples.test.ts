@@ -10,16 +10,23 @@ const government = UDATA_EXAMPLES.filter((example) => example.topics?.includes("
 
 async function normalized(example: ExampleFeed, observedAt: string) {
   const text = readFileSync(new URL(example.config.format === "csv" ? "./fixtures/cada-opinions.csv" : "./fixtures/government-registry-sample.json", import.meta.url), "utf8");
-  const collector = udataCollector({ config: example.config, hosts: "dados.gov.pt", fetcher: async (input) => {
-    const url = new URL(input.toString());
-    expect(url.origin).toBe("https://dados.gov.pt");
-    if (url.pathname.startsWith("/api/1/datasets/r/")) return new Response(text, { headers: { etag: '"fixture"' } });
-    return new Response(JSON.stringify({ resources: [{ id: example.config.distributionId, url: "https://dados.gov.pt/example-data" }] }));
-  } });
+  const collector = udataCollector({
+    config: example.config,
+    hosts: "dados.gov.pt",
+    fetcher: async (input) => {
+      const url = new URL(input.toString());
+      expect(url.origin).toBe("https://dados.gov.pt");
+      if (url.pathname.startsWith("/api/1/datasets/r/")) return new Response(text, { headers: { etag: '"fixture"' } });
+      return new Response(JSON.stringify({ resources: [{ id: example.config.distributionId, url: "https://dados.gov.pt/example-data" }] }));
+    },
+  });
   const resolved = await collector.resolve(example.config);
   const source = await collector.source(undefined, { kind: "live" }, new AbortController().signal);
   if (source.kind !== "body" || collector.normalize.kind !== "streaming") throw new Error("Expected streaming table");
-  const context: TransformContext = { observedAt, feed: { slug: example.slug, title: example.title, description: example.description, config: resolved.config, semantics: resolved.semantics } };
+  const context: TransformContext = {
+    observedAt,
+    feed: { slug: example.slug, title: example.title, description: example.description, config: resolved.config, semantics: resolved.semantics },
+  };
   const result = await collector.normalize.transform(new Response(source.body).body!, context);
   const rows: NormalizedRow[] = [];
   for await (const row of result.rows) rows.push(row);
@@ -60,7 +67,13 @@ describe("government distribution examples", () => {
   });
 
   it("uses the current income series and a monthly poll for annual releases", () => {
-    const slugs = ["ine-taxpayer-income-distribution", "ine-median-household-income-after-tax", "ine-household-income-gini", "ine-declared-income-per-inhabitant", "ine-household-income-p90-p10"];
+    const slugs = [
+      "ine-taxpayer-income-distribution",
+      "ine-median-household-income-after-tax",
+      "ine-household-income-gini",
+      "ine-declared-income-per-inhabitant",
+      "ine-household-income-p90-p10",
+    ];
     const examples = INE_EXAMPLES.filter((example) => slugs.includes(example.slug));
     expect(examples).toHaveLength(5);
     for (const example of examples) {

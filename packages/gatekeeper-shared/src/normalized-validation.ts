@@ -17,7 +17,9 @@ export function isPermanentCollectionError(error: Error): boolean {
   try {
     const detail = parseJson(error.message.slice(NORMALIZED_ERROR_PREFIX.length));
     return isJsonString(detail) && error.message === new NormalizedInputError(detail).message;
-  } catch { return false; }
+  } catch {
+    return false;
+  }
 }
 
 export function isProductSlug(value: JsonValue | undefined): value is string {
@@ -34,46 +36,92 @@ function isTimestamp(value: JsonValue | undefined): value is string {
   return canonical === value.replace(/(?:\.(\d{1,3}))?Z$/, (_, fraction: string | undefined) => `.${(fraction ?? "").padEnd(3, "0")}Z`);
 }
 
-function optionalTime(value: JsonValue | undefined): boolean { return value === undefined || isTimestamp(value); }
-function text(value: JsonValue | undefined, max = 4096): value is string { return isJsonString(value) && value.trim().length > 0 && value.length <= max; }
-function optionalText(value: JsonValue | undefined): boolean { return value === undefined || text(value); }
-function count(value: JsonValue | undefined): boolean { const n = asNumber(value); return n !== undefined && Number.isSafeInteger(n) && n >= 0; }
-function bounded(value: JsonValue, bytes: number): boolean { return new TextEncoder().encode(JSON.stringify(value)).byteLength <= bytes; }
-function onlyKeys(value: JsonObject, keys: string[]): boolean { return Object.keys(value).every((key) => keys.includes(key)); }
-function timeRange(from: JsonValue | undefined, to: JsonValue | undefined): boolean { return optionalTime(from) && optionalTime(to) && (from === undefined || to === undefined || Date.parse(String(from)) <= Date.parse(String(to))); }
-
-function isHistoryCursor(value: JsonValue | undefined): value is JsonObject & HistoryCursor {
-  return isJsonObject(value) && onlyKeys(value, ["before", "offset", "token"]) && isTimestamp(value.before)
-    && (value.offset === undefined || count(value.offset)) && (value.token === undefined || text(value.token, 2048)) && bounded(value, 4096);
+function optionalTime(value: JsonValue | undefined): boolean {
+  return value === undefined || isTimestamp(value);
+}
+function text(value: JsonValue | undefined, max = 4096): value is string {
+  return isJsonString(value) && value.trim().length > 0 && value.length <= max;
+}
+function optionalText(value: JsonValue | undefined): boolean {
+  return value === undefined || text(value);
+}
+function count(value: JsonValue | undefined): boolean {
+  const n = asNumber(value);
+  return n !== undefined && Number.isSafeInteger(n) && n >= 0;
+}
+function bounded(value: JsonValue, bytes: number): boolean {
+  return new TextEncoder().encode(JSON.stringify(value)).byteLength <= bytes;
+}
+function onlyKeys(value: JsonObject, keys: string[]): boolean {
+  return Object.keys(value).every((key) => keys.includes(key));
+}
+function timeRange(from: JsonValue | undefined, to: JsonValue | undefined): boolean {
+  return optionalTime(from) && optionalTime(to) && (from === undefined || to === undefined || Date.parse(String(from)) <= Date.parse(String(to)));
 }
 
-const FAILURE_CODES = ["invalid-config", "source-denied", "upstream-error", "invalid-response", "response-too-large", "deadline-exceeded", "history-unsupported", "protocol-mismatch"] as const;
+function isHistoryCursor(value: JsonValue | undefined): value is JsonObject & HistoryCursor {
+  return (
+    isJsonObject(value) &&
+    onlyKeys(value, ["before", "offset", "token"]) &&
+    isTimestamp(value.before) &&
+    (value.offset === undefined || count(value.offset)) &&
+    (value.token === undefined || text(value.token, 2048)) &&
+    bounded(value, 4096)
+  );
+}
+
+const FAILURE_CODES = [
+  "invalid-config",
+  "source-denied",
+  "upstream-error",
+  "invalid-response",
+  "response-too-large",
+  "deadline-exceeded",
+  "history-unsupported",
+  "protocol-mismatch",
+] as const;
 
 /** Narrow a Gatekeeper's resolved feed descriptor before the kernel persists or executes it. */
 export function assertResolvedFeed(value: ResolvedFeed): void {
   let parsed: JsonValue;
-  try { parsed = parseJson(JSON.stringify(value)); }
-  catch { throw new NormalizedInputError("Gatekeeper returned an invalid resolved feed"); }
-  if (!isJsonObject(parsed) || !onlyKeys(parsed, ["config", "configHash", "resourceKey", "kind", "semantics", "history"])
-    || !isJsonObject(parsed.config) || !Object.values(parsed.config).every(isJsonString)
-    || !isJsonString(parsed.configHash) || !/^[0-9a-f]{64}$/.test(parsed.configHash)
-    || !text(parsed.resourceKey, 1024) || !text(parsed.kind, 256) || !isJsonObject(parsed.semantics)) throw new NormalizedInputError("Gatekeeper returned an invalid resolved feed");
+  try {
+    parsed = parseJson(JSON.stringify(value));
+  } catch {
+    throw new NormalizedInputError("Gatekeeper returned an invalid resolved feed");
+  }
+  if (
+    !isJsonObject(parsed) ||
+    !onlyKeys(parsed, ["config", "configHash", "resourceKey", "kind", "semantics", "history"]) ||
+    !isJsonObject(parsed.config) ||
+    !Object.values(parsed.config).every(isJsonString) ||
+    !isJsonString(parsed.configHash) ||
+    !/^[0-9a-f]{64}$/.test(parsed.configHash) ||
+    !text(parsed.resourceKey, 1024) ||
+    !text(parsed.kind, 256) ||
+    !isJsonObject(parsed.semantics)
+  )
+    throw new NormalizedInputError("Gatekeeper returned an invalid resolved feed");
   const semantics = parsed.semantics;
-  if (!onlyKeys(semantics, ["domainSubject", "defaultProductRole"])
-    || !["coverage", "document", "event", "feature", "media", "observation", "reference"].includes(asString(semantics.domainSubject) ?? "")
-    || !["current-state", "event-log", "reference", "summary", "time-series"].includes(asString(semantics.defaultProductRole) ?? "")) {
+  if (
+    !onlyKeys(semantics, ["domainSubject", "defaultProductRole"]) ||
+    !["coverage", "document", "event", "feature", "media", "observation", "reference"].includes(asString(semantics.domainSubject) ?? "") ||
+    !["current-state", "event-log", "reference", "summary", "time-series"].includes(asString(semantics.defaultProductRole) ?? "")
+  ) {
     throw new NormalizedInputError("Gatekeeper returned invalid feed semantics");
   }
   if (parsed.history !== undefined) {
-    if (!isJsonObject(parsed.history) || !onlyKeys(parsed.history, ["earliest"])
-      || (parsed.history.earliest !== undefined && !isTimestamp(parsed.history.earliest))) throw new NormalizedInputError("Gatekeeper returned an invalid history capability");
+    if (!isJsonObject(parsed.history) || !onlyKeys(parsed.history, ["earliest"]) || (parsed.history.earliest !== undefined && !isTimestamp(parsed.history.earliest)))
+      throw new NormalizedInputError("Gatekeeper returned an invalid history capability");
   }
 }
 
 function validCheckpoint(value: SourceCheckpoint | undefined): boolean {
   if (value === undefined) return false;
-  try { return isSourceCheckpoint(parseJson(JSON.stringify(value))); }
-  catch { return false; }
+  try {
+    return isSourceCheckpoint(parseJson(JSON.stringify(value)));
+  } catch {
+    return false;
+  }
 }
 
 export function assertSourceCheckpoint(value: SourceCheckpoint): void {
@@ -88,14 +136,20 @@ export function assertCollectionResult(result: CollectionResult, mode: Collectio
       if (!exact(["kind", "stream"]) || !(result.stream instanceof ReadableStream)) throw new NormalizedInputError("Gatekeeper returned an invalid batch result");
       return;
     case "unchanged":
-      if (mode.kind !== "live" || !exact(["kind", "checkpoint"]) || !validCheckpoint(result.checkpoint)) throw new NormalizedInputError("Gatekeeper returned an invalid unchanged result");
+      if (mode.kind !== "live" || !exact(["kind", "checkpoint"]) || !validCheckpoint(result.checkpoint))
+        throw new NormalizedInputError("Gatekeeper returned an invalid unchanged result");
       return;
     case "exhausted":
       if (mode.kind !== "history" || !exact(["kind"])) throw new NormalizedInputError("Gatekeeper returned an invalid exhausted result");
       return;
     case "failure":
-      if (!exact(["kind", "code", "retryable", "retryAfterSeconds"]) || !FAILURE_CODES.includes(result.code) || !isJsonBoolean(result.retryable)
-        || (result.retryAfterSeconds !== undefined && (!Number.isSafeInteger(result.retryAfterSeconds) || result.retryAfterSeconds < 0))) throw new NormalizedInputError("Gatekeeper returned an invalid failure result");
+      if (
+        !exact(["kind", "code", "retryable", "retryAfterSeconds"]) ||
+        !FAILURE_CODES.includes(result.code) ||
+        !isJsonBoolean(result.retryable) ||
+        (result.retryAfterSeconds !== undefined && (!Number.isSafeInteger(result.retryAfterSeconds) || result.retryAfterSeconds < 0))
+      )
+        throw new NormalizedInputError("Gatekeeper returned an invalid failure result");
       return;
   }
 }
@@ -124,9 +178,19 @@ function schema(value: JsonValue | undefined): boolean {
   if (!isJsonObject(value) || !isJsonArray(value.fields) || value.fields.length > 1024) return false;
   const ids = new Set<string>();
   return value.fields.every((field) => {
-    if (!isJsonObject(field) || !onlyKeys(field, ["id", "name", "type", "nullable", "unit", "display"]) || !text(field.id) || ids.has(field.id) || !text(field.name) || !isJsonBoolean(field.nullable)
-      || !["boolean", "category", "color", "date", "datetime", "geometry", "identifier", "json", "latitude", "longitude", "number", "string", "url"].includes(asString(field.type) ?? "")
-      || !optionalText(field.unit)) return false;
+    if (
+      !isJsonObject(field) ||
+      !onlyKeys(field, ["id", "name", "type", "nullable", "unit", "display"]) ||
+      !text(field.id) ||
+      ids.has(field.id) ||
+      !text(field.name) ||
+      !isJsonBoolean(field.nullable) ||
+      !["boolean", "category", "color", "date", "datetime", "geometry", "identifier", "json", "latitude", "longitude", "number", "string", "url"].includes(
+        asString(field.type) ?? "",
+      ) ||
+      !optionalText(field.unit)
+    )
+      return false;
     ids.add(field.id);
     if (field.display === undefined) return true;
     if (!isJsonObject(field.display) || !onlyKeys(field.display, ["label", "badge"]) || !optionalText(field.display.label)) return false;
@@ -135,36 +199,75 @@ function schema(value: JsonValue | undefined): boolean {
   });
 }
 function product(value: JsonValue): boolean {
-  return isJsonObject(value)
-    && onlyKeys(value, ["productKey", "suggestedSlug", "title", "description", "role", "schema", "kind", "updateMode", "completeness", "watermark"])
-    && text(value.productKey, 256) && isProductSlug(value.suggestedSlug) && text(value.title) && isJsonString(value.description)
-    && ["current-state", "event-log", "reference", "summary", "time-series"].includes(asString(value.role) ?? "")
-    && schema(value.schema) && ["record", "series"].includes(asString(value.kind) ?? "")
-    && (value.kind !== "series" || value.role === "time-series")
-    && ["authoritative-snapshot", "partial-snapshot", "delta", "source-window"].includes(asString(value.updateMode) ?? "")
-    && (value.kind !== "series" || value.updateMode !== "partial-snapshot")
-    && ["complete", "partial", "unknown"].includes(asString(value.completeness) ?? "") && optionalTime(value.watermark);
+  return (
+    isJsonObject(value) &&
+    onlyKeys(value, ["productKey", "suggestedSlug", "title", "description", "role", "schema", "kind", "updateMode", "completeness", "watermark"]) &&
+    text(value.productKey, 256) &&
+    isProductSlug(value.suggestedSlug) &&
+    text(value.title) &&
+    isJsonString(value.description) &&
+    ["current-state", "event-log", "reference", "summary", "time-series"].includes(asString(value.role) ?? "") &&
+    schema(value.schema) &&
+    ["record", "series"].includes(asString(value.kind) ?? "") &&
+    (value.kind !== "series" || value.role === "time-series") &&
+    ["authoritative-snapshot", "partial-snapshot", "delta", "source-window"].includes(asString(value.updateMode) ?? "") &&
+    (value.kind !== "series" || value.updateMode !== "partial-snapshot") &&
+    ["complete", "partial", "unknown"].includes(asString(value.completeness) ?? "") &&
+    optionalTime(value.watermark)
+  );
 }
 function isSourceCheckpoint(value: JsonValue | undefined): boolean {
-  if (!isJsonObject(value) || !onlyKeys(value, ["version", "resourceKey", "configHash", "feedEpoch", "normalizer", "state"]) || value.version !== 2 || !text(value.resourceKey, 1024) || !text(value.configHash, 256) || !text(value.feedEpoch, 256)
-    || !isJsonObject(value.normalizer) || !onlyKeys(value.normalizer, ["id", "version"]) || !text(value.normalizer.id, 256) || !text(value.normalizer.version, 256)
-    || !isJsonObject(value.state) || !bounded(value.state, 16_384)) return false;
+  if (
+    !isJsonObject(value) ||
+    !onlyKeys(value, ["version", "resourceKey", "configHash", "feedEpoch", "normalizer", "state"]) ||
+    value.version !== 2 ||
+    !text(value.resourceKey, 1024) ||
+    !text(value.configHash, 256) ||
+    !text(value.feedEpoch, 256) ||
+    !isJsonObject(value.normalizer) ||
+    !onlyKeys(value.normalizer, ["id", "version"]) ||
+    !text(value.normalizer.id, 256) ||
+    !text(value.normalizer.version, 256) ||
+    !isJsonObject(value.state) ||
+    !bounded(value.state, 16_384)
+  )
+    return false;
   return boundedState(value.state);
 }
 function finalization(value: JsonValue): boolean {
-  return isJsonObject(value) && onlyKeys(value, ["productKey", "schema", "watermark", "completeness"]) && text(value.productKey, 256)
-    && (value.schema === undefined || schema(value.schema)) && optionalTime(value.watermark)
-    && (value.completeness === undefined || ["complete", "partial", "unknown"].includes(asString(value.completeness) ?? ""));
+  return (
+    isJsonObject(value) &&
+    onlyKeys(value, ["productKey", "schema", "watermark", "completeness"]) &&
+    text(value.productKey, 256) &&
+    (value.schema === undefined || schema(value.schema)) &&
+    optionalTime(value.watermark) &&
+    (value.completeness === undefined || ["complete", "partial", "unknown"].includes(asString(value.completeness) ?? ""))
+  );
 }
 function record(value: JsonValue | undefined): boolean {
-  return isJsonObject(value) && onlyKeys(value, ["entityKey", "operation", "payload", "eventTime", "validFrom", "validTo", "sourcePublishedAt", "sourceSequence"])
-    && text(value.entityKey) && isJsonObject(value.payload)
-    && (value.operation === undefined || ["correct", "create", "delete", "retract", "upsert"].includes(asString(value.operation) ?? ""))
-    && optionalTime(value.eventTime) && timeRange(value.validFrom, value.validTo) && optionalTime(value.sourcePublishedAt) && optionalText(value.sourceSequence);
+  return (
+    isJsonObject(value) &&
+    onlyKeys(value, ["entityKey", "operation", "payload", "eventTime", "validFrom", "validTo", "sourcePublishedAt", "sourceSequence"]) &&
+    text(value.entityKey) &&
+    isJsonObject(value.payload) &&
+    (value.operation === undefined || ["correct", "create", "delete", "retract", "upsert"].includes(asString(value.operation) ?? "")) &&
+    optionalTime(value.eventTime) &&
+    timeRange(value.validFrom, value.validTo) &&
+    optionalTime(value.sourcePublishedAt) &&
+    optionalText(value.sourceSequence)
+  );
 }
 function point(value: JsonValue | undefined): boolean {
-  return isJsonObject(value) && onlyKeys(value, ["seriesKey", "eventTime", "value", "unit", "dimensions"]) && text(value.seriesKey) && isTimestamp(value.eventTime) && asNumber(value.value) !== undefined
-    && isJsonString(value.unit) && isJsonObject(value.dimensions) && Object.values(value.dimensions).every(isJsonString);
+  return (
+    isJsonObject(value) &&
+    onlyKeys(value, ["seriesKey", "eventTime", "value", "unit", "dimensions"]) &&
+    text(value.seriesKey) &&
+    isTimestamp(value.eventTime) &&
+    asNumber(value.value) !== undefined &&
+    isJsonString(value.unit) &&
+    isJsonObject(value.dimensions) &&
+    Object.values(value.dimensions).every(isJsonString)
+  );
 }
 
 function boundedState(value: JsonValue, depth = 0): boolean {
@@ -182,28 +285,47 @@ function boundedState(value: JsonValue, depth = 0): boolean {
  */
 export function isNormalizedFrame(value: JsonObject): boolean {
   if (value.type === "record") return onlyKeys(value, ["type", "productKey", "value"]) && text(value.productKey, 256) && record(value.value);
-  if (value.type === "point") return onlyKeys(value, ["type", "productKey", "value"]) && text(value.productKey, 256) && point(value.value) && Number.isFinite(asNumber(asObjectValue(value.value)));
+  if (value.type === "point")
+    return onlyKeys(value, ["type", "productKey", "value"]) && text(value.productKey, 256) && point(value.value) && Number.isFinite(asNumber(asObjectValue(value.value)));
   if (value.type === "header") {
     const normalizer = isJsonObject(value.normalizer) ? value.normalizer : undefined;
     const provenance = isJsonObject(value.provenance) ? value.provenance : undefined;
-    return onlyKeys(value, ["type", "protocol", "collectionId", "normalizer", "products", "provenance", "completeness", "checkpoint"])
-      && value.protocol === NORMALIZED_PROTOCOL && text(value.collectionId, 200)
-      && isJsonObject(normalizer) && onlyKeys(normalizer, ["id", "version"]) && text(normalizer.id, 256) && text(normalizer.version, 256)
-      && isJsonArray(value.products) && value.products.every(product)
-      && isJsonObject(provenance) && onlyKeys(provenance, ["sourceUrl", "sourcePublishedAt"]) && text(provenance.sourceUrl) && optionalTime(provenance.sourcePublishedAt)
-      && ["complete", "partial", "unknown"].includes(asString(value.completeness) ?? "")
-      && isSourceCheckpoint(value.checkpoint);
+    return (
+      onlyKeys(value, ["type", "protocol", "collectionId", "normalizer", "products", "provenance", "completeness", "checkpoint"]) &&
+      value.protocol === NORMALIZED_PROTOCOL &&
+      text(value.collectionId, 200) &&
+      isJsonObject(normalizer) &&
+      onlyKeys(normalizer, ["id", "version"]) &&
+      text(normalizer.id, 256) &&
+      text(normalizer.version, 256) &&
+      isJsonArray(value.products) &&
+      value.products.every(product) &&
+      isJsonObject(provenance) &&
+      onlyKeys(provenance, ["sourceUrl", "sourcePublishedAt"]) &&
+      text(provenance.sourceUrl) &&
+      optionalTime(provenance.sourcePublishedAt) &&
+      ["complete", "partial", "unknown"].includes(asString(value.completeness) ?? "") &&
+      isSourceCheckpoint(value.checkpoint)
+    );
   }
   if (value.type !== "complete") return false;
   const counts = isJsonObject(value.counts) ? value.counts : undefined;
   const quality = isJsonObject(value.quality) ? value.quality : undefined;
-  return onlyKeys(value, ["type", "counts", "quality", "products", "nextCursor", "exhausted"])
-    && isJsonObject(counts) && onlyKeys(counts, ["records", "points"])
-    && isJsonObject(quality) && onlyKeys(quality, ["acceptedRecords", "rejectedRecords"])
-    && count(counts.records) && count(counts.points) && count(quality.acceptedRecords) && count(quality.rejectedRecords)
-    && (value.products === undefined || (isJsonArray(value.products) && value.products.length <= 256 && value.products.every(finalization)))
-    && (value.nextCursor === undefined || isHistoryCursor(value.nextCursor)) && (value.exhausted === undefined || isJsonBoolean(value.exhausted))
-    && !(value.nextCursor !== undefined && value.exhausted === true);
+  return (
+    onlyKeys(value, ["type", "counts", "quality", "products", "nextCursor", "exhausted"]) &&
+    isJsonObject(counts) &&
+    onlyKeys(counts, ["records", "points"]) &&
+    isJsonObject(quality) &&
+    onlyKeys(quality, ["acceptedRecords", "rejectedRecords"]) &&
+    count(counts.records) &&
+    count(counts.points) &&
+    count(quality.acceptedRecords) &&
+    count(quality.rejectedRecords) &&
+    (value.products === undefined || (isJsonArray(value.products) && value.products.length <= 256 && value.products.every(finalization))) &&
+    (value.nextCursor === undefined || isHistoryCursor(value.nextCursor)) &&
+    (value.exhausted === undefined || isJsonBoolean(value.exhausted)) &&
+    !(value.nextCursor !== undefined && value.exhausted === true)
+  );
 }
 
 function asObjectValue(value: JsonValue | undefined): JsonValue | undefined {

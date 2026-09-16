@@ -25,14 +25,17 @@ export function sqliteStorage(database: DatabaseSync): SqlStorage {
         statement = database.prepare(query);
         statements.set(query, statement);
       }
-      const rows = statement.all(...bindings.map((value) => value instanceof ArrayBuffer ? new Uint8Array(value) : value));
+      const rows = statement.all(...bindings.map((value) => (value instanceof ArrayBuffer ? new Uint8Array(value) : value)));
       // SAFETY: SQL and its row type are supplied together by each store, as with SqlStorage.exec<T>.
       const result = rows as T[];
       const writes = changes.get()?.count ?? 0;
       const columns = statement.columns().map((column) => column.name);
       return {
         toArray: () => result,
-        one: () => { if (result.length !== 1) throw new Error("Expected one row"); return result[0]!; },
+        one: () => {
+          if (result.length !== 1) throw new Error("Expected one row");
+          return result[0]!;
+        },
         rowsRead: result.length,
         rowsWritten: Number(writes),
         columnNames: columns,

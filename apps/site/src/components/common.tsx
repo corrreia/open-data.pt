@@ -127,7 +127,9 @@ export interface KvItem {
 
 /** Term and value pairs, skipping the ones without a value. */
 export function Kv({ items }: { items: (KvItem | null | false | undefined)[] }) {
-  const shown = items.filter((item): item is KvItem => Boolean(item) && item !== null && item !== false && item !== undefined && item.value !== null && item.value !== undefined && item.value !== "");
+  const shown = items.filter(
+    (item): item is KvItem => Boolean(item) && item !== null && item !== false && item !== undefined && item.value !== null && item.value !== undefined && item.value !== "",
+  );
   return (
     <dl className="grid grid-cols-[minmax(6.5rem,auto)_minmax(0,1fr)] gap-x-4 gap-y-2 text-sm">
       {shown.map((item) => (

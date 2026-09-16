@@ -1,6 +1,16 @@
 import {
-  GatekeeperError, invalidResponse, readBoundedResponse, responseValidator, retryAfterSeconds, sourceValidator,
-  type FeedKindDescription, type JsonObject, type SourceBody, type SourceConfig, type SourceFetch, type SourceValidator,
+  GatekeeperError,
+  invalidResponse,
+  readBoundedResponse,
+  responseValidator,
+  retryAfterSeconds,
+  sourceValidator,
+  type FeedKindDescription,
+  type JsonObject,
+  type SourceBody,
+  type SourceConfig,
+  type SourceFetch,
+  type SourceValidator,
 } from "../../index";
 import { limitBytes } from "../../stream";
 
@@ -10,12 +20,42 @@ const DOCUMENT_PATH = "/webutils/docs/doc.txt";
 export const PARLIAMENT_HTML_BYTES = 1024 * 1024;
 
 export const PARLIAMENT_FEEDS = {
-  members: { kind: "members", title: "Parliamentary mandates and legislature reference", description: "Published mandates, including historical statuses within the selected legislature, constituencies, groups and sessions.", semantics: { domainSubject: "reference", defaultProductRole: "reference" } },
-  careers: { kind: "careers", title: "Parliamentary professional profiles", description: "Professional qualifications and career information, excluding birth dates, sex and private contact details.", semantics: { domainSubject: "reference", defaultProductRole: "reference" } },
-  petitions: { kind: "petitions", title: "Parliamentary petitions", description: "Petition subjects, processing status, signature counts, dates and official metadata.", semantics: { domainSubject: "event", defaultProductRole: "event-log" } },
-  diplomas: { kind: "diplomas", title: "Approved parliamentary legislation", description: "Approved legislation metadata and its stated publication dates and official text links.", semantics: { domainSubject: "document", defaultProductRole: "event-log" } },
-  activities: { kind: "activities", title: "Parliamentary activities", description: "Hearings, audiences, debates, visits and events in the selected legislature.", semantics: { domainSubject: "event", defaultProductRole: "event-log" } },
-  committees: { kind: "committees", title: "Parliamentary committees", description: "Committee reference, published membership histories and meeting metadata.", semantics: { domainSubject: "reference", defaultProductRole: "reference" } },
+  members: {
+    kind: "members",
+    title: "Parliamentary mandates and legislature reference",
+    description: "Published mandates, including historical statuses within the selected legislature, constituencies, groups and sessions.",
+    semantics: { domainSubject: "reference", defaultProductRole: "reference" },
+  },
+  careers: {
+    kind: "careers",
+    title: "Parliamentary professional profiles",
+    description: "Professional qualifications and career information, excluding birth dates, sex and private contact details.",
+    semantics: { domainSubject: "reference", defaultProductRole: "reference" },
+  },
+  petitions: {
+    kind: "petitions",
+    title: "Parliamentary petitions",
+    description: "Petition subjects, processing status, signature counts, dates and official metadata.",
+    semantics: { domainSubject: "event", defaultProductRole: "event-log" },
+  },
+  diplomas: {
+    kind: "diplomas",
+    title: "Approved parliamentary legislation",
+    description: "Approved legislation metadata and its stated publication dates and official text links.",
+    semantics: { domainSubject: "document", defaultProductRole: "event-log" },
+  },
+  activities: {
+    kind: "activities",
+    title: "Parliamentary activities",
+    description: "Hearings, audiences, debates, visits and events in the selected legislature.",
+    semantics: { domainSubject: "event", defaultProductRole: "event-log" },
+  },
+  committees: {
+    kind: "committees",
+    title: "Parliamentary committees",
+    description: "Committee reference, published membership histories and meeting metadata.",
+    semantics: { domainSubject: "reference", defaultProductRole: "reference" },
+  },
 } as const satisfies Record<string, FeedKindDescription>;
 
 export type ParliamentFeed = keyof typeof PARLIAMENT_FEEDS;
@@ -54,7 +94,8 @@ export function validateParliamentFeedConfig(config: SourceConfig): SourceConfig
   if (!legislature || !["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII"].includes(legislature)) {
     throw new GatekeeperError("Parliament requires an explicit legislature from I to XVII", "invalid-config");
   }
-  if (Object.keys(config).some((key) => key !== "feed" && key !== "legislature")) throw new GatekeeperError("Parliament does not accept source URLs or additional configuration", "invalid-config");
+  if (Object.keys(config).some((key) => key !== "feed" && key !== "legislature"))
+    throw new GatekeeperError("Parliament does not accept source URLs or additional configuration", "invalid-config");
   return { feed, legislature };
 }
 
@@ -67,7 +108,13 @@ export function parliamentDocument(config: SourceConfig): ParliamentDocument {
   if (!isParliamentFeed(validated.feed)) throw new GatekeeperError("Unsupported Parliament feed", "invalid-config");
   const document = DOCUMENTS[validated.feed];
   const legislature = validated.legislature ?? "";
-  return { ...document, feed: validated.feed, legislature, filename: `${document.prefix}${legislature}_json.txt`, pageUrl: `${PAGE_ORIGIN}/Cidadania/Paginas/${document.page}.aspx` };
+  return {
+    ...document,
+    feed: validated.feed,
+    legislature,
+    filename: `${document.prefix}${legislature}_json.txt`,
+    pageUrl: `${PAGE_ORIGIN}/Cidadania/Paginas/${document.page}.aspx`,
+  };
 }
 
 /** Discover fresh encrypted links each time; the file/legislature, never its URL token, is the resource. */
@@ -98,7 +145,10 @@ export async function collectParliamentFeed(config: SourceConfig, state: JsonObj
   const nextState: JsonObject = { resource: document.filename };
   if (validator) nextState.validators = { default: { ...validator } };
   const fetched: SourceBody = {
-    kind: "body", body: limitBytes(response.body, document.sourceBytes), completeness: "complete", state: nextState,
+    kind: "body",
+    body: limitBytes(response.body, document.sourceBytes),
+    completeness: "complete",
+    state: nextState,
     // A durable public directory link is more useful than an expiring encrypted download address.
     provenance: { sourceUrl: document.pageUrl },
   };
@@ -114,10 +164,12 @@ async function htmlPage(url: URL, fetcher: typeof fetch): Promise<string> {
 }
 
 async function request(url: URL, headers: Headers, fetcher: typeof fetch): Promise<Response> {
-  if (![PAGE_ORIGIN, DOCUMENT_ORIGIN].includes(url.origin) || url.username || url.password || url.port) throw new GatekeeperError("Parliament source origin is not allowed", "source-denied");
+  if (![PAGE_ORIGIN, DOCUMENT_ORIGIN].includes(url.origin) || url.username || url.password || url.port)
+    throw new GatekeeperError("Parliament source origin is not allowed", "source-denied");
   let response: Response;
-  try { response = await fetcher(url, { headers, redirect: "manual" }); }
-  catch (error) {
+  try {
+    response = await fetcher(url, { headers, redirect: "manual" });
+  } catch (error) {
     if (error instanceof TypeError) throw new GatekeeperError("Parliament source request failed", "upstream-error");
     throw error;
   }
@@ -131,7 +183,13 @@ async function request(url: URL, headers: Headers, fetcher: typeof fetch): Promi
 export function parliamentDirectoryLink(html: string, document: ParliamentDocument): URL {
   const url = titledLink(html, `Pasta ${document.legislature} Legislatura`, document.pageUrl);
   const expected = new URL(document.pageUrl);
-  if (url.origin !== PAGE_ORIGIN || url.pathname !== expected.pathname || !exactParameters(url, ["t", "Path"]) || !/^[a-f0-9]{1,256}$/i.test(url.searchParams.get("t") ?? "") || !boundedToken(url.searchParams.get("Path"))) {
+  if (
+    url.origin !== PAGE_ORIGIN ||
+    url.pathname !== expected.pathname ||
+    !exactParameters(url, ["t", "Path"]) ||
+    !/^[a-f0-9]{1,256}$/i.test(url.searchParams.get("t") ?? "") ||
+    !boundedToken(url.searchParams.get("Path"))
+  ) {
     throw new GatekeeperError("Parliament directory link is outside the selected public page", "source-denied");
   }
   return url;
@@ -139,7 +197,14 @@ export function parliamentDirectoryLink(html: string, document: ParliamentDocume
 
 export function parliamentDocumentLink(html: string, document: ParliamentDocument): URL {
   const url = titledLink(html, document.filename, document.pageUrl);
-  if (url.origin !== DOCUMENT_ORIGIN || url.pathname !== DOCUMENT_PATH || !exactParameters(url, ["path", "fich", "Inline"]) || url.searchParams.get("fich") !== document.filename || url.searchParams.get("Inline") !== "true" || !boundedToken(url.searchParams.get("path"))) {
+  if (
+    url.origin !== DOCUMENT_ORIGIN ||
+    url.pathname !== DOCUMENT_PATH ||
+    !exactParameters(url, ["path", "fich", "Inline"]) ||
+    url.searchParams.get("fich") !== document.filename ||
+    url.searchParams.get("Inline") !== "true" ||
+    !boundedToken(url.searchParams.get("path"))
+  ) {
     throw new GatekeeperError("Parliament download link does not identify the selected public file", "source-denied");
   }
   return url;
@@ -171,7 +236,11 @@ function titledLink(html: string, title: string, base: string): URL {
     const href = attributes.get("href");
     if (!href || href.length > 20_000) throw invalidResponse("Parliament directory anchor has no bounded href");
     let url: URL;
-    try { url = new URL(href, base); } catch { throw invalidResponse("Parliament directory anchor is not a URL"); }
+    try {
+      url = new URL(href, base);
+    } catch {
+      throw invalidResponse("Parliament directory anchor is not a URL");
+    }
     matches.add(url.toString());
   }
   if (matches.size !== 1) throw invalidResponse(`Parliament public directory did not uniquely identify ${title}`);
@@ -183,11 +252,16 @@ function titledLink(html: string, title: string, base: string): URL {
 function htmlEntities(value: string): string {
   return value.replace(/&(?:amp|quot|apos|lt|gt|#\d+|#x[0-9a-f]+);/gi, (entity) => {
     switch (entity.toLowerCase()) {
-      case "&amp;": return "&";
-      case "&quot;": return '"';
-      case "&apos;": return "'";
-      case "&lt;": return "<";
-      case "&gt;": return ">";
+      case "&amp;":
+        return "&";
+      case "&quot;":
+        return '"';
+      case "&apos;":
+        return "'";
+      case "&lt;":
+        return "<";
+      case "&gt;":
+        return ">";
       default: {
         const hex = entity.slice(0, 3).toLowerCase() === "&#x";
         const code = Number.parseInt(entity.slice(hex ? 3 : 2, -1), hex ? 16 : 10);
@@ -201,4 +275,6 @@ function mergedValidator(headers: Headers, previous: SourceValidator | undefined
   const validator = { ...previous, ...responseValidator(headers) };
   return Object.keys(validator).length ? validator : undefined;
 }
-function upstreamError(response: Response): GatekeeperError { return new GatekeeperError(`Parliament source returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers)); }
+function upstreamError(response: Response): GatekeeperError {
+  return new GatekeeperError(`Parliament source returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+}

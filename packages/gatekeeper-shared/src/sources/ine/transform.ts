@@ -23,25 +23,17 @@ interface ParsedRow {
 // value in a "values" record product.
 const TRANSFORMER = { id: "ine-indicator", version: "3" } as const;
 
-export function transformIneIndicator(
-  bytes: Uint8Array,
-  context: TransformContext,
-): TransformResult {
+export function transformIneIndicator(bytes: Uint8Array, context: TransformContext): TransformResult {
   const document = parseDocument(bytes);
   const meta = singleIndicator(document.meta, "metadata");
   const data = singleIndicator(document.data, "data");
   const expectedIndicator = context.feed.config.indicator;
   const indicator = requiredString(data.IndicadorCod, "IndicadorCod");
   if (expectedIndicator && indicator !== expectedIndicator) {
-    throw invalidResponse(
-      `INE response indicator ${indicator} did not match ${expectedIndicator}`,
-    );
+    throw invalidResponse(`INE response indicator ${indicator} did not match ${expectedIndicator}`);
   }
 
-  const designation =
-    optionalString(data.IndicadorDsg) ??
-    optionalString(meta.IndicadorNome) ??
-    `INE indicator ${indicator}`;
+  const designation = optionalString(data.IndicadorDsg) ?? optionalString(meta.IndicadorNome) ?? `INE indicator ${indicator}`;
   const title = indicatorTitle(designation);
   const unit = optionalString(meta.UnidadeMedida) ?? "unknown";
   const periodDates = readMetadataPeriodDates(meta);
@@ -62,12 +54,7 @@ export function transformIneIndicator(
     const period = normalizePeriod(periodLabel, periodDates);
     if (!period) continue;
     for (const value of rows) {
-      const parsed = parseRow(
-        value,
-        period,
-        dimensionNumbers,
-        unit,
-      );
+      const parsed = parseRow(value, period, dimensionNumbers, unit);
       if (!parsed) continue;
       if (entityKeys.has(parsed.entityKey)) {
         duplicateRows += 1;
@@ -78,16 +65,8 @@ export function transformIneIndicator(
     }
   }
 
-  parsedRows.sort((left, right) =>
-    left.entityKey.localeCompare(right.entityKey),
-  );
-  const points = parsedRows
-    .map(({ point }) => point)
-    .sort(
-      (left, right) =>
-        left.eventTime.localeCompare(right.eventTime) ||
-        left.seriesKey.localeCompare(right.seriesKey),
-    );
+  parsedRows.sort((left, right) => left.entityKey.localeCompare(right.entityKey));
+  const points = parsedRows.map(({ point }) => point).sort((left, right) => left.eventTime.localeCompare(right.eventTime) || left.seriesKey.localeCompare(right.seriesKey));
   const rejectedRecords = inputRows - parsedRows.length;
 
   const seriesSchema = {
@@ -107,8 +86,7 @@ export function transformIneIndicator(
       productKey: "series",
       slug: `${baseSlug}-series`,
       title,
-      description:
-        `${designation}. Measurements grouped into a series for each geography and dimension combination.`,
+      description: `${designation}. Measurements grouped into a series for each geography and dimension combination.`,
       role: "time-series",
       schema: seriesSchema,
       points,
@@ -170,19 +148,14 @@ function parseDocument(bytes: Uint8Array): JsonObject {
   return parsed;
 }
 
-function singleIndicator(
-  value: JsonValue | undefined,
-  resource: string,
-): JsonObject {
+function singleIndicator(value: JsonValue | undefined, resource: string): JsonObject {
   if (!Array.isArray(value) || value.length !== 1 || !isJsonObject(value[0])) {
     throw invalidResponse(`INE ${resource} must contain one indicator`);
   }
   return value[0];
 }
 
-function readMetadataPeriodDates(
-  meta: JsonObject,
-): ReadonlyMap<string, string> {
+function readMetadataPeriodDates(meta: JsonObject): ReadonlyMap<string, string> {
   const periods = new Map<string, string>();
   if (!isJsonObject(meta.Dimensoes) || !Array.isArray(meta.Dimensoes.Categoria_Dim)) {
     return periods;
@@ -203,9 +176,7 @@ function readMetadataPeriodDates(
   return periods;
 }
 
-function collectDimensionNumbers(
-  dataByPeriod: JsonObject,
-): number[] {
+function collectDimensionNumbers(dataByPeriod: JsonObject): number[] {
   const numbers = new Set<number>();
   for (const rows of Object.values(dataByPeriod)) {
     if (!Array.isArray(rows)) continue;
@@ -220,12 +191,7 @@ function collectDimensionNumbers(
   return [...numbers].sort((left, right) => left - right);
 }
 
-function parseRow(
-  value: JsonValue | undefined,
-  period: string,
-  dimensionNumbers: number[],
-  unit: string,
-): ParsedRow | undefined {
+function parseRow(value: JsonValue | undefined, period: string, dimensionNumbers: number[], unit: string): ParsedRow | undefined {
   if (!isJsonObject(value)) return undefined;
   const geocod = optionalString(value.geocod);
   const geodsg = optionalString(value.geodsg);
@@ -256,10 +222,7 @@ function parseRow(
   };
 }
 
-function normalizePeriod(
-  label: string,
-  metadataDates: ReadonlyMap<string, string>,
-): string | undefined {
+function normalizePeriod(label: string, metadataDates: ReadonlyMap<string, string>): string | undefined {
   const trimmed = label.trim();
   const metadataDate = metadataDates.get(normalizeLabel(trimmed));
   if (metadataDate) return metadataDate;
@@ -343,8 +306,5 @@ function requiredString(value: JsonValue | undefined, fieldName: string): string
 }
 
 function optionalString(value: JsonValue | undefined): string | undefined {
-  return isJsonString(value) && value.trim() !== ""
-    ? value.trim()
-    : undefined;
+  return isJsonString(value) && value.trim() !== "" ? value.trim() : undefined;
 }
-

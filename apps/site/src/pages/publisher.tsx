@@ -16,7 +16,8 @@ function PublisherIndex({ publishers }: { publishers: Publisher[] }) {
   return (
     <>
       <PageHead eyebrow="Publishers" title="Who publishes the data">
-        {fmt.int(publishers.length)} institutions and operators, {fmt.int(datasets)} datasets. Each dataset is collected from where its publisher shares it, keeps their licence, and links back to their source.
+        {fmt.int(publishers.length)} institutions and operators, {fmt.int(datasets)} datasets. Each dataset is collected from where its publisher shares it, keeps their licence,
+        and links back to their source.
       </PageHead>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(min(19rem,100%),1fr))] gap-3">
         {publishers.map((publisher) => (
@@ -71,7 +72,18 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
           <LayerCard.Primary>
             <Kv
               items={[
-                { term: "Topics", value: <span className="flex flex-wrap gap-1.5">{topicsOf(publisher).map((topic) => <Badge key={topic} variant="outline">{topic}</Badge>)}</span> },
+                {
+                  term: "Topics",
+                  value: (
+                    <span className="flex flex-wrap gap-1.5">
+                      {topicsOf(publisher).map((topic) => (
+                        <Badge key={topic} variant="outline">
+                          {topic}
+                        </Badge>
+                      ))}
+                    </span>
+                  ),
+                },
                 publisher.hosts.size
                   ? {
                       term: "Published at",
@@ -94,7 +106,12 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
         </LayerCard>
         <div className="grid grid-cols-2 gap-3">
           <StatTile label="Datasets" value={fmt.int(publisher.datasets.length)} note={`${fmt.int(productCount(publisher.datasets))} tables and series`} />
-          <StatTile label="Freshness" value={late === 0 ? "all current" : `${late} late`} tone={late === 0 ? "ok" : "warn"} note={late === 0 ? "every dataset within its update window" : "past their expected update"} />
+          <StatTile
+            label="Freshness"
+            value={late === 0 ? "all current" : `${late} late`}
+            tone={late === 0 ? "ok" : "warn"}
+            note={late === 0 ? "every dataset within its update window" : "past their expected update"}
+          />
           <div className="col-span-2">
             <Button variant="secondary" icon={<HeartbeatIcon />} className="w-full" onClick={() => window.location.assign(`/status/#pub-${publisher.slug}`)}>
               Collection status, day by day
@@ -107,9 +124,11 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
         <h2 id="datasets-title" className="font-display text-2xl text-kumo-strong">
           Datasets
         </h2>
-        {[...publisher.datasets].sort((a, b) => emptyLast(a, b) || a.title.localeCompare(b.title)).map((dataset) => (
-          <DatasetCard key={dataset.feed.id} dataset={dataset} showPublisher={false} />
-        ))}
+        {[...publisher.datasets]
+          .sort((a, b) => emptyLast(a, b) || a.title.localeCompare(b.title))
+          .map((dataset) => (
+            <DatasetCard key={dataset.feed.id} dataset={dataset} showPublisher={false} />
+          ))}
       </section>
     </>
   );

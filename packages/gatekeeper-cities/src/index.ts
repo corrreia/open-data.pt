@@ -25,10 +25,7 @@ import { CITIES_EXAMPLES } from "./examples";
  * One Worker per catalog topic. It holds no parsing: it names its libraries,
  * hands each the vars and secrets it needs, and lists the example feeds it owns.
  */
-export default class CitiesGatekeeper
-  extends WorkerEntrypoint<Env>
-  implements FeedGatekeeper
-{
+export default class CitiesGatekeeper extends WorkerEntrypoint<Env> implements FeedGatekeeper {
   override async fetch(): Promise<Response> {
     return new Response("This Gatekeeper is available through RPC only.", { status: 404 });
   }
@@ -60,9 +57,27 @@ export default class CitiesGatekeeper
   /** The wiring: which library answers for a feed, and what it is given to do it with. */
   private libraries(): GatekeeperLibraries {
     return new Map<string, GatekeeperLibrary>([
-      ["arcgis", { kinds: Object.values(ARCGIS_FEEDS), collector: (config: SourceConfig) => arcgisCollector({ config, hosts: this.env.ARCGIS_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }) }],
-      ["ckan", { kinds: Object.values(CKAN_FEEDS), collector: (config: SourceConfig) => ckanCollector({ config, hosts: this.env.CKAN_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }) }],
-      ["udata", { kinds: Object.values(UDATA_FEEDS), collector: (config: SourceConfig) => udataCollector({ config, hosts: this.env.UDATA_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }) }],
+      [
+        "arcgis",
+        {
+          kinds: Object.values(ARCGIS_FEEDS),
+          collector: (config: SourceConfig) => arcgisCollector({ config, hosts: this.env.ARCGIS_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }),
+        },
+      ],
+      [
+        "ckan",
+        {
+          kinds: Object.values(CKAN_FEEDS),
+          collector: (config: SourceConfig) => ckanCollector({ config, hosts: this.env.CKAN_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }),
+        },
+      ],
+      [
+        "udata",
+        {
+          kinds: Object.values(UDATA_FEEDS),
+          collector: (config: SourceConfig) => udataCollector({ config, hosts: this.env.UDATA_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }),
+        },
+      ],
     ]);
   }
 }

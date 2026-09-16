@@ -19,11 +19,16 @@ export class CollectionDeadline {
     }
     let abort: () => void = () => undefined;
     try {
-      return await Promise.race([promise, new Promise<never>((_, reject) => {
-        abort = () => reject(signal.reason);
-        signal.addEventListener("abort", abort, { once: true });
-      })]);
-    } finally { signal.removeEventListener("abort", abort); }
+      return await Promise.race([
+        promise,
+        new Promise<never>((_, reject) => {
+          abort = () => reject(signal.reason);
+          signal.addEventListener("abort", abort, { once: true });
+        }),
+      ]);
+    } finally {
+      signal.removeEventListener("abort", abort);
+    }
   }
   /**
    * Call `release` once when the deadline passes, for example to cancel a
@@ -45,5 +50,7 @@ export class CollectionDeadline {
     if (Date.now() >= this.expiresAt && !signal.aborted) this.controller.abort(new Error("Collection deadline exceeded"));
     if (signal.aborted) throw signal.reason;
   }
-  close(): void { clearTimeout(this.timer); }
+  close(): void {
+    clearTimeout(this.timer);
+  }
 }

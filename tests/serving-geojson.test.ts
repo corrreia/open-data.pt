@@ -11,21 +11,55 @@ import { jsonAs } from "./support";
 async function serving(schemaFields: Array<{ name: string; type: FieldType }>, records: JsonObject[]) {
   const snapshots = new MemorySnapshots();
   const objects = new ObjectStore(snapshots);
-  const rows = records.map((record) => ({ key: String(record.id), json: JSON.stringify({ ...record, _hash: "h", _time: { validFrom: record.validFrom ?? null, validTo: record.validTo ?? null } }) })).sort((a, b) => compareKeys(a.key, b.key));
-  const chunks = await buildChunks(rows, { prefix: keys.prefix("feed_1", "places"), known: new Set(), put: async (key, body) => { await objects.writeText(key, body); } });
+  const rows = records
+    .map((record) => ({ key: String(record.id), json: JSON.stringify({ ...record, _hash: "h", _time: { validFrom: record.validFrom ?? null, validTo: record.validTo ?? null } }) }))
+    .sort((a, b) => compareKeys(a.key, b.key));
+  const chunks = await buildChunks(rows, {
+    prefix: keys.prefix("feed_1", "places"),
+    known: new Set(),
+    put: async (key, body) => {
+      await objects.writeText(key, body);
+    },
+  });
   const product: ProductDetail = {
-    id: "prd_1", slug: "places", feedId: "feed_1", productKey: "places", title: "Places", description: "test", role: "reference", kind: "record",
-    schema: { fields: schemaFields.map((field) => ({ id: field.name, nullable: true, ...field })) }, updateMode: "authoritative-snapshot", completeness: "complete",
-    version: 1, status: "current", currentAcquisitionId: "acq_1", watermark: null, rowCount: rows.length, chunks,
-    changesKey: null, seriesKey: null, seriesChangesKey: null, updatedAt: "2026-09-10T00:00:00.000Z", createdAt: "2026-09-10T00:00:00.000Z",
-    stale: false, exposeHistory: true, historyMode: "changes", licence: null, attribution: null, staleAfterSeconds: 3600, cadenceSeconds: 3600,
+    id: "prd_1",
+    slug: "places",
+    feedId: "feed_1",
+    productKey: "places",
+    title: "Places",
+    description: "test",
+    role: "reference",
+    kind: "record",
+    schema: { fields: schemaFields.map((field) => ({ id: field.name, nullable: true, ...field })) },
+    updateMode: "authoritative-snapshot",
+    completeness: "complete",
+    version: 1,
+    status: "current",
+    currentAcquisitionId: "acq_1",
+    watermark: null,
+    rowCount: rows.length,
+    chunks,
+    changesKey: null,
+    seriesKey: null,
+    seriesChangesKey: null,
+    updatedAt: "2026-09-10T00:00:00.000Z",
+    createdAt: "2026-09-10T00:00:00.000Z",
+    stale: false,
+    exposeHistory: true,
+    historyMode: "changes",
+    licence: null,
+    attribution: null,
+    staleAfterSeconds: 3600,
+    cadenceSeconds: 3600,
   };
   const service = new Serving({ listProducts: async () => [product], getProduct: async (slug) => (slug === "places" ? product : undefined) }, objects);
   return { serving: service, product, chunks };
 }
 
 async function geojson(service: Serving, product: ProductDetail, filters?: RowFilters) {
-  return jsonAs<{ type: string; features: Array<{ id: string; geometry: JsonObject; properties: JsonObject }>; numberMatched?: number; numberReturned: number }>(await new Response(await service.geoJson(product, filters)).text());
+  return jsonAs<{ type: string; features: Array<{ id: string; geometry: JsonObject; properties: JsonObject }>; numberMatched?: number; numberReturned: number }>(
+    await new Response(await service.geoJson(product, filters)).text(),
+  );
 }
 
 async function allRecords(service: Serving, product: ProductDetail, filters?: RowFilters) {
@@ -43,18 +77,54 @@ describe("a product is looked up once, in the Registry", () => {
 
 describe("GeoJSON is streamed chunk by chunk from the chunk list", () => {
   it("uses a geometry field as the feature geometry and keeps the centroid as a property", async () => {
-    const { serving: service, product } = await serving([{ name: "geometry", type: "geometry" }, { name: "lat", type: "latitude" }, { name: "lon", type: "longitude" }], [
-      { id: "a", geometry: { type: "LineString", coordinates: [[-9.1, 38.7], [-9.2, 38.8]] }, lat: 38.75, lon: -9.15 },
-    ]);
+    const { serving: service, product } = await serving(
+      [
+        { name: "geometry", type: "geometry" },
+        { name: "lat", type: "latitude" },
+        { name: "lon", type: "longitude" },
+      ],
+      [
+        {
+          id: "a",
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [-9.1, 38.7],
+              [-9.2, 38.8],
+            ],
+          },
+          lat: 38.75,
+          lon: -9.15,
+        },
+      ],
+    );
     const body = await geojson(service, product);
-    expect(body.features[0]?.geometry).toEqual({ type: "LineString", coordinates: [[-9.1, 38.7], [-9.2, 38.8]] });
+    expect(body.features[0]?.geometry).toEqual({
+      type: "LineString",
+      coordinates: [
+        [-9.1, 38.7],
+        [-9.2, 38.8],
+      ],
+    });
     expect(body.features[0]?.properties).toMatchObject({ lat: 38.75, lon: -9.15 });
     expect(body.features[0]?.properties).not.toHaveProperty("_hash");
   });
 
   it("builds points from coordinates, skips rows without them, and joins many chunks into one valid collection", async () => {
-    const records = Array.from({ length: 12_000 }, (_, index) => (index % 1000 === 0 ? { id: `p${index}`, name: "no coordinates" } : { id: `p${index}`, lat: 38 + index / 100_000, lon: -9 }));
-    const { serving: service, product, chunks } = await serving([{ name: "lat", type: "latitude" }, { name: "lon", type: "longitude" }], records);
+    const records = Array.from({ length: 12_000 }, (_, index) =>
+      index % 1000 === 0 ? { id: `p${index}`, name: "no coordinates" } : { id: `p${index}`, lat: 38 + index / 100_000, lon: -9 },
+    );
+    const {
+      serving: service,
+      product,
+      chunks,
+    } = await serving(
+      [
+        { name: "lat", type: "latitude" },
+        { name: "lon", type: "longitude" },
+      ],
+      records,
+    );
     expect(chunks.length).toBeGreaterThan(2);
     const body = await geojson(service, product);
     expect(body.numberMatched).toBe(12_000);
@@ -76,7 +146,11 @@ describe("record pages follow the chunk list across chunk boundaries", () => {
   });
 
   it("returns every record exactly once through cursors, and filters by validity", async () => {
-    const records = Array.from({ length: 9_000 }, (_, index) => ({ id: `r${String(index).padStart(5, "0")}`, n: index, validFrom: index % 2 === 0 ? "2026-01-01T00:00:00.000Z" : "2027-01-01T00:00:00.000Z" }));
+    const records = Array.from({ length: 9_000 }, (_, index) => ({
+      id: `r${String(index).padStart(5, "0")}`,
+      n: index,
+      validFrom: index % 2 === 0 ? "2026-01-01T00:00:00.000Z" : "2027-01-01T00:00:00.000Z",
+    }));
     const { serving: service, product } = await serving([{ name: "n", type: "number" }], records);
     const seen: string[] = [];
     let cursor: string | undefined;
@@ -95,16 +169,35 @@ describe("record pages follow the chunk list across chunk boundaries", () => {
 
 describe("record filters are checked against the schema and applied while reading chunks", () => {
   const fields: Array<{ name: string; type: FieldType }> = [
-    { name: "name", type: "string" }, { name: "kind", type: "category" }, { name: "n", type: "number" }, { name: "lat", type: "latitude" }, { name: "lon", type: "longitude" },
+    { name: "name", type: "string" },
+    { name: "kind", type: "category" },
+    { name: "n", type: "number" },
+    { name: "lat", type: "latitude" },
+    { name: "lon", type: "longitude" },
   ];
-  const records = Array.from({ length: 30 }, (_, index) => ({ id: `r${String(index).padStart(2, "0")}`, name: `stop ${index}`, kind: index % 3 === 0 ? "bus" : "tram", n: index, lat: 38 + index / 100, lon: -9 }));
+  const records = Array.from({ length: 30 }, (_, index) => ({
+    id: `r${String(index).padStart(2, "0")}`,
+    name: `stop ${index}`,
+    kind: index % 3 === 0 ? "bus" : "tram",
+    n: index,
+    lat: 38 + index / 100,
+    lon: -9,
+  }));
 
   it("matches where filters on category and string fields, all of them together", async () => {
     const { serving: service, product } = await serving(fields, records);
     const buses = await service.records(product, { limit: 50, filters: { where: [{ field: "kind", value: "bus" }] } });
     expect(buses.data).toHaveLength(10);
     expect(buses.data.every((row) => row.kind === "bus")).toBe(true);
-    const one = await service.records(product, { limit: 50, filters: { where: [{ field: "kind", value: "bus" }, { field: "name", value: "stop 3" }] } });
+    const one = await service.records(product, {
+      limit: 50,
+      filters: {
+        where: [
+          { field: "kind", value: "bus" },
+          { field: "name", value: "stop 3" },
+        ],
+      },
+    });
     expect(one.data.map((row) => row.id)).toEqual(["r03"]);
   });
 

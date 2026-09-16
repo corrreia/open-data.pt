@@ -1,8 +1,15 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
-  isJsonObject, libraryConfig, parseJson, toByteStream,
-  type JsonObject, type JsonValue, type NormalizedRow, type SourceConfig, type SourceFetch,
+  isJsonObject,
+  libraryConfig,
+  parseJson,
+  toByteStream,
+  type JsonObject,
+  type JsonValue,
+  type NormalizedRow,
+  type SourceConfig,
+  type SourceFetch,
 } from "../packages/gatekeeper-shared/src/index";
 import { OPENDATASOFT_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/opendatasoft/examples";
 import { CATALOG_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/opendatasoft/catalog-examples";
@@ -29,19 +36,34 @@ function capture(records: JsonObject[], fields: JsonObject[]): JsonObject {
 async function transform(config: SourceConfig, document: JsonObject, observedAt = "2026-09-16T00:00:00Z", chunkSize = 97) {
   const bytes = new TextEncoder().encode(JSON.stringify(document));
   let offset = 0;
-  const body = new ReadableStream<Uint8Array>({ pull(controller) {
-    if (offset >= bytes.length) { controller.close(); return; }
-    controller.enqueue(bytes.slice(offset, offset + chunkSize)); offset += chunkSize;
-  } });
+  const body = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      if (offset >= bytes.length) {
+        controller.close();
+        return;
+      }
+      controller.enqueue(bytes.slice(offset, offset + chunkSize));
+      offset += chunkSize;
+    },
+  });
   const result = await new OpendatasoftTransformer().transform(body, {
-    feed: { slug: "sample-feed", title: "Sample", description: "Only the declared source scope", config, semantics: { domainSubject: "observation", defaultProductRole: "time-series" } }, observedAt,
+    feed: {
+      slug: "sample-feed",
+      title: "Sample",
+      description: "Only the declared source scope",
+      config,
+      semantics: { domainSubject: "observation", defaultProductRole: "time-series" },
+    },
+    observedAt,
   });
   const rows: NormalizedRow[] = [];
   for await (const row of result.rows) rows.push(row);
   return { products: result.products, rows, summary: result.finish() };
 }
 
-function field(name: string, type = "text"): JsonObject { return { name, type, annotations: {} }; }
+function field(name: string, type = "text"): JsonObject {
+  return { name, type, annotations: {} };
+}
 
 async function body(fetched: SourceFetch): Promise<JsonValue> {
   if (fetched.kind !== "body") throw new Error("Expected body");
@@ -94,7 +116,10 @@ describe("Opendatasoft catalog expansion", () => {
   });
 
   it("uses source year/month and Portuguese quarter parts, independently of poll time and chunk size", async () => {
-    const document = capture([{ year: "2026", month: "9", quarter: "Terceiro", code: "01", value: 5 }], [field("year"), field("month"), field("quarter"), field("code"), field("value", "int")]);
+    const document = capture(
+      [{ year: "2026", month: "9", quarter: "Terceiro", code: "01", value: 5 }],
+      [field("year"), field("month"), field("quarter"), field("code"), field("value", "int")],
+    );
     const config = { ...BASE, timeField: "year", monthField: "month", dimensions: "code", series: "value", units: "value=count" };
     const first = await transform(config, document, "2030-01-01T00:00:00Z", 1);
     const second = await transform(config, document, "2040-01-01T00:00:00Z", 23);
@@ -106,7 +131,13 @@ describe("Opendatasoft catalog expansion", () => {
   });
 
   it("rejects conflicting unlabelled series revisions instead of silently choosing the first", async () => {
-    const document = capture([{ date: "2026-05", code: "1", energy: 5 }, { date: "2026-05", code: "1", energy: 6 }], [field("date", "date"), field("code"), field("energy", "double")]);
+    const document = capture(
+      [
+        { date: "2026-05", code: "1", energy: 5 },
+        { date: "2026-05", code: "1", energy: 6 },
+      ],
+      [field("date", "date"), field("code"), field("energy", "double")],
+    );
     await expect(transform({ ...BASE, timeField: "date", dimensions: "code", series: "energy" }, document)).rejects.toThrow("revision order is unknown");
     const example = CATALOG_EXAMPLES.find((item) => item.slug === "sns-lvt-hospital-morbidity-mortality-feed")!;
     expect(example.config.series).toBeUndefined();
@@ -121,18 +152,33 @@ describe("Opendatasoft catalog expansion", () => {
     const second = await transform(config, capture([{ date: "2026-09-01", district: "1", id: "20", value: 11 }], fields));
     expect(first.rows[0]?.record?.entityKey).toBe(second.rows[0]?.record?.entityKey);
     expect(first.products[0]?.updateMode).toBe("source-window");
-    const missing = await transform(config, capture([{ date: "2026-09-01", district: "1", id: null, value: 10 }, { date: null, district: "1", id: "20", value: 11 }], fields));
+    const missing = await transform(
+      config,
+      capture(
+        [
+          { date: "2026-09-01", district: "1", id: null, value: 10 },
+          { date: null, district: "1", id: "20", value: 11 },
+        ],
+        fields,
+      ),
+    );
     expect(missing.rows).toHaveLength(0);
     expect(missing.summary.quality.rejectedRecords).toBe(2);
   });
 
   it("rejects malformed explicit field, dimension and reporting-window options", () => {
     for (const options of [
-      { timeField: "date;drop" }, { idFields: "id,id" }, { dimensions: "id;drop" },
-      { units: "x=kWh\nignored" }, { windowPeriods: "0", period: "month", timeField: "date" },
-      { windowPeriods: "367", period: "month", timeField: "date" }, { windowPeriods: "2", period: "month" },
-      { monthField: "month" }, { timeField: "year", monthField: "month", quarterField: "quarter" },
-    ]) expect(() => validateOpendatasoftFeedConfig({ ...BASE, ...options }, HOSTS)).toThrow();
+      { timeField: "date;drop" },
+      { idFields: "id,id" },
+      { dimensions: "id;drop" },
+      { units: "x=kWh\nignored" },
+      { windowPeriods: "0", period: "month", timeField: "date" },
+      { windowPeriods: "367", period: "month", timeField: "date" },
+      { windowPeriods: "2", period: "month" },
+      { monthField: "month" },
+      { timeField: "year", monthField: "month", quarterField: "quarter" },
+    ])
+      expect(() => validateOpendatasoftFeedConfig({ ...BASE, ...options }, HOSTS)).toThrow();
     expect(validateOpendatasoftFeedConfig({ ...BASE, dimensions: "", where: "region = 'Região de Saúde LVT'" }, HOSTS).dimensions).toBe("");
   });
 });
@@ -142,11 +188,15 @@ describe("source-side Opendatasoft bounds", () => {
     const document = capture([], [field("date", "date"), field("code"), field("energy", "double")]);
     const seen: URL[] = [];
     const fetcher: typeof fetch = async (input) => {
-      const url = new URL(String(input)); seen.push(url);
+      const url = new URL(String(input));
+      seen.push(url);
       if (seen.length === 1) return Response.json(document.dataset);
       if (seen.length === 2) return Response.json({ total_count: 1000, results: [{ date: "2023-12" }] });
       if (seen.length === 3) return Response.json({ total_count: 1, results: [{ date: "2023-12", code: "1000", energy: 2 }] });
-      return Response.json([{ date: "2023-12", code: "1000", energy: 2 }, { date: "2023-11", code: "4000", energy: 3 }]);
+      return Response.json([
+        { date: "2023-12", code: "1000", energy: 2 },
+        { date: "2023-11", code: "4000", energy: 3 },
+      ]);
     };
     const config = { ...BASE, timeField: "date", period: "month", windowPeriods: "2", select: "date,code,sum(energy) as energy", groupBy: "date,code", orderBy: "date DESC,code" };
     const fetched = await new OpendatasoftSource(HOSTS, fetcher).collect(config);
@@ -165,7 +215,11 @@ describe("source-side Opendatasoft bounds", () => {
       request += 1;
       if (request === 1) return Response.json(document.dataset);
       if (request === 2) return Response.json({ total_count: 1, results: [{ code: "a", energy: 1 }] });
-      return Response.json([{ code: "a", energy: 1 }, { code: "b", energy: 2 }, { code: "c", energy: 3 }]);
+      return Response.json([
+        { code: "a", energy: 1 },
+        { code: "b", energy: 2 },
+        { code: "c", energy: 3 },
+      ]);
     };
     const fetched = await new OpendatasoftSource(HOSTS, fetcher).collect({ ...BASE, groupBy: "code", select: "code,sum(energy) as energy", limit: "2" });
     await expect(body(fetched)).rejects.toThrow("grouped scope exceeds 2 rows");
@@ -179,7 +233,9 @@ describe("source-side Opendatasoft bounds", () => {
       if (request === 1) return Response.json(document.dataset);
       return Response.json({ total_count: 1000, results: [{ date: "2026-09" }] });
     };
-    await expect(new OpendatasoftSource(HOSTS, fetcher).collect({ ...BASE, timeField: "date", period: "month", windowPeriods: "2" })).rejects.toThrow("reporting window exceeds 100 rows");
+    await expect(new OpendatasoftSource(HOSTS, fetcher).collect({ ...BASE, timeField: "date", period: "month", windowPeriods: "2" })).rejects.toThrow(
+      "reporting window exceeds 100 rows",
+    );
   });
 
   for (const type of ["text", "date"]) {

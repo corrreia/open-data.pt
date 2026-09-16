@@ -10,21 +10,58 @@ import { jsonBody } from "./support";
 const ORIGIN = "https://open-data.pt";
 const BROWSER = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
 
-const FUEL_FEED: JsonObject = { id: "feed_fuel", slug: "fuel", title: "Fuel prices", description: "Prices at every station.", publisher: "Direção-Geral de Energia e Geologia", topics: ["energy"], format: "own-api", cadenceSeconds: 900, enabled: true, staleAfterSeconds: 3600, sourceUrl: "https://precoscombustiveis.dgeg.gov.pt/" };
-const POWER_FEED: JsonObject = { id: "feed_power", slug: "power", title: "Electricity consumption", description: "National consumption.", publisher: "REN", topics: ["energy"], format: "own-api", cadenceSeconds: 3600, enabled: true, staleAfterSeconds: 7200 };
+const FUEL_FEED: JsonObject = {
+  id: "feed_fuel",
+  slug: "fuel",
+  title: "Fuel prices",
+  description: "Prices at every station.",
+  publisher: "Direção-Geral de Energia e Geologia",
+  topics: ["energy"],
+  format: "own-api",
+  cadenceSeconds: 900,
+  enabled: true,
+  staleAfterSeconds: 3600,
+  sourceUrl: "https://precoscombustiveis.dgeg.gov.pt/",
+};
+const POWER_FEED: JsonObject = {
+  id: "feed_power",
+  slug: "power",
+  title: "Electricity consumption",
+  description: "National consumption.",
+  publisher: "REN",
+  topics: ["energy"],
+  format: "own-api",
+  cadenceSeconds: 3600,
+  enabled: true,
+  staleAfterSeconds: 7200,
+};
 const FUEL: JsonObject = {
   slug: "fuel-stations",
   title: "Station prices",
   feedId: "feed_fuel",
   role: "current-state",
-  schema: { fields: [{ id: "station", name: "Station", type: "string" }, { id: "price", name: "Price", type: "number", unit: "EUR/l" }] },
+  schema: {
+    fields: [
+      { id: "station", name: "Station", type: "string" },
+      { id: "price", name: "Price", type: "number", unit: "EUR/l" },
+    ],
+  },
   rowCount: 2,
   updatedAt: "2026-09-15T10:00:00.000Z",
   cadenceSeconds: 900,
   licence: "CC-BY-4.0",
   attribution: "DGEG",
 };
-const POWER: JsonObject = { slug: "power-consumption", title: "Electricity consumption", feedId: "feed_power", role: "time-series", schema: { fields: [{ id: "value", name: "Value", type: "number", unit: "MWh" }] }, rowCount: 48, updatedAt: "2026-09-15T09:00:00.000Z", cadenceSeconds: 3600 };
+const POWER: JsonObject = {
+  slug: "power-consumption",
+  title: "Electricity consumption",
+  feedId: "feed_power",
+  role: "time-series",
+  schema: { fields: [{ id: "value", name: "Value", type: "number", unit: "MWh" }] },
+  rowCount: 48,
+  updatedAt: "2026-09-15T09:00:00.000Z",
+  cadenceSeconds: 3600,
+};
 
 const API = new Map<string, JsonValue>([
   ["/api/products", { data: [FUEL, POWER] }],
@@ -153,7 +190,13 @@ describe("agent discovery", () => {
     const skill = readFileSync(`apps/site/public${SKILL_PATH}`);
     expect(index.$schema).toBe("https://schemas.agentskills.io/discovery/0.2.0/schema.json");
     expect(index.skills).toEqual([
-      { name: "open-data-pt", type: "skill-md", description: expect.stringContaining("Portuguese public data"), url: SKILL_PATH, digest: `sha256:${createHash("sha256").update(skill).digest("hex")}` },
+      {
+        name: "open-data-pt",
+        type: "skill-md",
+        description: expect.stringContaining("Portuguese public data"),
+        url: SKILL_PATH,
+        digest: `sha256:${createHash("sha256").update(skill).digest("hex")}`,
+      },
     ]);
     expect(skill.toString("utf8")).toContain(`\ndescription: ${index.skills[0]?.description}\n`);
     expect(skill.toString("utf8")).toMatch(/^---\nname: open-data-pt\n/);
@@ -183,7 +226,14 @@ describe("agent discovery", () => {
     expect(html.headers.get("Content-Type")).toBe("text/html");
     expect(html.headers.get("Vary")).toBe("Accept");
     const links = html.headers.get("Link") ?? "";
-    for (const relation of ['</>; rel="alternate"; type="text/markdown"', '</.well-known/api-catalog>; rel="api-catalog"', 'rel="service-desc"', 'rel="service-doc"', 'rel="describedby"']) expect(links).toContain(relation);
+    for (const relation of [
+      '</>; rel="alternate"; type="text/markdown"',
+      '</.well-known/api-catalog>; rel="api-catalog"',
+      'rel="service-desc"',
+      'rel="service-doc"',
+      'rel="describedby"',
+    ])
+      expect(links).toContain(relation);
 
     const script = await get("/assets/page.js", { Accept: "text/markdown" });
     expect(script.status).toBe(404);

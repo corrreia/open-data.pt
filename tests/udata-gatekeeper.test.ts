@@ -10,14 +10,7 @@ import {
   type JsonObject,
   libraryConfig,
 } from "@open-data-pt/gatekeeper-shared";
-import {
-  UDATA_EXAMPLES,
-  UdataSource,
-  chooseTransformer,
-  resolveUdataFeed,
-  udataCollector,
-  validateUdataFeedConfig,
-} from "../packages/gatekeeper-shared/src/formats/udata";
+import { UDATA_EXAMPLES, UdataSource, chooseTransformer, resolveUdataFeed, udataCollector, validateUdataFeedConfig } from "../packages/gatekeeper-shared/src/formats/udata";
 
 const payload = {
   id: "dataset-1",
@@ -69,11 +62,14 @@ async function request(overrides: Partial<CollectionRequest> = {}): Promise<Coll
 
 async function frames(stream: ReadableStream<Uint8Array>): Promise<JsonObject[]> {
   const text = await new Response(stream).text();
-  return text.split("\n").filter((line) => line !== "").map((line) => {
-    const value = parseJson(line);
-    if (!isJsonObject(value)) throw new Error("Every frame must be an object");
-    return value;
-  });
+  return text
+    .split("\n")
+    .filter((line) => line !== "")
+    .map((line) => {
+      const value = parseJson(line);
+      if (!isJsonObject(value)) throw new Error("Every frame must be an object");
+      return value;
+    });
 }
 
 describe("UdataSource", () => {
@@ -88,10 +84,7 @@ describe("UdataSource", () => {
       );
     const source = new UdataSource(new Set(["dados.gov.pt"]), fetcher);
 
-    const fetched = await source.fetchDistribution(
-      { baseUrl: "https://dados.gov.pt", dataset: "population" },
-      "resource-1",
-    );
+    const fetched = await source.fetchDistribution({ baseUrl: "https://dados.gov.pt", dataset: "population" }, "resource-1");
 
     expect(fetched).toMatchObject({
       kind: "body",
@@ -102,9 +95,7 @@ describe("UdataSource", () => {
     if (fetched.kind !== "body") return;
     expect(fetched.body).toBeInstanceOf(ReadableStream);
     expect(await new Response(fetched.body).text()).toContain("Lisbon,42");
-    expect(fetcher.mock.calls[1]?.[0].toString()).toBe(
-      "https://dados.gov.pt/api/1/datasets/r/resource-1",
-    );
+    expect(fetcher.mock.calls[1]?.[0].toString()).toBe("https://dados.gov.pt/api/1/datasets/r/resource-1");
   });
 
   it("sends the checkpoint as a conditional request and reports not-modified on 304", async () => {
@@ -114,11 +105,10 @@ describe("UdataSource", () => {
       .mockResolvedValueOnce(new Response(null, { status: 304, headers: { ETag: '"v1"' } }));
     const source = new UdataSource(new Set(["dados.gov.pt"]), fetcher);
 
-    const fetched = await source.fetchDistribution(
-      { baseUrl: "https://dados.gov.pt", dataset: "population" },
-      "resource-1",
-      { etag: '"v1"', lastModified: "Sat, 01 Aug 2026 12:00:00 GMT" },
-    );
+    const fetched = await source.fetchDistribution({ baseUrl: "https://dados.gov.pt", dataset: "population" }, "resource-1", {
+      etag: '"v1"',
+      lastModified: "Sat, 01 Aug 2026 12:00:00 GMT",
+    });
 
     expect(fetched).toEqual({ kind: "not-modified", validator: { etag: '"v1"' } });
     const headers = new Headers(fetcher.mock.calls[1]?.[1]?.headers);
@@ -129,12 +119,7 @@ describe("UdataSource", () => {
   it("rejects a distribution that is not declared by the dataset", async () => {
     const source = new UdataSource(new Set(["dados.gov.pt"]), async () => Response.json(payload));
 
-    await expect(
-      source.fetchDistribution(
-        { baseUrl: "https://dados.gov.pt", dataset: "population" },
-        "unknown-resource",
-      ),
-    ).rejects.toMatchObject({ code: "invalid-config" });
+    await expect(source.fetchDistribution({ baseUrl: "https://dados.gov.pt", dataset: "population" }, "unknown-resource")).rejects.toMatchObject({ code: "invalid-config" });
   });
 
   it("rejects hosts outside its deployment allowlist", () => {
@@ -149,21 +134,23 @@ describe("UdataSource", () => {
   });
 
   it("turns provider failures into an upstream error carrying status and Retry-After", async () => {
-    const metadataDown = new UdataSource(
-      new Set(["dados.gov.pt"]),
-      vi.fn().mockResolvedValueOnce(new Response("unavailable", { status: 503, headers: { "Retry-After": "120" } })),
-    );
-    await expect(
-      metadataDown.fetchDistribution({ baseUrl: "https://dados.gov.pt", dataset: "population" }, "resource-1"),
-    ).rejects.toMatchObject({ code: "upstream-error", retryAfterSeconds: 120 });
+    const metadataDown = new UdataSource(new Set(["dados.gov.pt"]), vi.fn().mockResolvedValueOnce(new Response("unavailable", { status: 503, headers: { "Retry-After": "120" } })));
+    await expect(metadataDown.fetchDistribution({ baseUrl: "https://dados.gov.pt", dataset: "population" }, "resource-1")).rejects.toMatchObject({
+      code: "upstream-error",
+      retryAfterSeconds: 120,
+    });
 
     const distributionGone = new UdataSource(
       new Set(["dados.gov.pt"]),
-      vi.fn().mockResolvedValueOnce(Response.json(payload)).mockResolvedValueOnce(new Response("gone", { status: 410 })),
+      vi
+        .fn()
+        .mockResolvedValueOnce(Response.json(payload))
+        .mockResolvedValueOnce(new Response("gone", { status: 410 })),
     );
-    await expect(
-      distributionGone.fetchDistribution({ baseUrl: "https://dados.gov.pt", dataset: "population" }, "resource-1"),
-    ).rejects.toMatchObject({ code: "upstream-error", retryAfterSeconds: undefined });
+    await expect(distributionGone.fetchDistribution({ baseUrl: "https://dados.gov.pt", dataset: "population" }, "resource-1")).rejects.toMatchObject({
+      code: "upstream-error",
+      retryAfterSeconds: undefined,
+    });
   });
 
   it("validates every curated example and resolves its transformer", () => {
@@ -177,7 +164,8 @@ describe("UdataSource", () => {
 
 describe("uData collection", () => {
   it("streams a distribution into header, record and completion frames", async () => {
-    const fetcher = vi.fn<typeof fetch>()
+    const fetcher = vi
+      .fn<typeof fetch>()
       .mockResolvedValueOnce(Response.json(payload))
       .mockResolvedValueOnce(new Response("name,value\nLisbon,42\nPorto,\n", { headers: { ETag: '"v2"' } }));
     const result = await collect(fetcher, await request());
@@ -200,12 +188,15 @@ describe("uData collection", () => {
       type: "complete",
       counts: { records: 2, points: 0 },
       quality: { acceptedRecords: 2, rejectedRecords: 0 },
-      products: [{ productKey: "records", schema: { fields: [expect.objectContaining({ name: "name" }), expect.objectContaining({ name: "value", type: "number", nullable: true })] } }],
+      products: [
+        { productKey: "records", schema: { fields: [expect.objectContaining({ name: "name" }), expect.objectContaining({ name: "value", type: "number", nullable: true })] } },
+      ],
     });
   });
 
   it("reports unchanged when the distribution answers 304 to the checkpoint validators", async () => {
-    const fetcher = vi.fn()
+    const fetcher = vi
+      .fn()
       .mockResolvedValueOnce(Response.json(payload))
       .mockResolvedValueOnce(new Response(null, { status: 304 }));
     const base = await request();
@@ -227,14 +218,20 @@ describe("uData collection", () => {
 
   it("leaves the distribution size to the collector's source budget instead of a buffer cap", async () => {
     const rows = Array.from({ length: 200 }, (_, index) => `place-${index},${index}`).join("\n");
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(Response.json(payload)).mockResolvedValueOnce(new Response(`name,value\n${rows}\n`));
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(Response.json(payload))
+      .mockResolvedValueOnce(new Response(`name,value\n${rows}\n`));
     const base = await request();
     const result = await collect(fetcher, { ...base, limits: { ...base.limits, sourceBytes: 256 } });
     expect(result).toEqual({ kind: "failure", code: "response-too-large", retryable: false });
   });
 
   it("maps an upstream refusal to a retryable typed failure with Retry-After", async () => {
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(Response.json(payload)).mockResolvedValueOnce(new Response("busy", { status: 429, headers: { "Retry-After": "30" } }));
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(Response.json(payload))
+      .mockResolvedValueOnce(new Response("busy", { status: 429, headers: { "Retry-After": "30" } }));
     expect(await collect(fetcher, await request())).toEqual({
       kind: "failure",
       code: "upstream-error",

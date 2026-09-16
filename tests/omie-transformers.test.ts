@@ -1,10 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { TransformContext } from "@open-data-pt/gatekeeper-shared";
-import {
-  marketPeriodStart,
-  OmieTransformer,
-} from "../packages/gatekeeper-shared/src/sources/omie/transform";
+import { marketPeriodStart, OmieTransformer } from "../packages/gatekeeper-shared/src/sources/omie/transform";
 
 type Series = "marginalpdbc" | "marginalpdbcpt";
 
@@ -12,10 +9,7 @@ function fixture(name: string): string {
   return readFileSync(new URL(`./fixtures/omie/${name}`, import.meta.url), "utf8");
 }
 
-function context(
-  series: Series,
-  clocks: Partial<Pick<TransformContext, "observedAt">> = {},
-): TransformContext {
+function context(series: Series, clocks: Partial<Pick<TransformContext, "observedAt">> = {}): TransformContext {
   return {
     feed: {
       id: `feed_${series}`,
@@ -39,10 +33,7 @@ function context(
   };
 }
 
-function captured(
-  series: Series,
-  files: Array<{ date: string; text: string }>,
-): Uint8Array {
+function captured(series: Series, files: Array<{ date: string; text: string }>): Uint8Array {
   return new TextEncoder().encode(
     JSON.stringify({
       series,
@@ -61,10 +52,7 @@ function oneRowFile(series: Series, date: string, row: string): string {
 
 function periodFile(series: Series, date: string, periods: number): string {
   const [year, month, day] = date.split("-");
-  const rows = Array.from(
-    { length: periods },
-    (_, index) => `${year};${month};${day};${index + 1};10;20;`,
-  );
+  const rows = Array.from({ length: periods }, (_, index) => `${year};${month};${day};${index + 1};10;20;`);
   return `${series.toUpperCase()};\n${rows.join("\n")}\n*\n`;
 }
 
@@ -132,9 +120,7 @@ describe("OMIE transformers", () => {
         spainMaximumPrice: 223.8,
       },
     });
-    expect(
-      Number(daily?.records?.[0]?.payload.portugalMeanPrice),
-    ).toBeCloseTo(215.2933, 4);
+    expect(Number(daily?.records?.[0]?.payload.portugalMeanPrice)).toBeCloseTo(215.2933, 4);
     expect(result.quality).toEqual({
       acceptedRecords: 13,
       rejectedRecords: 0,
@@ -146,11 +132,7 @@ describe("OMIE transformers", () => {
       captured("marginalpdbcpt", [
         {
           date: "2026-09-06",
-          text: oneRowFile(
-            "marginalpdbcpt",
-            "2026-09-06",
-            "2026;09;06;1;10.25;20.5;",
-          ),
+          text: oneRowFile("marginalpdbcpt", "2026-09-06", "2026;09;06;1;10.25;20.5;"),
         },
       ]),
       context("marginalpdbcpt"),
@@ -174,27 +156,15 @@ describe("OMIE transformers", () => {
   });
 
   it("converts the 92 spring-transition periods from Madrid market time to UTC", () => {
-    expect(marketPeriodStart("2026-03-29", 1)).toBe(
-      "2026-03-28T23:00:00.000Z",
-    );
-    expect(marketPeriodStart("2026-03-29", 92)).toBe(
-      "2026-03-29T21:45:00.000Z",
-    );
-    expect(() => marketPeriodStart("2026-03-29", 93)).toThrow(
-      "expected 1-92",
-    );
+    expect(marketPeriodStart("2026-03-29", 1)).toBe("2026-03-28T23:00:00.000Z");
+    expect(marketPeriodStart("2026-03-29", 92)).toBe("2026-03-29T21:45:00.000Z");
+    expect(() => marketPeriodStart("2026-03-29", 93)).toThrow("expected 1-92");
   });
 
   it("converts the 100 autumn-transition periods from Madrid market time to UTC", () => {
-    expect(marketPeriodStart("2026-10-25", 1)).toBe(
-      "2026-10-24T22:00:00.000Z",
-    );
-    expect(marketPeriodStart("2026-10-25", 100)).toBe(
-      "2026-10-25T22:45:00.000Z",
-    );
-    expect(() => marketPeriodStart("2026-10-25", 101)).toThrow(
-      "expected 1-100",
-    );
+    expect(marketPeriodStart("2026-10-25", 1)).toBe("2026-10-24T22:00:00.000Z");
+    expect(marketPeriodStart("2026-10-25", 100)).toBe("2026-10-25T22:45:00.000Z");
+    expect(() => marketPeriodStart("2026-10-25", 101)).toThrow("expected 1-100");
   });
 
   it("handles the documented 2025-10-01 switch from 24 hourly to 96 quarter-hourly periods", () => {
@@ -213,10 +183,7 @@ describe("OMIE transformers", () => {
     );
     expect(result.products[0]?.points).toHaveLength((24 + 96) * 2);
     expect(result.products[1]?.records).toHaveLength(2);
-    expect(result.products[1]?.records?.map((record) => record.eventTime)).toEqual([
-      "2025-09-29T22:00:00.000Z",
-      "2025-09-30T22:00:00.000Z",
-    ]);
+    expect(result.products[1]?.records?.map((record) => record.eventTime)).toEqual(["2025-09-29T22:00:00.000Z", "2025-09-30T22:00:00.000Z"]);
   });
 
   it("is independent of acquisition clocks when replaying retained bytes", () => {
@@ -227,17 +194,12 @@ describe("OMIE transformers", () => {
       },
     ]);
     const first = transformer.transform(bytes, context("marginalpdbc"));
-    const replay = transformer.transform(
-      bytes,
-      context("marginalpdbc", { observedAt: "2030-01-01T00:00:00.000Z" }),
-    );
+    const replay = transformer.transform(bytes, context("marginalpdbc", { observedAt: "2030-01-01T00:00:00.000Z" }));
     expect(replay).toEqual(first);
   });
 
   it("rejects malformed compound documents and mismatched configurations", () => {
-    expect(() =>
-      transformer.transform(new TextEncoder().encode("{}"), context("marginalpdbc")),
-    ).toThrow("requires a supported series and files");
+    expect(() => transformer.transform(new TextEncoder().encode("{}"), context("marginalpdbc"))).toThrow("requires a supported series and files");
 
     const bytes = captured("marginalpdbc", [
       {
@@ -246,8 +208,6 @@ describe("OMIE transformers", () => {
       },
     ]);
     const mismatched = context("marginalpdbcpt");
-    expect(() => transformer.transform(bytes, mismatched)).toThrow(
-      "does not match configured series",
-    );
+    expect(() => transformer.transform(bytes, mismatched)).toThrow("does not match configured series");
   });
 });

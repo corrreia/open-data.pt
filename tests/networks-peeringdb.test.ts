@@ -25,7 +25,13 @@ async function drain(result: SourceFetch): Promise<string> {
 describe("PeeringDB source boundaries", () => {
   it("requires Portugal and only the public exchange capability", () => {
     expect(validatePeeringdbFeedConfig({ country: "pt" })).toEqual(CONFIG);
-    for (const config of [{ ...CONFIG, country: "ES" }, { ...CONFIG, feed: "contacts" }, { ...CONFIG, host: "private.test" }, { ...CONFIG, fields: "tech_email" }]) expect(() => validatePeeringdbFeedConfig(config)).toThrow();
+    for (const config of [
+      { ...CONFIG, country: "ES" },
+      { ...CONFIG, feed: "contacts" },
+      { ...CONFIG, host: "private.test" },
+      { ...CONFIG, fields: "tech_email" },
+    ])
+      expect(() => validatePeeringdbFeedConfig(config)).toThrow();
     expect(PEERINGDB_EXAMPLES).toHaveLength(1);
     const example = PEERINGDB_EXAMPLES[0]!;
     expect(validatePeeringdbFeedConfig(libraryConfig(example.config))).toEqual(CONFIG);
@@ -36,7 +42,8 @@ describe("PeeringDB source boundaries", () => {
   it("requests only non-contact fields and drains short pages until an explicit empty page", async () => {
     const seen: URL[] = [];
     const fetcher: typeof fetch = async (input, init) => {
-      const url = new URL(String(input)); seen.push(url);
+      const url = new URL(String(input));
+      seen.push(url);
       expect(init?.redirect).toBe("manual");
       expect(new Headers(init?.headers).has("if-none-match")).toBe(false);
       return Response.json({ data: seen.length === 1 ? [exchange(1), exchange(2)] : seen.length === 2 ? [exchange(3)] : [], meta: {} });
@@ -46,8 +53,10 @@ describe("PeeringDB source boundaries", () => {
     expect(seen.map((url) => url.searchParams.get("skip"))).toEqual(["0", "2", "3"]);
     for (const url of seen) {
       expect(url.origin).toBe(PEERINGDB_ORIGIN);
-      expect(url.searchParams.get("country")).toBe("PT"); expect(url.searchParams.get("status")).toBe("ok");
-      expect(url.searchParams.get("depth")).toBe("0"); expect(url.searchParams.get("fields")).toBe(PEERINGDB_PUBLIC_FIELDS);
+      expect(url.searchParams.get("country")).toBe("PT");
+      expect(url.searchParams.get("status")).toBe("ok");
+      expect(url.searchParams.get("depth")).toBe("0");
+      expect(url.searchParams.get("fields")).toBe(PEERINGDB_PUBLIC_FIELDS);
       expect(url.searchParams.get("fields")).not.toMatch(/email|phone|address|notes/);
     }
     expect(source).toMatchObject({ completeness: "complete", state: {} });
@@ -57,16 +66,23 @@ describe("PeeringDB source boundaries", () => {
     for (const origin of ["http://www.peeringdb.com", "https://private.test", "https://user@www.peeringdb.com", "https://www.peeringdb.com/api"])
       await expect(collectPeeringdbFeed(CONFIG, origin, fetch)).rejects.toMatchObject({ code: "source-denied" });
     let requests = 0;
-    const fetcher: typeof fetch = async () => { requests += 1; return new Response(null, { status: 302, headers: { Location: "https://private.test" } }); };
+    const fetcher: typeof fetch = async () => {
+      requests += 1;
+      return new Response(null, { status: 302, headers: { Location: "https://private.test" } });
+    };
     await expect(drain(await collectPeeringdbFeed(CONFIG, PEERINGDB_ORIGIN, fetcher))).rejects.toMatchObject({ code: "source-denied" });
     expect(requests).toBe(1);
   });
 
   it("does not accept a first-page 304 as proof of an unchanged directory", async () => {
-    const collector = peeringdbCollector({ config: CONFIG, apiOrigin: PEERINGDB_ORIGIN, fetcher: async (_input, init) => {
-      expect(new Headers(init?.headers).has("if-none-match")).toBe(false);
-      return new Response(null, { status: 304 });
-    } });
+    const collector = peeringdbCollector({
+      config: CONFIG,
+      apiOrigin: PEERINGDB_ORIGIN,
+      fetcher: async (_input, init) => {
+        expect(new Headers(init?.headers).has("if-none-match")).toBe(false);
+        return new Response(null, { status: 304 });
+      },
+    });
     const state = { validators: { default: { etag: '"one-page-only"' } } };
     const source = await collector.source(state, { kind: "live" }, new AbortController().signal);
     await expect(drain(source)).rejects.toMatchObject({ code: "source-denied" });
@@ -101,8 +117,10 @@ describe("PeeringDB public directory normalization", () => {
     expect(first.rows[0]?.record).toMatchObject({ entityKey: "1", eventTime: "2026-06-03T12:00:00.000Z", payload: { country: "PT", supportsIpv6: true } });
     expect(first.rows[1]?.record?.eventTime).toBeUndefined();
     for (const row of first.rows) {
-      expect(row.record?.payload).not.toHaveProperty("tech_email"); expect(row.record?.payload).not.toHaveProperty("tech_phone");
-      expect(row.record?.payload).not.toHaveProperty("notes"); expect(row.record?.payload).not.toHaveProperty("generated");
+      expect(row.record?.payload).not.toHaveProperty("tech_email");
+      expect(row.record?.payload).not.toHaveProperty("tech_phone");
+      expect(row.record?.payload).not.toHaveProperty("notes");
+      expect(row.record?.payload).not.toHaveProperty("generated");
     }
   });
 
@@ -127,7 +145,8 @@ describe("PeeringDB public directory normalization", () => {
       [{ data: [{ ...exchange(1), status: "deleted" }] }, { data: [] }],
       [{ data: [], meta: { status: "error", message: "Incomplete result" } }],
       [{ data: [{ ...exchange(1), updated: "2026-02-31T00:00:00Z" }] }, { data: [] }],
-    ]) await expect(transform({ pages })).rejects.toMatchObject({ code: "invalid-response" });
+    ])
+      await expect(transform({ pages })).rejects.toMatchObject({ code: "invalid-response" });
   });
 
   it("bounds the complete directory by record count, not just bytes", async () => {

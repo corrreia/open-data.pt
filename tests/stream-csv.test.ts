@@ -12,7 +12,7 @@ function random(seed: number): () => number {
   };
 }
 
-const ALPHABET = ["a", "b", "Z", "1", " ", ",", ";", "\t", "\"", "\n", "\r\n", "ç", "€", "😀", "'"];
+const ALPHABET = ["a", "b", "Z", "1", " ", ",", ";", "\t", '"', "\n", "\r\n", "ç", "€", "😀", "'"];
 
 function randomField(next: () => number): string {
   let text = "";
@@ -23,10 +23,14 @@ function randomField(next: () => number): string {
 
 /** The reference serializer: RFC 4180 quoting whenever a field needs it, and sometimes when it does not. */
 function serialize(rows: string[][], delimiter: string, lineEnd: string, trailing: boolean, next: () => number): string {
-  const lines = rows.map((row) => row.map((field) => {
-    const needsQuotes = field.includes(delimiter) || field.includes("\"") || field.includes("\n") || field.includes("\r") || field === "" && row.length === 1;
-    return needsQuotes || next() > 0.8 ? `"${field.replaceAll("\"", "\"\"")}"` : field;
-  }).join(delimiter));
+  const lines = rows.map((row) =>
+    row
+      .map((field) => {
+        const needsQuotes = field.includes(delimiter) || field.includes('"') || field.includes("\n") || field.includes("\r") || (field === "" && row.length === 1);
+        return needsQuotes || next() > 0.8 ? `"${field.replaceAll('"', '""')}"` : field;
+      })
+      .join(delimiter),
+  );
   return lines.join(lineEnd) + (trailing ? lineEnd : "");
 }
 
@@ -94,20 +98,35 @@ describe("streamCsvRows", () => {
   });
 
   it("detects the delimiter from the first line, ignoring delimiters inside quotes", async () => {
-    expect(await rows(textStream('"a,b,c";x;y\n1;2;3\n', "one"))).toEqual([["a,b,c", "x", "y"], ["1", "2", "3"]]);
-    expect(await rows(textStream("a\tb\n1\t2", "one"))).toEqual([["a", "b"], ["1", "2"]]);
-    expect(await rows(textStream("a,b\n1,2\n"))).toEqual([["a", "b"], ["1", "2"]]);
+    expect(await rows(textStream('"a,b,c";x;y\n1;2;3\n', "one"))).toEqual([
+      ["a,b,c", "x", "y"],
+      ["1", "2", "3"],
+    ]);
+    expect(await rows(textStream("a\tb\n1\t2", "one"))).toEqual([
+      ["a", "b"],
+      ["1", "2"],
+    ]);
+    expect(await rows(textStream("a,b\n1,2\n"))).toEqual([
+      ["a", "b"],
+      ["1", "2"],
+    ]);
     expect(await rows(textStream("single\nline"))).toEqual([["single"], ["line"]]);
   });
 
   it("strips a UTF-8 BOM split across chunks and handles lone CR line endings", async () => {
     const bytes = new Uint8Array([0xef, 0xbb, 0xbf, ...new TextEncoder().encode("nome;valor\rÉvora;1\r")]);
-    expect(await rows(streamOf(chunk(bytes, "one")))).toEqual([["nome", "valor"], ["Évora", "1"]]);
+    expect(await rows(streamOf(chunk(bytes, "one")))).toEqual([
+      ["nome", "valor"],
+      ["Évora", "1"],
+    ]);
   });
 
   it("decodes Windows-1252 when asked to read latin1", async () => {
     const bytes = windows1252("Município;População\nÉvora;€ 5\n");
-    expect(await rows(streamOf(chunk(bytes, "one")), { encoding: "latin1" })).toEqual([["Município", "População"], ["Évora", "€ 5"]]);
+    expect(await rows(streamOf(chunk(bytes, "one")), { encoding: "latin1" })).toEqual([
+      ["Município", "População"],
+      ["Évora", "€ 5"],
+    ]);
   });
 
   it("skips rows before the header row and keeps blank lines as raw rows", async () => {
@@ -123,7 +142,11 @@ describe("streamCsvRows", () => {
 
   it("cancels the source when the consumer stops early", async () => {
     let cancelled = false;
-    for await (const row of streamCsvRows(streamOf(chunk(new TextEncoder().encode("a,b\n1,2\n3,4\n"), "one"), () => { cancelled = true; }))) {
+    for await (const row of streamCsvRows(
+      streamOf(chunk(new TextEncoder().encode("a,b\n1,2\n3,4\n"), "one"), () => {
+        cancelled = true;
+      }),
+    )) {
       expect(row).toEqual(["a", "b"]);
       break;
     }

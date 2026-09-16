@@ -20,9 +20,10 @@ export function ineCollector(options: IneCollectorOptions): NormalizedCollector 
   return {
     normalizer: INE_NORMALIZER,
     resolve: (value) => resolveIneFeed(value),
-    source: (state, mode, signal) => mode.kind === "history"
-      ? collectIneIndicatorHistory(options.config, mode.cursor, options.apiOrigin, (input, init) => options.fetcher(input, { ...init, signal }))
-      : collectIneIndicator(options.config, sourceValidator(state), options.apiOrigin, (input, init) => options.fetcher(input, { ...init, signal })),
+    source: (state, mode, signal) =>
+      mode.kind === "history"
+        ? collectIneIndicatorHistory(options.config, mode.cursor, options.apiOrigin, (input, init) => options.fetcher(input, { ...init, signal }))
+        : collectIneIndicator(options.config, sourceValidator(state), options.apiOrigin, (input, init) => options.fetcher(input, { ...init, signal })),
     normalize: { kind: "buffered", transform: (bytes, context) => transformIneIndicator(bytes, context) },
   };
 }

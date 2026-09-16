@@ -9,11 +9,17 @@ const ARCGIS_HOSTS = "services.arcgis.com,sniambgeoogc.apambiente.pt";
 const OPENDATASOFT_HOSTS = "e-redes.opendatasoft.com,transparencia.sns.gov.pt";
 const runtimeVars = {
   cities: { ARCGIS_ALLOWED_HOSTS: ARCGIS_HOSTS, CKAN_ALLOWED_HOSTS: "opendata.porto.digital,dadosabertos.cascais.pt", UDATA_ALLOWED_HOSTS: "dados.gov.pt" },
-  energy: { REN_API_ORIGIN: "https://datahub.ren.pt", OMIE_API_ORIGIN: "https://www.omie.es", DGEG_API_ORIGIN: "https://precoscombustiveis.dgeg.gov.pt", OPENDATASOFT_ALLOWED_HOSTS: OPENDATASOFT_HOSTS },
+  energy: {
+    REN_API_ORIGIN: "https://datahub.ren.pt",
+    OMIE_API_ORIGIN: "https://www.omie.es",
+    DGEG_API_ORIGIN: "https://precoscombustiveis.dgeg.gov.pt",
+    OPENDATASOFT_ALLOWED_HOSTS: OPENDATASOFT_HOSTS,
+  },
   environment: { IPMA_API_ORIGIN: "https://api.ipma.pt", ARCGIS_ALLOWED_HOSTS: ARCGIS_HOSTS },
   health: { OPENDATASOFT_ALLOWED_HOSTS: OPENDATASOFT_HOSTS },
   mobility: {
-    CARRIS_API_ORIGIN: "https://api.carrismetropolitana.pt", METROLISBOA_API_ORIGIN: "https://lisboa-metro.open-data.pt",
+    CARRIS_API_ORIGIN: "https://api.carrismetropolitana.pt",
+    METROLISBOA_API_ORIGIN: "https://lisboa-metro.open-data.pt",
     GTFS_ALLOWED_HOSTS: "api.carrismetropolitana.pt,opendata.porto.digital,dados.gov.pt",
     GBFS_ALLOWED_HOSTS: "data.lime.bike,mds.bird.co,gbfs.primelayer.pt,gbfs.nextbike.net",
   },
@@ -21,10 +27,19 @@ const runtimeVars = {
 } satisfies Record<string, Record<string, string>>;
 const services = gatekeepers.map((name) => ({ binding: `GK_${name.toUpperCase()}`, service: `conformance-${name}`, entrypoint: entrypoint(name) }));
 function workerConfig(name: string, vars: Record<string, string> = {}, bindings = false) {
-  const config = { name, main: "tests/fixtures/gatekeeper-conformance-worker.ts", compatibility_date: "2026-09-09", compatibility_flags: ["nodejs_compat"], vars, services: bindings ? services : [] };
+  const config = {
+    name,
+    main: "tests/fixtures/gatekeeper-conformance-worker.ts",
+    compatibility_date: "2026-09-09",
+    compatibility_flags: ["nodejs_compat"],
+    vars,
+    services: bindings ? services : [],
+  };
   return { config };
 }
-const server = createTestHarness({ workers: [workerConfig("gatekeeper-conformance", {}, true), ...gatekeepers.map((name) => workerConfig(`conformance-${name}`, runtimeVars[name]))] });
+const server = createTestHarness({
+  workers: [workerConfig("gatekeeper-conformance", {}, true), ...gatekeepers.map((name) => workerConfig(`conformance-${name}`, runtimeVars[name]))],
+});
 
 beforeAll(async () => server.listen(), 60_000);
 afterAll(async () => server.close(), 30_000);
@@ -43,7 +58,14 @@ describe("all Gatekeeper entrypoints expose the normalized five-operation contra
   it("resolves a canonical example through every real entrypoint over private Worker RPC", async () => {
     const response = await server.fetch("/conformance");
     expect(response.status, await response.clone().text()).toBe(200);
-    const rows = await response.json<Array<{ binding: string; description: { kind: string; name: string }; kindCount: number; resolved: { config: Record<string, string>; configHash: string; resourceKey: string; kind: string } }>>();
+    const rows = await response.json<
+      Array<{
+        binding: string;
+        description: { kind: string; name: string };
+        kindCount: number;
+        resolved: { config: Record<string, string>; configHash: string; resourceKey: string; kind: string };
+      }>
+    >();
     expect(rows).toHaveLength(6);
     for (const row of rows) {
       expect(row.description.kind).toBeTruthy();

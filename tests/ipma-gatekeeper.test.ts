@@ -1,10 +1,6 @@
 import type { JsonValue } from "@open-data-pt/gatekeeper-shared";
 import { describe, expect, it, vi } from "vitest";
-import {
-  collectIpmaFeed,
-  IPMA_FEED_LIMITS,
-  validateIpmaFeedConfig,
-} from "../packages/gatekeeper-shared/src/sources/ipma/ipma";
+import { collectIpmaFeed, IPMA_FEED_LIMITS, validateIpmaFeedConfig } from "../packages/gatekeeper-shared/src/sources/ipma/ipma";
 
 const ORIGIN = "https://api.ipma.pt";
 
@@ -24,33 +20,26 @@ describe("IPMA Gatekeeper", () => {
 
   it("rejects caller-provided hosts and a misconfigured Worker origin", async () => {
     expect(() => validateIpmaFeedConfig({ feed: "seismic", host: "evil.example" })).toThrow("does not accept host");
-    await expect(collectIpmaFeed(
-      { feed: "seismic" },
-      undefined,
-      "https://evil.example",
-      vi.fn(),
-    )).rejects.toThrow("origin is not allowed");
+    await expect(collectIpmaFeed({ feed: "seismic" }, undefined, "https://evil.example", vi.fn())).rejects.toThrow("origin is not allowed");
   });
 
   it("combines source documents with provenance, completeness and the primary validator", async () => {
     const fetcher = vi.fn(async (input: URL | RequestInfo) => {
       const url = input.toString();
       if (url.endsWith("observations.json")) {
-        return jsonResponse({ "2026-09-07T16:00": {} }, {
-          ETag: '"observations-v1"',
-          "Last-Modified": "Mon, 07 Sep 2026 16:35:03 GMT",
-        });
+        return jsonResponse(
+          { "2026-09-07T16:00": {} },
+          {
+            ETag: '"observations-v1"',
+            "Last-Modified": "Mon, 07 Sep 2026 16:35:03 GMT",
+          },
+        );
       }
       if (url.endsWith("stations.json")) return jsonResponse([]);
       throw new Error(`Unexpected URL ${url}`);
     });
 
-    const fetched = await collectIpmaFeed(
-      { feed: "station-observations" },
-      undefined,
-      ORIGIN,
-      fetcher,
-    );
+    const fetched = await collectIpmaFeed({ feed: "station-observations" }, undefined, ORIGIN, fetcher);
 
     expect(fetched).toMatchObject({
       kind: "body",
@@ -67,10 +56,13 @@ describe("IPMA Gatekeeper", () => {
   });
 
   it("reports the primary resource as not modified with its validator", async () => {
-    const fetcher = vi.fn(async () => new Response(null, {
-      status: 304,
-      headers: { ETag: '"mainland-v1"' },
-    }));
+    const fetcher = vi.fn(
+      async () =>
+        new Response(null, {
+          status: 304,
+          headers: { ETag: '"mainland-v1"' },
+        }),
+    );
 
     const fetched = await collectIpmaFeed({ feed: "seismic" }, undefined, ORIGIN, fetcher);
 
@@ -85,12 +77,7 @@ describe("IPMA Gatekeeper", () => {
       return jsonResponse({ data: azores ? [{ id: "azores-new" }] : [], updateDate: "2026-09-07T16:36:02Z" }, azores ? {} : { ETag: '"mainland-v1"' });
     });
 
-    const fetched = await collectIpmaFeed(
-      { feed: "seismic" },
-      { etag: '"mainland-v1"', lastModified: "Mon, 07 Sep 2026 16:36:02 GMT" },
-      ORIGIN,
-      fetcher,
-    );
+    const fetched = await collectIpmaFeed({ feed: "seismic" }, { etag: '"mainland-v1"', lastModified: "Mon, 07 Sep 2026 16:36:02 GMT" }, ORIGIN, fetcher);
 
     if (fetched.kind !== "body") throw new Error("expected a source body");
     expect(fetched.provenance.sourcePublishedAt).toBe("2026-09-07T16:36:02.000Z");
@@ -99,26 +86,19 @@ describe("IPMA Gatekeeper", () => {
   });
 
   it("rejects a response over the feed-kind byte cap", async () => {
-    const fetcher = vi.fn(async () => new Response("{}", {
-      headers: { "Content-Length": String(IPMA_FEED_LIMITS.seismic + 1) },
-    }));
+    const fetcher = vi.fn(
+      async () =>
+        new Response("{}", {
+          headers: { "Content-Length": String(IPMA_FEED_LIMITS.seismic + 1) },
+        }),
+    );
 
-    await expect(collectIpmaFeed(
-      { feed: "seismic" },
-      undefined,
-      ORIGIN,
-      fetcher,
-    )).rejects.toMatchObject({ code: "response-too-large" });
+    await expect(collectIpmaFeed({ feed: "seismic" }, undefined, ORIGIN, fetcher)).rejects.toMatchObject({ code: "response-too-large" });
   });
 
   it("reports provider errors without returning their body", async () => {
     const fetcher = vi.fn(async () => new Response("unavailable", { status: 503 }));
 
-    await expect(collectIpmaFeed(
-      { feed: "daily-forecast" },
-      undefined,
-      ORIGIN,
-      fetcher,
-    )).rejects.toMatchObject({ code: "upstream-error" });
+    await expect(collectIpmaFeed({ feed: "daily-forecast" }, undefined, ORIGIN, fetcher)).rejects.toMatchObject({ code: "upstream-error" });
   });
 });

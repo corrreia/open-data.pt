@@ -26,10 +26,7 @@ import { MOBILITY_EXAMPLES } from "./examples";
  * One Worker per catalog topic. It holds no parsing: it names its libraries,
  * hands each the vars and secrets it needs, and lists the example feeds it owns.
  */
-export default class MobilityGatekeeper
-  extends WorkerEntrypoint<Env>
-  implements FeedGatekeeper
-{
+export default class MobilityGatekeeper extends WorkerEntrypoint<Env> implements FeedGatekeeper {
   override async fetch(): Promise<Response> {
     return new Response("This Gatekeeper is available through RPC only.", { status: 404 });
   }
@@ -61,10 +58,40 @@ export default class MobilityGatekeeper
   /** The wiring: which library answers for a feed, and what it is given to do it with. */
   private libraries(): GatekeeperLibraries {
     return new Map<string, GatekeeperLibrary>([
-      ["carris", { kinds: Object.values(CARRIS_FEEDS), collector: (config: SourceConfig) => carrisCollector({ config, apiOrigin: this.env.CARRIS_API_ORIGIN, fetcher: (input, init) => fetch(input, init) }) }],
-      ["metrolisboa", { kinds: Object.values(METRO_FEEDS), collector: (config: SourceConfig) => metrolisboaCollector({ config, apiOrigin: this.env.METROLISBOA_API_ORIGIN, credentials: { key: this.env.ML_CONSUMER_KEY, secret: this.env.ML_CONSUMER_SECRET }, fetcher: (input, init) => fetch(input, init) }) }],
-      ["gtfs", { kinds: Object.values(GTFS_FEEDS), collector: (config: SourceConfig) => gtfsCollector({ config, hosts: this.env.GTFS_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }) }],
-      ["gbfs", { kinds: Object.values(GBFS_FEEDS), collector: (config: SourceConfig) => gbfsCollector({ config, hosts: this.env.GBFS_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }) }],
+      [
+        "carris",
+        {
+          kinds: Object.values(CARRIS_FEEDS),
+          collector: (config: SourceConfig) => carrisCollector({ config, apiOrigin: this.env.CARRIS_API_ORIGIN, fetcher: (input, init) => fetch(input, init) }),
+        },
+      ],
+      [
+        "metrolisboa",
+        {
+          kinds: Object.values(METRO_FEEDS),
+          collector: (config: SourceConfig) =>
+            metrolisboaCollector({
+              config,
+              apiOrigin: this.env.METROLISBOA_API_ORIGIN,
+              credentials: { key: this.env.ML_CONSUMER_KEY, secret: this.env.ML_CONSUMER_SECRET },
+              fetcher: (input, init) => fetch(input, init),
+            }),
+        },
+      ],
+      [
+        "gtfs",
+        {
+          kinds: Object.values(GTFS_FEEDS),
+          collector: (config: SourceConfig) => gtfsCollector({ config, hosts: this.env.GTFS_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }),
+        },
+      ],
+      [
+        "gbfs",
+        {
+          kinds: Object.values(GBFS_FEEDS),
+          collector: (config: SourceConfig) => gbfsCollector({ config, hosts: this.env.GBFS_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }),
+        },
+      ],
     ]);
   }
 }

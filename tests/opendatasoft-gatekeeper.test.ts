@@ -19,12 +19,7 @@ import {
   type TransformContext,
   libraryConfig,
 } from "@open-data-pt/gatekeeper-shared";
-import {
-  MAX_HISTORY_DOCUMENT_BYTES,
-  MAX_HISTORY_RECORDS,
-  OPENDATASOFT_FEEDS,
-  OpendatasoftSource,
-} from "../packages/gatekeeper-shared/src/formats/opendatasoft/opendatasoft";
+import { MAX_HISTORY_DOCUMENT_BYTES, MAX_HISTORY_RECORDS, OPENDATASOFT_FEEDS, OpendatasoftSource } from "../packages/gatekeeper-shared/src/formats/opendatasoft/opendatasoft";
 import { OPENDATASOFT_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/opendatasoft/examples";
 import { OpendatasoftTransformer, seriesSlug } from "../packages/gatekeeper-shared/src/formats/opendatasoft/transform";
 import { opendatasoftCollector } from "../packages/gatekeeper-shared/src/formats/opendatasoft";
@@ -141,7 +136,10 @@ async function request(config: SourceConfig, fetcher: typeof fetch, mode: Collec
 async function frames(result: CollectionResult): Promise<NormalizedFrame[]> {
   if (result.kind !== "batch") throw new Error(`Expected a batch, got ${JSON.stringify(result)}`);
   const text = await new Response(result.stream).text();
-  return text.trim().split("\n").map((line) => jsonAs<NormalizedFrame>(line));
+  return text
+    .trim()
+    .split("\n")
+    .map((line) => jsonAs<NormalizedFrame>(line));
 }
 
 describe("Opendatasoft Gatekeeper", () => {
@@ -171,14 +169,16 @@ describe("Opendatasoft Gatekeeper", () => {
 
   it("normalizes a valid config and rejects unsupported ODSQL", () => {
     const instance = source(fetch);
-    expect(instance.validateConfig({
-      host: " E-REDES.OPENDATASOFT.COM ",
-      dataset: " SAMPLE-DATASET ",
-      where: "value >= 10",
-      select: "id, value",
-      orderBy: "value DESC",
-      limit: "25",
-    })).toEqual({
+    expect(
+      instance.validateConfig({
+        host: " E-REDES.OPENDATASOFT.COM ",
+        dataset: " SAMPLE-DATASET ",
+        where: "value >= 10",
+        select: "id, value",
+        orderBy: "value DESC",
+        limit: "25",
+      }),
+    ).toEqual({
       host: "e-redes.opendatasoft.com",
       dataset: "sample-dataset",
       where: "value >= 10",
@@ -186,32 +186,40 @@ describe("Opendatasoft Gatekeeper", () => {
       orderBy: "value DESC",
       limit: "25",
     });
-    expect(() => instance.validateConfig({
-      host: "e-redes.opendatasoft.com",
-      dataset: "sample-dataset",
-      where: "value = 1; DROP TABLE records",
-    })).toThrow("unsupported ODSQL characters");
+    expect(() =>
+      instance.validateConfig({
+        host: "e-redes.opendatasoft.com",
+        dataset: "sample-dataset",
+        where: "value = 1; DROP TABLE records",
+      }),
+    ).toThrow("unsupported ODSQL characters");
   });
 
   it("rejects hosts outside the deployment allowlist", () => {
-    expect(() => source(fetch).validateConfig({
-      host: "internal.example.test",
-      dataset: "anything",
-    })).toThrowError(GatekeeperError);
-    expect(() => source(fetch).validateConfig({
-      host: "https://e-redes.opendatasoft.com/path",
-      dataset: "anything",
-    })).toThrow("host must be a hostname");
+    expect(() =>
+      source(fetch).validateConfig({
+        host: "internal.example.test",
+        dataset: "anything",
+      }),
+    ).toThrowError(GatekeeperError);
+    expect(() =>
+      source(fetch).validateConfig({
+        host: "https://e-redes.opendatasoft.com/path",
+        dataset: "anything",
+      }),
+    ).toThrow("host must be a hostname");
   });
 
   it("streams a small export with provenance, completeness and validators", async () => {
     const fetcher = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(Response.json(metadata))
-      .mockResolvedValueOnce(Response.json([
-        { id: "a", value: 1 },
-        { id: "b", value: 2 },
-      ]));
+      .mockResolvedValueOnce(
+        Response.json([
+          { id: "a", value: 1 },
+          { id: "b", value: 2 },
+        ]),
+      );
 
     const fetched = bodyOf(await source(fetcher).collect(LIVE_CONFIG));
 
@@ -225,11 +233,12 @@ describe("Opendatasoft Gatekeeper", () => {
     expect(fetched.body).toBeInstanceOf(ReadableStream);
     expect(await documentOf(fetched)).toEqual({
       dataset: metadata,
-      records: [{ id: "a", value: 1 }, { id: "b", value: 2 }],
+      records: [
+        { id: "a", value: 1 },
+        { id: "b", value: 2 },
+      ],
     });
-    expect(fetcher.mock.calls[1]?.[0].toString()).toBe(
-      "https://e-redes.opendatasoft.com/api/explore/v2.1/catalog/datasets/sample-dataset/exports/json",
-    );
+    expect(fetcher.mock.calls[1]?.[0].toString()).toBe("https://e-redes.opendatasoft.com/api/explore/v2.1/catalog/datasets/sample-dataset/exports/json");
   });
 
   it("forwards a checkpoint and reports an upstream 304 as not modified", async () => {
@@ -259,9 +268,7 @@ describe("Opendatasoft Gatekeeper", () => {
   });
 
   it("reports unchanged metadata as not modified without requesting records", async () => {
-    const first = bodyOf(await source(vi.fn<typeof fetch>()
-      .mockResolvedValueOnce(Response.json(metadata))
-      .mockResolvedValueOnce(Response.json([]))).collect(LIVE_CONFIG));
+    const first = bodyOf(await source(vi.fn<typeof fetch>().mockResolvedValueOnce(Response.json(metadata)).mockResolvedValueOnce(Response.json([]))).collect(LIVE_CONFIG));
     const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(Response.json(metadata));
     const second = await source(fetcher).collect(LIVE_CONFIG, first.validator);
     expect(second).toEqual({ kind: "not-modified", validator: first.validator });
@@ -274,17 +281,24 @@ describe("Opendatasoft Gatekeeper", () => {
     const fetcher = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(Response.json(largeMetadata))
-      .mockResolvedValueOnce(Response.json({
-        total_count: 3,
-        results: [{ id: "a", value: 1 }, { id: "b", value: 2 }],
-      }));
+      .mockResolvedValueOnce(
+        Response.json({
+          total_count: 3,
+          results: [
+            { id: "a", value: 1 },
+            { id: "b", value: 2 },
+          ],
+        }),
+      );
 
-    const fetched = bodyOf(await source(fetcher).collect({
-      host: "e-redes.opendatasoft.com",
-      dataset: "sample-dataset",
-      orderBy: "id",
-      limit: "2",
-    }));
+    const fetched = bodyOf(
+      await source(fetcher).collect({
+        host: "e-redes.opendatasoft.com",
+        dataset: "sample-dataset",
+        orderBy: "id",
+        limit: "2",
+      }),
+    );
 
     expect(fetched.completeness).toBe("partial");
     expect((await documentOf<{ records: JsonObject[] }>(fetched)).records).toHaveLength(2);
@@ -306,12 +320,14 @@ describe("Opendatasoft Gatekeeper", () => {
       .mockResolvedValueOnce(Response.json({ total_count: 150, results: rows.slice(0, 100) }))
       .mockResolvedValueOnce(Response.json({ total_count: 150, results: rows.slice(100) }));
 
-    const fetched = bodyOf(await source(fetcher).collect({
-      host: "e-redes.opendatasoft.com",
-      dataset: "sample-dataset",
-      where: "value < 150",
-      limit: "200",
-    }));
+    const fetched = bodyOf(
+      await source(fetcher).collect({
+        host: "e-redes.opendatasoft.com",
+        dataset: "sample-dataset",
+        where: "value < 150",
+        limit: "200",
+      }),
+    );
 
     expect(fetched.completeness).toBe("complete");
     // Only the first page is requested before the body is read.
@@ -346,16 +362,23 @@ describe("Opendatasoft Gatekeeper", () => {
     const fetcher = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(Response.json(historyMetadata))
-      .mockResolvedValueOnce(Response.json({
-        total_count: 3,
-        results: [{ id: "first", observed_at: "2020-01-01T00:00:00+00:00", value: 0 }],
-      }))
+      .mockResolvedValueOnce(
+        Response.json({
+          total_count: 3,
+          results: [{ id: "first", observed_at: "2020-01-01T00:00:00+00:00", value: 0 }],
+        }),
+      )
       .mockResolvedValueOnce(Response.json(records));
 
-    const fetched = bodyOf(await source(fetcher).collectHistory({
-      host: "e-redes.opendatasoft.com",
-      dataset: "sample-dataset",
-    }, { before: "2026-01-01T00:00:00Z" }));
+    const fetched = bodyOf(
+      await source(fetcher).collectHistory(
+        {
+          host: "e-redes.opendatasoft.com",
+          dataset: "sample-dataset",
+        },
+        { before: "2026-01-01T00:00:00Z" },
+      ),
+    );
 
     expect(fetched.next).toEqual({ before: "2025-12-28T12:00:00.000Z" });
     expect(fetched.exhausted).toBeUndefined();
@@ -364,10 +387,7 @@ describe("Opendatasoft Gatekeeper", () => {
     expect(await documentOf(fetched)).toEqual({ dataset: historyMetadata, records });
 
     const normalized = await transformed(fetched);
-    expect(normalized.records.map((record) => record.eventTime)).toEqual([
-      "2025-12-31T23:00:00.000Z",
-      "2025-12-28T12:00:00.000Z",
-    ]);
+    expect(normalized.records.map((record) => record.eventTime)).toEqual(["2025-12-31T23:00:00.000Z", "2025-12-28T12:00:00.000Z"]);
     // Without a `series` list the dataset is published once, as its table.
     expect(normalized.points.size).toBe(0);
 
@@ -376,9 +396,7 @@ describe("Opendatasoft Gatekeeper", () => {
     expect(earliestUrl.searchParams.get("order_by")).toBe("observed_at");
     expect(earliestUrl.searchParams.get("limit")).toBe("1");
     const exportUrl = new URL(fetcher.mock.calls[2]?.[0].toString() ?? "");
-    expect(exportUrl.searchParams.get("where")).toBe(
-      "observed_at >= '2025-12-25T00:00:00Z' AND observed_at < '2026-01-01T00:00:00Z'",
-    );
+    expect(exportUrl.searchParams.get("where")).toBe("observed_at >= '2025-12-25T00:00:00Z' AND observed_at < '2026-01-01T00:00:00Z'");
     expect(exportUrl.searchParams.get("order_by")).toBe("observed_at DESC");
   });
 
@@ -416,7 +434,20 @@ describe("Opendatasoft Gatekeeper", () => {
       // latest timestamp below the cursor
       .mockResolvedValueOnce(Response.json({ total_count: 3, results: [row("01", 0)] }))
       // facets for the only text candidate
-      .mockResolvedValueOnce(Response.json({ facets: [{ name: "district", facets: [{ name: "01", value: "01", count: 2 }, { name: "02", value: "02", count: 1 }, { name: "03", value: "03", count: 1 }] }] }))
+      .mockResolvedValueOnce(
+        Response.json({
+          facets: [
+            {
+              name: "district",
+              facets: [
+                { name: "01", value: "01", count: 2 },
+                { name: "02", value: "02", count: 1 },
+                { name: "03", value: "03", count: 1 },
+              ],
+            },
+          ],
+        }),
+      )
       // partition exports from offset 1 onwards
       .mockResolvedValueOnce(Response.json([row("02", 1)]))
       .mockResolvedValueOnce(Response.json([row("03", 2)]));
@@ -434,26 +465,29 @@ describe("Opendatasoft Gatekeeper", () => {
     const before = Date.parse("2026-01-01T00:00:00Z");
     const records = Array.from({ length: MAX_HISTORY_RECORDS + 3 }, (_, index) => ({
       id: String(index),
-      observed_at: new Date(before - (
-        index === MAX_HISTORY_RECORDS + 2
-          ? MAX_HISTORY_RECORDS + 1
-          : Math.min(index + 1, MAX_HISTORY_RECORDS)
-      ) * 60_000).toISOString(),
+      observed_at: new Date(before - (index === MAX_HISTORY_RECORDS + 2 ? MAX_HISTORY_RECORDS + 1 : Math.min(index + 1, MAX_HISTORY_RECORDS)) * 60_000).toISOString(),
       value: index,
     }));
     const fetcher = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(Response.json(historyMetadata))
-      .mockResolvedValueOnce(Response.json({
-        total_count: records.length + 1,
-        results: [{ id: "first", observed_at: "2020-01-01T00:00:00Z", value: 0 }],
-      }))
+      .mockResolvedValueOnce(
+        Response.json({
+          total_count: records.length + 1,
+          results: [{ id: "first", observed_at: "2020-01-01T00:00:00Z", value: 0 }],
+        }),
+      )
       .mockResolvedValueOnce(Response.json(records));
 
-    const fetched = bodyOf(await source(fetcher).collectHistory({
-      host: "e-redes.opendatasoft.com",
-      dataset: "sample-dataset",
-    }, { before: "2026-01-01T00:00:00Z" }));
+    const fetched = bodyOf(
+      await source(fetcher).collectHistory(
+        {
+          host: "e-redes.opendatasoft.com",
+          dataset: "sample-dataset",
+        },
+        { before: "2026-01-01T00:00:00Z" },
+      ),
+    );
     const document = await documentOf<{ records: Array<JsonObject> }>(fetched);
 
     expect(document.records).toHaveLength(MAX_HISTORY_RECORDS + 2);
@@ -465,15 +499,22 @@ describe("Opendatasoft Gatekeeper", () => {
     const fetcher = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(Response.json(historyMetadata))
-      .mockResolvedValueOnce(Response.json({
-        total_count: 1,
-        results: [{ id: "first", observed_at: "2020-01-01T00:00:00Z", value: 0 }],
-      }));
+      .mockResolvedValueOnce(
+        Response.json({
+          total_count: 1,
+          results: [{ id: "first", observed_at: "2020-01-01T00:00:00Z", value: 0 }],
+        }),
+      );
 
-    expect(await source(fetcher).collectHistory({
-      host: "e-redes.opendatasoft.com",
-      dataset: "sample-dataset",
-    }, { before: "2020-01-01T00:00:00Z" })).toEqual({ kind: "exhausted" });
+    expect(
+      await source(fetcher).collectHistory(
+        {
+          host: "e-redes.opendatasoft.com",
+          dataset: "sample-dataset",
+        },
+        { before: "2020-01-01T00:00:00Z" },
+      ),
+    ).toEqual({ kind: "exhausted" });
     expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
@@ -488,48 +529,57 @@ describe("Opendatasoft Gatekeeper", () => {
     const fetcher = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(Response.json(monthlyMetadata))
-      .mockResolvedValueOnce(Response.json({
-        total_count: 2,
-        results: [{ id: "first", observed_at: "2013-01", value: 0 }],
-      }))
-      .mockResolvedValueOnce(Response.json([
-        { id: "last-year", observed_at: "2025-12", value: 1 },
-      ]));
+      .mockResolvedValueOnce(
+        Response.json({
+          total_count: 2,
+          results: [{ id: "first", observed_at: "2013-01", value: 0 }],
+        }),
+      )
+      .mockResolvedValueOnce(Response.json([{ id: "last-year", observed_at: "2025-12", value: 1 }]));
 
-    bodyOf(await source(fetcher).collectHistory({
-      host: "transparencia.sns.gov.pt",
-      dataset: "sample-dataset",
-    }, { before: "2026-01-01T00:00:00Z" }));
+    bodyOf(
+      await source(fetcher).collectHistory(
+        {
+          host: "transparencia.sns.gov.pt",
+          dataset: "sample-dataset",
+        },
+        { before: "2026-01-01T00:00:00Z" },
+      ),
+    );
 
     const exportUrl = new URL(fetcher.mock.calls[2]?.[0].toString() ?? "");
-    expect(exportUrl.searchParams.get("where")).toBe(
-      "observed_at >= '2016-01-01' AND observed_at < '2026-01-01'",
-    );
+    expect(exportUrl.searchParams.get("where")).toBe("observed_at >= '2016-01-01' AND observed_at < '2026-01-01'");
   });
 
   it("reports exhaustion when metadata has no annotated time field", async () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(Response.json(metadata));
-    expect(await source(fetcher).collectHistory({
-      host: "e-redes.opendatasoft.com",
-      dataset: "sample-dataset",
-    }, { before: "2026-01-01T00:00:00Z" })).toEqual({ kind: "exhausted" });
+    expect(
+      await source(fetcher).collectHistory(
+        {
+          host: "e-redes.opendatasoft.com",
+          dataset: "sample-dataset",
+        },
+        { before: "2026-01-01T00:00:00Z" },
+      ),
+    ).toEqual({ kind: "exhausted" });
     expect(fetcher).toHaveBeenCalledOnce();
   });
 
   it.each([429, 503])("maps upstream HTTP %i during history collection to a retryable error", async (status) => {
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(
-      new Response("retry later", { status }),
-    );
-    await expect(source(fetcher).collectHistory({
-      host: "e-redes.opendatasoft.com",
-      dataset: "sample-dataset",
-    }, { before: "2026-01-01T00:00:00Z" })).rejects.toMatchObject({ code: "upstream-error" });
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(new Response("retry later", { status }));
+    await expect(
+      source(fetcher).collectHistory(
+        {
+          host: "e-redes.opendatasoft.com",
+          dataset: "sample-dataset",
+        },
+        { before: "2026-01-01T00:00:00Z" },
+      ),
+    ).rejects.toMatchObject({ code: "upstream-error" });
   });
 
   it("carries Retry-After seconds on an upstream error", async () => {
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(
-      new Response("slow down", { status: 429, headers: { "Retry-After": "120" } }),
-    );
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(new Response("slow down", { status: 429, headers: { "Retry-After": "120" } }));
     await expect(source(fetcher).collect(LIVE_CONFIG)).rejects.toMatchObject({
       code: "upstream-error",
       retryAfterSeconds: 120,
@@ -539,10 +589,12 @@ describe("Opendatasoft Gatekeeper", () => {
   it("surfaces provider errors without attempting a data request", async () => {
     const fetcher = vi.fn<typeof fetch>(async () => new Response("unavailable", { status: 503 }));
 
-    await expect(source(fetcher).collect({
-      host: "transparencia.sns.gov.pt",
-      dataset: "sample-dataset",
-    })).rejects.toMatchObject({ code: "upstream-error" });
+    await expect(
+      source(fetcher).collect({
+        host: "transparencia.sns.gov.pt",
+        dataset: "sample-dataset",
+      }),
+    ).rejects.toMatchObject({ code: "upstream-error" });
     expect(fetcher).toHaveBeenCalledOnce();
   });
 });
@@ -566,7 +618,12 @@ describe("Opendatasoft through the shared collector", () => {
     const fetcher = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(Response.json(metadata))
-      .mockResolvedValueOnce(Response.json([{ id: "a", value: 1 }, { id: "b", value: 2 }]));
+      .mockResolvedValueOnce(
+        Response.json([
+          { id: "a", value: 1 },
+          { id: "b", value: 2 },
+        ]),
+      );
     const req = await request(LIVE_CONFIG, fetcher, { kind: "live" });
     const [header, ...rest] = await frames(await collectNormalized(req, odsCollector(LIVE_CONFIG, fetcher)));
 
@@ -584,7 +641,10 @@ describe("Opendatasoft through the shared collector", () => {
     if (complete?.type !== "complete") throw new Error("Expected a completion frame last");
     expect(complete.counts).toEqual({ records: 2, points: 0 });
     expect(complete.quality).toEqual({ acceptedRecords: 2, rejectedRecords: 0 });
-    expect(complete.products?.[0]).toMatchObject({ productKey: "records", schema: { fields: expect.arrayContaining([expect.objectContaining({ id: "value", type: "number", nullable: false })]) } });
+    expect(complete.products?.[0]).toMatchObject({
+      productKey: "records",
+      schema: { fields: expect.arrayContaining([expect.objectContaining({ id: "value", type: "number", nullable: false })]) },
+    });
   });
 
   it("carries the history continuation and terminal exhaustion", async () => {
@@ -593,10 +653,12 @@ describe("Opendatasoft through the shared collector", () => {
       .fn<typeof fetch>()
       .mockResolvedValueOnce(Response.json(historyMetadata))
       .mockResolvedValueOnce(Response.json({ total_count: 3, results: [{ id: "first", observed_at: "2020-01-01T00:00:00+00:00", value: 0 }] }))
-      .mockResolvedValueOnce(Response.json([
-        { id: "newer", observed_at: "2025-12-31T23:00:00+00:00", value: 2 },
-        { id: "older", observed_at: "2025-12-28T12:00:00+00:00", value: 1 },
-      ]));
+      .mockResolvedValueOnce(
+        Response.json([
+          { id: "newer", observed_at: "2025-12-31T23:00:00+00:00", value: 2 },
+          { id: "older", observed_at: "2025-12-28T12:00:00+00:00", value: 1 },
+        ]),
+      );
     const sliceRequest = await request(config, sliceFetcher, { kind: "history", cursor: { before: "2026-01-01T00:00:00.000Z" } });
     const slice = await frames(await collectNormalized(sliceRequest, odsCollector(config, sliceFetcher)));
     const header = slice[0];
@@ -633,10 +695,7 @@ describe("Opendatasoft through the shared collector", () => {
 
   it("reports a source body over the collection byte budget as too large", async () => {
     const rows = Array.from({ length: 2 }, (_, index) => ({ id: `r${index}`, value: index, note: "x".repeat(4_000) }));
-    const fetcher = vi
-      .fn<typeof fetch>()
-      .mockResolvedValueOnce(Response.json(metadata))
-      .mockResolvedValueOnce(Response.json(rows));
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(Response.json(metadata)).mockResolvedValueOnce(Response.json(rows));
     const req = await request(LIVE_CONFIG, fetcher, { kind: "live" }, 4_096);
     expect(await collectNormalized(req, odsCollector(LIVE_CONFIG, fetcher))).toEqual({
       kind: "failure",

@@ -2,12 +2,7 @@ import { jsonAs } from "./support";
 import { readFileSync } from "node:fs";
 import { deflateRawSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
-import type {
-  CanonicalRecord,
-  ProductDeclaration,
-  StreamingSummary,
-  TransformContext,
-} from "@open-data-pt/gatekeeper-shared";
+import type { CanonicalRecord, ProductDeclaration, StreamingSummary, TransformContext } from "@open-data-pt/gatekeeper-shared";
 import { GtfsCsvReader } from "../packages/gatekeeper-shared/src/formats/gtfs/csv";
 import { GTFS_NORMALIZER, transformGtfs, type GtfsTransformLimits } from "../packages/gatekeeper-shared/src/formats/gtfs/transform";
 
@@ -64,12 +59,7 @@ function fixtureArchive(fixture: GtfsFixture, entry: (name: string, index: numbe
   return zipArchive(Object.entries(fixture.files).map(([name, text], index) => ({ name, text, ...entry(name, index) })));
 }
 
-async function normalize(
-  archive: Uint8Array,
-  transformContext: TransformContext,
-  chunkSize = 7,
-  limits?: GtfsTransformLimits,
-): Promise<Normalized> {
+async function normalize(archive: Uint8Array, transformContext: TransformContext, chunkSize = 7, limits?: GtfsTransformLimits): Promise<Normalized> {
   const transform = transformGtfs(chunked(archive, chunkSize), transformContext, limits);
   const rows = new Map<string, CanonicalRecord[]>();
   for await (const row of transform.rows) {
@@ -83,10 +73,7 @@ async function normalize(
 
 describe("GTFS transformer", () => {
   it("streams typed stop, route, agency, and calendar-exception products from the live Carris archive", async () => {
-    const result = await normalize(
-      fixtureArchive(fixtures.carris),
-      context("carris-metropolitana-gtfs-feed", "Carris Metropolitana GTFS", CARRIS_FILES),
-    );
+    const result = await normalize(fixtureArchive(fixtures.carris), context("carris-metropolitana-gtfs-feed", "Carris Metropolitana GTFS", CARRIS_FILES));
 
     expect(GTFS_NORMALIZER).toEqual({ id: "gtfs-schedule", version: "3" });
     expect(result.products.map((product) => product.slug)).toEqual([
@@ -207,7 +194,7 @@ describe("GTFS transformer", () => {
   it("counts malformed rows, applies the single-agency default only to a lone agency, and never reads stop_times.txt", async () => {
     const archive = zipArchive([
       { name: "agency.txt", text: "agency_id,agency_name,agency_url,agency_timezone\n,First,https://a.example,Europe/Lisbon\nB,Second,https://b.example,Europe/Lisbon\n" },
-      { name: "stop_times.txt", text: "not even,a,valid\"csv" },
+      { name: "stop_times.txt", text: 'not even,a,valid"csv' },
       { name: "stops.txt", text: "stop_id,stop_name\n,Nameless\nS1,Named\n" },
     ]);
     const result = await normalize(archive, context("test-feed", "Test", "agency,stops,stop_times"));
@@ -222,10 +209,11 @@ describe("GTFS transformer", () => {
   it("fails explicitly past the shapes.txt point bound and the per-entry inflated cap", async () => {
     const metro = fixtureArchive(fixtures.metro);
     const metroContext = context("test-feed", "Test", METRO_FILES);
-    await expect(normalize(metro, metroContext, 7, { maximumEntryBytes: 1024 * 1024, maximumPathPoints: 3 }))
-      .rejects.toMatchObject({ code: "response-too-large", message: "GTFS shapes.txt has more than 3 points to assemble" });
-    await expect(normalize(metro, metroContext, 7, { maximumEntryBytes: 64, maximumPathPoints: 1000 }))
-      .rejects.toMatchObject({ code: "response-too-large" });
+    await expect(normalize(metro, metroContext, 7, { maximumEntryBytes: 1024 * 1024, maximumPathPoints: 3 })).rejects.toMatchObject({
+      code: "response-too-large",
+      message: "GTFS shapes.txt has more than 3 points to assemble",
+    });
+    await expect(normalize(metro, metroContext, 7, { maximumEntryBytes: 64, maximumPathPoints: 1000 })).rejects.toMatchObject({ code: "response-too-large" });
   });
 });
 

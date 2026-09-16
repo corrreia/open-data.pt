@@ -12,7 +12,19 @@ import {
 } from "@open-data-pt/gatekeeper-shared";
 
 import { chunkIndexFor, chunkListProblem, parseChunkRows, regenerateChunks, servedIdentity, type ChunkSink, type ServingRow } from "./chunks";
-import { definitionFingerprint, feedDefinition, keepsHistory, policyFingerprint, type Acquisition, type AcquisitionStatus, type BackfillSummary, type Feed, type FeedPolicy, type FeedStatus, type ProductIndexEntry } from "./feed-model";
+import {
+  definitionFingerprint,
+  feedDefinition,
+  keepsHistory,
+  policyFingerprint,
+  type Acquisition,
+  type AcquisitionStatus,
+  type BackfillSummary,
+  type Feed,
+  type FeedPolicy,
+  type FeedStatus,
+  type ProductIndexEntry,
+} from "./feed-model";
 import { digest } from "./hash";
 import type { LakeTable } from "./lake";
 import { keys, WINDOW, type ChangeItem, type ObjectStore } from "./object-store";
@@ -267,7 +279,8 @@ export class RunnerCore {
     this.exec(`CREATE INDEX IF NOT EXISTS outbox_acquisition ON outbox(acquisition_id)`);
     this.exec(`CREATE TABLE IF NOT EXISTS garbage (object_key TEXT PRIMARY KEY, delete_after TEXT NOT NULL)`);
     // Every construction runs this; writing the version only when it is new keeps a warm-up free of row writes.
-    if (current !== String(RUNNER_SCHEMA_VERSION)) this.exec(`INSERT INTO meta (key, value) VALUES ('schema_version', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`, String(RUNNER_SCHEMA_VERSION));
+    if (current !== String(RUNNER_SCHEMA_VERSION))
+      this.exec(`INSERT INTO meta (key, value) VALUES ('schema_version', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`, String(RUNNER_SCHEMA_VERSION));
   }
 
   private reset(): void {
@@ -291,8 +304,12 @@ export class RunnerCore {
     this.exec(`DELETE FROM state WHERE key = ?`, key);
   }
 
-  feed(): Feed | undefined { return this.getState<Feed>("feed"); }
-  policy(): FeedPolicy | undefined { return this.getState<FeedPolicy>("policy"); }
+  feed(): Feed | undefined {
+    return this.getState<Feed>("feed");
+  }
+  policy(): FeedPolicy | undefined {
+    return this.getState<FeedPolicy>("policy");
+  }
 
   runtime(): RunnerState {
     return this.getState<RunnerState>("runtime") ?? { consecutiveFailures: 0, consecutiveInterruptions: 0 };
@@ -329,7 +346,8 @@ export class RunnerCore {
     const current = this.feed();
     const currentPolicy = this.policy();
     // Adopted again after being dropped is a change too: the runner must plan its wake-ups again.
-    if (current && currentPolicy && definitionFingerprint(current) === definitionFingerprint(feed) && policyFingerprint(currentPolicy) === policyFingerprint(policy)) return wasRetiring;
+    if (current && currentPolicy && definitionFingerprint(current) === definitionFingerprint(feed) && policyFingerprint(currentPolicy) === policyFingerprint(policy))
+      return wasRetiring;
     this.setState("feed", feedDefinition(feed));
     this.setState("policy", policy);
     const now = this.deps.now();
@@ -426,7 +444,13 @@ export class RunnerCore {
   markStarted(acquisitionId: string, instanceId: string): void {
     const now = this.deps.now();
     this.exec(`UPDATE acquisitions SET status = 'running', started_at = ? WHERE id = ?`, new Date(now).toISOString(), acquisitionId);
-    this.setRuntime({ ...this.runtime(), runningAcquisitionId: acquisitionId, runningInstanceId: instanceId, watchdogAt: this.watchdogDeadline(), lastAttemptAt: new Date(now).toISOString() });
+    this.setRuntime({
+      ...this.runtime(),
+      runningAcquisitionId: acquisitionId,
+      runningInstanceId: instanceId,
+      watchdogAt: this.watchdogDeadline(),
+      lastAttemptAt: new Date(now).toISOString(),
+    });
   }
 
   private watchdogDeadline(): string {
@@ -445,9 +469,10 @@ export class RunnerCore {
 
   /** Serving objects referenced by one product (or all products). */
   private productObjectKeys(productKey?: string): string[] {
-    const rows = productKey === undefined
-      ? this.rows<{ entry_json: string }>(`SELECT entry_json FROM products`)
-      : this.rows<{ entry_json: string }>(`SELECT entry_json FROM products WHERE product_key = ?`, productKey);
+    const rows =
+      productKey === undefined
+        ? this.rows<{ entry_json: string }>(`SELECT entry_json FROM products`)
+        : this.rows<{ entry_json: string }>(`SELECT entry_json FROM products WHERE product_key = ?`, productKey);
     // SAFETY: entry_json is written only from ProductIndexEntry values.
     return [...new Set(rows.flatMap((row) => objectKeysOf(JSON.parse(row.entry_json) as ProductIndexEntry)))];
   }
@@ -497,7 +522,8 @@ export class RunnerCore {
     if (this.getState<PendingPublication>("publication")) throw new Error("A committed batch is still being published; retry shortly");
     const feed = this.requireFeed();
     const policy = this.requirePolicy();
-    if (this.committedOutboxBytes() >= PENDING_MAX_BYTES) throw new Error(`History backlog reached ${PENDING_MAX_BYTES} bytes; collection paused without discarding accepted history`);
+    if (this.committedOutboxBytes() >= PENDING_MAX_BYTES)
+      throw new Error(`History backlog reached ${PENDING_MAX_BYTES} bytes; collection paused without discarding accepted history`);
     // A retried attempt starts clean; nothing uncommitted from an earlier attempt survives.
     this.discard(acquisitionId);
     const now = this.deps.now();
@@ -545,7 +571,11 @@ export class RunnerCore {
     const declared = declareProducts(this.productPlans(), input.products);
     const fresh = declared.filter((product) => !product.previous).map((product) => product.slug);
     if (fresh.length > 0) await this.deps.claim(feed.id, fresh);
-    const updated: CollectionMemo = { ...memo, normalizer: input.normalizer, declared: declared.map(({ productKey, slug, version, baseline }) => ({ productKey, slug, version, baseline })) };
+    const updated: CollectionMemo = {
+      ...memo,
+      normalizer: input.normalizer,
+      declared: declared.map(({ productKey, slug, version, baseline }) => ({ productKey, slug, version, baseline })),
+    };
     if (input.sourcePublishedAt) updated.sourcePublishedAt = input.sourcePublishedAt;
     this.setState(collectionKey(acquisitionId), updated);
     return declared;
@@ -559,11 +589,17 @@ export class RunnerCore {
     const product = this.productPlans().find((candidate) => candidate.productKey === productKey);
     if (!product || product.mode === "large") return;
     const rows: ServingRow[] = [];
-    for (const chunk of product.entry.chunks ?? []) rows.push(...parseChunkRows(await this.deps.objects.readText(chunk.key) ?? ""));
+    for (const chunk of product.entry.chunks ?? []) rows.push(...parseChunkRows((await this.deps.objects.readText(chunk.key)) ?? ""));
     this.transaction(() => {
       for (const row of rows) {
         const hash = rowHash(row.json);
-        this.exec(`INSERT INTO entities (product_key, entity_key, hash, row_json) VALUES (?, ?, ?, ?) ON CONFLICT(product_key, entity_key) DO UPDATE SET hash = excluded.hash, row_json = excluded.row_json`, productKey, row.key, hash, row.json);
+        this.exec(
+          `INSERT INTO entities (product_key, entity_key, hash, row_json) VALUES (?, ?, ?, ?) ON CONFLICT(product_key, entity_key) DO UPDATE SET hash = excluded.hash, row_json = excluded.row_json`,
+          productKey,
+          row.key,
+          hash,
+          row.json,
+        );
       }
       this.exec(`UPDATE products SET mode = 'large' WHERE product_key = ?`, productKey);
     });
@@ -648,7 +684,8 @@ export class RunnerCore {
   async commit(acquisitionId: string, input: CommitInput): Promise<CommitResult> {
     const acquisition = this.getAcquisition(acquisitionId);
     if (!acquisition) throw new Error(`Unknown acquisition ${acquisitionId}`);
-    if (acquisition.status === "succeeded" || acquisition.status === "unchanged") return { status: acquisition.status, historyRows: acquisition.historyRows ?? 0, outbox: this.pendingOutbox(COMMIT_OUTBOX_BLOBS) };
+    if (acquisition.status === "succeeded" || acquisition.status === "unchanged")
+      return { status: acquisition.status, historyRows: acquisition.historyRows ?? 0, outbox: this.pendingOutbox(COMMIT_OUTBOX_BLOBS) };
     const policy = this.requirePolicy();
     const now = this.deps.now();
     const at = new Date(now).toISOString();
@@ -667,7 +704,18 @@ export class RunnerCore {
       this.exec(`UPDATE outbox SET committed = 1, committed_at = ? WHERE acquisition_id = ?`, at, acquisitionId);
       this.exec(
         `UPDATE acquisitions SET status = ?, completed_at = ?, observed_at = ?, event_time = ?, source_published_at = ?, completeness = ?, normalizer_json = ?, quality_json = ?, rows = ?, revisions = ?, history_rows = ?, error = NULL WHERE id = ?`,
-        status, at, memo.observedAt, input.eventTime ?? null, input.sourcePublishedAt ?? null, input.completeness, JSON.stringify(input.normalizer), JSON.stringify(input.quality), input.rows, input.revisions, historyRows, acquisitionId,
+        status,
+        at,
+        memo.observedAt,
+        input.eventTime ?? null,
+        input.sourcePublishedAt ?? null,
+        input.completeness,
+        JSON.stringify(input.normalizer),
+        JSON.stringify(input.quality),
+        input.rows,
+        input.revisions,
+        historyRows,
+        acquisitionId,
       );
       const runtime = this.runtime();
       const next: RunnerState = { ...runtime, consecutiveFailures: 0, consecutiveInterruptions: 0 };
@@ -685,7 +733,8 @@ export class RunnerCore {
       this.setRuntime(next);
       if (!history) this.maybeStartBackfill();
       const publish = input.products.filter((product) => product.changed).map((product) => product.productKey);
-      if (!history && (publish.length > 0 || this.retiredSinceLastPublication())) this.setState("publication", { acquisitionId, productKeys: publish } satisfies PendingPublication);
+      if (!history && (publish.length > 0 || this.retiredSinceLastPublication()))
+        this.setState("publication", { acquisitionId, productKeys: publish } satisfies PendingPublication);
       else this.exec(`DELETE FROM stage WHERE acquisition_id = ?`, acquisitionId);
       this.deleteState(collectionKey(acquisitionId));
     });
@@ -708,7 +757,15 @@ export class RunnerCore {
       this.discard(acquisitionId);
       this.exec(`UPDATE acquisitions SET status = 'unchanged', completed_at = ?, observed_at = COALESCE(observed_at, ?), error = NULL WHERE id = ?`, at, at, acquisitionId);
       const runtime = this.runtime();
-      const next: RunnerState = { ...runtime, checkpoint, lastSuccessAt: at, consecutiveFailures: 0, consecutiveInterruptions: 0, cooldowns: 0, nextRunAt: new Date(now + policy.collection.cadenceSeconds * 1000).toISOString() };
+      const next: RunnerState = {
+        ...runtime,
+        checkpoint,
+        lastSuccessAt: at,
+        consecutiveFailures: 0,
+        consecutiveInterruptions: 0,
+        cooldowns: 0,
+        nextRunAt: new Date(now + policy.collection.cadenceSeconds * 1000).toISOString(),
+      };
       delete next.runningAcquisitionId;
       delete next.watchdogAt;
       this.setRuntime(next);
@@ -849,7 +906,17 @@ export class RunnerCore {
   backfillSummary(): BackfillSummary | undefined {
     const state = this.getState<BackfillState>("backfill");
     if (!state) return undefined;
-    const summary: BackfillSummary = { status: state.status, cursor: state.cursor.before, slices: state.slices, points: state.points, records: state.records, failures: state.failures, floors: state.floors, startedAt: state.startedAt, updatedAt: state.updatedAt };
+    const summary: BackfillSummary = {
+      status: state.status,
+      cursor: state.cursor.before,
+      slices: state.slices,
+      points: state.points,
+      records: state.records,
+      failures: state.failures,
+      floors: state.floors,
+      startedAt: state.startedAt,
+      updatedAt: state.updatedAt,
+    };
     if (state.until) summary.until = state.until;
     if (state.lastError) summary.lastError = state.lastError;
     return summary;
@@ -857,7 +924,9 @@ export class RunnerCore {
 
   /** Oldest event time this feed serves today; where a history walk starts by default. */
   oldestServedTime(): string | undefined {
-    const times = this.productPlans().map((product) => product.entry.watermark).filter((value): value is string => Boolean(value));
+    const times = this.productPlans()
+      .map((product) => product.entry.watermark)
+      .filter((value): value is string => Boolean(value));
     return times.sort()[0];
   }
 
@@ -948,7 +1017,13 @@ export class RunnerCore {
   }
 
   private insertAcquisition(id: string, trigger: string, policyVersion: number): void {
-    this.exec(`INSERT INTO acquisitions (id, trigger, status, requested_at, policy_version) VALUES (?, ?, 'queued', ?, ?)`, id, trigger, new Date(this.deps.now()).toISOString(), policyVersion);
+    this.exec(
+      `INSERT INTO acquisitions (id, trigger, status, requested_at, policy_version) VALUES (?, ?, 'queued', ?, ?)`,
+      id,
+      trigger,
+      new Date(this.deps.now()).toISOString(),
+      policyVersion,
+    );
   }
 
   private nextQueued(): Acquisition | undefined {
@@ -968,8 +1043,13 @@ export class RunnerCore {
     if (!declared || !memo.normalizer) throw new NormalizedInputError(`Product ${productKey} was not declared`);
     const policy = this.requirePolicy();
     const context: RecordContext = {
-      feedId: this.requireFeed().id, acquisitionId, slug: declared.slug, productVersion: declared.version,
-      observedAt: memo.observedAt, normalizer: memo.normalizer, baseline: declared.baseline,
+      feedId: this.requireFeed().id,
+      acquisitionId,
+      slug: declared.slug,
+      productVersion: declared.version,
+      observedAt: memo.observedAt,
+      normalizer: memo.normalizer,
+      baseline: declared.baseline,
       keepHistory: memo.lake && keepsHistory(policy, productKey),
     };
     if (memo.sourcePublishedAt) context.sourcePublishedAt = memo.sourcePublishedAt;
@@ -980,7 +1060,11 @@ export class RunnerCore {
     const found = new Map<string, { id: number; hash: string }>();
     for (let start = 0; start < entityKeys.length; start += LOOKUP_BATCH) {
       const slice = entityKeys.slice(start, start + LOOKUP_BATCH);
-      for (const row of this.rows<{ id: number; entity_key: string; hash: string }>(`SELECT id, entity_key, hash FROM entities WHERE product_key = ? AND entity_key IN (SELECT value FROM json_each(?))`, productKey, JSON.stringify(slice))) {
+      for (const row of this.rows<{ id: number; entity_key: string; hash: string }>(
+        `SELECT id, entity_key, hash FROM entities WHERE product_key = ? AND entity_key IN (SELECT value FROM json_each(?))`,
+        productKey,
+        JSON.stringify(slice),
+      )) {
         found.set(row.entity_key, { id: row.id, hash: row.hash });
       }
     }
@@ -1013,12 +1097,14 @@ export class RunnerCore {
          SELECT ?, json_extract(j.value, '$[0]'), json_extract(j.value, '$[1]'), json_extract(j.value, '$[2]')
          FROM stage s, json_each(s.body) j WHERE s.seq = ? AND json_extract(j.value, '$[1]') IS NOT NULL
          ON CONFLICT(product_key, entity_key) DO UPDATE SET hash = excluded.hash, row_json = excluded.row_json`,
-        productKey, seq,
+        productKey,
+        seq,
       );
       this.exec(
         `DELETE FROM entities WHERE product_key = ? AND entity_key IN
          (SELECT json_extract(j.value, '$[0]') FROM stage s, json_each(s.body) j WHERE s.seq = ? AND json_extract(j.value, '$[1]') IS NULL)`,
-        productKey, seq,
+        productKey,
+        seq,
       );
     }
   }
@@ -1037,10 +1123,14 @@ export class RunnerCore {
     this.exec(
       `INSERT INTO products (product_key, slug, mode, entry_json, regenerate) VALUES (?, ?, ?, ?, ?)
        ON CONFLICT(product_key) DO UPDATE SET mode = excluded.mode, entry_json = excluded.entry_json, regenerate = excluded.regenerate`,
-      product.productKey, product.entry.slug, mode, JSON.stringify(product.entry), product.mode === "large" && product.staged ? 1 : 0,
+      product.productKey,
+      product.entry.slug,
+      mode,
+      JSON.stringify(product.entry),
+      product.mode === "large" && product.staged ? 1 : 0,
     );
     // SAFETY: entry_json is written only from ProductIndexEntry values.
-    this.supersede(current ? JSON.parse(current.entry_json) as ProductIndexEntry : null, product.entry);
+    this.supersede(current ? (JSON.parse(current.entry_json) as ProductIndexEntry) : null, product.entry);
   }
 
   /**
@@ -1064,7 +1154,9 @@ export class RunnerCore {
 
   private retireMissing(productKeys: string[]): void {
     const keep = new Set(productKeys);
-    const missing = this.rows<{ product_key: string }>(`SELECT product_key FROM products`).map((row) => row.product_key).filter((key) => !keep.has(key));
+    const missing = this.rows<{ product_key: string }>(`SELECT product_key FROM products`)
+      .map((row) => row.product_key)
+      .filter((key) => !keep.has(key));
     if (missing.length === 0) return;
     for (const key of missing) {
       // A retired product's serving objects are no longer selectable once the Registry publishes without it.
@@ -1091,14 +1183,31 @@ export class RunnerCore {
     const sink: ChunkSink = {
       prefix: keys.prefix(feed.id, product.slug),
       known: new Set(previous.map((chunk) => chunk.key)),
-      put: async (key, body) => { await this.deps.objects.writeText(key, body); },
+      put: async (key, body) => {
+        await this.deps.objects.writeText(key, body);
+      },
     };
-    const chunks = await regenerateChunks(previous, dirty, (after, limit) => {
-      const rows = after === null
-        ? this.rows<{ entity_key: string; row_json: string }>(`SELECT entity_key, row_json FROM entities WHERE product_key = ? ORDER BY entity_key LIMIT ?`, product.productKey, limit)
-        : this.rows<{ entity_key: string; row_json: string }>(`SELECT entity_key, row_json FROM entities WHERE product_key = ? AND entity_key > ? ORDER BY entity_key LIMIT ?`, product.productKey, after, limit);
-      return rows.map((row) => ({ key: row.entity_key, json: row.row_json }));
-    }, sink);
+    const chunks = await regenerateChunks(
+      previous,
+      dirty,
+      (after, limit) => {
+        const rows =
+          after === null
+            ? this.rows<{ entity_key: string; row_json: string }>(
+                `SELECT entity_key, row_json FROM entities WHERE product_key = ? ORDER BY entity_key LIMIT ?`,
+                product.productKey,
+                limit,
+              )
+            : this.rows<{ entity_key: string; row_json: string }>(
+                `SELECT entity_key, row_json FROM entities WHERE product_key = ? AND entity_key > ? ORDER BY entity_key LIMIT ?`,
+                product.productKey,
+                after,
+                limit,
+              );
+        return rows.map((row) => ({ key: row.entity_key, json: row.row_json }));
+      },
+      sink,
+    );
     const problem = chunkListProblem(chunks, product.slug);
     // The commit is durable, so a product too large to list must not wedge publication: it serves nothing, and every collection tries again.
     if (problem) console.error(JSON.stringify({ event: "chunk_list_too_large", feedId: feed.id, problem }));
@@ -1166,8 +1275,19 @@ export class RunnerCore {
     const earliest = history.earliest ? Date.parse(history.earliest) : Number.NaN;
     const until = new Date(Number.isFinite(earliest) ? Math.max(earliest, floor.getTime()) : floor.getTime()).toISOString();
     const walk: BackfillState & { nextAt: string } = {
-      status: "running", cursor: { before: this.oldestServedTime() ?? at }, visitedCursors: [], walkId: crypto.randomUUID(), until,
-      floors: {}, seen: {}, slices: 0, points: 0, records: 0, failures: 0, startedAt: at, updatedAt: at,
+      status: "running",
+      cursor: { before: this.oldestServedTime() ?? at },
+      visitedCursors: [],
+      walkId: crypto.randomUUID(),
+      until,
+      floors: {},
+      seen: {},
+      slices: 0,
+      points: 0,
+      records: 0,
+      failures: 0,
+      startedAt: at,
+      updatedAt: at,
       nextAt: new Date(now + BACKFILL_START_DELAY_MS).toISOString(),
     };
     this.setState("backfill", walk);
@@ -1286,9 +1406,25 @@ export function declareProducts(existing: ProductPlan[], headers: NormalizedProd
   const declared = headers.map((header): DeclaredProduct => {
     const previous = byKey.get(header.productKey);
     if (previous) {
-      return { productKey: header.productKey, slug: previous.slug, kind: header.kind, version: previous.entry.version + 1, baseline: false, mode: previous.mode, previous: previous.entry };
+      return {
+        productKey: header.productKey,
+        slug: previous.slug,
+        kind: header.kind,
+        version: previous.entry.version + 1,
+        baseline: false,
+        mode: previous.mode,
+        previous: previous.entry,
+      };
     }
-    return { productKey: header.productKey, slug: header.suggestedSlug, kind: header.kind, version: 1, baseline: true, mode: header.kind === "record" ? "large" : "small", previous: null };
+    return {
+      productKey: header.productKey,
+      slug: header.suggestedSlug,
+      kind: header.kind,
+      version: 1,
+      baseline: true,
+      mode: header.kind === "record" ? "large" : "small",
+      previous: null,
+    };
   });
   const slugs = declared.map((product) => product.slug);
   if (new Set(slugs).size !== slugs.length) throw new NormalizedInputError("Two products of one batch map to the same slug");

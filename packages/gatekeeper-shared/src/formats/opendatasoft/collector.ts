@@ -23,14 +23,12 @@ export async function resolveOpendatasoftFeed(config: SourceConfig, hosts: Reado
 /** The collection wiring the Worker serves over RPC, kept outside the entrypoint so tests drive exactly it. */
 export function opendatasoftCollector(options: OpendatasoftCollectorOptions): NormalizedCollector {
   const hosts = allowedHosts(options.hosts);
-  const sourceFor = (signal?: AbortSignal): OpendatasoftSource =>
-    new OpendatasoftSource(hosts, (input, init) => options.fetcher(input, { ...init, signal: signal ?? null }));
+  const sourceFor = (signal?: AbortSignal): OpendatasoftSource => new OpendatasoftSource(hosts, (input, init) => options.fetcher(input, { ...init, signal: signal ?? null }));
   return {
     normalizer: { id: transformer.id, version: transformer.version },
     resolve: (value) => resolveOpendatasoftFeed(value, hosts),
-    source: (state, mode, signal) => mode.kind === "history"
-      ? sourceFor(signal).collectHistory(options.config, mode.cursor)
-      : sourceFor(signal).collect(options.config, sourceValidator(state)),
+    source: (state, mode, signal) =>
+      mode.kind === "history" ? sourceFor(signal).collectHistory(options.config, mode.cursor) : sourceFor(signal).collect(options.config, sourceValidator(state)),
     normalize: { kind: "streaming", transform: (body, context) => transformer.transform(body, context) },
   };
 }

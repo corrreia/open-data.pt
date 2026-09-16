@@ -167,11 +167,16 @@ export class Registry extends DurableObject<Env> {
       return;
     }
     if (due > now) return;
-    const products = new Set(this.listProducts().filter((product) => product.role === "time-series" && product.exposeHistory).map((product) => product.slug));
+    const products = new Set(
+      this.listProducts()
+        .filter((product) => product.role === "time-series" && product.exposeHistory)
+        .map((product) => product.slug),
+    );
     try {
       const run = await summariseSettledDays({ env: this.env, objects: new ObjectStore(new R2SnapshotStore(this.env.DATA_OBJECTS)), products }, now, SUMMARY_DAYS_PER_WAKE);
       this.store.setState(SUMMARY_DUE_STATE_KEY, run.backlog ? now + 60_000 : run.nextDue);
-      if (run.summarised.length > 0 || run.late.length > 0 || run.backlog) console.log(JSON.stringify({ event: "series_summaries", days: run.summarised, lateDays: run.late, backlog: run.backlog, bytesScanned: run.bytesScanned }));
+      if (run.summarised.length > 0 || run.late.length > 0 || run.backlog)
+        console.log(JSON.stringify({ event: "series_summaries", days: run.summarised, lateDays: run.late, backlog: run.backlog, bytesScanned: run.bytesScanned }));
     } catch (error) {
       this.store.setState(SUMMARY_DUE_STATE_KEY, now + 3_600_000);
       console.error(JSON.stringify({ event: "series_summary_failed", error: String(error) }));
@@ -267,15 +272,16 @@ export class Registry extends DurableObject<Env> {
     const gatekeeper = getFeedGatekeeper(buildGatekeeperRegistry(this.env), input.gatekeeperKind);
     const resolved = await gatekeeper.resolveFeed(input.config);
     assertResolvedFeed(resolved);
-    if (resolved.configHash !== await hashSourceConfig(resolved.config)) throw new NormalizedInputError("Resolved feed configuration digest did not match");
+    if (resolved.configHash !== (await hashSourceConfig(resolved.config))) throw new NormalizedInputError("Resolved feed configuration digest did not match");
     const policy = this.store.getPolicy(input.policyId);
     if (!policy) throw new NotFoundError(`Policy ${input.policyId} was not found`);
     const existing = this.store.getFeedBySlug(input.slug);
     const now = new Date().toISOString();
-    const sameSemantics = existing?.resolved.resourceKey === resolved.resourceKey
-      && existing.resolved.kind === resolved.kind
-      && JSON.stringify(existing.resolved.semantics) === JSON.stringify(resolved.semantics)
-      && JSON.stringify(existing.resolved.history ?? null) === JSON.stringify(resolved.history ?? null);
+    const sameSemantics =
+      existing?.resolved.resourceKey === resolved.resourceKey &&
+      existing.resolved.kind === resolved.kind &&
+      JSON.stringify(existing.resolved.semantics) === JSON.stringify(resolved.semantics) &&
+      JSON.stringify(existing.resolved.history ?? null) === JSON.stringify(resolved.history ?? null);
     const candidate: Feed = {
       ...input,
       id: existing?.id ?? `feed_${digest(`feed:${input.slug}`)}`,
@@ -405,14 +411,21 @@ export class Registry extends DurableObject<Env> {
     const now = Date.now();
     const to = new Date(Math.floor(now / 86_400_000) * 86_400_000).toISOString();
     const from = new Date(Date.parse(to) - 86_400_000).toISOString();
-    const sample = this.store.listActivityBetween(from, to, 5_000).items.filter((item) => (item.historyRows ?? 0) > 0).slice(0, 40);
+    const sample = this.store
+      .listActivityBetween(from, to, 5_000)
+      .items.filter((item) => (item.historyRows ?? 0) > 0)
+      .slice(0, 40);
     const audit: LakeAudit = { at: new Date(now).toISOString(), window: { from, to }, checked: sample.length, mismatches: [] };
     if (sample.length > 0) {
       const ids = sample.map((item) => `'${item.id.replaceAll("'", "''")}'`).join(",");
       const found = new Map<string, number>();
       try {
         for (const table of ["records", "points"] as const) {
-          const result = await runLakeQuery(this.env, `SELECT batch_id, COUNT(DISTINCT revision_id) AS count FROM open_data.${table} WHERE __ingest_ts >= TIMESTAMP '${from}' AND batch_id IN (${ids}) GROUP BY batch_id LIMIT 1000`, `audit:${table}`);
+          const result = await runLakeQuery(
+            this.env,
+            `SELECT batch_id, COUNT(DISTINCT revision_id) AS count FROM open_data.${table} WHERE __ingest_ts >= TIMESTAMP '${from}' AND batch_id IN (${ids}) GROUP BY batch_id LIMIT 1000`,
+            `audit:${table}`,
+          );
           for (const row of result.rows) found.set(String(row.batch_id), (found.get(String(row.batch_id)) ?? 0) + Number(row.count ?? 0));
         }
         for (const item of sample) {
@@ -452,7 +465,10 @@ function nextAuditTime(now: number): number {
 }
 
 function slugify(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 /**
@@ -605,7 +621,8 @@ export class FeedRunner extends DurableObject<Env> {
       if (overdue) ended = await this.checkExecutor(overdue);
       // The Workflow delivers what it commits. History still waiting after ten minutes (its executor died, or a retried
       // step found the work done) triggers a drain here, which then sends everything committed.
-      if (!this.core.runtime().runningAcquisitionId && this.core.hasUndeliveredHistory(new Date(Date.now() - LEFTOVER_HISTORY_AFTER_MS).toISOString())) ended = (await this.drainLeftoverHistory()) > 0 || ended;
+      if (!this.core.runtime().runningAcquisitionId && this.core.hasUndeliveredHistory(new Date(Date.now() - LEFTOVER_HISTORY_AFTER_MS).toISOString()))
+        ended = (await this.drainLeftoverHistory()) > 0 || ended;
       const due = this.core.takeDue();
       if (due) ended = !(await this.start(due)) || ended;
       await this.core.collectGarbage();
@@ -623,7 +640,10 @@ export class FeedRunner extends DurableObject<Env> {
     const instanceId = `${acquisition.id}-${Date.now().toString(36)}`;
     this.core.markStarted(acquisition.id, instanceId);
     try {
-      await this.env.COLLECTIONS.create({ id: instanceId, params: { feedId: feed.id, acquisitionId: acquisition.id, gatekeeperKind: feed.gatekeeperKind, timeoutSeconds: policy.collection.timeoutSeconds } });
+      await this.env.COLLECTIONS.create({
+        id: instanceId,
+        params: { feedId: feed.id, acquisitionId: acquisition.id, gatekeeperKind: feed.gatekeeperKind, timeoutSeconds: policy.collection.timeoutSeconds },
+      });
       return true;
     } catch (error) {
       this.core.fail(acquisition.id, { message: `Could not start the collection executor: ${String(error)}`, retryable: true });

@@ -20,11 +20,13 @@ const SHARED = "gatekeeper-shared";
 
 /** Every Gatekeeper Worker package, by its topic name, in directory order. */
 export function workerTopics(): string[] {
-  return readdirSync(PACKAGES, { withFileTypes: true })
-    // A directory left behind by a deleted package (its ignored node_modules and .wrangler) is not a Worker: only a Wrangler config makes one.
-    .filter((entry) => entry.isDirectory() && entry.name.startsWith("gatekeeper-") && entry.name !== SHARED && existsSync(join(PACKAGES, entry.name, "wrangler.jsonc")))
-    .map((entry) => entry.name.slice("gatekeeper-".length))
-    .toSorted();
+  return (
+    readdirSync(PACKAGES, { withFileTypes: true })
+      // A directory left behind by a deleted package (its ignored node_modules and .wrangler) is not a Worker: only a Wrangler config makes one.
+      .filter((entry) => entry.isDirectory() && entry.name.startsWith("gatekeeper-") && entry.name !== SHARED && existsSync(join(PACKAGES, entry.name, "wrangler.jsonc")))
+      .map((entry) => entry.name.slice("gatekeeper-".length))
+      .toSorted()
+  );
 }
 
 /** The Wrangler config of one topic Worker, relative to the repository root. */
@@ -71,10 +73,8 @@ export function expectedPackageJson(topics: string[]): string {
 const SERVICES_COMMENT = "  // One Worker per catalog topic; the kernel discovers them by binding prefix.\n";
 
 function servicesBlock(topics: string[]): string {
-  const entries = topics
-    .map((topic) => `    { "binding": "GATEKEEPER_${topic.toUpperCase()}", "service": "open-data-pt-gatekeeper-${topic}" }`)
-    .join(",\n");
-  return `${SERVICES_COMMENT}  "services": [\n${entries}\n  ],\n`;
+  const entries = topics.map((topic) => `    { "binding": "GATEKEEPER_${topic.toUpperCase()}", "service": "open-data-pt-gatekeeper-${topic}" }`).join(",\n");
+  return `${SERVICES_COMMENT}  "services": [\n${entries},\n  ],\n`;
 }
 
 /** The kernel's Wrangler config as it should be: only the `services` array and its comment are replaced. */

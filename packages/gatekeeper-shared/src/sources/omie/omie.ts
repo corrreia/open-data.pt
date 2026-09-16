@@ -12,22 +12,14 @@ import {
   type SourceValidator,
   type SourceConfig,
 } from "../../index";
-import {
-  marketDateBefore,
-  marketPeriodStart,
-  OMIE_HISTORY_EARLIEST_MARKET_DATE,
-  shiftMarketDate,
-} from "./market-time";
+import { marketDateBefore, marketPeriodStart, OMIE_HISTORY_EARLIEST_MARKET_DATE, shiftMarketDate } from "./market-time";
 
 const ALLOWED_ORIGIN = "https://www.omie.es";
 const MAX_MISSING_DAYS = 7;
 
 export const OMIE_MAX_BYTES = 1024 * 1024;
 export const OMIE_HISTORY_SLICE_DAYS = 7;
-export const OMIE_HISTORY_EARLIEST = marketPeriodStart(
-  OMIE_HISTORY_EARLIEST_MARKET_DATE,
-  1,
-);
+export const OMIE_HISTORY_EARLIEST = marketPeriodStart(OMIE_HISTORY_EARLIEST_MARKET_DATE, 1);
 
 export const OMIE_SERIES = ["marginalpdbc", "marginalpdbcpt"] as const;
 export type OmieSeries = (typeof OMIE_SERIES)[number];
@@ -36,8 +28,7 @@ export const OMIE_FEEDS = {
   prices: {
     kind: "prices",
     title: "Day-ahead electricity prices",
-    description:
-      "Hourly through 2025-09-30 and quarter-hourly from 2025-10-01: day-ahead market prices for the Portuguese and Spanish bidding zones.",
+    description: "Hourly through 2025-09-30 and quarter-hourly from 2025-10-01: day-ahead market prices for the Portuguese and Spanish bidding zones.",
     history: {
       // Seven reports stay around 20-80 KB and at most 1,400 points, well below
       // the 1 MiB policy cap while avoiding an overly chatty one-day walk.
@@ -59,9 +50,7 @@ interface CollectedFile {
 }
 
 export function validateOmieFeedConfig(config: SourceConfig): SourceConfig {
-  const unsupported = Object.keys(config).filter(
-    (key) => key !== "series" && key !== "days",
-  );
+  const unsupported = Object.keys(config).filter((key) => key !== "series" && key !== "days");
   if (unsupported.length > 0) {
     throw new GatekeeperError(`OMIE feed configuration does not accept ${unsupported.join(", ")}`, "source-denied");
   }
@@ -161,12 +150,7 @@ export async function collectOmieFeed(
  * rolling archive, so history uses OMIE's stable per-day public report path;
  * both formats are retained in the same `{ series, files }` envelope.
  */
-export async function collectOmieHistory(
-  config: SourceConfig,
-  cursor: HistoryCursor,
-  apiOrigin: string,
-  fetcher: typeof fetch,
-): Promise<SourceFetch> {
+export async function collectOmieHistory(config: SourceConfig, cursor: HistoryCursor, apiOrigin: string, fetcher: typeof fetch): Promise<SourceFetch> {
   const validated = validateOmieFeedConfig(config);
   // SAFETY: `validateOmieFeedConfig` has just confirmed `series` names one of
   // the series OMIE_SERIES declares.
@@ -178,9 +162,7 @@ export async function collectOmieHistory(
   }
 
   const newestDate = marketDateBefore(before);
-  const dates = Array.from({ length: OMIE_HISTORY_SLICE_DAYS }, (_, index) =>
-    shiftMarketDate(newestDate, -index),
-  ).filter((date) => date >= OMIE_HISTORY_EARLIEST_MARKET_DATE);
+  const dates = Array.from({ length: OMIE_HISTORY_SLICE_DAYS }, (_, index) => shiftMarketDate(newestDate, -index)).filter((date) => date >= OMIE_HISTORY_EARLIEST_MARKET_DATE);
   const boundaryDate = dates.at(-1);
   if (!boundaryDate) return { kind: "exhausted" };
 
@@ -246,17 +228,10 @@ function historyReportFilename(date: string): string {
 
 function historyReportUrl(origin: string, date: string): URL {
   const [year, month] = date.split("-");
-  return new URL(
-    `/sites/default/files/dados/AGNO_${year}/MES_${month}/TXT/${historyReportFilename(date)}`,
-    origin,
-  );
+  return new URL(`/sites/default/files/dados/AGNO_${year}/MES_${month}/TXT/${historyReportFilename(date)}`, origin);
 }
 
-function validateHistorySourceText(
-  text: string,
-  filename: string,
-  date: string,
-): void {
+function validateHistorySourceText(text: string, filename: string, date: string): void {
   const lines = text.split(/\r?\n/u).map((line) => line.trim());
   const [year, month, day] = date.split("-");
   const periodHeader = lines.findIndex((line) => line.startsWith(";"));
@@ -266,8 +241,7 @@ function validateHistorySourceText(
     .slice(0, 2);
   if (
     !/^(OMIE|OMEL) - Mercado de electricidad;/u.test(lines[0] ?? "") ||
-    (!(lines[0] ?? "").includes(`;${day}/${month}/${year};`) &&
-      !(lines[0] ?? "").includes(`;${date};`)) ||
+    (!(lines[0] ?? "").includes(`;${day}/${month}/${year};`) && !(lines[0] ?? "").includes(`;${date};`)) ||
     periodHeader < 0 ||
     priceLines.length !== 2 ||
     priceLines.some((line) => !line.toLocaleLowerCase("es").startsWith("precio marginal"))
@@ -281,21 +255,11 @@ function isOmieSeries(value: string | undefined): value is OmieSeries {
 }
 
 function candidateDates(now: Date, count: number): string[] {
-  const start = Date.UTC(
-    now.getUTCFullYear(),
-    now.getUTCMonth(),
-    now.getUTCDate() + 1,
-  );
-  return Array.from({ length: count }, (_, index) =>
-    new Date(start - index * 86_400_000).toISOString().slice(0, 10),
-  );
+  const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+  return Array.from({ length: count }, (_, index) => new Date(start - index * 86_400_000).toISOString().slice(0, 10));
 }
 
-function downloadUrl(
-  origin: string,
-  series: OmieSeries,
-  filename: string,
-): URL {
+function downloadUrl(origin: string, series: OmieSeries, filename: string): URL {
   const url = new URL("/en/file-download", origin);
   url.searchParams.set("parents", series);
   url.searchParams.set("filename", filename);
@@ -303,10 +267,7 @@ function downloadUrl(
 }
 
 /** An upstream 304: the provider's validators win, the checkpoint's fill any gap. */
-function notModified(
-  response: Response,
-  checkpoint: SourceValidator | undefined,
-): SourceNotModified {
+function notModified(response: Response, checkpoint: SourceValidator | undefined): SourceNotModified {
   const fetched: SourceNotModified = { kind: "not-modified" };
   const validator: SourceValidator = { ...checkpoint, ...responseValidator(response.headers) };
   if (validator.etag || validator.lastModified) fetched.validator = validator;
@@ -317,11 +278,7 @@ function tooLarge(filename: string): GatekeeperError {
   return new GatekeeperError(`OMIE response for ${filename} exceeded ${OMIE_MAX_BYTES} bytes`, "response-too-large");
 }
 
-function validateSourceText(
-  text: string,
-  series: OmieSeries,
-  filename: string,
-): void {
+function validateSourceText(text: string, series: OmieSeries, filename: string): void {
   const lines = text.split(/\r?\n/u).map((line) => line.trim());
   if (lines[0] !== `${series.toUpperCase()};` || !lines.includes("*")) {
     throw new GatekeeperError(`OMIE returned an invalid price file for ${filename}`, "invalid-response");
@@ -333,9 +290,7 @@ function latestLastModified(files: CollectedFile[]): string | undefined {
     .flatMap((file) => {
       if (!file.lastModified) return [];
       const milliseconds = Date.parse(file.lastModified);
-      return Number.isNaN(milliseconds)
-        ? []
-        : [{ value: file.lastModified, milliseconds }];
+      return Number.isNaN(milliseconds) ? [] : [{ value: file.lastModified, milliseconds }];
     })
     .sort((left, right) => left.milliseconds - right.milliseconds)
     .at(-1)?.value;

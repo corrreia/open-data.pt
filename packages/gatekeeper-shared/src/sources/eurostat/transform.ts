@@ -56,20 +56,10 @@ export function validateEurostatDatasetStructure(bytes: Uint8Array): void {
   parseDataset(bytes);
 }
 
-export function transformEurostatDataset(
-  bytes: Uint8Array,
-  context: TransformContext,
-): TransformResult {
+export function transformEurostatDataset(bytes: Uint8Array, context: TransformContext): TransformResult {
   const dataset = parseDataset(bytes);
   const names = namesFor(dataset.dimensions);
-  const constantIds = new Set(
-    dataset.dimensions
-      .filter(
-        (dimension) =>
-          dimension.id !== dataset.timeId && dimension.codes.length === 1,
-      )
-      .map((dimension) => dimension.id),
-  );
+  const constantIds = new Set(dataset.dimensions.filter((dimension) => dimension.id !== dataset.timeId && dimension.codes.length === 1).map((dimension) => dimension.id));
   const constants = dataset.dimensions
     .filter((dimension) => constantIds.has(dimension.id))
     .map((dimension) => {
@@ -89,14 +79,7 @@ export function transformEurostatDataset(
   let rejectedRecords = 0;
   let duplicateRecords = 0;
   for (const [flatIndex, rawValue] of dataset.values) {
-    const decoded = decodeCell(
-      dataset,
-      flatIndex,
-      rawValue,
-      names,
-      constantIds,
-      context.feed.config.unit,
-    );
+    const decoded = decodeCell(dataset, flatIndex, rawValue, names, constantIds, context.feed.config.unit);
     if (!decoded) {
       rejectedRecords += 1;
       continue;
@@ -113,24 +96,11 @@ export function transformEurostatDataset(
     cells.set(decoded.entityKey, decoded);
   }
 
-  const decodedCells = [...cells.values()].sort((left, right) =>
-    left.entityKey.localeCompare(right.entityKey),
-  );
-  const points = decodedCells
-    .map(({ point }) => point)
-    .sort(
-      (left, right) =>
-        left.eventTime.localeCompare(right.eventTime) ||
-        left.seriesKey.localeCompare(right.seriesKey),
-    );
+  const decodedCells = [...cells.values()].sort((left, right) => left.entityKey.localeCompare(right.entityKey));
+  const points = decodedCells.map(({ point }) => point).sort((left, right) => left.eventTime.localeCompare(right.eventTime) || left.seriesKey.localeCompare(right.seriesKey));
   const units = new Set(decodedCells.map(({ unit }) => unit));
   const sharedUnit = units.size === 1 ? decodedCells[0]?.unit : undefined;
-  const constantsNote =
-    constants.length === 0
-      ? ""
-      : ` Fixed for this dataset: ${constants
-          .map((constant) => `${constant.label}: ${constant.value}`)
-          .join("; ")}.`;
+  const constantsNote = constants.length === 0 ? "" : ` Fixed for this dataset: ${constants.map((constant) => `${constant.label}: ${constant.value}`).join("; ")}.`;
   const seriesSchema = {
     fields: [
       field("seriesKey", "identifier", false, undefined, "Series key"),
@@ -207,9 +177,7 @@ function parseDataset(bytes: Uint8Array): JsonStatDataset {
     throw invalidResponse("Eurostat dataset dimensions were too large to decode");
   }
   const values = indexedValues(raw.value, cellCount, "value");
-  const status = raw.status === undefined
-    ? undefined
-    : indexedObject(raw.status, cellCount, "status");
+  const status = raw.status === undefined ? undefined : indexedObject(raw.status, cellCount, "status");
   return {
     label: optionalString(raw.label) ?? "Eurostat dataset",
     ids,
@@ -223,29 +191,17 @@ function parseDataset(bytes: Uint8Array): JsonStatDataset {
   };
 }
 
-function parseDimension(
-  id: string,
-  dimensions: JsonObject,
-  expectedSize: number | undefined,
-): JsonStatDimension {
+function parseDimension(id: string, dimensions: JsonObject, expectedSize: number | undefined): JsonStatDimension {
   const raw = dimensions[id];
   if (!isJsonObject(raw) || !isJsonObject(raw.category)) {
     throw invalidResponse(`Eurostat dimension ${id} was malformed`);
   }
   const codes = categoryCodes(raw.category.index);
   if (expectedSize === undefined || codes.length !== expectedSize) {
-    throw invalidResponse(
-      `Eurostat dimension ${id} size did not match its categories`,
-    );
+    throw invalidResponse(`Eurostat dimension ${id} size did not match its categories`);
   }
   const labels = isJsonObject(raw.category.label)
-    ? Object.fromEntries(
-        Object.entries(raw.category.label).flatMap(([code, value]) =>
-          isJsonString(value) && value.trim() !== ""
-            ? [[code, value.trim()]]
-            : [],
-        ),
-      )
+    ? Object.fromEntries(Object.entries(raw.category.label).flatMap(([code, value]) => (isJsonString(value) && value.trim() !== "" ? [[code, value.trim()]] : [])))
     : {};
   return {
     id,
@@ -261,42 +217,24 @@ function categoryCodes(value: JsonValue | undefined): string[] {
     throw invalidResponse("Eurostat dimension category index was malformed");
   }
   const entries = Object.entries(value);
-  if (
-    !entries.every(
-      ([code, position]) =>
-        code.length > 0 &&
-        isJsonNumber(position) &&
-        Number.isSafeInteger(position) &&
-        position >= 0,
-    )
-  ) {
+  if (!entries.every(([code, position]) => code.length > 0 && isJsonNumber(position) && Number.isSafeInteger(position) && position >= 0)) {
     throw invalidResponse("Eurostat dimension category positions were malformed");
   }
   entries.sort(([, left], [, right]) => Number(left) - Number(right));
   if (entries.some((entry, index) => entry[1] !== index)) {
-    throw invalidResponse(
-      "Eurostat dimension category positions were not contiguous",
-    );
+    throw invalidResponse("Eurostat dimension category positions were not contiguous");
   }
   return entries.map(([code]) => code);
 }
 
-function indexedValues(
-  value: JsonValue | undefined,
-  cellCount: number,
-  name: string,
-): Array<[number, JsonValue]> {
+function indexedValues(value: JsonValue | undefined, cellCount: number, name: string): Array<[number, JsonValue]> {
   const object = indexedObject(value, cellCount, name);
   return Object.entries(object)
     .map(([key, entry]): [number, JsonValue] => [Number(key), entry])
     .sort((left, right) => left[0] - right[0]);
 }
 
-function indexedObject(
-  value: JsonValue | undefined,
-  cellCount: number,
-  name: string,
-): JsonObject {
+function indexedObject(value: JsonValue | undefined, cellCount: number, name: string): JsonObject {
   if (!isJsonObject(value)) {
     throw invalidResponse(`Eurostat ${name} was not a sparse object`);
   }
@@ -306,9 +244,7 @@ function indexedObject(
     }
     const index = Number(key);
     if (!Number.isSafeInteger(index) || index < 0 || index >= cellCount) {
-      throw invalidResponse(
-        `Eurostat ${name} index exceeded the dataset dimensions`,
-      );
+      throw invalidResponse(`Eurostat ${name} index exceeded the dataset dimensions`);
     }
   }
   return value;
@@ -325,45 +261,32 @@ function decodeCell(
   if (!isJsonNumber(rawValue) || !Number.isFinite(rawValue)) {
     return undefined;
   }
-  const selected = coordinates(flatIndex, dataset.sizes).map(
-    (position, index): DimensionSelection | undefined => {
-      const dimension = dataset.dimensions[index];
-      const code = dimension?.codes[position];
-      if (!dimension || code === undefined) return undefined;
-      return {
-        dimension,
-        code,
-        label: dimension.labels[code] ?? code,
-      };
-    },
-  );
+  const selected = coordinates(flatIndex, dataset.sizes).map((position, index): DimensionSelection | undefined => {
+    const dimension = dataset.dimensions[index];
+    const code = dimension?.codes[position];
+    if (!dimension || code === undefined) return undefined;
+    return {
+      dimension,
+      code,
+      label: dimension.labels[code] ?? code,
+    };
+  });
   if (selected.some((selection) => selection === undefined)) return undefined;
-  const selections = selected.filter(
-    (selection): selection is DimensionSelection => selection !== undefined,
-  );
-  const time = selections.find(
-    ({ dimension }) => dimension.id === dataset.timeId,
-  );
+  const selections = selected.filter((selection): selection is DimensionSelection => selection !== undefined);
+  const time = selections.find(({ dimension }) => dimension.id === dataset.timeId);
   if (!time) return undefined;
   const date = normalizeEurostatPeriod(time.code);
   if (!date) return undefined;
   const eventTime = `${date}T00:00:00Z`;
-  const nonTime = selections.filter(
-    ({ dimension }) => dimension.id !== dataset.timeId,
-  );
-  const varying = nonTime.filter(
-    ({ dimension }) => !constantIds.has(dimension.id),
-  );
+  const nonTime = selections.filter(({ dimension }) => dimension.id !== dataset.timeId);
+  const varying = nonTime.filter(({ dimension }) => !constantIds.has(dimension.id));
   const dimensions: Record<string, string> = {};
   for (const selection of varying) {
     const name = names.get(selection.dimension.id) ?? selection.dimension.name;
     dimensions[name] = selection.label;
   }
   // A dataset without a unit dimension uses the unit its example states.
-  const unit =
-    nonTime.find(({ dimension }) => dimension.id === "unit")?.label ??
-    statedUnit ??
-    "unknown";
+  const unit = nonTime.find(({ dimension }) => dimension.id === "unit")?.label ?? statedUnit ?? "unknown";
   const seriesCodes = varying.map(({ code }) => code);
   const entityCodes = [...seriesCodes, time.code];
   return {
@@ -392,10 +315,7 @@ function coordinates(flatIndex: number, sizes: number[]): number[] {
   return result;
 }
 
-function statusAt(
-  status: JsonObject | undefined,
-  index: number,
-): string | null {
+function statusAt(status: JsonObject | undefined, index: number): string | null {
   const value = status?.[String(index)];
   return isJsonString(value) && value !== "" ? value : null;
 }
@@ -414,13 +334,9 @@ export function normalizeEurostatPeriod(value: string): string | undefined {
     if (weekNumber < 1 || weekNumber > 53) return undefined;
     const januaryFourth = new Date(Date.UTC(year, 0, 4));
     const weekday = (januaryFourth.getUTCDay() + 6) % 7;
-    const monday = new Date(
-      Date.UTC(year, 0, 4 - weekday + (weekNumber - 1) * 7),
-    );
+    const monday = new Date(Date.UTC(year, 0, 4 - weekday + (weekNumber - 1) * 7));
     const parts = isoWeekParts(monday);
-    return parts.year === year && parts.week === weekNumber
-      ? monday.toISOString().slice(0, 10)
-      : undefined;
+    return parts.year === year && parts.week === weekNumber ? monday.toISOString().slice(0, 10) : undefined;
   }
 
   const month = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(value);
@@ -445,8 +361,7 @@ function isoWeekParts(date: Date): IsoWeek {
   const januaryWeekday = (januaryFourth.getUTCDay() + 6) % 7;
   const firstThursday = new Date(januaryFourth);
   firstThursday.setUTCDate(januaryFourth.getUTCDate() + 3 - januaryWeekday);
-  const week =
-    1 + Math.round((thursday.getTime() - firstThursday.getTime()) / 604_800_000);
+  const week = 1 + Math.round((thursday.getTime() - firstThursday.getTime()) / 604_800_000);
   return { year, week };
 }
 
@@ -458,17 +373,12 @@ interface IsoWeek {
 
 function validDate(value: string): boolean {
   const date = new Date(`${value}T00:00:00Z`);
-  return (
-    !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
-  );
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
 function roleIds(value: JsonValue | undefined, ids: string[]): string[] {
   if (!Array.isArray(value)) return [];
-  return value.filter(
-    (entry): entry is string =>
-      isJsonString(entry) && ids.includes(entry),
-  );
+  return value.filter((entry): entry is string => isJsonString(entry) && ids.includes(entry));
 }
 
 function namesFor(dimensions: JsonStatDimension[]): Map<string, string> {
@@ -485,9 +395,7 @@ function namesFor(dimensions: JsonStatDimension[]): Map<string, string> {
 }
 
 function optionalString(value: JsonValue | undefined): string | undefined {
-  return isJsonString(value) && value.trim() !== ""
-    ? value.trim()
-    : undefined;
+  return isJsonString(value) && value.trim() !== "" ? value.trim() : undefined;
 }
 
 function nonEmptyString(value: JsonValue | undefined): value is string {
@@ -497,4 +405,3 @@ function nonEmptyString(value: JsonValue | undefined): value is string {
 function positiveInteger(value: JsonValue | undefined): value is number {
   return isJsonNumber(value) && Number.isSafeInteger(value) && value > 0;
 }
-

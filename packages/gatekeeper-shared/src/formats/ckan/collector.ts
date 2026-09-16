@@ -11,7 +11,11 @@ export interface CkanCollectorOptions {
 }
 
 export function resolveCkanFeed(config: SourceConfig, hosts: ReadonlySet<string>): Promise<ResolvedFeed> {
-  return resolveFeed(config, { gatekeeperKind: "ckan", kinds: [config.measures ? CKAN_FEEDS.observations : CKAN_FEEDS.resource], validate: (value) => validateCkanFeedConfig(value, hosts) });
+  return resolveFeed(config, {
+    gatekeeperKind: "ckan",
+    kinds: [config.measures ? CKAN_FEEDS.observations : CKAN_FEEDS.resource],
+    validate: (value) => validateCkanFeedConfig(value, hosts),
+  });
 }
 
 /**

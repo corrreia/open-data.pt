@@ -57,7 +57,11 @@ export async function* readFrames(stream: ReadableStream<Uint8Array>, limits: Fr
       throw new NormalizedInputError(`Normalized frame exceeds ${limits.frameBytes} bytes`);
     }
     let parsed;
-    try { parsed = parseJson(line); } catch { throw new NormalizedInputError("Gatekeeper normalized stream contained invalid JSON"); }
+    try {
+      parsed = parseJson(line);
+    } catch {
+      throw new NormalizedInputError("Gatekeeper normalized stream contained invalid JSON");
+    }
     // A Gatekeeper on another release than this kernel is a deploy in progress, over in a minute: a retry, never a cooldown.
     // Decided before the shape check, which would otherwise call the whole header invalid.
     if (isJsonObject(parsed) && parsed.type === "header" && isJsonString(parsed.protocol) && parsed.protocol !== NORMALIZED_PROTOCOL) {
@@ -86,7 +90,8 @@ export async function* readFrames(stream: ReadableStream<Uint8Array>, limits: Fr
       const product = products.get(frame.productKey);
       if (!product) throw new NormalizedInputError("Normalized row referred to an unknown product");
       if ((frame.type === "record") !== (product.kind === "record")) throw new NormalizedInputError("Normalized row and product content disagree");
-      if (frame.type === "record") records += 1; else points += 1;
+      if (frame.type === "record") records += 1;
+      else points += 1;
       return frame;
     }
     if (frame.type !== "complete") throw new NormalizedInputError("Gatekeeper normalized stream contained an unknown frame");
@@ -100,7 +105,9 @@ export async function* readFrames(stream: ReadableStream<Uint8Array>, limits: Fr
 
   // One listener for the whole stream instead of a race per read: when the deadline passes, cancelling the reader
   // releases a read that is still waiting on a stalled producer, and the check after it reports the deadline.
-  const forget = deadline.onExpiry(() => { void reader.cancel("Collection deadline exceeded").catch(() => undefined); });
+  const forget = deadline.onExpiry(() => {
+    void reader.cancel("Collection deadline exceeded").catch(() => undefined);
+  });
   try {
     while (true) {
       deadline.check();
@@ -109,8 +116,11 @@ export async function* readFrames(stream: ReadableStream<Uint8Array>, limits: Fr
       if (part.done) break;
       totalBytes += part.value.byteLength;
       if (totalBytes > limits.outputBytes) throw new NormalizedInputError(`Normalized output exceeds ${limits.outputBytes} bytes`);
-      try { carry += decoder.decode(part.value, { stream: true }); }
-      catch { throw new NormalizedInputError("Invalid normalized UTF-8"); }
+      try {
+        carry += decoder.decode(part.value, { stream: true });
+      } catch {
+        throw new NormalizedInputError("Invalid normalized UTF-8");
+      }
       let start = 0;
       while (true) {
         const newline = carry.indexOf("\n", start);
@@ -124,7 +134,11 @@ export async function* readFrames(stream: ReadableStream<Uint8Array>, limits: Fr
         throw new NormalizedInputError(`Normalized frame exceeds ${limits.frameBytes} bytes`);
       }
     }
-    try { carry += decoder.decode(); } catch { throw new NormalizedInputError("Invalid normalized UTF-8"); }
+    try {
+      carry += decoder.decode();
+    } catch {
+      throw new NormalizedInputError("Invalid normalized UTF-8");
+    }
     if (carry.trim()) yield frameOf(carry);
     if (!header || !complete) throw new NormalizedInputError("Gatekeeper normalized stream was truncated before completion");
     finished = true;
@@ -139,8 +153,13 @@ export async function* readFrames(stream: ReadableStream<Uint8Array>, limits: Fr
 
 function acceptHeader(frame: HeaderFrame, limits: FrameLimits, scope: FrameScope): void {
   if (frame.collectionId !== scope.collectionId) throw new NormalizedInputError("Gatekeeper normalized stream header did not match the request");
-  if (frame.checkpoint.resourceKey !== scope.resourceKey || frame.checkpoint.configHash !== scope.configHash || frame.checkpoint.feedEpoch !== scope.feedEpoch
-    || frame.checkpoint.normalizer.id !== frame.normalizer.id || frame.checkpoint.normalizer.version !== frame.normalizer.version) {
+  if (
+    frame.checkpoint.resourceKey !== scope.resourceKey ||
+    frame.checkpoint.configHash !== scope.configHash ||
+    frame.checkpoint.feedEpoch !== scope.feedEpoch ||
+    frame.checkpoint.normalizer.id !== frame.normalizer.id ||
+    frame.checkpoint.normalizer.version !== frame.normalizer.version
+  ) {
     throw new NormalizedInputError("Checkpoint scope or normalizer did not match the request");
   }
   if (frame.products.length > limits.products) throw new NormalizedInputError(`Normalized output exceeds ${limits.products} products`);

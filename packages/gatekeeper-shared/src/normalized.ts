@@ -140,12 +140,13 @@ async function collect(request: CollectionRequest, collector: NormalizedCollecto
   if (request.mode.kind === "history" && !resolved.history) return { kind: "failure", code: "history-unsupported", retryable: false };
   const configHash = await hashSourceConfig(resolved.config);
   if (resolved.configHash !== configHash) return { kind: "failure", code: "invalid-config", retryable: false };
-  const compatible = request.checkpoint?.version === 2
-    && request.checkpoint.resourceKey === resolved.resourceKey
-    && request.checkpoint.configHash === configHash
-    && request.checkpoint.feedEpoch === request.feedEpoch
-    && request.checkpoint.normalizer.id === collector.normalizer.id
-    && request.checkpoint.normalizer.version === collector.normalizer.version;
+  const compatible =
+    request.checkpoint?.version === 2 &&
+    request.checkpoint.resourceKey === resolved.resourceKey &&
+    request.checkpoint.configHash === configHash &&
+    request.checkpoint.feedEpoch === request.feedEpoch &&
+    request.checkpoint.normalizer.id === collector.normalizer.id &&
+    request.checkpoint.normalizer.version === collector.normalizer.version;
   const previousState = compatible ? request.checkpoint?.state : undefined;
   const aborter = new AbortController();
   const abort = () => aborter.abort("Collection deadline exceeded");
@@ -219,8 +220,14 @@ export function bufferedTransform(result: TransformResult): StreamingTransform {
   return {
     products: result.products.map((product): ProductDeclaration => {
       const declaration: ProductDeclaration = {
-        productKey: product.productKey, slug: product.slug, title: product.title, description: product.description,
-        role: product.role, kind: product.kind, schema: product.schema, updateMode: product.updateMode,
+        productKey: product.productKey,
+        slug: product.slug,
+        title: product.title,
+        description: product.description,
+        role: product.role,
+        kind: product.kind,
+        schema: product.schema,
+        updateMode: product.updateMode,
         completeness: product.completeness,
       };
       if (product.watermark) declaration.watermark = product.watermark;
@@ -242,13 +249,22 @@ async function* bufferedRows(result: TransformResult): AsyncGenerator<Normalized
 }
 
 function productHeader(product: ProductDeclaration, sourceCompleteness: Completeness): NormalizedProductHeader {
-  const completeness: Completeness = sourceCompleteness === "partial" || product.completeness === "partial"
-    ? "partial"
-    : sourceCompleteness === "unknown" || product.completeness === "unknown" ? "unknown" : "complete";
+  const completeness: Completeness =
+    sourceCompleteness === "partial" || product.completeness === "partial"
+      ? "partial"
+      : sourceCompleteness === "unknown" || product.completeness === "unknown"
+        ? "unknown"
+        : "complete";
   const header: NormalizedProductHeader = {
-    productKey: product.productKey, suggestedSlug: product.slug, title: product.title,
-    description: product.description, role: product.role, schema: product.schema,
-    kind: product.kind, updateMode: product.updateMode, completeness,
+    productKey: product.productKey,
+    suggestedSlug: product.slug,
+    title: product.title,
+    description: product.description,
+    role: product.role,
+    schema: product.schema,
+    kind: product.kind,
+    updateMode: product.updateMode,
+    completeness,
   };
   if (product.watermark) header.watermark = product.watermark;
   return header;
@@ -291,7 +307,10 @@ function frameStream(
           emit(controller, JSON.stringify(header));
           return;
         }
-        if (phase === "done") { controller.close(); return; }
+        if (phase === "done") {
+          controller.close();
+          return;
+        }
         const next = await rows.next();
         if (!next.done) {
           const row = next.value;
@@ -343,11 +362,19 @@ function validateRequest(request: CollectionRequest): void {
   if (!request.collectionId || !request.feedEpoch || !request.resolved.resourceKey || !request.feed.id || !request.feed.slug) throw new Error("Collection identity is required");
   if (Number.isNaN(Date.parse(request.deadline)) || Date.parse(request.deadline) <= Date.now()) throw new Error("Collection deadline is invalid or expired");
   if (Number.isNaN(Date.parse(request.observedAt))) throw new Error("Observation time is invalid");
-  for (const [name, value] of Object.entries(request.limits)) if (!Number.isSafeInteger(value) || value <= 0) throw new Error(`Collection limit ${name} must be a positive integer`);
-  if (request.limits.recordBytes > request.limits.frameBytes || request.limits.frameBytes > request.limits.outputBytes) throw new Error("Collection limits must satisfy recordBytes <= frameBytes <= outputBytes");
+  for (const [name, value] of Object.entries(request.limits))
+    if (!Number.isSafeInteger(value) || value <= 0) throw new Error(`Collection limit ${name} must be a positive integer`);
+  if (request.limits.recordBytes > request.limits.frameBytes || request.limits.frameBytes > request.limits.outputBytes)
+    throw new Error("Collection limits must satisfy recordBytes <= frameBytes <= outputBytes");
 }
 
-function checkpointFrom(request: CollectionRequest, normalizer: { id: string; version: string }, configHash: string, previous: JsonObject | undefined, fetched: SourceFetch): SourceCheckpoint {
+function checkpointFrom(
+  request: CollectionRequest,
+  normalizer: { id: string; version: string },
+  configHash: string,
+  previous: JsonObject | undefined,
+  fetched: SourceFetch,
+): SourceCheckpoint {
   const validator = fetched.kind === "exhausted" ? undefined : fetched.validator;
   const owned = fetched.kind === "body" ? fetched.state : undefined;
   const state = owned ?? (validator ? withSourceValidator(previous, validator) : (previous ?? {}));
@@ -362,7 +389,14 @@ function provenanceFrom(fetched: SourceBody): Extract<NormalizedFrame, { type: "
 }
 
 function canonicalResolved(value: ResolvedFeed): string {
-  return JSON.stringify({ config: JSON.parse(canonicalSourceConfig(value.config)), configHash: value.configHash, resourceKey: value.resourceKey, kind: value.kind, semantics: value.semantics, history: value.history ?? null });
+  return JSON.stringify({
+    config: JSON.parse(canonicalSourceConfig(value.config)),
+    configHash: value.configHash,
+    resourceKey: value.resourceKey,
+    kind: value.kind,
+    semantics: value.semantics,
+    history: value.history ?? null,
+  });
 }
 
 async function beforeDeadline<T>(promise: Promise<T>, deadline: string, onTimeout?: () => void): Promise<T> {
@@ -370,6 +404,16 @@ async function beforeDeadline<T>(promise: Promise<T>, deadline: string, onTimeou
   if (remaining <= 0) throw new Error("Collection deadline exceeded");
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    return await Promise.race([promise, new Promise<never>((_, reject) => { timer = setTimeout(() => { onTimeout?.(); reject(new Error("Collection deadline exceeded")); }, remaining); })]);
-  } finally { if (timer) clearTimeout(timer); }
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => {
+          onTimeout?.();
+          reject(new Error("Collection deadline exceeded"));
+        }, remaining);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }

@@ -14,7 +14,7 @@
     // The token endpoint is fixed on port 443, whose chain is complete.
     "METROLISBOA_API_ORIGIN": "https://lisboa-metro.open-data.pt",
     "GTFS_ALLOWED_HOSTS": "api.carrismetropolitana.pt,opendata.porto.digital,dados.gov.pt,publico.cp.pt,www.fertagus.pt,www.tub.pt,backend.tcbarreiro.pt,www.horariosdofunchal.pt",
-    "GBFS_ALLOWED_HOSTS": "data.lime.bike,mds.bird.co,gbfs.primelayer.pt,gbfs.nextbike.net"
+    "GBFS_ALLOWED_HOSTS": "data.lime.bike,mds.bird.co,gbfs.primelayer.pt,gbfs.nextbike.net",
   },
   // Secrets (wrangler secret put): ML_CONSUMER_KEY, ML_CONSUMER_SECRET, read by the metrolisboa library.
   // One GTFS archive is tens of megabytes of CSV, parsed in a single invocation.
@@ -22,6 +22,6 @@
   "observability": {
     "enabled": true,
     // The kernel records every acquisition's outcome; a tenth of invocations is enough to debug.
-    "head_sampling_rate": 0.1
-  }
+    "head_sampling_rate": 0.1,
+  },
 }

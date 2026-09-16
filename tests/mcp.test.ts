@@ -50,12 +50,21 @@ async function callTool(host: McpHost, name: "search" | "execute", code: string)
   return { text: body.result.content.map((part) => part.text).join("\n"), isError: body.result.isError === true };
 }
 
-const products = () => Response.json({ data: [{ slug: "precos-combustiveis", role: "current-state" }, { slug: "consumo-eletricidade", role: "time-series" }] });
+const products = () =>
+  Response.json({
+    data: [
+      { slug: "precos-combustiveis", role: "current-state" },
+      { slug: "consumo-eletricidade", role: "time-series" },
+    ],
+  });
 
 describe("MCP server", () => {
   it("introduces itself with a session number and offers Code Mode's two tools", async () => {
     const { host } = fakeHost(products);
-    const initialize = await handleMcp(mcpRequest({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "test", version: "1" } } }), host);
+    const initialize = await handleMcp(
+      mcpRequest({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "test", version: "1" } } }),
+      host,
+    );
     expect(initialize.status).toBe(200);
     expect(initialize.headers.get("Access-Control-Allow-Origin")).toBe("*");
     expect(initialize.headers.get("Mcp-Session-Id")).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
@@ -83,10 +92,14 @@ describe("MCP server", () => {
 
   it("reads the API through the kernel's own edge, as the client that asked", async () => {
     const { host, seen } = fakeHost(products);
-    const answer = await callTool(host, "execute", `async () => {
+    const answer = await callTool(
+      host,
+      "execute",
+      `async () => {
       const { data } = await codemode.request({ method: "GET", path: "/api/products" });
       return data.filter((product) => product.role === "time-series").map((product) => product.slug);
-    }`);
+    }`,
+    );
     expect(answer.isError).toBe(false);
     expect(JSON.parse(answer.text)).toEqual(["consumo-eletricidade"]);
     expect(seen.map((request) => request.url)).toEqual(["https://open-data.pt/api/products"]);
@@ -96,7 +109,8 @@ describe("MCP server", () => {
 
   it("counts a hosted assistant's callers by session and everyone else by address, over IPv4 and IPv6", () => {
     const session = "4f9c2b1e-8a3d-4c5e-9f1a-2b3c4d5e6f70";
-    const caller = (address: string, id?: string) => new Request("https://open-data.pt/mcp", { method: "POST", headers: id ? { "cf-connecting-ip": address, "Mcp-Session-Id": id } : { "cf-connecting-ip": address } });
+    const caller = (address: string, id?: string) =>
+      new Request("https://open-data.pt/mcp", { method: "POST", headers: id ? { "cf-connecting-ip": address, "Mcp-Session-Id": id } : { "cf-connecting-ip": address } });
     for (const address of ["160.79.104.0", "160.79.111.255", "2607:6bc0::1", "2607:6BC0:0:ffff::abcd"]) {
       expect(fromHostedAssistant(address)).toBe(true);
       expect(mcpClientKey(caller(address, session))).toBe(`mcp-session:${session}`);
@@ -117,7 +131,11 @@ describe("MCP server", () => {
 
   it("repeats array query values, so several where filters all apply", async () => {
     const { host, seen } = fakeHost(() => Response.json({ data: [] }));
-    await callTool(host, "execute", `async () => codemode.request({ method: "GET", path: "/api/products/paragens/records", query: { where: ["line:1", "status:open"], limit: 10, cursor: undefined } })`);
+    await callTool(
+      host,
+      "execute",
+      `async () => codemode.request({ method: "GET", path: "/api/products/paragens/records", query: { where: ["line:1", "status:open"], limit: 10, cursor: undefined } })`,
+    );
     const url = new URL(seen[0]?.url ?? "");
     expect(url.pathname).toBe("/api/products/paragens/records");
     expect(url.searchParams.getAll("where")).toEqual(["line:1", "status:open"]);
@@ -144,10 +162,17 @@ describe("MCP server", () => {
   it("hands API errors to the code as exceptions it can catch", async () => {
     const { host } = fakeHost((request) =>
       request.url.endsWith("/missing")
-        ? Response.json({ type: "about:blank", title: "Not found", status: 404, detail: "Product was not found" }, { status: 404, headers: { "Content-Type": "application/problem+json" } })
+        ? Response.json(
+            { type: "about:blank", title: "Not found", status: 404, detail: "Product was not found" },
+            { status: 404, headers: { "Content-Type": "application/problem+json" } },
+          )
         : Response.json({ type: "about:blank", title: "Too many requests", status: 429, detail: "Slow down" }, { status: 429, headers: { "Retry-After": "60" } }),
     );
-    const missing = await callTool(host, "execute", `async () => { try { await codemode.request({ method: "GET", path: "/api/products/missing" }); } catch (error) { return error.message; } }`);
+    const missing = await callTool(
+      host,
+      "execute",
+      `async () => { try { await codemode.request({ method: "GET", path: "/api/products/missing" }); } catch (error) { return error.message; } }`,
+    );
     expect(missing.text).toBe("GET /api/products/missing answered 404: Product was not found");
     const busy = await callTool(host, "execute", `async () => codemode.request({ method: "GET", path: "/api/products" })`);
     expect(busy.isError).toBe(true);
@@ -163,7 +188,10 @@ describe("MCP server", () => {
 
   it("answers a spent run allowance as a tool error the model can read", async () => {
     let asked = 0;
-    const { host } = fakeHost(products, limitRuns(localExecutor, async () => (asked += 1) > 1 && false));
+    const { host } = fakeHost(
+      products,
+      limitRuns(localExecutor, async () => (asked += 1) > 1 && false),
+    );
     const answer = await callTool(host, "execute", `async () => "ran"`);
     expect(answer).toEqual({ isError: true, text: "Error: This client ran too much code in the last minute; wait 60 seconds and try again." });
     expect(asked).toBe(1);

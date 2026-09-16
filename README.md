@@ -83,23 +83,23 @@ A daily Registry audit compares a sample of yesterday's committed history row co
 
 All endpoints live under `/api`.
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| `GET` | `/api/products`, `/api/products/:slug` | Public product catalog and metadata |
-| `GET` | `/api/products/:slug/records` | Current records with cursor pagination |
-| `GET` | `/api/products/:slug/records/all` | Every current record in one streamed response |
-| `GET` | `/api/products/:slug/series` | Current bounded series window |
-| `GET` | `/api/products/:slug/changes` | Recent bounded changes |
-| `GET` | `/api/products/:slug/series/changes` | Recent series corrections |
-| `GET` | `/api/products/:slug/events` | Applicable event revisions in a bounded interval |
-| `GET` | `/api/products/:slug/changes/range` | Durable changes in a bounded knowledge-time interval |
-| `GET` | `/api/products/:slug/series/range` | Durable deduplicated series points in a bounded interval; `knownAt` answers what was known then |
-| `GET` | `/api/products/:slug/series/changes/range` | Series point revisions (new points and corrections) ingested in a bounded interval |
-| `GET` | `/api/products/:slug.geojson` | Current geospatial records as streamed GeoJSON |
-| `GET` | `/api/catalog.dcat.json` | DCAT 3 JSON-LD catalog |
-| `GET` | `/api/feeds`, `/api/feeds/:id` | Where each dataset comes from: publisher, source, format, cadence and freshness |
-| `GET` | `/api/acquisitions?feedId=&day=` | Collection runs, newest first, or every run of one UTC day |
-| `GET` | `/api/outages?days=` | When each feed's live collection kept failing, and when the platform collected nothing (the status page's bars) |
+| Method | Path                                       | Purpose                                                                                                         |
+| ------ | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `GET`  | `/api/products`, `/api/products/:slug`     | Public product catalog and metadata                                                                             |
+| `GET`  | `/api/products/:slug/records`              | Current records with cursor pagination                                                                          |
+| `GET`  | `/api/products/:slug/records/all`          | Every current record in one streamed response                                                                   |
+| `GET`  | `/api/products/:slug/series`               | Current bounded series window                                                                                   |
+| `GET`  | `/api/products/:slug/changes`              | Recent bounded changes                                                                                          |
+| `GET`  | `/api/products/:slug/series/changes`       | Recent series corrections                                                                                       |
+| `GET`  | `/api/products/:slug/events`               | Applicable event revisions in a bounded interval                                                                |
+| `GET`  | `/api/products/:slug/changes/range`        | Durable changes in a bounded knowledge-time interval                                                            |
+| `GET`  | `/api/products/:slug/series/range`         | Durable deduplicated series points in a bounded interval; `knownAt` answers what was known then                 |
+| `GET`  | `/api/products/:slug/series/changes/range` | Series point revisions (new points and corrections) ingested in a bounded interval                              |
+| `GET`  | `/api/products/:slug.geojson`              | Current geospatial records as streamed GeoJSON                                                                  |
+| `GET`  | `/api/catalog.dcat.json`                   | DCAT 3 JSON-LD catalog                                                                                          |
+| `GET`  | `/api/feeds`, `/api/feeds/:id`             | Where each dataset comes from: publisher, source, format, cadence and freshness                                 |
+| `GET`  | `/api/acquisitions?feedId=&day=`           | Collection runs, newest first, or every run of one UTC day                                                      |
+| `GET`  | `/api/outages?days=`                       | When each feed's live collection kept failing, and when the platform collected nothing (the status page's bars) |
 
 The API is read-only: every other method answers `405`. `/records` accepts `where=field:value` (up to five) and, for located products, `bbox=minLon,minLat,maxLon,maxLat`. Unknown query parameters answer `400`, and requests are rate limited per client (`429` with `Retry-After`). A product's current data is cached at the edge for a quarter of its feed's cadence, between 15 seconds and five minutes; the product states its `cadenceSeconds`, `licence` and `attribution`.
 

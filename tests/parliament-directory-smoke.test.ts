@@ -20,7 +20,15 @@ describe.skipIf(!saved)("Parliament recorded public-directory HTML", () => {
     expect(directory.origin).toBe("https://www.parlamento.pt");
     expect(download.origin).toBe("https://app.parlamento.pt");
     expect(download.searchParams.get("fich")).toBe(document.filename);
-    console.info(JSON.stringify({ mode: "recorded-public-directory", feed: document.feed, firstHtmlBytes: Buffer.byteLength(first), secondHtmlBytes: Buffer.byteLength(second), matched: true }));
+    console.info(
+      JSON.stringify({
+        mode: "recorded-public-directory",
+        feed: document.feed,
+        firstHtmlBytes: Buffer.byteLength(first),
+        secondHtmlBytes: Buffer.byteLength(second),
+        matched: true,
+      }),
+    );
   });
 });
 
@@ -28,7 +36,11 @@ describe.skipIf(!live)("Parliament live public-directory HTML only", () => {
   it("discovers the members file without downloading its records", async () => {
     const document = parliamentDocument({ feed: "members", legislature: "XVII" });
     const fetchHtml = async (url: URL): Promise<string> => {
-      const response = await fetch(url, { redirect: "manual", signal: AbortSignal.timeout(30_000), headers: { Accept: "text/html", "User-Agent": "open-data.pt (+https://open-data.pt)" } });
+      const response = await fetch(url, {
+        redirect: "manual",
+        signal: AbortSignal.timeout(30_000),
+        headers: { Accept: "text/html", "User-Agent": "open-data.pt (+https://open-data.pt)" },
+      });
       expect(response.status).toBe(200);
       return new TextDecoder().decode(await readBoundedResponse(response, PARLIAMENT_HTML_BYTES, "public directory HTML"));
     };

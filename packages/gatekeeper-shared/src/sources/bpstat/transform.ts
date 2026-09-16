@@ -45,10 +45,7 @@ interface DecodedCell {
 // value in an "observations" record product.
 const TRANSFORMER = { id: "bpstat-jsonstat-dataset", version: "4" } as const;
 
-export function transformBpstatDataset(
-  bytes: Uint8Array,
-  context: TransformContext,
-): TransformResult {
+export function transformBpstatDataset(bytes: Uint8Array, context: TransformContext): TransformResult {
   const pages = parseArtifact(bytes).map(parsePage);
   if (pages.length === 0) {
     throw invalidResponse("BPstat artifact did not contain a dataset page");
@@ -57,11 +54,7 @@ export function transformBpstatDataset(
   const first = pages[0];
   if (!first) throw invalidResponse("BPstat artifact did not contain a dataset");
   for (const page of pages.slice(1)) {
-    if (
-      page.ids.length !== first.ids.length ||
-      page.ids.some((id, index) => id !== first.ids[index]) ||
-      page.timeId !== first.timeId
-    ) {
+    if (page.ids.length !== first.ids.length || page.ids.some((id, index) => id !== first.ids[index]) || page.timeId !== first.timeId) {
       throw invalidResponse("BPstat dataset pages used inconsistent dimensions");
     }
   }
@@ -82,9 +75,7 @@ export function transformBpstatDataset(
     }
   }
   const constantIds = new Set(
-    first.dimensions
-      .filter((dimension) => dimension.id !== first.timeId && (codesById.get(dimension.id)?.size ?? 0) === 1)
-      .map((dimension) => dimension.id),
+    first.dimensions.filter((dimension) => dimension.id !== first.timeId && (codesById.get(dimension.id)?.size ?? 0) === 1).map((dimension) => dimension.id),
   );
   const constants = first.dimensions
     .filter((dimension) => constantIds.has(dimension.id))
@@ -123,17 +114,9 @@ export function transformBpstatDataset(
     }
   }
 
-  const cells = [...cellsByEntity.values()].sort((left, right) =>
-    left.entityKey.localeCompare(right.entityKey),
-  );
+  const cells = [...cellsByEntity.values()].sort((left, right) => left.entityKey.localeCompare(right.entityKey));
 
-  const points = cells
-    .map(({ point }) => point)
-    .sort(
-      (left, right) =>
-        left.eventTime.localeCompare(right.eventTime) ||
-        left.seriesKey.localeCompare(right.seriesKey),
-    );
+  const points = cells.map(({ point }) => point).sort((left, right) => left.eventTime.localeCompare(right.eventTime) || left.seriesKey.localeCompare(right.seriesKey));
   if (context.feed.config.lastN) {
     const counts = new Map<string, number>();
     for (const point of points) counts.set(point.seriesKey, (counts.get(point.seriesKey) ?? 0) + 1);
@@ -141,9 +124,7 @@ export function transformBpstatDataset(
   }
   const units = new Set(cells.map(({ unit }) => unit));
   const sharedUnit = units.size === 1 ? cells[0]?.unit : undefined;
-  const constantsNote = constants.length === 0
-    ? ""
-    : ` Fixed for this dataset: ${constants.map((constant) => `${constant.label}: ${constant.value}`).join("; ")}.`;
+  const constantsNote = constants.length === 0 ? "" : ` Fixed for this dataset: ${constants.map((constant) => `${constant.label}: ${constant.value}`).join("; ")}.`;
   const seriesSchema = {
     fields: [
       field("seriesKey", "identifier", false, undefined, "Series key"),
@@ -161,8 +142,7 @@ export function transformBpstatDataset(
       productKey: "series",
       slug: `${context.feed.slug}-series`,
       title,
-      description:
-        `${context.feed.description} BPstat values grouped into a series for each non-time dimension combination.${constantsNote}`,
+      description: `${context.feed.description} BPstat values grouped into a series for each non-time dimension combination.${constantsNote}`,
       role: "time-series",
       schema: seriesSchema,
       kind: "series",
@@ -217,13 +197,9 @@ function parsePage(raw: JsonObject): JsonStatPage {
   const ids = [...raw.id];
   const sizes = [...raw.size];
   const dimensionMap = raw.dimension;
-  const dimensions = ids.map((id, index) =>
-    parseDimension(id, dimensionMap, sizes[index]),
-  );
+  const dimensions = ids.map((id, index) => parseDimension(id, dimensionMap, sizes[index]));
   const role = isJsonObject(raw.role) ? raw.role : undefined;
-  const timeRole = role && Array.isArray(role.time)
-    ? role.time.filter(nonEmptyString)
-    : [];
+  const timeRole = role && Array.isArray(role.time) ? role.time.filter(nonEmptyString) : [];
   const timeId = timeRole[0] ?? (ids.includes("reference_date") ? "reference_date" : undefined);
   if (!timeId || !ids.includes(timeId)) {
     throw invalidResponse("BPstat dataset did not identify a time dimension");
@@ -249,11 +225,7 @@ function parsePage(raw: JsonObject): JsonStatPage {
   };
 }
 
-function parseDimension(
-  id: string,
-  dimensions: JsonObject,
-  expectedSize: number | undefined,
-): JsonStatDimension {
+function parseDimension(id: string, dimensions: JsonObject, expectedSize: number | undefined): JsonStatDimension {
   const raw = dimensions[id];
   if (!isJsonObject(raw) || !isJsonObject(raw.category)) {
     throw invalidResponse(`BPstat dimension ${id} was malformed`);
@@ -263,13 +235,7 @@ function parseDimension(
     throw invalidResponse(`BPstat dimension ${id} size did not match its categories`);
   }
   const labels = isJsonObject(raw.category.label)
-    ? Object.fromEntries(
-        Object.entries(raw.category.label).flatMap(([code, value]) =>
-          isJsonString(value) && value.trim() !== ""
-            ? [[code, value.trim()]]
-            : [],
-        ),
-      )
+    ? Object.fromEntries(Object.entries(raw.category.label).flatMap(([code, value]) => (isJsonString(value) && value.trim() !== "" ? [[code, value.trim()]] : [])))
     : {};
   return {
     id,
@@ -286,11 +252,7 @@ function categoryCodes(value: JsonValue | undefined): string[] {
     throw invalidResponse("BPstat dimension category index was malformed");
   }
   const entries = Object.entries(value);
-  if (
-    !entries.every(([, position]) =>
-      isJsonNumber(position) && Number.isSafeInteger(position) && position >= 0
-    )
-  ) {
+  if (!entries.every(([, position]) => isJsonNumber(position) && Number.isSafeInteger(position) && position >= 0)) {
     throw invalidResponse("BPstat dimension category positions were malformed");
   }
   entries.sort(([, left], [, right]) => Number(left) - Number(right));
@@ -300,11 +262,7 @@ function categoryCodes(value: JsonValue | undefined): string[] {
   return entries.map(([code]) => code);
 }
 
-function indexedValues(
-  value: JsonValue | undefined,
-  cellCount: number,
-  name: string,
-): Array<[number, JsonValue]> {
+function indexedValues(value: JsonValue | undefined, cellCount: number, name: string): Array<[number, JsonValue]> {
   if (Array.isArray(value)) {
     if (value.length > cellCount) {
       throw invalidResponse(`BPstat ${name} exceeded the dataset dimensions`);
@@ -339,33 +297,24 @@ function decodeCell(
   if (!isJsonNumber(rawValue) || !Number.isFinite(rawValue)) {
     return undefined;
   }
-  const selections = coordinates(flatIndex, page.sizes).map(
-    (position, index) => {
-      const dimension = page.dimensions[index];
-      const code = dimension?.codes[position];
-      if (!dimension || code === undefined) return undefined;
-      return {
-        dimension,
-        code,
-        label: dimension.labels[code] ?? code,
-      };
-    },
-  );
+  const selections = coordinates(flatIndex, page.sizes).map((position, index) => {
+    const dimension = page.dimensions[index];
+    const code = dimension?.codes[position];
+    if (!dimension || code === undefined) return undefined;
+    return {
+      dimension,
+      code,
+      label: dimension.labels[code] ?? code,
+    };
+  });
   if (selections.some((selection) => selection === undefined)) return undefined;
-  const selected = selections.filter(
-    (selection): selection is NonNullable<typeof selection> =>
-      selection !== undefined,
-  );
-  const time = selected.find(
-    ({ dimension }) => dimension.id === page.timeId,
-  );
+  const selected = selections.filter((selection): selection is NonNullable<typeof selection> => selection !== undefined);
+  const time = selected.find(({ dimension }) => dimension.id === page.timeId);
   if (!time) return undefined;
   const date = normalizeReferenceDate(time.code);
   if (!date) return undefined;
   const eventTime = `${date}T00:00:00Z`;
-  const nonTime = selected.filter(
-    ({ dimension }) => dimension.id !== page.timeId,
-  );
+  const nonTime = selected.filter(({ dimension }) => dimension.id !== page.timeId);
   const varying = nonTime.filter(({ dimension }) => !constantIds.has(dimension.id));
   const dimensions: Record<string, string> = {};
   for (const selection of varying) {
@@ -412,28 +361,18 @@ function unitFor(
     const unit = unitLabel(dimension.units[code]);
     if (unit) return unit;
   }
-  const unitDimension = selections.find(({ dimension }) =>
-    /(^|\b)unit(\b|$)|unidade/i.test(dimension.name),
-  );
+  const unitDimension = selections.find(({ dimension }) => /(^|\b)unit(\b|$)|unidade/i.test(dimension.name));
   return unitDimension?.label ?? "unknown";
 }
 
 function unitLabel(value: JsonValue | undefined): string | undefined {
   if (isJsonString(value) && value.trim() !== "") return value.trim();
   if (!isJsonObject(value)) return undefined;
-  return (
-    optionalString(value.label) ??
-    optionalString(value.symbol) ??
-    optionalString(value.name)
-  );
+  return optionalString(value.label) ?? optionalString(value.symbol) ?? optionalString(value.name);
 }
 
 function statusAt(status: JsonValue | undefined, index: number): string | null {
-  const value = Array.isArray(status)
-    ? status[index]
-    : isJsonObject(status)
-      ? status[String(index)]
-      : undefined;
+  const value = Array.isArray(status) ? status[index] : isJsonObject(status) ? status[String(index)] : undefined;
   if (isJsonString(value) && value !== "") return value;
   return null;
 }
@@ -488,9 +427,7 @@ function namesFor(dimensions: JsonStatDimension[]): Map<string, string> {
 }
 
 function optionalString(value: JsonValue | undefined): string | undefined {
-  return isJsonString(value) && value.trim() !== ""
-    ? value.trim()
-    : undefined;
+  return isJsonString(value) && value.trim() !== "" ? value.trim() : undefined;
 }
 
 function nonEmptyString(value: JsonValue | undefined): value is string {
@@ -500,4 +437,3 @@ function nonEmptyString(value: JsonValue | undefined): value is string {
 function positiveInteger(value: JsonValue | undefined): value is number {
   return isJsonNumber(value) && Number.isSafeInteger(value) && value > 0;
 }
-

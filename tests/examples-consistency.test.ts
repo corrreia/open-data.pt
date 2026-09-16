@@ -71,14 +71,7 @@ function publicationHolds(): Map<string, string> {
 const PUBLICATION_HOLDS = publicationHolds();
 
 /** What the six Workers actually install, which is what the Registry turns into feeds. */
-const DEPLOYED: ExampleFeed[] = [
-  ...CITIES_EXAMPLES,
-  ...ENERGY_EXAMPLES,
-  ...ENVIRONMENT_EXAMPLES,
-  ...HEALTH_EXAMPLES,
-  ...MOBILITY_EXAMPLES,
-  ...STATISTICS_EXAMPLES,
-];
+const DEPLOYED: ExampleFeed[] = [...CITIES_EXAMPLES, ...ENERGY_EXAMPLES, ...ENVIRONMENT_EXAMPLES, ...HEALTH_EXAMPLES, ...MOBILITY_EXAMPLES, ...STATISTICS_EXAMPLES];
 
 describe("example feed policies", () => {
   it("never call a feed stale before its next collection is due", () => {
@@ -105,15 +98,34 @@ describe("example feed policies", () => {
 describe("libraries and the Workers that carry them", () => {
   it("finds a format library per standard and a source library per bespoke API", () => {
     expect(Object.keys(LIBRARIES).map(libraryName).toSorted()).toEqual([
-      "arcgis", "bpstat", "carris", "ckan", "dgeg", "eurostat", "gbfs", "gtfs",
-      "ine", "ipma", "metrolisboa", "ogc", "omie", "opendatasoft", "parliament", "peeringdb", "ren", "ripestat", "udata",
+      "arcgis",
+      "bpstat",
+      "carris",
+      "ckan",
+      "dgeg",
+      "eurostat",
+      "gbfs",
+      "gtfs",
+      "ine",
+      "ipma",
+      "metrolisboa",
+      "ogc",
+      "omie",
+      "opendatasoft",
+      "parliament",
+      "peeringdb",
+      "ren",
+      "ripestat",
+      "udata",
     ]);
   });
 
   it("gives every cleared library example to exactly one Worker", async () => {
     const libraries = await libraryExamples();
-    const offered = [...libraries].filter(([name]) => !PUBLICATION_HOLDS.has(name))
-      .flatMap(([, examples]) => examples.map((example) => example.slug)).toSorted();
+    const offered = [...libraries]
+      .filter(([name]) => !PUBLICATION_HOLDS.has(name))
+      .flatMap(([, examples]) => examples.map((example) => example.slug))
+      .toSorted();
     expect(DEPLOYED.map((example) => example.slug).toSorted()).toEqual(offered);
   });
 
@@ -127,9 +139,9 @@ describe("libraries and the Workers that carry them", () => {
 
   it("names its own library in every example configuration", async () => {
     const libraries = await libraryExamples();
-    const wrong = [...libraries].flatMap(([name, examples]) => examples
-      .filter((example) => example.config.source !== name)
-      .map((example) => `${example.slug}: ${example.config.source ?? "(none)"} is not ${name}`));
+    const wrong = [...libraries].flatMap(([name, examples]) =>
+      examples.filter((example) => example.config.source !== name).map((example) => `${example.slug}: ${example.config.source ?? "(none)"} is not ${name}`),
+    );
     expect(wrong).toEqual([]);
   });
 });

@@ -1,19 +1,12 @@
 import { jsonAs } from "./support";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import {
-  isJsonString,
-} from "@open-data-pt/gatekeeper-shared";
-import type {
-  JsonObject,
-  TransformContext,
-} from "@open-data-pt/gatekeeper-shared";
+import { isJsonString } from "@open-data-pt/gatekeeper-shared";
+import type { JsonObject, TransformContext } from "@open-data-pt/gatekeeper-shared";
 import { GbfsTransformer } from "../packages/gatekeeper-shared/src/formats/gbfs/transform";
 
 function fixture(name: string): Uint8Array {
-  return new Uint8Array(
-    readFileSync(new URL(`./fixtures/gbfs/${name}.json`, import.meta.url)),
-  );
+  return new Uint8Array(readFileSync(new URL(`./fixtures/gbfs/${name}.json`, import.meta.url)));
 }
 
 function context(slug: string, language = "en"): TransformContext {
@@ -48,10 +41,7 @@ describe("GBFS transformers", () => {
   const transformer = new GbfsTransformer();
 
   it("transforms a GBFS 1.0 Lime snapshot into all four product roles", () => {
-    const result = transformer.transform(
-      fixture("lime-lisbon"),
-      context("lime-lisbon"),
-    );
+    const result = transformer.transform(fixture("lime-lisbon"), context("lime-lisbon"));
 
     expect(result.transformer).toEqual({ id: "gbfs", version: "2" });
     expect(result.products.map((product) => [product.slug, product.role])).toEqual([
@@ -93,10 +83,7 @@ describe("GBFS transformers", () => {
   });
 
   it("decodes GBFS 2.3 vehicle types and normalizes fuel fraction to percent", () => {
-    const result = transformer.transform(
-      fixture("bird-lisbon"),
-      context("bird-lisbon"),
-    );
+    const result = transformer.transform(fixture("bird-lisbon"), context("bird-lisbon"));
     const vehicles = result.products[0];
     const fleet = result.products[2];
 
@@ -113,20 +100,22 @@ describe("GBFS transformers", () => {
       batteryPercent: 78.41,
       isReserved: true,
     });
-    expect(fleet?.points).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        seriesKey: "scooter:electric",
-        value: 2,
-        unit: "vehicles",
-      }),
-      expect.objectContaining({
-        seriesKey: "bicycle:electric_assist",
-        value: 0,
-        unit: "vehicles",
-      }),
-      expect.objectContaining({ seriesKey: "reserved", value: 2 }),
-      expect.objectContaining({ seriesKey: "disabled", value: 0 }),
-    ]));
+    expect(fleet?.points).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          seriesKey: "scooter:electric",
+          value: 2,
+          unit: "vehicles",
+        }),
+        expect.objectContaining({
+          seriesKey: "bicycle:electric_assist",
+          value: 0,
+          unit: "vehicles",
+        }),
+        expect.objectContaining({ seriesKey: "reserved", value: 2 }),
+        expect.objectContaining({ seriesKey: "disabled", value: 0 }),
+      ]),
+    );
     expect(result.products[3]?.records?.[0]?.payload).toMatchObject({
       systemId: "bird-lisbon",
       name: "bird lisbon",
@@ -169,10 +158,7 @@ describe("GBFS transformers", () => {
   });
 
   it("derives operator and location titles from a new live TubaBike fixture", () => {
-    const result = transformer.transform(
-      fixture("tubabike-barcelos"),
-      context("tubabike-barcelos", "pt"),
-    );
+    const result = transformer.transform(fixture("tubabike-barcelos"), context("tubabike-barcelos", "pt"));
 
     expect(result.products.map((product) => product.title)).toEqual([
       "TubaBike vehicles in Barcelos",
@@ -188,26 +174,14 @@ describe("GBFS transformers", () => {
     const document = jsonAs<JsonObject>(fixture("bird-lisbon"));
     delete document.system_information;
 
-    const result = transformer.transform(
-      new TextEncoder().encode(JSON.stringify(document)),
-      context("coastal-share"),
-    );
+    const result = transformer.transform(new TextEncoder().encode(JSON.stringify(document)), context("coastal-share"));
 
-    expect(result.products.map((product) => product.title)).toEqual([
-      "Coastal Share vehicles",
-      "Coastal Share stations",
-      "Coastal Share fleet over time",
-    ]);
-    expect(result.products.some((product) => product.role === "reference")).toBe(
-      false,
-    );
+    expect(result.products.map((product) => product.title)).toEqual(["Coastal Share vehicles", "Coastal Share stations", "Coastal Share fleet over time"]);
+    expect(result.products.some((product) => product.role === "reference")).toBe(false);
   });
 
   it("types every published schema field for source-agnostic rendering", () => {
-    const result = transformer.transform(
-      fixture("bird-lisbon"),
-      context("bird-lisbon"),
-    );
+    const result = transformer.transform(fixture("bird-lisbon"), context("bird-lisbon"));
     const fields = result.products.flatMap((product) => product.schema.fields);
 
     expect(fields.every((field) => isJsonString(field.type))).toBe(true);

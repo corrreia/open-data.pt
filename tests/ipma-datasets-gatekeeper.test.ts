@@ -1,8 +1,13 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import {
-  NORMALIZED_PROTOCOL, collectNormalized, isNormalizedFrame, parseJson,
-  type CollectionRequest, type NormalizedRow, type TransformContext,
+  NORMALIZED_PROTOCOL,
+  collectNormalized,
+  isNormalizedFrame,
+  parseJson,
+  type CollectionRequest,
+  type NormalizedRow,
+  type TransformContext,
 } from "@open-data-pt/gatekeeper-shared";
 import { collectIpmaFeed, IPMA_FEEDS, validateIpmaFeedConfig } from "../packages/gatekeeper-shared/src/sources/ipma/ipma";
 import { ipmaCollector, resolveIpmaFeed } from "../packages/gatekeeper-shared/src/sources/ipma/collector";
@@ -15,10 +20,16 @@ const fixture = (name: string) => readFileSync(new URL(`./fixtures/${name}`, imp
 function bytes(text: string, chunkSize = 1000): ReadableStream<Uint8Array> {
   const data = new TextEncoder().encode(text);
   let offset = 0;
-  return new ReadableStream({ pull(controller) {
-    if (offset >= data.length) { controller.close(); return; }
-    controller.enqueue(data.slice(offset, offset + chunkSize)); offset += chunkSize;
-  } });
+  return new ReadableStream({
+    pull(controller) {
+      if (offset >= data.length) {
+        controller.close();
+        return;
+      }
+      controller.enqueue(data.slice(offset, offset + chunkSize));
+      offset += chunkSize;
+    },
+  });
 }
 
 function context(feed: IpmaDatasetFeed, observedAt = "2026-09-15T12:00:00Z"): TransformContext {
@@ -34,10 +45,15 @@ async function transformed(text: string, feed: IpmaDatasetFeed, chunkSize = 1000
 
 async function request(feed: IpmaDatasetFeed): Promise<CollectionRequest> {
   return {
-    protocol: NORMALIZED_PROTOCOL, collectionId: "test-ipma", feed: { id: "test", slug: `ipma-${feed}-feed`, title: feed, description: feed },
-    feedEpoch: "test", resolved: await resolveIpmaFeed({ feed }), mode: { kind: "live" },
+    protocol: NORMALIZED_PROTOCOL,
+    collectionId: "test-ipma",
+    feed: { id: "test", slug: `ipma-${feed}-feed`, title: feed, description: feed },
+    feedEpoch: "test",
+    resolved: await resolveIpmaFeed({ feed }),
+    mode: { kind: "live" },
     limits: { sourceBytes: 2_000_000, outputBytes: 4_000_000, frameBytes: 2_000_000, recordBytes: 1_000_000, records: 20_000, products: 10 },
-    deadline: new Date(Date.now() + 60_000).toISOString(), observedAt: "2026-09-15T12:00:00Z",
+    deadline: new Date(Date.now() + 60_000).toISOString(),
+    observedAt: "2026-09-15T12:00:00Z",
   };
 }
 
@@ -48,7 +64,13 @@ describe("IPMA published datasets", () => {
     expect(result.products).toHaveLength(1);
     expect(result.products[0]).toMatchObject({ kind: "series", updateMode: "source-window" });
     expect(result.rows).toHaveLength(4);
-    expect(result.rows[0]?.point).toMatchObject({ seriesKey: "0101:total-precipitation", eventTime: "2026-09-13T00:00:00.000Z", value: 0.73, unit: "mm", dimensions: { municipalityCode: "0101", municipality: "Águeda", spatialStatistic: "mean" } });
+    expect(result.rows[0]?.point).toMatchObject({
+      seriesKey: "0101:total-precipitation",
+      eventTime: "2026-09-13T00:00:00.000Z",
+      value: 0.73,
+      unit: "mm",
+      dimensions: { municipalityCode: "0101", municipality: "Águeda", spatialStatistic: "mean" },
+    });
     expect(result.rows[1]?.point).toMatchObject({ value: 8.59, unit: "mm/h" });
     expect(result.rows[2]?.point?.value).toBe(0);
     expect(result.summary.products?.[0]?.watermark).toBe("2026-09-14T00:00:00.000Z");
@@ -75,10 +97,15 @@ describe("IPMA published datasets", () => {
     const text = fixture("ipma-shellfish.geojson");
     const result = await transformed(text, "shellfish-restrictions", 1);
     expect(result.products).toHaveLength(1);
-    expect(result.rows[0]?.record).toMatchObject({ entityKey: "L1", payload: {
-      status: "PARTIAL_OPEN", latitude: 41.5689535,
-      openSpecies: [{ specie_s: "Spisula solida" }], closedSpecies: [{ specie_s: "Mytilus spp." }],
-    } });
+    expect(result.rows[0]?.record).toMatchObject({
+      entityKey: "L1",
+      payload: {
+        status: "PARTIAL_OPEN",
+        latitude: 41.5689535,
+        openSpecies: [{ specie_s: "Spisula solida" }],
+        closedSpecies: [{ specie_s: "Mytilus spp." }],
+      },
+    });
     expect(result.rows[0]?.record?.eventTime).toBeUndefined();
     expect(result.summary.products?.[0]?.watermark).toBe("2026-09-07T00:00:00.000Z");
     expect(result).toEqual(await transformed(text, "shellfish-restrictions", 1024, "2030-01-01T00:00:00Z"));
@@ -105,7 +132,9 @@ describe("IPMA published datasets", () => {
       return new Response(null, { status: 304 });
     });
     expect(await collectIpmaFeed({ feed: "municipal-precipitation" }, { etag: '"climate-v1"' }, ORIGIN, fetcher)).toEqual({ kind: "not-modified" });
-    await expect(collectIpmaFeed({ feed: "municipal-precipitation" }, undefined, ORIGIN, async () => new Response(null, { status: 304 }))).rejects.toMatchObject({ code: "invalid-response" });
+    await expect(collectIpmaFeed({ feed: "municipal-precipitation" }, undefined, ORIGIN, async () => new Response(null, { status: 304 }))).rejects.toMatchObject({
+      code: "invalid-response",
+    });
     expect(() => validateIpmaFeedConfig({ feed: "shellfish-restrictions", host: "evil.example" })).toThrow();
     await expect(collectIpmaFeed({ feed: "shellfish-restrictions" }, undefined, "https://evil.example", fetcher)).rejects.toMatchObject({ code: "source-denied" });
   });
@@ -123,8 +152,12 @@ describe("IPMA published datasets", () => {
     const fetched = await collectIpmaFeed({ feed: "municipal-temperature" }, { etag: '"old"' }, ORIGIN, async () => new Response(fixture("ipma-municipal-temperature.csv")));
     expect(fetched).toMatchObject({ kind: "body", state: {} });
     if (fetched.kind === "body") await new Response(fetched.body).text();
-    await expect(collectIpmaFeed({ feed: "municipal-temperature" }, undefined, ORIGIN, async () => new Response("", { status: 503 }))).rejects.toMatchObject({ code: "upstream-error" });
-    await expect(collectIpmaFeed({ feed: "municipal-temperature" }, undefined, ORIGIN, async () => new Response("", { headers: { "content-length": "3000000" } }))).rejects.toMatchObject({ code: "response-too-large" });
+    await expect(collectIpmaFeed({ feed: "municipal-temperature" }, undefined, ORIGIN, async () => new Response("", { status: 503 }))).rejects.toMatchObject({
+      code: "upstream-error",
+    });
+    await expect(
+      collectIpmaFeed({ feed: "municipal-temperature" }, undefined, ORIGIN, async () => new Response("", { headers: { "content-length": "3000000" } })),
+    ).rejects.toMatchObject({ code: "response-too-large" });
   });
 
   it("passes the normalized protocol and keeps arbitrary history unsupported", async () => {
@@ -135,7 +168,10 @@ describe("IPMA published datasets", () => {
     const lines = (await new Response(result.stream).text()).trim().split("\n");
     expect(lines.every((line) => isNormalizedFrame(parseJson(line)))).toBe(true);
     expect(parseJson(lines.at(-1)!)).toMatchObject({ type: "complete", counts: { records: 0, points: 4 } });
-    expect(await collectNormalized({ ...req, mode: { kind: "history", cursor: { before: "2026-01-01T00:00:00Z" } } }, collector)).toMatchObject({ kind: "failure", code: "history-unsupported" });
+    expect(await collectNormalized({ ...req, mode: { kind: "history", cursor: { before: "2026-01-01T00:00:00Z" } } }, collector)).toMatchObject({
+      kind: "failure",
+      code: "history-unsupported",
+    });
   });
 
   it("fails the byte stream without a completion frame if the kernel output budget is exhausted", async () => {

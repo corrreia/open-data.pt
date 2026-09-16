@@ -97,7 +97,9 @@ export default class KernelWorker extends WorkerEntrypoint<Env> {
       if (hit) return head ? withoutBody(hit) : hit;
     }
     if (!(await withinRateLimit(this.rateLimiters(), request, route?.costly === true))) {
-      return problem(429, "Too many requests", `This client sent too many uncached requests; retry after ${RATE_LIMIT_RETRY_SECONDS} seconds.`, { "Retry-After": String(RATE_LIMIT_RETRY_SECONDS) });
+      return problem(429, "Too many requests", `This client sent too many uncached requests; retry after ${RATE_LIMIT_RETRY_SECONDS} seconds.`, {
+        "Retry-After": String(RATE_LIMIT_RETRY_SECONDS),
+      });
     }
     const response = await handleApi(read, this.apiContext());
     if (ttl === undefined || !response.ok) return head ? withoutBody(response) : response;

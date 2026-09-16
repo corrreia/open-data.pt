@@ -1,23 +1,53 @@
 import {
-  GatekeeperError, field, isJsonArray, isJsonNumber, isJsonObject, isJsonString, parseJsonBytes,
-  readBoundedBytes, streamJsonArray,
-  type CanonicalRecord, type JsonObject, type JsonValue, type NormalizedRow, type ProductDeclaration, type ProductFinalization, type SeriesPoint,
-  type StreamingTransform, type TransformContext,
+  GatekeeperError,
+  field,
+  isJsonArray,
+  isJsonNumber,
+  isJsonObject,
+  isJsonString,
+  parseJsonBytes,
+  readBoundedBytes,
+  streamJsonArray,
+  type CanonicalRecord,
+  type JsonObject,
+  type JsonValue,
+  type NormalizedRow,
+  type ProductDeclaration,
+  type ProductFinalization,
+  type SeriesPoint,
+  type StreamingTransform,
+  type TransformContext,
 } from "../../index";
 import { asn, endpoint, envelope, hasWarnings, sourceTime, validateCountry, validateRipestatFeedConfig } from "./ripestat";
 
 const DAY_MS = 86_400_000;
 const RESOURCE_SCHEMA = { fields: [field("kind", "category", false), field("resource", "identifier", false)] };
-const SERIES_SCHEMA = { fields: [field("seriesKey", "identifier", false), field("eventTime", "datetime", false), field("value", "number", false), field("unit", "category", false), field("dimensions", "json", false)] };
-const STATUS_SCHEMA = { fields: [
-  field("asn", "identifier", false), field("snapshotTime", "datetime", false),
-  field("firstSeen", "datetime", true), field("lastSeen", "datetime", true),
-  field("ipv4PeersSeeing", "number", false, "RIS peers"), field("ipv4PeersTotal", "number", false, "RIS peers"),
-  field("ipv6PeersSeeing", "number", false, "RIS peers"), field("ipv6PeersTotal", "number", false, "RIS peers"),
-  field("ipv4Prefixes", "number", false, "prefixes"), field("ipv4Addresses", "number", false, "IPv4 addresses"),
-  field("ipv6Prefixes", "number", false, "prefixes"), field("ipv6Slash48Units", "number", false, "IPv6 /48 subnet equivalents"),
-  field("observedNeighbours", "number", false, "ASNs"),
-] };
+const SERIES_SCHEMA = {
+  fields: [
+    field("seriesKey", "identifier", false),
+    field("eventTime", "datetime", false),
+    field("value", "number", false),
+    field("unit", "category", false),
+    field("dimensions", "json", false),
+  ],
+};
+const STATUS_SCHEMA = {
+  fields: [
+    field("asn", "identifier", false),
+    field("snapshotTime", "datetime", false),
+    field("firstSeen", "datetime", true),
+    field("lastSeen", "datetime", true),
+    field("ipv4PeersSeeing", "number", false, "RIS peers"),
+    field("ipv4PeersTotal", "number", false, "RIS peers"),
+    field("ipv6PeersSeeing", "number", false, "RIS peers"),
+    field("ipv6PeersTotal", "number", false, "RIS peers"),
+    field("ipv4Prefixes", "number", false, "prefixes"),
+    field("ipv4Addresses", "number", false, "IPv4 addresses"),
+    field("ipv6Prefixes", "number", false, "prefixes"),
+    field("ipv6Slash48Units", "number", false, "IPv6 /48 subnet equivalents"),
+    field("observedNeighbours", "number", false, "ASNs"),
+  ],
+};
 
 export class RipestatTransformer {
   readonly id = "ripestat-json";
@@ -31,8 +61,25 @@ export class RipestatTransformer {
   }
 }
 
-function declaration(context: TransformContext, productKey: string, kind: ProductDeclaration["kind"], schema: ProductDeclaration["schema"], role: ProductDeclaration["role"], updateMode: ProductDeclaration["updateMode"]): ProductDeclaration {
-  return { productKey, slug: context.feed.slug.replace(/-feed$/, ""), title: context.feed.title, description: context.feed.description, kind, schema, role, updateMode, completeness: "complete" };
+function declaration(
+  context: TransformContext,
+  productKey: string,
+  kind: ProductDeclaration["kind"],
+  schema: ProductDeclaration["schema"],
+  role: ProductDeclaration["role"],
+  updateMode: ProductDeclaration["updateMode"],
+): ProductDeclaration {
+  return {
+    productKey,
+    slug: context.feed.slug.replace(/-feed$/, ""),
+    title: context.feed.title,
+    description: context.feed.description,
+    kind,
+    schema,
+    role,
+    updateMode,
+    completeness: "complete",
+  };
 }
 
 async function status(body: ReadableStream<Uint8Array>, context: TransformContext): Promise<StreamingTransform> {
@@ -48,15 +95,22 @@ async function status(body: ReadableStream<Uint8Array>, context: TransformContex
   const space6 = object(announced.v6);
   const stamp = sourceTime(data.query_time);
   const payload: JsonObject = {
-    asn: `AS${number}`, snapshotTime: stamp,
-    firstSeen: seenTime(data.first_seen), lastSeen: seenTime(data.last_seen),
-    ipv4PeersSeeing: count(v4.ris_peers_seeing), ipv4PeersTotal: count(v4.total_ris_peers),
-    ipv6PeersSeeing: count(v6.ris_peers_seeing), ipv6PeersTotal: count(v6.total_ris_peers),
-    ipv4Prefixes: count(space4.prefixes), ipv4Addresses: count(space4.ips),
-    ipv6Prefixes: count(space6.prefixes), ipv6Slash48Units: count(space6["48s"], false),
+    asn: `AS${number}`,
+    snapshotTime: stamp,
+    firstSeen: seenTime(data.first_seen),
+    lastSeen: seenTime(data.last_seen),
+    ipv4PeersSeeing: count(v4.ris_peers_seeing),
+    ipv4PeersTotal: count(v4.total_ris_peers),
+    ipv6PeersSeeing: count(v6.ris_peers_seeing),
+    ipv6PeersTotal: count(v6.total_ris_peers),
+    ipv4Prefixes: count(space4.prefixes),
+    ipv4Addresses: count(space4.ips),
+    ipv6Prefixes: count(space6.prefixes),
+    ipv6Slash48Units: count(space6["48s"], false),
     observedNeighbours: count(data.observed_neighbours),
   };
-  if (Number(payload.ipv4PeersSeeing) > Number(payload.ipv4PeersTotal) || Number(payload.ipv6PeersSeeing) > Number(payload.ipv6PeersTotal)) throw new GatekeeperError("RIPEstat visibility exceeds its peer population", "invalid-response");
+  if (Number(payload.ipv4PeersSeeing) > Number(payload.ipv4PeersTotal) || Number(payload.ipv6PeersSeeing) > Number(payload.ipv6PeersTotal))
+    throw new GatekeeperError("RIPEstat visibility exceeds its peer population", "invalid-response");
   const product = declaration(context, "routing-status", "record", STATUS_SCHEMA, "current-state", "authoritative-snapshot");
   product.watermark = stamp;
   if (isJsonObject(root) && hasWarnings(root)) product.completeness = "partial";
@@ -82,7 +136,8 @@ async function resources(body: ReadableStream<Uint8Array>, context: TransformCon
     const key = `${kind}:${resource}`;
     if (seen.has(key)) return undefined;
     if (seen.size >= 5000) throw new GatekeeperError("RIPEstat resource list exceeds 5000 resources", "response-too-large");
-    seen.add(key); accepted += 1;
+    seen.add(key);
+    accepted += 1;
     return { productKey: "resources", record: { entityKey: key, payload: { kind, resource } } };
   }
   async function* rows(): AsyncGenerator<NormalizedRow> {
@@ -99,13 +154,20 @@ async function resources(body: ReadableStream<Uint8Array>, context: TransformCon
       for (const kind of ["asn", "ipv6"] as const) {
         const values = lists[kind];
         if (!isJsonArray(values)) throw new GatekeeperError("Invalid RIPEstat resource family", "invalid-response");
-        for (const value of values) { const normalized = row(kind, value); if (normalized) yield normalized; }
+        for (const value of values) {
+          const normalized = row(kind, value);
+          if (normalized) yield normalized;
+        }
       }
-      partial = hasWarnings(root); finished = true;
-    } finally { await iterator.return?.(); }
+      partial = hasWarnings(root);
+      finished = true;
+    } finally {
+      await iterator.return?.();
+    }
   }
   return {
-    products: [declaration(context, "resources", "record", RESOURCE_SCHEMA, "reference", "authoritative-snapshot")], rows: rows(),
+    products: [declaration(context, "resources", "record", RESOURCE_SCHEMA, "reference", "authoritative-snapshot")],
+    rows: rows(),
     finish: () => {
       if (!finished) throw new GatekeeperError("RIPEstat resource stream is incomplete", "invalid-response");
       return { quality: { acceptedRecords: accepted, rejectedRecords: 0 }, products: [{ productKey: "resources", completeness: partial ? "partial" : "complete" }] };
@@ -144,7 +206,8 @@ async function routing(body: ReadableStream<Uint8Array>, context: TransformConte
           const period = object(interval);
           const start = sourceTime(period.starttime);
           const end = sourceTime(period.endtime);
-          if (end < start || start < from || end > before || Date.parse(start) % DAY_MS !== 0) throw new GatekeeperError("RIPEstat timeline is invalid or outside its requested scope", "invalid-response");
+          if (end < start || start < from || end > before || Date.parse(start) % DAY_MS !== 0)
+            throw new GatekeeperError("RIPEstat timeline is invalid or outside its requested scope", "invalid-response");
           for (let time = Date.parse(start); time <= Date.parse(end) && time < Date.parse(before); time += DAY_MS) {
             for (const measure of ROUTING_MEASURES) {
               const value = stat[measure.field];
@@ -158,7 +221,8 @@ async function routing(body: ReadableStream<Uint8Array>, context: TransformConte
                 continue;
               }
               if (seen.size >= 360) throw new GatekeeperError("RIPEstat routing output exceeds its daily window", "response-too-large");
-              seen.set(key, measured); accepted += 1;
+              seen.set(key, measured);
+              accepted += 1;
               if (!watermark || stamp > watermark) watermark = stamp;
               const dimensions: SeriesPoint["dimensions"] = { measure: measure.measure, source: measure.source };
               if (measure.ipVersion) dimensions.ipVersion = measure.ipVersion;
@@ -174,11 +238,15 @@ async function routing(body: ReadableStream<Uint8Array>, context: TransformConte
       const earliest = sourceTime(complete.earliest_time);
       const latest = sourceTime(complete.latest_time);
       if (earliest > latest) throw new GatekeeperError("RIPEstat availability boundaries are reversed", "invalid-response");
-      partial = hasWarnings(root); finished = true;
-    } finally { await iterator.return?.(); }
+      partial = hasWarnings(root);
+      finished = true;
+    } finally {
+      await iterator.return?.();
+    }
   }
   return {
-    products: [declaration(context, "routing", "series", SERIES_SCHEMA, "time-series", "source-window")], rows: rows(),
+    products: [declaration(context, "routing", "series", SERIES_SCHEMA, "time-series", "source-window")],
+    rows: rows(),
     finish: () => {
       if (!finished) throw new GatekeeperError("RIPEstat routing stream is incomplete", "invalid-response");
       const finalization: ProductFinalization = { productKey: "routing", completeness: partial ? "partial" : "complete" };
@@ -194,18 +262,26 @@ function object(value: JsonValue | undefined): JsonObject {
 }
 
 function count(value: JsonValue | undefined, integer = true): number {
-  if (!isJsonNumber(value) || !Number.isFinite(value) || value < 0 || (integer && !Number.isSafeInteger(value))) throw new GatekeeperError("RIPEstat returned an invalid count", "invalid-response");
+  if (!isJsonNumber(value) || !Number.isFinite(value) || value < 0 || (integer && !Number.isSafeInteger(value)))
+    throw new GatekeeperError("RIPEstat returned an invalid count", "invalid-response");
   return value;
 }
 
-function seenTime(value: JsonValue | undefined): string | null { return value === undefined || value === null ? null : sourceTime(object(value).time); }
+function seenTime(value: JsonValue | undefined): string | null {
+  return value === undefined || value === null ? null : sourceTime(object(value).time);
+}
 
-async function* oneRecord(productKey: string, record: CanonicalRecord): AsyncGenerator<NormalizedRow> { yield { productKey, record }; }
+async function* oneRecord(productKey: string, record: CanonicalRecord): AsyncGenerator<NormalizedRow> {
+  yield { productKey, record };
+}
 
 function resourceText(kind: string, value: JsonValue): string {
   if (kind === "asn") {
-    try { return `AS${asn(value)}`; }
-    catch { throw new GatekeeperError("RIPEstat returned an invalid AS resource", "invalid-response"); }
+    try {
+      return `AS${asn(value)}`;
+    } catch {
+      throw new GatekeeperError("RIPEstat returned an invalid AS resource", "invalid-response");
+    }
   }
   if (!isJsonString(value) || value.length > 100) throw new GatekeeperError("RIPEstat returned an invalid IP resource", "invalid-response");
   if (kind === "ipv4") {
@@ -213,15 +289,19 @@ function resourceText(kind: string, value: JsonValue): string {
     if (prefix?.[1] && prefix[2] && Number(prefix[2]) <= 32) return `${ipv4(prefix[1])}/${Number(prefix[2])}`;
     const range = value.split("-");
     if (range.length === 2 && range[0] && range[1]) {
-      const start = ipv4(range[0]); const end = ipv4(range[1]);
+      const start = ipv4(range[0]);
+      const end = ipv4(range[1]);
       const number = (address: string) => address.split(".").reduce((result, part) => result * 256 + Number(part), 0);
       if (number(start) <= number(end)) return `${start}-${end}`;
     }
   } else {
     const prefix = /^([0-9a-f:]+)\/(\d{1,3})$/i.exec(value);
     if (prefix?.[1] && prefix[2] && Number(prefix[2]) <= 128) {
-      try { return `${new URL(`https://[${prefix[1]}]/`).hostname.slice(1, -1)}/${Number(prefix[2])}`; }
-      catch { /* Invalid IPv6 literals do not enter the reference inventory. */ }
+      try {
+        return `${new URL(`https://[${prefix[1]}]/`).hostname.slice(1, -1)}/${Number(prefix[2])}`;
+      } catch {
+        /* Invalid IPv6 literals do not enter the reference inventory. */
+      }
     }
   }
   throw new GatekeeperError("RIPEstat returned an invalid IP resource", "invalid-response");
@@ -229,6 +309,7 @@ function resourceText(kind: string, value: JsonValue): string {
 
 function ipv4(value: string): string {
   const parts = value.split(".");
-  if (parts.length !== 4 || parts.some((part) => !/^\d{1,3}$/.test(part) || Number(part) > 255)) throw new GatekeeperError("RIPEstat returned an invalid IPv4 address", "invalid-response");
+  if (parts.length !== 4 || parts.some((part) => !/^\d{1,3}$/.test(part) || Number(part) > 255))
+    throw new GatekeeperError("RIPEstat returned an invalid IPv4 address", "invalid-response");
   return parts.map(Number).join(".");
 }

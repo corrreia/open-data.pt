@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { assertCollectionResult, assertHistoryProgress, assertResolvedFeed, historyCursorKey, type JsonObject, type JsonValue, type NormalizedFrame } from "@open-data-pt/gatekeeper-shared";
+import {
+  assertCollectionResult,
+  assertHistoryProgress,
+  assertResolvedFeed,
+  historyCursorKey,
+  type JsonObject,
+  type JsonValue,
+  type NormalizedFrame,
+} from "@open-data-pt/gatekeeper-shared";
 import { readFrames, type FrameLimits, type FrameScope } from "../apps/kernel/src/frames";
 
 import { scope, limits, header, framed } from "./normalized-fixtures";
@@ -44,7 +52,13 @@ describe("history cursor time bounds", () => {
 });
 
 describe("resolved feed validation", () => {
-  const valid = { config: { feed: "events" }, configHash: "a".repeat(64), resourceKey: "fixture:events:resource", kind: "events", semantics: { domainSubject: "event", defaultProductRole: "event-log" } };
+  const valid = {
+    config: { feed: "events" },
+    configHash: "a".repeat(64),
+    resourceKey: "fixture:events:resource",
+    kind: "events",
+    semantics: { domainSubject: "event", defaultProductRole: "event-log" },
+  };
   it("accepts the exact bounded descriptor", () => expect(() => assertResolvedFeed(valid)).not.toThrow());
   it.each([
     { ...valid, configHash: "not-a-digest" },
@@ -82,12 +96,40 @@ describe("collection result envelope validation", () => {
 describe("normalized consumer validation", () => {
   it.each(["resourceKey", "configHash", "feedEpoch"])("rejects wrong checkpoint %s", async (field) => {
     const h = header();
-    h.checkpoint = { version: 2, resourceKey: scope.resourceKey, configHash: scope.configHash, feedEpoch: scope.feedEpoch, normalizer: { id: "fixture", version: "1" }, state: {}, [field]: "wrong" };
+    h.checkpoint = {
+      version: 2,
+      resourceKey: scope.resourceKey,
+      configHash: scope.configHash,
+      feedEpoch: scope.feedEpoch,
+      normalizer: { id: "fixture", version: "1" },
+      state: {},
+      [field]: "wrong",
+    };
     await expect(readNormalizedStream(framed([h]), limits, scope)).rejects.toThrow();
   });
-  it.each<[string, JsonValue]>([["schema", {}], ["schema", { fields: [{ id: "x", name: "x", type: "bogus", nullable: false }] }], ["updateMode", "replace"], ["role", "bogus"], ["suggestedSlug", "../other"], ["watermark", "2026-02-30T00:00:00Z"]])("rejects malformed product %s", async (field, value) => {
+  it.each<[string, JsonValue]>([
+    ["schema", {}],
+    ["schema", { fields: [{ id: "x", name: "x", type: "bogus", nullable: false }] }],
+    ["updateMode", "replace"],
+    ["role", "bogus"],
+    ["suggestedSlug", "../other"],
+    ["watermark", "2026-02-30T00:00:00Z"],
+  ])("rejects malformed product %s", async (field, value) => {
     const h = header();
-    h.products = [{ productKey: "events", suggestedSlug: "events", title: "Events", description: "", role: "event-log", schema: { fields: [] }, kind: "record", updateMode: "authoritative-snapshot", completeness: "complete", [field]: value }];
+    h.products = [
+      {
+        productKey: "events",
+        suggestedSlug: "events",
+        title: "Events",
+        description: "",
+        role: "event-log",
+        schema: { fields: [] },
+        kind: "record",
+        updateMode: "authoritative-snapshot",
+        completeness: "complete",
+        [field]: value,
+      },
+    ];
     await expect(readNormalizedStream(framed([h]), limits, scope)).rejects.toThrow();
   });
   it.each(["record", "series"])("rejects inline product rows under kind:%s rather than bypassing row budgets and completion counts", async (kind) => {
@@ -95,18 +137,49 @@ describe("normalized consumer validation", () => {
       const h = header();
       const record = { entityKey: "inline", payload: { oversized: "x".repeat(200) } };
       const point = { seriesKey: "inline", eventTime: "2026-09-09T00:00:00Z", value: 1, unit: "MW", dimensions: { oversized: "x".repeat(200) } };
-      h.products = [{ productKey: "inline", suggestedSlug: "inline", title: "Inline", description: "", role: "time-series", schema: { fields: [] }, kind, updateMode: "authoritative-snapshot", completeness: "complete", [field]: field === "records" ? [record, record] : [point, point] }];
+      h.products = [
+        {
+          productKey: "inline",
+          suggestedSlug: "inline",
+          title: "Inline",
+          description: "",
+          role: "time-series",
+          schema: { fields: [] },
+          kind,
+          updateMode: "authoritative-snapshot",
+          completeness: "complete",
+          [field]: field === "records" ? [record, record] : [point, point],
+        },
+      ];
       // No row frames: framed() emits all-zero completion counts.
       await expect(readNormalizedStream(framed([h]), { ...limits, records: 1, recordBytes: 64 }, scope)).rejects.toThrow("invalid frame");
     }
   });
-  it.each<JsonObject>([{ operation: "replace" }, { eventTime: "yesterday" }, { validFrom: "2026-09-10T00:00:00Z", validTo: "2026-09-09T00:00:00Z" }, { identity: { confidence: "stable" } }])("rejects malformed or retired record fields %j", async (fields) => {
-    await expect(readNormalizedStream(framed([header(), { type: "record", productKey: "events", value: { entityKey: "a", payload: {}, ...fields } }]), limits, scope)).rejects.toThrow();
+  it.each<JsonObject>([
+    { operation: "replace" },
+    { eventTime: "yesterday" },
+    { validFrom: "2026-09-10T00:00:00Z", validTo: "2026-09-09T00:00:00Z" },
+    { identity: { confidence: "stable" } },
+  ])("rejects malformed or retired record fields %j", async (fields) => {
+    await expect(
+      readNormalizedStream(framed([header(), { type: "record", productKey: "events", value: { entityKey: "a", payload: {}, ...fields } }]), limits, scope),
+    ).rejects.toThrow();
   });
   it("rejects row/product kind disagreement", async () => {
-    await expect(readNormalizedStream(framed([header(), { type: "point", productKey: "events", value: { seriesKey: "a", eventTime: "2026-09-09T00:00:00Z", value: 1, unit: "MW", dimensions: {} } }]), limits, scope)).rejects.toThrow();
+    await expect(
+      readNormalizedStream(
+        framed([header(), { type: "point", productKey: "events", value: { seriesKey: "a", eventTime: "2026-09-09T00:00:00Z", value: 1, unit: "MW", dimensions: {} } }]),
+        limits,
+        scope,
+      ),
+    ).rejects.toThrow();
   });
-  it.each<JsonObject>([{ nextCursor: { before: "invalid" } }, { nextCursor: { before: "2026-09-09T00:00:00Z", offset: -1 } }, { exhausted: "yes" }, { nextCursor: { before: "2026-09-09T00:00:00Z" }, exhausted: true }])("rejects malformed completion metadata %j", async (completion) => {
+  it.each<JsonObject>([
+    { nextCursor: { before: "invalid" } },
+    { nextCursor: { before: "2026-09-09T00:00:00Z", offset: -1 } },
+    { exhausted: "yes" },
+    { nextCursor: { before: "2026-09-09T00:00:00Z" }, exhausted: true },
+  ])("rejects malformed completion metadata %j", async (completion) => {
     await expect(readNormalizedStream(framed([header()], completion), limits, scope)).rejects.toThrow();
   });
   it("rejects oversized or malformed checkpoint metadata", async () => {
@@ -122,7 +195,12 @@ it("rejects exact offset/token repetition and bounded opaque cursor cycles befor
   const cursor = { before: "2026-09-09T00:00:00.000Z", offset: 2, token: "opaque" };
   const history = { ...scope, mode: { kind: "history" as const, cursor } };
   await expect(readNormalizedStream(framed([header()], { nextCursor: cursor }), limits, history)).rejects.toThrow("repeated or cycled");
-  await expect(readNormalizedStream(framed([header()], { nextCursor: { ...cursor, token: "previous" } }), limits, { ...history, visitedCursors: [JSON.stringify([cursor.before, 2, "previous"])] })).rejects.toThrow("repeated or cycled");
+  await expect(
+    readNormalizedStream(framed([header()], { nextCursor: { ...cursor, token: "previous" } }), limits, {
+      ...history,
+      visitedCursors: [JSON.stringify([cursor.before, 2, "previous"])],
+    }),
+  ).rejects.toThrow("repeated or cycled");
   await expect(readNormalizedStream(framed([header()]), limits, history)).rejects.toThrow("explicit continuation or exhaustion");
   const accepted = await readNormalizedStream(framed([header()], { nextCursor: { ...cursor, offset: 3 } }), limits, history);
   expect(accepted.nextCursor?.offset).toBe(3);
@@ -130,7 +208,17 @@ it("rejects exact offset/token repetition and bounded opaque cursor cycles befor
 
 it("rejects duplicate product keys and negative completion counts", async () => {
   const h = header();
-  const duplicate = { productKey: "duplicate", suggestedSlug: "duplicate", title: "Duplicate", description: "", role: "reference", schema: { fields: [] }, kind: "record", updateMode: "delta", completeness: "complete" };
+  const duplicate = {
+    productKey: "duplicate",
+    suggestedSlug: "duplicate",
+    title: "Duplicate",
+    description: "",
+    role: "reference",
+    schema: { fields: [] },
+    kind: "record",
+    updateMode: "delta",
+    completeness: "complete",
+  };
   h.products = [duplicate, duplicate];
   await expect(readNormalizedStream(framed([h]), limits, scope)).rejects.toThrow("Duplicate product key");
   await expect(readNormalizedStream(framed([header()], { counts: { records: -1, points: 0 } }), limits, scope)).rejects.toThrow("invalid frame");

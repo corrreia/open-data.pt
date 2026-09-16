@@ -58,7 +58,12 @@ describe("hourly status history", () => {
   });
 
   it("does not double-count overlapping outage intervals", () => {
-    const result = measureStatus([{ label: "Feed", outages: [outage(START + 5 * MINUTE, START + 25 * MINUTE), outage(START + 15 * MINUTE, START + 35 * MINUTE)] }], [HOUR], HOUR.end, START);
+    const result = measureStatus(
+      [{ label: "Feed", outages: [outage(START + 5 * MINUTE, START + 25 * MINUTE), outage(START + 15 * MINUTE, START + 35 * MINUTE)] }],
+      [HOUR],
+      HOUR.end,
+      START,
+    );
     expect(result.uptime).toBe(0.5);
     expect(result.bars[0]?.longest).toBe(30 * MINUTE);
     expect(result.bars[0]?.affected).toBe(1);
@@ -71,7 +76,15 @@ describe("hourly status history", () => {
   });
 
   it("shows partial publisher impact rather than claiming all datasets are unavailable", () => {
-    const result = measureStatus([{ label: "Failing", outages: [outage(START, HOUR.end)] }, { label: "Healthy", outages: [] }], [HOUR], HOUR.end, START);
+    const result = measureStatus(
+      [
+        { label: "Failing", outages: [outage(START, HOUR.end)] },
+        { label: "Healthy", outages: [] },
+      ],
+      [HOUR],
+      HOUR.end,
+      START,
+    );
     expect(result.bars[0]).toMatchObject({ level: "major", affected: 1, trackedMembers: 2 });
     expect(result.uptime).toBe(0.5);
   });
@@ -102,7 +115,15 @@ describe("hourly status history", () => {
   });
 
   it("counts separate datasets even when their display names match", () => {
-    const result = measureStatus([{ label: "Same title", outages: [outage(START)] }, { label: "Same title", outages: [outage(START)] }], [HOUR], HOUR.end, START);
+    const result = measureStatus(
+      [
+        { label: "Same title", outages: [outage(START)] },
+        { label: "Same title", outages: [outage(START)] },
+      ],
+      [HOUR],
+      HOUR.end,
+      START,
+    );
     expect(result.bars[0]).toMatchObject({ affected: 2, trackedMembers: 2, level: "severe" });
   });
 });

@@ -1,9 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type {
-  JsonValue,
-  TransformContext,
-} from "@open-data-pt/gatekeeper-shared";
+import type { JsonValue, TransformContext } from "@open-data-pt/gatekeeper-shared";
 import { IpmaTransformer } from "../packages/gatekeeper-shared/src/sources/ipma/transform";
 
 type FeedKind = "warnings" | "uv-index" | "fire-risk" | "sea-forecast";
@@ -64,28 +61,33 @@ describe("IPMA additional transformers", () => {
         levelColor: "#f9a825",
       },
     });
-    expect(product?.schema.fields.find((field) => field.id === "level")?.display)
-      .toEqual({ badge: { colorField: "levelColor" } });
+    expect(product?.schema.fields.find((field) => field.id === "level")?.display).toEqual({ badge: { colorField: "levelColor" } });
   });
 
   it("converts a DST-transition day and maps every warning level colour", async () => {
     const levels = ["green", "yellow", "orange", "red"] as const;
-    const result = await transformer.transform(bytes({
-      warnings: levels.map((level, index) => ({
-        text: `warning ${level}`,
-        awarenessTypeName: `Type ${index}`,
-        idAreaAviso: "LSB",
-        startTime: "2026-03-29T12:00:00",
-        endTime: "2026-03-29T13:00:00",
-        awarenessLevelID: level,
-      })),
-      areas: { data: [{ idAreaAviso: "LSB", local: "Lisboa" }] },
-    }), context("warnings"));
+    const result = await transformer.transform(
+      bytes({
+        warnings: levels.map((level, index) => ({
+          text: `warning ${level}`,
+          awarenessTypeName: `Type ${index}`,
+          idAreaAviso: "LSB",
+          startTime: "2026-03-29T12:00:00",
+          endTime: "2026-03-29T13:00:00",
+          awarenessLevelID: level,
+        })),
+        areas: { data: [{ idAreaAviso: "LSB", local: "Lisboa" }] },
+      }),
+      context("warnings"),
+    );
 
-    expect(result.products[0]?.records?.map((record) => record.eventTime))
-      .toEqual(Array(4).fill("2026-03-29T11:00:00.000Z"));
-    expect(Object.fromEntries(result.products[0]?.records?.map((record) => [record.payload.level, record.payload.levelColor]) ?? []))
-      .toEqual({ green: "#2e7d32", yellow: "#f9a825", orange: "#ef6c00", red: "#c62828" });
+    expect(result.products[0]?.records?.map((record) => record.eventTime)).toEqual(Array(4).fill("2026-03-29T11:00:00.000Z"));
+    expect(Object.fromEntries(result.products[0]?.records?.map((record) => [record.payload.level, record.payload.levelColor]) ?? [])).toEqual({
+      green: "#2e7d32",
+      yellow: "#f9a825",
+      orange: "#ef6c00",
+      red: "#c62828",
+    });
   });
 
   it("creates UV forecast records with city coordinates, published once without a restated series", async () => {
@@ -120,29 +122,30 @@ describe("IPMA additional transformers", () => {
       riskColor: "#2e7d32",
       forecastDate: "2026-09-07",
     });
-    expect(product?.records?.find((record) => record.entityKey === "0101:2026-09-07")?.payload)
-      .toMatchObject({ municipality: "0101", riskLabel: "Moderado", riskColor: "#f9a825" });
-    expect(product?.schema.fields.find((field) => field.id === "riskLabel")?.display)
-      .toEqual({ badge: { colorField: "riskColor" } });
+    expect(product?.records?.find((record) => record.entityKey === "0101:2026-09-07")?.payload).toMatchObject({
+      municipality: "0101",
+      riskLabel: "Moderado",
+      riskColor: "#f9a825",
+    });
+    expect(product?.schema.fields.find((field) => field.id === "riskLabel")?.display).toEqual({ badge: { colorField: "riskColor" } });
   });
 
   it("maps every fire-risk level to its Portuguese label and colour", async () => {
     const levels = [1, 2, 3, 4, 5];
-    const result = await transformer.transform(bytes({
-      forecasts: [{
-        dataPrev: "2026-09-07",
-        local: Object.fromEntries(levels.map((level) => [
-          `000${level}`,
-          { data: { rcm: level }, dico: `000${level}`, latitude: 38 + level / 10, longitude: -9 },
-        ])),
-      }],
-      municipalities: { data: [] },
-    }), context("fire-risk"));
+    const result = await transformer.transform(
+      bytes({
+        forecasts: [
+          {
+            dataPrev: "2026-09-07",
+            local: Object.fromEntries(levels.map((level) => [`000${level}`, { data: { rcm: level }, dico: `000${level}`, latitude: 38 + level / 10, longitude: -9 }])),
+          },
+        ],
+        municipalities: { data: [] },
+      }),
+      context("fire-risk"),
+    );
 
-    expect(Object.fromEntries(result.products[0]?.records?.map((record) => [
-      record.payload.riskLevel,
-      [record.payload.riskLabel, record.payload.riskColor],
-    ]) ?? [])).toEqual({
+    expect(Object.fromEntries(result.products[0]?.records?.map((record) => [record.payload.riskLevel, [record.payload.riskLabel, record.payload.riskColor]]) ?? [])).toEqual({
       1: ["Reduzido", "#2e7d32"],
       2: ["Moderado", "#f9a825"],
       3: ["Elevado", "#ef6c00"],

@@ -2,10 +2,7 @@ import type { SourceConfig } from "../../index";
 import { chooseTransformer } from "./transform";
 import { validateUdataSourceConfig } from "./udata";
 
-export function validateUdataFeedConfig(
-  config: SourceConfig,
-  hosts: ReadonlySet<string>,
-): SourceConfig {
+export function validateUdataFeedConfig(config: SourceConfig, hosts: ReadonlySet<string>): SourceConfig {
   const base = validateUdataSourceConfig(config, hosts);
   const distributionId = config.distributionId?.trim();
   const format = config.format?.trim().toLowerCase();
@@ -33,14 +30,7 @@ export function validateUdataFeedConfig(
     productSlug,
     feed,
   };
-  const optionalSettings = [
-    "productTitle",
-    "productDescription",
-    "keyField",
-    "eventTimeField",
-    "headerRow",
-    "transformer",
-  ] as const;
+  const optionalSettings = ["productTitle", "productDescription", "keyField", "eventTimeField", "headerRow", "transformer"] as const;
   for (const setting of optionalSettings) {
     const value = config[setting];
     if (value) validated[setting] = value;

@@ -16,7 +16,9 @@ export function peeringdbCollector(options: PeeringdbCollectorOptions): Normaliz
     resolve: (config) => resolveFeed(config, { gatekeeperKind: "peeringdb", kinds: PEERINGDB_FEEDS, validate: validatePeeringdbFeedConfig }),
     source: (_state, mode, signal) => {
       if (mode.kind === "history") throw new Error("PeeringDB directory history is not supported");
-      return collectPeeringdbFeed(options.config, options.apiOrigin, (input, init) => options.fetcher(input, { ...init, signal: init?.signal ? AbortSignal.any([signal, init.signal]) : signal }));
+      return collectPeeringdbFeed(options.config, options.apiOrigin, (input, init) =>
+        options.fetcher(input, { ...init, signal: init?.signal ? AbortSignal.any([signal, init.signal]) : signal }),
+      );
     },
     normalize: { kind: "streaming", transform: (body, context) => transformer.transform(body, context) },
   };

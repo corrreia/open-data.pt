@@ -80,7 +80,16 @@ function Catalog() {
   const words = q.toLocaleLowerCase().split(/\s+/).filter(Boolean);
   const matchesQuery = (dataset: Dataset) => {
     if (words.length === 0) return true;
-    const haystack = [dataset.title, dataset.feed.description, dataset.publisher, dataset.format, ...dataset.topics, ...dataset.products.flatMap(({ product, label }) => [product.title, product.slug, label])].join(" ").toLocaleLowerCase();
+    const haystack = [
+      dataset.title,
+      dataset.feed.description,
+      dataset.publisher,
+      dataset.format,
+      ...dataset.topics,
+      ...dataset.products.flatMap(({ product, label }) => [product.title, product.slug, label]),
+    ]
+      .join(" ")
+      .toLocaleLowerCase();
     return words.every((word) => haystack.includes(word));
   };
   const matchesFacets = (dataset: Dataset, except?: FacetId) =>
@@ -101,7 +110,11 @@ function Catalog() {
   const active = FACETS.flatMap((facet) => (selected.get(facet.id) ?? []).map((value) => ({ facet: facet.id, value })));
 
   const byOrder = (a: Dataset, b: Dataset) =>
-    sort === "recent" ? (b.updatedAt ?? "").localeCompare(a.updatedAt ?? "") : sort === "name" ? a.title.localeCompare(b.title) : a.publisher.localeCompare(b.publisher) || a.title.localeCompare(b.title);
+    sort === "recent"
+      ? (b.updatedAt ?? "").localeCompare(a.updatedAt ?? "")
+      : sort === "name"
+        ? a.title.localeCompare(b.title)
+        : a.publisher.localeCompare(b.publisher) || a.title.localeCompare(b.title);
   const ordered = [...visible].sort((a, b) => emptyLast(a, b) || byOrder(a, b));
   const groups = new Map<string, Dataset[]>();
   if (sort === "publisher") for (const dataset of ordered) groups.set(dataset.publisher, [...(groups.get(dataset.publisher) ?? []), dataset]);
@@ -115,7 +128,9 @@ function Catalog() {
         const chosen = selected.get(facet.id) ?? [];
         for (const value of chosen) if (!counts.has(value)) counts.set(value, 0);
         let options = [...counts.entries()].sort(
-          facet.order ? (a, b) => (facet.order ?? []).indexOf(a[0]) - (facet.order ?? []).indexOf(b[0]) : (a, b) => b[1] - a[1] || nameOf(facet.id, a[0]).localeCompare(nameOf(facet.id, b[0])),
+          facet.order
+            ? (a, b) => (facet.order ?? []).indexOf(a[0]) - (facet.order ?? []).indexOf(b[0])
+            : (a, b) => b[1] - a[1] || nameOf(facet.id, a[0]).localeCompare(nameOf(facet.id, b[0])),
         );
         const hidden = facet.collapsed && !expanded.has(facet.id) ? options.length - facet.collapsed : 0;
         if (hidden > 0) options = options.filter(([value], index) => index < (facet.collapsed ?? 0) || chosen.includes(value));
@@ -171,17 +186,37 @@ function Catalog() {
               <InputGroup.Addon>
                 <MagnifyingGlassIcon />
               </InputGroup.Addon>
-              <InputGroup.Input value={q} onChange={(event) => setQ(event.target.value)} placeholder="Search datasets, publishers, tables…" aria-label="Search datasets" autoFocus={Boolean(initial.q)} />
+              <InputGroup.Input
+                value={q}
+                onChange={(event) => setQ(event.target.value)}
+                placeholder="Search datasets, publishers, tables…"
+                aria-label="Search datasets"
+                autoFocus={Boolean(initial.q)}
+              />
             </InputGroup>
             <Select aria-label="Sort by" className="w-48" value={sort} onValueChange={(value: string | null) => setSort(isSort(value) ? value : "publisher")} items={SORTS} />
           </div>
 
           <div className="flex min-h-8 flex-wrap items-center gap-2">
             <p className="text-sm text-kumo-subtle" role="status" aria-live="polite">
-              {datasets.length === 0 ? "Loading the catalog…" : `${plural(visible.length, "dataset")} · ${fmt.int(productCount(visible))} tables and series${visible.length !== datasets.length ? `, of ${fmt.int(datasets.length)}` : ""}`}
+              {datasets.length === 0
+                ? "Loading the catalog…"
+                : `${plural(visible.length, "dataset")} · ${fmt.int(productCount(visible))} tables and series${visible.length !== datasets.length ? `, of ${fmt.int(datasets.length)}` : ""}`}
             </p>
             {active.map((item) => (
-              <Button key={`${item.facet}:${item.value}`} size="sm" variant="secondary" icon={<XIcon />} aria-label={`Remove filter ${nameOf(item.facet, item.value)}`} onClick={() => choose(item.facet, (selected.get(item.facet) ?? []).filter((value) => value !== item.value))}>
+              <Button
+                key={`${item.facet}:${item.value}`}
+                size="sm"
+                variant="secondary"
+                icon={<XIcon />}
+                aria-label={`Remove filter ${nameOf(item.facet, item.value)}`}
+                onClick={() =>
+                  choose(
+                    item.facet,
+                    (selected.get(item.facet) ?? []).filter((value) => value !== item.value),
+                  )
+                }
+              >
                 {nameOf(item.facet, item.value)}
               </Button>
             ))}

@@ -57,44 +57,42 @@ function transformFuelTypes(value: JsonValue | undefined): Omit<TransformResult,
     if (!isJsonBoolean(candidate.fl_rodoviario) || !isJsonBoolean(candidate.fl_ativo)) {
       return [];
     }
-    return [{
-      entityKey: String(id),
-      payload: {
-        id: String(id),
-        name,
-        unit,
-        roadFuel: candidate.fl_rodoviario,
-        active: candidate.fl_ativo,
-        visibleOnWebsite:
-          isJsonBoolean(candidate.fl_ViewWebSite)
-            ? candidate.fl_ViewWebSite
-            : null,
-        color: hexColor(candidate.BackGroundColor),
+    return [
+      {
+        entityKey: String(id),
+        payload: {
+          id: String(id),
+          name,
+          unit,
+          roadFuel: candidate.fl_rodoviario,
+          active: candidate.fl_ativo,
+          visibleOnWebsite: isJsonBoolean(candidate.fl_ViewWebSite) ? candidate.fl_ViewWebSite : null,
+          color: hexColor(candidate.BackGroundColor),
+        },
       },
-    }];
+    ];
   });
-  return result(values.length, records.length, [{
-    productKey: "fuel-types",
-    slug: "dgeg-fuel-types",
-    title: "DGEG fuel types",
-    description: "Fuel types and units published by Preços dos Combustíveis Online.",
-    role: "reference",
-    schema: FUEL_TYPE_SCHEMA,
-    records,
-    kind: "record",
-    updateMode: "authoritative-snapshot",
-    completeness: "complete",
-  }]);
+  return result(values.length, records.length, [
+    {
+      productKey: "fuel-types",
+      slug: "dgeg-fuel-types",
+      title: "DGEG fuel types",
+      description: "Fuel types and units published by Preços dos Combustíveis Online.",
+      role: "reference",
+      schema: FUEL_TYPE_SCHEMA,
+      records,
+      kind: "record",
+      updateMode: "authoritative-snapshot",
+      completeness: "complete",
+    },
+  ]);
 }
 
-function transformFuelPrices(
-  value: JsonValue | undefined,
-  context: TransformContext,
-): Omit<TransformResult, "transformer"> {
+function transformFuelPrices(value: JsonValue | undefined, context: TransformContext): Omit<TransformResult, "transformer"> {
   if (!isJsonObject(value)) throw new Error("DGEG fuel-price document must be an object");
   const fuelType = parseFuelType(value.fuelType);
   const district = value.district === null ? null : parseDistrict(value.district);
-  if (!fuelType || value.district !== null && !district) {
+  if (!fuelType || (value.district !== null && !district)) {
     throw new Error("DGEG fuel-price document has invalid source metadata");
   }
   if (!Number.isSafeInteger(value.fetchedPages) || !Array.isArray(value.stations)) {
@@ -109,34 +107,31 @@ function transformFuelPrices(
     const municipality = text(station.Municipio);
     const stationDistrict = text(station.Distrito);
     const price = parsePrice(station.Preco);
-    const updatedAt = isJsonString(station.DataAtualizacao)
-      ? dgegDateTime(station.DataAtualizacao)
-      : undefined;
-    if (
-      id === undefined || !name || !municipality || !stationDistrict ||
-      price === undefined || !updatedAt
-    ) {
+    const updatedAt = isJsonString(station.DataAtualizacao) ? dgegDateTime(station.DataAtualizacao) : undefined;
+    if (id === undefined || !name || !municipality || !stationDistrict || price === undefined || !updatedAt) {
       return [];
     }
-    return [{
-      entityKey: String(id),
-      eventTime: updatedAt,
-      payload: {
-        id: String(id),
-        name,
-        brand: nullableText(station.Marca),
-        stationType: nullableText(station.TipoPosto),
-        municipality,
-        district: stationDistrict,
-        address: nullableText(station.Morada),
-        locality: nullableText(station.Localidade),
-        postalCode: nullableText(station.CodPostal),
-        latitude: coordinate(station.Latitude, -90, 90),
-        longitude: coordinate(station.Longitude, -180, 180),
-        price,
-        updatedAt,
+    return [
+      {
+        entityKey: String(id),
+        eventTime: updatedAt,
+        payload: {
+          id: String(id),
+          name,
+          brand: nullableText(station.Marca),
+          stationType: nullableText(station.TipoPosto),
+          municipality,
+          district: stationDistrict,
+          address: nullableText(station.Morada),
+          locality: nullableText(station.Localidade),
+          postalCode: nullableText(station.CodPostal),
+          latitude: coordinate(station.Latitude, -90, 90),
+          longitude: coordinate(station.Longitude, -180, 180),
+          price,
+          updatedAt,
+        },
       },
-    }];
+    ];
   });
 
   // One point per municipality per day. A median that moves during the day revises that day's point; one that
@@ -152,13 +147,9 @@ function transformFuelPrices(
   const points = [...byMunicipality.entries()]
     .sort(([left], [right]) => left.localeCompare(right, "pt"))
     .map(([municipality, municipalityRecords]) => {
-      const prices = municipalityRecords
-        .map((record) => Number(record.payload.price))
-        .sort((left, right) => left - right);
+      const prices = municipalityRecords.map((record) => Number(record.payload.price)).sort((left, right) => left - right);
       const middle = Math.floor(prices.length / 2);
-      const value = prices.length % 2 === 0
-        ? ((prices[middle - 1] ?? 0) + (prices[middle] ?? 0)) / 2
-        : prices[middle] ?? 0;
+      const value = prices.length % 2 === 0 ? ((prices[middle - 1] ?? 0) + (prices[middle] ?? 0)) / 2 : (prices[middle] ?? 0);
       const districtName = String(municipalityRecords[0]?.payload.district ?? "");
       return {
         seriesKey: municipality,
@@ -189,12 +180,7 @@ function transformFuelPrices(
     ],
   };
   const seriesSchema: CanonicalSchema = {
-    fields: [
-      field("seriesKey", "identifier", false),
-      field("eventTime", "datetime", false),
-      field("value", "number", false, priceUnit),
-      field("dimensions", "json", false),
-    ],
+    fields: [field("seriesKey", "identifier", false), field("eventTime", "datetime", false), field("value", "number", false, priceUnit), field("dimensions", "json", false)],
   };
   const latestUpdate = records
     .map((record) => record.eventTime)
@@ -232,11 +218,7 @@ function transformFuelPrices(
   return result(value.stations.length, records.length, products);
 }
 
-function result(
-  inputCount: number,
-  acceptedRecords: number,
-  products: ProductBuild[],
-): Omit<TransformResult, "transformer"> {
+function result(inputCount: number, acceptedRecords: number, products: ProductBuild[]): Omit<TransformResult, "transformer"> {
   const rejectedRecords = inputCount - acceptedRecords;
   return {
     products,
@@ -260,11 +242,7 @@ function parseArtifact(bytes: Uint8Array): JsonValue {
 }
 
 function envelopeResults(value: JsonValue | undefined): JsonValue[] {
-  if (
-    !isJsonObject(value) ||
-    value.status !== true ||
-    !Array.isArray(value.resultado)
-  ) {
+  if (!isJsonObject(value) || value.status !== true || !Array.isArray(value.resultado)) {
     throw new Error("DGEG artifact has an invalid response envelope");
   }
   return value.resultado;
@@ -285,7 +263,6 @@ function parseDistrict(value: JsonValue | undefined): { id: number; name: string
   return id === undefined || !name ? undefined : { id, name };
 }
 
-
 function integer(value: JsonValue | undefined): number | undefined {
   return isJsonNumber(value) && Number.isSafeInteger(value) ? value : undefined;
 }
@@ -299,9 +276,7 @@ function nullableText(value: JsonValue | undefined): string | null {
 }
 
 function coordinate(value: JsonValue | undefined, minimum: number, maximum: number): number | null {
-  return isJsonNumber(value) && Number.isFinite(value) && value >= minimum && value <= maximum
-    ? value
-    : null;
+  return isJsonNumber(value) && Number.isFinite(value) && value >= minimum && value <= maximum ? value : null;
 }
 
 function parsePrice(value: JsonValue | undefined): number | undefined {

@@ -22,7 +22,17 @@ import { keepsHistory, type ProductIndexEntry } from "./feed-model";
 import { readFrames, type CompleteFrame, type FrameScope, type HeaderFrame } from "./frames";
 import { digest, stableStringify } from "./hash";
 import type { LakeTable } from "./lake";
-import { keys, WINDOW, type ChangeItem, type ChangesWindow, type ObjectStore, type PointChangeItem, type PointItem, type SeriesChangesWindow, type SeriesWindow } from "./object-store";
+import {
+  keys,
+  WINDOW,
+  type ChangeItem,
+  type ChangesWindow,
+  type ObjectStore,
+  type PointChangeItem,
+  type PointItem,
+  type SeriesChangesWindow,
+  type SeriesWindow,
+} from "./object-store";
 import { OutboxBuffer } from "./outbox";
 import { RecentChanges, prepareRecord, recordRevision, retractionRevision, revisionId, servingJson, type PreparedRecord, type RecordContext } from "./records";
 import {
@@ -99,7 +109,11 @@ export class PromotionRequired extends Error {
 
 /** The Gatekeeper reported a typed failure. */
 export class CollectionFailed extends Error {
-  constructor(message: string, readonly retryable: boolean, readonly retryAfterSeconds?: number) {
+  constructor(
+    message: string,
+    readonly retryable: boolean,
+    readonly retryAfterSeconds?: number,
+  ) {
     super(message);
     this.name = "CollectionFailed";
   }
@@ -167,7 +181,7 @@ export async function runCollection(acquisitionId: string, ports: EnginePorts): 
       result = await deadline.wait(pending);
       assertCollectionResult(result, request.mode);
     } catch (error) {
-      void pending.then((late) => late.kind === "batch" ? late.stream.cancel() : undefined).catch(() => undefined);
+      void pending.then((late) => (late.kind === "batch" ? late.stream.cancel() : undefined)).catch(() => undefined);
       throw error;
     }
     if (result.kind === "failure") throw new CollectionFailed(`Gatekeeper collection failed: ${result.code}`, result.retryable, result.retryAfterSeconds);
@@ -188,8 +202,13 @@ export async function runCollection(acquisitionId: string, ports: EnginePorts): 
 async function consumeBatch(plan: CollectionPlan, stream: ReadableStream<Uint8Array>, ports: EnginePorts): Promise<EngineOutcome> {
   const acquisitionId = plan.acquisitionId;
   const scope: FrameScope = {
-    collectionId: acquisitionId, resourceKey: plan.feed.resolved.resourceKey, configHash: plan.feed.resolved.configHash,
-    feedEpoch: plan.feed.feedEpoch, mode: plan.mode, deadline: plan.deadline, visitedCursors: plan.visitedCursors,
+    collectionId: acquisitionId,
+    resourceKey: plan.feed.resolved.resourceKey,
+    configHash: plan.feed.resolved.configHash,
+    feedEpoch: plan.feed.feedEpoch,
+    mode: plan.mode,
+    deadline: plan.deadline,
+    visitedCursors: plan.visitedCursors,
   };
   const outbox = new OutboxBuffer((table, json, rows) => ports.runner.appendOutbox(acquisitionId, table, json, rows));
   const history = plan.mode.kind === "history" ? new HistoryState(plan) : undefined;
@@ -213,7 +232,16 @@ async function consumeBatch(plan: CollectionPlan, stream: ReadableStream<Uint8Ar
         const binding = declared.find((candidate) => candidate.productKey === product.productKey);
         if (!binding) throw new NormalizedInputError(`Runner did not declare product ${product.productKey}`);
         const base: WorkerBase = { plan, ports, outbox, header: product, declared: binding, context: recordContext(plan, frame, binding) };
-        workers.set(product.productKey, history ? new HistoryWorker(base, history) : product.kind === "series" ? new SeriesWorker(base) : binding.mode === "large" ? new LargeRecordWorker(base) : new SmallRecordWorker(base));
+        workers.set(
+          product.productKey,
+          history
+            ? new HistoryWorker(base, history)
+            : product.kind === "series"
+              ? new SeriesWorker(base)
+              : binding.mode === "large"
+                ? new LargeRecordWorker(base)
+                : new SmallRecordWorker(base),
+        );
       }
       continue;
     }
@@ -238,7 +266,11 @@ async function consumeBatch(plan: CollectionPlan, stream: ReadableStream<Uint8Ar
     if (finished.commit) commits.push(finished.commit);
   }
   await outbox.close();
-  const watermark = commits.map((commit) => commit.entry.watermark).filter((value): value is string => Boolean(value)).sort().at(-1);
+  const watermark = commits
+    .map((commit) => commit.entry.watermark)
+    .filter((value): value is string => Boolean(value))
+    .sort()
+    .at(-1);
   const input: CommitInput = {
     checkpoint: header.checkpoint,
     normalizer: header.normalizer,
@@ -297,7 +329,7 @@ export interface Drained {
  */
 export async function drainOutbox(runner: Pick<RunnerPort, "pendingOutbox" | "ackOutbox">, send: LakeSend, maxBlobs: number, first?: OutboxBlob[]): Promise<Drained> {
   let delivered = 0;
-  let blobs = first ?? await runner.pendingOutbox(Math.min(OUTBOX_PAGE_BLOBS, maxBlobs));
+  let blobs = first ?? (await runner.pendingOutbox(Math.min(OUTBOX_PAGE_BLOBS, maxBlobs)));
   while (blobs.length > 0 && delivered < maxBlobs) {
     for (const blob of blobs) {
       // SAFETY: outbox blobs hold JSON arrays of lake rows validated before they were stored.
@@ -305,7 +337,10 @@ export async function drainOutbox(runner: Pick<RunnerPort, "pendingOutbox" | "ac
     }
     delivered += blobs.length;
     // Past the budget, one blob is enough to learn whether anything is left.
-    blobs = await runner.ackOutbox(blobs.map((blob) => blob.seq), delivered < maxBlobs ? OUTBOX_PAGE_BLOBS : 1);
+    blobs = await runner.ackOutbox(
+      blobs.map((blob) => blob.seq),
+      delivered < maxBlobs ? OUTBOX_PAGE_BLOBS : 1,
+    );
   }
   return { delivered, done: blobs.length === 0 };
 }
@@ -361,8 +396,13 @@ interface ProductWorker {
 
 function recordContext(plan: CollectionPlan, header: HeaderFrame, declared: DeclaredProduct): RecordContext {
   const context: RecordContext = {
-    feedId: plan.feed.id, acquisitionId: plan.acquisitionId, slug: declared.slug, productVersion: declared.version,
-    observedAt: plan.observedAt, normalizer: header.normalizer, baseline: declared.baseline,
+    feedId: plan.feed.id,
+    acquisitionId: plan.acquisitionId,
+    slug: declared.slug,
+    productVersion: declared.version,
+    observedAt: plan.observedAt,
+    normalizer: header.normalizer,
+    baseline: declared.baseline,
     keepHistory: plan.lake && keepsHistory(plan.policy, declared.productKey),
   };
   if (header.provenance.sourcePublishedAt) context.sourcePublishedAt = header.provenance.sourcePublishedAt;
@@ -392,30 +432,32 @@ function nextEntry(base: WorkerBase, rules: ProductRules, changed: boolean): Pro
     schema,
     updateMode: rules.updateMode,
     completeness: rules.completeness,
-    version: changed ? declared.version : previous?.version ?? declared.version,
+    version: changed ? declared.version : (previous?.version ?? declared.version),
     status: "current",
-    currentAcquisitionId: changed ? plan.acquisitionId : previous?.currentAcquisitionId ?? plan.acquisitionId,
+    currentAcquisitionId: changed ? plan.acquisitionId : (previous?.currentAcquisitionId ?? plan.acquisitionId),
     watermark,
     rowCount: previous?.rowCount ?? 0,
     chunks: previous?.chunks ?? null,
     // A product that stopped keeping history lets go of its change windows, and the runner deletes them.
-    changesKey: keepsChangeWindow(base) ? previous?.changesKey ?? null : null,
+    changesKey: keepsChangeWindow(base) ? (previous?.changesKey ?? null) : null,
     seriesKey: previous?.seriesKey ?? null,
-    seriesChangesKey: keepsChangeWindow(base) ? previous?.seriesChangesKey ?? null : null,
-    updatedAt: changed ? plan.observedAt : previous?.updatedAt ?? plan.observedAt,
+    seriesChangesKey: keepsChangeWindow(base) ? (previous?.seriesChangesKey ?? null) : null,
+    updatedAt: changed ? plan.observedAt : (previous?.updatedAt ?? plan.observedAt),
     createdAt: previous?.createdAt ?? plan.observedAt,
   };
 }
 
 function metadataChanged(previous: ProductIndexEntry | null, entry: ProductIndexEntry): boolean {
   if (!previous) return true;
-  return previous.title !== entry.title
-    || previous.description !== entry.description
-    || previous.role !== entry.role
-    || stableStringify(toJsonObject(previous.schema)) !== stableStringify(toJsonObject(entry.schema))
-    || previous.updateMode !== entry.updateMode
-    || previous.completeness !== entry.completeness
-    || previous.watermark !== entry.watermark;
+  return (
+    previous.title !== entry.title ||
+    previous.description !== entry.description ||
+    previous.role !== entry.role ||
+    stableStringify(toJsonObject(previous.schema)) !== stableStringify(toJsonObject(entry.schema)) ||
+    previous.updateMode !== entry.updateMode ||
+    previous.completeness !== entry.completeness ||
+    previous.watermark !== entry.watermark
+  );
 }
 
 async function writeChangeWindow(base: WorkerBase, entry: ProductIndexEntry, fresh: ChangeItem[]): Promise<void> {
@@ -431,7 +473,9 @@ function chunkSink(base: WorkerBase, known: ReadonlySet<string>): ChunkSink {
   return {
     prefix: keys.prefix(base.plan.feed.id, base.declared.slug),
     known,
-    put: async (key, body) => { await base.ports.objects.writeText(key, body); },
+    put: async (key, body) => {
+      await base.ports.objects.writeText(key, body);
+    },
   };
 }
 
@@ -460,7 +504,7 @@ class SmallRecordWorker implements ProductWorker {
     const { base } = this;
     const previousRows = new Map<string, { hash: string; json: string }>();
     for (const chunk of base.declared.previous?.chunks ?? []) {
-      for (const row of parseChunkRows(await base.ports.objects.readText(chunk.key) ?? "")) previousRows.set(row.key, { hash: hashOf(row.json), json: row.json });
+      for (const row of parseChunkRows((await base.ports.objects.readText(chunk.key)) ?? "")) previousRows.set(row.key, { hash: hashOf(row.json), json: row.json });
     }
     const changes = new RecentChanges<ChangeItem>(WINDOW.changes);
     let revisions = 0;
@@ -565,7 +609,10 @@ class LargeRecordWorker implements ProductWorker {
     const entry = nextEntry(base, rules, true);
     await writeChangeWindow(base, entry, this.changes.newestFirst());
     // The runner rebuilds the changed chunks from its index after the commit and fills in the chunk list.
-    return { commit: { productKey: base.header.productKey, changed: true, entry, mode: "large", staged: this.staged > 0 || !base.declared.previous?.chunks }, revisions: this.revisions };
+    return {
+      commit: { productKey: base.header.productKey, changed: true, entry, mode: "large", staged: this.staged > 0 || !base.declared.previous?.chunks },
+      revisions: this.revisions,
+    };
   }
 }
 
@@ -600,9 +647,21 @@ class SeriesWorker implements ProductWorker {
     const before = this.next.get(id) ?? previous.get(id);
     // Live snapshots may repeat deep history: keep bounded overlap; older walks are backfill's job.
     if (!before && this.floor && point.eventTime < this.floor) return;
-    const changed = this.base.declared.baseline || !before || before.value !== point.value || before.unit !== point.unit || stableStringify(before.dimensions) !== stableStringify(point.dimensions);
+    const changed =
+      this.base.declared.baseline ||
+      !before ||
+      before.value !== point.value ||
+      before.unit !== point.unit ||
+      stableStringify(before.dimensions) !== stableStringify(point.dimensions);
     if (!changed) return;
-    const item: PointItem = { seriesKey: point.seriesKey, eventTime: point.eventTime, value: point.value, unit: point.unit, dimensions: point.dimensions, observedAt: this.base.plan.observedAt };
+    const item: PointItem = {
+      seriesKey: point.seriesKey,
+      eventTime: point.eventTime,
+      value: point.value,
+      unit: point.unit,
+      dimensions: point.dimensions,
+      observedAt: this.base.plan.observedAt,
+    };
     const revision = revisionId(this.base.context, id, "");
     this.changes.add({ ...item, id: revision, ingestedAt: this.base.plan.observedAt, acquisitionId: this.base.plan.acquisitionId, previousValue: before?.value ?? null });
     this.revisions += 1;
@@ -610,10 +669,20 @@ class SeriesWorker implements ProductWorker {
     if (this.next.size > WINDOW.points * 3) this.trim();
     if (this.base.context.keepHistory) {
       await this.base.outbox.add("points", {
-        batch_id: this.base.plan.acquisitionId, revision_id: revision, feed_id: this.base.plan.feed.id, product_slug: this.base.declared.slug,
-        normalizer_id: this.base.context.normalizer.id, normalizer_version: this.base.context.normalizer.version, schema: {},
-        series_key: point.seriesKey, event_time: point.eventTime, value: point.value, unit: point.unit, dimensions: point.dimensions,
-        observed_at: this.base.plan.observedAt, acquisition_id: this.base.plan.acquisitionId,
+        batch_id: this.base.plan.acquisitionId,
+        revision_id: revision,
+        feed_id: this.base.plan.feed.id,
+        product_slug: this.base.declared.slug,
+        normalizer_id: this.base.context.normalizer.id,
+        normalizer_version: this.base.context.normalizer.version,
+        schema: {},
+        series_key: point.seriesKey,
+        event_time: point.eventTime,
+        value: point.value,
+        unit: point.unit,
+        dimensions: point.dimensions,
+        observed_at: this.base.plan.observedAt,
+        acquisition_id: this.base.plan.acquisitionId,
       });
     }
   }
@@ -639,7 +708,11 @@ class SeriesWorker implements ProductWorker {
     if (keepsChangeWindow(base) && (this.revisions > 0 || !entry.seriesChangesKey)) {
       const previous = base.declared.previous?.seriesChangesKey ? await base.ports.objects.read<SeriesChangesWindow>(base.declared.previous.seriesChangesKey) : undefined;
       const changesKey = keys.seriesChanges(base.plan.feed.id, entry.slug, entry.version);
-      await base.ports.objects.write(changesKey, { slug: entry.slug, updatedAt: base.plan.observedAt, changes: [...this.changes.newestFirst(), ...(previous?.changes ?? [])].slice(0, WINDOW.pointChanges) } satisfies SeriesChangesWindow);
+      await base.ports.objects.write(changesKey, {
+        slug: entry.slug,
+        updatedAt: base.plan.observedAt,
+        changes: [...this.changes.newestFirst(), ...(previous?.changes ?? [])].slice(0, WINDOW.pointChanges),
+      } satisfies SeriesChangesWindow);
       entry.seriesChangesKey = changesKey;
     }
     return { commit: { productKey: base.header.productKey, changed: true, entry, mode: "series" }, revisions: this.revisions };
@@ -671,7 +744,10 @@ class HistoryWorker implements ProductWorker {
   private floor: string | undefined;
   private nextFloor: string | undefined;
 
-  constructor(private readonly base: WorkerBase, private readonly state: HistoryState) {}
+  constructor(
+    private readonly base: WorkerBase,
+    private readonly state: HistoryState,
+  ) {}
 
   private async currentFloor(): Promise<string> {
     if (this.floor !== undefined) return this.floor;
@@ -703,10 +779,20 @@ class HistoryWorker implements ProductWorker {
     if (point.eventTime < (this.nextFloor ?? floor)) this.nextFloor = point.eventTime;
     const plan = this.base.plan;
     await this.base.outbox.add("points", {
-      batch_id: plan.acquisitionId, revision_id: `rev_${digest(`${plan.acquisitionId}|${logical}`)}`, feed_id: plan.feed.id, product_slug: this.base.declared.slug,
-      normalizer_id: this.base.context.normalizer.id, normalizer_version: this.base.context.normalizer.version, schema: {},
-      series_key: point.seriesKey, event_time: point.eventTime, value: point.value, unit: point.unit, dimensions: point.dimensions,
-      observed_at: plan.observedAt, acquisition_id: plan.acquisitionId,
+      batch_id: plan.acquisitionId,
+      revision_id: `rev_${digest(`${plan.acquisitionId}|${logical}`)}`,
+      feed_id: plan.feed.id,
+      product_slug: this.base.declared.slug,
+      normalizer_id: this.base.context.normalizer.id,
+      normalizer_version: this.base.context.normalizer.version,
+      schema: {},
+      series_key: point.seriesKey,
+      event_time: point.eventTime,
+      value: point.value,
+      unit: point.unit,
+      dimensions: point.dimensions,
+      observed_at: plan.observedAt,
+      acquisition_id: plan.acquisitionId,
     });
   }
 
@@ -714,7 +800,15 @@ class HistoryWorker implements ProductWorker {
     if (!record.eventTime || !keepsHistory(this.base.plan.policy, this.base.header.productKey)) return;
     const floor = await this.currentFloor();
     const logical = `r|${this.base.declared.slug}|${record.entityKey}`;
-    const hash = digest(stableStringify({ operation: record.operation ?? "upsert", payload: record.payload, eventTime: record.eventTime, validFrom: record.validFrom ?? null, validTo: record.validTo ?? null }));
+    const hash = digest(
+      stableStringify({
+        operation: record.operation ?? "upsert",
+        payload: record.payload,
+        eventTime: record.eventTime,
+        validFrom: record.validFrom ?? null,
+        validTo: record.validTo ?? null,
+      }),
+    );
     if (this.beyondFloor(record.eventTime, floor) && this.state.seen[logical] === undefined) return;
     if (this.state.seen[logical] === hash) return;
     this.state.seen[logical] = hash;
@@ -722,10 +816,21 @@ class HistoryWorker implements ProductWorker {
     if (record.eventTime < (this.nextFloor ?? floor)) this.nextFloor = record.eventTime;
     const plan = this.base.plan;
     const row: JsonObject = {
-      batch_id: plan.acquisitionId, revision_id: `rev_${digest(`${plan.acquisitionId}|${logical}`)}`, feed_id: plan.feed.id, product_slug: this.base.declared.slug,
-      product_version: 0, normalizer_id: this.base.context.normalizer.id, normalizer_version: this.base.context.normalizer.version, schema: {},
-      entity_key: record.entityKey, operation: record.operation ?? "upsert", event_time: record.eventTime,
-      observed_at: plan.observedAt, ingested_at: plan.observedAt, acquisition_id: plan.acquisitionId, payload: record.payload,
+      batch_id: plan.acquisitionId,
+      revision_id: `rev_${digest(`${plan.acquisitionId}|${logical}`)}`,
+      feed_id: plan.feed.id,
+      product_slug: this.base.declared.slug,
+      product_version: 0,
+      normalizer_id: this.base.context.normalizer.id,
+      normalizer_version: this.base.context.normalizer.version,
+      schema: {},
+      entity_key: record.entityKey,
+      operation: record.operation ?? "upsert",
+      event_time: record.eventTime,
+      observed_at: plan.observedAt,
+      ingested_at: plan.observedAt,
+      acquisition_id: plan.acquisitionId,
+      payload: record.payload,
     };
     if (record.validFrom) row.valid_from = record.validFrom;
     if (record.validTo) row.valid_to = record.validTo;

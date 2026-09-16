@@ -11,18 +11,9 @@ import {
   type CollectionRequest,
   type NormalizedFrame,
 } from "@open-data-pt/gatekeeper-shared";
-import {
-  collectGtfsFeed,
-  DEFAULT_GTFS_FILES,
-  GTFS_FEEDS,
-  validateGtfsFeedConfig,
-} from "../packages/gatekeeper-shared/src/formats/gtfs/gtfs";
+import { collectGtfsFeed, DEFAULT_GTFS_FILES, GTFS_FEEDS, validateGtfsFeedConfig } from "../packages/gatekeeper-shared/src/formats/gtfs/gtfs";
 import { GTFS_NORMALIZER, transformGtfs } from "../packages/gatekeeper-shared/src/formats/gtfs/transform";
-import {
-  gtfsZipEntries,
-  MAX_ARCHIVE_BYTES,
-  type GtfsZipOptions,
-} from "../packages/gatekeeper-shared/src/formats/gtfs/zip";
+import { gtfsZipEntries, MAX_ARCHIVE_BYTES, type GtfsZipOptions } from "../packages/gatekeeper-shared/src/formats/gtfs/zip";
 
 const ALLOWED_HOSTS = "api.carrismetropolitana.pt,opendata.porto.digital";
 const SOURCE_URL = "https://api.carrismetropolitana.pt/v2/gtfs";
@@ -45,10 +36,7 @@ describe("GTFS Gatekeeper", () => {
       url: SOURCE_URL,
       files: DEFAULT_GTFS_FILES.join(","),
     });
-    expect(validateGtfsFeedConfig(
-      { url: SOURCE_URL, files: "routes, agency,routes,shapes" },
-      ALLOWED_HOSTS,
-    )).toEqual({ url: SOURCE_URL, files: "agency,routes,shapes" });
+    expect(validateGtfsFeedConfig({ url: SOURCE_URL, files: "routes, agency,routes,shapes" }, ALLOWED_HOSTS)).toEqual({ url: SOURCE_URL, files: "agency,routes,shapes" });
     expect(() => validateGtfsFeedConfig({ url: "http://api.carrismetropolitana.pt/v2/gtfs" }, ALLOWED_HOSTS)).toThrow("must use HTTPS");
     expect(() => validateGtfsFeedConfig({ url: "https://example.com/feed.zip" }, ALLOWED_HOSTS)).toThrow("is not allowed");
     expect(() => validateGtfsFeedConfig({ url: SOURCE_URL, files: "stops,secrets" }, ALLOWED_HOSTS)).toThrow("comma-separated names");
@@ -56,13 +44,16 @@ describe("GTFS Gatekeeper", () => {
 
   it("hands the archive body on unread with provenance, completeness, and validators", async () => {
     const archive = zipArchive([{ name: "stops.txt", text: "stop_id\n1\n" }]);
-    const fetcher = vi.fn(async () => new Response(archive, {
-      headers: {
-        "Content-Type": "application/zip",
-        ETag: '"gtfs-1"',
-        "Last-Modified": "Mon, 07 Sep 2026 15:27:33 GMT",
-      },
-    }));
+    const fetcher = vi.fn(
+      async () =>
+        new Response(archive, {
+          headers: {
+            "Content-Type": "application/zip",
+            ETag: '"gtfs-1"',
+            "Last-Modified": "Mon, 07 Sep 2026 15:27:33 GMT",
+          },
+        }),
+    );
 
     const fetched = await collectGtfsFeed({ url: SOURCE_URL }, undefined, ALLOWED_HOSTS, fetcher);
     if (fetched.kind !== "body") throw new Error(`Expected a body, got ${fetched.kind}`);
@@ -84,12 +75,7 @@ describe("GTFS Gatekeeper", () => {
       return new Response(null, { status: 304, headers: { ETag: '"old"' } });
     });
 
-    const fetched = await collectGtfsFeed(
-      { url: SOURCE_URL },
-      { etag: '"old"', lastModified: "Sun, 06 Sep 2026 15:27:33 GMT" },
-      ALLOWED_HOSTS,
-      fetcher,
-    );
+    const fetched = await collectGtfsFeed({ url: SOURCE_URL }, { etag: '"old"', lastModified: "Sun, 06 Sep 2026 15:27:33 GMT" }, ALLOWED_HOSTS, fetcher);
     expect(fetched).toEqual({
       kind: "not-modified",
       validator: { etag: '"old"', lastModified: "Sun, 06 Sep 2026 15:27:33 GMT" },
@@ -97,19 +83,27 @@ describe("GTFS Gatekeeper", () => {
   });
 
   it("rejects redirects to hosts outside the allowlist", async () => {
-    const fetcher = vi.fn(async () => new Response(null, {
-      status: 302,
-      headers: { Location: "https://downloads.example.com/gtfs.zip" },
-    }));
+    const fetcher = vi.fn(
+      async () =>
+        new Response(null, {
+          status: 302,
+          headers: { Location: "https://downloads.example.com/gtfs.zip" },
+        }),
+    );
     await expect(collectGtfsFeed({ url: SOURCE_URL }, undefined, ALLOWED_HOSTS, fetcher)).rejects.toThrow("is not allowed");
   });
 
   it("rejects declared archives above the compressed body cap", async () => {
-    const fetcher = vi.fn(async () => new Response(Uint8Array.of(1), {
-      headers: { "Content-Length": String(MAX_ARCHIVE_BYTES + 1) },
-    }));
-    await expect(collectGtfsFeed({ url: SOURCE_URL }, undefined, ALLOWED_HOSTS, fetcher))
-      .rejects.toMatchObject({ code: "response-too-large", message: `GTFS ZIP exceeded ${MAX_ARCHIVE_BYTES} bytes` });
+    const fetcher = vi.fn(
+      async () =>
+        new Response(Uint8Array.of(1), {
+          headers: { "Content-Length": String(MAX_ARCHIVE_BYTES + 1) },
+        }),
+    );
+    await expect(collectGtfsFeed({ url: SOURCE_URL }, undefined, ALLOWED_HOSTS, fetcher)).rejects.toMatchObject({
+      code: "response-too-large",
+      message: `GTFS ZIP exceeded ${MAX_ARCHIVE_BYTES} bytes`,
+    });
   });
 
   it("reports provider errors with their status and Retry-After before touching a body", async () => {
@@ -125,11 +119,13 @@ describe("GTFS Gatekeeper", () => {
 
   it("streams the live Metro do Porto archive through the collector in 7-byte chunks", async () => {
     const metro = jsonAs<GtfsFixture>(readFileSync(new URL("./fixtures/gtfs/metro-do-porto.json", import.meta.url), "utf8"));
-    const archive = zipArchive(Object.entries(metro.files).map(([name, text], index) => ({
-      name: `gtfs/${name}`,
-      text,
-      descriptor: index % 2 === 1,
-    })));
+    const archive = zipArchive(
+      Object.entries(metro.files).map(([name, text], index) => ({
+        name: `gtfs/${name}`,
+        text,
+        descriptor: index % 2 === 1,
+      })),
+    );
     const resolved = await resolveFeed(
       { url: metro.source, files: "agency,stops,routes,calendar,calendar_dates,trips,shapes,feed_info" },
       { gatekeeperKind: "gtfs", kinds: GTFS_FEEDS, validate: (value) => validateGtfsFeedConfig(value, ALLOWED_HOSTS) },
@@ -145,9 +141,12 @@ describe("GTFS Gatekeeper", () => {
       deadline: new Date(Date.now() + 60_000).toISOString(),
       observedAt: "2026-09-10T09:00:00.000Z",
     };
-    const fetcher = vi.fn(async () => new Response(chunked(archive, 7), {
-      headers: { ETag: '"metro-1"', "Last-Modified": "Mon, 07 Sep 2026 15:27:33 GMT" },
-    }));
+    const fetcher = vi.fn(
+      async () =>
+        new Response(chunked(archive, 7), {
+          headers: { ETag: '"metro-1"', "Last-Modified": "Mon, 07 Sep 2026 15:27:33 GMT" },
+        }),
+    );
 
     const result = await collectNormalized(request, {
       normalizer: GTFS_NORMALIZER,
@@ -156,7 +155,10 @@ describe("GTFS Gatekeeper", () => {
       normalize: { kind: "streaming", transform: (body, context) => transformGtfs(body, context) },
     });
     if (result.kind !== "batch") throw new Error(`Expected a batch, got ${JSON.stringify(result)}`);
-    const frames = (await new Response(result.stream).text()).trim().split("\n").map((line) => jsonAs<NormalizedFrame>(line));
+    const frames = (await new Response(result.stream).text())
+      .trim()
+      .split("\n")
+      .map((line) => jsonAs<NormalizedFrame>(line));
 
     const header = frames[0];
     if (header?.type !== "header") throw new Error("Expected the header frame first");
@@ -215,7 +217,16 @@ describe("streaming GTFS ZIP reader", () => {
     ]);
     let cancelled = false;
     let delivered = 0;
-    const body = chunked(archive, 16, () => { cancelled = true; }, (size) => { delivered += size; });
+    const body = chunked(
+      archive,
+      16,
+      () => {
+        cancelled = true;
+      },
+      (size) => {
+        delivered += size;
+      },
+    );
     for await (const entry of gtfsZipEntries(body, new Set(["agency.txt"]))) {
       for await (const chunk of entry.chunks) expect(chunk.byteLength).toBeGreaterThan(0);
     }
@@ -226,8 +237,10 @@ describe("streaming GTFS ZIP reader", () => {
   it("fails an entry past its inflated cap, whether sized by its header or by a descriptor", async () => {
     const text = "0123456789".repeat(4);
     for (const descriptor of [false, true]) {
-      await expect(readEntries(zipArchive([{ name: "stops.txt", text, descriptor }]), ["stops.txt"], 7, { maximumEntryBytes: 16 }))
-        .rejects.toMatchObject({ code: "response-too-large", message: "GTFS entry stops.txt inflates past 16 bytes" });
+      await expect(readEntries(zipArchive([{ name: "stops.txt", text, descriptor }]), ["stops.txt"], 7, { maximumEntryBytes: 16 })).rejects.toMatchObject({
+        code: "response-too-large",
+        message: "GTFS entry stops.txt inflates past 16 bytes",
+      });
     }
   });
 
@@ -250,12 +263,7 @@ describe("streaming GTFS ZIP reader", () => {
   });
 });
 
-async function readEntries(
-  archive: Uint8Array,
-  wanted: string[],
-  chunkSize: number,
-  options?: GtfsZipOptions,
-): Promise<Record<string, string>> {
+async function readEntries(archive: Uint8Array, wanted: string[], chunkSize: number, options?: GtfsZipOptions): Promise<Record<string, string>> {
   const texts: Record<string, string> = {};
   for await (const entry of gtfsZipEntries(chunked(archive, chunkSize), new Set(wanted), options)) {
     const decoder = new TextDecoder();
@@ -301,12 +309,7 @@ function zipArchive(entries: ZipEntry[]): Uint8Array {
   return archive;
 }
 
-function chunked(
-  bytes: Uint8Array,
-  chunkSize: number,
-  onCancel?: () => void,
-  onDeliver?: (size: number) => void,
-): ReadableStream<Uint8Array> {
+function chunked(bytes: Uint8Array, chunkSize: number, onCancel?: () => void, onDeliver?: (size: number) => void): ReadableStream<Uint8Array> {
   let offset = 0;
   return new ReadableStream({
     pull(controller) {

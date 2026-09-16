@@ -1,20 +1,41 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import { NORMALIZED_PROTOCOL, collectNormalized, isNormalizedFrame, parseJson, type CollectionRequest, type NormalizedRow, type TransformContext } from "@open-data-pt/gatekeeper-shared";
+import {
+  NORMALIZED_PROTOCOL,
+  collectNormalized,
+  isNormalizedFrame,
+  parseJson,
+  type CollectionRequest,
+  type NormalizedRow,
+  type TransformContext,
+} from "@open-data-pt/gatekeeper-shared";
 import { renCollector, resolveRenFeed } from "../packages/gatekeeper-shared/src/sources/ren/collector";
-import { REN_PERIODIC_ORIGIN, REN_PERIODIC_FEEDS, renPeriodicCollector, collectRenPeriodic, validateRenPeriodicConfig, type RenPeriodicService } from "../packages/gatekeeper-shared/src/sources/ren/periodic";
+import {
+  REN_PERIODIC_ORIGIN,
+  REN_PERIODIC_FEEDS,
+  renPeriodicCollector,
+  collectRenPeriodic,
+  validateRenPeriodicConfig,
+  type RenPeriodicService,
+} from "../packages/gatekeeper-shared/src/sources/ren/periodic";
 
 const fixture = (name: string) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf8");
 const NOW = new Date("2026-09-16T12:00:00Z");
 
 function context(service: RenPeriodicService, observedAt: string): TransformContext {
-  return { observedAt, feed: { slug: `ren-${service}-feed`, title: service, description: service,
-    config: { service, feed: service }, semantics: REN_PERIODIC_FEEDS[service].semantics } };
+  return {
+    observedAt,
+    feed: { slug: `ren-${service}-feed`, title: service, description: service, config: { service, feed: service }, semantics: REN_PERIODIC_FEEDS[service].semantics },
+  };
 }
 
 async function normalized(service: RenPeriodicService, observedAt = NOW.toISOString()) {
-  const collector = renPeriodicCollector({ config: { service, day: "2026-09-14" }, apiOrigin: REN_PERIODIC_ORIGIN,
-    fetcher: async () => new Response(fixture(service === "installed-capacity" ? "ren-installed-capacity.json" : "ren-daily-storage.json")), now: () => NOW });
+  const collector = renPeriodicCollector({
+    config: { service, day: "2026-09-14" },
+    apiOrigin: REN_PERIODIC_ORIGIN,
+    fetcher: async () => new Response(fixture(service === "installed-capacity" ? "ren-installed-capacity.json" : "ren-daily-storage.json")),
+    now: () => NOW,
+  });
   const fetched = await collector.source(undefined, { kind: "live" }, new AbortController().signal);
   if (fetched.kind !== "body" || collector.normalize.kind !== "streaming") throw new Error("Expected streaming body");
   const body = new Response(fetched.body).body!;
@@ -43,7 +64,8 @@ describe("REN periodic public API", () => {
   it("collects all seven closed days without reusing a one-day transport validator", async () => {
     const days: string[] = [];
     const fetcher = vi.fn(async (input: URL | RequestInfo, init?: RequestInit) => {
-      const url = new URL(input.toString()); days.push(url.searchParams.get("date")!);
+      const url = new URL(input.toString());
+      days.push(url.searchParams.get("date")!);
       expect(url.origin).toBe(REN_PERIODIC_ORIGIN);
       expect(init?.redirect).toBe("manual");
       expect(new Headers(init?.headers).has("if-none-match")).toBe(false);
@@ -59,22 +81,41 @@ describe("REN periodic public API", () => {
   });
 
   it("handles an unpublished latest day without inventing zeroes or claiming complete coverage", async () => {
-    const result = await collectRenPeriodic({ config: { service: "gas-storage" }, apiOrigin: REN_PERIODIC_ORIGIN, now: () => NOW,
-      fetcher: async (input) => new URL(input.toString()).searchParams.get("date") === "2026-09-15"
-        ? new Response('{"message":"No data available for the selected date."}', { status: 404 }) : new Response(fixture("ren-daily-storage.json")),
-    }, undefined);
+    const result = await collectRenPeriodic(
+      {
+        config: { service: "gas-storage" },
+        apiOrigin: REN_PERIODIC_ORIGIN,
+        now: () => NOW,
+        fetcher: async (input) =>
+          new URL(input.toString()).searchParams.get("date") === "2026-09-15"
+            ? new Response('{"message":"No data available for the selected date."}', { status: 404 })
+            : new Response(fixture("ren-daily-storage.json")),
+      },
+      undefined,
+    );
     if (result.kind !== "body") throw new Error("Expected body");
     expect(result.completeness).toBe("partial");
     expect((await new Response(result.body).text()).trim().split("\n")).toHaveLength(6);
   });
 
   it("retries when every requested period is unpublished and rejects provider errors", async () => {
-    await expect(collectRenPeriodic({ config: { service: "gas-storage" }, apiOrigin: REN_PERIODIC_ORIGIN, now: () => NOW,
-      fetcher: async () => new Response('{"message":"No data available for the selected date."}'),
-    }, undefined)).rejects.toMatchObject({ code: "upstream-error", retryAfterSeconds: 21_600 });
-    await expect(collectRenPeriodic({ config: { service: "gas-storage" }, apiOrigin: REN_PERIODIC_ORIGIN,
-      fetcher: async () => new Response("oops", { status: 429, headers: { "retry-after": "60" } }),
-    }, undefined)).rejects.toMatchObject({ code: "upstream-error", retryAfterSeconds: 60 });
+    await expect(
+      collectRenPeriodic(
+        {
+          config: { service: "gas-storage" },
+          apiOrigin: REN_PERIODIC_ORIGIN,
+          now: () => NOW,
+          fetcher: async () => new Response('{"message":"No data available for the selected date."}'),
+        },
+        undefined,
+      ),
+    ).rejects.toMatchObject({ code: "upstream-error", retryAfterSeconds: 21_600 });
+    await expect(
+      collectRenPeriodic(
+        { config: { service: "gas-storage" }, apiOrigin: REN_PERIODIC_ORIGIN, fetcher: async () => new Response("oops", { status: 429, headers: { "retry-after": "60" } }) },
+        undefined,
+      ),
+    ).rejects.toMatchObject({ code: "upstream-error", retryAfterSeconds: 60 });
   });
 
   it("refuses a redirect without using the edge-unsupported error redirect mode", async () => {
@@ -82,15 +123,27 @@ describe("REN periodic public API", () => {
       expect(init?.redirect).toBe("manual");
       return new Response(null, { status: 302, headers: { location: "https://evil.example/data" } });
     });
-    await expect(collectRenPeriodic({ config: { service: "gas-storage" }, apiOrigin: REN_PERIODIC_ORIGIN, fetcher, now: () => NOW }, undefined)).rejects.toMatchObject({ code: "upstream-error" });
+    await expect(collectRenPeriodic({ config: { service: "gas-storage" }, apiOrigin: REN_PERIODIC_ORIGIN, fetcher, now: () => NOW }, undefined)).rejects.toMatchObject({
+      code: "upstream-error",
+    });
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
   it("uses completed calendar months across a year boundary", async () => {
     const requested: string[] = [];
-    await collectRenPeriodic({ config: { service: "installed-capacity" }, apiOrigin: REN_PERIODIC_ORIGIN, now: () => new Date("2026-01-01T00:30:00Z"),
-      fetcher: async (input) => { const url = new URL(input.toString()); requested.push(`${url.searchParams.get("year")}-${url.searchParams.get("month")}`); return new Response(fixture("ren-installed-capacity.json")); },
-    }, undefined);
+    await collectRenPeriodic(
+      {
+        config: { service: "installed-capacity" },
+        apiOrigin: REN_PERIODIC_ORIGIN,
+        now: () => new Date("2026-01-01T00:30:00Z"),
+        fetcher: async (input) => {
+          const url = new URL(input.toString());
+          requested.push(`${url.searchParams.get("year")}-${url.searchParams.get("month")}`);
+          return new Response(fixture("ren-installed-capacity.json"));
+        },
+      },
+      undefined,
+    );
     expect(requested).toEqual(["2025-12", "2025-11", "2025-10"]);
   });
 
@@ -115,8 +168,7 @@ describe("REN periodic public API", () => {
   });
 
   it("enforces per-response byte bounds and validates the configured origin", async () => {
-    const options = { config: { service: "gas-storage" }, apiOrigin: REN_PERIODIC_ORIGIN,
-      fetcher: async () => new Response("{}", { headers: { "content-length": "999999" } }) };
+    const options = { config: { service: "gas-storage" }, apiOrigin: REN_PERIODIC_ORIGIN, fetcher: async () => new Response("{}", { headers: { "content-length": "999999" } }) };
     await expect(collectRenPeriodic(options, undefined)).rejects.toMatchObject({ code: "response-too-large" });
     await expect(collectRenPeriodic({ ...options, apiOrigin: "https://evil.example" }, undefined)).rejects.toMatchObject({ code: "source-denied" });
   });
@@ -125,16 +177,30 @@ describe("REN periodic public API", () => {
     const config = { service: "gas-storage", day: "2026-09-14" };
     const resolved = await resolveRenFeed(config);
     const request: CollectionRequest = {
-      protocol: NORMALIZED_PROTOCOL, collectionId: "ren-periodic", feed: { id: "test", slug: "ren-gas-storage-feed", title: "Storage", description: "Storage" }, resolved, feedEpoch: "test", mode: { kind: "live" },
-      observedAt: NOW.toISOString(), deadline: new Date(Date.now() + 30_000).toISOString(),
+      protocol: NORMALIZED_PROTOCOL,
+      collectionId: "ren-periodic",
+      feed: { id: "test", slug: "ren-gas-storage-feed", title: "Storage", description: "Storage" },
+      resolved,
+      feedEpoch: "test",
+      mode: { kind: "live" },
+      observedAt: NOW.toISOString(),
+      deadline: new Date(Date.now() + 30_000).toISOString(),
       limits: { sourceBytes: 100_000, outputBytes: 100_000, frameBytes: 50_000, recordBytes: 20_000, products: 10, records: 1000 },
     };
-    const collector = renCollector({ config, apiOrigin: "https://datahub.ren.pt", dataApiOrigin: REN_PERIODIC_ORIGIN, fetcher: async () => new Response(fixture("ren-daily-storage.json")) });
+    const collector = renCollector({
+      config,
+      apiOrigin: "https://datahub.ren.pt",
+      dataApiOrigin: REN_PERIODIC_ORIGIN,
+      fetcher: async () => new Response(fixture("ren-daily-storage.json")),
+    });
     const result = await collectNormalized(request, collector);
     if (result.kind !== "batch") throw new Error(`Expected batch, got ${result.kind}`);
     const lines = (await new Response(result.stream).text()).trim().split("\n");
     expect(lines.every((line) => isNormalizedFrame(parseJson(line)))).toBe(true);
     expect(parseJson(lines.at(-1)!)).toMatchObject({ type: "complete", counts: { points: 4, records: 0 } });
-    expect(await collectNormalized({ ...request, mode: { kind: "history", cursor: { before: "2025-01-01T00:00:00Z" } } }, collector)).toMatchObject({ kind: "failure", code: "history-unsupported" });
+    expect(await collectNormalized({ ...request, mode: { kind: "history", cursor: { before: "2025-01-01T00:00:00Z" } } }, collector)).toMatchObject({
+      kind: "failure",
+      code: "history-unsupported",
+    });
   });
 });

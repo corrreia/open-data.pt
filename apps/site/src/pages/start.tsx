@@ -96,7 +96,11 @@ interface KindGuide {
 }
 
 const KINDS: KindGuide[] = [
-  { role: "reference", text: "A complete, slow-changing set such as stops, stations, or municipalities. Each collection replaces the whole set.", reads: [{ what: "Records", path: "/records" }] },
+  {
+    role: "reference",
+    text: "A complete, slow-changing set such as stops, stations, or municipalities. Each collection replaces the whole set.",
+    reads: [{ what: "Records", path: "/records" }],
+  },
   { role: "current-state", text: "The latest state of each entity: vehicle positions, fuel prices, fire risk.", reads: [{ what: "Records", path: "/records" }] },
   {
     role: "event-log",
@@ -136,7 +140,10 @@ interface Manner {
 
 const MANNERS: Manner[] = [
   { lead: "Use bounded ranges.", body: "Historical endpoints require a UTC interval of at most 366 days and are cached at the edge." },
-  { lead: "Poll at the product's cadence.", body: "Each product page says how often its feed runs. Near-real-time products refresh every one to five minutes, most others hourly or daily." },
+  {
+    lead: "Poll at the product's cadence.",
+    body: "Each product page says how often its feed runs. Near-real-time products refresh every one to five minutes, most others hourly or daily.",
+  },
   {
     lead: "Page deterministically.",
     body: (
@@ -150,7 +157,8 @@ const MANNERS: Manner[] = [
     lead: "Read the product metadata first.",
     body: (
       <>
-        <InlineCode>GET /api/products/{"{slug}"}</InlineCode> carries the schema, unit, row count, watermark and whether the product is stale, so you know what the rows mean before you fetch them.
+        <InlineCode>GET /api/products/{"{slug}"}</InlineCode> carries the schema, unit, row count, watermark and whether the product is stale, so you know what the rows mean before
+        you fetch them.
       </>
     ),
   },
@@ -277,8 +285,8 @@ function Start() {
             </>
           }
         >
-          open-data.pt collects Portuguese public data from the institutions that publish it and serves it as clean JSON. There is no account, no API key, no quota to buy, and no plan to add one. Use it from a script, a notebook, a spreadsheet, or any
-          tool that speaks HTTP.
+          open-data.pt collects Portuguese public data from the institutions that publish it and serves it as clean JSON. There is no account, no API key, no quota to buy, and no
+          plan to add one. Use it from a script, a notebook, a spreadsheet, or any tool that speaks HTTP.
         </PageHead>
         <ul aria-label="What you can count on" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {PLEDGES.map((pledge) => (
@@ -300,17 +308,22 @@ function Start() {
         <div className="grid min-w-0 gap-16">
           <Section id="three-requests" eyebrow="Three requests" title="Everything starts from the product list">
             <p className="max-w-[68ch]">
-              A <strong>product</strong> is one table you can read: current records, a time series, an event log, or a summary. List them, pick one by its <InlineCode>slug</InlineCode>, then read its rows. Every response is JSON with a <InlineCode>data</InlineCode> array.
+              A <strong>product</strong> is one table you can read: current records, a time series, an event log, or a summary. List them, pick one by its{" "}
+              <InlineCode>slug</InlineCode>, then read its rows. Every response is JSON with a <InlineCode>data</InlineCode> array.
             </p>
             <ol className="grid gap-8">
               <Step n={1} title="List the products">
                 <CommandBlock command={`curl ${API}/api/products`} label="List the products" />
-                <Note>Returns every product with its role, schema, row count, watermark and freshness. {list ? `${fmt.int(list.length)} today` : "About 200 today"}. Cached for 20 seconds at the edge.</Note>
+                <Note>
+                  Returns every product with its role, schema, row count, watermark and freshness. {list ? `${fmt.int(list.length)} today` : "About 200 today"}. Cached for 20
+                  seconds at the edge.
+                </Note>
               </Step>
               <Step n={2} title="Read a product's current records">
                 <CommandBlock command={`curl "${API}/api/products/${recordsSlug}/records?limit=100"`} highlight={recordsSlug} label="Read a product's current records" />
                 <Note>
-                  Follow <InlineCode>nextCursor</InlineCode> for the next page. Add <InlineCode>validAt=&lt;ISO time&gt;</InlineCode> for what was valid then; earlier versions live in the history endpoints.
+                  Follow <InlineCode>nextCursor</InlineCode> for the next page. Add <InlineCode>validAt=&lt;ISO time&gt;</InlineCode> for what was valid then; earlier versions live
+                  in the history endpoints.
                 </Note>
               </Step>
               <Step n={3} title="Read a time series">
@@ -321,7 +334,8 @@ function Start() {
               </Step>
             </ol>
             <p className="max-w-[68ch]">
-              Every product also has a page for humans at <InlineCode>/product/?slug=&lt;slug&gt;</InlineCode> with a chart or table, the schema, the lineage of the run that built it, and copyable API links
+              Every product also has a page for humans at <InlineCode>/product/?slug=&lt;slug&gt;</InlineCode> with a chart or table, the schema, the lineage of the run that built
+              it, and copyable API links
               {records ? (
                 <>
                   , such as{" "}
@@ -360,7 +374,10 @@ function Start() {
                     <LayerCard.Secondary className="flex items-center justify-between gap-2">
                       <RoleBadge role={kind.role} />
                       {count ? (
-                        <a href={`/catalog/?kind=${encodeURIComponent(kind.role)}`} className="inline-flex items-center gap-1 text-xs text-kumo-subtle no-underline hover:text-kumo-strong">
+                        <a
+                          href={`/catalog/?kind=${encodeURIComponent(kind.role)}`}
+                          className="inline-flex items-center gap-1 text-xs text-kumo-subtle no-underline hover:text-kumo-strong"
+                        >
                           {plural(count, "product")} <ArrowRightIcon size={12} />
                         </a>
                       ) : null}
@@ -387,7 +404,8 @@ function Start() {
 
           <Section id="history" eyebrow="History" title="Where the past lives">
             <p className="max-w-[68ch]">
-              The fast endpoints serve a rolling window: the current version of each product plus a bounded set of recent points and changes. Every meaningful revision is appended to a lake of Parquet tables and stays there. Typed, bounded endpoints expose it:
+              The fast endpoints serve a rolling window: the current version of each product plus a bounded set of recent points and changes. Every meaningful revision is appended
+              to a lake of Parquet tables and stays there. Typed, bounded endpoints expose it:
             </p>
             <LayerCard>
               <LayerCard.Primary className="p-0">
@@ -405,7 +423,11 @@ function Start() {
               </LayerCard.Primary>
             </LayerCard>
             <p className="max-w-[68ch]">All three use opaque compound cursors and include freshness and coverage.</p>
-            <CommandBlock command={`curl "${API}/api/products/${seriesSlug}/series/range?from=2026-01-01T00%3A00%3A00Z&to=2027-01-01T00%3A00%3A00Z&limit=500"`} highlight={seriesSlug} label="Read a year of a time series" />
+            <CommandBlock
+              command={`curl "${API}/api/products/${seriesSlug}/series/range?from=2026-01-01T00%3A00%3A00Z&to=2027-01-01T00%3A00%3A00Z&limit=500"`}
+              highlight={seriesSlug}
+              label="Read a year of a time series"
+            />
             <Note>Windows that ended over an hour ago are cached for a day; others for five minutes.</Note>
           </Section>
 

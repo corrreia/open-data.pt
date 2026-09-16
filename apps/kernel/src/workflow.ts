@@ -39,7 +39,9 @@ export class CollectionWorkflow extends WorkflowEntrypoint<Env, CollectionParams
       // The collection delivers what it committed itself; a second step runs only for what it could not send.
       if (lake) ports.lake = (table, rows) => lake.send(table, rows);
       // A source or Gatekeeper failure comes back from the step as a value; only errors a step retry can cure are thrown.
-      const result = await step.do("collect", { retries: { limit: 2, delay: "15 seconds", backoff: "exponential" }, timeout: `${timeoutSeconds + 180} seconds` }, async () => collectionStep(acquisitionId, ports));
+      const result = await step.do("collect", { retries: { limit: 2, delay: "15 seconds", backoff: "exponential" }, timeout: `${timeoutSeconds + 180} seconds` }, async () =>
+        collectionStep(acquisitionId, ports),
+      );
       if ("failure" in result) {
         await runner.fail(acquisitionId, result.failure);
         return;
@@ -52,7 +54,9 @@ export class CollectionWorkflow extends WorkflowEntrypoint<Env, CollectionParams
       return;
     }
     if (!outcome.undelivered || !lake) return;
-    await step.do("deliver history", { retries: { limit: 6, delay: "30 seconds", backoff: "exponential" }, timeout: "10 minutes" }, async () => drainOutbox(runner, (table, rows) => lake.send(table, rows), DELIVERY_STEP_BLOBS));
+    await step.do("deliver history", { retries: { limit: 6, delay: "30 seconds", backoff: "exponential" }, timeout: "10 minutes" }, async () =>
+      drainOutbox(runner, (table, rows) => lake.send(table, rows), DELIVERY_STEP_BLOBS),
+    );
   }
 }
 

@@ -1,5 +1,16 @@
 import { Badge, Breadcrumbs, Button, Empty, LayerCard, Link, Loader, Tabs, Tooltip } from "@cloudflare/kumo";
-import { ArrowClockwiseIcon, ArrowRightIcon, CheckCircleIcon, CircleNotchIcon, ClockIcon, CompassIcon, DatabaseIcon, MinusCircleIcon, XCircleIcon, type Icon } from "@phosphor-icons/react";
+import {
+  ArrowClockwiseIcon,
+  ArrowRightIcon,
+  CheckCircleIcon,
+  CircleNotchIcon,
+  ClockIcon,
+  CompassIcon,
+  DatabaseIcon,
+  MinusCircleIcon,
+  XCircleIcon,
+  type Icon,
+} from "@phosphor-icons/react";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Countdown, Kv, RelativeTime, RoleBadge, ToneBadge } from "../components/common";
 import { mountPage } from "../components/mount";
@@ -71,7 +82,9 @@ function ProductPage() {
   const product = useQuery(slug ? `product:${slug}` : null, () => apiGet<Product>(productPath(slug ?? "")));
   const feedId = product.data?.feedId;
   const feed = useQuery(feedId ? `feed:${feedId}` : null, () => apiGet<{ data: Feed }>(`/api/feeds/${encodeURIComponent(feedId ?? "")}`).then((result) => result.data));
-  const acquisitions = useQuery(feedId ? `acquisitions:${feedId}` : null, () => apiGet<{ data: Acquisition[] }>(`/api/acquisitions?feedId=${encodeURIComponent(feedId ?? "")}&limit=20`).then((result) => result.data));
+  const acquisitions = useQuery(feedId ? `acquisitions:${feedId}` : null, () =>
+    apiGet<{ data: Acquisition[] }>(`/api/acquisitions?feedId=${encodeURIComponent(feedId ?? "")}&limit=20`).then((result) => result.data),
+  );
   // The open tab lives in the address, so a link can land on the map or the API.
   const [tab, setTab] = useState<string | undefined>(() => window.location.hash.slice(1) || undefined);
   const openTab = (value: string) => {
@@ -85,11 +98,14 @@ function ProductPage() {
   const cadence = product.data?.cadenceSeconds;
   useEffect(() => {
     if (!cadence || cadence >= 3600) return undefined;
-    const timer = setInterval(() => {
-      invalidate(`product:${slug}`);
-      invalidate(`feed:${feedId}`);
-      invalidate(`acquisitions:${feedId}`);
-    }, Math.max(30_000, cadence * 1000));
+    const timer = setInterval(
+      () => {
+        invalidate(`product:${slug}`);
+        invalidate(`feed:${feedId}`);
+        invalidate(`acquisitions:${feedId}`);
+      },
+      Math.max(30_000, cadence * 1000),
+    );
     return () => clearInterval(timer);
   }, [cadence, feedId]);
 
@@ -105,11 +121,14 @@ function ProductPage() {
   const tabs = useMemo<TabDef[]>(() => {
     if (!data) return [];
     const list: TabDef[] = [];
-    const mappable = data.schema.fields.some((field) => field.type === "geometry") || (data.schema.fields.some((field) => field.type === "latitude") && data.schema.fields.some((field) => field.type === "longitude"));
+    const mappable =
+      data.schema.fields.some((field) => field.type === "geometry") ||
+      (data.schema.fields.some((field) => field.type === "latitude") && data.schema.fields.some((field) => field.type === "longitude"));
     // Data with places opens on its map, the same rows one tab away as a table; while the source lists nothing, the table says so first.
     const mapTab: TabDef = { value: "map", label: "Map", render: () => <MapView product={data} refreshKey={refreshKey} /> };
     if (mappable && data.rowCount > 0) list.push(mapTab);
-    if (data.role === "time-series") list.push({ value: "series", label: "Series", render: () => <SeriesView product={data} refreshKey={refreshKey} withHistory={data.exposeHistory} /> });
+    if (data.role === "time-series")
+      list.push({ value: "series", label: "Series", render: () => <SeriesView product={data} refreshKey={refreshKey} withHistory={data.exposeHistory} /> });
     else list.push({ value: "records", label: "Records", count: data.rowCount, render: () => <RecordsView product={data} refreshKey={refreshKey} /> });
     if (mappable && data.rowCount === 0) list.push(mapTab);
     if (data.hasChanges && data.exposeHistory) list.push({ value: "changes", label: "Changes", render: () => <ChangesView product={data} refreshKey={refreshKey} /> });
@@ -147,7 +166,8 @@ function ProductPage() {
   document.title = `${data.title} · open-data.pt`;
   const active = tabs.find((each) => each.value === tab) ?? tabs[0];
   const fresh = freshness(data, feed.data);
-  const current = acquisitions.data?.find((acquisition) => acquisition.id === data.currentAcquisitionId) ?? acquisitions.data?.find((acquisition) => acquisition.status === "succeeded");
+  const current =
+    acquisitions.data?.find((acquisition) => acquisition.id === data.currentAcquisitionId) ?? acquisitions.data?.find((acquisition) => acquisition.status === "succeeded");
   const source = openableUrl(feed.data?.sourceUrl);
 
   return (
@@ -249,8 +269,26 @@ function ProductPage() {
             <LayerCard.Primary>
               <Kv
                 items={[
-                  feed.data ? { term: "Publisher", value: <a href={publisherHref(feed.data.publisher)} className="text-kumo-link hover:underline">{feed.data.publisher}</a> } : null,
-                  source ? { term: "Original", value: <Link href={source.href} target="_blank" rel="noopener noreferrer">{source.hostname} <Link.ExternalIcon /></Link> } : null,
+                  feed.data
+                    ? {
+                        term: "Publisher",
+                        value: (
+                          <a href={publisherHref(feed.data.publisher)} className="text-kumo-link hover:underline">
+                            {feed.data.publisher}
+                          </a>
+                        ),
+                      }
+                    : null,
+                  source
+                    ? {
+                        term: "Original",
+                        value: (
+                          <Link href={source.href} target="_blank" rel="noopener noreferrer">
+                            {source.hostname} <Link.ExternalIcon />
+                          </Link>
+                        ),
+                      }
+                    : null,
                   feed.data ? { term: "Shared", value: throughOf(feed.data) } : null,
                   { term: "Licence", value: data.licence ?? "As stated by the publisher" },
                   data.attribution ? { term: "Attribution", value: data.attribution } : null,
@@ -309,16 +347,24 @@ function ProductPage() {
       <section aria-labelledby="lineage-title" className="grid gap-4">
         <div className="grid gap-1.5">
           <p className="font-mono text-[0.7rem] font-medium uppercase tracking-[0.12em] text-kumo-brand">Lineage</p>
-          <h2 id="lineage-title" className="font-display text-2xl text-kumo-strong sm:text-3xl">How the current version was built</h2>
+          <h2 id="lineage-title" className="font-display text-2xl text-kumo-strong sm:text-3xl">
+            How the current version was built
+          </h2>
           <p className="max-w-2xl text-sm text-kumo-subtle">From the publisher's source to what this page serves: when it was read, checked and published.</p>
         </div>
         <ol className="grid gap-3 md:grid-cols-4">
           <Step n={1} label="Source" last={false}>
             {feed.data ? (
               <>
-                <a href={publisherHref(feed.data.publisher)} className="font-display text-lg text-kumo-strong hover:underline">{feed.data.publisher}</a>
+                <a href={publisherHref(feed.data.publisher)} className="font-display text-lg text-kumo-strong hover:underline">
+                  {feed.data.publisher}
+                </a>
                 <span>Shared {throughOf(feed.data)}</span>
-                {source ? <Link href={source.href} target="_blank" rel="noopener noreferrer">{source.hostname} <Link.ExternalIcon /></Link> : null}
+                {source ? (
+                  <Link href={source.href} target="_blank" rel="noopener noreferrer">
+                    {source.hostname} <Link.ExternalIcon />
+                  </Link>
+                ) : null}
                 {current?.sourcePublishedAt ? <span>Source published {fmt.dateTime(current.sourcePublishedAt)}</span> : null}
               </>
             ) : (
@@ -328,9 +374,18 @@ function ProductPage() {
           <Step n={2} label="Read" last={false}>
             {current ? (
               <>
-                <span className="font-display text-lg text-kumo-strong"><RelativeTime value={current.observedAt} /></span>
-                <span>{fmt.dateTime(current.observedAt)}{current.completeness ? ` · ${current.completeness}` : ""}</span>
-                {current.revisions !== undefined ? <span>{fmt.int(current.rows ?? 0)} rows · {fmt.int(current.revisions)} changes</span> : null}
+                <span className="font-display text-lg text-kumo-strong">
+                  <RelativeTime value={current.observedAt} />
+                </span>
+                <span>
+                  {fmt.dateTime(current.observedAt)}
+                  {current.completeness ? ` · ${current.completeness}` : ""}
+                </span>
+                {current.revisions !== undefined ? (
+                  <span>
+                    {fmt.int(current.rows ?? 0)} rows · {fmt.int(current.revisions)} changes
+                  </span>
+                ) : null}
               </>
             ) : (
               <span>{acquisitions.loading ? "Loading the latest run…" : "No successful collection yet."}</span>
@@ -340,16 +395,26 @@ function ProductPage() {
             {current?.normalizer ? (
               <>
                 <span className="font-display text-lg text-kumo-strong">{current.normalizer.id}</span>
-                <span className="flex items-center gap-2">code version {current.normalizer.version} <Badge variant={current.status === "failed" ? "error" : "success"}>{current.status}</Badge></span>
-                {current.quality ? <span>{fmt.int(current.quality.acceptedRecords)} accepted, {fmt.int(current.quality.rejectedRecords)} rejected</span> : null}
+                <span className="flex items-center gap-2">
+                  code version {current.normalizer.version} <Badge variant={current.status === "failed" ? "error" : "success"}>{current.status}</Badge>
+                </span>
+                {current.quality ? (
+                  <span>
+                    {fmt.int(current.quality.acceptedRecords)} accepted, {fmt.int(current.quality.rejectedRecords)} rejected
+                  </span>
+                ) : null}
               </>
             ) : (
               <span>Waiting for the first accepted batch.</span>
             )}
           </Step>
           <Step n={4} label="Published" last>
-            <span className="font-display text-lg text-kumo-strong"><RelativeTime value={data.updatedAt} /></span>
-            <span>version {fmt.int(data.version)} · {fmt.int(data.rowCount)} {data.role === "time-series" ? "points" : "records"}</span>
+            <span className="font-display text-lg text-kumo-strong">
+              <RelativeTime value={data.updatedAt} />
+            </span>
+            <span>
+              version {fmt.int(data.version)} · {fmt.int(data.rowCount)} {data.role === "time-series" ? "points" : "records"}
+            </span>
             {data.watermark ? <span>data through {fmt.dateTime(data.watermark)}</span> : null}
             <span>stale after {fmt.span(data.staleAfterSeconds)} without a refresh</span>
           </Step>
@@ -369,7 +434,9 @@ function Step({ n, label, last, children }: { n: number; label: string; last: bo
         </LayerCard.Secondary>
         <LayerCard.Primary className="grid flex-1 content-start gap-1 text-xs text-kumo-subtle">{children}</LayerCard.Primary>
       </LayerCard>
-      {last ? null : <ArrowRightIcon aria-hidden="true" size={16} className="absolute -right-3 top-1/2 z-10 hidden -translate-y-1/2 rounded-full bg-kumo-canvas text-kumo-subtle md:block" />}
+      {last ? null : (
+        <ArrowRightIcon aria-hidden="true" size={16} className="absolute -right-3 top-1/2 z-10 hidden -translate-y-1/2 rounded-full bg-kumo-canvas text-kumo-subtle md:block" />
+      )}
     </li>
   );
 }

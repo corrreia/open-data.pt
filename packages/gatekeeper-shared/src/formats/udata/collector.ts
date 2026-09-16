@@ -1,13 +1,4 @@
-import {
-  allowedHosts,
-  requireString,
-  resolveFeed,
-  sourceValidator,
-  type FeedKindDescription,
-  type NormalizedCollector,
-  type ResolvedFeed,
-  type SourceConfig,
-} from "../../index";
+import { allowedHosts, requireString, resolveFeed, sourceValidator, type FeedKindDescription, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../index";
 import { validateUdataFeedConfig } from "./config";
 import { chooseTransformer } from "./transform";
 import { UdataSource } from "./udata";

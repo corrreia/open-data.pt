@@ -101,7 +101,14 @@ export function useQuery<T>(key: string | null, fetcher: () => Promise<T>, optio
     return () => clearInterval(timer);
   }, [entry, options.refreshMs]);
   const refetch = useCallback(() => entry?.refetch() ?? Promise.resolve(), [entry]);
-  return { data: snapshot.data, error: snapshot.error, loading: snapshot.data === undefined && snapshot.error === undefined, fetching: snapshot.fetching, updatedAt: snapshot.updatedAt, refetch };
+  return {
+    data: snapshot.data,
+    error: snapshot.error,
+    loading: snapshot.data === undefined && snapshot.error === undefined,
+    fetching: snapshot.fetching,
+    updatedAt: snapshot.updatedAt,
+    refetch,
+  };
 }
 
 /** Refetch every watched query whose key starts with `prefix`. */

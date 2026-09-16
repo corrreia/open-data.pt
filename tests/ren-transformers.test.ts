@@ -6,9 +6,7 @@ import type { RenServiceName } from "../packages/gatekeeper-shared/src/sources/r
 import { RenTransformer } from "../packages/gatekeeper-shared/src/sources/ren/transform";
 
 function fixture(name: string): Uint8Array {
-  return new Uint8Array(
-    readFileSync(new URL(`./fixtures/ren/${name}.json`, import.meta.url)),
-  );
+  return new Uint8Array(readFileSync(new URL(`./fixtures/ren/${name}.json`, import.meta.url)));
 }
 
 function context(service: RenServiceName): TransformContext {
@@ -40,24 +38,16 @@ function bytes(value: JsonValue | undefined): Uint8Array {
 }
 
 function parsedFixture(name: string): JsonObject {
-  return jsonAs<JsonObject>(
-    readFileSync(new URL(`./fixtures/ren/${name}.json`, import.meta.url), "utf8"),
-  );
+  return jsonAs<JsonObject>(readFileSync(new URL(`./fixtures/ren/${name}.json`, import.meta.url), "utf8"));
 }
 
 describe("REN transformers", () => {
   const transformer = new RenTransformer();
 
   it("creates typed time-series and daily reference products", () => {
-    const result = transformer.transform(
-      fixture("production-breakdown"),
-      context("production-breakdown"),
-    );
+    const result = transformer.transform(fixture("production-breakdown"), context("production-breakdown"));
 
-    expect(result.products.map((product) => product.role)).toEqual([
-      "time-series",
-      "reference",
-    ]);
+    expect(result.products.map((product) => product.role)).toEqual(["time-series", "reference"]);
     const series = result.products[0];
     expect(series).toMatchObject({
       slug: "ren-production-breakdown-series",
@@ -74,13 +64,7 @@ describe("REN transformers", () => {
         color: "#494949",
       },
     });
-    expect(series?.schema.fields.map((field) => field.type)).toEqual([
-      "identifier",
-      "datetime",
-      "number",
-      "category",
-      "json",
-    ]);
+    expect(series?.schema.fields.map((field) => field.type)).toEqual(["identifier", "datetime", "number", "category", "json"]);
 
     const summary = result.products[1];
     expect(summary).toMatchObject({
@@ -88,18 +72,12 @@ describe("REN transformers", () => {
       role: "reference",
       updateMode: "delta",
     });
-    expect(
-      summary?.schema.fields.find((field) => field.id === "source"),
-    ).toMatchObject({
+    expect(summary?.schema.fields.find((field) => field.id === "source")).toMatchObject({
       type: "category",
       display: { badge: { colorField: "color" } },
     });
-    expect(summary?.schema.fields.find((field) => field.id === "color")?.type).toBe(
-      "color",
-    );
-    const consumption = summary?.records?.find(
-      (record) => record.entityKey === "2026-09-06:consumption",
-    );
+    expect(summary?.schema.fields.find((field) => field.id === "color")?.type).toBe("color");
+    const consumption = summary?.records?.find((record) => record.entityKey === "2026-09-06:consumption");
     expect(consumption?.payload).toMatchObject({
       day: "2026-09-06",
       source: "Consumption",
@@ -125,21 +103,14 @@ describe("REN transformers", () => {
     const value = parsedFixture("production-breakdown");
     value.service = "consumption";
     const result = transformer.transform(bytes(value), context("consumption"));
-    expect(new Set(result.products[0]?.points?.map((point) => point.seriesKey))).toEqual(
-      new Set(["consumption"]),
-    );
+    expect(new Set(result.products[0]?.points?.map((point) => point.seriesKey))).toEqual(new Set(["consumption"]));
     expect(result.products[1]?.records).toHaveLength(1);
   });
 
   it("keeps a summary record for an all-null exchange series", () => {
-    const result = transformer.transform(
-      fixture("interconnection-exchanges"),
-      context("interconnection-exchanges"),
-    );
+    const result = transformer.transform(fixture("interconnection-exchanges"), context("interconnection-exchanges"));
     expect(result.products[0]?.points).toHaveLength(4);
-    const exports = result.products[1]?.records?.find(
-      (record) => record.entityKey === "2026-09-06:exports",
-    );
+    const exports = result.products[1]?.records?.find((record) => record.entityKey === "2026-09-06:exports");
     expect(exports?.payload).toMatchObject({
       source: "Exports",
       sampleCount: 0,
@@ -168,10 +139,7 @@ describe("REN transformers", () => {
       series.data = series.data.slice(0, 2);
     }
     const result = transformer.transform(bytes(value), context("gas-consumption"));
-    expect(result.products[0]?.points?.slice(0, 2).map((point) => point.eventTime)).toEqual([
-      "2026-09-06T22:00:00.000Z",
-      "2026-09-06T23:00:00.000Z",
-    ]);
+    expect(result.products[0]?.points?.slice(0, 2).map((point) => point.eventTime)).toEqual(["2026-09-06T22:00:00.000Z", "2026-09-06T23:00:00.000Z"]);
   });
 
   it("distinguishes both occurrences of a repeated DST fallback hour", () => {
@@ -195,24 +163,13 @@ describe("REN transformers", () => {
       ],
     };
     const result = transformer.transform(bytes(value), context("consumption"));
-    expect(result.products[0]?.points?.map((point) => point.eventTime)).toEqual([
-      "2026-10-25T00:00:00.000Z",
-      "2026-10-25T01:00:00.000Z",
-    ]);
+    expect(result.products[0]?.points?.map((point) => point.eventTime)).toEqual(["2026-10-25T00:00:00.000Z", "2026-10-25T01:00:00.000Z"]);
   });
 
   it("is deterministic and stamps the transformer identity", async () => {
     const input = fixture("renewables-share");
-    const first = await runTransformer(
-      transformer,
-      input,
-      context("renewables-share"),
-    );
-    const second = await runTransformer(
-      transformer,
-      input,
-      context("renewables-share"),
-    );
+    const first = await runTransformer(transformer, input, context("renewables-share"));
+    const second = await runTransformer(transformer, input, context("renewables-share"));
     expect(second).toEqual(first);
     expect(first.transformer).toEqual({
       id: "ren-chart-services",
@@ -221,9 +178,7 @@ describe("REN transformers", () => {
   });
 
   it("rejects malformed retained source documents", () => {
-    expect(() =>
-      transformer.transform(bytes({ service: "consumption", days: [] }), context("consumption")),
-    ).toThrow("contains no days");
+    expect(() => transformer.transform(bytes({ service: "consumption", days: [] }), context("consumption"))).toThrow("contains no days");
     expect(() =>
       transformer.transform(
         bytes({

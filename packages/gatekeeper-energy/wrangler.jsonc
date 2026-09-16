@@ -11,11 +11,11 @@
     "REN_DATA_API_ORIGIN": "https://servicebus.ren.pt",
     "OMIE_API_ORIGIN": "https://www.omie.es",
     "DGEG_API_ORIGIN": "https://precoscombustiveis.dgeg.gov.pt",
-    "OPENDATASOFT_ALLOWED_HOSTS": "e-redes.opendatasoft.com,transparencia.sns.gov.pt"
+    "OPENDATASOFT_ALLOWED_HOSTS": "e-redes.opendatasoft.com,transparencia.sns.gov.pt",
   },
   "observability": {
     "enabled": true,
     // The kernel records every acquisition's outcome; a tenth of invocations is enough to debug.
-    "head_sampling_rate": 0.1
-  }
+    "head_sampling_rate": 0.1,
+  },
 }

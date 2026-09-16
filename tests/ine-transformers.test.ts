@@ -1,10 +1,7 @@
 import { jsonAs } from "./support";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type {
-  JsonObject,
-  TransformContext,
-} from "@open-data-pt/gatekeeper-shared";
+import type { JsonObject, TransformContext } from "@open-data-pt/gatekeeper-shared";
 import { transformIneIndicator } from "../packages/gatekeeper-shared/src/sources/ine/transform";
 
 function fixture(name: string): Uint8Array {
@@ -38,10 +35,7 @@ function context(indicator: string, slug: string): TransformContext {
 
 describe("INE transformers", () => {
   it("creates one time-series product from an annual indicator", () => {
-    const result = transformIneIndicator(
-      fixture("population-0004167.json"),
-      context("0004167", "ine-resident-population"),
-    );
+    const result = transformIneIndicator(fixture("population-0004167.json"), context("0004167", "ine-resident-population"));
 
     expect(result.transformer).toEqual({ id: "ine-indicator", version: "3" });
     expect(result.quality).toEqual({
@@ -49,18 +43,14 @@ describe("INE transformers", () => {
       rejectedRecords: 0,
     });
     // Every value is published once: no record product repeats the points.
-    expect(result.products.map(({ slug, role, kind }) => ({ slug, role, kind }))).toEqual([
-      { slug: "ine-resident-population-series", role: "time-series", kind: "series" },
-    ]);
+    expect(result.products.map(({ slug, role, kind }) => ({ slug, role, kind }))).toEqual([{ slug: "ine-resident-population-series", role: "time-series", kind: "series" }]);
 
     const series = result.products[0];
     expect(series).toMatchObject({
       updateMode: "authoritative-snapshot",
       watermark: "2025-01-01T00:00:00.000Z",
     });
-    expect(series?.schema.fields.find(({ id }) => id === "value")?.unit).toBe(
-      "Número (N.º)",
-    );
+    expect(series?.schema.fields.find(({ id }) => id === "value")?.unit).toBe("Número (N.º)");
 
     expect(series?.points?.[0]).toEqual({
       seriesKey: "01:1:1",
@@ -122,18 +112,13 @@ describe("INE transformers", () => {
       dimensions: [],
     },
   ])("transforms curated live indicator $indicator into typed values and history", ({ fixture: fixtureName, indicator, slug, unit, firstEventTime, lastEventTime, dimensions }) => {
-    const result = transformIneIndicator(
-      fixture(fixtureName),
-      context(indicator, slug),
-    );
+    const result = transformIneIndicator(fixture(fixtureName), context(indicator, slug));
     expect(result.products).toHaveLength(1);
     const series = result.products[0];
 
     expect(result.quality.acceptedRecords).toBeGreaterThan(0);
     expect(result.quality.rejectedRecords).toBe(0);
-    expect(series?.schema.fields).toEqual(expect.arrayContaining([
-      expect.objectContaining({ id: "value", type: "number", unit }),
-    ]));
+    expect(series?.schema.fields).toEqual(expect.arrayContaining([expect.objectContaining({ id: "value", type: "number", unit })]));
     expect(series?.points?.[0]).toMatchObject({ eventTime: firstEventTime });
     for (const id of dimensions.filter((key) => !key.endsWith("_t"))) {
       expect(series?.points?.every((point) => id in point.dimensions)).toBe(true);
@@ -152,30 +137,18 @@ describe("INE transformers", () => {
   });
 
   it("titles products with the measure and keeps the full designation in the description", () => {
-    const annual = transformIneIndicator(
-      fixture("population-0004167.json"),
-      context("0004167", "ine-resident-population"),
-    );
+    const annual = transformIneIndicator(fixture("population-0004167.json"), context("0004167", "ine-resident-population"));
 
-    expect(annual.products.map(({ title }) => title)).toEqual([
-      "População residente (N.º)",
-    ]);
+    expect(annual.products.map(({ title }) => title)).toEqual(["População residente (N.º)"]);
     expect(annual.products[0]?.description).toBe(
       "População residente (N.º) por Local de residência, Sexo e Grupo etário (Por ciclos de vida); Anual - INE, Estimativas anuais da população residente. Measurements grouped into a series for each geography and dimension combination.",
     );
 
-    const monthly = transformIneIndicator(
-      fixture("unemployment-0007976.json"),
-      context("0007976", "ine-unemployment-rate"),
-    );
+    const monthly = transformIneIndicator(fixture("unemployment-0007976.json"), context("0007976", "ine-unemployment-rate"));
 
     // The breakdown ("por Grupo etário") goes, the measure and its cohort stay.
-    expect(monthly.products[0]?.title).toBe(
-      "Taxa de desemprego (%) da população ativa com idade entre 16 e 74 anos",
-    );
-    expect(monthly.products[0]?.description).toContain(
-      "Mensal - INE, Estatísticas Mensais de Emprego e Desemprego",
-    );
+    expect(monthly.products[0]?.title).toBe("Taxa de desemprego (%) da população ativa com idade entre 16 e 74 anos");
+    expect(monthly.products[0]?.description).toContain("Mensal - INE, Estatísticas Mensais de Emprego e Desemprego");
   });
 
   it("keeps a short designation whole, breakdown and all", () => {
@@ -191,8 +164,7 @@ describe("INE transformers", () => {
         data: [
           {
             IndicadorCod: "0000002",
-            IndicadorDsg:
-              "Produto interno bruto por habitante (€); Anual - INE, Contas nacionais",
+            IndicadorDsg: "Produto interno bruto por habitante (€); Anual - INE, Contas nacionais",
             Dados: { "2024": [{ geocod: "PT", geodsg: "Portugal", valor: "1" }] },
           },
         ],
@@ -201,16 +173,11 @@ describe("INE transformers", () => {
 
     const result = transformIneIndicator(bytes, context("0000002", "ine-gdp-per-capita"));
 
-    expect(result.products[0]?.title).toBe(
-      "Produto interno bruto por habitante (€)",
-    );
+    expect(result.products[0]?.title).toBe("Produto interno bruto por habitante (€)");
   });
 
   it("uses metadata to normalize INE's localized monthly period labels", () => {
-    const result = transformIneIndicator(
-      fixture("unemployment-0007976.json"),
-      context("0007976", "ine-unemployment-rate"),
-    );
+    const result = transformIneIndicator(fixture("unemployment-0007976.json"), context("0007976", "ine-unemployment-rate"));
 
     expect(result.products[0]?.points?.[2]).toMatchObject({
       seriesKey: "PT:T",
@@ -242,14 +209,8 @@ describe("INE transformers", () => {
         ],
       }),
     );
-    const result = transformIneIndicator(
-      bytes,
-      context("0000001", "ine-months"),
-    );
-    expect(result.products[0]?.points?.map(({ eventTime }) => eventTime)).toEqual([
-      "2023-03-01T00:00:00.000Z",
-      "2023-04-01T00:00:00.000Z",
-    ]);
+    const result = transformIneIndicator(bytes, context("0000001", "ine-months"));
+    expect(result.products[0]?.points?.map(({ eventTime }) => eventTime)).toEqual(["2023-03-01T00:00:00.000Z", "2023-04-01T00:00:00.000Z"]);
   });
 
   it("rejects rows with missing dimension codes or duplicate identities", () => {
@@ -262,20 +223,12 @@ describe("INE transformers", () => {
     if (!rows?.[0]) throw new Error("Fixture did not contain the expected row");
     rows.push({ ...rows[0], dim_3: "" }, { ...rows[0] });
 
-    const result = transformIneIndicator(
-      new TextEncoder().encode(JSON.stringify(source)),
-      context("0007976", "ine-unemployment-rate"),
-    );
+    const result = transformIneIndicator(new TextEncoder().encode(JSON.stringify(source)), context("0007976", "ine-unemployment-rate"));
     expect(result.quality.acceptedRecords).toBe(3);
     expect(result.quality.rejectedRecords).toBe(2);
   });
 
   it("rejects artifacts for a different indicator", () => {
-    expect(() =>
-      transformIneIndicator(
-        fixture("population-0004167.json"),
-        context("0007976", "wrong-indicator"),
-      ),
-    ).toThrow("did not match");
+    expect(() => transformIneIndicator(fixture("population-0004167.json"), context("0007976", "wrong-indicator"))).toThrow("did not match");
   });
 });

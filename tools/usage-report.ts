@@ -432,8 +432,7 @@ interface DailyAnalytics {
 }
 
 function decodeDaily(account: JsonRecord): DailyAnalytics {
-  const rows = (alias: string) =>
-    listAt(account, alias).map((row) => ({ row, dimensions: field(row, "dimensions"), sum: field(row, "sum"), max: field(row, "max") }));
+  const rows = (alias: string) => listAt(account, alias).map((row) => ({ row, dimensions: field(row, "dimensions"), sum: field(row, "sum"), max: field(row, "max") }));
   return {
     doObjects: decodeDoObjects(listAt(account, "doObjects"), null),
     doInvocations: decodeDoInvocations(listAt(account, "doInvocations"), null),
@@ -565,9 +564,7 @@ async function getPublic(path: string): Promise<Json> {
 
 async function loadFeeds(): Promise<FeedInfo[]> {
   const [feeds, policies] = await Promise.all([getPublic("/feeds"), getPublic("/policies")]);
-  const cadenceByPolicy = new Map(
-    listAt(policies, "data").map((policy) => [textAt(policy, "id"), numberAt(field(policy, "collection"), "cadenceSeconds")]),
-  );
+  const cadenceByPolicy = new Map(listAt(policies, "data").map((policy) => [textAt(policy, "id"), numberAt(field(policy, "collection"), "cadenceSeconds")]));
   return listAt(feeds, "data").map((feed) => {
     const cadence = cadenceByPolicy.get(textAt(feed, "policyId"));
     const cadenceSeconds = cadence === undefined || cadence <= 0 ? null : cadence;
@@ -696,11 +693,7 @@ function namespaceRoles(namespaceIds: string[], objects: DoObjectRow[]): Map<str
   const roles = new Map<string, NamespaceRole>();
   for (const namespaceId of namespaceIds) {
     const names = objects.filter((row) => row.namespaceId === namespaceId).map((row) => row.name);
-    const role = names.includes(REGISTRY_OBJECT)
-      ? "Registry"
-      : names.some((name) => name.startsWith(FEED_OBJECT_PREFIX))
-        ? "FeedRunner"
-        : "kernel (unclassified)";
+    const role = names.includes(REGISTRY_OBJECT) ? "Registry" : names.some((name) => name.startsWith(FEED_OBJECT_PREFIX)) ? "FeedRunner" : "kernel (unclassified)";
     roles.set(namespaceId, role);
   }
   return roles;
@@ -789,12 +782,7 @@ interface ObjectUsage {
   totals: DoTotals;
 }
 
-function objectUsage(
-  objects: DoObjectRow[],
-  invocations: DoInvocationRow[],
-  roles: Map<string, NamespaceRole>,
-  feedsById: Map<string, FeedInfo>,
-): ObjectUsage[] {
+function objectUsage(objects: DoObjectRow[], invocations: DoInvocationRow[], roles: Map<string, NamespaceRole>, feedsById: Map<string, FeedInfo>): ObjectUsage[] {
   const usage = new Map<string, ObjectUsage>();
   const entry = (period: string, namespaceId: string, objectId: string, name: string) => {
     const key = `${period}|${objectId}`;
@@ -870,19 +858,11 @@ interface FeedAttribution {
   unattributed: ObjectUsage[];
 }
 
-function attributeFeeds(
-  periods: Period[],
-  usage: ObjectUsage[],
-  feeds: FeedInfo[],
-  histories: Map<string, AcquisitionHistory>,
-  nowMs: number,
-): FeedAttribution {
+function attributeFeeds(periods: Period[], usage: ObjectUsage[], feeds: FeedInfo[], histories: Map<string, AcquisitionHistory>, nowMs: number): FeedAttribution {
   const classes: ClassUsage[] = [];
   const perFeed: FeedPeriodUsage[] = [];
   for (const period of periods) {
-    const runners = new Map(
-      usage.filter((item) => item.period === period.key && item.role === "FeedRunner" && item.feed !== null).map((item) => [item.name, item]),
-    );
+    const runners = new Map(usage.filter((item) => item.period === period.key && item.role === "FeedRunner" && item.feed !== null).map((item) => [item.name, item]));
     for (const feedClass of FEED_CLASSES) {
       const summary: ClassUsage = { period: period.key, feedClass, feedsWithUsage: 0, collections: { measured: 0, estimated: 0 }, totals: emptyTotals() };
       for (const feed of feeds.filter((candidate) => candidate.feedClass === feedClass)) {
@@ -1081,12 +1061,7 @@ function markdownTable(headers: string[], rows: string[][], textColumns: number)
   if (rows.length === 0) return ["_No rows._", ""];
   const escape = (cell: string) => cell.replaceAll("|", "\\|");
   const align = headers.map((_, index) => (index < textColumns ? "---" : "---:"));
-  return [
-    `| ${headers.map(escape).join(" | ")} |`,
-    `| ${align.join(" | ")} |`,
-    ...rows.map((row) => `| ${row.map(escape).join(" | ")} |`),
-    "",
-  ];
+  return [`| ${headers.map(escape).join(" | ")} |`, `| ${align.join(" | ")} |`, ...rows.map((row) => `| ${row.map(escape).join(" | ")} |`), ""];
 }
 
 /* ---------- Report ---------- */
@@ -1152,9 +1127,7 @@ function topObjectsSection(report: Report, top: number): string[] {
     "",
   );
   for (const period of report.periods) {
-    const runners = report.objects
-      .filter((item) => item.period === period.key && item.role === "FeedRunner")
-      .toSorted((a, b) => b.totals.gbSeconds - a.totals.gbSeconds);
+    const runners = report.objects.filter((item) => item.period === period.key && item.role === "FeedRunner").toSorted((a, b) => b.totals.gbSeconds - a.totals.gbSeconds);
     if (runners.length === 0) continue;
     const totalGbSeconds = runners.reduce((total, item) => total + item.totals.gbSeconds, 0);
     lines.push(`### ${period.label}: ${formatInteger(runners.length)} runners, ${formatDecimal(totalGbSeconds, 1)} GB-s`, "");
@@ -1218,7 +1191,20 @@ function perCollectionSection(report: Report): string[] {
       "Per-collection values divide measured usage by that count.",
     "",
     ...markdownTable(
-      ["Period", "Class", "Feeds", "Collections", "GB-s", "GB-s / coll.", "Active s / coll.", "CPU ms / coll.", "Active:CPU", "Requests / coll.", "Rows read / coll.", "Rows written / coll."],
+      [
+        "Period",
+        "Class",
+        "Feeds",
+        "Collections",
+        "GB-s",
+        "GB-s / coll.",
+        "Active s / coll.",
+        "CPU ms / coll.",
+        "Active:CPU",
+        "Requests / coll.",
+        "Rows read / coll.",
+        "Rows written / coll.",
+      ],
       rows,
       2,
     ),
@@ -1277,7 +1263,18 @@ function pipelinesSection(report: Report): string[] {
       `\`pipelinesIngestionAdaptiveGroups\` returned ${formatInteger(ingestion)} rows and \`pipelinesDeliveryAdaptiveGroups\` ${formatInteger(delivery)} rows for this range.`,
     "",
     ...markdownTable(
-      ["UTC day", "Pipeline", "Stream bytes in", "Stream records in", "Operator bytes in (no stream)", "Sink records", "Sink bytes (raw)", "Sink bytes (compressed)", "Files", "Decode errors"],
+      [
+        "UTC day",
+        "Pipeline",
+        "Stream bytes in",
+        "Stream records in",
+        "Operator bytes in (no stream)",
+        "Sink records",
+        "Sink bytes (raw)",
+        "Sink bytes (compressed)",
+        "Files",
+        "Decode errors",
+      ],
       rows,
       2,
     ),
@@ -1538,9 +1535,7 @@ async function main(): Promise<void> {
     objects: usage,
     attribution: attributeFeeds(periods, usage, feeds, histories, nowMs),
     acquisitionsRead: [...histories.values()].filter((history) => history.available).length,
-    acquisitionsUnavailable: [...histories.entries()]
-      .filter(([, history]) => !history.available)
-      .map(([feedId]) => feedsById.get(feedId)?.slug ?? feedId),
+    acquisitionsUnavailable: [...histories.entries()].filter(([, history]) => !history.available).map(([feedId]) => feedsById.get(feedId)?.slug ?? feedId),
     r2: r2BucketDays(daily.r2Operations, daily.r2Storage),
     pipelines: pipelineDays(daily, lakeStreamBindings()),
     daily,
