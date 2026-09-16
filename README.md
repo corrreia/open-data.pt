@@ -42,7 +42,7 @@ One Worker per catalog topic, each separately deployable and reached only throug
 | `economy`     | INE, BPstat, Eurostat                                               |
 | `energy`      | REN, OMIE, DGEG, Opendatasoft (E-REDES), Eurostat                   |
 | `environment` | IPMA, OGC (Azores), ArcGIS (APA)                                    |
-| `government`  | uData (government registers), Parliament (held)                     |
+| `government`  | uData (government registers), Parliament (Assembleia da República)  |
 | `health`      | Opendatasoft (SNS), uData (DGS)                                     |
 | `mobility`    | Carris, Metro Lisboa, GTFS, GBFS, INE                               |
 | `society`     | INE, OGC (DGT), uData (culture and justice)                         |
@@ -54,7 +54,7 @@ The RPC has five operations: `describe`, `listFeedKinds`, `resolveFeed`, `collec
 
 ### Source publication review
 
-Source access, validation and permission to republish are separate checks. The Parliament library is wired into `government`, and the RIPEstat and PeeringDB libraries into `telecom`, but their examples stay out of those Workers' example lists until the explicit holds in [`packages/gatekeeper-shared/src/publication-holds.json`](packages/gatekeeper-shared/src/publication-holds.json) are resolved. The consistency tests require every library to be wired into a Worker, every cleared example to belong to exactly one Worker whose topic it carries, and no held example to be auto-published.
+Source access, validation and permission to republish are separate checks. The RIPEstat and PeeringDB libraries are wired into `telecom`, but their examples stay out of its example list until the explicit holds in [`packages/gatekeeper-shared/src/publication-holds.json`](packages/gatekeeper-shared/src/publication-holds.json) are resolved. The consistency tests require every library to be wired into a Worker, every cleared example to belong to exactly one Worker whose topic it carries, and no held example to be auto-published.
 
 A successful source request is not proof of a reuse licence, and a successful dry-run is not a deployment.
 
