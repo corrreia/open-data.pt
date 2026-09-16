@@ -20,7 +20,7 @@ import {
 } from "../../index";
 import { parliamentDocument, type ParliamentFeed } from "./parliament";
 
-export const PARLIAMENT_NORMALIZER = { id: "parliament-public-records", version: "2" } as const;
+export const PARLIAMENT_NORMALIZER = { id: "parliament-public-records", version: "3" } as const;
 export const PARLIAMENT_ELEMENT_BYTES = 256 * 1024;
 // A legislature's attendance alone reaches about 90,000 rows by its fourth year.
 export const PARLIAMENT_MAX_RECORDS = 250_000;
@@ -202,7 +202,7 @@ const TABLES = {
         label("session"),
         structured("author_groups"),
         structured("author_deputies"),
-        structured("author_other"),
+        structured("author_type"),
         field("text_url", "url", true),
         structured("petition_ids"),
         structured("origin_ids"),
@@ -591,7 +591,8 @@ function* committeeRows(item: JsonObject, legislature: string, partial: Set<stri
 function* initiativeRows(item: JsonObject, legislature: string): Generator<BuiltRow> {
   requireLegislature(item.IniLeg, legislature);
   const initiative = identifier(item.IniId, "initiative id");
-  const other = item.IniAutorOutros === null || item.IniAutorOutros === undefined ? null : object(item.IniAutorOutros, "initiative author");
+  // `IniAutorOutros` is the kind of author (parliamentary groups, Government, a regional assembly, committees), set on every initiative.
+  const kind = item.IniAutorOutros === null || item.IniAutorOutros === undefined ? null : object(item.IniAutorOutros, "initiative author kind");
   yield {
     key: "initiatives",
     record: record(initiative, {
@@ -610,7 +611,7 @@ function* initiativeRows(item: JsonObject, legislature: string): Generator<Built
         const deputy = object(value, "initiative author deputy");
         return { person_id: optionalCode(deputy.idCadastro), name: text(deputy.nome), group: text(deputy.GP) };
       }),
-      author_other: other && (text(other.nome) || text(other.sigla)) ? { name: text(other.nome), abbreviation: text(other.sigla) } : null,
+      author_type: kind && (text(kind.nome) || text(kind.sigla)) ? { code: text(kind.sigla), name: text(kind.nome) } : null,
       text_url: officialUrl(item.IniLinkTexto),
       petition_ids: referencedIds(item.Peticoes, "petition"),
       origin_ids: referencedIds(item.IniciativasOrigem, "origin initiative"),

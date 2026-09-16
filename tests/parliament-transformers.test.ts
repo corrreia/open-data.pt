@@ -198,12 +198,12 @@ describe("Parliament streaming normalization", () => {
     expect(result.records.get("initiatives")?.[0]?.payload).toMatchObject({
       author_groups: ["L"],
       author_deputies: [{ person_id: "40000001", name: "Synthetic Member One", group: "L" }],
-      author_other: null,
+      author_type: null,
       text_url: "https://app.parlamento.pt/webutils/docs/doc.pdf?path=synthetic",
       petition_ids: ["60000001"],
       originated_ids: ["80000002"],
     });
-    expect(result.records.get("initiatives")?.[1]?.payload.author_other).toEqual({ name: "Governo", abbreviation: "V" });
+    expect(result.records.get("initiatives")?.[1]?.payload.author_type).toEqual({ code: "V", name: "Governo" });
     expect(result.records.get("events")?.[0]).toMatchObject({
       entityKey: "90000001",
       eventTime: "2025-07-01T00:00:00.000Z",

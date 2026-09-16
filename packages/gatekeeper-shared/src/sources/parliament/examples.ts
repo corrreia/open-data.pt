@@ -51,7 +51,7 @@ export const PARLIAMENT_EXAMPLES: ExampleFeed[] = [
     "initiatives",
     "parliament-initiatives-xvii-feed",
     "Parliament XVII: initiatives and votes",
-    "Every bill, draft resolution and other initiative of the XVII legislature, each step of its procedure, and every plenary and committee vote on it with each parliamentary group's position. Parliament records votes by group: named members appear only where they voted apart from their group, and head counts only where Parliament gives them.",
+    "Every bill, draft resolution and other initiative of the XVII legislature, each step of its procedure, and every plenary and committee vote on it with each parliamentary group's position. Parliament records votes by group: named members appear only where they voted apart from their group, and head counts only where Parliament gives them. Unanimous votes and some procedural committee votes carry no per-group detail, so their position lists are empty.",
     86_400,
     // A 93 MB source: 35 s to download and read live, 19,491 rows and 10 MB of output measured for XVII.
     { timeoutSeconds: 600, maxOutputBytes: 32 * 1024 * 1024 },
