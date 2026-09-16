@@ -1,10 +1,13 @@
 import type { FeedGatekeeper } from "@open-data-pt/gatekeeper-shared";
 export { default as Cities } from "../../packages/gatekeeper-cities/src/index";
+export { default as Economy } from "../../packages/gatekeeper-economy/src/index";
 export { default as Energy } from "../../packages/gatekeeper-energy/src/index";
 export { default as Environment } from "../../packages/gatekeeper-environment/src/index";
+export { default as Government } from "../../packages/gatekeeper-government/src/index";
 export { default as Health } from "../../packages/gatekeeper-health/src/index";
 export { default as Mobility } from "../../packages/gatekeeper-mobility/src/index";
-export { default as Statistics } from "../../packages/gatekeeper-statistics/src/index";
+export { default as Society } from "../../packages/gatekeeper-society/src/index";
+export { default as Telecom } from "../../packages/gatekeeper-telecom/src/index";
 
 interface FixtureEnv {
   [key: `GK_${string}`]: Service<FeedGatekeeper>;

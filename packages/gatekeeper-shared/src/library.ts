@@ -16,7 +16,7 @@ export interface GatekeeperLibrary {
 export type GatekeeperLibraries = ReadonlyMap<string, GatekeeperLibrary>;
 
 export interface TopicOptions {
-  /** The Worker's own kind: `mobility`, `energy`, `statistics`, `health`, `cities`, `environment`. */
+  /** The Worker's own kind, which is its topic: `mobility`, `energy`, `telecom`, … */
   gatekeeperKind: string;
   libraries: GatekeeperLibraries;
 }

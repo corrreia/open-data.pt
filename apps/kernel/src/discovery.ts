@@ -21,7 +21,7 @@ export const SKILL_PATH = "/.well-known/agent-skills/open-data-pt/SKILL.md";
 const SITEMAP_PAGES = ["/", "/catalog/", "/publisher/", "/start/", "/status/", "/operations/", "/contribute/", "/docs"];
 
 /** Words every AI Catalog entry shares, for registries that filter by tag. */
-const TAGS = ["portugal", "open data", "public data", "energy", "mobility", "weather", "health", "statistics"];
+const TAGS = ["portugal", "open data", "public data", "energy", "mobility", "weather", "health", "economy", "telecom"];
 
 /** What the site's pages and documents read. */
 export interface SiteHost {

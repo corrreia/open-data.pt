@@ -29,14 +29,20 @@ import { INE_FEEDS, ineCollector } from "@open-data-pt/gatekeeper-shared/sources
 import { IPMA_FEEDS, ipmaCollector } from "@open-data-pt/gatekeeper-shared/sources/ipma";
 import { METRO_FEEDS, metrolisboaCollector } from "@open-data-pt/gatekeeper-shared/sources/metrolisboa";
 import { OMIE_FEEDS, omieCollector } from "@open-data-pt/gatekeeper-shared/sources/omie";
+import { PARLIAMENT_FEEDS, parliamentCollector } from "@open-data-pt/gatekeeper-shared/sources/parliament";
+import { PEERINGDB_FEEDS, peeringdbCollector } from "@open-data-pt/gatekeeper-shared/sources/peeringdb";
 import { REN_FEEDS, renCollector } from "@open-data-pt/gatekeeper-shared/sources/ren";
+import { RIPESTAT_FEEDS, ripestatCollector } from "@open-data-pt/gatekeeper-shared/sources/ripestat";
 import { isNormalizedFrame } from "../packages/gatekeeper-shared/src/normalized-validation";
 import { CITIES_EXAMPLES } from "../packages/gatekeeper-cities/src/examples";
 import { ENERGY_EXAMPLES } from "../packages/gatekeeper-energy/src/examples";
 import { ENVIRONMENT_EXAMPLES } from "../packages/gatekeeper-environment/src/examples";
 import { HEALTH_EXAMPLES } from "../packages/gatekeeper-health/src/examples";
 import { MOBILITY_EXAMPLES } from "../packages/gatekeeper-mobility/src/examples";
-import { STATISTICS_EXAMPLES } from "../packages/gatekeeper-statistics/src/examples";
+import { ECONOMY_EXAMPLES } from "../packages/gatekeeper-economy/src/examples";
+import { GOVERNMENT_EXAMPLES } from "../packages/gatekeeper-government/src/examples";
+import { SOCIETY_EXAMPLES } from "../packages/gatekeeper-society/src/examples";
+import { TELECOM_EXAMPLES } from "../packages/gatekeeper-telecom/src/examples";
 import { readFrames } from "../apps/kernel/src/frames";
 import { MAX_RECORD_BYTES } from "../apps/kernel/src/blob-budget";
 import { jsonAs } from "./support";
@@ -66,7 +72,7 @@ function library(kinds: Record<string, { kind: string }>, collector: GatekeeperL
   return { kinds: Object.values(kinds) as GatekeeperLibrary["kinds"], collector };
 }
 
-/** The same wiring the six Workers deploy, with the same vars and the real fetch. */
+/** The same wiring the topic Workers deploy, with the same vars and the real fetch. */
 const TOPICS: Array<{ kind: string; libraries: Map<string, GatekeeperLibrary>; examples: readonly ExampleFeed[] }> = [
   {
     kind: "mobility",
@@ -86,6 +92,7 @@ const TOPICS: Array<{ kind: string; libraries: Map<string, GatekeeperLibrary>; e
       ],
       ["gtfs", library(GTFS_FEEDS, (config) => gtfsCollector({ config, hosts: configured("mobility", "GTFS_ALLOWED_HOSTS"), fetcher: fetch }))],
       ["gbfs", library(GBFS_FEEDS, (config) => gbfsCollector({ config, hosts: configured("mobility", "GBFS_ALLOWED_HOSTS"), fetcher: fetch }))],
+      ["ine", library(INE_FEEDS, (config) => ineCollector({ config, apiOrigin: configured("mobility", "INE_API_ORIGIN"), fetcher: fetch }))],
     ]),
   },
   {
@@ -101,17 +108,42 @@ const TOPICS: Array<{ kind: string; libraries: Map<string, GatekeeperLibrary>; e
       ["omie", library(OMIE_FEEDS, (config) => omieCollector({ config, apiOrigin: configured("energy", "OMIE_API_ORIGIN"), fetcher: fetch }))],
       ["dgeg", library(DGEG_FEEDS, (config) => dgegCollector({ config, apiOrigin: configured("energy", "DGEG_API_ORIGIN"), fetcher: fetch }))],
       ["opendatasoft", library(OPENDATASOFT_FEEDS, (config) => opendatasoftCollector({ config, hosts: configured("energy", "OPENDATASOFT_ALLOWED_HOSTS"), fetcher: fetch }))],
+      ["eurostat", library(EUROSTAT_FEEDS, (config) => eurostatCollector({ config, apiOrigin: configured("energy", "EUROSTAT_API_ORIGIN"), fetcher: fetch }))],
     ]),
   },
   {
-    kind: "statistics",
-    examples: STATISTICS_EXAMPLES,
+    kind: "economy",
+    examples: ECONOMY_EXAMPLES,
     libraries: new Map([
-      ["ogc", library(OGC_FEEDS, (config) => ogcCollector({ config, hosts: configured("statistics", "OGC_ALLOWED_HOSTS"), fetcher: fetch }))],
-      ["udata", library(UDATA_FEEDS, (config) => udataCollector({ config, hosts: configured("statistics", "UDATA_ALLOWED_HOSTS"), fetcher: fetch }))],
-      ["ine", library(INE_FEEDS, (config) => ineCollector({ config, apiOrigin: configured("statistics", "INE_API_ORIGIN"), fetcher: fetch }))],
-      ["bpstat", library(BPSTAT_FEEDS, (config) => bpstatCollector({ config, apiOrigin: configured("statistics", "BPSTAT_API_ORIGIN"), fetcher: fetch }))],
-      ["eurostat", library(EUROSTAT_FEEDS, (config) => eurostatCollector({ config, apiOrigin: configured("statistics", "EUROSTAT_API_ORIGIN"), fetcher: fetch }))],
+      ["ine", library(INE_FEEDS, (config) => ineCollector({ config, apiOrigin: configured("economy", "INE_API_ORIGIN"), fetcher: fetch }))],
+      ["bpstat", library(BPSTAT_FEEDS, (config) => bpstatCollector({ config, apiOrigin: configured("economy", "BPSTAT_API_ORIGIN"), fetcher: fetch }))],
+      ["eurostat", library(EUROSTAT_FEEDS, (config) => eurostatCollector({ config, apiOrigin: configured("economy", "EUROSTAT_API_ORIGIN"), fetcher: fetch }))],
+    ]),
+  },
+  {
+    kind: "society",
+    examples: SOCIETY_EXAMPLES,
+    libraries: new Map([
+      ["ine", library(INE_FEEDS, (config) => ineCollector({ config, apiOrigin: configured("society", "INE_API_ORIGIN"), fetcher: fetch }))],
+      ["ogc", library(OGC_FEEDS, (config) => ogcCollector({ config, hosts: configured("society", "OGC_ALLOWED_HOSTS"), fetcher: fetch }))],
+      ["udata", library(UDATA_FEEDS, (config) => udataCollector({ config, hosts: configured("society", "UDATA_ALLOWED_HOSTS"), fetcher: fetch }))],
+    ]),
+  },
+  {
+    kind: "government",
+    examples: GOVERNMENT_EXAMPLES,
+    libraries: new Map([
+      ["udata", library(UDATA_FEEDS, (config) => udataCollector({ config, hosts: configured("government", "UDATA_ALLOWED_HOSTS"), fetcher: fetch }))],
+      ["parliament", library(PARLIAMENT_FEEDS, (config) => parliamentCollector({ config, fetcher: fetch }))],
+    ]),
+  },
+  {
+    kind: "telecom",
+    examples: TELECOM_EXAMPLES,
+    libraries: new Map([
+      ["ine", library(INE_FEEDS, (config) => ineCollector({ config, apiOrigin: configured("telecom", "INE_API_ORIGIN"), fetcher: fetch }))],
+      ["ripestat", library(RIPESTAT_FEEDS, (config) => ripestatCollector({ config, apiOrigin: configured("telecom", "RIPESTAT_API_ORIGIN"), fetcher: fetch }))],
+      ["peeringdb", library(PEERINGDB_FEEDS, (config) => peeringdbCollector({ config, apiOrigin: configured("telecom", "PEERINGDB_API_ORIGIN"), fetcher: fetch }))],
     ]),
   },
   {
@@ -119,6 +151,7 @@ const TOPICS: Array<{ kind: string; libraries: Map<string, GatekeeperLibrary>; e
     examples: HEALTH_EXAMPLES,
     libraries: new Map([
       ["opendatasoft", library(OPENDATASOFT_FEEDS, (config) => opendatasoftCollector({ config, hosts: configured("health", "OPENDATASOFT_ALLOWED_HOSTS"), fetcher: fetch }))],
+      ["udata", library(UDATA_FEEDS, (config) => udataCollector({ config, hosts: configured("health", "UDATA_ALLOWED_HOSTS"), fetcher: fetch }))],
     ]),
   },
   {

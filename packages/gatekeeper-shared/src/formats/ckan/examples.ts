@@ -195,7 +195,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "Evacuation meeting points to use in case of a tsunami warning in Cascais.",
     "geocascais-pontosencontrotsunami",
     "f6c7b517-7663-4f7c-bcd9-2db8cfab5036",
-    ["environment", "society"],
+    ["environment", "society", "cities"],
   ),
   cascaisExample("cascais-beaches-feed", "Cascais beaches", "Beaches in Cascais with their location and facilities.", "geocascais-praia", "0ba066ff-383d-484b-baf6-a7769c2316dd", [
     "environment",

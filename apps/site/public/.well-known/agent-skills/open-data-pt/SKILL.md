@@ -1,6 +1,6 @@
 ---
 name: open-data-pt
-description: Find and read Portuguese public data (energy and fuel prices, mobility, weather and environment, health, statistics, cities) from open-data.pt, a free, keyless, read-only JSON API over what Portuguese institutions and operators publish. Use when a question needs current or historical figures from Portugal's public sources.
+description: Find and read Portuguese public data (energy and fuel prices, mobility, weather and environment, health, economy, society and culture, government, telecommunications, cities) from open-data.pt, a free, keyless, read-only JSON API over what Portuguese institutions and operators publish. Use when a question needs current or historical figures from Portugal's public sources.
 ---
 
 # Portuguese public data from open-data.pt

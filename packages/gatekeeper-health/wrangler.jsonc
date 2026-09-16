@@ -8,6 +8,7 @@
   "preview_urls": false,
   "vars": {
     "OPENDATASOFT_ALLOWED_HOSTS": "e-redes.opendatasoft.com,transparencia.sns.gov.pt",
+    "UDATA_ALLOWED_HOSTS": "dados.gov.pt",
   },
   "observability": {
     "enabled": true,

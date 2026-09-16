@@ -19,6 +19,7 @@ import {
 import { GBFS_FEEDS, gbfsCollector } from "@open-data-pt/gatekeeper-shared/formats/gbfs";
 import { GTFS_FEEDS, gtfsCollector } from "@open-data-pt/gatekeeper-shared/formats/gtfs";
 import { CARRIS_FEEDS, carrisCollector } from "@open-data-pt/gatekeeper-shared/sources/carris";
+import { INE_FEEDS, ineCollector } from "@open-data-pt/gatekeeper-shared/sources/ine";
 import { METRO_FEEDS, metrolisboaCollector } from "@open-data-pt/gatekeeper-shared/sources/metrolisboa";
 import { MOBILITY_EXAMPLES } from "./examples";
 
@@ -90,6 +91,13 @@ export default class MobilityGatekeeper extends WorkerEntrypoint<Env> implements
         {
           kinds: Object.values(GBFS_FEEDS),
           collector: (config: SourceConfig) => gbfsCollector({ config, hosts: this.env.GBFS_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }),
+        },
+      ],
+      [
+        "ine",
+        {
+          kinds: Object.values(INE_FEEDS),
+          collector: (config: SourceConfig) => ineCollector({ config, apiOrigin: this.env.INE_API_ORIGIN, fetcher: (input, init) => fetch(input, init) }),
         },
       ],
     ]);

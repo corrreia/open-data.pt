@@ -9,6 +9,6 @@ describe("generated Worker lists", () => {
   });
 
   it("names one Worker per catalog topic", () => {
-    expect(workerTopics()).toEqual(["cities", "energy", "environment", "health", "mobility", "statistics"]);
+    expect(workerTopics()).toEqual(["cities", "economy", "energy", "environment", "government", "health", "mobility", "society", "telecom"]);
   });
 });

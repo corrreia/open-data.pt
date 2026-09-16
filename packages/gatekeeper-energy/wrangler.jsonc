@@ -12,6 +12,7 @@
     "OMIE_API_ORIGIN": "https://www.omie.es",
     "DGEG_API_ORIGIN": "https://precoscombustiveis.dgeg.gov.pt",
     "OPENDATASOFT_ALLOWED_HOSTS": "e-redes.opendatasoft.com,transparencia.sns.gov.pt",
+    "EUROSTAT_API_ORIGIN": "https://ec.europa.eu",
   },
   "observability": {
     "enabled": true,

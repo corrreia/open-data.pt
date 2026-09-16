@@ -1,7 +1,7 @@
 /**
  * Run the kernel locally with only the Gatekeepers you are working on.
  *
- *   pnpm dev                      the kernel and all six topic Workers
+ *   pnpm dev                      the kernel and every topic Worker
  *   pnpm dev -- mobility          the kernel and the mobility Worker
  *   pnpm dev -- cities energy     the kernel and those two
  *

@@ -135,7 +135,7 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
     policy: annualPolicy("Portuguese museums annual snapshot", "Arquivo.pt", 1 * MIB),
     staleAfterSeconds: 30 * 86_400,
     publisher: "Arquivo.pt",
-    topics: ["culture"],
+    topics: ["culture", "society"],
   },
   {
     slug: "portuguese-parishes-feed",
@@ -179,7 +179,7 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
     policy: annualPolicy("Public libraries annual snapshot", "Direção-Geral do Livro, dos Arquivos e das Bibliotecas", 1 * MIB),
     staleAfterSeconds: 30 * 86_400,
     publisher: "DGLAB · Direção-Geral do Livro, dos Arquivos e das Bibliotecas",
-    topics: ["culture"],
+    topics: ["culture", "society"],
   },
   {
     slug: "municipal-ev-charging-feed",

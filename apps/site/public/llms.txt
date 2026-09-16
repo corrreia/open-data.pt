@@ -15,7 +15,7 @@ Source code: https://github.com/corrreia/open-data.pt · Contribute: https://ope
 
 ## What is here
 
-Products from Portuguese public institutions and operators: energy, mobility, weather and environment, health, economy and statistics, cities, culture and society. `GET /api/products` lists every public product; `GET /api/feeds` lists sources with their publisher and topics.
+Products from Portuguese public institutions and operators: energy, mobility, weather and environment, health, economy, society and culture, government, telecommunications, cities. `GET /api/products` lists every public product; `GET /api/feeds` lists sources with their publisher and topics.
 
 A product is one table. Its `role` says how it changes:
 - reference: complete slow-changing set

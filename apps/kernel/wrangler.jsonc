@@ -76,11 +76,14 @@
   // One Worker per catalog topic; the kernel discovers them by binding prefix.
   "services": [
     { "binding": "GATEKEEPER_CITIES", "service": "open-data-pt-gatekeeper-cities" },
+    { "binding": "GATEKEEPER_ECONOMY", "service": "open-data-pt-gatekeeper-economy" },
     { "binding": "GATEKEEPER_ENERGY", "service": "open-data-pt-gatekeeper-energy" },
     { "binding": "GATEKEEPER_ENVIRONMENT", "service": "open-data-pt-gatekeeper-environment" },
+    { "binding": "GATEKEEPER_GOVERNMENT", "service": "open-data-pt-gatekeeper-government" },
     { "binding": "GATEKEEPER_HEALTH", "service": "open-data-pt-gatekeeper-health" },
     { "binding": "GATEKEEPER_MOBILITY", "service": "open-data-pt-gatekeeper-mobility" },
-    { "binding": "GATEKEEPER_STATISTICS", "service": "open-data-pt-gatekeeper-statistics" },
+    { "binding": "GATEKEEPER_SOCIETY", "service": "open-data-pt-gatekeeper-society" },
+    { "binding": "GATEKEEPER_TELECOM", "service": "open-data-pt-gatekeeper-telecom" },
   ],
   // Per-client limits on uncached API reads, keyed by cf-connecting-ip; cache hits
   // never count. History windows and GeoJSON exports scan the lake or every

@@ -34,13 +34,27 @@ flowchart LR
 
 ### Gatekeepers
 
-One Worker per catalog topic, each separately deployable and reached only through a private service binding: `mobility`, `energy`, `statistics`, `health`, `cities`, and `environment`. A Worker holds no parsing. It wires shared libraries — a format library for anything with a standard (ArcGIS, CKAN, Opendatasoft, GTFS, GBFS, uData, OGC API Features) and a source library per bespoke API (Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat) — hands each the vars and secrets it needs, and lists the example feeds it owns. Every feed's configuration names its library in `source`, and that key is what routes it.
+One Worker per catalog topic, each separately deployable and reached only through a private service binding. A topic is what the data is about, never who publishes it or how, so a library that serves several topics (INE, Eurostat, uData, OGC, ArcGIS, Opendatasoft) is wired into each Worker that needs it:
+
+| Worker        | Libraries                                                           |
+| ------------- | ------------------------------------------------------------------- |
+| `cities`      | ArcGIS (Lisboa Aberta), CKAN, uData (municipal)                     |
+| `economy`     | INE, BPstat, Eurostat                                               |
+| `energy`      | REN, OMIE, DGEG, Opendatasoft (E-REDES), Eurostat                   |
+| `environment` | IPMA, OGC (Azores), ArcGIS (APA)                                    |
+| `government`  | uData (government registers), Parliament (held)                     |
+| `health`      | Opendatasoft (SNS), uData (DGS)                                     |
+| `mobility`    | Carris, Metro Lisboa, GTFS, GBFS, INE                               |
+| `society`     | INE, OGC (DGT), uData (culture and justice)                         |
+| `telecom`     | INE (telecommunications surveys), RIPEstat (held), PeeringDB (held) |
+
+A feed lives in a Worker whose topic its `topics` carry; for INE and Eurostat that is the first topic. A Worker holds no parsing. It wires shared libraries — a format library for anything with a standard (ArcGIS, CKAN, Opendatasoft, GTFS, GBFS, uData, OGC API Features) and a source library per bespoke API (Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, RIPEstat, PeeringDB) — hands each the vars and secrets it needs, and lists the example feeds it owns. Every feed's configuration names its library in `source`, and that key is what routes it.
 
 The RPC has five operations: `describe`, `listFeedKinds`, `resolveFeed`, `collect`, and `exampleFeeds`. `collect` returns a typed unchanged, batch, exhausted, or failure result. A batch is one `open-data-normalized/4` NDJSON stream: a header, product-keyed record and point frames, and a mandatory completion frame that may finalize values only known at the end (inferred schema, watermark, a product found absent). Adapters hand the shared collector a typed source fetch; formats that can be read row by row (CSV, NDJSON, JSON arrays, GeoJSON features, GTFS ZIP entries) stream, and everything else is buffered under a 16 MiB cap. Source bodies never leave the Gatekeeper.
 
 ### Source publication review
 
-Source access, validation and permission to republish are separate checks. The Parliament, RIPEstat and PeeringDB libraries are implemented but are not carried by a production topic Worker. Their examples remain excluded from automatic installation until the explicit holds in [`research/source-publication-holds.json`](research/source-publication-holds.json) are resolved. The consistency test requires every other library example to belong to exactly one Worker and prevents held examples from being auto-published.
+Source access, validation and permission to republish are separate checks. The Parliament library is wired into `government`, and the RIPEstat and PeeringDB libraries into `telecom`, but their examples stay out of those Workers' example lists until the explicit holds in [`research/source-publication-holds.json`](research/source-publication-holds.json) are resolved. The consistency tests require every library to be wired into a Worker, every cleared example to belong to exactly one Worker whose topic it carries, and no held example to be auto-published.
 
 The [source expansion operating notes](research/source-expansion-2026-09-16.md) describe collection frequency, retained history, source limitations, validation and deployment status. The [added-feed manifest](research/source-expansion-manifest.json) records exact configurations and policies. A successful source request is not proof of a reuse licence, and a successful dry-run is not a deployment.
 
@@ -108,7 +122,7 @@ The API is read-only: every other method answers `405`. `/records` accepts `wher
 ```bash
 pnpm install
 pnpm types
-pnpm dev                 # the kernel and all six Gatekeepers
+pnpm dev                 # the kernel and every Gatekeeper
 pnpm dev -- mobility     # the kernel and one of them
 ```
 

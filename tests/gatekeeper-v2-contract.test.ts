@@ -3,7 +3,7 @@ import { createTestHarness } from "wrangler";
 import { readFileSync } from "node:fs";
 import { hashSourceConfig } from "@open-data-pt/gatekeeper-shared";
 
-const gatekeepers = ["cities", "energy", "environment", "health", "mobility", "statistics"];
+const gatekeepers = ["cities", "economy", "energy", "environment", "government", "health", "mobility", "society", "telecom"];
 const entrypoint = (name: string) => name[0]!.toUpperCase() + name.slice(1);
 const ARCGIS_HOSTS = "services.arcgis.com,sniambgeoogc.apambiente.pt";
 const OPENDATASOFT_HOSTS = "e-redes.opendatasoft.com,transparencia.sns.gov.pt";
@@ -23,7 +23,10 @@ const runtimeVars = {
     GTFS_ALLOWED_HOSTS: "api.carrismetropolitana.pt,opendata.porto.digital,dados.gov.pt",
     GBFS_ALLOWED_HOSTS: "data.lime.bike,mds.bird.co,gbfs.primelayer.pt,gbfs.nextbike.net",
   },
-  statistics: { INE_API_ORIGIN: "https://www.ine.pt", BPSTAT_API_ORIGIN: "https://bpstat.bportugal.pt", EUROSTAT_API_ORIGIN: "https://ec.europa.eu" },
+  economy: { INE_API_ORIGIN: "https://www.ine.pt", BPSTAT_API_ORIGIN: "https://bpstat.bportugal.pt", EUROSTAT_API_ORIGIN: "https://ec.europa.eu" },
+  society: { INE_API_ORIGIN: "https://www.ine.pt", OGC_ALLOWED_HOSTS: "ogcapi.dgterritorio.gov.pt", UDATA_ALLOWED_HOSTS: "dados.gov.pt" },
+  government: { UDATA_ALLOWED_HOSTS: "dados.gov.pt" },
+  telecom: { INE_API_ORIGIN: "https://www.ine.pt", RIPESTAT_API_ORIGIN: "https://stat.ripe.net", PEERINGDB_API_ORIGIN: "https://www.peeringdb.com" },
 } satisfies Record<string, Record<string, string>>;
 const services = gatekeepers.map((name) => ({ binding: `GK_${name.toUpperCase()}`, service: `conformance-${name}`, entrypoint: entrypoint(name) }));
 function workerConfig(name: string, vars: Record<string, string> = {}, bindings = false) {
@@ -66,7 +69,7 @@ describe("all Gatekeeper entrypoints expose the normalized five-operation contra
         resolved: { config: Record<string, string>; configHash: string; resourceKey: string; kind: string };
       }>
     >();
-    expect(rows).toHaveLength(6);
+    expect(rows).toHaveLength(gatekeepers.length);
     for (const row of rows) {
       expect(row.description.kind).toBeTruthy();
       expect(row.description.name).toBeTruthy();

@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 import { type ExampleFeed, type NormalizedRow, type TransformContext } from "@open-data-pt/gatekeeper-shared";
 import { UDATA_EXAMPLES, udataCollector } from "@open-data-pt/gatekeeper-shared/formats/udata";
 import { CITIES_EXAMPLES } from "../packages/gatekeeper-cities/src/examples";
-import { STATISTICS_EXAMPLES } from "../packages/gatekeeper-statistics/src/examples";
+import { GOVERNMENT_EXAMPLES } from "../packages/gatekeeper-government/src/examples";
+import { TELECOM_EXAMPLES } from "../packages/gatekeeper-telecom/src/examples";
 import { INE_EXAMPLES } from "../packages/gatekeeper-shared/src/sources/ine/examples";
 
 const government = UDATA_EXAMPLES.filter((example) => example.topics?.includes("government"));
@@ -34,10 +35,10 @@ async function normalized(example: ExampleFeed, observedAt: string) {
 }
 
 describe("government distribution examples", () => {
-  it("assigns government distributions exactly once to statistics, not cities", () => {
+  it("assigns government distributions exactly once to government, not cities", () => {
     expect(government).toHaveLength(5);
     for (const example of government) {
-      expect(STATISTICS_EXAMPLES.filter((candidate) => candidate.slug === example.slug)).toHaveLength(1);
+      expect(GOVERNMENT_EXAMPLES.filter((candidate) => candidate.slug === example.slug)).toHaveLength(1);
       expect(CITIES_EXAMPLES.some((candidate) => candidate.slug === example.slug)).toBe(false);
       expect(example.policy.collection.cadenceSeconds).toBeGreaterThanOrEqual(604_800);
     }
@@ -59,6 +60,7 @@ describe("government distribution examples", () => {
   it("uses keyless government telecom statistics without claiming live coverage", () => {
     const telecom = INE_EXAMPLES.filter((example) => example.topics?.includes("telecom"));
     expect(telecom).toHaveLength(6);
+    expect(TELECOM_EXAMPLES.map((example) => example.slug).toSorted()).toEqual(telecom.map((example) => example.slug).toSorted());
     for (const example of telecom) {
       expect(example.policy.collection.cadenceSeconds).toBe(30 * 86_400);
       expect(example.policy.serving.licence).toContain("CC BY");

@@ -40,7 +40,7 @@ function example(slug: string, title: string, description: string, config: Sourc
     description,
     config: { source: "ripestat", ...config },
     publisher: "RIPE NCC",
-    topics: ["internet-infrastructure"],
+    topics: ["telecom"],
     staleAfterSeconds: cadenceSeconds * 3,
     policy: {
       name: "RIPEstat research — republication permission required",
