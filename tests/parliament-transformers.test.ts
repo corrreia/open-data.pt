@@ -167,12 +167,87 @@ describe("Parliament streaming normalization", () => {
     });
     expect(result.summary.products).toContainEqual({ productKey: "memberships", completeness: "partial" });
     expect(result.summary.products?.find((product) => product.productKey === "meetings")?.completeness).toBe("partial");
+    expect(result.records.get("plenary-meetings")?.[0]).toMatchObject({
+      entityKey: "376838",
+      eventTime: "2026-07-17T09:00:00.000Z",
+      payload: { number: "111", type: "Ordinária", session: "1" },
+    });
+    expect(result.records.get("plenary-attendance")?.map((row) => [row.entityKey, row.eventTime, row.payload])).toEqual([
+      [
+        "376838:Synthetic Member One",
+        "2026-07-17T00:00:00.000Z",
+        { meeting_id: "376838", date: "2026-07-17", member: "Synthetic Member One", group: "L", attendance_code: "PR", absence_reason: null },
+      ],
+      [
+        "376838:Synthetic Member Two",
+        "2026-07-17T00:00:00.000Z",
+        { meeting_id: "376838", date: "2026-07-17", member: "Synthetic Member Two", group: "PSD", attendance_code: "FJ", absence_reason: "Doença" },
+      ],
+    ]);
     const data = object(fixture("committees"));
     const meeting = object(array(object(array(data.Comissoes)[0]).Reunioes)[0]);
     meeting.reuDataHora = "2026-10-25T01:30:00";
     const ambiguous = await run("committees", data);
     expect(ambiguous.records.get("meetings")?.[0]?.eventTime).toBeUndefined();
     expect(ambiguous.records.get("meetings")?.[0]?.payload.source_start).toBe("2026-10-25T01:30:00");
+  });
+
+  it("splits initiatives into initiatives, procedure events and votes with each group's parsed position", async () => {
+    const result = await run("initiatives");
+    expect(Object.fromEntries([...result.records].map(([key, rows]) => [key, rows.length]))).toEqual({ initiatives: 2, events: 3, votes: 3 });
+    expect(result.records.get("initiatives")?.[0]?.payload).toMatchObject({
+      author_groups: ["L"],
+      author_deputies: [{ person_id: "40000001", name: "Synthetic Member One", group: "L" }],
+      author_other: null,
+      text_url: "https://app.parlamento.pt/webutils/docs/doc.pdf?path=synthetic",
+      petition_ids: ["60000001"],
+      originated_ids: ["80000002"],
+    });
+    expect(result.records.get("initiatives")?.[1]?.payload.author_other).toEqual({ name: "Governo", abbreviation: "V" });
+    expect(result.records.get("events")?.[0]).toMatchObject({
+      entityKey: "90000001",
+      eventTime: "2025-07-01T00:00:00.000Z",
+      payload: { initiative_id: "80000001", committees: [{ id: "70000001", name: "Synthetic Committee", competent: true }] },
+    });
+    const [committee, plenary, permanent] = result.records.get("votes") ?? [];
+    expect(committee).toMatchObject({
+      entityKey: "95000001",
+      eventTime: "2025-07-10T00:00:00.000Z",
+      payload: { body: "committee", committee_id: "70000001", unanimous: true, in_favour: [{ group: "PSD" }, { group: "CH" }], absent: [{ group: "L" }, { group: "PAN" }] },
+    });
+    expect(plenary?.payload).toMatchObject({
+      body: "plenary",
+      event_id: "90000002",
+      phase: "Votação final global",
+      meeting: "27",
+      unanimous: null,
+      in_favour: [
+        { group: "PSD", count: 86 },
+        { group: "CH", count: 59 },
+      ],
+      against: [
+        { group: "PS", count: 54 },
+        { group: "PSD", deputy: "Synthetic Member Two" },
+      ],
+      abstention: [{ group: "PAN" }],
+      absent: [],
+    });
+    expect(permanent?.payload).toMatchObject({ body: "permanent-committee", in_favour: [], absent: [{ group: "BE" }] });
+    // Speeches, joint-initiative copies and committee documents are not republished.
+    expect(JSON.stringify([...result.records.values()])).not.toContain("not published");
+    expect(JSON.stringify([...result.records.values()])).not.toContain("80000009");
+  });
+
+  it("fails an initiative vote whose summary it cannot read rather than publishing a wrong position", async () => {
+    const data = array(fixture("initiatives"));
+    const vote = () => object(array(object(array(object(data[0]).IniEventos)[1]).Votacao)[0]);
+    vote().detalhe = "A Favor: <I>PSD</I><BR>Talvez: <I>PS</I>";
+    await expect(run("initiatives", data)).rejects.toThrow("unknown position");
+    vote().detalhe = "A Favor: PSD";
+    await expect(run("initiatives", data)).rejects.toThrow("outside its entries");
+    vote().detalhe = null;
+    vote().tipoReuniao = "XX";
+    await expect(run("initiatives", data)).rejects.toThrow("meeting type");
   });
 
   it("rejects duplicate identities, wrong-legislature payloads and incomplete required arrays", async () => {

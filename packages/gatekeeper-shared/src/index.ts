@@ -32,6 +32,7 @@ export {
 } from "./json";
 export { SOURCE_KEY, libraryConfig, resolveTopicFeed, topicCollector, topicFeedKinds, type GatekeeperLibraries, type GatekeeperLibrary, type TopicOptions } from "./library";
 export { lisbonDay, lisbonInstants, lisbonOffsetMinutes, lisbonToUtc } from "./lisbon-time";
+export { r2Staging, type SourceStaging } from "./staging";
 export {
   BUFFERED_SOURCE_MAX_BYTES,
   bufferedTransform,

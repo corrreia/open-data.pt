@@ -1,6 +1,7 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
 import {
   collectNormalized,
+  r2Staging,
   resolveTopicFeed,
   topicCollector,
   topicFeedKinds,
@@ -65,7 +66,10 @@ export default class GovernmentGatekeeper extends WorkerEntrypoint<Env> implemen
       ],
       [
         "parliament",
-        { kinds: Object.values(PARLIAMENT_FEEDS), collector: (config: SourceConfig) => parliamentCollector({ config, fetcher: (input, init) => fetch(input, init) }) },
+        {
+          kinds: Object.values(PARLIAMENT_FEEDS),
+          collector: (config: SourceConfig) => parliamentCollector({ config, fetcher: (input, init) => fetch(input, init), staging: r2Staging(this.env.PARLIAMENT_STAGING) }),
+        },
       ],
     ]);
   }

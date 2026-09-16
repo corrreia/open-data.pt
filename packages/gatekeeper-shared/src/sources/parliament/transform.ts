@@ -20,9 +20,10 @@ import {
 } from "../../index";
 import { parliamentDocument, type ParliamentFeed } from "./parliament";
 
-export const PARLIAMENT_NORMALIZER = { id: "parliament-public-records", version: "1" } as const;
+export const PARLIAMENT_NORMALIZER = { id: "parliament-public-records", version: "2" } as const;
 export const PARLIAMENT_ELEMENT_BYTES = 256 * 1024;
-export const PARLIAMENT_MAX_RECORDS = 50_000;
+// A legislature's attendance alone reaches about 90,000 rows by its fourth year.
+export const PARLIAMENT_MAX_RECORDS = 250_000;
 
 interface Table {
   key: string;
@@ -173,6 +174,71 @@ const TABLES = {
         field("official_url", "url", true),
       ],
     },
+    {
+      key: "plenary-meetings",
+      title: "plenary sittings",
+      role: "event-log",
+      fields: [id("id"), label("number"), field("starts_at", "datetime", true), label("source_start"), label("type"), label("session"), label("legislature")],
+    },
+    {
+      key: "plenary-attendance",
+      title: "plenary attendance",
+      role: "event-log",
+      fields: [id("meeting_id"), date("date"), label("member"), label("group"), label("attendance_code"), label("absence_reason")],
+    },
+  ],
+  initiatives: [
+    {
+      key: "initiatives",
+      title: "initiatives",
+      role: "reference",
+      fields: [
+        id("id"),
+        label("number"),
+        label("type_code"),
+        label("type"),
+        label("title"),
+        label("legislature"),
+        label("session"),
+        structured("author_groups"),
+        structured("author_deputies"),
+        structured("author_other"),
+        field("text_url", "url", true),
+        structured("petition_ids"),
+        structured("origin_ids"),
+        structured("originated_ids"),
+      ],
+    },
+    {
+      key: "events",
+      title: "initiative procedure events",
+      role: "event-log",
+      fields: [id("id"), id("initiative_id"), label("phase_code"), label("phase"), date("date"), label("observation"), structured("committees"), structured("publications")],
+    },
+    {
+      key: "votes",
+      title: "votes on initiatives",
+      role: "event-log",
+      fields: [
+        id("id"),
+        id("initiative_id"),
+        id("event_id"),
+        label("phase"),
+        date("date"),
+        label("body"),
+        label("committee_id"),
+        label("committee"),
+        label("meeting"),
+        label("result"),
+        field("unanimous", "boolean", true),
+        structured("in_favour"),
+        structured("against"),
+        structured("abstention"),
+        structured("absent"),
+        label("description"),
+        structured("publications"),
+      ],
+    },
   ],
 } satisfies Record<ParliamentFeed, Table[]>;
 
@@ -198,7 +264,7 @@ export function transformParliament(body: ReadableStream<Uint8Array>, context: T
     completeness: "complete",
   }));
   const source = streamJsonArray(requireJsonRoot(body, document.arrayPath.length === 0 ? "[" : "{"), document.arrayPath, {
-    maxElementBytes: PARLIAMENT_ELEMENT_BYTES,
+    maxElementBytes: document.elementBytes ?? PARLIAMENT_ELEMENT_BYTES,
     maxEnvelopeBytes: document.envelopeBytes,
   });
   const seen = new Set<string>();
@@ -220,6 +286,8 @@ export function transformParliament(body: ReadableStream<Uint8Array>, context: T
       const item = object(value, "array item");
       if (document.feed === "committees") {
         for (const row of committeeRows(item, document.legislature, partial)) yield emit(row);
+      } else if (document.feed === "initiatives") {
+        for (const row of initiativeRows(item, document.legislature)) yield emit(row);
       } else {
         const row = mainRow(item, document.feed, document.legislature);
         if (row) yield emit(row);
@@ -249,6 +317,9 @@ export function transformParliament(body: ReadableStream<Uint8Array>, context: T
           record: record(key, { number: key, legislature: document.legislature, start_date: sourceDate(item.dataInicio), end_date: sourceDate(item.dataFim) }),
         });
       }
+    }
+    if (document.feed === "committees") {
+      for (const row of plenaryRows(object(envelope.Plenario, "plenary"), document.legislature)) yield emit(row);
     }
     if (document.feed === "activities") {
       for (const [section, key] of Object.entries({ Audiencias: "audiences", Debates: "debates", Deslocacoes: "visits", Eventos: "events" })) {
@@ -349,17 +420,7 @@ function mainRow(item: JsonObject, feed: ParliamentFeed, legislature: string): B
     case "diplomas": {
       requireLegislature(item.Legislatura, legislature);
       const key = identifier(item.Id, "legislation id");
-      const publications = optionalArray(item.Publicacao).map((value) => {
-        const publication = object(value, "publication");
-        return {
-          date: sourceDate(publication.pubdt),
-          number: optionalCode(publication.pubNr),
-          type: text(publication.pubTipo),
-          legislature: text(publication.pubLeg),
-          session: optionalCode(publication.pubSL),
-          official_url: officialUrl(publication.URLDiario),
-        };
-      });
+      const publications = publicationList(item.Publicacao);
       const dates = publications.flatMap((publication) => (publication.date ? [publication.date] : [])).sort();
       const value = record(
         key,
@@ -385,7 +446,8 @@ function mainRow(item: JsonObject, feed: ParliamentFeed, legislature: string): B
     case "activities":
       return activityRow(item, "hearings", legislature);
     case "committees":
-      throw invalidResponse("Committee rows require their scoped normalizer");
+    case "initiatives":
+      throw invalidResponse("Committee and initiative rows require their scoped normalizers");
   }
 }
 
@@ -522,6 +584,220 @@ function* committeeRows(item: JsonObject, legislature: string, partial: Set<stri
         start,
       ),
     };
+  }
+}
+
+/** One initiative, its procedure events, and the plenary and committee votes recorded under them. */
+function* initiativeRows(item: JsonObject, legislature: string): Generator<BuiltRow> {
+  requireLegislature(item.IniLeg, legislature);
+  const initiative = identifier(item.IniId, "initiative id");
+  const other = item.IniAutorOutros === null || item.IniAutorOutros === undefined ? null : object(item.IniAutorOutros, "initiative author");
+  yield {
+    key: "initiatives",
+    record: record(initiative, {
+      id: initiative,
+      number: optionalCode(item.IniNr),
+      type_code: text(item.IniTipo),
+      type: text(item.IniDescTipo),
+      title: text(item.IniTitulo),
+      legislature,
+      session: optionalCode(item.IniSel),
+      author_groups: optionalArray(item.IniAutorGruposParlamentares).flatMap((value) => {
+        const group = text(object(value, "initiative author group").GP);
+        return group ? [group] : [];
+      }),
+      author_deputies: optionalArray(item.IniAutorDeputados).map((value) => {
+        const deputy = object(value, "initiative author deputy");
+        return { person_id: optionalCode(deputy.idCadastro), name: text(deputy.nome), group: text(deputy.GP) };
+      }),
+      author_other: other && (text(other.nome) || text(other.sigla)) ? { name: text(other.nome), abbreviation: text(other.sigla) } : null,
+      text_url: officialUrl(item.IniLinkTexto),
+      petition_ids: referencedIds(item.Peticoes, "petition"),
+      origin_ids: referencedIds(item.IniciativasOrigem, "origin initiative"),
+      originated_ids: referencedIds(item.IniciativasOriginadas, "originated initiative"),
+    }),
+  };
+  for (const value of optionalArray(item.IniEventos)) {
+    const event = object(value, "initiative event");
+    const eventId = identifier(event.OevId, "initiative event id");
+    const day = sourceDate(event.DataFase);
+    const phase = text(event.Fase);
+    const committees = optionalArray(event.Comissao).map((entry) => object(entry, "initiative committee"));
+    yield {
+      key: "events",
+      record: record(
+        eventId,
+        {
+          id: eventId,
+          initiative_id: initiative,
+          phase_code: optionalCode(event.CodigoFase),
+          phase,
+          date: day,
+          observation: text(event.ObsFase),
+          committees: committees.map((committee) => ({ id: optionalCode(committee.IdComissao), name: text(committee.Nome), competent: committee.Competente === "S" })),
+          publications: publicationList(event.PublicacaoFase),
+        },
+        dayClock(day),
+      ),
+    };
+    for (const vote of optionalArray(event.Votacao)) yield voteRow(object(vote, "plenary vote"), initiative, eventId, phase, null);
+    for (const committee of committees) {
+      for (const vote of optionalArray(committee.Votacao)) yield voteRow(object(vote, "committee vote"), initiative, eventId, phase, committee);
+    }
+  }
+}
+
+const MEETING_BODIES = new Map([
+  ["RP", "plenary"],
+  ["CP", "permanent-committee"],
+]);
+
+function voteRow(vote: JsonObject, initiative: string, eventId: string, phase: string | null, committee: JsonObject | null): BuiltRow {
+  const voteId = identifier(vote.id, "vote id");
+  const day = sourceDate(vote.data);
+  const body = committee ? "committee" : MEETING_BODIES.get(text(vote.tipoReuniao) ?? "");
+  if (!body) throw invalidResponse("Parliament plenary vote has an unknown meeting type");
+  const positions = votePositions(vote.detalhe);
+  return {
+    key: "votes",
+    record: record(
+      voteId,
+      {
+        id: voteId,
+        initiative_id: initiative,
+        event_id: eventId,
+        phase,
+        date: day,
+        body,
+        committee_id: committee ? optionalCode(committee.IdComissao) : null,
+        committee: committee ? text(committee.Nome) : null,
+        meeting: optionalCode(vote.reuniao),
+        result: text(vote.resultado),
+        unanimous: vote.unanime === "unanime" || vote.unanime === "S" ? true : null,
+        in_favour: positions.in_favour,
+        against: positions.against,
+        abstention: positions.abstention,
+        // The detail's absence segment and `ausencias` name the same groups; the array only stands in when there is no detail.
+        absent: positions.detailed
+          ? positions.absent
+          : optionalArray(vote.ausencias).flatMap((value) => {
+              const group = text(value);
+              return group ? [{ group }] : [];
+            }),
+        description: text(vote.descricao),
+        publications: publicationList(vote.publicacao),
+      },
+      dayClock(day),
+    ),
+  };
+}
+
+/**
+ * `detalhe` is Parliament's own vote summary: `A Favor: <I>PSD</I>, <I> 59-CH</I><BR>Contra: …`.
+ * An entry is a group, a head count and group (`86-PSD`), or a member voting apart from the group (`Name (PSD)`).
+ */
+function votePositions(value: JsonValue | undefined) {
+  const in_favour: JsonObject[] = [];
+  const against: JsonObject[] = [];
+  const abstention: JsonObject[] = [];
+  const absent: JsonObject[] = [];
+  const lists = new Map([
+    ["A Favor", in_favour],
+    ["Contra", against],
+    ["Abstenção", abstention],
+    ["Ausência", absent],
+  ]);
+  const detail = text(value);
+  for (const segment of detail ? detail.split(/<BR\s*\/?>/i) : []) {
+    const match = /^\s*([^:<]+):(.*)$/s.exec(segment);
+    const list = match ? lists.get((match[1] ?? "").trim()) : undefined;
+    if (!match || !list) throw invalidResponse("Parliament vote detail has an unknown position");
+    const entries = match[2] ?? "";
+    if (entries.replace(/<I>.*?<\/I>/gis, "").replace(/[\s,]/g, "") !== "") throw invalidResponse("Parliament vote detail has text outside its entries");
+    for (const entry of entries.matchAll(/<I>(.*?)<\/I>/gis)) {
+      const trimmed = (entry[1] ?? "").trim();
+      if (trimmed) list.push(voteEntry(trimmed));
+    }
+  }
+  return { detailed: detail !== null, in_favour, against, abstention, absent };
+}
+
+function voteEntry(entry: string): JsonObject {
+  const counted = /^(\d+)-(\S+)$/.exec(entry);
+  if (counted) return { group: counted[2] ?? "", count: Number(counted[1]) };
+  const member = /^(.+?)\s*\(([^()]+)\)$/.exec(entry);
+  if (member) return { group: (member[2] ?? "").trim(), deputy: (member[1] ?? "").trim() };
+  return { group: entry };
+}
+
+function referencedIds(value: JsonValue | undefined, label: string): string[] {
+  return optionalArray(value).map((entry) => identifier(object(entry, label).id, `${label} id`));
+}
+
+function publicationList(value: JsonValue | undefined) {
+  return optionalArray(value).map((entry) => {
+    const publication = object(entry, "publication");
+    return {
+      date: sourceDate(publication.pubdt),
+      number: optionalCode(publication.pubNr),
+      type: text(publication.pubTipo),
+      legislature: text(publication.pubLeg),
+      session: optionalCode(publication.pubSL),
+      official_url: officialUrl(publication.URLDiario),
+    };
+  });
+}
+
+/**
+ * Plenary sittings and who attended each, as Parliament records it: an attendance code per member and,
+ * for an absence, its stated reason. Members carry no identifier here, so a row is its sitting and name.
+ */
+function* plenaryRows(plenary: JsonObject, legislature: string): Generator<BuiltRow> {
+  requireLegislature(object(plenary.DetalheOrgao, "plenary detail").siglaLegislatura, legislature);
+  for (const value of requiredArray(plenary.Reunioes, "plenary sittings")) {
+    const sitting = object(value, "plenary sitting");
+    const meeting = object(sitting.Reuniao, "plenary meeting");
+    requireLegislature(meeting.legDes, legislature);
+    const meetingId = identifier(meeting.reuId, "plenary meeting id");
+    const start = meetingTime(meeting.reuDataHora);
+    yield {
+      key: "plenary-meetings",
+      record: record(
+        meetingId,
+        {
+          id: meetingId,
+          number: optionalCode(meeting.reuNumero),
+          starts_at: start ?? null,
+          source_start: text(meeting.reuDataHora),
+          type: text(meeting.reuTirDes),
+          session: optionalCode(meeting.selNumero),
+          legislature,
+        },
+        start,
+      ),
+    };
+    const attendance = object(sitting.Presencas, "plenary attendance");
+    const day = sourceDate(attendance.dtReuniao);
+    for (const entry of requiredArray(attendance.presencas, "plenary attendance")) {
+      const presence = object(entry, "plenary presence");
+      const member = text(presence.nomeDeputado);
+      if (!member) throw invalidResponse("Parliament omitted a plenary attendee's name");
+      yield {
+        key: "plenary-attendance",
+        record: record(
+          `${meetingId}:${member}`,
+          {
+            meeting_id: meetingId,
+            date: day,
+            member,
+            group: text(presence.siglaGrupo),
+            attendance_code: text(presence.siglaFalta),
+            absence_reason: text(presence.motivoFalta),
+          },
+          dayClock(day),
+        ),
+      };
+    }
   }
 }
 

@@ -112,6 +112,7 @@ The shared helper enforces source, output, frame, row, record, and deadline limi
 
 ## Source boundary rules
 
+- A large source that sends no ETag or Last-Modified can stage its body in an R2 bucket bound to the Worker (`r2Staging` in the shared package) and keep the digest R2 computes in the checkpoint state: an unchanged digest answers `not-modified`, so the file is downloaded but never parsed. Parliament does this for its 93 MB initiatives file. A staging bucket is a cache, never canonical storage.
 - Accept HTTPS source URLs without embedded credentials.
 - Restrict outbound hosts through deployment configuration.
 - Prefer streaming; bound every buffered response before reading it fully.

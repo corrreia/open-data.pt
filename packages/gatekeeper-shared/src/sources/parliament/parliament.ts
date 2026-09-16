@@ -10,6 +10,7 @@ import {
   type SourceBody,
   type SourceConfig,
   type SourceFetch,
+  type SourceStaging,
   type SourceValidator,
 } from "../../index";
 import { limitBytes } from "../../stream";
@@ -52,9 +53,15 @@ export const PARLIAMENT_FEEDS = {
   },
   committees: {
     kind: "committees",
-    title: "Parliamentary committees",
-    description: "Committee reference, published membership histories and meeting metadata.",
+    title: "Parliamentary committees and plenary attendance",
+    description: "Committee reference, published membership histories and meeting metadata, plus plenary sittings and attendance with stated absence reasons.",
     semantics: { domainSubject: "reference", defaultProductRole: "reference" },
+  },
+  initiatives: {
+    kind: "initiatives",
+    title: "Parliamentary initiatives and votes",
+    description: "Bills, draft resolutions and other initiatives, every step of their procedure, and every plenary and committee vote on them with each group's position.",
+    semantics: { domainSubject: "event", defaultProductRole: "event-log" },
   },
 } as const satisfies Record<string, FeedKindDescription>;
 
@@ -65,6 +72,8 @@ interface DocumentDefinition {
   arrayPath: readonly string[];
   sourceBytes: number;
   envelopeBytes: number;
+  /** One array element's cap, when an element can outgrow the default. */
+  elementBytes?: number;
 }
 
 const MIB = 1024 * 1024;
@@ -76,8 +85,10 @@ const DOCUMENTS = {
   // The largest named activity array streams; the other sections together are
   // a measured 1.4 MB bounded envelope and become distinct products after it.
   activities: { page: "DAatividades", prefix: "Atividades", arrayPath: ["Audicoes"], sourceBytes: 4 * MIB, envelopeBytes: 2 * MIB },
-  // This source also contains plenary material outside Comissoes (4.4 MB measured).
-  committees: { page: "DAComposicaoOrgaos", prefix: "OrgaoComposicao", arrayPath: ["Comissoes"], sourceBytes: 8 * MIB, envelopeBytes: 6 * MIB },
+  // Comissoes streams; Plenario (sittings and attendance, 4.1 MB measured) is read from the bounded envelope.
+  committees: { page: "DAComposicaoOrgaos", prefix: "OrgaoComposicao", arrayPath: ["Comissoes"], sourceBytes: 32 * MIB, envelopeBytes: 24 * MIB },
+  // 93 MB for XVII (66 MB for XVI), streamed one initiative at a time; the largest measured initiative is 600 KB.
+  initiatives: { page: "DAIniciativas", prefix: "Iniciativas", arrayPath: [], sourceBytes: 160 * MIB, envelopeBytes: 64 * 1024, elementBytes: 4 * MIB },
 } satisfies Record<ParliamentFeed, DocumentDefinition>;
 
 export interface ParliamentDocument extends DocumentDefinition {
@@ -117,8 +128,12 @@ export function parliamentDocument(config: SourceConfig): ParliamentDocument {
   };
 }
 
-/** Discover fresh encrypted links each time; the file/legislature, never its URL token, is the resource. */
-export async function collectParliamentFeed(config: SourceConfig, state: JsonObject | undefined, fetcher: typeof fetch): Promise<SourceFetch> {
+/**
+ * Discover fresh encrypted links each time; the file/legislature, never its URL token, is the resource.
+ * The download server sends no ETag or Last-Modified, so with staging the body is stored first and its
+ * digest compared with the last collection's: an unchanged file is downloaded but never parsed.
+ */
+export async function collectParliamentFeed(config: SourceConfig, state: JsonObject | undefined, fetcher: typeof fetch, staging?: SourceStaging): Promise<SourceFetch> {
   const document = parliamentDocument(config);
   const page = await htmlPage(new URL(document.pageUrl), fetcher);
   const directory = parliamentDirectoryLink(page, document);
@@ -144,9 +159,18 @@ export async function collectParliamentFeed(config: SourceConfig, state: JsonObj
   const validator = responseValidator(response.headers);
   const nextState: JsonObject = { resource: document.filename };
   if (validator) nextState.validators = { default: { ...validator } };
+  let body = response.body;
+  const declared = Number(length);
+  if (staging && length && Number.isSafeInteger(declared) && declared > 0) {
+    const key = `parliament/${document.filename}`;
+    const digest = await staging.store(key, response.body, declared);
+    if (state?.resource === document.filename && state.digest === digest) return { kind: "not-modified" };
+    nextState.digest = digest;
+    body = await staging.read(key);
+  }
   const fetched: SourceBody = {
     kind: "body",
-    body: limitBytes(response.body, document.sourceBytes),
+    body: limitBytes(body, document.sourceBytes),
     completeness: "complete",
     state: nextState,
     // A durable public directory link is more useful than an expiring encrypted download address.

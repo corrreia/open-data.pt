@@ -9,6 +9,12 @@
   "vars": {
     "UDATA_ALLOWED_HOSTS": "dados.gov.pt",
   },
+  // Parliament's download server sends no validators: each document is staged here and its R2 MD5
+  // compared with the last collection's, so an unchanged file is never parsed. One object per file,
+  // overwritten on every collection; a lifecycle rule may expire them, the next collection stages again.
+  "r2_buckets": [{ "binding": "PARLIAMENT_STAGING", "bucket_name": "open-data-pt-gatekeeper-staging" }],
+  // Initiatives is a 93 MB JSON document: about 5 s of CPU to tokenise, plus normalisation.
+  "limits": { "cpu_ms": 120000 },
   "observability": {
     "enabled": true,
     // The kernel records every acquisition's outcome; a tenth of invocations is enough to debug.

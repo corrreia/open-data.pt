@@ -1,0 +1,52 @@
+[
+  {
+    "DataFimleg": null, "DataInicioleg": "2025-06-03", "IniAnexos": [{ "anexoFich": "https://app.parlamento.pt/annex.pdf", "anexoNome": "Anexo" }],
+    "IniAutorDeputados": [{ "GP": "L", "idCadastro": "40000001", "nome": "Synthetic Member One" }],
+    "IniAutorGruposParlamentares": [{ "GP": "L" }], "IniAutorOutros": { "iniAutorComissao": null, "nome": null, "sigla": null },
+    "IniciativasEuropeias": null, "IniciativasOrigem": null, "IniciativasOriginadas": [{ "id": "80000002", "numero": "3", "tipo": "D" }],
+    "IniDescTipo": "Projeto de Lei", "IniEpigrafe": null, "IniId": "80000001", "IniLeg": "XVII", "IniLinkTexto": "http://app.parlamento.pt/webutils/docs/doc.pdf?path=synthetic",
+    "IniNr": "12", "IniObs": null, "IniSel": "1", "IniTextoSubst": "NAO", "IniTextoSubstCampo": null, "IniTipo": "J", "IniTitulo": "Synthetic bill", "Links": null,
+    "Peticoes": [{ "id": "60000001", "numero": "1" }], "PropostasAlteracao": null,
+    "IniEventos": [
+      {
+        "ActId": null, "ActividadesConjuntas": null, "AnexosFase": null, "CodigoFase": "10", "DataFase": "2025-07-01", "EvtId": "1", "Fase": "Entrada", "Links": null, "ObsFase": null,
+        "OevId": "90000001", "OevTextId": null, "PcpublicasConjuntas": null, "PeticoesConjuntas": null, "RecursoDeputados": null, "RecursoGP": null, "TextosAprovados": null, "Votacao": null,
+        "IniciativasConjuntas": [{ "id": "80000009" }], "Intervencoesdebates": [{ "orador": "not published" }],
+        "PublicacaoFase": [{ "pubdt": "2025-07-02", "pubLeg": "XVII", "pubNr": "5", "pubSL": "1", "pubTipo": "DAR II série A", "URLDiario": "https://debates.parlamento.pt/catalogo/synthetic" }],
+        "Comissao": [
+          {
+            "IdComissao": "70000001", "Nome": "Synthetic Committee ", "Competente": "S", "Documentos": [{ "body": "not published" }],
+            "Votacao": [{ "ausencias": ["L", "PAN"], "data": "2025-07-10", "descricao": null, "detalhe": "A Favor: <I>PSD</I>, <I> CH</I><BR>Ausência: <I>L</I>, <I> PAN</I>", "id": "95000001", "publicacao": null, "resultado": "Aprovado", "reuniao": "7", "tipoReuniao": null, "unanime": "unanime" }]
+          }
+        ]
+      },
+      {
+        "ActId": null, "ActividadesConjuntas": null, "AnexosFase": null, "CodigoFase": "300", "DataFase": "2025-10-28", "EvtId": "2", "Fase": "Votação final global", "Links": null, "ObsFase": "Synthetic note",
+        "OevId": "90000002", "OevTextId": null, "PcpublicasConjuntas": null, "PeticoesConjuntas": null, "RecursoDeputados": null, "RecursoGP": null, "TextosAprovados": null, "IniciativasConjuntas": null, "Intervencoesdebates": null,
+        "PublicacaoFase": null, "Comissao": null,
+        "Votacao": [
+          {
+            "ausencias": null, "data": "2025-10-28", "descricao": "Texto de substituição",
+            "detalhe": "A Favor: <I>86-PSD</I>, <I> 59-CH</I><BR>Contra:<I>54-PS</I>, <I> Synthetic Member Two (PSD)</I><BR>Abstenção: <I>PAN</I>",
+            "id": "95000002", "publicacao": [{ "pubdt": "2025-10-29", "pubLeg": "XVII", "pubNr": "30", "pubSL": "1", "pubTipo": "DAR I série", "URLDiario": "https://debates.parlamento.pt/catalogo/vote" }],
+            "resultado": "Aprovado", "reuniao": "27", "tipoReuniao": "RP", "unanime": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "DataFimleg": null, "DataInicioleg": "2025-06-03", "IniAnexos": null, "IniAutorDeputados": null, "IniAutorGruposParlamentares": null,
+    "IniAutorOutros": { "iniAutorComissao": null, "nome": "Governo", "sigla": "V" }, "IniciativasEuropeias": null, "IniciativasOrigem": [{ "id": "80000001" }], "IniciativasOriginadas": null,
+    "IniDescTipo": "Projeto de Deliberação", "IniEpigrafe": null, "IniId": "80000002", "IniLeg": "XVII", "IniLinkTexto": null, "IniNr": "3", "IniObs": null, "IniSel": "1",
+    "IniTextoSubst": "NAO", "IniTextoSubstCampo": null, "IniTipo": "D", "IniTitulo": "Synthetic deliberation", "Links": null, "Peticoes": null, "PropostasAlteracao": null,
+    "IniEventos": [
+      {
+        "ActId": null, "ActividadesConjuntas": null, "AnexosFase": null, "CodigoFase": "301", "DataFase": "2025-11-05", "EvtId": "3", "Fase": "Votação Deliberação", "Links": null, "ObsFase": null,
+        "OevId": "90000003", "OevTextId": null, "PcpublicasConjuntas": null, "PeticoesConjuntas": null, "RecursoDeputados": null, "RecursoGP": null, "TextosAprovados": null, "IniciativasConjuntas": null,
+        "Intervencoesdebates": null, "PublicacaoFase": null, "Comissao": null,
+        "Votacao": [{ "ausencias": ["BE"], "data": "2025-11-05", "descricao": null, "detalhe": null, "id": "95000003", "publicacao": null, "resultado": "Aprovado", "reuniao": "30", "tipoReuniao": "CP", "unanime": "unanime" }]
+      }
+    ]
+  }
+]
