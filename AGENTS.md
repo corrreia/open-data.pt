@@ -43,6 +43,7 @@ Run them in this order, in the foreground, one at a time:
 
 ```bash
 pnpm lint
+pnpm format:check
 pnpm types
 pnpm types:check
 pnpm typecheck
@@ -54,6 +55,7 @@ pnpm deploy:dry-run
 
 ## Constraints
 
+- Oxfmt owns formatting: run `pnpm format` before committing; CI rejects unformatted files.
 - The vendored anti-slop Oxlint rules are errors: no runtime `typeof`, no widening anonymous types, no `unknown` parameters or returns, no unsafe dictionary types, a `SAFETY:` comment before every type assertion.
 - **No module mocking.** Inject a `fetcher` or a fixture; never stub a module.
 - Match the existing test style: fixtures under `tests/fixtures/`, no network in unit tests.

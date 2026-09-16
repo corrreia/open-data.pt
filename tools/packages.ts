@@ -74,7 +74,7 @@ function servicesBlock(topics: string[]): string {
   const entries = topics
     .map((topic) => `    { "binding": "GATEKEEPER_${topic.toUpperCase()}", "service": "open-data-pt-gatekeeper-${topic}" }`)
     .join(",\n");
-  return `${SERVICES_COMMENT}  "services": [\n${entries}\n  ],\n`;
+  return `${SERVICES_COMMENT}  "services": [\n${entries},\n  ],\n`;
 }
 
 /** The kernel's Wrangler config as it should be: only the `services` array and its comment are replaced. */

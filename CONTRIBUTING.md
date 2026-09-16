@@ -85,6 +85,7 @@ It resolves and collects exactly the way the deployed Worker does, and reads the
 
 ```bash
 pnpm lint
+pnpm format:check
 pnpm types
 pnpm types:check
 pnpm typecheck
@@ -94,7 +95,7 @@ pnpm deploy:dry-run
 
 `pnpm packages:sync` regenerates the root scripts and the kernel's service bindings after adding or removing a Worker; a test fails when the checked-in files drift from it.
 
-The repository lints with vendored anti-slop rules: no runtime `typeof`, no widening anonymous types, a `SAFETY:` comment before every type assertion, no module mocking. Match the surrounding test style.
+`pnpm format` formats with Oxfmt; CI runs every check above on each pull request. The repository lints with vendored anti-slop rules: no runtime `typeof`, no widening anonymous types, a `SAFETY:` comment before every type assertion, no module mocking. Match the surrounding test style.
 
 ## What is not yours to do
 
