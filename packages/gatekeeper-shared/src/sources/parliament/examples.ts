@@ -79,7 +79,7 @@ function example(
     description,
     config,
     publisher: "Assembleia da República",
-    topics: ["government", "parliament"],
+    topics: ["government"],
     policy: {
       name: `Parliament ${feed}: ${cadenceSeconds === 604_800 ? "weekly professional reference" : "daily public record updates"}`,
       version: 1,
