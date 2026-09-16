@@ -1,31 +1,13 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { asStringList, parseJson, type ExampleFeed } from "@open-data-pt/gatekeeper-shared";
-import { CITIES_EXAMPLES } from "../packages/gatekeeper-cities/src/examples";
-import { ENERGY_EXAMPLES } from "../packages/gatekeeper-energy/src/examples";
-import { ENVIRONMENT_EXAMPLES } from "../packages/gatekeeper-environment/src/examples";
-import { HEALTH_EXAMPLES } from "../packages/gatekeeper-health/src/examples";
-import { MOBILITY_EXAMPLES } from "../packages/gatekeeper-mobility/src/examples";
-import { ECONOMY_EXAMPLES } from "../packages/gatekeeper-economy/src/examples";
-import { GOVERNMENT_EXAMPLES } from "../packages/gatekeeper-government/src/examples";
-import { SOCIETY_EXAMPLES } from "../packages/gatekeeper-society/src/examples";
-import { TELECOM_EXAMPLES } from "../packages/gatekeeper-telecom/src/examples";
+import { PLANS, workerExamples } from "./catalog";
 
 interface TopicExamples {
   topic: string;
   examples: ExampleFeed[];
 }
-const topics: TopicExamples[] = [
-  { topic: "cities", examples: CITIES_EXAMPLES },
-  { topic: "energy", examples: ENERGY_EXAMPLES },
-  { topic: "environment", examples: ENVIRONMENT_EXAMPLES },
-  { topic: "health", examples: HEALTH_EXAMPLES },
-  { topic: "mobility", examples: MOBILITY_EXAMPLES },
-  { topic: "economy", examples: ECONOMY_EXAMPLES },
-  { topic: "society", examples: SOCIETY_EXAMPLES },
-  { topic: "government", examples: GOVERNMENT_EXAMPLES },
-  { topic: "telecom", examples: TELECOM_EXAMPLES },
-];
+const topics: TopicExamples[] = PLANS.map((plan) => ({ topic: plan.topic, examples: workerExamples(plan.topic) }));
 const baseline = new Set(asStringList(parseJson(readFileSync(new URL("./fixtures/source-expansion-baseline-slugs.json", import.meta.url), "utf8"))));
 
 describe("source expansion inventory", () => {

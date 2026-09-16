@@ -150,7 +150,7 @@ export const OGC_EXAMPLES: ExampleFeed[] = [
     policy: attributePolicy("OGC weekly attribute table", AZORES_SERVING, 4 * MEBIBYTE),
     staleAfterSeconds: 1_209_600,
     publisher: "Governo dos Açores",
-    topics: ["mobility", "environment"],
+    topics: ["environment", "mobility"],
   },
   {
     slug: "azores-operadores-residuos-feed",

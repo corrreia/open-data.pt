@@ -68,17 +68,12 @@ describe("public API contract", () => {
   it("exposes no legacy transform or history RPC on Gatekeeper entrypoints", () => {
     const topics = workerTopics();
     expect(topics.length).toBeGreaterThan(0);
-    for (const topic of topics) {
-      const name = `gatekeeper-${topic}`;
-      const index = readFileSync(`packages/${name}/src/index.ts`, "utf8");
-      expect(index).not.toMatch(/async\s+transform\s*\(/);
-      expect(index).not.toMatch(/async\s+collectHistory\s*\(/);
-      const sources = readdirSync(`packages/${name}/src`)
-        .filter((file) => file.endsWith(".ts"))
-        .map((file) => readFileSync(`packages/${name}/src/${file}`, "utf8"))
-        .join("\n");
-      expect(sources, name).toContain("collectNormalized");
-    }
+    // Every topic Worker is generated to call the one factory, so the factory is the entrypoint to check.
+    for (const topic of topics) expect(readFileSync(`packages/gatekeeper-${topic}/src/index.ts`, "utf8")).toContain("topicGatekeeper<Env>(");
+    const factory = readFileSync("packages/gatekeeper-shared/src/topic-worker.ts", "utf8");
+    expect(factory).not.toMatch(/async\s+transform\s*\(/);
+    expect(factory).not.toMatch(/async\s+collectHistory\s*\(/);
+    expect(factory).toContain("collectNormalized");
   });
 
   it("mounts Scalar against the published OpenAPI document", () => {

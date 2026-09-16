@@ -283,7 +283,11 @@ function quality(run: GtfsRun): TransformQuality {
 class RowByRow implements EntryNormalizer {
   rejected = 0;
 
-  constructor(private readonly convert: (row: GtfsRow) => CanonicalRecord | undefined) {}
+  private readonly convert: (row: GtfsRow) => CanonicalRecord | undefined;
+
+  constructor(convert: (row: GtfsRow) => CanonicalRecord | undefined) {
+    this.convert = convert;
+  }
 
   row(row: GtfsRow): CanonicalRecord | undefined {
     const converted = this.convert(row);
@@ -339,7 +343,11 @@ class PathLines implements EntryNormalizer {
   private points = 0;
   private readonly paths = new Map<string, number[]>();
 
-  constructor(private readonly maximumPoints: number) {}
+  private readonly maximumPoints: number;
+
+  constructor(maximumPoints: number) {
+    this.maximumPoints = maximumPoints;
+  }
 
   row(row: GtfsRow): CanonicalRecord | undefined {
     const id = required(row["shape_id"]);

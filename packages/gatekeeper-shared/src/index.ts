@@ -30,9 +30,21 @@ export {
   type JsonObject,
   type JsonValue,
 } from "./json";
-export { SOURCE_KEY, libraryConfig, resolveTopicFeed, topicCollector, topicFeedKinds, type GatekeeperLibraries, type GatekeeperLibrary, type TopicOptions } from "./library";
+export {
+  SOURCE_KEY,
+  libraryConfig,
+  resolveTopicFeed,
+  topicCollector,
+  topicFeedKinds,
+  type GatekeeperLibraries,
+  type GatekeeperLibrary,
+  type LibraryDeployment,
+  type R2BucketDeployment,
+  type TopicOptions,
+} from "./library";
 export { lisbonDay, lisbonInstants, lisbonOffsetMinutes, lisbonToUtc } from "./lisbon-time";
 export { r2Staging, type SourceStaging } from "./staging";
+export { TOPICS, isTopic, type Topic } from "./topics";
 export {
   BUFFERED_SOURCE_MAX_BYTES,
   bufferedTransform,
@@ -454,13 +466,14 @@ export interface FeedGatekeeper extends WorkerEntrypoint {
 }
 
 export class GatekeeperError extends Error {
-  constructor(
-    message: string,
-    readonly code: "invalid-config" | "source-denied" | "upstream-error" | "invalid-response" | "response-too-large",
-    readonly retryAfterSeconds?: number,
-  ) {
+  readonly code: "invalid-config" | "source-denied" | "upstream-error" | "invalid-response" | "response-too-large";
+  readonly retryAfterSeconds: number | undefined;
+
+  constructor(message: string, code: GatekeeperError["code"], retryAfterSeconds?: number) {
     super(message);
     this.name = "GatekeeperError";
+    this.code = code;
+    this.retryAfterSeconds = retryAfterSeconds;
   }
 }
 

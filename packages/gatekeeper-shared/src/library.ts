@@ -15,8 +15,34 @@ export interface GatekeeperLibrary {
 /** The libraries one topic Worker carries, by the `source` value that selects them. */
 export type GatekeeperLibraries = ReadonlyMap<string, GatekeeperLibrary>;
 
+/** An R2 bucket a library reads and writes through the Worker that carries it. */
+export interface R2BucketDeployment {
+  binding: string;
+  bucketName: string;
+}
+
+/**
+ * What a library needs from any Worker that carries it, and how it is built
+ * from that Worker's environment. `pnpm packages:sync` writes the vars,
+ * secrets, buckets and CPU limit into the Wrangler config of every topic
+ * Worker whose feeds use the library; nothing is copied by hand.
+ */
+export interface LibraryDeployment<E> {
+  /** The `source` value its examples carry. */
+  source: string;
+  /** Vars it reads, with their deployed values. */
+  vars: Readonly<Record<string, string>>;
+  /** Secret names, set with `wrangler secret put` on the Worker that carries the library. */
+  secrets?: readonly string[];
+  r2Buckets?: readonly R2BucketDeployment[];
+  /** The CPU limit one collection needs; a Worker takes the largest of its libraries'. */
+  cpuMs?: number;
+  /** Builds the library from the Worker's environment. */
+  library: (env: E) => GatekeeperLibrary;
+}
+
 export interface TopicOptions {
-  /** The Worker's own kind, which is its topic: `mobility`, `energy`, `telecom`, … */
+  /** The Worker's own kind, which is its topic (a key of `TOPICS`). */
   gatekeeperKind: string;
   libraries: GatekeeperLibraries;
 }

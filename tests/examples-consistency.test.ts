@@ -1,16 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { isJsonObject, isJsonString, parseJson, type ExampleFeed } from "@open-data-pt/gatekeeper-shared";
-import { CITIES_EXAMPLES } from "../packages/gatekeeper-cities/src/examples";
-import { ECONOMY_EXAMPLES } from "../packages/gatekeeper-economy/src/examples";
-import { ENERGY_EXAMPLES } from "../packages/gatekeeper-energy/src/examples";
-import { ENVIRONMENT_EXAMPLES } from "../packages/gatekeeper-environment/src/examples";
-import { GOVERNMENT_EXAMPLES } from "../packages/gatekeeper-government/src/examples";
-import { HEALTH_EXAMPLES } from "../packages/gatekeeper-health/src/examples";
-import { MOBILITY_EXAMPLES } from "../packages/gatekeeper-mobility/src/examples";
-import { SOCIETY_EXAMPLES } from "../packages/gatekeeper-society/src/examples";
-import { TELECOM_EXAMPLES } from "../packages/gatekeeper-telecom/src/examples";
+import { isJsonObject, isJsonString, isTopic, parseJson, type ExampleFeed } from "@open-data-pt/gatekeeper-shared";
 import { workerTopics } from "../tools/packages";
+import { INSTALLED, PLANS } from "./catalog";
 
 /** One library's module namespace, as this test reads it: exported values, one of which is its examples. */
 interface LibraryModule {
@@ -74,19 +66,8 @@ function publicationHolds(): Map<string, string> {
 
 const PUBLICATION_HOLDS = publicationHolds();
 
-/** What each topic Worker installs, which is what the Registry turns into feeds. */
-const WORKERS = new Map<string, readonly ExampleFeed[]>([
-  ["cities", CITIES_EXAMPLES],
-  ["economy", ECONOMY_EXAMPLES],
-  ["energy", ENERGY_EXAMPLES],
-  ["environment", ENVIRONMENT_EXAMPLES],
-  ["government", GOVERNMENT_EXAMPLES],
-  ["health", HEALTH_EXAMPLES],
-  ["mobility", MOBILITY_EXAMPLES],
-  ["society", SOCIETY_EXAMPLES],
-  ["telecom", TELECOM_EXAMPLES],
-]);
-const DEPLOYED: ExampleFeed[] = [...WORKERS.values()].flat();
+/** What the topic Workers install, which is what the Registry turns into feeds. */
+const DEPLOYED: ExampleFeed[] = INSTALLED;
 
 describe("example feed policies", () => {
   it("never call a feed stale before its next collection is due", () => {
@@ -135,25 +116,26 @@ describe("libraries and the Workers that carry them", () => {
     ]);
   });
 
-  it("lists every Worker package here", () => {
-    expect([...WORKERS.keys()]).toEqual(workerTopics());
+  it("has a Worker package for every generated Worker", () => {
+    expect(PLANS.map((plan) => plan.topic)).toEqual(workerTopics());
   });
 
-  it("puts every feed in a Worker whose topic the feed carries", () => {
-    const misplaced = [...WORKERS].flatMap(([topic, examples]) =>
-      examples.filter((example) => !example.topics?.includes(topic)).map((example) => `${example.slug} (${(example.topics ?? []).join(", ")}) is in ${topic}`),
-    );
-    expect(misplaced).toEqual([]);
+  it("names a catalog topic first on every example, held or not, since that topic's Worker runs it", async () => {
+    const libraries = await libraryExamples();
+    const orphans = [...libraries.values()]
+      .flat()
+      .filter((example) => !isTopic(example.topics?.[0]))
+      .map((example) => `${example.slug} (${(example.topics ?? []).join(", ")})`);
+    expect(orphans).toEqual([]);
   });
 
   it("wires every library, held or not, into a Worker", () => {
-    const wiring = workerTopics()
-      .map((topic) => readFileSync(new URL(`../packages/gatekeeper-${topic}/src/index.ts`, import.meta.url), "utf8"))
-      .join("\n");
-    const unwired = Object.keys(LIBRARIES)
-      .map(libraryName)
-      .filter((name) => !new RegExp(`\\[\\s*"${name}",\\s*\\{`).test(wiring));
-    expect(unwired).toEqual([]);
+    const wired = new Set(PLANS.flatMap((plan) => plan.libraries.map((library) => library.source)));
+    expect(
+      Object.keys(LIBRARIES)
+        .map(libraryName)
+        .filter((name) => !wired.has(name)),
+    ).toEqual([]);
   });
 
   it("gives every cleared library example to exactly one Worker", async () => {

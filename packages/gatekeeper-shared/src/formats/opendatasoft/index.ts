@@ -13,3 +13,4 @@ export {
   type Fetcher,
 } from "./opendatasoft";
 export { OpendatasoftTransformer, SAMPLE_CHARACTERS, SAMPLE_ROWS, seriesSlug } from "./transform";
+export { OPENDATASOFT_DEPLOYMENT } from "./worker";

@@ -192,12 +192,14 @@ class RowPublisher {
   private inSample = true;
   private accepted = 0;
 
-  constructor(
-    private readonly columns: ProfiledColumn[],
-    private readonly keyField: string | undefined,
-    private readonly eventTimeColumn: string | undefined,
-    sample: JsonObject[],
-  ) {
+  private readonly columns: ProfiledColumn[];
+  private readonly keyField: string | undefined;
+  private readonly eventTimeColumn: string | undefined;
+
+  constructor(columns: ProfiledColumn[], keyField: string | undefined, eventTimeColumn: string | undefined, sample: JsonObject[]) {
+    this.columns = columns;
+    this.keyField = keyField;
+    this.eventTimeColumn = eventTimeColumn;
     this.sampleKeys = countKeys(keyField, sample);
     for (const column of columns) this.counters.set(column.name, emptyCounter());
   }

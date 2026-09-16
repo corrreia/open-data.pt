@@ -127,11 +127,15 @@ class CsvParser {
   private rowStarted = false;
   private rowBytes = 0;
 
-  constructor(
-    private readonly delimiter: string,
-    private readonly maxRowBytes: number,
-    private readonly measure: (text: string, start: number, end: number) => number,
-  ) {}
+  private readonly delimiter: string;
+  private readonly maxRowBytes: number;
+  private readonly measure: (text: string, start: number, end: number) => number;
+
+  constructor(delimiter: string, maxRowBytes: number, measure: (text: string, start: number, end: number) => number) {
+    this.delimiter = delimiter;
+    this.maxRowBytes = maxRowBytes;
+    this.measure = measure;
+  }
 
   *push(text: string): Generator<string[]> {
     const length = text.length;

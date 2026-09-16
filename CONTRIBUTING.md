@@ -8,17 +8,17 @@ open-data.pt collects Portuguese public data and publishes it as cacheable JSON.
 packages/gatekeeper-shared/src/
   formats/<format>/     arcgis  ckan  opendatasoft  gtfs  gbfs  udata  ogc
   sources/<name>/       carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat  parliament  ripestat  peeringdb
-packages/gatekeeper-<topic>/
+packages/gatekeeper-<topic>/    generated, one per topic:
                         cities  economy  energy  environment  government  health  mobility  society  telecom
 apps/kernel/            storage, history, the API and the site
 ```
 
 1. **A library per format.** Anything with a standard — GTFS, GBFS, ArcGIS, CKAN, Opendatasoft, uData, OGC API Features — is parsed once, under `formats/`. A Worker never contains parsing.
 2. **A library per bespoke source,** under `sources/`: Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, RIPEstat, PeeringDB.
-3. **One Worker per topic:** `cities`, `economy`, `energy`, `environment`, `government`, `health`, `mobility`, `society`, `telecom`. A Worker is named for what its data is about, never for who publishes it or how: there is no `statistics` Worker, and INE's indicators live in `economy`, `society`, `mobility` and `telecom`. A Worker is wiring: its libraries, its vars and secrets, its example feeds. A feed lives in a Worker whose topic its `topics` list carries (a test checks it), and a library several topics need is wired into each of them. The publisher is a label on each feed, shown on the site; it is not a code boundary.
+3. **One Worker per topic, generated.** A topic is what the data is about, never who publishes it or how: there is no `statistics` Worker, and INE's indicators run in `economy`, `society`, `mobility` and `telecom`. A feed runs in the Worker of its **first** topic (the topics are `TOPICS` in `packages/gatekeeper-shared/src/topics.ts`). Each library's `worker.ts` declares the vars, secrets, buckets and CPU limit it needs, and `pnpm packages:sync` writes every `packages/gatekeeper-<topic>/` from those declarations and the feeds' first topics. Nobody edits a Worker package; to move a feed, change its `topics`. The publisher is a label on each feed, shown on the site; it is not a code boundary.
 4. **Feed slugs never change.** A feed's ID derives from its slug, so moving a feed between Workers keeps its history. Renaming a slug throws that history away.
 
-A library exports its feed-kind table, `validate<Name>FeedConfig`, `collect<Name>Feed`, its transformer, its examples array, and `<name>Collector(options)` — the factory a Worker calls. Every example configuration carries `source: "<library>"`, which is what routes it inside its Worker; the library never sees that key.
+A library exports its feed-kind table, `validate<Name>FeedConfig`, `collect<Name>Feed`, its transformer, its examples array, `<name>Collector(options)`, and `<NAME>_DEPLOYMENT` from `worker.ts` — what a Worker needs to carry it. Every example configuration carries `source: "<library>"`, which is what routes it inside its Worker; the library never sees that key.
 
 ## The four kinds of contribution
 
@@ -39,15 +39,15 @@ One entry in that library's `examples.ts`. Nothing else.
 }
 ```
 
-If several Workers carry the library, each selects its share (ArcGIS is split between `cities` and `environment`, Opendatasoft between `energy` and `health`, INE and Eurostat by a feed's first topic, uData by topic), so check `packages/gatekeeper-<topic>/src/examples.ts` picks yours up.
+The first entry in `topics` decides which Worker runs it. Then `pnpm packages:sync`: if that Worker did not carry the library yet, it does now.
 
 ### A new source on a format we already read
 
-The example above, plus its hostname in the Worker's allowlist var (`CKAN_ALLOWED_HOSTS`, `ARCGIS_ALLOWED_HOSTS`, …) in `packages/gatekeeper-<topic>/wrangler.jsonc`.
+The example above, plus its hostname in the library's allowlist var (`CKAN_ALLOWED_HOSTS`, `ARCGIS_ALLOWED_HOSTS`, …) in that library's `worker.ts`, then `pnpm packages:sync`.
 
 ### A new bespoke source
 
-A directory under `packages/gatekeeper-shared/src/sources/<name>/`: `<name>.ts` (feed kinds, validation, fetching), `transform.ts` (bytes to products), `examples.ts`, `collector.ts` (the factory), `index.ts` (the barrel). Then one line in the `libraries()` of the Worker for its topic and its `<NAME>_API_ORIGIN` var. A topic with no Worker yet gets a new `packages/gatekeeper-<topic>/` and `pnpm packages:sync`. Fixture tests under `tests/` with saved source responses — no network in unit tests, and no module mocking.
+A directory under `packages/gatekeeper-shared/src/sources/<name>/`: `<name>.ts` (feed kinds, validation, fetching), `transform.ts` (bytes to products), `examples.ts`, `collector.ts` (the factory), `worker.ts` (its `<NAME>_API_ORIGIN` var and anything else a Worker must give it), `index.ts` (the barrel). Then `pnpm packages:sync`, which wires it into the Worker of its examples' first topic; a topic with no Worker yet needs only its key in `TOPICS`. Fixture tests under `tests/` with saved source responses — no network in unit tests, and no module mocking.
 
 ### A new format
 
@@ -93,7 +93,7 @@ pnpm exec vitest run --maxWorkers=2
 pnpm deploy:dry-run
 ```
 
-`pnpm packages:sync` regenerates the root scripts and the kernel's service bindings after adding or removing a Worker; a test fails when the checked-in files drift from it.
+`pnpm packages:sync` regenerates every topic Worker, the root scripts and the kernel's service bindings; a test fails when the checked-in files drift from it. After it creates a Worker, run `pnpm install` and `pnpm types`.
 
 `pnpm format` formats with Oxfmt; CI runs every check above on each pull request. The repository lints with vendored anti-slop rules: no runtime `typeof`, no widening anonymous types, a `SAFETY:` comment before every type assertion, no module mocking. Match the surrounding test style.
 

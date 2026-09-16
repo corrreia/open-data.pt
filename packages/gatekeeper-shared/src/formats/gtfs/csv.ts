@@ -29,7 +29,11 @@ export class GtfsCsvReader {
   private skipLineFeed = false;
   private started = false;
 
-  constructor(private readonly maximumRowCharacters = MAX_ROW_CHARACTERS) {}
+  private readonly maximumRowCharacters: number;
+
+  constructor(maximumRowCharacters = MAX_ROW_CHARACTERS) {
+    this.maximumRowCharacters = maximumRowCharacters;
+  }
 
   push(text: string): GtfsRow[] {
     const rows: GtfsRow[] = [];

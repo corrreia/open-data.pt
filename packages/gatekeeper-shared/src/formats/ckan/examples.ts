@@ -81,7 +81,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     policy: DAILY_REFERENCE,
     staleAfterSeconds: 604_800,
     publisher: "Câmara Municipal do Porto",
-    topics: ["culture", "cities"],
+    topics: ["cities", "culture"],
   },
   {
     slug: "porto-cultural-agenda-feed",
@@ -96,7 +96,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     policy: DAILY_CHANGES,
     staleAfterSeconds: 172_800,
     publisher: "Câmara Municipal do Porto",
-    topics: ["culture", "cities"],
+    topics: ["cities", "culture"],
   },
   {
     slug: "porto-loading-zones-feed",
@@ -119,7 +119,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "Pharmacies in Cascais with addresses and locations.",
     "geocascais-farmacias",
     "94238d3f-4832-4927-977e-22e82940a9d9",
-    ["health", "cities"],
+    ["cities", "health"],
   ),
   cascaisExample(
     "cascais-defibrillators-feed",
@@ -127,7 +127,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "Locations of automated external defibrillators available to the public in Cascais.",
     "geocascais-desfibrilhador",
     "073e2257-3bb8-4065-a503-a901dff66295",
-    ["health", "cities"],
+    ["cities", "health"],
   ),
   cascaisExample(
     "cascais-health-facilities-feed",
@@ -135,7 +135,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "Health centres, hospitals, and other health facilities in Cascais.",
     "geocascais-equipamentosaude",
     "1f32f448-7ea4-4d16-a64b-9e4eb4fffa12",
-    ["health", "cities"],
+    ["cities", "health"],
   ),
   cascaisExample(
     "cascais-shared-mobility-stations-feed",
@@ -143,7 +143,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "Stations for shared bicycles and scooters in Cascais.",
     "geocascais-estacaopartilhamicromobilidade",
     "6b19cc5b-7e82-4ba5-b5b0-747725a99b4e",
-    ["mobility", "cities"],
+    ["cities", "mobility"],
   ),
   cascaisExample(
     "cascais-bus-stops-feed",
@@ -151,7 +151,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "Bus stops in Cascais with their location and shelter details.",
     "geocascais-paragemautocarro",
     "a5375dc1-824a-48ec-b7e3-8030d5543285",
-    ["mobility", "cities"],
+    ["cities", "mobility"],
   ),
   cascaisExample(
     "cascais-train-stations-feed",
@@ -159,7 +159,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "Railway stations on the Cascais line within the municipality.",
     "geocascais-estacaocomboios",
     "86545ad5-30a4-45c6-a311-e4a6d01d6762",
-    ["mobility", "cities"],
+    ["cities", "mobility"],
   ),
   cascaisExample(
     "cascais-taxi-ranks-feed",
@@ -167,11 +167,11 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "Taxi ranks in Cascais with their location and number of places.",
     "geocascais-pracataxis",
     "7c2f6153-f9f9-488d-867c-ceb050e48d43",
-    ["mobility", "cities"],
+    ["cities", "mobility"],
   ),
   cascaisExample("cascais-cycle-paths-feed", "Cascais cycle paths", "Cycle path segments in Cascais.", "geocascais-ciclovia", "74649057-6245-4214-a68c-d4acc3753b7d", [
-    "mobility",
     "cities",
+    "mobility",
   ]),
   cascaisExample(
     "cascais-forest-fires-feed",
@@ -179,7 +179,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "Areas burnt by recorded forest fires in Cascais, with their dates.",
     "geocascais-incendioflorestal",
     "062d1d34-dce0-4a5a-bae1-99cc7f124bcf",
-    ["environment", "cities"],
+    ["cities", "environment"],
   ),
   cascaisExample(
     "cascais-fire-stations-feed",
@@ -187,7 +187,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "Fire brigade stations in Cascais.",
     "geocascais-quartelbombeiros",
     "8b4c8466-3df8-439c-9b3d-c5419395e916",
-    ["society", "cities"],
+    ["cities", "society"],
   ),
   cascaisExample(
     "cascais-tsunami-meeting-points-feed",
@@ -195,11 +195,11 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "Evacuation meeting points to use in case of a tsunami warning in Cascais.",
     "geocascais-pontosencontrotsunami",
     "f6c7b517-7663-4f7c-bcd9-2db8cfab5036",
-    ["environment", "society", "cities"],
+    ["cities", "environment", "society"],
   ),
   cascaisExample("cascais-beaches-feed", "Cascais beaches", "Beaches in Cascais with their location and facilities.", "geocascais-praia", "0ba066ff-383d-484b-baf6-a7769c2316dd", [
-    "environment",
     "cities",
+    "environment",
   ]),
   cascaisExample(
     "cascais-drinking-fountains-feed",
@@ -215,7 +215,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "Municipal fairs and markets in Cascais with their location.",
     "geocascais-feiramercado",
     "52ac6f20-e436-4270-93c7-35d2529da157",
-    ["economy", "cities"],
+    ["cities", "economy"],
   ),
   cascaisExample("cascais-playgrounds-feed", "Cascais playgrounds", "Public playgrounds in Cascais.", "geocascais-parqueinfantil", "684f9e58-2c4f-4f5b-b0a1-a5455acbed64", [
     "cities",
@@ -226,7 +226,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "Public schools in Cascais with their education level and location.",
     "geocascais-estabelecimentoescolar",
     "b7b1fef2-960c-4934-a912-92f026ffd000",
-    ["society", "cities"],
+    ["cities", "society"],
   ),
   cascaisExample(
     "cascais-hotels-feed",
@@ -234,7 +234,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "Hotels and other tourist accommodation units in Cascais.",
     "geocascais-unidadehoteleira",
     "16f33130-4504-4304-9517-e02b1442025d",
-    ["economy", "cities"],
+    ["cities", "economy"],
   ),
   cascaisExample(
     "cascais-cultural-venues-feed",
@@ -242,7 +242,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "Museums, theatres, libraries, and other cultural venues in Cascais.",
     "geocascais-equipamentocultural",
     "9b899d53-8e7f-4d61-bac1-86449853a87b",
-    ["culture", "cities"],
+    ["cities", "culture"],
   ),
   aguedaExample(
     "flood-marks",
@@ -251,7 +251,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "cotas-de-cheia",
     "51ebb54b-0249-46b6-8aa9-edf5365a9976",
     { idField: "gid", crs: "EPSG:3763" },
-    ["environment", "cities"],
+    ["cities", "environment"],
     "Creative Commons Attribution (CC BY)",
   ),
   aguedaExample(
@@ -299,7 +299,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "ponto-de-carregamento-de-veiculos-eletricos",
     "8a0e420f-ebe4-452c-956f-870427811bcd",
     { idField: "id_pontocve" },
-    ["mobility", "energy", "cities"],
+    ["cities", "mobility", "energy"],
   ),
   aguedaExample(
     "beagueda-stations",
@@ -308,7 +308,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "estacoes-beagueda",
     "c6da7509-f4b1-4a3c-a39b-5af5e4908288",
     { idField: "id" },
-    ["mobility", "cities"],
+    ["cities", "mobility"],
   ),
   {
     slug: "oeiras-hourly-environment-feed",
@@ -353,7 +353,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     },
     staleAfterSeconds: 45 * 86_400,
     publisher: "Câmara Municipal de Oeiras",
-    topics: ["environment", "cities"],
+    topics: ["cities", "environment"],
   },
 ];
 

@@ -153,10 +153,13 @@ export function validateCkanFeedConfig(config: SourceConfig, hosts: ReadonlySet<
 }
 
 export class CkanSource {
-  constructor(
-    private readonly allowedHosts: ReadonlySet<string>,
-    private readonly fetcher: Fetcher,
-  ) {}
+  private readonly allowedHosts: ReadonlySet<string>;
+  private readonly fetcher: Fetcher;
+
+  constructor(allowedHosts: ReadonlySet<string>, fetcher: Fetcher) {
+    this.allowedHosts = allowedHosts;
+    this.fetcher = fetcher;
+  }
 
   validateConfig(config: SourceConfig): SourceConfig {
     return validateCkanFeedConfig(config, this.allowedHosts);

@@ -135,7 +135,7 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
     policy: annualPolicy("Portuguese museums annual snapshot", "Arquivo.pt", 1 * MIB),
     staleAfterSeconds: 30 * 86_400,
     publisher: "Arquivo.pt",
-    topics: ["culture", "society"],
+    topics: ["society", "culture"],
   },
   {
     slug: "portuguese-parishes-feed",
@@ -179,7 +179,7 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
     policy: annualPolicy("Public libraries annual snapshot", "Direção-Geral do Livro, dos Arquivos e das Bibliotecas", 1 * MIB),
     staleAfterSeconds: 30 * 86_400,
     publisher: "DGLAB · Direção-Geral do Livro, dos Arquivos e das Bibliotecas",
-    topics: ["culture", "society"],
+    topics: ["society", "culture"],
   },
   {
     slug: "municipal-ev-charging-feed",
@@ -201,7 +201,7 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
     policy: annualPolicy("Municipal EV charging annual snapshot", "Agência para a Reforma Tecnológica do Estado", 1 * MIB),
     staleAfterSeconds: 30 * 86_400,
     publisher: "Agência para a Reforma Tecnológica do Estado",
-    topics: ["energy", "cities"],
+    topics: ["cities", "energy"],
   },
   {
     slug: "cadaval-municipal-waste-feed",
@@ -221,7 +221,7 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
     policy: annualPolicy("Cadaval waste annual snapshot", "Município do Cadaval", 256 * 1024),
     staleAfterSeconds: 30 * 86_400,
     publisher: "Município do Cadaval",
-    topics: ["environment", "cities"],
+    topics: ["cities", "environment"],
   },
   {
     slug: "primary-care-oral-health-referrals-feed",

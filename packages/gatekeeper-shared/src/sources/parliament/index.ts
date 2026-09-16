@@ -3,3 +3,4 @@ export { PARLIAMENT_FEEDS, collectParliamentFeed, validateParliamentFeedConfig, 
 export { parliamentCollector, resolveParliamentFeed, type ParliamentCollectorOptions } from "./collector";
 export { PARLIAMENT_EXAMPLES } from "./examples";
 export { PARLIAMENT_NORMALIZER, transformParliament } from "./transform";
+export { PARLIAMENT_DEPLOYMENT } from "./worker";

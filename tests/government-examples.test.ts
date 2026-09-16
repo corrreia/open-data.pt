@@ -2,11 +2,12 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { type ExampleFeed, type NormalizedRow, type TransformContext } from "@open-data-pt/gatekeeper-shared";
 import { UDATA_EXAMPLES, udataCollector } from "@open-data-pt/gatekeeper-shared/formats/udata";
-import { CITIES_EXAMPLES } from "../packages/gatekeeper-cities/src/examples";
-import { GOVERNMENT_EXAMPLES } from "../packages/gatekeeper-government/src/examples";
-import { TELECOM_EXAMPLES } from "../packages/gatekeeper-telecom/src/examples";
+import { workerExamples } from "./catalog";
 import { INE_EXAMPLES } from "../packages/gatekeeper-shared/src/sources/ine/examples";
 
+const GOVERNMENT_EXAMPLES = workerExamples("government");
+const CITIES_EXAMPLES = workerExamples("cities");
+const TELECOM_EXAMPLES = workerExamples("telecom");
 const government = UDATA_EXAMPLES.filter((example) => example.topics?.includes("government"));
 
 async function normalized(example: ExampleFeed, observedAt: string) {
