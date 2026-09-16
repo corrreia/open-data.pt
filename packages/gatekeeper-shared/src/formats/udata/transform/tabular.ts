@@ -96,9 +96,7 @@ export class TabularTransformer implements Transformer {
     if (format !== "csv" && format !== "json" && format !== "geojson") {
       throw new Error(`Unsupported tabular format: ${format}`);
     }
-    const table = format === "csv"
-      ? await readCsvTable(body, context.feed.config.headerRow)
-      : await readJsonTable(body);
+    const table = format === "csv" ? await readCsvTable(body, context.feed.config.headerRow) : await readJsonTable(body);
 
     const sample: JsonObject[] = [];
     let sampleBytes = 0;
@@ -125,7 +123,10 @@ export class TabularTransformer implements Transformer {
         // A configured provider identity is opaque even when the sample contains
         // only digits. Preserve leading zeroes and later alphanumeric tax IDs.
         const identity = columns.find((column) => column.name === keyField);
-        if (identity) { identity.type = "identifier"; delete identity.unit; }
+        if (identity) {
+          identity.type = "identifier";
+          delete identity.unit;
+        }
       }
       eventTimeColumn = chooseEventTimeColumn(context.feed.config.eventTimeField, columns);
     } catch (error) {
@@ -162,12 +163,7 @@ export class TabularTransformer implements Transformer {
 }
 
 /** The sample first, then every remaining row, each published under the sample's decisions. */
-async function* publishRows(
-  table: TableStream,
-  sample: JsonObject[],
-  exhausted: boolean,
-  publisher: RowPublisher,
-): AsyncGenerator<NormalizedRow> {
+async function* publishRows(table: TableStream, sample: JsonObject[], exhausted: boolean, publisher: RowPublisher): AsyncGenerator<NormalizedRow> {
   try {
     for (const row of sample) yield* publisher.publish(row);
     sample.length = 0;
@@ -227,9 +223,7 @@ class RowPublisher {
       entityKey: unique && rawKey !== undefined ? rawKey : `row-${stableRowHash(row)}`,
       payload,
     };
-    const eventTime = this.eventTimeColumn === undefined
-      ? undefined
-      : parseEventTime(row[this.eventTimeColumn], this.eventTimeColumn);
+    const eventTime = this.eventTimeColumn === undefined ? undefined : parseEventTime(row[this.eventTimeColumn], this.eventTimeColumn);
     if (eventTime !== undefined) record.eventTime = eventTime;
     this.accepted += 1;
     yield { productKey: "records", record };
@@ -535,16 +529,12 @@ function featureRecord(feature: JsonObject): JsonObject {
 }
 
 /** The point a GeoJSON geometry names, when it names a single one. */
-function pointCoordinates(
-  geometry: JsonValue,
-): { longitude: number; latitude: number } | undefined {
+function pointCoordinates(geometry: JsonValue): { longitude: number; latitude: number } | undefined {
   if (!isJsonObject(geometry) || geometry.type !== "Point") return undefined;
   const coordinates = asArrayOrEmpty(geometry.coordinates);
   const longitude = asNumber(coordinates[0]);
   const latitude = asNumber(coordinates[1]);
-  return longitude === undefined || latitude === undefined
-    ? undefined
-    : { longitude, latitude };
+  return longitude === undefined || latitude === undefined ? undefined : { longitude, latitude };
 }
 
 function flattenJsonRecord(record: JsonObject): JsonObject {
@@ -560,10 +550,7 @@ function jsonLayout(value: JsonValue): string {
 
 /* ---------- Profiling the sample ---------- */
 
-function profileColumns(
-  names: string[],
-  rows: Array<JsonObject>,
-): ProfiledColumn[] {
+function profileColumns(names: string[], rows: Array<JsonObject>): ProfiledColumn[] {
   return names.map((name) => {
     const values = rows.map((row) => row[name] ?? null);
     const type = inferType(name, values, rows);
@@ -580,11 +567,7 @@ function profileColumns(
   });
 }
 
-function inferType(
-  name: string,
-  values: JsonValue[],
-  rows: Array<JsonObject>,
-): InferredType {
+function inferType(name: string, values: JsonValue[], rows: Array<JsonObject>): InferredType {
   const present = values.filter((value) => !isEmpty(value));
   if (present.length === 0) return "string";
   const normalizedName = normalizeName(name);
@@ -602,10 +585,7 @@ function inferType(
   if (present.every((value) => isJsonObject(value) || isJsonArray(value))) return "json";
   if (present.every((value) => parseBoolean(value) !== null)) return "boolean";
   const urlCount = present.filter(isUrl).length;
-  if (
-    urlCount === present.length ||
-    (URL_NAME.test(normalizedName) && urlCount / present.length >= 0.9)
-  ) return "url";
+  if (urlCount === present.length || (URL_NAME.test(normalizedName) && urlCount / present.length >= 0.9)) return "url";
   if (present.every((value) => isColor(value))) return "color";
   const dates = present.map((value) => parseDateValue(value));
   if (dates.every((value) => value !== null)) {
@@ -620,9 +600,8 @@ function inferType(
 function applyColorBadge(columns: ProfiledColumn[]): void {
   const color = columns.find((column) => column.type === "color");
   if (!color) return;
-  const label = columns.find((column) =>
-    (column.type === "string" || column.type === "category") &&
-    /(^| )(name|nome|title|titulo|designacao|label|short name)( |$)/.test(normalizeName(column.name)),
+  const label = columns.find(
+    (column) => (column.type === "string" || column.type === "category") && /(^| )(name|nome|title|titulo|designacao|label|short name)( |$)/.test(normalizeName(column.name)),
   );
   if (!label) return;
   label.display = {
@@ -647,11 +626,7 @@ function schemaOf(columns: ProfiledColumn[]): CanonicalSchema {
   };
 }
 
-function chooseKeyField(
-  configured: string | undefined,
-  columns: ProfiledColumn[],
-  rows: Array<JsonObject>,
-): string | undefined {
+function chooseKeyField(configured: string | undefined, columns: ProfiledColumn[], rows: Array<JsonObject>): string | undefined {
   if (configured) {
     if (!columns.some((column) => column.name === configured)) {
       throw new Error(`Configured keyField ${configured} was not found`);
@@ -665,27 +640,17 @@ function chooseKeyField(
   })?.name;
 }
 
-function chooseEventTimeColumn(
-  configured: string | undefined,
-  columns: ProfiledColumn[],
-): string | undefined {
+function chooseEventTimeColumn(configured: string | undefined, columns: ProfiledColumn[]): string | undefined {
   if (configured) {
     if (!columns.some((column) => column.name === configured)) {
       throw new Error(`Configured eventTimeField ${configured} was not found`);
     }
     return configured;
   }
-  return columns.find((column) =>
-    column.type === "date" ||
-    column.type === "datetime" ||
-    /^(ano|year|periodo|period|data)$/.test(normalizeName(column.name)),
-  )?.name;
+  return columns.find((column) => column.type === "date" || column.type === "datetime" || /^(ano|year|periodo|period|data)$/.test(normalizeName(column.name)))?.name;
 }
 
-function countKeys(
-  keyField: string | undefined,
-  rows: Array<JsonObject>,
-): Map<string, number> {
+function countKeys(keyField: string | undefined, rows: Array<JsonObject>): Map<string, number> {
   const counts = new Map<string, number>();
   if (!keyField) return counts;
   for (const row of rows) {
@@ -734,19 +699,18 @@ function parseNumber(value: JsonValue | undefined): number | null {
   if (isJsonNumber(value)) return Number.isFinite(value) ? value : null;
   const text = asString(value);
   if (text === undefined) return null;
-  let normalized = text.trim().replace(/[ \s]/g, "").replace(/[€%]/g, "");
+  let normalized = text
+    .trim()
+    .replace(/[ \s]/g, "")
+    .replace(/[€%]/g, "");
   if (!/^[-+]?\d[\d.,]*$/.test(normalized)) return null;
   const comma = normalized.lastIndexOf(",");
   const dot = normalized.lastIndexOf(".");
   if (comma >= 0 && dot >= 0) {
-    normalized = comma > dot
-      ? normalized.replaceAll(".", "").replace(",", ".")
-      : normalized.replaceAll(",", "");
+    normalized = comma > dot ? normalized.replaceAll(".", "").replace(",", ".") : normalized.replaceAll(",", "");
   } else if (comma >= 0) {
     const commas = normalized.match(/,/g)?.length ?? 0;
-    normalized = commas > 1
-      ? normalized.replaceAll(",", "")
-      : normalized.replace(",", ".");
+    normalized = commas > 1 ? normalized.replaceAll(",", "") : normalized.replace(",", ".");
   } else if ((normalized.match(/\./g)?.length ?? 0) > 1) {
     normalized = normalized.replaceAll(".", "");
   }
@@ -761,9 +725,7 @@ function parseDateValue(value: JsonValue | undefined): string | null {
   const portuguese = /^(\d{2})\/(\d{2})\/(\d{4})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/.exec(text);
   if (portuguese) {
     const [, day, month, year, hour, minute, second] = portuguese;
-    const iso = hour
-      ? `${year}-${month}-${day}T${hour}:${minute}:${second ?? "00"}Z`
-      : `${year}-${month}-${day}`;
+    const iso = hour ? `${year}-${month}-${day}T${hour}:${minute}:${second ?? "00"}Z` : `${year}-${month}-${day}`;
     return validDate(iso) ? iso : null;
   }
   if (/^\d{4}-\d{2}$/.test(text)) {
@@ -792,17 +754,11 @@ function parseEventTime(value: JsonValue | undefined, columnName: string): strin
 function coordinate(value: JsonValue | undefined, kind: "latitude" | "longitude"): number | null {
   const number = parseNumber(value);
   if (number === null) return null;
-  const valid = kind === "latitude"
-    ? number >= PORTUGAL.minLatitude && number <= PORTUGAL.maxLatitude
-    : number >= PORTUGAL.minLongitude && number <= PORTUGAL.maxLongitude;
+  const valid = kind === "latitude" ? number >= PORTUGAL.minLatitude && number <= PORTUGAL.maxLatitude : number >= PORTUGAL.minLongitude && number <= PORTUGAL.maxLongitude;
   return valid ? number : null;
 }
 
-function isPortugalCoordinateColumn(
-  name: "x" | "y",
-  values: JsonValue[],
-  _rows: Array<JsonObject>,
-): boolean {
+function isPortugalCoordinateColumn(name: "x" | "y", values: JsonValue[], _rows: Array<JsonObject>): boolean {
   const kind = name === "x" ? "longitude" : "latitude";
   return values.every((value) => coordinate(value, kind) !== null);
 }
@@ -824,10 +780,12 @@ function isColor(value: JsonValue | undefined): boolean {
 }
 
 function isIdentifierName(name: string): boolean {
-  return /^(id|fid|codigo|code|identificador|identifier|cmnpc|codigo postal)$/.test(name) ||
+  return (
+    /^(id|fid|codigo|code|identificador|identifier|cmnpc|codigo postal)$/.test(name) ||
     /(^| )(id|codigo|code)$/.test(name) ||
     /^(id|codigo|code) /.test(name) ||
-    /(^|_)(id|codigo|code)$/.test(name);
+    /(^|_)(id|codigo|code)$/.test(name)
+  );
 }
 
 function isLatitudeName(name: string): boolean {
@@ -851,10 +809,7 @@ function inferUnit(name: string): string | undefined {
 }
 
 function displayLabel(name: string): string {
-  return name
-    .replaceAll("_", " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return name.replaceAll("_", " ").replace(/\s+/g, " ").trim();
 }
 
 function normalizeName(value: string): string {
@@ -895,7 +850,6 @@ function stableStringify(value: JsonValue): string {
   return JSON.stringify(value);
 }
 
-
 function validDate(value: string): boolean {
   return !Number.isNaN(Date.parse(value));
 }
@@ -903,4 +857,3 @@ function validDate(value: string): boolean {
 function uniqueInOrder(values: string[]): string[] {
   return [...new Set(values)];
 }
-

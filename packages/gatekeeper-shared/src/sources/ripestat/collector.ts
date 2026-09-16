@@ -16,7 +16,15 @@ export function ripestatCollector(options: RipestatCollectorOptions): Normalized
   return {
     normalizer: { id: transformer.id, version: transformer.version },
     resolve: (config) => resolveFeed(config, { gatekeeperKind: "ripestat", kinds: RIPESTAT_FEEDS, validate: validateRipestatFeedConfig }),
-    source: (state, mode, signal) => collectRipestatFeed(options.config, state, options.apiOrigin, (input, init) => options.fetcher(input, { ...init, signal: init?.signal ? AbortSignal.any([signal, init.signal]) : signal }), mode, options.now?.() ?? new Date()),
+    source: (state, mode, signal) =>
+      collectRipestatFeed(
+        options.config,
+        state,
+        options.apiOrigin,
+        (input, init) => options.fetcher(input, { ...init, signal: init?.signal ? AbortSignal.any([signal, init.signal]) : signal }),
+        mode,
+        options.now?.() ?? new Date(),
+      ),
     normalize: { kind: "streaming", transform: (body, context) => transformer.transform(body, context) },
   };
 }

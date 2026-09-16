@@ -1,7 +1,14 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { NORMALIZED_PROTOCOL, collectNormalized, resolveFeed, runTransformer, type CollectionRequest, type JsonObject } from "@open-data-pt/gatekeeper-shared";
-import { METRO_DOCS_URL, METRO_FEEDS, METRO_TOKEN_URL, collectMetroFeed, metroApiOrigin, validateMetroFeedConfig } from "../packages/gatekeeper-shared/src/sources/metrolisboa/metrolisboa";
+import {
+  METRO_DOCS_URL,
+  METRO_FEEDS,
+  METRO_TOKEN_URL,
+  collectMetroFeed,
+  metroApiOrigin,
+  validateMetroFeedConfig,
+} from "../packages/gatekeeper-shared/src/sources/metrolisboa/metrolisboa";
 import { MetroLisboaTransformer } from "../packages/gatekeeper-shared/src/sources/metrolisboa/transform";
 import { jsonAs } from "./support";
 
@@ -44,7 +51,13 @@ describe("Metro Lisboa Gatekeeper", () => {
   it("allows only a bare https API origin", () => {
     expect(metroApiOrigin("https://api.metrolisboa.pt:8243")).toBe(ORIGIN);
     expect(metroApiOrigin("https://metro.open-data.pt/")).toBe("https://metro.open-data.pt");
-    for (const bad of ["http://api.metrolisboa.pt:8243", "https://user:pass@api.metrolisboa.pt", "https://api.metrolisboa.pt/other", "https://api.metrolisboa.pt/?x=1", "not a url"]) {
+    for (const bad of [
+      "http://api.metrolisboa.pt:8243",
+      "https://user:pass@api.metrolisboa.pt",
+      "https://api.metrolisboa.pt/other",
+      "https://api.metrolisboa.pt/?x=1",
+      "not a url",
+    ]) {
       expect(() => metroApiOrigin(bad)).toThrow(/origin/);
     }
   });
@@ -69,7 +82,10 @@ describe("Metro Lisboa Gatekeeper", () => {
 
   it("fails permanently without credentials, and never names them in an error", async () => {
     const { fetcher } = metro({});
-    await expect(collectMetroFeed({ feed: "stations" }, undefined, ORIGIN, { key: undefined, secret: undefined }, fetcher)).rejects.toMatchObject({ name: "GatekeeperError", code: "invalid-config" });
+    await expect(collectMetroFeed({ feed: "stations" }, undefined, ORIGIN, { key: undefined, secret: undefined }, fetcher)).rejects.toMatchObject({
+      name: "GatekeeperError",
+      code: "invalid-config",
+    });
     expect(fetcher).not.toHaveBeenCalled();
     const rejected = vi.fn(async () => new Response('{"error":"invalid_client"}', { status: 401 }));
     const error = await collectMetroFeed({ feed: "stations" }, undefined, ORIGIN, CREDENTIALS, rejected).catch((reason: Error) => reason);
@@ -123,10 +139,15 @@ describe("Metro Lisboa Gatekeeper", () => {
     const resolve = (config: Record<string, string>) => resolveFeed(config, { gatekeeperKind: "metrolisboa", kinds: METRO_FEEDS, validate: validateMetroFeedConfig });
     const resolved = await resolve({ feed: "waiting-times" });
     const request: CollectionRequest = {
-      protocol: NORMALIZED_PROTOCOL, collectionId: "acq_test", feed: { id: "feed_test", slug: "metrolisboa-waiting-times-feed", title: "t", description: "d" },
-      resolved, feedEpoch: "e", mode: { kind: "live" },
+      protocol: NORMALIZED_PROTOCOL,
+      collectionId: "acq_test",
+      feed: { id: "feed_test", slug: "metrolisboa-waiting-times-feed", title: "t", description: "d" },
+      resolved,
+      feedEpoch: "e",
+      mode: { kind: "live" },
       limits: { sourceBytes: 512 * 1024, outputBytes: 4 * 1024 * 1024, frameBytes: 272 * 1024, recordBytes: 256 * 1024, records: 1_000_000, products: 64 },
-      deadline: new Date(Date.now() + 60_000).toISOString(), observedAt: "2026-09-14T08:00:00.000Z",
+      deadline: new Date(Date.now() + 60_000).toISOString(),
+      observedAt: "2026-09-14T08:00:00.000Z",
     };
     const result = await collectNormalized(request, {
       normalizer: { id: transformer.id, version: transformer.version },
@@ -135,7 +156,10 @@ describe("Metro Lisboa Gatekeeper", () => {
       normalize: { kind: "buffered", transform: (bytes, context) => runTransformer(transformer, bytes, context) },
     });
     if (result.kind !== "batch") throw new Error(`Expected a batch, got ${result.kind}`);
-    const frames = (await new Response(result.stream).text()).trim().split("\n").map((line) => jsonAs<JsonObject>(line));
+    const frames = (await new Response(result.stream).text())
+      .trim()
+      .split("\n")
+      .map((line) => jsonAs<JsonObject>(line));
     const waiting = jsonAs<{ resposta: unknown[] }>(fixture("waiting-times")).resposta;
     expect(frames[0]?.type).toBe("header");
     expect(frames.filter((frame) => frame.type === "record")).toHaveLength(waiting.length);

@@ -410,13 +410,7 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
     // Seven counts per row; the full table normalizes to more than 16 MiB.
     "3000",
   ),
-  snsMonthly(
-    "sns-births-and-caesareans-feed",
-    "Hospital births and caesarean sections",
-    "Monthly births and caesarean sections by hospital.",
-    "partos-e-cesarianas",
-    "7000",
-  ),
+  snsMonthly("sns-births-and-caesareans-feed", "Hospital births and caesarean sections", "Monthly births and caesarean sections by hospital.", "partos-e-cesarianas", "7000"),
   eRedes(
     "e-redes-national-consumption-feed",
     "National electricity consumption",
@@ -488,15 +482,7 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
 ];
 
 /** An SNS dataset published day by day, collected twice a day. */
-function snsDaily(
-  slug: string,
-  title: string,
-  description: string,
-  dataset: string,
-  orderBy: string,
-  limit: string,
-  series?: string,
-): ExampleFeed {
+function snsDaily(slug: string, title: string, description: string, dataset: string, orderBy: string, limit: string, series?: string): ExampleFeed {
   // Named numeric fields make the dataset a time series; without them it is a table.
   const config: ExampleFeed["config"] = { source: "opendatasoft", host: "transparencia.sns.gov.pt", dataset, orderBy, limit };
   if (series) config.series = series;
@@ -513,13 +499,7 @@ function snsDaily(
 }
 
 /** An SNS dataset with one row per hospital and month. */
-function snsMonthly(
-  slug: string,
-  title: string,
-  description: string,
-  dataset: string,
-  limit: string,
-): ExampleFeed {
+function snsMonthly(slug: string, title: string, description: string, dataset: string, limit: string): ExampleFeed {
   return {
     slug,
     title,
@@ -542,14 +522,7 @@ interface ERedesQuery {
   series?: string;
 }
 
-function eRedes(
-  slug: string,
-  title: string,
-  description: string,
-  query: ERedesQuery,
-  policy: ExampleFeed["policy"],
-  staleAfterSeconds: number,
-): ExampleFeed {
+function eRedes(slug: string, title: string, description: string, query: ERedesQuery, policy: ExampleFeed["policy"], staleAfterSeconds: number): ExampleFeed {
   return {
     slug,
     title,

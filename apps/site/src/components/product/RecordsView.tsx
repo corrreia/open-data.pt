@@ -129,8 +129,16 @@ export function RecordsView({ product, refreshKey }: { product: Product; refresh
       </div>
     );
   }
-  if (error && rows.length === 0) return <Empty icon={<TableIcon size={40} className="text-kumo-inactive" />} title="Could not load records" description={`${error.message}. Refresh the page to try again.`} />;
-  if (rows.length === 0) return <Empty icon={<TableIcon size={40} className="text-kumo-inactive" />} title="Empty at the source" description="The latest collection returned no records. The source is still read on its usual schedule, and records appear here as soon as it lists any." />;
+  if (error && rows.length === 0)
+    return <Empty icon={<TableIcon size={40} className="text-kumo-inactive" />} title="Could not load records" description={`${error.message}. Refresh the page to try again.`} />;
+  if (rows.length === 0)
+    return (
+      <Empty
+        icon={<TableIcon size={40} className="text-kumo-inactive" />}
+        title="Empty at the source"
+        description="The latest collection returned no records. The source is still read on its usual schedule, and records appear here as soon as it lists any."
+      />
+    );
 
   const remaining = product.rowCount - rows.length;
 
@@ -173,7 +181,12 @@ export function RecordsView({ product, refreshKey }: { product: Product; refresh
                   ) : (
                     <div className="grid gap-2">
                       {(glance.top ?? []).map(([value, count]) => (
-                        <Meter key={value} label={value.replaceAll("_", " ")} value={Math.round((count / rows.length) * 100)} customValue={`${fmt.int(count)} · ${Math.round((count / rows.length) * 100)}%`} />
+                        <Meter
+                          key={value}
+                          label={value.replaceAll("_", " ")}
+                          value={Math.round((count / rows.length) * 100)}
+                          customValue={`${fmt.int(count)} · ${Math.round((count / rows.length) * 100)}%`}
+                        />
                       ))}
                     </div>
                   )}

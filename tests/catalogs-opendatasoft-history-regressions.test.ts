@@ -1,8 +1,17 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
-  NORMALIZED_PROTOCOL, collectNormalized, isJsonObject, isNormalizedFrame, libraryConfig, parseJson, toByteStream,
-  type CollectionRequest, type JsonObject, type NormalizedRow, type SourceConfig,
+  NORMALIZED_PROTOCOL,
+  collectNormalized,
+  isJsonObject,
+  isNormalizedFrame,
+  libraryConfig,
+  parseJson,
+  toByteStream,
+  type CollectionRequest,
+  type JsonObject,
+  type NormalizedRow,
+  type SourceConfig,
 } from "../packages/gatekeeper-shared/src/index";
 import { CATALOG_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/opendatasoft/catalog-examples";
 import { opendatasoftCollector } from "../packages/gatekeeper-shared/src/formats/opendatasoft/collector";
@@ -29,15 +38,24 @@ describe("Opendatasoft measure-expanded history bounds", () => {
       const measures = Array.from({ length: measureCount }, (_, index) => `m${index}`);
       const records = annualRecords(measures);
       const metadata: JsonObject = {
-        dataset_id: "annual-budget", metas: { default: { title: "Annual indicators", description: "Synthetic history boundary regression", records_count: records.length } },
+        dataset_id: "annual-budget",
+        metas: { default: { title: "Annual indicators", description: "Synthetic history boundary regression", records_count: records.length } },
         fields: [
-          { name: "year", type: "text", annotations: {} }, { name: "municipality", type: "text", annotations: {} },
+          { name: "year", type: "text", annotations: {} },
+          { name: "municipality", type: "text", annotations: {} },
           ...measures.map((name) => ({ name, type: "double", annotations: { unit: "events" } })),
         ],
       };
       const config: SourceConfig = {
-        host: "example.test", dataset: "annual-budget", timeField: "year", period: "year", windowPeriods: "3",
-        dimensions: "municipality", series: measures.join(","), orderBy: "year DESC,municipality", limit: "10000",
+        host: "example.test",
+        dataset: "annual-budget",
+        timeField: "year",
+        period: "year",
+        windowPeriods: "3",
+        dimensions: "municipality",
+        series: measures.join(","),
+        orderBy: "year DESC,municipality",
+        limit: "10000",
       };
       const fetcher: typeof fetch = async (input) => {
         const url = new URL(String(input));
@@ -58,11 +76,22 @@ describe("Opendatasoft measure-expanded history bounds", () => {
         slices += 1;
         expect(slices).toBeLessThanOrEqual(4);
         const request: CollectionRequest = {
-          protocol: NORMALIZED_PROTOCOL, collectionId: `history-budget-${slices}`,
+          protocol: NORMALIZED_PROTOCOL,
+          collectionId: `history-budget-${slices}`,
           feed: { id: "history-budget", slug: "history-budget-feed", title: "Annual indicators", description: "Synthetic history boundary regression" },
-          resolved, feedEpoch: "history-budget", mode: { kind: "history", cursor: { before } },
-          deadline: new Date(Date.now() + 60_000).toISOString(), observedAt: "2026-09-16T00:00:00Z",
-          limits: { sourceBytes: 8 * 1024 * 1024, outputBytes: 16 * 1024 * 1024, frameBytes: 1024 * 1024, recordBytes: 512 * 1024, records: MAX_HISTORY_NORMALIZED_ROWS, products: 32 },
+          resolved,
+          feedEpoch: "history-budget",
+          mode: { kind: "history", cursor: { before } },
+          deadline: new Date(Date.now() + 60_000).toISOString(),
+          observedAt: "2026-09-16T00:00:00Z",
+          limits: {
+            sourceBytes: 8 * 1024 * 1024,
+            outputBytes: 16 * 1024 * 1024,
+            frameBytes: 1024 * 1024,
+            recordBytes: 512 * 1024,
+            records: MAX_HISTORY_NORMALIZED_ROWS,
+            products: 32,
+          },
         };
         const result = await collectNormalized(request, collector);
         if (result.kind !== "batch") throw new Error(JSON.stringify(result));
@@ -106,10 +135,25 @@ describe("Opendatasoft measure-expanded history bounds", () => {
       return row;
     });
     const metadata: JsonObject = {
-      dataset_id: "dense-budget", metas: { default: { title: "Dense indicators", description: "Synthetic partition regression", records_count: records.length } },
-      fields: [{ name: "year", type: "text", annotations: {} }, { name: "region", type: "text", annotations: {} }, { name: "id", type: "text", annotations: {} }, ...measures.map((name) => ({ name, type: "double", annotations: { unit: "events" } }))],
+      dataset_id: "dense-budget",
+      metas: { default: { title: "Dense indicators", description: "Synthetic partition regression", records_count: records.length } },
+      fields: [
+        { name: "year", type: "text", annotations: {} },
+        { name: "region", type: "text", annotations: {} },
+        { name: "id", type: "text", annotations: {} },
+        ...measures.map((name) => ({ name, type: "double", annotations: { unit: "events" } })),
+      ],
     };
-    const config: SourceConfig = { host: "example.test", dataset: "dense-budget", timeField: "year", period: "year", windowPeriods: "1", dimensions: "region,id", series: measures.join(","), orderBy: "year DESC,region,id" };
+    const config: SourceConfig = {
+      host: "example.test",
+      dataset: "dense-budget",
+      timeField: "year",
+      period: "year",
+      windowPeriods: "1",
+      dimensions: "region,id",
+      series: measures.join(","),
+      orderBy: "year DESC,region,id",
+    };
     const fetcher: typeof fetch = async (input) => {
       const url = new URL(String(input));
       const where = url.searchParams.get("where") ?? "";
@@ -126,10 +170,20 @@ describe("Opendatasoft measure-expanded history bounds", () => {
     if (fetched.kind !== "body") throw new Error("Expected partition body");
     expect(fetched.next).toEqual({ before: "2023-01-01T00:00:00.000Z", offset: 1, token: "region" });
     const transformed = await new OpendatasoftTransformer().transform(toByteStream(fetched.body), {
-      feed: { slug: "dense-budget-feed", title: "Dense indicators", description: "Synthetic partition regression", config, semantics: { domainSubject: "observation", defaultProductRole: "time-series" } }, observedAt: "2026-09-16T00:00:00Z",
+      feed: {
+        slug: "dense-budget-feed",
+        title: "Dense indicators",
+        description: "Synthetic partition regression",
+        config,
+        semantics: { domainSubject: "observation", defaultProductRole: "time-series" },
+      },
+      observedAt: "2026-09-16T00:00:00Z",
     });
     let points = 0;
-    for await (const row of transformed.rows) { expect(row.point?.dimensions.region).toBe("a"); points += 1; }
+    for await (const row of transformed.rows) {
+      expect(row.point?.dimensions.region).toBe("a");
+      points += 1;
+    }
     expect(points).toBe(16000);
     expect(points).toBeLessThanOrEqual(MAX_HISTORY_NORMALIZED_ROWS);
     expect(transformed.finish().quality.acceptedRecords).toBe(500);
@@ -147,7 +201,13 @@ describe("Historical medical-training record ambiguity", () => {
     const document = { ...fixture("vagas-formacao-especializada-internato"), records: fixture("medical-training-2022-records").records };
     const body = new TextEncoder().encode(JSON.stringify(document));
     const result = await new OpendatasoftTransformer().transform(toByteStream(body), {
-      feed: { slug: example.slug, title: example.title, description: example.description, config: libraryConfig(example.config), semantics: { domainSubject: "observation", defaultProductRole: "current-state" } },
+      feed: {
+        slug: example.slug,
+        title: example.title,
+        description: example.description,
+        config: libraryConfig(example.config),
+        semantics: { domainSubject: "observation", defaultProductRole: "current-state" },
+      },
       observedAt: "2040-01-01T00:00:00Z",
     });
     const rows: NormalizedRow[] = [];

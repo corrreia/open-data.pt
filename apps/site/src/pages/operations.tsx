@@ -117,7 +117,14 @@ const FEED_COLUMNS: Column<FeedRow>[] = [
     ),
   },
   { key: "cadence", header: "Cadence", className: "whitespace-nowrap", sort: (row) => row.cadence, text: (row) => fmt.every(row.cadence), cell: (row) => fmt.every(row.cadence) },
-  { key: "lastSuccess", header: "Last success", mono: true, className: "whitespace-nowrap", sort: (row) => row.feed.lastSuccessAt, cell: (row) => <RelativeTime value={row.feed.lastSuccessAt} /> },
+  {
+    key: "lastSuccess",
+    header: "Last success",
+    mono: true,
+    className: "whitespace-nowrap",
+    sort: (row) => row.feed.lastSuccessAt,
+    cell: (row) => <RelativeTime value={row.feed.lastSuccessAt} />,
+  },
   {
     key: "nextRun",
     header: "Next run",
@@ -217,7 +224,8 @@ interface AcquisitionRow {
   outcome: string;
 }
 
-const tookOf = (acquisition: Acquisition) => (acquisition.startedAt && acquisition.completedAt ? new Date(acquisition.completedAt).getTime() - new Date(acquisition.startedAt).getTime() : undefined);
+const tookOf = (acquisition: Acquisition) =>
+  acquisition.startedAt && acquisition.completedAt ? new Date(acquisition.completedAt).getTime() - new Date(acquisition.startedAt).getTime() : undefined;
 
 function outcomeOf(acquisition: Acquisition) {
   if (acquisition.error) return acquisition.error;
@@ -233,14 +241,41 @@ const ACQUISITION_COLUMNS: Column<AcquisitionRow>[] = [
     text: (row) => `${runStatus(row.acquisition.status).label} ${row.acquisition.status}`,
     cell: (row) => <RunBadge status={row.acquisition.status} />,
   },
-  { key: "feed", header: "Feed", sort: (row) => row.feedTitle, className: "min-w-[14rem] whitespace-normal", cell: (row) => <span className="font-medium text-kumo-strong">{row.feedTitle}</span> },
-  { key: "requested", header: "Requested", mono: true, className: "whitespace-nowrap", sort: (row) => row.acquisition.requestedAt, text: () => "", cell: (row) => <RelativeTime value={row.acquisition.requestedAt} /> },
+  {
+    key: "feed",
+    header: "Feed",
+    sort: (row) => row.feedTitle,
+    className: "min-w-[14rem] whitespace-normal",
+    cell: (row) => <span className="font-medium text-kumo-strong">{row.feedTitle}</span>,
+  },
+  {
+    key: "requested",
+    header: "Requested",
+    mono: true,
+    className: "whitespace-nowrap",
+    sort: (row) => row.acquisition.requestedAt,
+    text: () => "",
+    cell: (row) => <RelativeTime value={row.acquisition.requestedAt} />,
+  },
   { key: "took", header: "Took", align: "end", className: "whitespace-nowrap", sort: (row) => row.took, cell: (row) => fmt.took(row.took) },
-  { key: "observed", header: "Observed", mono: true, className: "whitespace-nowrap", sort: (row) => row.acquisition.observedAt, text: () => "", cell: (row) => fmt.dateTime(row.acquisition.observedAt) },
+  {
+    key: "observed",
+    header: "Observed",
+    mono: true,
+    className: "whitespace-nowrap",
+    sort: (row) => row.acquisition.observedAt,
+    text: () => "",
+    cell: (row) => fmt.dateTime(row.acquisition.observedAt),
+  },
   { key: "completeness", header: "Completeness", sort: (row) => row.acquisition.completeness, cell: (row) => row.acquisition.completeness ?? "—" },
   { key: "rows", header: "Rows", align: "end", sort: (row) => row.acquisition.rows, cell: (row) => fmt.int(row.acquisition.rows) },
   { key: "changes", header: "Changes", align: "end", sort: (row) => row.acquisition.revisions, cell: (row) => fmt.int(row.acquisition.revisions) },
-  { key: "trigger", header: "Trigger", sort: (row) => triggerLabel(row.acquisition.trigger), cell: (row) => <span className="text-kumo-subtle">{triggerLabel(row.acquisition.trigger)}</span> },
+  {
+    key: "trigger",
+    header: "Trigger",
+    sort: (row) => triggerLabel(row.acquisition.trigger),
+    cell: (row) => <span className="text-kumo-subtle">{triggerLabel(row.acquisition.trigger)}</span>,
+  },
   {
     key: "outcome",
     header: "Outcome",
@@ -260,10 +295,19 @@ function AcquisitionsSection({ feeds, feedsById }: { feeds: Feed[]; feedsById: M
   const [feedId, setFeedId] = useState("");
   const acquisitions = useQuery(acquisitionsKey(feedId), () => fetchAcquisitions(feedId), { staleMs: 20_000, refreshMs: 60_000 });
   const rows = useMemo(
-    () => (acquisitions.data ?? []).map((acquisition): AcquisitionRow => ({ acquisition, feedTitle: feedsById.get(acquisition.feedId)?.title ?? acquisition.feedId, took: tookOf(acquisition), outcome: outcomeOf(acquisition) })),
+    () =>
+      (acquisitions.data ?? []).map((acquisition): AcquisitionRow => ({
+        acquisition,
+        feedTitle: feedsById.get(acquisition.feedId)?.title ?? acquisition.feedId,
+        took: tookOf(acquisition),
+        outcome: outcomeOf(acquisition),
+      })),
     [acquisitions.data, feedsById],
   );
-  const items = useMemo(() => [{ label: "All feeds", value: ALL_FEEDS }, ...[...feeds].sort((a, b) => a.title.localeCompare(b.title)).map((feed) => ({ label: feed.title, value: feed.id }))], [feeds]);
+  const items = useMemo(
+    () => [{ label: "All feeds", value: ALL_FEEDS }, ...[...feeds].sort((a, b) => a.title.localeCompare(b.title)).map((feed) => ({ label: feed.title, value: feed.id }))],
+    [feeds],
+  );
 
   return (
     <section id="acquisitions" aria-labelledby="acquisitions-title" className="scroll-mt-24">
@@ -283,7 +327,13 @@ function AcquisitionsSection({ feeds, feedsById }: { feeds: Feed[]; feedsById: M
           empty={acquisitions.loading ? "Loading acquisitions…" : "No acquisitions yet. The runners have not woken up."}
           toolbar={
             <>
-              <Select aria-label="Filter by feed" className="w-64 max-w-full" value={feedId || ALL_FEEDS} onValueChange={(value: string | null) => setFeedId(!value || value === ALL_FEEDS ? "" : value)} items={items} />
+              <Select
+                aria-label="Filter by feed"
+                className="w-64 max-w-full"
+                value={feedId || ALL_FEEDS}
+                onValueChange={(value: string | null) => setFeedId(!value || value === ALL_FEEDS ? "" : value)}
+                items={items}
+              />
               <Button variant="ghost" icon={<ArrowClockwiseIcon />} loading={acquisitions.fetching} onClick={() => void acquisitions.refetch()}>
                 Refresh
               </Button>
@@ -329,7 +379,8 @@ function Operations() {
     <Shell section="operations">
       <div className="grid gap-6">
         <PageHead eyebrow="Operations" title="Every feed, every attempt.">
-          Nobody starts or stops anything: feeds install themselves, collect on their own cadence, and retry by themselves when something breaks. This page shows what each feed collects and what every run produced. The{" "}
+          Nobody starts or stops anything: feeds install themselves, collect on their own cadence, and retry by themselves when something breaks. This page shows what each feed
+          collects and what every run produced. The{" "}
           <a href="/status/" className="font-medium text-kumo-link">
             status page
           </a>{" "}
@@ -337,7 +388,11 @@ function Operations() {
         </PageHead>
         <nav aria-label="On this page" className="flex flex-wrap gap-1.5">
           {SECTIONS.map((section) => (
-            <a key={section.id} href={`#${section.id}`} className="rounded-full bg-kumo-base px-3 py-1 text-sm text-kumo-default no-underline ring-1 ring-kumo-line hover:bg-kumo-tint">
+            <a
+              key={section.id}
+              href={`#${section.id}`}
+              className="rounded-full bg-kumo-base px-3 py-1 text-sm text-kumo-default no-underline ring-1 ring-kumo-line hover:bg-kumo-tint"
+            >
               {section.label}
             </a>
           ))}

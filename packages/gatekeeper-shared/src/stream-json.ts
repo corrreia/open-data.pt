@@ -44,11 +44,7 @@ const decoder = new TextDecoder();
  * (`path = []`), holding at most one element in memory at a time.
  */
 export function streamJsonArray(body: ReadableStream<Uint8Array>, path: readonly string[], options?: JsonArrayStreamOptions): JsonArrayStream {
-  const scanner = new ArrayScanner(
-    path,
-    options?.maxElementBytes ?? DEFAULT_ELEMENT_BYTES,
-    options?.maxEnvelopeBytes ?? DEFAULT_ENVELOPE_BYTES,
-  );
+  const scanner = new ArrayScanner(path, options?.maxElementBytes ?? DEFAULT_ELEMENT_BYTES, options?.maxEnvelopeBytes ?? DEFAULT_ENVELOPE_BYTES);
   return { elements: scanElements(body, scanner), envelope: () => scanner.envelope() };
 }
 
@@ -331,8 +327,7 @@ class ArrayScanner {
   }
 
   private atTarget(): boolean {
-    return this.frames.length === this.path.length
-      && this.frames.every((frame, index) => frame.object && !frame.expectsKey && frame.key === this.path[index]);
+    return this.frames.length === this.path.length && this.frames.every((frame, index) => frame.object && !frame.expectsKey && frame.key === this.path[index]);
   }
 
   private finishKey(): void {

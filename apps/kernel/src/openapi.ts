@@ -70,7 +70,8 @@ export function openApiDocument(origin: string) {
           operationId: "listAcquisitions",
           tags: ["Feeds"],
           summary: "List collection runs across public feeds or of one feed, newest first; with `day`, every run of that UTC day",
-          description: "Read from the Registry's bounded mirror of recent runs. `limit` is at most 200, or 1000 with `day`. With `day` the response also says whether the mirror still reaches back to the start of that day (`complete`).",
+          description:
+            "Read from the Registry's bounded mirror of recent runs. `limit` is at most 200, or 1000 with `day`. With `day` the response also says whether the mirror still reaches back to the start of that day (`complete`).",
           parameters: [queryParameter("feedId", "Optional feed ID."), queryParameter("day", "Optional calendar day, YYYY-MM-DD (UTC)."), integerParameter("limit", 50, 1, 1000)],
           responses: {
             "200": jsonResponse("Runs, newest first", {
@@ -91,7 +92,8 @@ export function openApiDocument(origin: string) {
           operationId: "listOutages",
           tags: ["Feeds"],
           summary: "When each feed's live collection kept failing, and when the platform collected nothing, over the last days",
-          description: "An outage runs from a feed's first failed live collection to its next success. `cause` says whether the source did not answer (`source`), collection failed on this platform's side (`collection`), or the platform stopped collecting altogether (`platform`, with a null `feedId`). Nothing is recorded before `trackedSince`.",
+          description:
+            "An outage runs from a feed's first failed live collection to its next success. `cause` says whether the source did not answer (`source`), collection failed on this platform's side (`collection`), or the platform stopped collecting altogether (`platform`, with a null `feedId`). Nothing is recorded before `trackedSince`.",
           parameters: [integerParameter("days", 90, 1, 90)],
           responses: {
             "200": jsonResponse("Outages overlapping the window, newest first", {
@@ -171,10 +173,15 @@ export function openApiDocument(origin: string) {
           operationId: "listAllProductRecords",
           tags: ["Products"],
           summary: "Get every current record of a product in one streamed response",
-          description: "The same rows as `/records`, without a cursor, as `{numberMatched, data, numberReturned}`. Filtered exports omit `numberMatched`; `numberReturned` is always at the end. Counts against the stricter rate limit.",
+          description:
+            "The same rows as `/records`, without a cursor, as `{numberMatched, data, numberReturned}`. Filtered exports omit `numberMatched`; `numberReturned` is always at the end. Counts against the stricter rate limit.",
           parameters: [pathParameter("slug", "Stable product slug"), whereParameter(), bboxParameter()],
           responses: {
-            "200": jsonResponse("Every current record", { type: "object", required: ["data", "numberReturned"], properties: { numberMatched: { type: "integer" }, data: { type: "array", items: schemaRef("Record") }, numberReturned: { type: "integer" } } }),
+            "200": jsonResponse("Every current record", {
+              type: "object",
+              required: ["data", "numberReturned"],
+              properties: { numberMatched: { type: "integer" }, data: { type: "array", items: schemaRef("Record") }, numberReturned: { type: "integer" } },
+            }),
             "404": responseRef("NotFound"),
             ...reads(),
           },
@@ -185,7 +192,8 @@ export function openApiDocument(origin: string) {
           operationId: "listProductRecords",
           tags: ["Products"],
           summary: "Read the current reference, state, summary, or event records",
-          description: "A page reads a bounded number of chunks. With a selective filter a page can hold fewer rows than `limit`, or none, and still carry `nextCursor`; follow it until it is absent.",
+          description:
+            "A page reads a bounded number of chunks. With a selective filter a page can hold fewer rows than `limit`, or none, and still carry `nextCursor`; follow it until it is absent.",
           parameters: [
             pathParameter("slug", "Stable product slug"),
             integerParameter("limit", 50, 1, 500),
@@ -194,7 +202,18 @@ export function openApiDocument(origin: string) {
             whereParameter(),
             bboxParameter(),
           ],
-          responses: { "200": jsonResponse("Current records", { type: "object", required: ["data"], properties: { data: { type: "array", items: schemaRef("Record") }, nextCursor: { type: "string", description: "Absent on the last page; pass it back as `cursor`." } } }), "404": responseRef("NotFound"), ...reads() },
+          responses: {
+            "200": jsonResponse("Current records", {
+              type: "object",
+              required: ["data"],
+              properties: {
+                data: { type: "array", items: schemaRef("Record") },
+                nextCursor: { type: "string", description: "Absent on the last page; pass it back as `cursor`." },
+              },
+            }),
+            "404": responseRef("NotFound"),
+            ...reads(),
+          },
         },
       },
       "/api/products/{slug}/changes": {
@@ -245,7 +264,12 @@ export function openApiDocument(origin: string) {
           operationId: "listProductEvents",
           tags: ["Products"],
           summary: "Read the applicable revision of each event in an event-time window, as known now or at `knownAt`",
-          parameters: [...historyWindow("event-time"), timeParameter("knownAt", "Read the window as it was known at this RFC 3339 time."), queryParameter("cursor", "Opaque compound continuation cursor."), integerParameter("limit", 200, 1, 500)],
+          parameters: [
+            ...historyWindow("event-time"),
+            timeParameter("knownAt", "Read the window as it was known at this RFC 3339 time."),
+            queryParameter("cursor", "Opaque compound continuation cursor."),
+            integerParameter("limit", 200, 1, 500),
+          ],
           responses: { "200": jsonResponse("Deduplicated event revisions with freshness and coverage", schemaRef("HistoryPage")), ...historyErrors() },
         },
       },
@@ -255,7 +279,12 @@ export function openApiDocument(origin: string) {
           tags: ["Products"],
           summary: "Read every revision ingested in a knowledge-time window, newest first",
           description: "Record products return record revisions. Time-series products return point revisions, as `/series/changes/range` does, and accept `seriesKey`.",
-          parameters: [...historyWindow("knowledge-time"), queryParameter("seriesKey", "Time-series products only: one series key."), queryParameter("cursor", "Opaque compound continuation cursor."), integerParameter("limit", 200, 1, 1000)],
+          parameters: [
+            ...historyWindow("knowledge-time"),
+            queryParameter("seriesKey", "Time-series products only: one series key."),
+            queryParameter("cursor", "Opaque compound continuation cursor."),
+            integerParameter("limit", 200, 1, 1000),
+          ],
           responses: { "200": jsonResponse("Revisions with freshness and coverage", schemaRef("HistoryPage")), ...historyErrors() },
         },
       },
@@ -264,9 +293,19 @@ export function openApiDocument(origin: string) {
           operationId: "listProductSeriesRange",
           tags: ["Products"],
           summary: "Read the value of each point in an event-time window, as known now or at `knownAt`",
-          description: "Without `knownAt`, each point's latest revision. With it, the latest revision observed at or before that time, so a window reads exactly as it was published then.",
-          parameters: [...historyWindow("event-time"), timeParameter("knownAt", "Read the window as it was known at this RFC 3339 time."), queryParameter("seriesKey", "Optional series key."), queryParameter("cursor", "Opaque compound continuation cursor."), integerParameter("limit", 500, 1, 1000)],
-          responses: { "200": jsonResponse("Deduplicated series points with freshness and coverage", { allOf: [schemaRef("HistoryPage"), dataOf("SeriesPoint")] }), ...historyErrors() },
+          description:
+            "Without `knownAt`, each point's latest revision. With it, the latest revision observed at or before that time, so a window reads exactly as it was published then.",
+          parameters: [
+            ...historyWindow("event-time"),
+            timeParameter("knownAt", "Read the window as it was known at this RFC 3339 time."),
+            queryParameter("seriesKey", "Optional series key."),
+            queryParameter("cursor", "Opaque compound continuation cursor."),
+            integerParameter("limit", 500, 1, 1000),
+          ],
+          responses: {
+            "200": jsonResponse("Deduplicated series points with freshness and coverage", { allOf: [schemaRef("HistoryPage"), dataOf("SeriesPoint")] }),
+            ...historyErrors(),
+          },
         },
       },
       "/api/products/{slug}/series/changes/range": {
@@ -274,7 +313,12 @@ export function openApiDocument(origin: string) {
           operationId: "listProductSeriesChangeRange",
           tags: ["Products"],
           summary: "Read every point revision ingested in a knowledge-time window: new points and corrections, newest first",
-          parameters: [...historyWindow("knowledge-time"), queryParameter("seriesKey", "Optional series key."), queryParameter("cursor", "Opaque compound continuation cursor."), integerParameter("limit", 500, 1, 1000)],
+          parameters: [
+            ...historyWindow("knowledge-time"),
+            queryParameter("seriesKey", "Optional series key."),
+            queryParameter("cursor", "Opaque compound continuation cursor."),
+            integerParameter("limit", 500, 1, 1000),
+          ],
           responses: { "200": jsonResponse("Point revisions with freshness and coverage", schemaRef("HistoryPage")), ...historyErrors() },
         },
       },
@@ -283,13 +327,31 @@ export function openApiDocument(origin: string) {
           operationId: "getProductSeriesSummary",
           tags: ["Products"],
           summary: "Read any window of a time series by hour, Lisbon day or Lisbon month",
-          description: "The count, mean, lowest and highest of each point's latest value per bucket, read from summary files rather than the lake, so long windows cost little. Summaries cover the Lisbon days from `coverage.firstDay`, back into backfilled history, to `coverage.through`; each day is summarised a day after it ends, and history published late is added the day after it arrives. Points after `coverage.until` are read from `/series`. Without `resolution`, windows up to 14 days come back by the hour, up to about three years by the day, and longer ones by the month, counted from where the product's history begins: decades of a short history come back by the day or the hour. Backfilled history before the service began is kept by Lisbon day, so it comes back by the day when asked for hours.",
+          description:
+            "The count, mean, lowest and highest of each point's latest value per bucket, read from summary files rather than the lake, so long windows cost little. Summaries cover the Lisbon days from `coverage.firstDay`, back into backfilled history, to `coverage.through`; each day is summarised a day after it ends, and history published late is added the day after it arrives. Points after `coverage.until` are read from `/series`. Without `resolution`, windows up to 14 days come back by the hour, up to about three years by the day, and longer ones by the month, counted from where the product's history begins: decades of a short history come back by the day or the hour. Backfilled history before the service began is kept by Lisbon day, so it comes back by the day when asked for hours.",
           parameters: [
             pathParameter("slug", "Stable product slug"),
             requiredQueryParameter("from", "Inclusive RFC 3339 lower bound.", { type: "string", format: "date-time" }),
-            requiredQueryParameter("to", "Exclusive RFC 3339 upper bound. The summarised span between the two may cover at most 36 months by hour or day, or 50 years by month.", { type: "string", format: "date-time" }),
-            { name: "resolution", in: "query", required: false, description: "`hour`, `day` or `month`. A month kept by day answers `day` when asked for hours.", schema: { type: "string", enum: ["hour", "day", "month"] } },
-            { name: "seriesKey", in: "query", required: false, description: "Up to ten series; repeat the parameter for each. Without it, every series, up to 20,000 buckets in all.", style: "form", explode: true, schema: { type: "array", maxItems: 10, items: { type: "string" } } },
+            requiredQueryParameter("to", "Exclusive RFC 3339 upper bound. The summarised span between the two may cover at most 36 months by hour or day, or 50 years by month.", {
+              type: "string",
+              format: "date-time",
+            }),
+            {
+              name: "resolution",
+              in: "query",
+              required: false,
+              description: "`hour`, `day` or `month`. A month kept by day answers `day` when asked for hours.",
+              schema: { type: "string", enum: ["hour", "day", "month"] },
+            },
+            {
+              name: "seriesKey",
+              in: "query",
+              required: false,
+              description: "Up to ten series; repeat the parameter for each. Without it, every series, up to 20,000 buckets in all.",
+              style: "form",
+              explode: true,
+              schema: { type: "array", maxItems: 10, items: { type: "string" } },
+            },
           ],
           responses: { "200": jsonResponse("Buckets per series", schemaRef("SeriesSummary")), ...reads(), "404": responseRef("NotFound") },
         },
@@ -299,9 +361,23 @@ export function openApiDocument(origin: string) {
           operationId: "getProductSeriesSummaryFile",
           tags: ["Products"],
           summary: "Download one Lisbon month or year of a time series' summaries, as stored",
-          description: "The files the window endpoint reads. A month (`YYYY-MM`) holds hourly buckets, or daily ones for backfilled history and for a month too large for hours (`resolution`). A year (`YYYY`) holds one bucket per series and Lisbon month. Once a period is over and its last day summarised, its file changes only when late data arrives, at most once a day, and it is cached for a day.",
-          parameters: [pathParameter("slug", "Stable product slug"), { name: "period", in: "path", required: true, description: "A Lisbon calendar month, YYYY-MM, or year, YYYY.", schema: { type: "string", pattern: "^\\d{4}(-\\d{2})?$" } }],
-          responses: { "200": jsonResponse("One month or year of summary buckets", { oneOf: [schemaRef("SeriesSummaryMonth"), schemaRef("SeriesSummaryYear")] }), ...reads(), "404": responseRef("NotFound") },
+          description:
+            "The files the window endpoint reads. A month (`YYYY-MM`) holds hourly buckets, or daily ones for backfilled history and for a month too large for hours (`resolution`). A year (`YYYY`) holds one bucket per series and Lisbon month. Once a period is over and its last day summarised, its file changes only when late data arrives, at most once a day, and it is cached for a day.",
+          parameters: [
+            pathParameter("slug", "Stable product slug"),
+            {
+              name: "period",
+              in: "path",
+              required: true,
+              description: "A Lisbon calendar month, YYYY-MM, or year, YYYY.",
+              schema: { type: "string", pattern: "^\\d{4}(-\\d{2})?$" },
+            },
+          ],
+          responses: {
+            "200": jsonResponse("One month or year of summary buckets", { oneOf: [schemaRef("SeriesSummaryMonth"), schemaRef("SeriesSummaryYear")] }),
+            ...reads(),
+            "404": responseRef("NotFound"),
+          },
         },
       },
     },
@@ -316,7 +392,11 @@ export function openApiDocument(origin: string) {
             feedId: { type: "string", description: "The feed that collects it: `/api/feeds/{feedId}`." },
             title: { type: "string" },
             description: { type: "string" },
-            role: { type: "string", enum: ["reference", "current-state", "event-log", "time-series", "summary"], description: "`time-series` is read with `/series`; every other role with `/records`." },
+            role: {
+              type: "string",
+              enum: ["reference", "current-state", "event-log", "time-series", "summary"],
+              description: "`time-series` is read with `/series`; every other role with `/records`.",
+            },
             schema: { type: "object", required: ["fields"], properties: { fields: { type: "array", items: schemaRef("Field") } } },
             version: { type: "integer" },
             status: { type: "string", enum: ["current", "failed"] },
@@ -342,7 +422,10 @@ export function openApiDocument(origin: string) {
           properties: {
             id: { type: "string" },
             name: { type: "string", description: "The key this field has in each record." },
-            type: { type: "string", enum: ["boolean", "category", "color", "date", "datetime", "geometry", "identifier", "json", "latitude", "longitude", "number", "string", "url"] },
+            type: {
+              type: "string",
+              enum: ["boolean", "category", "color", "date", "datetime", "geometry", "identifier", "json", "latitude", "longitude", "number", "string", "url"],
+            },
             nullable: { type: "boolean" },
             unit: { type: "string" },
             display: { type: "object", properties: { label: { type: "string" }, badge: { type: "object" } } },
@@ -418,7 +501,13 @@ export function openApiDocument(origin: string) {
                     items: {
                       type: "object",
                       required: ["start", "count", "mean", "min", "max"],
-                      properties: { start: { type: "string", format: "date-time" }, count: { type: "integer" }, mean: { type: "number" }, min: { type: "number" }, max: { type: "number" } },
+                      properties: {
+                        start: { type: "string", format: "date-time" },
+                        count: { type: "integer" },
+                        mean: { type: "number" },
+                        min: { type: "number" },
+                        max: { type: "number" },
+                      },
                     },
                   },
                 },
@@ -443,7 +532,12 @@ export function openApiDocument(origin: string) {
             buckets: {
               type: "array",
               description: "`[seriesKey, start, count, mean, min, max]`, by start and then series key. `start` is a UTC instant.",
-              items: { type: "array", minItems: 6, maxItems: 6, prefixItems: [{ type: "string" }, { type: "string", format: "date-time" }, { type: "integer" }, { type: "number" }, { type: "number" }, { type: "number" }] },
+              items: {
+                type: "array",
+                minItems: 6,
+                maxItems: 6,
+                prefixItems: [{ type: "string" }, { type: "string", format: "date-time" }, { type: "integer" }, { type: "number" }, { type: "number" }, { type: "number" }],
+              },
             },
             updatedAt: { type: "string", format: "date-time" },
           },
@@ -464,7 +558,12 @@ export function openApiDocument(origin: string) {
             buckets: {
               type: "array",
               description: "`[seriesKey, start, count, mean, min, max]`, by start and then series key. `start` is the UTC instant the Lisbon month begins.",
-              items: { type: "array", minItems: 6, maxItems: 6, prefixItems: [{ type: "string" }, { type: "string", format: "date-time" }, { type: "integer" }, { type: "number" }, { type: "number" }, { type: "number" }] },
+              items: {
+                type: "array",
+                minItems: 6,
+                maxItems: 6,
+                prefixItems: [{ type: "string" }, { type: "string", format: "date-time" }, { type: "integer" }, { type: "number" }, { type: "number" }, { type: "number" }],
+              },
             },
             updatedAt: { type: "string", format: "date-time" },
           },
@@ -507,7 +606,11 @@ export function openApiDocument(origin: string) {
             description: { type: "string" },
             publisher: { type: "string", description: "The institution that publishes the source." },
             topics: { type: "array", items: { type: "string" } },
-            format: { type: "string", enum: ["arcgis", "ckan", "gbfs", "gtfs", "opendatasoft", "udata", "own-api"], description: "The standard the source publishes in, or `own-api`." },
+            format: {
+              type: "string",
+              enum: ["arcgis", "ckan", "gbfs", "gtfs", "opendatasoft", "udata", "own-api"],
+              description: "The standard the source publishes in, or `own-api`.",
+            },
             cadenceSeconds: { type: ["integer", "null"], description: "How often it is collected." },
             staleAfterSeconds: { type: "integer" },
             enabled: { type: "boolean" },
@@ -581,9 +684,14 @@ export function openApiDocument(origin: string) {
       responses: {
         BadRequest: problemResponse("An invalid or unknown query parameter"),
         NotFound: problemResponse("No such product or feed, or it is not public"),
-        TooManyRequests: problemResponse("Too many uncached requests from this client, or every history query slot is busy", { "Retry-After": { description: "Seconds to wait", schema: { type: "integer" } } }),
+        TooManyRequests: problemResponse("Too many uncached requests from this client, or every history query slot is busy", {
+          "Retry-After": { description: "Seconds to wait", schema: { type: "integer" } },
+        }),
         ServerError: problemResponse("Something failed on our side", { "X-Request-Id": { description: "Quote it when reporting the failure", schema: { type: "string" } } }),
-        HistoryFailed: problemResponse("The history query failed: the history store refused or could not run it (502), it took longer than 30 seconds (504), or open-data.pt built a query it cannot run (500). The detail says which", { "X-Request-Id": { description: "Quote it when reporting the failure", schema: { type: "string" } } }),
+        HistoryFailed: problemResponse(
+          "The history query failed: the history store refused or could not run it (502), it took longer than 30 seconds (504), or open-data.pt built a query it cannot run (500). The detail says which",
+          { "X-Request-Id": { description: "Quote it when reporting the failure", schema: { type: "string" } } },
+        ),
         HistoryUnavailable: problemResponse("History queries are not enabled on this deployment"),
       },
     },

@@ -16,7 +16,8 @@ const TIME_LABEL = new Map([
 
 function plain(value: JsonValue | undefined) {
   if (value === null || value === undefined) return "—";
-  if (Array.isArray(value) || isRecord(value)) return <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-all font-mono text-xs">{JSON.stringify(value, null, 2)}</pre>;
+  if (Array.isArray(value) || isRecord(value))
+    return <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-all font-mono text-xs">{JSON.stringify(value, null, 2)}</pre>;
   return String(value);
 }
 
@@ -26,7 +27,7 @@ export function RecordDialog({ record, fields, title, onClose }: { record: JsonR
   const clocks = time && isRecord(time) ? Object.entries(time) : [];
   const known = new Set(fields.map((field) => field.name));
   const extra = record ? Object.keys(record).filter((key) => !known.has(key) && key !== "_time") : [];
-  const name = record ? record.name ?? record.title ?? record.id : undefined;
+  const name = record ? (record.name ?? record.title ?? record.id) : undefined;
   return (
     <Dialog.Root open={record !== null} onOpenChange={(open: boolean) => (open ? undefined : onClose())}>
       <Dialog size="xl" className="max-h-[85vh] overflow-y-auto p-6">

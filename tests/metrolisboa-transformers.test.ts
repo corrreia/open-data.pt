@@ -40,14 +40,40 @@ describe("Metro Lisboa normalizer", () => {
 
   it("reports a line closed for the night as closed, not as disrupted", () => {
     // As served at 01:30 Lisbon time on 2026-09-14.
-    const status = { amarela: " Ok", azul: " Ok", verde: " Ok", vermelha: " Ok", tipo_msg_am: "0", tipo_msg_az: "0", tipo_msg_vd: "0", tipo_msg_vm: "0", azul_curta: "encerrada", amarela_curta: "encerrada", verde_curta: "encerrada", vermelha_curta: "encerrada" };
+    const status = {
+      amarela: " Ok",
+      azul: " Ok",
+      verde: " Ok",
+      vermelha: " Ok",
+      tipo_msg_am: "0",
+      tipo_msg_az: "0",
+      tipo_msg_vd: "0",
+      tipo_msg_vm: "0",
+      azul_curta: "encerrada",
+      amarela_curta: "encerrada",
+      verde_curta: "encerrada",
+      vermelha_curta: "encerrada",
+    };
     const records = normalize({ feed: "line-status", status }, "line-status").products[0]?.records;
     expect(records?.map((record) => record.payload.shortStatus)).toEqual(["encerrada", "encerrada", "encerrada", "encerrada"]);
     expect(records?.every((record) => record.payload.status === "Ok" && !("normal" in record.payload))).toBe(true);
   });
 
   it("keeps a disruption's message, short state and message type", () => {
-    const status = { amarela: " Circulação interrompida entre Rato e Marquês de Pombal.", amarela_curta: "perturbacao", tipo_msg_am: "2", azul: " Ok", azul_curta: "normal", tipo_msg_az: "0", verde: " Ok", verde_curta: "normal", tipo_msg_vd: "0", vermelha: " Ok", vermelha_curta: "normal", tipo_msg_vm: "0" };
+    const status = {
+      amarela: " Circulação interrompida entre Rato e Marquês de Pombal.",
+      amarela_curta: "perturbacao",
+      tipo_msg_am: "2",
+      azul: " Ok",
+      azul_curta: "normal",
+      tipo_msg_az: "0",
+      verde: " Ok",
+      verde_curta: "normal",
+      tipo_msg_vd: "0",
+      vermelha: " Ok",
+      vermelha_curta: "normal",
+      tipo_msg_vm: "0",
+    };
     const record = normalize({ feed: "line-status", status }, "line-status").products[0]?.records?.[0];
     expect(record?.payload).toMatchObject({ status: "Circulação interrompida entre Rato e Marquês de Pombal.", shortStatus: "perturbacao", messageType: "2" });
   });
@@ -61,10 +87,27 @@ describe("Metro Lisboa normalizer", () => {
     const first = product?.records?.find((record) => record.entityKey === "AL4RMO");
     expect(first).toMatchObject({
       eventTime: "2026-09-13T23:39:53.000Z",
-      payload: { platform: "AL4RMO", stationId: "RM", train1: "21C", arrival1Seconds: 413, train2: "23C", arrival2Seconds: 1524, train3: "24C", arrival3Seconds: 2078, destinationId: "54", leavingService: false, units: 1 },
+      payload: {
+        platform: "AL4RMO",
+        stationId: "RM",
+        train1: "21C",
+        arrival1Seconds: 413,
+        train2: "23C",
+        arrival2Seconds: 1524,
+        train3: "24C",
+        arrival3Seconds: 2078,
+        destinationId: "54",
+        leavingService: false,
+        units: 1,
+      },
     });
     expect(first?.payload.destinationName).toEqual(expect.any(String));
-    expect(product?.watermark).toBe(product?.records?.map((record) => record.eventTime ?? "").sort().at(-1));
+    expect(product?.watermark).toBe(
+      product?.records
+        ?.map((record) => record.eventTime ?? "")
+        .sort()
+        .at(-1),
+    );
   });
 
   it("rejects malformed and repeated platforms, keeps an unknown destination without a name, and reads missing trailing trains as empty", () => {
@@ -77,7 +120,16 @@ describe("Metro Lisboa normalizer", () => {
     ];
     const result = normalize({ feed: "waiting-times", waiting, destinations: [{ id_destino: "33", nome_destino: "Reboleira" }] }, "waiting-times");
     expect(result.quality).toEqual({ acceptedRecords: 1, rejectedRecords: 4 });
-    expect(result.products[0]?.records?.[0]?.payload).toMatchObject({ train1: "1C", arrival1Seconds: 90, train2: null, arrival2Seconds: null, destinationId: "999", destinationName: null, leavingService: true, units: 2 });
+    expect(result.products[0]?.records?.[0]?.payload).toMatchObject({
+      train1: "1C",
+      arrival1Seconds: 90,
+      train2: null,
+      arrival2Seconds: null,
+      destinationId: "999",
+      destinationName: null,
+      leavingService: true,
+      units: 2,
+    });
   });
 
   it("reads the empty list served outside service hours as a complete, empty snapshot", () => {
@@ -113,7 +165,17 @@ describe("Metro Lisboa normalizer", () => {
     const first = result.products[0]?.records?.[0];
     expect(first).toEqual({
       entityKey: "amarela:S:06:30:00",
-      payload: { id: "amarela:S:06:30:00", line: "Amarela", lineId: "amarela", dayType: "weekday", start: "06:30:00", end: "07:14:59", interval: "07:30:00", intervalSeconds: 450, units: 2 },
+      payload: {
+        id: "amarela:S:06:30:00",
+        line: "Amarela",
+        lineId: "amarela",
+        dayType: "weekday",
+        start: "06:30:00",
+        end: "07:14:59",
+        interval: "07:30:00",
+        intervalSeconds: 450,
+        units: 2,
+      },
     });
     expect(intervalSeconds("04:05:00")).toBe(245);
     expect(intervalSeconds("4:75:00")).toBeUndefined();

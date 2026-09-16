@@ -37,7 +37,24 @@ const DEFAULT_RECORD_LIMIT = 10_000;
 const PAGE_SIZE = 100;
 const DATASET_PATTERN = /^[a-z0-9_-]+$/;
 const ODSQL_PATTERN = /^[\p{L}\p{N}_\s=<>!'"(),.:-]+$/u;
-const CONFIG_KEYS = new Set(["host", "dataset", "where", "select", "groupBy", "orderBy", "limit", "series", "dimensions", "idFields", "timeField", "monthField", "quarterField", "units", "windowPeriods", "period"]);
+const CONFIG_KEYS = new Set([
+  "host",
+  "dataset",
+  "where",
+  "select",
+  "groupBy",
+  "orderBy",
+  "limit",
+  "series",
+  "dimensions",
+  "idFields",
+  "timeField",
+  "monthField",
+  "quarterField",
+  "units",
+  "windowPeriods",
+  "period",
+]);
 /** A field named in `series`: Opendatasoft field names are lowercase identifiers. */
 const SERIES_FIELD_PATTERN = /^[a-z0-9_]{1,128}$/;
 
@@ -56,10 +73,7 @@ export const OPENDATASOFT_FEEDS = {
   },
 } as const satisfies Record<string, FeedKindDescription>;
 
-export type Fetcher = (
-  input: RequestInfo | URL,
-  init?: RequestInit,
-) => Promise<Response>;
+export type Fetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
 interface ValidatedConfig {
   host: string;
@@ -131,7 +145,9 @@ export function validateOpendatasoftFeedConfig(config: SourceConfig, hosts: Read
 
   for (const key of ["dimensions", "idFields", "timeField", "monthField", "quarterField"] as const) {
     if (config[key] === undefined) continue;
-    const names = config[key]!.split(",").map((name) => name.trim()).filter(Boolean);
+    const names = config[key]!.split(",")
+      .map((name) => name.trim())
+      .filter(Boolean);
     const maximum = key.endsWith("Field") ? 1 : 32;
     if (names.length > maximum || (names.length === 0 && key !== "dimensions") || names.some((name) => !SERIES_FIELD_PATTERN.test(name)) || new Set(names).size !== names.length) {
       throw new GatekeeperError(`${key} must name ${maximum === 1 ? "one field" : "distinct fields"}`, "invalid-config");
@@ -142,7 +158,8 @@ export function validateOpendatasoftFeedConfig(config: SourceConfig, hosts: Read
   if (normalized.monthField && normalized.quarterField) throw new GatekeeperError("Use monthField or quarterField, not both", "invalid-config");
   if (config.units !== undefined) {
     const entries = config.units.split(",").map((entry) => entry.trim());
-    if (entries.length > 32 || entries.some((entry) => !/^[a-z0-9_]{1,128}=[^=,\r\n]{1,40}$/.test(entry))) throw new GatekeeperError("units must be field=unit pairs", "invalid-config");
+    if (entries.length > 32 || entries.some((entry) => !/^[a-z0-9_]{1,128}=[^=,\r\n]{1,40}$/.test(entry)))
+      throw new GatekeeperError("units must be field=unit pairs", "invalid-config");
     normalized.units = entries.join(",");
   }
   if (config.windowPeriods !== undefined || config.period !== undefined) {
@@ -150,7 +167,8 @@ export function validateOpendatasoftFeedConfig(config: SourceConfig, hosts: Read
     if (!normalized.timeField || !Number.isSafeInteger(periods) || periods < 1 || periods > 366 || !["hour", "day", "month", "year"].includes(config.period ?? "")) {
       throw new GatekeeperError("A source-anchored window requires timeField, period=hour|day|month|year and windowPeriods=1..366", "invalid-config");
     }
-    if ((normalized.monthField || normalized.quarterField) && config.period !== "year") throw new GatekeeperError("Compound clocks can only window their source year", "invalid-config");
+    if ((normalized.monthField || normalized.quarterField) && config.period !== "year")
+      throw new GatekeeperError("Compound clocks can only window their source year", "invalid-config");
     normalized.windowPeriods = String(periods);
     normalized.period = config.period!;
   }
@@ -185,10 +203,7 @@ export class OpendatasoftSource {
    * selection, and paging stops at `limit`, which the first page's
    * `total_count` compares against.
    */
-  async collect(
-    config: SourceConfig,
-    checkpoint?: SourceValidator,
-  ): Promise<SourceFetch> {
+  async collect(config: SourceConfig, checkpoint?: SourceValidator): Promise<SourceFetch> {
     const validated = parseValidated(this.validateConfig(config));
     const datasetUrl = datasetEndpoint(validated);
     const metadataResponse = await this.fetcher(datasetUrl, { headers: conditionalHeaders(checkpoint) });
@@ -197,17 +212,11 @@ export class OpendatasoftSource {
       return notModified(metadataResponse.headers, checkpoint);
     }
     assertUpstreamResponse(metadataResponse, "metadata");
-    const metadata = parseDatasetMetadata(
-      await readBoundedResponse(metadataResponse, MAX_METADATA_BYTES, "Opendatasoft metadata"),
-      validated.dataset,
-    );
+    const metadata = parseDatasetMetadata(await readBoundedResponse(metadataResponse, MAX_METADATA_BYTES, "Opendatasoft metadata"), validated.dataset);
     const publication = publicationTime(metadata);
     const validator: SourceValidator = { etag: syntheticEtag(metadata) };
     if (publication) validator.lastModified = new Date(publication).toUTCString();
-    if (
-      checkpoint?.etag === validator.etag ||
-      (checkpoint?.lastModified !== undefined && checkpoint.lastModified === validator.lastModified)
-    ) {
+    if (checkpoint?.etag === validator.etag || (checkpoint?.lastModified !== undefined && checkpoint.lastModified === validator.lastModified)) {
       return { kind: "not-modified", validator };
     }
 
@@ -234,10 +243,7 @@ export class OpendatasoftSource {
    * calendar years for monthly/yearly data. There is deliberately no internal
    * page loop: metadata, one cheap earliest-row boundary query, and one export.
    */
-  async collectHistory(
-    config: SourceConfig,
-    cursor: HistoryCursor,
-  ): Promise<SourceFetch> {
+  async collectHistory(config: SourceConfig, cursor: HistoryCursor): Promise<SourceFetch> {
     const validated = parseValidated(this.validateConfig(config));
     const before = parseHistoryCursor(cursor);
     const datasetUrl = datasetEndpoint(validated);
@@ -245,10 +251,7 @@ export class OpendatasoftSource {
       headers: { Accept: "application/json" },
     });
     assertUpstreamResponse(metadataResponse, "metadata");
-    const metadata = parseDatasetMetadata(
-      await readBoundedResponse(metadataResponse, MAX_METADATA_BYTES, "Opendatasoft metadata"),
-      validated.dataset,
-    );
+    const metadata = parseDatasetMetadata(await readBoundedResponse(metadataResponse, MAX_METADATA_BYTES, "Opendatasoft metadata"), validated.dataset);
     const timeField = historyTimeField(metadata, validated);
     // Without an annotated time field there is no older slice to walk.
     if (!timeField) return { kind: "exhausted" };
@@ -261,10 +264,7 @@ export class OpendatasoftSource {
       headers: { Accept: "application/json" },
     });
     assertUpstreamResponse(earliestResponse, "earliest record");
-    const earliestPage = parseRecordsPage(
-      await readBoundedResponse(earliestResponse, MAX_PAGE_BYTES, "Opendatasoft earliest record"),
-      "earliest record",
-    );
+    const earliestPage = parseRecordsPage(await readBoundedResponse(earliestResponse, MAX_PAGE_BYTES, "Opendatasoft earliest record"), "earliest record");
     const firstRow = earliestPage.results[0];
     if (!firstRow) return { kind: "exhausted" };
     const earliest = historyEventTime(firstRow[timeField.name], timeField.type);
@@ -283,15 +283,9 @@ export class OpendatasoftSource {
     // Dense datasets (monthly rows per parish and technology) can exceed the
     // document cap over a planned span; halve the span until the export fits.
     for (let attempt = 0; ; attempt += 1) {
-      exportUrl = new URL(
-        `/api/explore/v2.1/catalog/datasets/${encodeURIComponent(validated.dataset)}/exports/json`,
-        `https://${validated.host}`,
-      );
+      exportUrl = new URL(`/api/explore/v2.1/catalog/datasets/${encodeURIComponent(validated.dataset)}/exports/json`, `https://${validated.host}`);
       const timeWhere = rangeWhere(timeField, from, before);
-      exportUrl.searchParams.set(
-        "where",
-        validated.where ? `(${validated.where}) AND ${timeWhere}` : timeWhere,
-      );
+      exportUrl.searchParams.set("where", validated.where ? `(${validated.where}) AND ${timeWhere}` : timeWhere);
       addProjection(exportUrl, validated);
       exportUrl.searchParams.set("order_by", validated.orderBy ?? `${timeField.name} DESC`);
       const exportResponse = await this.fetcher(exportUrl, {
@@ -299,10 +293,7 @@ export class OpendatasoftSource {
       });
       assertUpstreamResponse(exportResponse, "history export");
       try {
-        value = parseResource(
-          await readBoundedResponse(exportResponse, MAX_HISTORY_DOCUMENT_BYTES, "Opendatasoft history export"),
-          "history export",
-        );
+        value = parseResource(await readBoundedResponse(exportResponse, MAX_HISTORY_DOCUMENT_BYTES, "Opendatasoft history export"), "history export");
         break;
       } catch (error) {
         const tooLarge = error instanceof GatekeeperError && error.code === "response-too-large";
@@ -325,13 +316,15 @@ export class OpendatasoftSource {
       if (from === earliest) return { kind: "exhausted" };
       return historyBody(historyDocument(metadata, exportedRecords), exportUrl, from);
     }
-    const candidates = exportedRecords.map((record) => {
-      const eventTime = historyEventTime(record[timeField.name], timeField.type);
-      if (!eventTime || eventTime < from || eventTime >= before) {
-        throw new GatekeeperError(`Opendatasoft history export contains an invalid or out-of-range ${timeField.name} value`, "invalid-response");
-      }
-      return { eventTime, record };
-    }).sort((left, right) => right.eventTime.localeCompare(left.eventTime));
+    const candidates = exportedRecords
+      .map((record) => {
+        const eventTime = historyEventTime(record[timeField.name], timeField.type);
+        if (!eventTime || eventTime < from || eventTime >= before) {
+          throw new GatekeeperError(`Opendatasoft history export contains an invalid or out-of-range ${timeField.name} value`, "invalid-response");
+        }
+        return { eventTime, record };
+      })
+      .sort((left, right) => right.eventTime.localeCompare(left.eventTime));
     // The 2,000-source-row target is soft at a timestamp boundary, but its
     // normalized expansion is not: ten measures turn 2,224 source rows into
     // 22,240 points. Move the entire cutoff period to the next slice rather
@@ -410,9 +403,8 @@ export class OpendatasoftSource {
       if (!response.ok) continue;
       const parsed = parseResource(await readBoundedResponse(response, MAX_PAGE_BYTES, "Opendatasoft facets"), "facets");
       const group = isJsonObject(parsed) && Array.isArray(parsed.facets) ? parsed.facets.find((entry) => isJsonObject(entry) && entry.name === name) : undefined;
-      const found = isJsonObject(group) && Array.isArray(group.facets)
-        ? group.facets.flatMap((entry) => (isJsonObject(entry) && isJsonString(entry.value) ? [entry.value] : []))
-        : [];
+      const found =
+        isJsonObject(group) && Array.isArray(group.facets) ? group.facets.flatMap((entry) => (isJsonObject(entry) && isJsonString(entry.value) ? [entry.value] : [])) : [];
       if (found.length >= 2 && found.length <= 100 && (values.length === 0 || found.length > values.length)) {
         partitionField = name;
         values = [...new Set(found)].sort();
@@ -443,8 +435,10 @@ export class OpendatasoftSource {
       if (!Array.isArray(value) || !value.every(isJsonObject)) {
         throw new GatekeeperError("Opendatasoft history partition returned an unexpected shape", "invalid-response");
       }
-      if (value.some((record) => historyEventTime(record[timeField.name], timeField.type) !== stamp)) throw new GatekeeperError("Opendatasoft history partition contains an invalid or out-of-scope timestamp", "invalid-response");
-      if (value.length > maximumRows) throw new GatekeeperError("Opendatasoft history partition exceeds its measure-expanded row bound; a finer source partition is required", "response-too-large");
+      if (value.some((record) => historyEventTime(record[timeField.name], timeField.type) !== stamp))
+        throw new GatekeeperError("Opendatasoft history partition contains an invalid or out-of-scope timestamp", "invalid-response");
+      if (value.length > maximumRows)
+        throw new GatekeeperError("Opendatasoft history partition exceeds its measure-expanded row bound; a finer source partition is required", "response-too-large");
       const bytes = new TextEncoder().encode(JSON.stringify(value)).byteLength;
       if (records.length > 0 && (aggregateBytes + bytes > MAX_HISTORY_DOCUMENT_BYTES || records.length + value.length > targetRows)) break;
       records.push(...value.filter(isJsonObject));
@@ -480,23 +474,33 @@ export class OpendatasoftSource {
     if (!stamp || !isJsonString(latest)) throw new GatekeeperError("Opendatasoft latest reporting period is invalid", "invalid-response");
     const from = new Date(stamp);
     const steps = config.windowPeriods - 1;
-    if (config.period === "year") { from.setUTCMonth(0, 1); from.setUTCFullYear(from.getUTCFullYear() - steps); }
-    else if (config.period === "month") { from.setUTCDate(1); from.setUTCMonth(from.getUTCMonth() - steps); }
-    else if (config.period === "day") { from.setUTCHours(0, 0, 0, 0); from.setUTCDate(from.getUTCDate() - steps); }
-    else from.setUTCHours(from.getUTCHours() - steps, 0, 0, 0);
+    if (config.period === "year") {
+      from.setUTCMonth(0, 1);
+      from.setUTCFullYear(from.getUTCFullYear() - steps);
+    } else if (config.period === "month") {
+      from.setUTCDate(1);
+      from.setUTCMonth(from.getUTCMonth() - steps);
+    } else if (config.period === "day") {
+      from.setUTCHours(0, 0, 0, 0);
+      from.setUTCDate(from.getUTCDate() - steps);
+    } else from.setUTCHours(from.getUTCHours() - steps, 0, 0, 0);
     // Text years compare as years; ODS date fields accept ISO day bounds even when returned at month precision.
-    const literal = /^\d{4}$/.test(latest) ? from.toISOString().slice(0, 4) : /^\d{4}-\d{2}$/.test(latest) ? from.toISOString().slice(0, 7) : config.period === "hour" ? from.toISOString() : from.toISOString().slice(0, 10);
-    const where = metadata.fields.find((field) => field.name === config.timeField)?.type === "text" && /^\d{4}$/.test(latest) && config.period === "year"
-      ? `${config.timeField} IN (${Array.from({ length: config.windowPeriods }, (_, index) => `'${from.getUTCFullYear() + index}'`).join(",")})`
-      : `${config.timeField} >= '${literal}'`;
+    const literal = /^\d{4}$/.test(latest)
+      ? from.toISOString().slice(0, 4)
+      : /^\d{4}-\d{2}$/.test(latest)
+        ? from.toISOString().slice(0, 7)
+        : config.period === "hour"
+          ? from.toISOString()
+          : from.toISOString().slice(0, 10);
+    const where =
+      metadata.fields.find((field) => field.name === config.timeField)?.type === "text" && /^\d{4}$/.test(latest) && config.period === "year"
+        ? `${config.timeField} IN (${Array.from({ length: config.windowPeriods }, (_, index) => `'${from.getUTCFullYear() + index}'`).join(",")})`
+        : `${config.timeField} >= '${literal}'`;
     config.where = config.where ? `(${config.where}) AND ${where}` : where;
   }
 
   private async openExport(config: ValidatedConfig): Promise<AsyncGenerator<Uint8Array>> {
-    const endpoint = new URL(
-      `/api/explore/v2.1/catalog/datasets/${encodeURIComponent(config.dataset)}/exports/json`,
-      `https://${config.host}`,
-    );
+    const endpoint = new URL(`/api/explore/v2.1/catalog/datasets/${encodeURIComponent(config.dataset)}/exports/json`, `https://${config.host}`);
     addQuery(endpoint, config, true);
     const response = await this.fetcher(endpoint, {
       headers: { Accept: "application/json" },
@@ -505,10 +509,7 @@ export class OpendatasoftSource {
     return config.groupBy ? arrayBytes(boundedExportRows(body, config.limit)) : byteChunks(body);
   }
 
-  private async openPages(
-    config: ValidatedConfig,
-    metadata: DatasetMetadata,
-  ): Promise<PagedRecords> {
+  private async openPages(config: ValidatedConfig, metadata: DatasetMetadata): Promise<PagedRecords> {
     const orderBy = config.orderBy ?? defaultOrderBy(metadata);
     const first = await this.openPage(config, orderBy, 0);
     const head = await first.elements.next();
@@ -675,30 +676,18 @@ function parseValidated(config: SourceConfig): ValidatedConfig {
 function isHostname(value: string): boolean {
   try {
     const url = new URL(`https://${value}`);
-    return (
-      url.hostname === value &&
-      url.port === "" &&
-      url.username === "" &&
-      url.password === "" &&
-      url.pathname === "/"
-    );
+    return url.hostname === value && url.port === "" && url.username === "" && url.password === "" && url.pathname === "/";
   } catch {
     return false;
   }
 }
 
 function datasetEndpoint(config: ValidatedConfig): URL {
-  return new URL(
-    `/api/explore/v2.1/catalog/datasets/${encodeURIComponent(config.dataset)}`,
-    `https://${config.host}`,
-  );
+  return new URL(`/api/explore/v2.1/catalog/datasets/${encodeURIComponent(config.dataset)}`, `https://${config.host}`);
 }
 
 function recordsEndpoint(config: ValidatedConfig): URL {
-  return new URL(
-    `/api/explore/v2.1/catalog/datasets/${encodeURIComponent(config.dataset)}/records`,
-    `https://${config.host}`,
-  );
+  return new URL(`/api/explore/v2.1/catalog/datasets/${encodeURIComponent(config.dataset)}/records`, `https://${config.host}`);
 }
 
 function addProjection(endpoint: URL, config: ValidatedConfig): void {
@@ -819,11 +808,7 @@ function historySliceFrom(before: string, precision: string): string {
     const day = date.getUTCDate();
     date.setUTCDate(1);
     date.setUTCFullYear(date.getUTCFullYear() - 10);
-    const lastDay = new Date(Date.UTC(
-      date.getUTCFullYear(),
-      date.getUTCMonth() + 1,
-      0,
-    )).getUTCDate();
+    const lastDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate();
     date.setUTCDate(Math.min(day, lastDay));
     return date.toISOString();
   }
@@ -853,10 +838,7 @@ function historyEventTime(value: JsonValue | undefined, type: string): string | 
   if (/^\d{4}$/.test(text)) timestamp = `${text}-01-01T00:00:00Z`;
   else if (/^\d{4}-\d{2}$/.test(text)) timestamp = `${text}-01T00:00:00Z`;
   else if (/^\d{4}-\d{2}-\d{2}$/.test(text)) timestamp = `${text}T00:00:00Z`;
-  else if (
-    type === "datetime" &&
-    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(text)
-  ) timestamp = `${text}Z`;
+  else if (type === "datetime" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(text)) timestamp = `${text}Z`;
   const milliseconds = Date.parse(timestamp);
   return Number.isNaN(milliseconds) ? undefined : new Date(milliseconds).toISOString();
 }
@@ -869,22 +851,13 @@ interface RecordsPage {
 
 function parseRecordsPage(bytes: Uint8Array, resource: string): RecordsPage {
   const value = parseResource(bytes, resource);
-  if (
-    !isJsonObject(value) ||
-    !isJsonNumber(value.total_count) ||
-    !Number.isFinite(value.total_count) ||
-    !Array.isArray(value.results) ||
-    !value.results.every(isJsonObject)
-  ) {
+  if (!isJsonObject(value) || !isJsonNumber(value.total_count) || !Number.isFinite(value.total_count) || !Array.isArray(value.results) || !value.results.every(isJsonObject)) {
     throw new GatekeeperError(`Opendatasoft ${resource} returned an unexpected shape`, "invalid-response");
   }
   return { totalCount: value.total_count, results: value.results.filter(isJsonObject) };
 }
 
-function historyDocument(
-  metadata: DatasetMetadata,
-  records: Array<JsonObject>,
-): Uint8Array {
+function historyDocument(metadata: DatasetMetadata, records: Array<JsonObject>): Uint8Array {
   const bytes = new TextEncoder().encode(JSON.stringify({ dataset: metadata, records }));
   if (bytes.byteLength > MAX_HISTORY_DOCUMENT_BYTES) {
     throw new GatekeeperError(`Opendatasoft history document exceeds ${MAX_HISTORY_DOCUMENT_BYTES} bytes`, "response-too-large");
@@ -915,18 +888,12 @@ function publicationTime(metadata: DatasetMetadata): string | undefined {
 }
 
 function syntheticEtag(metadata: DatasetMetadata): string {
-  const basis = [
-    metadata.metas.default.modified,
-    metadata.metas.default.data_processed,
-    metadata.metas.default.records_count,
-  ].map(String).join("|");
+  const basis = [metadata.metas.default.modified, metadata.metas.default.data_processed, metadata.metas.default.records_count].map(String).join("|");
   return `"ods-${hashString(basis)}"`;
 }
 
 function defaultOrderBy(metadata: DatasetMetadata): string {
-  const sortable = metadata.fields.find(
-    (field) => isJsonObject(field.annotations) && field.annotations.sortable === true,
-  );
+  const sortable = metadata.fields.find((field) => isJsonObject(field.annotations) && field.annotations.sortable === true);
   const first = sortable ?? metadata.fields[0];
   if (!first || !isJsonString(first.name) || !DATASET_PATTERN.test(first.name)) {
     throw new GatekeeperError("Opendatasoft metadata has no field suitable for deterministic pagination", "invalid-response");

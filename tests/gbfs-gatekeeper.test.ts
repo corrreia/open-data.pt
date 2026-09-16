@@ -1,32 +1,15 @@
 import { jsonAs } from "./support";
 import { describe, expect, it, vi } from "vitest";
-import {
-  GBFS_MAX_BYTES,
-  collectGbfsFeed,
-  validateGbfsFeedConfig,
-} from "../packages/gatekeeper-shared/src/formats/gbfs/gbfs";
+import { GBFS_MAX_BYTES, collectGbfsFeed, validateGbfsFeedConfig } from "../packages/gatekeeper-shared/src/formats/gbfs/gbfs";
 import { GBFS_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/gbfs/examples";
 
-import type {
-  JsonObject,
-  JsonValue,
-  SourceBody,
-  SourceFetch,
-} from "@open-data-pt/gatekeeper-shared";
+import type { JsonObject, JsonValue, SourceBody, SourceFetch } from "@open-data-pt/gatekeeper-shared";
 import { libraryConfig } from "@open-data-pt/gatekeeper-shared";
 const DISCOVERY_URL = "https://mds.bird.co/gbfs/v2/public/lisbon/gbfs.json";
-const ALLOWED_HOSTS =
-  "data.lime.bike,mds.bird.co,gbfs.primelayer.pt,gbfs.nextbike.net";
+const ALLOWED_HOSTS = "data.lime.bike,mds.bird.co,gbfs.primelayer.pt,gbfs.nextbike.net";
 const allowedHosts = new Set(ALLOWED_HOSTS.split(","));
-const newExampleSlugs = new Set([
-  "bird-cascais",
-  "bird-matosinhos",
-  "bird-porto",
-  "tubabike-barcelos",
-]);
-const newExamples = GBFS_EXAMPLES.filter((example) =>
-  newExampleSlugs.has(example.slug)
-);
+const newExampleSlugs = new Set(["bird-cascais", "bird-matosinhos", "bird-porto", "tubabike-barcelos"]);
+const newExamples = GBFS_EXAMPLES.filter((example) => newExampleSlugs.has(example.slug));
 
 function jsonResponse(value: JsonValue, headers?: HeadersInit): Response {
   return new Response(JSON.stringify(value), {
@@ -129,12 +112,7 @@ function successfulFetcher(options?: { oversizedVehicles?: boolean }) {
 
 describe("GBFS Gatekeeper", () => {
   it("normalizes an allowlisted discovery URL and optional language", () => {
-    expect(
-      validateGbfsFeedConfig(
-        { url: DISCOVERY_URL, language: " EN-gb " },
-        allowedHosts,
-      ),
-    ).toEqual({ url: DISCOVERY_URL, language: "en-gb" });
+    expect(validateGbfsFeedConfig({ url: DISCOVERY_URL, language: " EN-gb " }, allowedHosts)).toEqual({ url: DISCOVERY_URL, language: "en-gb" });
   });
 
   it.each(newExamples)("validates the curated $title example", (example) => {
@@ -143,53 +121,25 @@ describe("GBFS Gatekeeper", () => {
   });
 
   it("ships every working additional Portuguese system", () => {
-    expect(newExamples.map((example) => example.slug)).toEqual([
-      "bird-cascais",
-      "bird-matosinhos",
-      "bird-porto",
-      "tubabike-barcelos",
-    ]);
+    expect(newExamples.map((example) => example.slug)).toEqual(["bird-cascais", "bird-matosinhos", "bird-porto", "tubabike-barcelos"]);
     expect(GBFS_EXAMPLES.some((example) => example.slug === "bird-braga")).toBe(true);
-    expect(newExamples.every((example) =>
-      example.policy.collection.cadenceSeconds === (example.publisher === "Bird" ? 300 : 180)
-    )).toBe(true);
-    expect(newExamples.filter((example) => example.publisher === "Bird").every((example) =>
-      example.policy.collection.withoutHistory?.includes("vehicles")
-      && example.policy.collection.withoutHistory.includes("stations")
-    )).toBe(true);
+    expect(newExamples.every((example) => example.policy.collection.cadenceSeconds === (example.publisher === "Bird" ? 300 : 180))).toBe(true);
+    expect(
+      newExamples
+        .filter((example) => example.publisher === "Bird")
+        .every((example) => example.policy.collection.withoutHistory?.includes("vehicles") && example.policy.collection.withoutHistory.includes("stations")),
+    ).toBe(true);
   });
 
   it("rejects malformed configuration and non-allowlisted hosts", () => {
-    expect(() =>
-      validateGbfsFeedConfig(
-        { url: "http://mds.bird.co/gbfs.json" },
-        allowedHosts,
-      ),
-    ).toThrow("must be an HTTPS URL");
-    expect(() =>
-      validateGbfsFeedConfig(
-        { url: "https://example.com/gbfs.json" },
-        allowedHosts,
-      ),
-    ).toThrow("host example.com is not allowed");
-    expect(() =>
-      validateGbfsFeedConfig(
-        { url: DISCOVERY_URL, arbitrary: "value" },
-        allowedHosts,
-      ),
-    ).toThrow("does not accept arbitrary");
+    expect(() => validateGbfsFeedConfig({ url: "http://mds.bird.co/gbfs.json" }, allowedHosts)).toThrow("must be an HTTPS URL");
+    expect(() => validateGbfsFeedConfig({ url: "https://example.com/gbfs.json" }, allowedHosts)).toThrow("host example.com is not allowed");
+    expect(() => validateGbfsFeedConfig({ url: DISCOVERY_URL, arbitrary: "value" }, allowedHosts)).toThrow("does not accept arbitrary");
   });
 
   it("collects a deterministic compound document with typed provenance", async () => {
     const fetcher = successfulFetcher();
-    const fetched = sourceBody(
-      await collectGbfsFeed(
-        { url: DISCOVERY_URL, language: "en" },
-        undefined,
-        ALLOWED_HOSTS,
-        fetcher,
-      ),
-    );
+    const fetched = sourceBody(await collectGbfsFeed({ url: DISCOVERY_URL, language: "en" }, undefined, ALLOWED_HOSTS, fetcher));
     const document = jsonAs<JsonObject>(await bodyBytes(fetched));
 
     expect(fetched.provenance).toEqual({
@@ -198,15 +148,8 @@ describe("GBFS Gatekeeper", () => {
     });
     expect(fetched.completeness).toBe("complete");
     expect(fetched.validator?.etag).toMatch(/^"gbfs-[0-9a-f]{16}"$/u);
-    expect(fetched.validator?.lastModified).toBe(
-      "Mon, 07 Sep 2026 20:56:00 GMT",
-    );
-    expect(Object.keys(document)).toEqual([
-      "discovery",
-      "system_information",
-      "vehicle_types",
-      "free_bike_status",
-    ]);
+    expect(fetched.validator?.lastModified).toBe("Mon, 07 Sep 2026 20:56:00 GMT");
+    expect(Object.keys(document)).toEqual(["discovery", "system_information", "vehicle_types", "free_bike_status"]);
     expect(fetcher).toHaveBeenCalledTimes(4);
   });
 
@@ -214,9 +157,7 @@ describe("GBFS Gatekeeper", () => {
     const fetcher = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
       const headers = new Headers(init?.headers);
       expect(headers.get("if-none-match")).toBe('"previous"');
-      expect(headers.get("if-modified-since")).toBe(
-        "Mon, 07 Sep 2026 20:50:00 GMT",
-      );
+      expect(headers.get("if-modified-since")).toBe("Mon, 07 Sep 2026 20:50:00 GMT");
       return new Response(null, {
         status: 304,
         headers: { ETag: '"current"' },
@@ -244,33 +185,14 @@ describe("GBFS Gatekeeper", () => {
   });
 
   it("reports unchanged when the newest feed's last_updated did not move", async () => {
-    const first = sourceBody(
-      await collectGbfsFeed(
-        { url: DISCOVERY_URL },
-        undefined,
-        ALLOWED_HOSTS,
-        successfulFetcher(),
-      ),
-    );
-    const again = await collectGbfsFeed(
-      { url: DISCOVERY_URL },
-      first.validator,
-      ALLOWED_HOSTS,
-      successfulFetcher(),
-    );
+    const first = sourceBody(await collectGbfsFeed({ url: DISCOVERY_URL }, undefined, ALLOWED_HOSTS, successfulFetcher()));
+    const again = await collectGbfsFeed({ url: DISCOVERY_URL }, first.validator, ALLOWED_HOSTS, successfulFetcher());
 
     expect(again).toEqual({ kind: "not-modified", validator: first.validator });
   });
 
   it("marks a compound document partial when an optional feed exceeds the cap", async () => {
-    const fetched = sourceBody(
-      await collectGbfsFeed(
-        { url: DISCOVERY_URL },
-        undefined,
-        ALLOWED_HOSTS,
-        successfulFetcher({ oversizedVehicles: true }),
-      ),
-    );
+    const fetched = sourceBody(await collectGbfsFeed({ url: DISCOVERY_URL }, undefined, ALLOWED_HOSTS, successfulFetcher({ oversizedVehicles: true })));
     const bytes = await bodyBytes(fetched);
     const document = jsonAs<JsonObject>(bytes);
 
@@ -285,14 +207,7 @@ describe("GBFS Gatekeeper", () => {
         "Content-Length": String(GBFS_MAX_BYTES + 1),
       }),
     );
-    await expect(
-      collectGbfsFeed(
-        { url: DISCOVERY_URL },
-        undefined,
-        ALLOWED_HOSTS,
-        fetcher,
-      ),
-    ).rejects.toThrow("exceeded");
+    await expect(collectGbfsFeed({ url: DISCOVERY_URL }, undefined, ALLOWED_HOSTS, fetcher)).rejects.toThrow("exceeded");
   });
 
   it("rejects child feed URLs outside the allowlist", async () => {
@@ -306,25 +221,11 @@ describe("GBFS Gatekeeper", () => {
         ]),
       ),
     );
-    await expect(
-      collectGbfsFeed(
-        { url: DISCOVERY_URL },
-        undefined,
-        ALLOWED_HOSTS,
-        fetcher,
-      ),
-    ).rejects.toThrow("host example.com is not allowed");
+    await expect(collectGbfsFeed({ url: DISCOVERY_URL }, undefined, ALLOWED_HOSTS, fetcher)).rejects.toThrow("host example.com is not allowed");
   });
 
   it("turns provider failures into an upstream error", async () => {
     const fetcher = vi.fn(async () => new Response("unavailable", { status: 503 }));
-    await expect(
-      collectGbfsFeed(
-        { url: DISCOVERY_URL },
-        undefined,
-        ALLOWED_HOSTS,
-        fetcher,
-      ),
-    ).rejects.toMatchObject({ code: "upstream-error" });
+    await expect(collectGbfsFeed({ url: DISCOVERY_URL }, undefined, ALLOWED_HOSTS, fetcher)).rejects.toMatchObject({ code: "upstream-error" });
   });
 });

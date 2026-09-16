@@ -11,11 +11,11 @@
     "BPSTAT_API_ORIGIN": "https://bpstat.bportugal.pt",
     "EUROSTAT_API_ORIGIN": "https://ec.europa.eu",
     "UDATA_ALLOWED_HOSTS": "dados.gov.pt",
-    "OGC_ALLOWED_HOSTS": "ogcapi.dgterritorio.gov.pt,ambiente.azores.gov.pt"
+    "OGC_ALLOWED_HOSTS": "ogcapi.dgterritorio.gov.pt,ambiente.azores.gov.pt",
   },
   "observability": {
     "enabled": true,
     // The kernel records every acquisition's outcome; a tenth of invocations is enough to debug.
-    "head_sampling_rate": 0.1
-  }
+    "head_sampling_rate": 0.1,
+  },
 }

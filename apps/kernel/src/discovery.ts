@@ -114,7 +114,10 @@ function pageLinks(target: string): string {
 async function serve(request: Request, document: Document): Promise<Response> {
   const etag = `"${await sha256Hex(document.body)}"`;
   const headers: HeaderMap = { ...CORS, "Content-Type": document.type, "Cache-Control": `public, max-age=${document.maxAge}`, ETag: etag, ...document.headers };
-  const known = request.headers.get("If-None-Match")?.split(",").map((tag) => tag.trim().replace(/^W\//, ""));
+  const known = request.headers
+    .get("If-None-Match")
+    ?.split(",")
+    .map((tag) => tag.trim().replace(/^W\//, ""));
   if (known?.includes(etag) || known?.includes("*")) return new Response(null, { status: 304, headers });
   return new Response(request.method === "HEAD" ? null : document.body, { headers });
 }

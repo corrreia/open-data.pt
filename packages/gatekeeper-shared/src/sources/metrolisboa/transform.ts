@@ -78,7 +78,8 @@ function lineStatus(status: JsonValue | undefined): UnstampedResult {
     productKey: "line-status",
     slug: "metrolisboa-line-status",
     title: "Metro Lisboa line status",
-    description: "Each of the four lines' state as the operator reports it: a short state (normal while running, encerrada after closing time, another word during a disruption), the service message, and its message type.",
+    description:
+      "Each of the four lines' state as the operator reports it: a short state (normal while running, encerrada after closing time, another word during a disruption), the service message, and its message type.",
     role: "current-state",
     schema: schema(
       field("id", "identifier", false),
@@ -131,7 +132,7 @@ function waitingTimes(waiting: JsonValue | undefined, destinations: JsonValue | 
         train3: third.train,
         arrival3Seconds: third.seconds,
         destinationId,
-        destinationName: destinationId === null ? null : names.get(destinationId) ?? null,
+        destinationName: destinationId === null ? null : (names.get(destinationId) ?? null),
         leavingService: asNumberLike(row.sairServico) === 1,
         units: asNumberLike(row.UT) ?? null,
       },
@@ -236,7 +237,8 @@ function headways(groups: JsonValue | undefined): UnstampedResult {
     productKey: "headways",
     slug: "metrolisboa-headways",
     title: "Metro Lisboa scheduled headways",
-    description: "The scheduled interval between trains on each line for each time band, on weekdays and on weekends and holidays. The operator writes the interval as minutes:seconds:hundredths (07:30:00 is seven and a half minutes); intervalSeconds reads it that way.",
+    description:
+      "The scheduled interval between trains on each line for each time band, on weekdays and on weekends and holidays. The operator writes the interval as minutes:seconds:hundredths (07:30:00 is seven and a half minutes); intervalSeconds reads it that way.",
     role: "reference",
     schema: schema(
       field("id", "identifier", false),
@@ -274,10 +276,19 @@ export function intervalSeconds(text: string | undefined): number | undefined {
 
 /** `[Verde, Vermelha]` or `[https://a/,https://b/]` as a list of its entries. */
 export function bracketList(value: JsonValue | undefined): string[] {
-  if (isJsonArray(value)) return value.filter(isJsonString).map((item) => item.trim()).filter((item) => item !== "");
+  if (isJsonArray(value))
+    return value
+      .filter(isJsonString)
+      .map((item) => item.trim())
+      .filter((item) => item !== "");
   const text = trimmed(value);
   if (text === undefined) return [];
-  return text.replace(/^\[/u, "").replace(/\]$/u, "").split(",").map((item) => item.trim()).filter((item) => item !== "");
+  return text
+    .replace(/^\[/u, "")
+    .replace(/\]$/u, "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter((item) => item !== "");
 }
 
 function train(id: JsonValue | undefined, arrival: JsonValue | undefined): NextTrain {
@@ -319,7 +330,6 @@ function dayTypeOf(value: JsonValue | undefined): MetroDayType | undefined {
 function schema(...fields: CanonicalField[]): CanonicalSchema {
   return { fields };
 }
-
 
 function result(inputCount: number, acceptedRecords: number, product: ProductBuild): UnstampedResult {
   const rejected = inputCount - acceptedRecords;

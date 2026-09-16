@@ -87,9 +87,18 @@ export interface Feed extends FeedStatus {
 /** A feed without the status its runner reports: what the Registry stores and what a runner is configured with. */
 export function feedDefinition(feed: Feed): Feed {
   const {
-    cooldownUntil: _cooldown, checkpoint: _checkpoint, backfill: _backfill, nextRunAt: _next, lastAttemptAt: _attempt,
-    lastSuccessAt: _success, lastAcquisitionStatus: _last, lastError: _error, consecutiveFailures: _failures,
-    running: _running, historyBacklog: _backlog, ...definition
+    cooldownUntil: _cooldown,
+    checkpoint: _checkpoint,
+    backfill: _backfill,
+    nextRunAt: _next,
+    lastAttemptAt: _attempt,
+    lastSuccessAt: _success,
+    lastAcquisitionStatus: _last,
+    lastError: _error,
+    consecutiveFailures: _failures,
+    running: _running,
+    historyBacklog: _backlog,
+    ...definition
   } = feed;
   return definition;
 }
@@ -168,12 +177,7 @@ export interface LiveEvent {
   status?: FeedStatus;
 }
 
-export type AcquisitionStatus =
-  | "failed"
-  | "queued"
-  | "running"
-  | "succeeded"
-  | "unchanged";
+export type AcquisitionStatus = "failed" | "queued" | "running" | "succeeded" | "unchanged";
 
 /** One logical collection attempt, including what its normalizer reported. */
 export interface Acquisition {

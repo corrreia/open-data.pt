@@ -1,11 +1,6 @@
 import type { JsonValue } from "@open-data-pt/gatekeeper-shared";
 import { describe, expect, it, vi } from "vitest";
-import {
-  collectDgegFeed,
-  DGEG_API_ORIGIN,
-  FUEL_TYPES_MAX_BYTES,
-  validateDgegFeedConfig,
-} from "../packages/gatekeeper-shared/src/sources/dgeg/dgeg";
+import { collectDgegFeed, DGEG_API_ORIGIN, FUEL_TYPES_MAX_BYTES, validateDgegFeedConfig } from "../packages/gatekeeper-shared/src/sources/dgeg/dgeg";
 
 const fuelTypes = {
   status: true,
@@ -39,11 +34,7 @@ function referenceFetcher() {
 describe("DGEG Gatekeeper", () => {
   it("normalizes and validates fuel and district identifiers against the source lists", async () => {
     const fetcher = referenceFetcher();
-    await expect(validateDgegFeedConfig(
-      { feed: "fuel-prices", fuelTypeId: "03201", districtId: "011" },
-      DGEG_API_ORIGIN,
-      fetcher,
-    )).resolves.toEqual({
+    await expect(validateDgegFeedConfig({ feed: "fuel-prices", fuelTypeId: "03201", districtId: "011" }, DGEG_API_ORIGIN, fetcher)).resolves.toEqual({
       feed: "fuel-prices",
       fuelTypeId: "3201",
       districtId: "11",
@@ -53,16 +44,10 @@ describe("DGEG Gatekeeper", () => {
 
   it("rejects caller-provided hosts and a configured origin outside the allowlist", async () => {
     const fetcher = referenceFetcher();
-    await expect(validateDgegFeedConfig(
-      { feed: "fuel-prices", fuelTypeId: "3201", host: "evil.example" },
-      DGEG_API_ORIGIN,
-      fetcher,
-    )).rejects.toMatchObject({ code: "source-denied" });
-    await expect(validateDgegFeedConfig(
-      { feed: "fuel-prices", fuelTypeId: "3201" },
-      "https://evil.example",
-      fetcher,
-    )).rejects.toMatchObject({ code: "source-denied" });
+    await expect(validateDgegFeedConfig({ feed: "fuel-prices", fuelTypeId: "3201", host: "evil.example" }, DGEG_API_ORIGIN, fetcher)).rejects.toMatchObject({
+      code: "source-denied",
+    });
+    await expect(validateDgegFeedConfig({ feed: "fuel-prices", fuelTypeId: "3201" }, "https://evil.example", fetcher)).rejects.toMatchObject({ code: "source-denied" });
     expect(fetcher).not.toHaveBeenCalled();
   });
 
@@ -112,10 +97,12 @@ describe("DGEG Gatekeeper", () => {
   });
 
   it("forwards upstream validators and Last-Modified provenance for fuel types", async () => {
-    const fetcher = vi.fn(async () => json(fuelTypes, {
-      ETag: '"types-v2"',
-      "Last-Modified": "Mon, 07 Sep 2026 09:00:00 GMT",
-    }));
+    const fetcher = vi.fn(async () =>
+      json(fuelTypes, {
+        ETag: '"types-v2"',
+        "Last-Modified": "Mon, 07 Sep 2026 09:00:00 GMT",
+      }),
+    );
 
     const fetched = await collectDgegFeed({ feed: "fuel-types" }, undefined, DGEG_API_ORIGIN, fetcher);
 
@@ -155,24 +142,17 @@ describe("DGEG Gatekeeper", () => {
   });
 
   it("rejects a declared source body above the feed-kind size cap", async () => {
-    const fetcher = vi.fn(async () => new Response("{}", {
-      headers: { "content-length": String(FUEL_TYPES_MAX_BYTES + 1) },
-    }));
-    await expect(collectDgegFeed(
-      { feed: "fuel-types" },
-      undefined,
-      DGEG_API_ORIGIN,
-      fetcher,
-    )).rejects.toMatchObject({ code: "response-too-large" });
+    const fetcher = vi.fn(
+      async () =>
+        new Response("{}", {
+          headers: { "content-length": String(FUEL_TYPES_MAX_BYTES + 1) },
+        }),
+    );
+    await expect(collectDgegFeed({ feed: "fuel-types" }, undefined, DGEG_API_ORIGIN, fetcher)).rejects.toMatchObject({ code: "response-too-large" });
   });
 
   it("turns provider failures into an upstream error", async () => {
     const fetcher = vi.fn(async () => new Response("unavailable", { status: 503 }));
-    await expect(collectDgegFeed(
-      { feed: "fuel-types" },
-      undefined,
-      DGEG_API_ORIGIN,
-      fetcher,
-    )).rejects.toMatchObject({ code: "upstream-error" });
+    await expect(collectDgegFeed({ feed: "fuel-types" }, undefined, DGEG_API_ORIGIN, fetcher)).rejects.toMatchObject({ code: "upstream-error" });
   });
 });

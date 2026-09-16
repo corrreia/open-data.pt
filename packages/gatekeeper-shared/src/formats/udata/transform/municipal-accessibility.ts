@@ -30,10 +30,7 @@ export class MunicipalAccessibilityTransformer implements Transformer {
   readonly id = "municipal-accessibility-v1";
   readonly version = "3";
 
-  async transform(
-    body: ReadableStream<Uint8Array>,
-    _context: TransformContext,
-  ): Promise<StreamingTransform> {
+  async transform(body: ReadableStream<Uint8Array>, _context: TransformContext): Promise<StreamingTransform> {
     const csv = streamCsvRecords(body);
     let accepted = 0;
     let rejected = 0;
@@ -77,9 +74,7 @@ export class MunicipalAccessibilityTransformer implements Transformer {
 
 function cleanMunicipality(value: string | undefined): string | null {
   if (!value) return null;
-  return value
-    .replace(/^Câmara Municipal (?:da |de |do |dos |das )?/i, "")
-    .trim() || null;
+  return value.replace(/^Câmara Municipal (?:da |de |do |dos |das )?/i, "").trim() || null;
 }
 
 function decimal(value: string | undefined): number | null {
@@ -98,4 +93,3 @@ function normalizeLabel(value: string | undefined): string | null {
   const normalized = value?.trim().toLowerCase();
   return normalized || null;
 }
-

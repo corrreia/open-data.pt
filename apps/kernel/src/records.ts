@@ -75,7 +75,7 @@ export interface Revision {
 
 export function recordRevision(prepared: PreparedRecord, existed: boolean, context: RecordContext): Revision {
   const record = prepared.record;
-  const operation = context.baseline ? "baseline" : record.operation ?? (existed ? "upsert" : "create");
+  const operation = context.baseline ? "baseline" : (record.operation ?? (existed ? "upsert" : "create"));
   const id = revisionId(context, prepared.key, "");
   const published = record.sourcePublishedAt ?? context.sourcePublishedAt ?? null;
   const change: ChangeItem = {
@@ -94,10 +94,20 @@ export function recordRevision(prepared: PreparedRecord, existed: boolean, conte
     acquisitionId: context.acquisitionId,
   };
   const lake: JsonObject = {
-    batch_id: context.acquisitionId, revision_id: id, feed_id: context.feedId, product_slug: context.slug,
-    product_version: context.productVersion, normalizer_id: context.normalizer.id, normalizer_version: context.normalizer.version,
-    schema: {}, entity_key: prepared.key, operation, observed_at: context.observedAt, ingested_at: context.observedAt,
-    acquisition_id: context.acquisitionId, payload: historyPayload(record.payload, record.sourceSequence ?? null),
+    batch_id: context.acquisitionId,
+    revision_id: id,
+    feed_id: context.feedId,
+    product_slug: context.slug,
+    product_version: context.productVersion,
+    normalizer_id: context.normalizer.id,
+    normalizer_version: context.normalizer.version,
+    schema: {},
+    entity_key: prepared.key,
+    operation,
+    observed_at: context.observedAt,
+    ingested_at: context.observedAt,
+    acquisition_id: context.acquisitionId,
+    payload: historyPayload(record.payload, record.sourceSequence ?? null),
   };
   if (record.eventTime) lake.event_time = record.eventTime;
   if (record.validFrom) lake.valid_from = record.validFrom;
@@ -110,15 +120,35 @@ export function recordRevision(prepared: PreparedRecord, existed: boolean, conte
 export function retractionRevision(key: string, context: RecordContext): Revision {
   const id = revisionId(context, key, "|retract");
   const change: ChangeItem = {
-    id, entityKey: key, operation: "retract", payload: null, recordHash: `retract:${context.acquisitionId}:${key}`,
-    eventTime: null, validFrom: null, validTo: null, sourcePublishedAt: null, sourceSequence: null,
-    observedAt: context.observedAt, ingestedAt: context.observedAt, acquisitionId: context.acquisitionId,
+    id,
+    entityKey: key,
+    operation: "retract",
+    payload: null,
+    recordHash: `retract:${context.acquisitionId}:${key}`,
+    eventTime: null,
+    validFrom: null,
+    validTo: null,
+    sourcePublishedAt: null,
+    sourceSequence: null,
+    observedAt: context.observedAt,
+    ingestedAt: context.observedAt,
+    acquisitionId: context.acquisitionId,
   };
   const lake: JsonObject = {
-    batch_id: context.acquisitionId, revision_id: id, feed_id: context.feedId, product_slug: context.slug,
-    product_version: context.productVersion, normalizer_id: context.normalizer.id, normalizer_version: context.normalizer.version,
-    schema: {}, entity_key: key, operation: "retract", observed_at: context.observedAt, ingested_at: context.observedAt,
-    acquisition_id: context.acquisitionId, payload: {},
+    batch_id: context.acquisitionId,
+    revision_id: id,
+    feed_id: context.feedId,
+    product_slug: context.slug,
+    product_version: context.productVersion,
+    normalizer_id: context.normalizer.id,
+    normalizer_version: context.normalizer.version,
+    schema: {},
+    entity_key: key,
+    operation: "retract",
+    observed_at: context.observedAt,
+    ingested_at: context.observedAt,
+    acquisition_id: context.acquisitionId,
+    payload: {},
   };
   return { change, lake };
 }

@@ -4,7 +4,19 @@ import { AriaComponent, DataZoomComponent, GridComponent, LegendComponent, MarkL
 import * as echarts from "echarts/core";
 import { CanvasRenderer } from "echarts/renderers";
 
-echarts.use([LineChart, BarChart, ScatterChart, MapChart, GridComponent, TooltipComponent, LegendComponent, DataZoomComponent, MarkLineComponent, AriaComponent, VisualMapComponent, CanvasRenderer]);
+echarts.use([
+  LineChart,
+  BarChart,
+  ScatterChart,
+  MapChart,
+  GridComponent,
+  TooltipComponent,
+  LegendComponent,
+  DataZoomComponent,
+  MarkLineComponent,
+  AriaComponent,
+  VisualMapComponent,
+  CanvasRenderer,
+]);
 
 export { echarts };
-

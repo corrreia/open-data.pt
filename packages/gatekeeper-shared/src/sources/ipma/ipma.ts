@@ -123,10 +123,7 @@ export const IPMA_FEED_LIMITS: FeedLimits = {
 type FeedEndpoints = { [Feed in IpmaFeedName]: readonly string[] };
 
 const ENDPOINTS: FeedEndpoints = {
-  "station-observations": [
-    "/open-data/observation/meteorology/stations/observations.json",
-    "/open-data/observation/meteorology/stations/stations.json",
-  ],
+  "station-observations": ["/open-data/observation/meteorology/stations/observations.json", "/open-data/observation/meteorology/stations/stations.json"],
   "daily-forecast": [
     "/open-data/forecast/meteorology/cities/daily/hp-daily-forecast-day0.json",
     "/open-data/forecast/meteorology/cities/daily/hp-daily-forecast-day1.json",
@@ -135,18 +132,9 @@ const ENDPOINTS: FeedEndpoints = {
     "/open-data/weather-type-classe.json",
     "/open-data/wind-speed-daily-classe.json",
   ],
-  seismic: [
-    "/open-data/observation/seismic/7.json",
-    "/open-data/observation/seismic/3.json",
-  ],
-  warnings: [
-    "/open-data/forecast/warnings/warnings_www.json",
-    "/open-data/distrits-islands.json",
-  ],
-  "uv-index": [
-    "/open-data/forecast/meteorology/uv/uv.json",
-    "/open-data/distrits-islands.json",
-  ],
+  seismic: ["/open-data/observation/seismic/7.json", "/open-data/observation/seismic/3.json"],
+  warnings: ["/open-data/forecast/warnings/warnings_www.json", "/open-data/distrits-islands.json"],
+  "uv-index": ["/open-data/forecast/meteorology/uv/uv.json", "/open-data/distrits-islands.json"],
   "fire-risk": [
     "/open-data/forecast/meteorology/rcm/rcm-d0.json",
     "/open-data/forecast/meteorology/rcm/rcm-d1.json",
@@ -183,12 +171,7 @@ export function validateIpmaFeedConfig(config: SourceConfig): SourceConfig {
   return { feed };
 }
 
-export async function collectIpmaFeed(
-  config: SourceConfig,
-  checkpoint: SourceValidator | undefined,
-  apiOrigin: string,
-  fetcher: typeof fetch,
-): Promise<SourceFetch> {
+export async function collectIpmaFeed(config: SourceConfig, checkpoint: SourceValidator | undefined, apiOrigin: string, fetcher: typeof fetch): Promise<SourceFetch> {
   const validated = validateIpmaFeedConfig(config);
   // SAFETY: `validateIpmaFeedConfig` has just confirmed `feed` names one of
   // the feeds IPMA_FEEDS declares.
@@ -219,8 +202,10 @@ export async function collectIpmaFeed(
     const declared = primaryResponse.headers.get("content-length");
     if (declared && Number(declared) > maximumBytes) throw new GatekeeperError("IPMA dataset exceeds its byte limit", "response-too-large");
     const fetched: SourceBody = {
-      kind: "body", body: limitBytes(primaryResponse.body, maximumBytes),
-      provenance: { sourceUrl: primaryUrl.toString() }, completeness: "complete",
+      kind: "body",
+      body: limitBytes(primaryResponse.body, maximumBytes),
+      provenance: { sourceUrl: primaryUrl.toString() },
+      completeness: "complete",
     };
     const published = normalizeDateTime(primaryResponse.headers.get("last-modified"));
     if (published) fetched.provenance.sourcePublishedAt = published;
@@ -243,7 +228,10 @@ export async function collectIpmaFeed(
     remainingBytes -= resource.bytes.byteLength;
   }
 
-  const bytes = combinedDocument(feed, resources.map((resource) => resource.bytes));
+  const bytes = combinedDocument(
+    feed,
+    resources.map((resource) => resource.bytes),
+  );
   if (bytes.byteLength > maximumBytes) {
     throw new GatekeeperError(`IPMA ${feed} response exceeded ${maximumBytes} bytes`, "response-too-large");
   }
@@ -265,11 +253,7 @@ function isFeedName(value: string | undefined): value is IpmaFeedName {
   return value !== undefined && Object.hasOwn(IPMA_FEEDS, value);
 }
 
-async function readJsonResource(
-  response: Response,
-  url: URL,
-  maximumBytes: number,
-): Promise<CollectedResource> {
+async function readJsonResource(response: Response, url: URL, maximumBytes: number): Promise<CollectedResource> {
   if (!response.ok || !response.body) {
     throw new GatekeeperError(`IPMA returned HTTP ${response.status} for ${url.pathname}`, "upstream-error");
   }
@@ -310,37 +294,33 @@ async function readJsonResource(
 function combinedDocument(feed: Exclude<IpmaFeedName, IpmaDatasetFeed>, resources: Uint8Array[]): Uint8Array {
   switch (feed) {
     case "station-observations":
-      return joinJson([
-        '{"stations":', resources[1]!, ',"observations":', resources[0]!, "}",
-      ]);
+      return joinJson(['{"stations":', resources[1]!, ',"observations":', resources[0]!, "}"]);
     case "daily-forecast":
       return joinJson([
-        '{"forecasts":[', resources[0]!, ",", resources[1]!, ",", resources[2]!,
-        '],"cities":', resources[3]!, ',"weatherTypes":', resources[4]!,
-        ',"windSpeedClasses":', resources[5]!, "}",
+        '{"forecasts":[',
+        resources[0]!,
+        ",",
+        resources[1]!,
+        ",",
+        resources[2]!,
+        '],"cities":',
+        resources[3]!,
+        ',"weatherTypes":',
+        resources[4]!,
+        ',"windSpeedClasses":',
+        resources[5]!,
+        "}",
       ]);
     case "seismic":
-      return joinJson([
-        '{"mainlandMadeira":', resources[0]!, ',"azores":', resources[1]!, "}",
-      ]);
+      return joinJson(['{"mainlandMadeira":', resources[0]!, ',"azores":', resources[1]!, "}"]);
     case "warnings":
-      return joinJson([
-        '{"warnings":', resources[0]!, ',"areas":', resources[1]!, "}",
-      ]);
+      return joinJson(['{"warnings":', resources[0]!, ',"areas":', resources[1]!, "}"]);
     case "uv-index":
-      return joinJson([
-        '{"uv":', resources[0]!, ',"cities":', resources[1]!, "}",
-      ]);
+      return joinJson(['{"uv":', resources[0]!, ',"cities":', resources[1]!, "}"]);
     case "fire-risk":
-      return joinJson([
-        '{"forecasts":[', resources[0]!, ",", resources[1]!, ",", resources[2]!,
-        '],"municipalities":', resources[3]!, "}",
-      ]);
+      return joinJson(['{"forecasts":[', resources[0]!, ",", resources[1]!, ",", resources[2]!, '],"municipalities":', resources[3]!, "}"]);
     case "sea-forecast":
-      return joinJson([
-        '{"forecasts":[', resources[0]!, ",", resources[1]!, ",", resources[2]!,
-        '],"locations":', resources[3]!, "}",
-      ]);
+      return joinJson(['{"forecasts":[', resources[0]!, ",", resources[1]!, ",", resources[2]!, '],"locations":', resources[3]!, "}"]);
   }
 }
 
@@ -384,16 +364,19 @@ function publishedAt(feed: IpmaFeedName, resources: CollectedResource[]): string
       }
     }
   }
-  return stated.map(normalizeDateTime).filter((value): value is string => Boolean(value)).sort().at(-1)
-    ?? normalizeDateTime(resources[0]?.response.headers.get("last-modified") ?? null);
+  return (
+    stated
+      .map(normalizeDateTime)
+      .filter((value): value is string => Boolean(value))
+      .sort()
+      .at(-1) ?? normalizeDateTime(resources[0]?.response.headers.get("last-modified") ?? null)
+  );
 }
 
 function normalizeDateTime(value: string | null): string | undefined {
   if (!value) return undefined;
   const trimmed = value.trim();
-  const explicit = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/u.test(trimmed)
-    ? `${trimmed.replace(" ", "T")}Z`
-    : trimmed;
+  const explicit = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/u.test(trimmed) ? `${trimmed.replace(" ", "T")}Z` : trimmed;
   const milliseconds = Date.parse(explicit);
   return Number.isNaN(milliseconds) ? undefined : new Date(milliseconds).toISOString();
 }

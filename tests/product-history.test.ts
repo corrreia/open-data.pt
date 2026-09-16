@@ -4,19 +4,29 @@ import type { Feed, ProductIndexEntry } from "../apps/kernel/src/feed-model";
 import { fixtureResolved } from "./kernel-harness";
 import { jsonBody } from "./support";
 
-const server = createTestHarness({ workers: [{ config: {
-  name: "product-history-test",
-  main: "tests/fixtures/product-history-worker.ts",
-  compatibility_date: "2026-09-09",
-  compatibility_flags: ["nodejs_compat"],
-  vars: { CATALOG_TOKEN: "test-only", CLOUDFLARE_ACCOUNT_ID: "test-account", LAKE_BUCKET: "test-history" },
-  r2_buckets: [{ binding: "DATA_OBJECTS", bucket_name: "test-only" }],
-  durable_objects: { bindings: [
-    { name: "Registry", class_name: "Registry" }, { name: "FeedRunner", class_name: "FeedRunner" }, { name: "HISTORY_FIXTURE", class_name: "HistoryFixture" },
-  ] },
-  workflows: [{ name: "open-data-pt-collections", binding: "COLLECTIONS", class_name: "CollectionWorkflow" }],
-  migrations: [{ tag: "test-only", new_sqlite_classes: ["Registry", "FeedRunner", "HistoryFixture"] }],
-} }] });
+const server = createTestHarness({
+  workers: [
+    {
+      config: {
+        name: "product-history-test",
+        main: "tests/fixtures/product-history-worker.ts",
+        compatibility_date: "2026-09-09",
+        compatibility_flags: ["nodejs_compat"],
+        vars: { CATALOG_TOKEN: "test-only", CLOUDFLARE_ACCOUNT_ID: "test-account", LAKE_BUCKET: "test-history" },
+        r2_buckets: [{ binding: "DATA_OBJECTS", bucket_name: "test-only" }],
+        durable_objects: {
+          bindings: [
+            { name: "Registry", class_name: "Registry" },
+            { name: "FeedRunner", class_name: "FeedRunner" },
+            { name: "HISTORY_FIXTURE", class_name: "HistoryFixture" },
+          ],
+        },
+        workflows: [{ name: "open-data-pt-collections", binding: "COLLECTIONS", class_name: "CollectionWorkflow" }],
+        migrations: [{ tag: "test-only", new_sqlite_classes: ["Registry", "FeedRunner", "HistoryFixture"] }],
+      },
+    },
+  ],
+});
 
 beforeAll(async () => {
   await server.listen();
@@ -31,20 +41,70 @@ beforeAll(async () => {
     await sql.exec("INSERT INTO policies VALUES (?, ?, 1, ?, ?, 'saved')", policy, policy, JSON.stringify({ ...collection, ...history }), "{}");
   }
   const resolved = await fixtureResolved();
-  for (const [feedId, policy] of [["feed-owner's", "public-history"], ["other-owner", "public-history"], ["private-owner", "no-history"], ["left-out-owner", "left-out"]] as const) {
+  for (const [feedId, policy] of [
+    ["feed-owner's", "public-history"],
+    ["other-owner", "public-history"],
+    ["private-owner", "no-history"],
+    ["left-out-owner", "left-out"],
+  ] as const) {
     const semantics = { ...resolved.semantics, domainSubject: "event" as const };
-    const feed: Feed = { id: feedId, slug: feedId, title: feedId, description: "", gatekeeperKind: "fixture", config: {}, semantics, resolved: { ...resolved, semantics }, feedEpoch: "e", policyId: policy, enabled: false, staleAfterSeconds: 60, topics: [], createdAt: "2026-09-01T00:00:00.000Z", updatedAt: "2026-09-01T00:00:00.000Z" };
+    const feed: Feed = {
+      id: feedId,
+      slug: feedId,
+      title: feedId,
+      description: "",
+      gatekeeperKind: "fixture",
+      config: {},
+      semantics,
+      resolved: { ...resolved, semantics },
+      feedEpoch: "e",
+      policyId: policy,
+      enabled: false,
+      staleAfterSeconds: 60,
+      topics: [],
+      createdAt: "2026-09-01T00:00:00.000Z",
+      updatedAt: "2026-09-01T00:00:00.000Z",
+    };
     await sql.exec("INSERT INTO feeds (id, slug, definition_json, policy_id, enabled, title) VALUES (?, ?, ?, ?, 0, ?)", feedId, feedId, JSON.stringify(feed), policy, feedId);
   }
   for (const [slug, role, feedId] of [
-    ["shared-events", "event-log", "feed-owner's"], ["shared-series", "time-series", "feed-owner's"], ["revised-series", "time-series", "feed-owner's"],
-    ["private-events", "event-log", "private-owner"], ["left-out-events", "event-log", "left-out-owner"], ["kept-events", "event-log", "left-out-owner"],
+    ["shared-events", "event-log", "feed-owner's"],
+    ["shared-series", "time-series", "feed-owner's"],
+    ["revised-series", "time-series", "feed-owner's"],
+    ["private-events", "event-log", "private-owner"],
+    ["left-out-events", "event-log", "left-out-owner"],
+    ["kept-events", "event-log", "left-out-owner"],
   ] as const) {
-    const entry: ProductIndexEntry = { id: `prd_${slug}`, slug, feedId, productKey: slug, title: slug, description: "", role, kind: role === "time-series" ? "series" : "record", schema: { fields: [] }, updateMode: "authoritative-snapshot", completeness: "complete", version: 1, status: "current", currentAcquisitionId: null, watermark: null, rowCount: 0, chunks: null, changesKey: null, seriesKey: null, seriesChangesKey: null, updatedAt: "2026-09-05T00:00:00.000Z", createdAt: "2026-09-05T00:00:00.000Z" };
+    const entry: ProductIndexEntry = {
+      id: `prd_${slug}`,
+      slug,
+      feedId,
+      productKey: slug,
+      title: slug,
+      description: "",
+      role,
+      kind: role === "time-series" ? "series" : "record",
+      schema: { fields: [] },
+      updateMode: "authoritative-snapshot",
+      completeness: "complete",
+      version: 1,
+      status: "current",
+      currentAcquisitionId: null,
+      watermark: null,
+      rowCount: 0,
+      chunks: null,
+      changesKey: null,
+      seriesKey: null,
+      seriesChangesKey: null,
+      updatedAt: "2026-09-05T00:00:00.000Z",
+      createdAt: "2026-09-05T00:00:00.000Z",
+    };
     await sql.exec("INSERT INTO products (slug, feed_id, product_key, title, entry_json) VALUES (?, ?, ?, ?, ?)", slug, feedId, slug, slug, JSON.stringify(entry));
   }
 }, 60_000);
-afterAll(async () => { await server.close(); }, 30_000);
+afterAll(async () => {
+  await server.close();
+}, 30_000);
 
 interface HistoryPage {
   data: Array<{ value?: number; revisionId?: string; payload?: { value: number } }>;
@@ -129,7 +189,10 @@ describe("series as known at any moment", () => {
 
   it("lists every point revision ingested in the window, corrections included", async () => {
     const page = await jsonBody<HistoryPage>(await server.fetch(`/api/products/revised-series/series/changes/range?${window}`));
-    expect(page.data.map((row) => [row.revisionId, row.value])).toEqual([["rev-b", 10], ["rev-a", 1]]);
+    expect(page.data.map((row) => [row.revisionId, row.value])).toEqual([
+      ["rev-b", 10],
+      ["rev-a", 1],
+    ]);
     expect(page.coverage.lakeStartsAt).toBe("2026-09-01T00:00:00.000Z");
   });
 
@@ -153,7 +216,14 @@ describe("series summaries", () => {
   it("answers a window from summary files, empty until the first day is summarised", async () => {
     const response = await server.fetch(`/api/products/revised-series/series/summary?${window}&seriesKey=a&seriesKey=b`);
     expect(response.status, await response.clone().text()).toBe(200);
-    expect(await response.json()).toEqual({ resolution: "hour", timeZone: "Europe/Lisbon", from: "2026-09-01T00:00:00.000Z", to: "2026-09-06T00:00:00.000Z", coverage: { firstDay: null, through: null, until: null }, series: [] });
+    expect(await response.json()).toEqual({
+      resolution: "hour",
+      timeZone: "Europe/Lisbon",
+      from: "2026-09-01T00:00:00.000Z",
+      to: "2026-09-06T00:00:00.000Z",
+      coverage: { firstDay: null, through: null, until: null },
+      series: [],
+    });
   });
 
   it("404s a month or year without a file and a product without public history, and refuses what it cannot answer", async () => {
@@ -168,7 +238,20 @@ describe("series summaries", () => {
 it("keeps flattened nonconflicting event payload fields but authoritative metadata wins collisions", async () => {
   const response = await server.fetch(`/api/products/shared-events/events?${bounds}`);
   expect(response.status).toBe(200);
-  expect(await response.json()).toMatchObject({ data: [{ value: 2, id: "two", operation: "upsert", eventTime: "2026-09-02T00:00:00.000Z", sourcePublishedAt: null, sourceSequence: "seq-two", observedAt: "2026-09-02T00:00:00.000Z", ingestedAt: "2026-09-02T00:00:00.000Z" }] });
+  expect(await response.json()).toMatchObject({
+    data: [
+      {
+        value: 2,
+        id: "two",
+        operation: "upsert",
+        eventTime: "2026-09-02T00:00:00.000Z",
+        sourcePublishedAt: null,
+        sourceSequence: "seq-two",
+        observedAt: "2026-09-02T00:00:00.000Z",
+        ingestedAt: "2026-09-02T00:00:00.000Z",
+      },
+    ],
+  });
 });
 
 it("reports a provider failure as a bad gateway without leaking the provider's message", async () => {
@@ -183,7 +266,12 @@ it("reports a provider failure as a bad gateway without leaking the provider's m
 
 describe("a read-only, public-only API", () => {
   it("answers only GET, HEAD and OPTIONS", async () => {
-    for (const [method, path] of [["POST", "/api/feeds"], ["POST", "/api/bootstrap"], ["DELETE", "/api/feeds/feed-owner's/backfill"], ["PUT", "/api/products/shared-events"]] as const) {
+    for (const [method, path] of [
+      ["POST", "/api/feeds"],
+      ["POST", "/api/bootstrap"],
+      ["DELETE", "/api/feeds/feed-owner's/backfill"],
+      ["PUT", "/api/products/shared-events"],
+    ] as const) {
       const response = await server.fetch(path, { method });
       expect(response.status, `${method} ${path}`).toBe(405);
       expect(response.headers.get("allow")).toBe("GET, HEAD, OPTIONS");

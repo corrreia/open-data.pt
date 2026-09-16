@@ -78,8 +78,19 @@ export async function fixtureResolved(): Promise<ResolvedFeed> {
 
 export function policy(overrides: Partial<FeedPolicy["collection"]> = {}): FeedPolicy {
   return {
-    id: "policy_1", name: "Fixture", version: 1, createdAt: "2026-09-10T00:00:00.000Z",
-    collection: { cadenceSeconds: 3600, timeoutSeconds: 120, maxBytes: 1024 * 1024, historyMode: "changes", maxRecords: 2_000_000, maxOutputBytes: 2 * 1024 * 1024 * 1024, ...overrides },
+    id: "policy_1",
+    name: "Fixture",
+    version: 1,
+    createdAt: "2026-09-10T00:00:00.000Z",
+    collection: {
+      cadenceSeconds: 3600,
+      timeoutSeconds: 120,
+      maxBytes: 1024 * 1024,
+      historyMode: "changes",
+      maxRecords: 2_000_000,
+      maxOutputBytes: 2 * 1024 * 1024 * 1024,
+      ...overrides,
+    },
     serving: {},
   };
 }
@@ -138,7 +149,10 @@ export async function kernelHarness(options: HarnessOptions = {}): Promise<Kerne
   const core = new RunnerCore(sqliteStorage(database), transaction, {
     objects,
     publish: async (entries) => {
-      if (failPublish.next) { failPublish.next = false; throw new Error("Registry unavailable"); }
+      if (failPublish.next) {
+        failPublish.next = false;
+        throw new Error("Registry unavailable");
+      }
       published.push(entries);
       return true;
     },
@@ -152,9 +166,21 @@ export async function kernelHarness(options: HarnessOptions = {}): Promise<Kerne
   else if (options.history) resolved.history = options.history;
   const feedPolicy = options.policy ?? policy();
   const feed: Feed = {
-    id: "feed_1", slug: "things", title: "Things", description: "Fixture", gatekeeperKind: "fixture", config: resolved.config,
-    semantics: resolved.semantics, resolved, feedEpoch: "epoch-1", policyId: feedPolicy.id, enabled: true, staleAfterSeconds: 7200, topics: [],
-    createdAt: "2026-09-10T00:00:00.000Z", updatedAt: "2026-09-10T00:00:00.000Z",
+    id: "feed_1",
+    slug: "things",
+    title: "Things",
+    description: "Fixture",
+    gatekeeperKind: "fixture",
+    config: resolved.config,
+    semantics: resolved.semantics,
+    resolved,
+    feedEpoch: "epoch-1",
+    policyId: feedPolicy.id,
+    enabled: true,
+    staleAfterSeconds: 7200,
+    topics: [],
+    createdAt: "2026-09-10T00:00:00.000Z",
+    updatedAt: "2026-09-10T00:00:00.000Z",
   };
   core.configure(feed, feedPolicy);
   const source: FixtureSource = { records: [], points: [], completeness: "complete", rejected: 0, updateMode: "authoritative-snapshot", kind: "record" };
@@ -177,16 +203,26 @@ export async function kernelHarness(options: HarnessOptions = {}): Promise<Kerne
     },
   };
   const gatekeeper = {
-    collect: (request: Parameters<typeof collectNormalized>[0]) => collectNormalized(request, {
-      normalizer: { id: "fixture", version: "1" },
-      resolve: async () => resolved,
-      source: async () => source.fetch ? source.fetch() : ({ kind: "body", body: new Uint8Array(0), provenance: { sourceUrl: "https://example.test/things" }, completeness: source.completeness }),
-      normalize: { kind: "streaming", transform: async () => fixtureTransform(source) },
-    }),
+    collect: (request: Parameters<typeof collectNormalized>[0]) =>
+      collectNormalized(request, {
+        normalizer: { id: "fixture", version: "1" },
+        resolve: async () => resolved,
+        source: async () =>
+          source.fetch ? source.fetch() : { kind: "body", body: new Uint8Array(0), provenance: { sourceUrl: "https://example.test/things" }, completeness: source.completeness },
+        normalize: { kind: "streaming", transform: async () => fixtureTransform(source) },
+      }),
   };
   const run = (acquisitionId: string, lake?: LakeSend) => runCollection(acquisitionId, lake ? { runner: port, gatekeeper, objects, lake } : { runner: port, gatekeeper, objects });
   const harness: KernelHarness = {
-    core, port, snapshots, objects, source, published, lake, failPublish, clock,
+    core,
+    port,
+    snapshots,
+    objects,
+    source,
+    published,
+    lake,
+    failPublish,
+    clock,
     async collect() {
       const acquisition = core.collectNow("manual");
       core.markStarted(acquisition.id, `${acquisition.id}-test`);
@@ -198,10 +234,17 @@ export async function kernelHarness(options: HarnessOptions = {}): Promise<Kerne
       return { ...outcome, acquisitionId: acquisition.id };
     },
     run,
-    deliver: async () => (await drainOutbox(port, async (table, rows) => {
-      harness.lakeCount += rows.length;
-      if (options.keepLake ?? true) lake.push({ table, rows });
-    }, Number.MAX_SAFE_INTEGER)).delivered,
+    deliver: async () =>
+      (
+        await drainOutbox(
+          port,
+          async (table, rows) => {
+            harness.lakeCount += rows.length;
+            if (options.keepLake ?? true) lake.push({ table, rows });
+          },
+          Number.MAX_SAFE_INTEGER,
+        )
+      ).delivered,
     lakeCount: 0,
     lakeRows: (table) => lake.filter((batch) => table === undefined || batch.table === table).flatMap((batch) => batch.rows),
     entry: (slug = "things") => published.at(-1)?.find((entry) => entry.slug === slug),
@@ -215,13 +258,40 @@ export async function kernelHarness(options: HarnessOptions = {}): Promise<Kerne
 }
 
 function fixtureTransform(source: FixtureSource): StreamingTransform {
-  const product = source.kind === "record"
-    ? { productKey: "things", slug: "things", title: "Things", description: "Fixture things", role: "reference" as const, kind: "record" as const, schema: { fields: [{ id: "name", name: "Name", type: "string" as const, nullable: false }, { id: "value", name: "Value", type: "string" as const, nullable: true }] }, updateMode: source.updateMode, completeness: "complete" as const }
-    : { productKey: "readings", slug: "readings", title: "Readings", description: "Fixture series", role: "time-series" as const, kind: "series" as const, schema: { fields: [{ id: "value", name: "Value", type: "number" as const, nullable: false }] }, updateMode: "source-window" as const, completeness: "complete" as const };
+  const product =
+    source.kind === "record"
+      ? {
+          productKey: "things",
+          slug: "things",
+          title: "Things",
+          description: "Fixture things",
+          role: "reference" as const,
+          kind: "record" as const,
+          schema: {
+            fields: [
+              { id: "name", name: "Name", type: "string" as const, nullable: false },
+              { id: "value", name: "Value", type: "string" as const, nullable: true },
+            ],
+          },
+          updateMode: source.updateMode,
+          completeness: "complete" as const,
+        }
+      : {
+          productKey: "readings",
+          slug: "readings",
+          title: "Readings",
+          description: "Fixture series",
+          role: "time-series" as const,
+          kind: "series" as const,
+          schema: { fields: [{ id: "value", name: "Value", type: "number" as const, nullable: false }] },
+          updateMode: "source-window" as const,
+          completeness: "complete" as const,
+        };
   if (!source.generate) {
     const base = bufferedTransform({
       transformer: { id: "fixture", version: "1" },
-      products: source.kind === "record" ? [{ ...product, kind: "record", records: source.records }] : [{ ...product, kind: "series", updateMode: "source-window", points: source.points }],
+      products:
+        source.kind === "record" ? [{ ...product, kind: "record", records: source.records }] : [{ ...product, kind: "series", updateMode: "source-window", points: source.points }],
       quality: { acceptedRecords: source.records.length + source.points.length, rejectedRecords: source.rejected },
     });
     if (!source.finalCompleteness) return base;

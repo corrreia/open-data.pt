@@ -48,8 +48,7 @@ export const OGC_FEEDS = {
   collection: {
     kind: "collection",
     title: "OGC API Features collection",
-    description:
-      "One collection of an OGC API — Features service, walked page by page as GeoJSON in WGS 84, with the property schema the service publishes.",
+    description: "One collection of an OGC API — Features service, walked page by page as GeoJSON in WGS 84, with the property schema the service publishes.",
     semantics: {
       domainSubject: "feature",
       defaultProductRole: "reference",
@@ -57,10 +56,7 @@ export const OGC_FEEDS = {
   },
 } as const satisfies Record<string, FeedKindDescription>;
 
-export type Fetcher = (
-  input: RequestInfo | URL,
-  init?: RequestInit,
-) => Promise<Response>;
+export type Fetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
 /** One property as the service's JSON Schema describes it. */
 export interface OgcProperty {
@@ -289,12 +285,7 @@ function unsafeParsed(config: SourceConfig): ValidatedConfig {
  * avoid. The kernel's semantic no-op suppression already makes an unchanged
  * collection cost no revision, no history row and no stored chunk.
  */
-export async function collectOgcFeed(
-  config: SourceConfig,
-  _state: JsonObject | undefined,
-  hosts: ReadonlySet<string>,
-  fetcher: Fetcher,
-): Promise<SourceFetch> {
+export async function collectOgcFeed(config: SourceConfig, _state: JsonObject | undefined, hosts: ReadonlySet<string>, fetcher: Fetcher): Promise<SourceFetch> {
   const validated = parseConfig(validateOgcFeedConfig(config, hosts), hosts);
   const collection = collectionUrl(config);
   const description = await readCollection(collection, validated, hosts, fetcher);
@@ -575,7 +566,19 @@ async function request(url: URL, headers: Headers, config: ValidatedConfig, host
   let target = url;
   for (let hop = 0; ; hop += 1) {
     const response = await fetcher(target, { headers: identified, redirect: "manual" });
-    if (response.status >= 400) console.warn(JSON.stringify({ event: "source_http_status", source: "ogc", host: target.hostname, path: target.pathname, status: response.status, server: response.headers.get("server"), mitigation: response.headers.get("cf-mitigated"), contentType: response.headers.get("content-type") }));
+    if (response.status >= 400)
+      console.warn(
+        JSON.stringify({
+          event: "source_http_status",
+          source: "ogc",
+          host: target.hostname,
+          path: target.pathname,
+          status: response.status,
+          server: response.headers.get("server"),
+          mitigation: response.headers.get("cf-mitigated"),
+          contentType: response.headers.get("content-type"),
+        }),
+      );
     if (response.status < 300 || response.status > 399 || response.status === 304) return response;
     await response.body?.cancel("Redirected").catch(() => undefined);
     if (hop >= MAX_REDIRECTS) {

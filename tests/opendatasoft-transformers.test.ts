@@ -1,15 +1,7 @@
 import { jsonAs } from "./support";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type {
-  CanonicalRecord,
-  JsonObject,
-  JsonValue,
-  ProductDeclaration,
-  SeriesPoint,
-  TransformContext,
-  TransformQuality,
-} from "@open-data-pt/gatekeeper-shared";
+import type { CanonicalRecord, JsonObject, JsonValue, ProductDeclaration, SeriesPoint, TransformContext, TransformQuality } from "@open-data-pt/gatekeeper-shared";
 import { OpendatasoftTransformer, SAMPLE_ROWS } from "../packages/gatekeeper-shared/src/formats/opendatasoft/transform";
 
 const transformer = new OpendatasoftTransformer();
@@ -96,10 +88,7 @@ async function transform(document: Uint8Array, slug: string, chunkSize = 97, ser
 
 describe("Opendatasoft transformers", () => {
   it("maps a live E-REDES geospatial fixture to typed current records", async () => {
-    const result = await transform(
-      fixture("e-redes-secondary-substations.json"),
-      "e-redes-secondary-substations",
-    );
+    const result = await transform(fixture("e-redes-secondary-substations.json"), "e-redes-secondary-substations");
     const product = result.products[0];
 
     expect({ id: transformer.id, version: transformer.version }).toEqual({
@@ -111,12 +100,14 @@ describe("Opendatasoft transformers", () => {
       role: "current-state",
       updateMode: "authoritative-snapshot",
     });
-    expect(product?.schema.fields).toEqual(expect.arrayContaining([
-      expect.objectContaining({ id: "coordenadas_geo_latitude", type: "latitude" }),
-      expect.objectContaining({ id: "coordenadas_geo_longitude", type: "longitude" }),
-      expect.objectContaining({ id: "potencia_transformacao_kva", type: "number" }),
-      expect.objectContaining({ id: "nivel_utilizacao", type: "category" }),
-    ]));
+    expect(product?.schema.fields).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "coordenadas_geo_latitude", type: "latitude" }),
+        expect.objectContaining({ id: "coordenadas_geo_longitude", type: "longitude" }),
+        expect.objectContaining({ id: "potencia_transformacao_kva", type: "number" }),
+        expect.objectContaining({ id: "nivel_utilizacao", type: "category" }),
+      ]),
+    );
     expect(product?.records[0]).toMatchObject({
       entityKey: expect.stringMatching(/^row-[0-9a-f]{16}$/),
       payload: {
@@ -235,11 +226,13 @@ describe("Opendatasoft transformers", () => {
     expect(table.products).toHaveLength(1);
     expect(table.products[0]?.title).toBe("Programa Nacional de Diagnóstico Precoce");
     expect(table.products[0]?.description).not.toContain("<p>");
-    expect(table.products[0]?.schema.fields).toEqual(expect.arrayContaining([
-      expect.objectContaining({ id: "tempo", type: "date" }),
-      expect.objectContaining({ id: "entidade", type: "category" }),
-      expect.objectContaining({ id: "casos_detetados", type: "number" }),
-    ]));
+    expect(table.products[0]?.schema.fields).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "tempo", type: "date" }),
+        expect.objectContaining({ id: "entidade", type: "category" }),
+        expect.objectContaining({ id: "casos_detetados", type: "number" }),
+      ]),
+    );
     expect(table.products[0]?.records[0]).toMatchObject({
       eventTime: "2011-01-01T00:00:00.000Z",
       payload: { tempo: "2011-01-01", casos_detetados: 75 },
@@ -269,35 +262,22 @@ describe("Opendatasoft transformers", () => {
   });
 
   it("uses annotated identifiers and otherwise hashes sorted row content deterministically", async () => {
-    const document = jsonAs<{ dataset: JsonObject; records: Array<JsonObject> }>(
-      fixture("sns-newborn-screening.json"),
-    );
+    const document = jsonAs<{ dataset: JsonObject; records: Array<JsonObject> }>(fixture("sns-newborn-screening.json"));
     const first = document.records[0] ?? {};
     const reversed = Object.fromEntries(Object.entries(first).reverse());
-    const one = await transform(
-      bytes({ dataset: document.dataset, records: [first] }),
-      "stable-one",
-    );
-    const two = await transform(
-      bytes({ dataset: document.dataset, records: [reversed] }),
-      "stable-two",
-    );
-    expect(one.products[0]?.records[0]?.entityKey).toBe(
-      two.products[0]?.records[0]?.entityKey,
-    );
+    const one = await transform(bytes({ dataset: document.dataset, records: [first] }), "stable-one");
+    const two = await transform(bytes({ dataset: document.dataset, records: [reversed] }), "stable-two");
+    expect(one.products[0]?.records[0]?.entityKey).toBe(two.products[0]?.records[0]?.entityKey);
 
     const identified = {
       dataset: {
         dataset_id: "identified",
         metas: { default: { title: "Identified", records_count: 1 } },
-        fields: [
-          { name: "code", type: "text", annotations: { id: true } },
-        ],
+        fields: [{ name: "code", type: "text", annotations: { id: true } }],
       },
       records: [{ code: "stable-code" }],
     };
-    expect((await transform(bytes(identified), "identified"))
-      .products[0]?.records[0]?.entityKey).toBe("stable-code");
+    expect((await transform(bytes(identified), "identified")).products[0]?.records[0]?.entityKey).toBe("stable-code");
   });
 
   it("types URLs, booleans, colours, geometry, JSON, and badge display hints", async () => {
@@ -321,15 +301,17 @@ describe("Opendatasoft transformers", () => {
           { name: "details", type: "object", annotations: {} },
         ],
       },
-      records: [{
-        id: "one",
-        name: "Area one",
-        color: "#112233",
-        active: true,
-        document: { url: "https://example.test/document.pdf" },
-        "shape": { type: "Feature", geometry: { type: "Point", coordinates: [-9, 38] } },
-        details: { source: "live" },
-      }],
+      records: [
+        {
+          id: "one",
+          name: "Area one",
+          color: "#112233",
+          active: true,
+          document: { url: "https://example.test/document.pdf" },
+          "shape": { type: "Feature", geometry: { type: "Point", coordinates: [-9, 38] } },
+          details: { source: "live" },
+        },
+      ],
     };
     const result = await transform(bytes(captured), "typed", 1);
     for (const schema of [result.declared[0]?.schema, result.products[0]?.schema]) {
@@ -353,7 +335,10 @@ describe("Opendatasoft transformers", () => {
     const late = new TextEncoder().encode(`{"records":${JSON.stringify(records)},"dataset":{"dataset_id":"x","fields":[],"metas":{"default":{}}}}`);
     await expect(transform(late, "late")).rejects.toThrow("dataset metadata before its records");
     // A body that ends inside the profiling prefix still reads metadata from anywhere.
-    const small = await transform(new TextEncoder().encode('{"records":[{"id":"a"}],"dataset":{"dataset_id":"x","fields":[{"name":"id","type":"text","annotations":{"id":true}}],"metas":{"default":{}}}}'), "small");
+    const small = await transform(
+      new TextEncoder().encode('{"records":[{"id":"a"}],"dataset":{"dataset_id":"x","fields":[{"name":"id","type":"text","annotations":{"id":true}}],"metas":{"default":{}}}}'),
+      "small",
+    );
     expect(small.products[0]?.records.map((record) => record.entityKey)).toEqual(["a"]);
   });
 });

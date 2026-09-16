@@ -20,10 +20,7 @@ import {
 
 const MAX_METADATA_BYTES = 2 * 1024 * 1024;
 
-export type Fetcher = (
-  input: RequestInfo | URL,
-  init?: RequestInit,
-) => Promise<Response>;
+export type Fetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
 /** The dataset a uData feed reads, checked against the allowlist before anything is fetched. */
 export function validateUdataSourceConfig(config: SourceConfig, hosts: ReadonlySet<string>): SourceConfig {
@@ -61,11 +58,7 @@ export class UdataSource {
    * never buffered here, so its size is bounded only by the collection's
    * source budget, which the collector enforces on the wire.
    */
-  async fetchDistribution(
-    config: SourceConfig,
-    distributionId: string,
-    checkpoint?: SourceValidator,
-  ): Promise<SourceFetch> {
+  async fetchDistribution(config: SourceConfig, distributionId: string, checkpoint?: SourceValidator): Promise<SourceFetch> {
     if (!/^[A-Za-z0-9_-]{1,200}$/.test(distributionId)) {
       throw new GatekeeperError("distributionId has an invalid format", "invalid-config");
     }
@@ -73,10 +66,7 @@ export class UdataSource {
     const validated = this.validateConfig(config);
     const baseUrl = requireString(validated, "baseUrl");
     const datasetId = requireString(validated, "dataset");
-    const metadataResponse = await this.fetcher(
-      datasetEndpoint(baseUrl, datasetId),
-      { headers: { Accept: "application/json" } },
-    );
+    const metadataResponse = await this.fetcher(datasetEndpoint(baseUrl, datasetId), { headers: { Accept: "application/json" } });
     if (!metadataResponse.ok) throw upstreamError("uData dataset metadata", metadataResponse);
     if (!metadataResponse.body) {
       throw new GatekeeperError("uData dataset metadata was empty", "invalid-response");
@@ -90,10 +80,7 @@ export class UdataSource {
 
     // uData's resource endpoint proxies the publisher URL. Keeping the request
     // on the configured uData host prevents publisher metadata becoming an SSRF URL.
-    const endpoint = new URL(
-      `/api/1/datasets/r/${encodeURIComponent(distributionId)}`,
-      baseUrl,
-    );
+    const endpoint = new URL(`/api/1/datasets/r/${encodeURIComponent(distributionId)}`, baseUrl);
     const requestHeaders = new Headers({ Accept: "*/*" });
     if (checkpoint?.etag) requestHeaders.set("If-None-Match", checkpoint.etag);
     if (checkpoint?.lastModified) {
@@ -164,10 +151,7 @@ interface UdataResource {
   lastModified?: string;
 }
 
-function findResource(
-  value: JsonValue | undefined,
-  distributionId: string,
-): UdataResource | undefined {
+function findResource(value: JsonValue | undefined, distributionId: string): UdataResource | undefined {
   for (const candidate of asArrayOrEmpty(value)) {
     if (!isJsonObject(candidate)) continue;
     const id = optionalString(candidate, "id");
@@ -189,4 +173,3 @@ function findResource(
 function upstreamError(label: string, response: Response): GatekeeperError {
   return new GatekeeperError(`${label} returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
 }
-

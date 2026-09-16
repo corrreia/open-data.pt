@@ -73,11 +73,7 @@ interface AggregateDocument {
   stations: JsonValue[];
 }
 
-export async function validateDgegFeedConfig(
-  config: SourceConfig,
-  apiOrigin: string,
-  fetcher: Fetcher,
-): Promise<SourceConfig> {
+export async function validateDgegFeedConfig(config: SourceConfig, apiOrigin: string, fetcher: Fetcher): Promise<SourceConfig> {
   const normalized = normalizeConfig(config);
   const origin = allowedOrigin(apiOrigin);
   if (normalized.feed === "fuel-types") return normalized;
@@ -110,13 +106,7 @@ export async function collectDgegFeed(
   if (normalized.feed === "fuel-types") {
     return collectFuelTypes(origin, checkpoint, fetcher);
   }
-  return collectFuelPrices(
-    normalized,
-    checkpoint,
-    origin,
-    fetcher,
-    options.requestDelayMs ?? DEFAULT_REQUEST_DELAY_MS,
-  );
+  return collectFuelPrices(normalized, checkpoint, origin, fetcher, options.requestDelayMs ?? DEFAULT_REQUEST_DELAY_MS);
 }
 
 function normalizeConfig(config: SourceConfig): SourceConfig & { feed: DgegFeed } {
@@ -124,11 +114,7 @@ function normalizeConfig(config: SourceConfig): SourceConfig & { feed: DgegFeed 
   if (feed !== "fuel-prices" && feed !== "fuel-types") {
     throw new GatekeeperError("DGEG feeds require feed=fuel-prices or feed=fuel-types", "invalid-config");
   }
-  const allowedKeys = new Set(
-    feed === "fuel-prices"
-      ? ["feed", "fuelTypeId", "districtId"]
-      : ["feed"],
-  );
+  const allowedKeys = new Set(feed === "fuel-prices" ? ["feed", "fuelTypeId", "districtId"] : ["feed"]);
   const unknown = Object.keys(config).find((key) => !allowedKeys.has(key));
   if (unknown) {
     throw new GatekeeperError(`Unsupported DGEG configuration field: ${unknown}`, unknown === "host" || unknown === "url" ? "source-denied" : "invalid-config");
@@ -136,19 +122,13 @@ function normalizeConfig(config: SourceConfig): SourceConfig & { feed: DgegFeed 
   if (feed === "fuel-types") return { feed };
 
   const fuelTypeId = positiveInteger(config.fuelTypeId, "fuelTypeId");
-  const districtId = config.districtId
-    ? positiveInteger(config.districtId, "districtId")
-    : undefined;
+  const districtId = config.districtId ? positiveInteger(config.districtId, "districtId") : undefined;
   const validated: SourceConfig & { feed: DgegFeed } = { feed, fuelTypeId };
   if (districtId) validated.districtId = districtId;
   return validated;
 }
 
-async function collectFuelTypes(
-  origin: URL,
-  checkpoint: SourceValidator | undefined,
-  fetcher: Fetcher,
-): Promise<SourceFetch> {
+async function collectFuelTypes(origin: URL, checkpoint: SourceValidator | undefined, fetcher: Fetcher): Promise<SourceFetch> {
   const endpoint = apiUrl(origin, "GetTiposCombustiveis");
   const response = await fetcher(endpoint, {
     headers: requestHeaders(checkpoint),
@@ -193,9 +173,7 @@ async function collectFuelPrices(
   }
   districts.sort((left, right) => left.Id - right.Id);
 
-  const selectedDistrict = config.districtId
-    ? districts.find((district) => district.Id === Number(config.districtId))
-    : undefined;
+  const selectedDistrict = config.districtId ? districts.find((district) => district.Id === Number(config.districtId)) : undefined;
   if (config.districtId && !selectedDistrict) {
     throw new GatekeeperError(`DGEG does not publish district ${config.districtId}`, "invalid-config");
   }
@@ -276,12 +254,7 @@ function allowedOrigin(value: string): URL {
   } catch {
     throw new GatekeeperError("DGEG API origin is invalid", "source-denied");
   }
-  if (
-    origin.origin !== DGEG_API_ORIGIN ||
-    origin.pathname !== "/" ||
-    origin.username !== "" ||
-    origin.password !== ""
-  ) {
+  if (origin.origin !== DGEG_API_ORIGIN || origin.pathname !== "/" || origin.username !== "" || origin.password !== "") {
     throw new GatekeeperError("DGEG API origin is not allowed", "source-denied");
   }
   return origin;
@@ -322,11 +295,7 @@ function sourceUrl(origin: URL, fuelTypeId: number, districtId?: number): URL {
   return url;
 }
 
-async function fetchReferenceArray(
-  origin: URL,
-  method: string,
-  fetcher: Fetcher,
-): Promise<JsonValue[]> {
+async function fetchReferenceArray(origin: URL, method: string, fetcher: Fetcher): Promise<JsonValue[]> {
   const response = await fetcher(apiUrl(origin, method), {
     headers: requestHeaders(undefined),
   });
@@ -385,12 +354,7 @@ function asFuelType(value: JsonValue | undefined): FuelType | undefined {
 
 function asDistrict(value: JsonValue | undefined): District | undefined {
   if (!isJsonObject(value)) return undefined;
-  if (
-    !isJsonNumber(value.Id) ||
-    !Number.isSafeInteger(value.Id) ||
-    !isJsonString(value.Descritivo) ||
-    value.Descritivo.trim() === ""
-  ) {
+  if (!isJsonNumber(value.Id) || !Number.isSafeInteger(value.Id) || !isJsonString(value.Descritivo) || value.Descritivo.trim() === "") {
     return undefined;
   }
   // SAFETY: the checks above confirm the Id and Descritivo a District names;
@@ -401,9 +365,7 @@ function asDistrict(value: JsonValue | undefined): District | undefined {
 function totalRows(value: JsonValue | undefined): number {
   if (!isJsonObject(value)) return 0;
   const total = value.Quantidade;
-  return isJsonNumber(total) && Number.isSafeInteger(total) && total >= 0
-    ? total
-    : 0;
+  return isJsonNumber(total) && Number.isSafeInteger(total) && total >= 0 ? total : 0;
 }
 
 function requestHeaders(checkpoint: SourceValidator | undefined): Headers {
@@ -454,26 +416,18 @@ export function dgegDateTime(value: string): string | undefined {
   const hour = Number(match[4]);
   const minute = Number(match[5]);
   const second = match[6] ? Number(match[6]) : 0;
-  if (
-    month < 1 || month > 12 || hour > 23 || minute > 59 || second > 59
-  ) {
+  if (month < 1 || month > 12 || hour > 23 || minute > 59 || second > 59) {
     return undefined;
   }
   const local = Date.UTC(year, month - 1, day, hour, minute, second);
   const calendar = new Date(local);
-  if (
-    calendar.getUTCFullYear() !== year ||
-    calendar.getUTCMonth() !== month - 1 ||
-    calendar.getUTCDate() !== day
-  ) {
+  if (calendar.getUTCFullYear() !== year || calendar.getUTCMonth() !== month - 1 || calendar.getUTCDate() !== day) {
     return undefined;
   }
   const summerCandidate = local - 3_600_000;
   const summerStart = Date.UTC(year, 2, lastSunday(year, 2), 1);
   const summerEnd = Date.UTC(year, 9, lastSunday(year, 9), 1);
-  const utc = summerCandidate >= summerStart && summerCandidate < summerEnd
-    ? summerCandidate
-    : local;
+  const utc = summerCandidate >= summerStart && summerCandidate < summerEnd ? summerCandidate : local;
   const date = new Date(utc);
   return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
 }

@@ -27,7 +27,14 @@ export interface LakeQueryResult {
  * public history page and its lookahead row by default; the internal summary
  * batch pages wider and names every clock change since 1996.
  */
-export async function runLakeQuery(env: Pick<Env, "CATALOG_TOKEN" | "LAKE_BUCKET" | "CLOUDFLARE_ACCOUNT_ID">, sql: string, clientKey: string, fetcher: typeof fetch = (input, init) => fetch(input, init), maxRows = MAX_LIMIT, maxChars = MAX_SQL_LENGTH): Promise<LakeQueryResult> {
+export async function runLakeQuery(
+  env: Pick<Env, "CATALOG_TOKEN" | "LAKE_BUCKET" | "CLOUDFLARE_ACCOUNT_ID">,
+  sql: string,
+  clientKey: string,
+  fetcher: typeof fetch = (input, init) => fetch(input, init),
+  maxRows = MAX_LIMIT,
+  maxChars = MAX_SQL_LENGTH,
+): Promise<LakeQueryResult> {
   if (!env.CATALOG_TOKEN || !env.LAKE_BUCKET) {
     throw new QueryError("Lake queries are not enabled on this deployment", "disabled");
   }
@@ -40,15 +47,12 @@ export async function runLakeQuery(env: Pick<Env, "CATALOG_TOKEN" | "LAKE_BUCKET
     let status: number;
     let text: string;
     try {
-      const response = await fetcher(
-        `https://api.sql.cloudflarestorage.com/api/v1/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/r2-sql/query/${env.LAKE_BUCKET}`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${env.CATALOG_TOKEN}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ query: cleaned }),
-          signal: aborter.signal,
-        },
-      );
+      const response = await fetcher(`https://api.sql.cloudflarestorage.com/api/v1/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/r2-sql/query/${env.LAKE_BUCKET}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${env.CATALOG_TOKEN}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ query: cleaned }),
+        signal: aborter.signal,
+      });
       status = response.status;
       text = await response.text();
     } catch (error) {
@@ -64,13 +68,19 @@ export async function runLakeQuery(env: Pick<Env, "CATALOG_TOKEN" | "LAKE_BUCKET
     const result = asObject(payload?.result);
     const bytesScanned = Math.max(0, asNumber(asObject(result?.metrics)?.bytes_scanned) ?? 0);
     if (status >= 400 || payload?.success === false) {
-      const message = asArray(payload?.errors)?.map((error) => asString(asObject(error)?.message)).filter(Boolean).join("; ") || `R2 SQL returned HTTP ${status}`;
+      const message =
+        asArray(payload?.errors)
+          ?.map((error) => asString(asObject(error)?.message))
+          .filter(Boolean)
+          .join("; ") || `R2 SQL returned HTTP ${status}`;
       throw new QueryError(message, "store");
     }
     const rows = asArray(result?.rows);
     if (!rows || !rows.every(isJsonObject)) throw new QueryError("R2 SQL returned an invalid result", "unreadable");
     return { rows, rowCount: rows.length, bytesScanned, durationMs: Date.now() - started, sql: cleaned };
-  } finally { clearTimeout(timer); }
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /**

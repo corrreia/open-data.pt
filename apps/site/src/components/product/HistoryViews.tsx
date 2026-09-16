@@ -30,7 +30,12 @@ export function ChangesView({ product, refreshKey }: { product: Product; refresh
 
   const columns = useMemo<Column<Change>[]>(
     () => [
-      { key: "operation", header: "Operation", cell: (change) => <Badge variant={OPERATION_BADGE.get(change.operation) ?? "neutral"}>{change.operation}</Badge>, sort: (change) => change.operation },
+      {
+        key: "operation",
+        header: "Operation",
+        cell: (change) => <Badge variant={OPERATION_BADGE.get(change.operation) ?? "neutral"}>{change.operation}</Badge>,
+        sort: (change) => change.operation,
+      },
       { key: "entity", header: "Entity", cell: (change) => change.entityKey, sort: (change) => change.entityKey, mono: true },
       { key: "eventTime", header: "Event time", cell: (change) => when(change.eventTime), sort: (change) => change.eventTime, mono: true },
       { key: "validFrom", header: "Valid from", cell: (change) => when(change.validFrom), sort: (change) => change.validFrom, mono: true },
@@ -51,12 +56,25 @@ export function ChangesView({ product, refreshKey }: { product: Product; refresh
         rowKey={(change, index) => change.revisionId ?? `${change.entityKey}-${index}`}
         initialSort={{ key: "observed", direction: "desc" }}
         onRowClick={setSelected}
-        exportRow={(change) => ({ operation: change.operation, entityKey: change.entityKey, eventTime: change.eventTime ?? null, validFrom: change.validFrom ?? null, validTo: change.validTo ?? null, observedAt: change.observedAt ?? null, payload: change.payload ?? null })}
+        exportRow={(change) => ({
+          operation: change.operation,
+          entityKey: change.entityKey,
+          eventTime: change.eventTime ?? null,
+          validFrom: change.validFrom ?? null,
+          validTo: change.validTo ?? null,
+          observedAt: change.observedAt ?? null,
+          payload: change.payload ?? null,
+        })}
         downloadName={`${product.slug}-changes`}
         empty="No changes recorded yet: changes are logged when a record is created, updated, corrected, retracted or deleted between collections."
         footer={<span>Every row keeps its own event, validity, source and observation clocks. Select one to read what it wrote.</span>}
       />
-      <RecordDialog record={selected?.payload ?? null} fields={product.schema.fields} title={selected ? `${selected.operation} · ${selected.entityKey}` : undefined} onClose={() => setSelected(null)} />
+      <RecordDialog
+        record={selected?.payload ?? null}
+        fields={product.schema.fields}
+        title={selected ? `${selected.operation} · ${selected.entityKey}` : undefined}
+        onClose={() => setSelected(null)}
+      />
     </>
   );
 }
@@ -128,14 +146,26 @@ export function EventHistoryView({ product }: { product: Product }) {
   const fields = product.schema.fields;
   const columns = useMemo<Column<JsonRecord>[]>(
     () => [
-      ...fields.slice(0, 5).map((field) => ({ key: field.name, header: humanize(field.name), cell: (record: JsonRecord) => <Cell record={record} field={field} />, sort: (record: JsonRecord) => sortValue(record[field.name]) })),
-      { key: "eventTime", header: "Event time", cell: (record) => (isText(record.eventTime) ? fmt.dateTime(record.eventTime) : "—"), sort: (record) => sortValue(record.eventTime), mono: true },
+      ...fields.slice(0, 5).map((field) => ({
+        key: field.name,
+        header: humanize(field.name),
+        cell: (record: JsonRecord) => <Cell record={record} field={field} />,
+        sort: (record: JsonRecord) => sortValue(record[field.name]),
+      })),
+      {
+        key: "eventTime",
+        header: "Event time",
+        cell: (record) => (isText(record.eventTime) ? fmt.dateTime(record.eventTime) : "—"),
+        sort: (record) => sortValue(record.eventTime),
+        mono: true,
+      },
     ],
     [fields],
   );
 
   if (loading && rows.length === 0) return <Loading what="the last 30 days" />;
-  if (error && rows.length === 0) return <Empty icon={<ClockCounterClockwiseIcon size={40} className="text-kumo-inactive" />} title="Could not load the event history" description={error.message} />;
+  if (error && rows.length === 0)
+    return <Empty icon={<ClockCounterClockwiseIcon size={40} className="text-kumo-inactive" />} title="Could not load the event history" description={error.message} />;
   return (
     <>
       <DataTable

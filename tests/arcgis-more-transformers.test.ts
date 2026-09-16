@@ -1,21 +1,13 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type {
-  CanonicalField,
-  CanonicalRecord,
-  ProductDeclaration,
-  TransformContext,
-  TransformQuality,
-} from "@open-data-pt/gatekeeper-shared";
+import type { CanonicalField, CanonicalRecord, ProductDeclaration, TransformContext, TransformQuality } from "@open-data-pt/gatekeeper-shared";
 import { ARCGIS_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/arcgis";
 import { ArcgisTransformer } from "../packages/gatekeeper-shared/src/formats/arcgis";
 
 const transformer = new ArcgisTransformer();
 
 function fixture(name: string): Uint8Array {
-  return new Uint8Array(
-    readFileSync(new URL(`./fixtures/arcgis-more/${name}`, import.meta.url)),
-  );
+  return new Uint8Array(readFileSync(new URL(`./fixtures/arcgis-more/${name}`, import.meta.url)));
 }
 
 function context(slug: string, service: string, title = slug): TransformContext {
@@ -79,11 +71,7 @@ async function run(bytes: Uint8Array, feed: TransformContext, chunkSize = 61): P
 
 describe("ArcGIS transformers — APA SNIAmb live fixtures", () => {
   it("types bathing-water classifications, dates, URLs, identifiers, and coordinates", async () => {
-    const result = await run(
-      fixture("bathing-beaches.json"),
-      context("apa-bathing-beaches-feed", "Praias", "Portugal bathing beaches"),
-      1,
-    );
+    const result = await run(fixture("bathing-beaches.json"), context("apa-bathing-beaches-feed", "Praias", "Portugal bathing beaches"), 1);
     const fields = result.fields;
 
     expect({ id: transformer.id, version: transformer.version }).toEqual({ id: "arcgis-rest-layer", version: "2" });
@@ -117,14 +105,8 @@ describe("ArcGIS transformers — APA SNIAmb live fixtures", () => {
   });
 
   it("types station status and links while retaining point positions", async () => {
-    const hydrometric = await run(
-      fixture("hydrometric-stations.json"),
-      context("apa-hydrometric-stations-feed", "Estacoes_hidrometricas"),
-    );
-    const meteorological = await run(
-      fixture("meteorological-stations.json"),
-      context("apa-meteorological-stations-feed", "Estacoes_meteorologicas"),
-    );
+    const hydrometric = await run(fixture("hydrometric-stations.json"), context("apa-hydrometric-stations-feed", "Estacoes_hidrometricas"));
+    const meteorological = await run(fixture("meteorological-stations.json"), context("apa-meteorological-stations-feed", "Estacoes_meteorologicas"));
 
     expect(hydrometric.fields.get("estado")?.type).toBe("category");
     expect(hydrometric.fields.get("url")?.type).toBe("url");
@@ -139,10 +121,7 @@ describe("ArcGIS transformers — APA SNIAmb live fixtures", () => {
   });
 
   it("converts pre-1970 ArcGIS epoch dates and preserves flood elevations as numbers", async () => {
-    const result = await run(
-      fixture("flood-marks.json"),
-      context("apa-flood-marks-feed", "Marcas_cheias"),
-    );
+    const result = await run(fixture("flood-marks.json"), context("apa-flood-marks-feed", "Marcas_cheias"));
     const first = result.records[0];
 
     expect(result.fields.get("data")?.type).toBe("datetime");
@@ -155,14 +134,8 @@ describe("ArcGIS transformers — APA SNIAmb live fixtures", () => {
   });
 
   it("builds typed reference products for air-quality and RADNET stations", async () => {
-    const air = await run(
-      fixture("air-quality-stations.json"),
-      context("apa-air-quality-stations-feed", "Qualidade_do_Ar"),
-    );
-    const radnet = await run(
-      fixture("radnet-stations.json"),
-      context("apa-radnet-stations-feed", "RADNET"),
-    );
+    const air = await run(fixture("air-quality-stations.json"), context("apa-air-quality-stations-feed", "Qualidade_do_Ar"));
+    const radnet = await run(fixture("radnet-stations.json"), context("apa-radnet-stations-feed", "RADNET"));
 
     expect(air.fields.get("rede_m_id")?.type).toBe("identifier");
     expect(radnet.fields.get("limite")?.type).toBe("number");
@@ -174,9 +147,7 @@ describe("ArcGIS transformers — APA SNIAmb live fixtures", () => {
   });
 
   it("ships ten ready-to-install APA examples", () => {
-    const examples = ARCGIS_EXAMPLES.filter(
-      (example) => example.config.host === "sniambgeoogc.apambiente.pt",
-    );
+    const examples = ARCGIS_EXAMPLES.filter((example) => example.config.host === "sniambgeoogc.apambiente.pt");
 
     expect(examples).toHaveLength(10);
     expect(examples.map((example) => `${example.config.service}/${example.config.layer}`)).toEqual([
@@ -191,9 +162,6 @@ describe("ArcGIS transformers — APA SNIAmb live fixtures", () => {
       "getogc/rest/services/SNIAmb/Prevencao_Acidentes_Graves/MapServer/0",
       "getogc/rest/services/SNIAmb/CELE/MapServer/0",
     ]);
-    expect(examples.every((example) =>
-      example.policy.collection.maxBytes === 5 * 1024 * 1024 &&
-      example.policy.collection.historyMode === "changes"
-    )).toBe(true);
+    expect(examples.every((example) => example.policy.collection.maxBytes === 5 * 1024 * 1024 && example.policy.collection.historyMode === "changes")).toBe(true);
   });
 });

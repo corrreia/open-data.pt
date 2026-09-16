@@ -134,7 +134,8 @@ describe("link previews", () => {
       "@context": "https://schema.org",
       "@type": "Dataset",
       name: 'Station prices "today" & <more> $1',
-      description: "Prices at every station in mainland Portugal. Published by Direção-Geral de Energia e Geologia, collected every hour by open-data.pt and served as free JSON with no key.",
+      description:
+        "Prices at every station in mainland Portugal. Published by Direção-Geral de Energia e Geologia, collected every hour by open-data.pt and served as free JSON with no key.",
       url: `${ORIGIN}/product/?slug=fuel-stations`,
       isAccessibleForFree: true,
       dateModified: "2026-09-15T10:00:00.000Z",

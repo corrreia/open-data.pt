@@ -1,17 +1,7 @@
 import { jsonAs } from "./support";
 import { describe, expect, it, vi } from "vitest";
-import {
-  GatekeeperError,
-  type JsonObject,
-  type JsonValue,
-  type SourceBody,
-  type SourceFetch,
-} from "@open-data-pt/gatekeeper-shared";
-import {
-  collectArcgisFeed,
-  validateArcgisFeedConfig,
-  type Fetcher,
-} from "../packages/gatekeeper-shared/src/formats/arcgis";
+import { GatekeeperError, type JsonObject, type JsonValue, type SourceBody, type SourceFetch } from "@open-data-pt/gatekeeper-shared";
+import { collectArcgisFeed, validateArcgisFeedConfig, type Fetcher } from "../packages/gatekeeper-shared/src/formats/arcgis";
 
 const apaHost = "sniambgeoogc.apambiente.pt";
 const hosts = new Set(["services.arcgis.com", apaHost]);
@@ -103,13 +93,23 @@ async function readText(body: ReadableStream<Uint8Array> | Uint8Array): Promise<
 
 describe("ArcGIS Gatekeeper — APA SNIAmb", () => {
   it("normalizes the allowlisted APA MapServer and rejects other hosts", () => {
-    expect(validateArcgisFeedConfig({
-      layerUrl: `${layerUrl}`,
-    }, hosts)).toEqual(config);
+    expect(
+      validateArcgisFeedConfig(
+        {
+          layerUrl: `${layerUrl}`,
+        },
+        hosts,
+      ),
+    ).toEqual(config);
 
-    expect(() => validateArcgisFeedConfig({
-      layerUrl: "https://example.test/getogc/rest/services/SNIAmb/Praias/MapServer/0",
-    }, hosts)).toThrowError(GatekeeperError);
+    expect(() =>
+      validateArcgisFeedConfig(
+        {
+          layerUrl: "https://example.test/getogc/rest/services/SNIAmb/Praias/MapServer/0",
+        },
+        hosts,
+      ),
+    ).toThrowError(GatekeeperError);
   });
 
   it("collects a layer without editingInfo with provenance, no validator and cleared state", async () => {
@@ -159,7 +159,14 @@ describe("ArcGIS Gatekeeper — APA SNIAmb", () => {
   });
 
   it("fails the stream when an object ID page is truncated after completeness was declared", async () => {
-    const fetched = bodyOf(await collectArcgisFeed(config, undefined, hosts, objectIdFetcher([1, 2], (ids) => geojsonPage(ids, true))));
+    const fetched = bodyOf(
+      await collectArcgisFeed(
+        config,
+        undefined,
+        hosts,
+        objectIdFetcher([1, 2], (ids) => geojsonPage(ids, true)),
+      ),
+    );
     await expect(readText(fetched.body)).rejects.toMatchObject({ code: "invalid-response" });
   });
 
@@ -171,28 +178,50 @@ describe("ArcGIS Gatekeeper — APA SNIAmb", () => {
     },
     {
       geometryType: "esriGeometryPolyline",
-      geometry: { paths: [[[-9.2, 38.7], [-9.1, 38.8]]] },
-      expected: { type: "LineString", coordinates: [[-9.2, 38.7], [-9.1, 38.8]] },
+      geometry: {
+        paths: [
+          [
+            [-9.2, 38.7],
+            [-9.1, 38.8],
+          ],
+        ],
+      },
+      expected: {
+        type: "LineString",
+        coordinates: [
+          [-9.2, 38.7],
+          [-9.1, 38.8],
+        ],
+      },
     },
     {
       geometryType: "esriGeometryPolygon",
-      geometry: { rings: [[[-9.2, 38.7], [-9.2, 38.8], [-9.1, 38.8], [-9.1, 38.7], [-9.2, 38.7]]] },
+      geometry: {
+        rings: [
+          [
+            [-9.2, 38.7],
+            [-9.2, 38.8],
+            [-9.1, 38.8],
+            [-9.1, 38.7],
+            [-9.2, 38.7],
+          ],
+        ],
+      },
       expected: { type: "Polygon" },
     },
   ])("converts $geometryType Esri JSON to GeoJSON", async ({ geometryType, geometry, expected }) => {
-    const fetched = bodyOf(await collectArcgisFeed(
-      config,
-      undefined,
-      hosts,
-      fixtureFetcher(
-        metadata({ geometryType, supportedQueryFormats: "JSON" }),
-        {
+    const fetched = bodyOf(
+      await collectArcgisFeed(
+        config,
+        undefined,
+        hosts,
+        fixtureFetcher(metadata({ geometryType, supportedQueryFormats: "JSON" }), {
           geometryType,
           spatialReference: { wkid: 4326 },
           features: [{ attributes: { objectid: 1, nome_praia: "Feature" }, geometry }],
-        },
+        }),
       ),
-    ));
+    );
     const artifact = jsonAs<{
       features: Array<{ geometry: JsonObject; properties: JsonObject }>;
     }>(await readText(fetched.body));
@@ -202,10 +231,14 @@ describe("ArcGIS Gatekeeper — APA SNIAmb", () => {
   });
 
   it("rejects an Esri JSON page that ignored outSR=4326", async () => {
-    const fetched = bodyOf(await collectArcgisFeed(config, undefined, hosts, fixtureFetcher(
-      metadata({ supportedQueryFormats: "JSON" }),
-      { spatialReference: { wkid: 3763 }, features: [{ attributes: { objectid: 1 }, geometry: { x: 1, y: 2 } }] },
-    )));
+    const fetched = bodyOf(
+      await collectArcgisFeed(
+        config,
+        undefined,
+        hosts,
+        fixtureFetcher(metadata({ supportedQueryFormats: "JSON" }), { spatialReference: { wkid: 3763 }, features: [{ attributes: { objectid: 1 }, geometry: { x: 1, y: 2 } }] }),
+      ),
+    );
     await expect(readText(fetched.body)).rejects.toThrow("spatial reference 3763");
   });
 
@@ -218,21 +251,21 @@ describe("ArcGIS Gatekeeper — APA SNIAmb", () => {
   });
 
   it("reports a throttled query page with its status and Retry-After", async () => {
-    const fetched = bodyOf(await collectArcgisFeed(config, undefined, hosts, async (input) => {
-      const url = new URL(input.toString());
-      if (!url.pathname.endsWith("/query")) return Response.json(metadata());
-      if (url.searchParams.get("returnCountOnly") === "true") return Response.json({ count: 1 });
-      return new Response("slow down", { status: 429, headers: { "Retry-After": "30" } });
-    }));
+    const fetched = bodyOf(
+      await collectArcgisFeed(config, undefined, hosts, async (input) => {
+        const url = new URL(input.toString());
+        if (!url.pathname.endsWith("/query")) return Response.json(metadata());
+        if (url.searchParams.get("returnCountOnly") === "true") return Response.json({ count: 1 });
+        return new Response("slow down", { status: 429, headers: { "Retry-After": "30" } });
+      }),
+    );
     await expect(readText(fetched.body)).rejects.toMatchObject({ code: "upstream-error", retryAfterSeconds: 30 });
   });
 
   it("reports provider errors before querying the layer", async () => {
     const fetcher = vi.fn(async () => new Response("unavailable", { status: 503 }));
 
-    await expect(
-      collectArcgisFeed(config, undefined, hosts, fetcher),
-    ).rejects.toMatchObject({ code: "upstream-error" });
+    await expect(collectArcgisFeed(config, undefined, hosts, fetcher)).rejects.toMatchObject({ code: "upstream-error" });
     expect(fetcher).toHaveBeenCalledOnce();
   });
 });

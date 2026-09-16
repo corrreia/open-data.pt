@@ -95,31 +95,12 @@ export class GbfsTransformer {
   transform(bytes: Uint8Array, context: TransformContext): TransformResult {
     const root = parseDocument(bytes);
     const systemResource = optionalResource(root.system_information);
-    const systemData = systemResource
-      ? resourceData(systemResource, "system_information")
-      : undefined;
-    const systemId = systemData
-      ? requiredString(systemData.system_id, "GBFS system_id")
-      : context.feed.slug;
+    const systemData = systemResource ? resourceData(systemResource, "system_information") : undefined;
+    const systemId = systemData ? requiredString(systemData.system_id, "GBFS system_id") : context.feed.slug;
     const preferredLanguage = context.feed.config.language;
-    const systemName = systemData
-      ? requiredLocalizedString(
-          systemData.name,
-          preferredLanguage,
-          "GBFS system name",
-        )
-      : undefined;
-    const operator = systemData
-      ? localizedString(
-          systemData.operator ?? systemData.attribution_organization_name,
-          preferredLanguage,
-        )
-      : null;
-    const titles = productTitles(
-      systemName,
-      operator,
-      context.feed.slug,
-    );
+    const systemName = systemData ? requiredLocalizedString(systemData.name, preferredLanguage, "GBFS system name") : undefined;
+    const operator = systemData ? localizedString(systemData.operator ?? systemData.attribution_organization_name, preferredLanguage) : null;
+    const titles = productTitles(systemName, operator, context.feed.slug);
     const vehicleTypes = parseVehicleTypes(root.vehicle_types);
     const vehicleResource = optionalResource(root.free_bike_status);
     const stationInformation = optionalResource(root.station_information);
@@ -129,11 +110,7 @@ export class GbfsTransformer {
     let rejectedRecords = 0;
 
     if (vehicleResource) {
-      const vehicles = transformVehicles(
-        vehicleResource,
-        vehicleTypes,
-        systemId,
-      );
+      const vehicles = transformVehicles(vehicleResource, vehicleTypes, systemId);
       acceptedRecords += vehicles.records.length;
       rejectedRecords += vehicles.rejected;
       products.push({
@@ -166,11 +143,7 @@ export class GbfsTransformer {
     }
 
     if (stationInformation || stationStatus) {
-      const stations = transformStations(
-        stationInformation,
-        stationStatus,
-        preferredLanguage,
-      );
+      const stations = transformStations(stationInformation, stationStatus, preferredLanguage);
       acceptedRecords += stations.records.length;
       rejectedRecords += stations.rejected;
       const stationProduct: ProductBuild = {
@@ -198,12 +171,7 @@ export class GbfsTransformer {
           operator,
           url: validUrl(localizedString(systemData.url, preferredLanguage)),
           timezone: nullableString(systemData.timezone),
-          licenceUrl: validUrl(
-            localizedString(
-              systemData.license_url ?? systemData.licence_url,
-              preferredLanguage,
-            ),
-          ),
+          licenceUrl: validUrl(localizedString(systemData.license_url ?? systemData.licence_url, preferredLanguage)),
         },
       };
       products.push({
@@ -243,10 +211,7 @@ function optionalResource(value: JsonValue | undefined): JsonObject | undefined 
   return isJsonObject(value) ? value : undefined;
 }
 
-function resourceData(
-  resource: JsonObject,
-  name: string,
-): JsonObject {
+function resourceData(resource: JsonObject, name: string): JsonObject {
   if (!isJsonObject(resource.data)) throw new Error(`GBFS ${name} requires data`);
   return resource.data;
 }
@@ -271,25 +236,12 @@ function parseVehicleTypes(value: JsonValue | undefined): Map<string, VehicleTyp
   return result;
 }
 
-function transformVehicles(
-  resource: JsonObject,
-  vehicleTypes: Map<string, VehicleTypeDescription>,
-  systemId: string,
-): TransformedVehicles {
+function transformVehicles(resource: JsonObject, vehicleTypes: Map<string, VehicleTypeDescription>, systemId: string): TransformedVehicles {
   const data = resourceData(resource, "vehicle status");
-  const values = Array.isArray(data.bikes)
-    ? data.bikes
-    : Array.isArray(data.vehicles)
-      ? data.vehicles
-      : [];
-  const publicationTime = requiredDateTime(
-    resource.last_updated,
-    "GBFS vehicle last_updated",
-  );
+  const values = Array.isArray(data.bikes) ? data.bikes : Array.isArray(data.vehicles) ? data.vehicles : [];
+  const publicationTime = requiredDateTime(resource.last_updated, "GBFS vehicle last_updated");
   const records: CanonicalRecord[] = [];
-  const available = new Map(
-    [...vehicleTypes.values()].map((description) => [description.label, 0]),
-  );
+  const available = new Map([...vehicleTypes.values()].map((description) => [description.label, 0]));
   let disabled = 0;
   let reserved = 0;
   let rejected = 0;
@@ -308,12 +260,8 @@ function transformVehicles(
     }
     const vehicleTypeId = nullableString(value.vehicle_type_id);
     const legacyType = nullableString(value.vehicle_type);
-    const description = vehicleTypeId
-      ? vehicleTypes.get(vehicleTypeId)
-      : undefined;
-    const vehicleType =
-      description?.label ??
-      (legacyType ? `${legacyType}:unknown` : "unknown:unknown");
+    const description = vehicleTypeId ? vehicleTypes.get(vehicleTypeId) : undefined;
+    const vehicleType = description?.label ?? (legacyType ? `${legacyType}:unknown` : "unknown:unknown");
     const isReserved = nullableBoolean(value.is_reserved);
     const isDisabled = nullableBoolean(value.is_disabled);
     const lastReported = dateTime(value.last_reported);
@@ -370,20 +318,10 @@ function transformVehicles(
   return { records, points, rejected, eventTime: publicationTime };
 }
 
-function transformStations(
-  informationResource: JsonObject | undefined,
-  statusResource: JsonObject | undefined,
-  preferredLanguage: string | undefined,
-): TransformedStations {
-  const informationData = informationResource
-    ? resourceData(informationResource, "station_information")
-    : undefined;
-  const statusData = statusResource
-    ? resourceData(statusResource, "station_status")
-    : undefined;
-  const information = Array.isArray(informationData?.stations)
-    ? informationData.stations
-    : [];
+function transformStations(informationResource: JsonObject | undefined, statusResource: JsonObject | undefined, preferredLanguage: string | undefined): TransformedStations {
+  const informationData = informationResource ? resourceData(informationResource, "station_information") : undefined;
+  const statusData = statusResource ? resourceData(statusResource, "station_status") : undefined;
+  const information = Array.isArray(informationData?.stations) ? informationData.stations : [];
   const statuses = Array.isArray(statusData?.stations) ? statusData.stations : [];
   const statusById = new Map<string, JsonObject>();
   let rejected = 0;
@@ -414,15 +352,12 @@ function transformStations(
       entityKey: value.station_id,
       payload: {
         id: value.station_id,
-        name:
-          localizedString(value.name, preferredLanguage) ?? value.station_id,
+        name: localizedString(value.name, preferredLanguage) ?? value.station_id,
         latitude,
         longitude,
         address: localizedString(value.address, preferredLanguage),
         capacity: finiteNumber(value.capacity),
-        numBikesAvailable: finiteNumber(
-          status?.num_bikes_available ?? status?.num_vehicles_available,
-        ),
+        numBikesAvailable: finiteNumber(status?.num_bikes_available ?? status?.num_vehicles_available),
         numDocksAvailable: finiteNumber(status?.num_docks_available),
         isInstalled: nullableBoolean(status?.is_installed),
         isRenting: nullableBoolean(status?.is_renting),
@@ -436,33 +371,18 @@ function transformStations(
 
   const unmatched = statusById.size;
   rejected += unmatched;
-  const watermark = statusResource
-    ? dateTime(statusResource.last_updated)
-    : informationResource
-      ? dateTime(informationResource.last_updated)
-      : undefined;
+  const watermark = statusResource ? dateTime(statusResource.last_updated) : informationResource ? dateTime(informationResource.last_updated) : undefined;
   const transformed: TransformedStations = { records, rejected };
   if (watermark) transformed.watermark = watermark;
   return transformed;
 }
 
-function localizedString(
-  value: JsonValue | undefined,
-  preferredLanguage: string | undefined,
-): string | null {
+function localizedString(value: JsonValue | undefined, preferredLanguage: string | undefined): string | null {
   const direct = nullableString(value);
   if (direct) return direct;
   if (!Array.isArray(value)) return null;
-  const translations = value.filter(
-    (entry): entry is JsonObject =>
-      isJsonObject(entry) && nonEmptyString(entry.text),
-  );
-  const preferred = preferredLanguage
-    ? translations.find(
-        (entry) =>
-          nullableString(entry.language)?.toLowerCase() === preferredLanguage,
-      )
-    : undefined;
+  const translations = value.filter((entry): entry is JsonObject => isJsonObject(entry) && nonEmptyString(entry.text));
+  const preferred = preferredLanguage ? translations.find((entry) => nullableString(entry.language)?.toLowerCase() === preferredLanguage) : undefined;
   return nullableString((preferred ?? translations[0])?.text);
 }
 
@@ -473,14 +393,8 @@ interface ProductTitles {
   system: string;
 }
 
-function productTitles(
-  systemName: string | undefined,
-  operator: string | null,
-  feedSlug: string,
-): ProductTitles {
-  const identity = systemName
-    ? systemIdentity(systemName, operator)
-    : { brand: capitaliseWords(feedSlug.replace(/[-_]+/gu, " ")) };
+function productTitles(systemName: string | undefined, operator: string | null, feedSlug: string): ProductTitles {
+  const identity = systemName ? systemIdentity(systemName, operator) : { brand: capitaliseWords(feedSlug.replace(/[-_]+/gu, " ")) };
   const place = identity.location ? ` in ${identity.location}` : "";
   return {
     vehicles: `${identity.brand} vehicles${place}`,
@@ -496,10 +410,7 @@ interface SystemIdentity {
   location?: string;
 }
 
-function systemIdentity(
-  systemName: string,
-  operator: string | null,
-): SystemIdentity {
+function systemIdentity(systemName: string, operator: string | null): SystemIdentity {
   const parenthetical = /^(.*?)\s*\(([^()]+)\)\s*$/u.exec(systemName);
   if (parenthetical?.[1] && parenthetical[2]) {
     return {
@@ -510,8 +421,7 @@ function systemIdentity(
 
   const operatorWord = operator?.match(/[\p{L}\p{N}]+/u)?.[0];
   if (operatorWord) {
-    const prefix = new RegExp(`^${escapeRegExp(operatorWord)}(?:[\\s_-]+)(.+)$`, "iu")
-      .exec(systemName);
+    const prefix = new RegExp(`^${escapeRegExp(operatorWord)}(?:[\\s_-]+)(.+)$`, "iu").exec(systemName);
     if (prefix?.[1]) {
       return {
         brand: capitaliseWords(operatorWord),
@@ -527,20 +437,14 @@ function capitaliseWords(value: string): string {
   if (/[\p{Lu}].*[\p{Ll}]|[\p{Ll}].*[\p{Lu}]/u.test(trimmed)) {
     return trimmed;
   }
-  return trimmed.replace(/(^|[\s-])([\p{Ll}])/gu, (_, separator: string, letter: string) =>
-    `${separator}${letter.toLocaleUpperCase("en")}`
-  );
+  return trimmed.replace(/(^|[\s-])([\p{Ll}])/gu, (_, separator: string, letter: string) => `${separator}${letter.toLocaleUpperCase("en")}`);
 }
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 }
 
-function requiredLocalizedString(
-  value: JsonValue | undefined,
-  preferredLanguage: string | undefined,
-  label: string,
-): string {
+function requiredLocalizedString(value: JsonValue | undefined, preferredLanguage: string | undefined, label: string): string {
   const result = localizedString(value, preferredLanguage);
   if (!result) throw new Error(`${label} must be a non-empty string`);
   return result;
@@ -585,9 +489,7 @@ function dateTime(value: JsonValue | undefined): string | undefined {
   }
   if (!isJsonString(value) || value.trim() === "") return undefined;
   const milliseconds = Date.parse(value);
-  return Number.isNaN(milliseconds)
-    ? undefined
-    : new Date(milliseconds).toISOString();
+  return Number.isNaN(milliseconds) ? undefined : new Date(milliseconds).toISOString();
 }
 
 function requiredDateTime(value: JsonValue | undefined, label: string): string {
@@ -600,9 +502,7 @@ function validUrl(value: string | null): string | null {
   if (!value) return null;
   try {
     const url = new URL(value);
-    return url.protocol === "https:" || url.protocol === "http:"
-      ? url.toString()
-      : null;
+    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : null;
   } catch {
     return null;
   }

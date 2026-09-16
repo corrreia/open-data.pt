@@ -20,9 +20,10 @@ export function omieCollector(options: OmieCollectorOptions): NormalizedCollecto
   return {
     normalizer: { id: transformer.id, version: transformer.version },
     resolve: (value) => resolveOmieFeed(value),
-    source: (state, mode, signal) => mode.kind === "history"
-      ? collectOmieHistory(options.config, mode.cursor, options.apiOrigin, (input, init) => options.fetcher(input, { ...init, signal }))
-      : collectOmieFeed(options.config, sourceValidator(state), options.apiOrigin, (input, init) => options.fetcher(input, { ...init, signal })),
+    source: (state, mode, signal) =>
+      mode.kind === "history"
+        ? collectOmieHistory(options.config, mode.cursor, options.apiOrigin, (input, init) => options.fetcher(input, { ...init, signal }))
+        : collectOmieFeed(options.config, sourceValidator(state), options.apiOrigin, (input, init) => options.fetcher(input, { ...init, signal })),
     normalize: { kind: "buffered", transform: (bytes, context) => transformer.transform(bytes, context) },
   };
 }

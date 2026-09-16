@@ -17,10 +17,16 @@ class Pending {
  * handful of SQLite row writes, and no blob reaches the 2 MB SQLite value limit.
  */
 export class OutboxBuffer {
-  private readonly pending = new Map<LakeTable, Pending>([["records", new Pending()], ["points", new Pending()]]);
+  private readonly pending = new Map<LakeTable, Pending>([
+    ["records", new Pending()],
+    ["points", new Pending()],
+  ]);
   private total = 0;
 
-  constructor(private readonly flushBlob: OutboxFlush, private readonly maxBytes = BLOB_BYTES) {}
+  constructor(
+    private readonly flushBlob: OutboxFlush,
+    private readonly maxBytes = BLOB_BYTES,
+  ) {}
 
   get rows(): number {
     return this.total;

@@ -40,8 +40,11 @@ export function csvSeriesOptions(config: SourceConfig): CsvSeriesOptions | undef
     throw new GatekeeperError("CKAN series require a bounded timeField and measures mapping", "invalid-config");
   }
   let parsed: JsonValue;
-  try { parsed = parseJson(config.measures); }
-  catch { throw new GatekeeperError("CKAN measures must be a JSON object mapping column names to units", "invalid-config"); }
+  try {
+    parsed = parseJson(config.measures);
+  } catch {
+    throw new GatekeeperError("CKAN measures must be a JSON object mapping column names to units", "invalid-config");
+  }
   if (!isJsonObject(parsed)) throw new GatekeeperError("CKAN measures must be a JSON object", "invalid-config");
   const measures: Measure[] = [];
   for (const [name, unit] of Object.entries(parsed).sort(([a], [b]) => a.localeCompare(b))) {
@@ -59,11 +62,7 @@ export function csvSeriesOptions(config: SourceConfig): CsvSeriesOptions | undef
 }
 
 /** One CSV observation window, one series product, no duplicate record table. */
-export async function transformCkanCsvSeries(
-  body: ReadableStream<Uint8Array>,
-  context: TransformContext,
-  options: CsvSeriesOptions,
-): Promise<StreamingTransform> {
+export async function transformCkanCsvSeries(body: ReadableStream<Uint8Array>, context: TransformContext, options: CsvSeriesOptions): Promise<StreamingTransform> {
   const iterator = streamCsvRows(body, { delimiter: options.delimiter, maxRowBytes: 256 * 1024 })[Symbol.asyncIterator]();
   const first = await iterator.next();
   if (first.done) throw invalidResponse("CKAN observation CSV omitted its header");
@@ -85,7 +84,15 @@ export async function transformCkanCsvSeries(
     description: context.feed.description,
     role: "time-series",
     kind: "series",
-    schema: { fields: [field("seriesKey", "identifier", false), field("eventTime", "datetime", false), field("value", "number", false), field("unit", "string", false), field("dimensions", "json", false)] },
+    schema: {
+      fields: [
+        field("seriesKey", "identifier", false),
+        field("eventTime", "datetime", false),
+        field("value", "number", false),
+        field("unit", "string", false),
+        field("dimensions", "json", false),
+      ],
+    },
     updateMode: "source-window",
     completeness: "complete",
   };
@@ -100,16 +107,24 @@ export async function transformCkanCsvSeries(
         const values = next.value;
         if (values.every((value) => !value.trim())) continue;
         const time = observationTime(values[timeIndex]);
-        if (values.length !== header.length || !time) { rejected += 1; continue; }
+        if (values.length !== header.length || !time) {
+          rejected += 1;
+          continue;
+        }
         for (const measure of measures) {
           const value = measurement(values[measure.index], options.decimal);
-          if (value === undefined) { rejected += 1; continue; }
+          if (value === undefined) {
+            rejected += 1;
+            continue;
+          }
           accepted += 1;
           if (!watermark || time > watermark) watermark = time;
           yield { productKey: product.productKey, point: { seriesKey: measure.field, eventTime: time, value, unit: measure.unit, dimensions: { measure: measure.field } } };
         }
       }
-    } finally { await iterator.return?.(undefined); }
+    } finally {
+      await iterator.return?.(undefined);
+    }
   }
   return {
     products: [product],

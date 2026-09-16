@@ -42,8 +42,7 @@ export const INE_FEEDS = {
   indicator: {
     kind: "indicator",
     title: "Statistical indicator",
-    description:
-      "A complete snapshot of the latest values published for one INE indicator, as time-series points.",
+    description: "A complete snapshot of the latest values published for one INE indicator, as time-series points.",
     semantics: {
       domainSubject: "observation",
       defaultProductRole: "time-series",
@@ -70,9 +69,7 @@ export const INE_FEEDS = {
  * within this Gatekeeper's 8 MiB acquisition boundary.
  */
 export function validateIneFeedConfig(config: SourceConfig): SourceConfig {
-  const unknown = Object.keys(config).filter(
-    (key) => key !== "indicator" && key !== "lang" && key !== "dims",
-  );
+  const unknown = Object.keys(config).filter((key) => key !== "indicator" && key !== "lang" && key !== "dims");
   if (unknown.length > 0) {
     throw new GatekeeperError(`INE indicator config does not accept ${unknown.sort().join(", ")}`, "invalid-config");
   }
@@ -93,12 +90,7 @@ export function validateIneFeedConfig(config: SourceConfig): SourceConfig {
   return validated;
 }
 
-export async function collectIneIndicator(
-  config: SourceConfig,
-  checkpoint: SourceValidator | undefined,
-  apiOrigin: string,
-  fetcher: typeof fetch,
-): Promise<SourceFetch> {
+export async function collectIneIndicator(config: SourceConfig, checkpoint: SourceValidator | undefined, apiOrigin: string, fetcher: typeof fetch): Promise<SourceFetch> {
   const validated = validateIneFeedConfig(config);
   const origin = validatedOrigin(apiOrigin);
   const indicator = validated.indicator;
@@ -127,18 +119,10 @@ export async function collectIneIndicator(
   const metaBytes = await readBoundedResponse(metaResponse, INE_MAX_BYTES, "INE metadata response");
   const meta = parseSingleObject(metaBytes, "metadata");
   validateIndicatorResponse(meta, indicator, "metadata", false);
-  const metadataUpdate = optionalNonEmptyString(
-    meta.DataUltimaAtualizacao,
-  );
-  const metadataEtag = metadataUpdate
-    ? syntheticEtag(metadataUpdate)
-    : undefined;
+  const metadataUpdate = optionalNonEmptyString(meta.DataUltimaAtualizacao);
+  const metadataEtag = metadataUpdate ? syntheticEtag(metadataUpdate) : undefined;
 
-  if (
-    metadataEtag &&
-    checkpoint?.etag &&
-    equivalentEtags(checkpoint.etag, metadataEtag)
-  ) {
+  if (metadataEtag && checkpoint?.etag && equivalentEtags(checkpoint.etag, metadataEtag)) {
     return notModified(metadataEtag, metaResponse.headers);
   }
 
@@ -148,9 +132,13 @@ export async function collectIneIndicator(
     throw tooLarge();
   }
 
-  const dataResponse = await upstreamFetch(fetcher, dataUrl, new Headers({
-    Accept: "application/json",
-  }));
+  const dataResponse = await upstreamFetch(
+    fetcher,
+    dataUrl,
+    new Headers({
+      Accept: "application/json",
+    }),
+  );
   requireSuccessfulResponse(dataResponse, "data");
   const dataBytes = await readBoundedResponse(dataResponse, remaining, "INE data response");
   const data = parseSingleObject(dataBytes, "data");
@@ -169,9 +157,7 @@ export async function collectIneIndicator(
   const collected: SourceBody = { kind: "body", body, provenance, completeness: "complete" };
   const validator: SourceValidator = {};
   if (etag) validator.etag = etag;
-  const lastModified =
-    dataResponse.headers.get("last-modified") ??
-    metaResponse.headers.get("last-modified");
+  const lastModified = dataResponse.headers.get("last-modified") ?? metaResponse.headers.get("last-modified");
   if (lastModified) validator.lastModified = lastModified;
   if (Object.keys(validator).length > 0) collected.validator = validator;
   return collected;
@@ -183,12 +169,7 @@ export async function collectIneIndicator(
  * comma-separated codes, so the selected periods are fetched in one data
  * request and returned in the same `{ meta, data }` shape as live collection.
  */
-export async function collectIneIndicatorHistory(
-  config: SourceConfig,
-  cursor: HistoryCursor,
-  apiOrigin: string,
-  fetcher: typeof fetch,
-): Promise<SourceFetch> {
+export async function collectIneIndicatorHistory(config: SourceConfig, cursor: HistoryCursor, apiOrigin: string, fetcher: typeof fetch): Promise<SourceFetch> {
   const validated = validateIneFeedConfig(config);
   const origin = validatedOrigin(apiOrigin);
   const indicator = validated.indicator;
@@ -208,11 +189,7 @@ export async function collectIneIndicatorHistory(
   });
   appendDimensions(dataUrl, validated.dims);
 
-  const metaResponse = await upstreamFetch(
-    fetcher,
-    metaUrl,
-    new Headers({ Accept: "application/json" }),
-  );
+  const metaResponse = await upstreamFetch(fetcher, metaUrl, new Headers({ Accept: "application/json" }));
   requireSuccessfulResponse(metaResponse, "metadata");
   const metaBytes = await readBoundedResponse(metaResponse, INE_HISTORY_MAX_BYTES, "INE metadata response");
   const meta = parseSingleObject(metaBytes, "metadata");
@@ -220,25 +197,15 @@ export async function collectIneIndicatorHistory(
 
   const periods = readHistoryPeriods(meta);
   const eligible = periods.filter((period) => period.start < before);
-  const selected = eligible.slice(
-    0,
-    historyPeriodCount(meta, validated.dims),
-  );
+  const selected = eligible.slice(0, historyPeriodCount(meta, validated.dims));
   if (selected.length === 0) return { kind: "exhausted" };
 
-  dataUrl.searchParams.set(
-    "Dim1",
-    selected.map((period) => period.code).join(","),
-  );
+  dataUrl.searchParams.set("Dim1", selected.map((period) => period.code).join(","));
   const wrapperBytes = byteLength('{"meta":,"data":}');
   const remaining = INE_HISTORY_MAX_BYTES - metaBytes.byteLength - wrapperBytes;
   if (remaining <= 0) throw historyTooLarge();
 
-  const dataResponse = await upstreamFetch(
-    fetcher,
-    dataUrl,
-    new Headers({ Accept: "application/json" }),
-  );
+  const dataResponse = await upstreamFetch(fetcher, dataUrl, new Headers({ Accept: "application/json" }));
   requireSuccessfulResponse(dataResponse, "data");
   const dataBytes = await readBoundedResponse(dataResponse, remaining, "INE data response");
   const data = parseSingleObject(dataBytes, "data");
@@ -287,27 +254,17 @@ function readHistoryPeriods(meta: JsonObject): HistoryPeriod[] {
       }
     }
   }
-  const periods = [...byCode.values()].sort((left, right) =>
-    right.start.localeCompare(left.start),
-  );
+  const periods = [...byCode.values()].sort((left, right) => right.start.localeCompare(left.start));
   if (periods.length === 0) throw invalidHistoryMetadata();
   return periods;
 }
 
-function historyPeriodCount(
-  meta: JsonObject,
-  dims: string | undefined,
-): number {
-  const normalized = normalizeHistoryLabel(
-    optionalNonEmptyString(meta.Periodic) ?? "",
-  );
+function historyPeriodCount(meta: JsonObject, dims: string | undefined): number {
+  const normalized = normalizeHistoryLabel(optionalNonEmptyString(meta.Periodic) ?? "");
   let maximum: number = HISTORY_PERIODS.annual;
   if (normalized.includes("mensal") || normalized.includes("monthly")) {
     maximum = HISTORY_PERIODS.monthly;
-  } else if (
-    normalized.includes("trimestral") ||
-    normalized.includes("quarterly")
-  ) {
+  } else if (normalized.includes("trimestral") || normalized.includes("quarterly")) {
     maximum = HISTORY_PERIODS.quarterly;
   }
 
@@ -321,16 +278,11 @@ function historyPeriodCount(
     rowsPerPeriod *= Math.max(1, count);
     if (rowsPerPeriod >= HISTORY_TARGET_POINTS) break;
   }
-  const pointBound = Math.max(
-    1,
-    Math.floor(HISTORY_TARGET_POINTS / rowsPerPeriod),
-  );
+  const pointBound = Math.max(1, Math.floor(HISTORY_TARGET_POINTS / rowsPerPeriod));
   return Math.min(maximum, pointBound);
 }
 
-function historyDimensionCategories(
-  meta: JsonObject,
-): Map<number, Set<string>> {
+function historyDimensionCategories(meta: JsonObject): Map<number, Set<string>> {
   const result = new Map<number, Set<string>>();
   if (!isJsonObject(meta.Dimensoes) || !Array.isArray(meta.Dimensoes.Categoria_Dim)) {
     return result;
@@ -359,11 +311,7 @@ function historyDateFromOrder(value: string): string | undefined {
   const milliseconds = Date.parse(`${match[1]}-${match[2]}-${match[3]}T00:00:00Z`);
   if (Number.isNaN(milliseconds)) return undefined;
   const date = new Date(milliseconds);
-  if (
-    date.getUTCFullYear() !== Number(match[1]) ||
-    date.getUTCMonth() + 1 !== Number(match[2]) ||
-    date.getUTCDate() !== Number(match[3])
-  ) {
+  if (date.getUTCFullYear() !== Number(match[1]) || date.getUTCMonth() + 1 !== Number(match[2]) || date.getUTCDate() !== Number(match[3])) {
     return undefined;
   }
   return date.toISOString();
@@ -377,30 +325,16 @@ function historyBefore(value: string): string {
   return new Date(milliseconds).toISOString();
 }
 
-function validateHistoryDataPeriods(
-  data: JsonObject,
-  selected: HistoryPeriod[],
-): void {
+function validateHistoryDataPeriods(data: JsonObject, selected: HistoryPeriod[]): void {
   if (!isJsonObject(data.Dados)) return;
-  const allowed = new Set(
-    selected.flatMap((period) => [
-      normalizeHistoryLabel(period.label),
-      normalizeHistoryLabel(period.code),
-    ]),
-  );
-  const returned = new Set(
-    Object.keys(data.Dados).map((label) => normalizeHistoryLabel(label)),
-  );
+  const allowed = new Set(selected.flatMap((period) => [normalizeHistoryLabel(period.label), normalizeHistoryLabel(period.code)]));
+  const returned = new Set(Object.keys(data.Dados).map((label) => normalizeHistoryLabel(label)));
   for (const label of returned) {
     if (!allowed.has(label)) {
       throw new GatekeeperError(`INE data response returned unrequested history period ${label}`, "invalid-response");
     }
   }
-  const missing = selected.find(
-    (period) =>
-      !returned.has(normalizeHistoryLabel(period.label)) &&
-      !returned.has(normalizeHistoryLabel(period.code)),
-  );
+  const missing = selected.find((period) => !returned.has(normalizeHistoryLabel(period.label)) && !returned.has(normalizeHistoryLabel(period.code)));
   if (missing) {
     throw new GatekeeperError(`INE data response omitted requested history period ${missing.label}`, "invalid-response");
   }
@@ -432,14 +366,7 @@ function normalizeDims(value: string): string {
   for (const [rawKey, rawValue] of parsed) {
     const match = /^dim(\d+)$/i.exec(rawKey);
     const number = match?.[1] ? Number(match[1]) : 0;
-    if (
-      !match ||
-      number < 1 ||
-      number > 99 ||
-      seen.has(number) ||
-      rawValue.length === 0 ||
-      !/^[A-Za-z0-9*<>.,_@-]+$/.test(rawValue)
-    ) {
+    if (!match || number < 1 || number > 99 || seen.has(number) || rawValue.length === 0 || !/^[A-Za-z0-9*<>.,_@-]+$/.test(rawValue)) {
       throw new GatekeeperError("INE dims must be unique Dim1..Dim99 parameters with comma-separated category codes", "invalid-config");
     }
     seen.add(number);
@@ -449,11 +376,7 @@ function normalizeDims(value: string): string {
     throw new GatekeeperError("INE dims must contain at least one dimension filter", "invalid-config");
   }
   dimensions.sort(([left], [right]) => left - right);
-  return dimensions
-    .map(([number, dimensionValue]) =>
-      `Dim${number}=${encodeURIComponent(dimensionValue)}`,
-    )
-    .join("&");
+  return dimensions.map(([number, dimensionValue]) => `Dim${number}=${encodeURIComponent(dimensionValue)}`).join("&");
 }
 
 function appendDimensions(url: URL, dims: string | undefined): void {
@@ -470,24 +393,13 @@ function validatedOrigin(value: string): URL {
   } catch {
     throw new GatekeeperError("INE API origin is invalid", "source-denied");
   }
-  if (
-    url.origin !== "https://www.ine.pt" ||
-    url.username !== "" ||
-    url.password !== "" ||
-    url.pathname !== "/" ||
-    url.search !== "" ||
-    url.hash !== ""
-  ) {
+  if (url.origin !== "https://www.ine.pt" || url.username !== "" || url.password !== "" || url.pathname !== "/" || url.search !== "" || url.hash !== "") {
     throw new GatekeeperError("INE requests are restricted to https://www.ine.pt", "source-denied");
   }
   return url;
 }
 
-function ineUrl(
-  origin: URL,
-  pathname: string,
-  parameters: Record<string, string>,
-): URL {
+function ineUrl(origin: URL, pathname: string, parameters: Record<string, string>): URL {
   const url = new URL(pathname, origin);
   for (const [name, value] of Object.entries(parameters)) {
     url.searchParams.set(name, value);
@@ -504,11 +416,7 @@ function conditionalHeaders(checkpoint: SourceValidator | undefined): Headers {
   return headers;
 }
 
-async function upstreamFetch(
-  fetcher: typeof fetch,
-  url: URL,
-  headers: Headers,
-): Promise<Response> {
+async function upstreamFetch(fetcher: typeof fetch, url: URL, headers: Headers): Promise<Response> {
   let lastError: Error | undefined;
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
@@ -534,32 +442,20 @@ function requireSuccessfulResponse(response: Response, resource: string): void {
   }
 }
 
-function parseSingleObject(
-  bytes: Uint8Array,
-  resource: string,
-): JsonObject {
+function parseSingleObject(bytes: Uint8Array, resource: string): JsonObject {
   let parsed: JsonValue;
   try {
     parsed = parseJsonBytes(bytes);
   } catch {
     throw new GatekeeperError(`INE ${resource} response was not valid JSON`, "invalid-response");
   }
-  if (
-    !Array.isArray(parsed) ||
-    parsed.length !== 1 ||
-    !isJsonObject(parsed[0])
-  ) {
+  if (!Array.isArray(parsed) || parsed.length !== 1 || !isJsonObject(parsed[0])) {
     throw new GatekeeperError(`INE ${resource} response did not contain one indicator`, "invalid-response");
   }
   return parsed[0];
 }
 
-function validateIndicatorResponse(
-  response: JsonObject,
-  indicator: string,
-  resource: string,
-  requiresData: boolean,
-): void {
+function validateIndicatorResponse(response: JsonObject, indicator: string, resource: string, requiresData: boolean): void {
   if (isJsonObject(response.Sucesso) && Array.isArray(response.Sucesso.Falso)) {
     const failure = response.Sucesso.Falso.find(isJsonObject);
     const detail = failure ? optionalNonEmptyString(failure.Msg) : undefined;
@@ -569,37 +465,21 @@ function validateIndicatorResponse(
     throw new GatekeeperError(`INE ${resource} response did not match indicator ${indicator}`, "invalid-response");
   }
   if (requiresData) {
-    if (
-      !isJsonObject(response.Dados) ||
-      !optionalNonEmptyString(response.DataUltimoAtualizacao)
-    ) {
+    if (!isJsonObject(response.Dados) || !optionalNonEmptyString(response.DataUltimoAtualizacao)) {
       throw new GatekeeperError("INE data response omitted Dados or DataUltimoAtualizacao", "invalid-response");
     }
     return;
   }
-  if (
-    !isJsonObject(response.Dimensoes) ||
-    !optionalNonEmptyString(response.UnidadeMedida) ||
-    !optionalNonEmptyString(response.DataUltimaAtualizacao)
-  ) {
+  if (!isJsonObject(response.Dimensoes) || !optionalNonEmptyString(response.UnidadeMedida) || !optionalNonEmptyString(response.DataUltimaAtualizacao)) {
     throw new GatekeeperError("INE metadata response omitted dimensions, unit, or update date", "invalid-response");
   }
 }
 
-function joinJsonDocuments(
-  metaBytes: Uint8Array,
-  dataBytes: Uint8Array,
-): Uint8Array {
+function joinJsonDocuments(metaBytes: Uint8Array, dataBytes: Uint8Array): Uint8Array {
   const prefix = new TextEncoder().encode('{"meta":');
   const middle = new TextEncoder().encode(',"data":');
   const suffix = new TextEncoder().encode("}");
-  const result = new Uint8Array(
-    prefix.byteLength +
-      metaBytes.byteLength +
-      middle.byteLength +
-      dataBytes.byteLength +
-      suffix.byteLength,
-  );
+  const result = new Uint8Array(prefix.byteLength + metaBytes.byteLength + middle.byteLength + dataBytes.byteLength + suffix.byteLength);
   let offset = 0;
   for (const part of [prefix, metaBytes, middle, dataBytes, suffix]) {
     result.set(part, offset);
@@ -609,18 +489,13 @@ function joinJsonDocuments(
 }
 
 /** An unchanged indicator; INE's own ETag, when it sends one, wins over the fallback. */
-function notModified(
-  etag: string | undefined,
-  upstreamHeaders: Headers,
-): SourceFetch {
+function notModified(etag: string | undefined, upstreamHeaders: Headers): SourceFetch {
   const validator: SourceValidator = {};
   const resolvedEtag = upstreamHeaders.get("etag") ?? etag;
   if (resolvedEtag) validator.etag = resolvedEtag;
   const lastModified = upstreamHeaders.get("last-modified");
   if (lastModified) validator.lastModified = lastModified;
-  return Object.keys(validator).length > 0
-    ? { kind: "not-modified", validator }
-    : { kind: "not-modified" };
+  return Object.keys(validator).length > 0 ? { kind: "not-modified", validator } : { kind: "not-modified" };
 }
 
 function syntheticEtag(sourceUpdate: string): string {
@@ -628,11 +503,8 @@ function syntheticEtag(sourceUpdate: string): string {
 }
 
 function optionalNonEmptyString(value: JsonValue | undefined): string | undefined {
-  return isJsonString(value) && value.trim() !== ""
-    ? value.trim()
-    : undefined;
+  return isJsonString(value) && value.trim() !== "" ? value.trim() : undefined;
 }
-
 
 function byteLength(value: string): number {
   return new TextEncoder().encode(value).byteLength;

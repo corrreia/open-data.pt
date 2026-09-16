@@ -32,8 +32,7 @@ export const BPSTAT_FEEDS = {
   dataset: {
     kind: "dataset",
     title: "Statistical dataset",
-    description:
-      "A bounded snapshot of one BPstat JSON-stat 2.0 dataset, published once as time-series points.",
+    description: "A bounded snapshot of one BPstat JSON-stat 2.0 dataset, published once as time-series points.",
     semantics: {
       domainSubject: "observation",
       defaultProductRole: "time-series",
@@ -42,9 +41,7 @@ export const BPSTAT_FEEDS = {
 } as const satisfies Record<string, FeedKindDescription>;
 
 export function validateBpstatFeedConfig(config: SourceConfig): SourceConfig {
-  const unknown = Object.keys(config).filter(
-    (key) => !["domain", "dataset", "lang", "seriesIds", "lastN"].includes(key),
-  );
+  const unknown = Object.keys(config).filter((key) => !["domain", "dataset", "lang", "seriesIds", "lastN"].includes(key));
   if (unknown.length > 0) {
     throw new GatekeeperError(`BPstat dataset config does not accept ${unknown.sort().join(", ")}`, "invalid-config");
   }
@@ -71,23 +68,20 @@ export function validateBpstatFeedConfig(config: SourceConfig): SourceConfig {
   const normalized: SourceConfig = { domain: String(domainNumber), dataset, lang };
   if (config.seriesIds !== undefined) {
     const ids = config.seriesIds.split(",").map((id) => id.trim());
-    if (ids.length > 100 || ids.some((id) => !/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(Number(id)))) throw new GatekeeperError("seriesIds must be 1..100 positive integer series IDs", "invalid-config");
+    if (ids.length > 100 || ids.some((id) => !/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(Number(id))))
+      throw new GatekeeperError("seriesIds must be 1..100 positive integer series IDs", "invalid-config");
     normalized.seriesIds = [...new Set(ids)].sort((a, b) => Number(a) - Number(b)).join(",");
   }
   if (config.lastN !== undefined) {
     const count = Number(config.lastN);
-    if (!/^\d+$/.test(config.lastN) || !Number.isSafeInteger(count) || count < 1 || count > 366) throw new GatekeeperError("lastN must be 1..366 observations per series", "invalid-config");
+    if (!/^\d+$/.test(config.lastN) || !Number.isSafeInteger(count) || count < 1 || count > 366)
+      throw new GatekeeperError("lastN must be 1..366 observations per series", "invalid-config");
     normalized.lastN = String(count);
   }
   return normalized;
 }
 
-export async function collectBpstatDataset(
-  config: SourceConfig,
-  checkpoint: SourceValidator | undefined,
-  apiOrigin: string,
-  fetcher: typeof fetch,
-): Promise<SourceFetch> {
+export async function collectBpstatDataset(config: SourceConfig, checkpoint: SourceValidator | undefined, apiOrigin: string, fetcher: typeof fetch): Promise<SourceFetch> {
   const validated = validateBpstatFeedConfig(config);
   const origin = validatedOrigin(apiOrigin);
   const domain = validated.domain;
@@ -100,11 +94,7 @@ export async function collectBpstatDataset(
   const sourceUrl = datasetUrl(origin, domain, dataset, lang);
   if (validated.seriesIds) sourceUrl.searchParams.set("series_ids", validated.seriesIds);
   if (validated.lastN) sourceUrl.searchParams.set("obs_last_n", validated.lastN);
-  const firstResponse = await upstreamFetch(
-    fetcher,
-    sourceUrl,
-    conditionalHeaders(checkpoint),
-  );
+  const firstResponse = await upstreamFetch(fetcher, sourceUrl, conditionalHeaders(checkpoint));
   if (firstResponse.status === 304) {
     return notModified(checkpoint, firstResponse.headers);
   }
@@ -116,18 +106,9 @@ export async function collectBpstatDataset(
   validateDatasetIdentity(firstPage, sourceUrl, domain, dataset, lang);
   validateSelectedSeries(firstPage, validated);
 
-  const sourcePublishedAt = sourcePublicationTime(
-    firstPage,
-    firstResponse.headers,
-  );
-  const sourceEtag = sourcePublishedAt
-    ? syntheticEtag(domain, dataset, lang, sourcePublishedAt)
-    : firstResponse.headers.get("etag") ?? undefined;
-  if (
-    sourceEtag &&
-    checkpoint?.etag &&
-    equivalentEtags(sourceEtag, checkpoint.etag)
-  ) {
+  const sourcePublishedAt = sourcePublicationTime(firstPage, firstResponse.headers);
+  const sourceEtag = sourcePublishedAt ? syntheticEtag(domain, dataset, lang, sourcePublishedAt) : (firstResponse.headers.get("etag") ?? undefined);
+  if (sourceEtag && checkpoint?.etag && equivalentEtags(sourceEtag, checkpoint.etag)) {
     return notModified({ ...checkpoint, etag: sourceEtag }, firstResponse.headers);
   }
 
@@ -142,14 +123,9 @@ export async function collectBpstatDataset(
     }
     const pageUrl = new URL(sourceUrl);
     pageUrl.searchParams.set("page", String(nextPage));
-    const response = await upstreamFetch(
-      fetcher,
-      pageUrl,
-      new Headers({ Accept: "application/json" }),
-    );
+    const response = await upstreamFetch(fetcher, pageUrl, new Headers({ Accept: "application/json" }));
     requireSuccessfulResponse(response);
-    const remaining =
-      BPSTAT_MAX_BYTES - WRAPPER_BYTES - pages.length - totalBytes(pages);
+    const remaining = BPSTAT_MAX_BYTES - WRAPPER_BYTES - pages.length - totalBytes(pages);
     if (remaining <= 0) {
       await response.body?.cancel("BPstat response reached its size cap");
       partial = true;
@@ -170,11 +146,7 @@ export async function collectBpstatDataset(
   const body = paginated ? combinePages(pages) : firstBytes;
   if (body.byteLength > BPSTAT_MAX_BYTES) throw tooLarge();
   const etag = sourceEtag ?? (await contentEtag(body));
-  if (
-    !sourceEtag &&
-    checkpoint?.etag &&
-    equivalentEtags(etag, checkpoint.etag)
-  ) {
+  if (!sourceEtag && checkpoint?.etag && equivalentEtags(etag, checkpoint.etag)) {
     return notModified({ ...checkpoint, etag }, firstResponse.headers);
   }
 
@@ -199,30 +171,14 @@ function validatedOrigin(value: string): URL {
   } catch {
     throw new GatekeeperError("BPstat API origin is invalid", "source-denied");
   }
-  if (
-    url.origin !== BPSTAT_ORIGIN ||
-    url.username !== "" ||
-    url.password !== "" ||
-    url.pathname !== "/" ||
-    url.search !== "" ||
-    url.hash !== ""
-  ) {
+  if (url.origin !== BPSTAT_ORIGIN || url.username !== "" || url.password !== "" || url.pathname !== "/" || url.search !== "" || url.hash !== "") {
     throw new GatekeeperError(`BPstat requests are restricted to ${BPSTAT_ORIGIN}`, "source-denied");
   }
   return url;
 }
 
-function datasetUrl(
-  origin: URL,
-  domain: string,
-  dataset: string,
-  lang: string,
-  page?: number,
-): URL {
-  const url = new URL(
-    `/data/v1/domains/${domain}/datasets/${dataset}/`,
-    origin,
-  );
+function datasetUrl(origin: URL, domain: string, dataset: string, lang: string, page?: number): URL {
+  const url = new URL(`/data/v1/domains/${domain}/datasets/${dataset}/`, origin);
   url.searchParams.set("lang", lang);
   if (page !== undefined) url.searchParams.set("page", String(page));
   return url;
@@ -237,11 +193,7 @@ function conditionalHeaders(checkpoint: SourceValidator | undefined): Headers {
   return headers;
 }
 
-async function upstreamFetch(
-  fetcher: typeof fetch,
-  url: URL,
-  headers: Headers,
-): Promise<Response> {
+async function upstreamFetch(fetcher: typeof fetch, url: URL, headers: Headers): Promise<Response> {
   try {
     return await fetcher(url, {
       headers,
@@ -305,11 +257,7 @@ function parseDatasetPage(bytes: Uint8Array): JsonObject {
     validateCategoryIndex(dimension.category.index, expectedSize);
   }
   const role = isJsonObject(parsed.role) ? parsed.role : undefined;
-  if (
-    !role ||
-    !Array.isArray(role.time) ||
-    !role.time.some((id) => isJsonString(id) && ids.includes(id))
-  ) {
+  if (!role || !Array.isArray(role.time) || !role.time.some((id) => isJsonString(id) && ids.includes(id))) {
     throw invalidResponse("BPstat dataset did not identify a time dimension");
   }
   const cellCount = sizes.reduce((product, size) => product * size, 1);
@@ -338,24 +286,14 @@ function validateCategoryIndex(value: JsonValue | undefined, expectedSize: numbe
   }
   const positions = Object.values(value);
   if (
-    !positions.every(
-      (position) =>
-        isJsonNumber(position) &&
-        Number.isSafeInteger(position) &&
-        position >= 0 &&
-        position < expectedSize,
-    ) ||
+    !positions.every((position) => isJsonNumber(position) && Number.isSafeInteger(position) && position >= 0 && position < expectedSize) ||
     new Set(positions).size !== expectedSize
   ) {
     throw invalidResponse("BPstat dimension category positions were malformed");
   }
 }
 
-function validateIndexedValues(
-  value: JsonValue | undefined,
-  cellCount: number,
-  name: string,
-): void {
+function validateIndexedValues(value: JsonValue | undefined, cellCount: number, name: string): void {
   if (Array.isArray(value)) {
     if (value.length > cellCount) {
       throw invalidResponse(`BPstat ${name} exceeded the dataset dimensions`);
@@ -383,13 +321,7 @@ function validateSelectedSeries(page: JsonObject, config: SourceConfig): void {
   }
 }
 
-function validateDatasetIdentity(
-  page: JsonObject,
-  requestedUrl: URL,
-  domain: string,
-  dataset: string,
-  lang: string,
-): void {
+function validateDatasetIdentity(page: JsonObject, requestedUrl: URL, domain: string, dataset: string, lang: string): void {
   const href = optionalString(page.href);
   if (!href) return;
   let url: URL;
@@ -400,24 +332,12 @@ function validateDatasetIdentity(
   }
   const expectedPath = `/data/v1/domains/${domain}/datasets/${dataset}/`;
   const actualPath = url.pathname.endsWith("/") ? url.pathname : `${url.pathname}/`;
-  if (
-    url.origin !== BPSTAT_ORIGIN ||
-    actualPath !== expectedPath ||
-    url.searchParams.get("lang") !== lang ||
-    url.username !== "" ||
-    url.password !== ""
-  ) {
-    throw invalidResponse(
-      `BPstat dataset identity did not match ${requestedUrl.toString()}`,
-    );
+  if (url.origin !== BPSTAT_ORIGIN || actualPath !== expectedPath || url.searchParams.get("lang") !== lang || url.username !== "" || url.password !== "") {
+    throw invalidResponse(`BPstat dataset identity did not match ${requestedUrl.toString()}`);
   }
 }
 
-function nextPageNumber(
-  page: JsonObject,
-  sourceUrl: URL,
-  currentPage: number,
-): number | undefined {
+function nextPageNumber(page: JsonObject, sourceUrl: URL, currentPage: number): number | undefined {
   if (!isJsonObject(page.extension)) return undefined;
   const next = optionalString(page.extension.next_page);
   if (!next) return undefined;
@@ -442,7 +362,8 @@ function nextPageNumber(
     pageValues.length !== 1 ||
     langValues.length !== 1 ||
     langValues[0] !== sourceUrl.searchParams.get("lang") ||
-    unknown.length > 0 || missingFilter ||
+    unknown.length > 0 ||
+    missingFilter ||
     !Number.isSafeInteger(pageNumber) ||
     pageNumber !== currentPage + 1
   ) {
@@ -455,11 +376,7 @@ function combinePages(pages: Uint8Array[]): Uint8Array {
   const prefix = new TextEncoder().encode('{"pages":[');
   const separator = new TextEncoder().encode(",");
   const suffix = new TextEncoder().encode("]}");
-  const length =
-    prefix.byteLength +
-    suffix.byteLength +
-    pages.reduce((sum, page) => sum + page.byteLength, 0) +
-    Math.max(0, pages.length - 1) * separator.byteLength;
+  const length = prefix.byteLength + suffix.byteLength + pages.reduce((sum, page) => sum + page.byteLength, 0) + Math.max(0, pages.length - 1) * separator.byteLength;
   const result = new Uint8Array(length);
   let offset = 0;
   result.set(prefix, offset);
@@ -476,19 +393,10 @@ function combinePages(pages: Uint8Array[]): Uint8Array {
   return result;
 }
 
-function sourcePublicationTime(
-  page: JsonObject,
-  headers: Headers,
-): string | undefined {
-  const extensionUpdate = isJsonObject(page.extension)
-    ? optionalString(page.extension.obs_updated_at)
-    : undefined;
+function sourcePublicationTime(page: JsonObject, headers: Headers): string | undefined {
+  const extensionUpdate = isJsonObject(page.extension) ? optionalString(page.extension.obs_updated_at) : undefined;
   const updated = optionalString(page.updated);
-  for (const candidate of [
-    extensionUpdate,
-    updated,
-    headers.get("last-modified") ?? undefined,
-  ]) {
+  for (const candidate of [extensionUpdate, updated, headers.get("last-modified") ?? undefined]) {
     const normalized = isoDate(candidate);
     if (normalized) return normalized;
   }
@@ -496,14 +404,10 @@ function sourcePublicationTime(
 }
 
 /** Upstream validators win; the checkpoint's fill in what an upstream 304 omits. */
-function notModified(
-  checkpoint: SourceValidator | undefined,
-  upstreamHeaders: Headers,
-): SourceNotModified {
+function notModified(checkpoint: SourceValidator | undefined, upstreamHeaders: Headers): SourceNotModified {
   const validator: SourceValidator = {};
   const etag = upstreamHeaders.get("etag") ?? checkpoint?.etag;
-  const lastModified =
-    upstreamHeaders.get("last-modified") ?? checkpoint?.lastModified;
+  const lastModified = upstreamHeaders.get("last-modified") ?? checkpoint?.lastModified;
   if (etag) validator.etag = etag;
   if (lastModified) validator.lastModified = lastModified;
   const result: SourceNotModified = { kind: "not-modified" };
@@ -511,12 +415,7 @@ function notModified(
   return result;
 }
 
-function syntheticEtag(
-  domain: string,
-  dataset: string,
-  lang: string,
-  publishedAt: string,
-): string {
+function syntheticEtag(domain: string, dataset: string, lang: string, publishedAt: string): string {
   return `"bpstat:${domain}:${dataset}:${lang}:${publishedAt}"`;
 }
 
@@ -525,9 +424,7 @@ function totalBytes(pages: Uint8Array[]): number {
 }
 
 function optionalString(value: JsonValue | undefined): string | undefined {
-  return isJsonString(value) && value.trim() !== ""
-    ? value.trim()
-    : undefined;
+  return isJsonString(value) && value.trim() !== "" ? value.trim() : undefined;
 }
 
 function nonEmptyString(value: JsonValue | undefined): value is string {
@@ -537,7 +434,6 @@ function nonEmptyString(value: JsonValue | undefined): value is string {
 function positiveInteger(value: JsonValue | undefined): value is number {
   return isJsonNumber(value) && Number.isSafeInteger(value) && value > 0;
 }
-
 
 function tooLarge(): GatekeeperError {
   return new GatekeeperError(`BPstat response exceeded ${BPSTAT_MAX_BYTES} bytes`, "response-too-large");

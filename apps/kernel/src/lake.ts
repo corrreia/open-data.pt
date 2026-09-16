@@ -78,7 +78,14 @@ export class PipelinesLake implements LakeSink {
 
 /** Reject a row the stream schema would refuse before it is accepted into the outbox. */
 export function validateLakeRow(row: JsonObject, table: LakeTable): void {
-  if (!isJsonString(row.batch_id) || !isJsonString(row.feed_id) || !isJsonString(row.acquisition_id) || !isJsonString(row.revision_id) || !isJsonString(row.product_slug) || !isJsonObject(row.schema)) {
+  if (
+    !isJsonString(row.batch_id) ||
+    !isJsonString(row.feed_id) ||
+    !isJsonString(row.acquisition_id) ||
+    !isJsonString(row.revision_id) ||
+    !isJsonString(row.product_slug) ||
+    !isJsonObject(row.schema)
+  ) {
     throw new NormalizedInputError("Lake rows require stable batch, revision, feed, product, and acquisition identities");
   }
   if (table === "records") {
@@ -97,7 +104,14 @@ export function validateLakeRow(row: JsonObject, table: LakeTable): void {
     if (invalid.length > 0) throw new NormalizedInputError(`Record history row has invalid fields: ${invalid.join(", ")}`);
     return;
   }
-  if (!isJsonString(row.series_key) || !isTimestamp(row.event_time) || !isJsonNumber(row.value) || !isJsonString(row.unit) || !isJsonObject(row.dimensions) || !isTimestamp(row.observed_at)) {
+  if (
+    !isJsonString(row.series_key) ||
+    !isTimestamp(row.event_time) ||
+    !isJsonNumber(row.value) ||
+    !isJsonString(row.unit) ||
+    !isJsonObject(row.dimensions) ||
+    !isTimestamp(row.observed_at)
+  ) {
     throw new NormalizedInputError("Series history row does not match the configured schema");
   }
 }
@@ -115,7 +129,9 @@ async function withTimeout<T>(promise: Promise<T>, milliseconds: number, message
   try {
     return await Promise.race([
       promise,
-      new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error(message)), milliseconds); }),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(message)), milliseconds);
+      }),
     ]);
   } finally {
     if (timer) clearTimeout(timer);

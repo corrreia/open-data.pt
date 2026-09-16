@@ -69,8 +69,25 @@ function LiveLog({ runs, lookup }: { runs: RunRow[]; lookup: FeedLookup }) {
 function dayColumns(lookup: FeedLookup): Column<RunRow>[] {
   const title = (run: RunRow) => lookup.feedsById.get(run.feedId)?.title ?? run.feedId;
   return [
-    { key: "at", header: "Time (UTC)", mono: true, sort: (run) => run.at, text: (run) => utcTime.format(new Date(run.at)), cell: (run) => <time dateTime={run.at} title={fmt.dateTime(run.at)}>{utcTime.format(new Date(run.at))}</time> },
-    { key: "status", header: "Status", sort: (run) => runStatus(run.status).label, text: (run) => `${runStatus(run.status).label} ${run.status}`, cell: (run) => <RunBadge status={run.status} /> },
+    {
+      key: "at",
+      header: "Time (UTC)",
+      mono: true,
+      sort: (run) => run.at,
+      text: (run) => utcTime.format(new Date(run.at)),
+      cell: (run) => (
+        <time dateTime={run.at} title={fmt.dateTime(run.at)}>
+          {utcTime.format(new Date(run.at))}
+        </time>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      sort: (run) => runStatus(run.status).label,
+      text: (run) => `${runStatus(run.status).label} ${run.status}`,
+      cell: (run) => <RunBadge status={run.status} />,
+    },
     { key: "feed", header: "Feed", sort: title, className: "min-w-[14rem] whitespace-normal", cell: (run) => <FeedName feedId={run.feedId} lookup={lookup} /> },
     { key: "trigger", header: "Trigger", sort: (run) => triggerLabel(run.trigger), cell: (run) => <span className="text-kumo-subtle">{triggerLabel(run.trigger)}</span> },
     { key: "rows", header: "Rows", align: "end", sort: (run) => run.rows, cell: (run) => fmt.int(run.rows) },
@@ -80,7 +97,14 @@ function dayColumns(lookup: FeedLookup): Column<RunRow>[] {
       header: "Outcome",
       className: "min-w-[16rem] whitespace-normal",
       text: (run) => run.error ?? "",
-      cell: (run) => (run.error ? <span className="line-clamp-2 break-words text-kumo-danger" title={run.error}>{run.error}</span> : run.status === "unchanged" ? <span className="text-kumo-subtle">Source unchanged</span> : null),
+      cell: (run) =>
+        run.error ? (
+          <span className="line-clamp-2 break-words text-kumo-danger" title={run.error}>
+            {run.error}
+          </span>
+        ) : run.status === "unchanged" ? (
+          <span className="text-kumo-subtle">Source unchanged</span>
+        ) : null,
     },
   ];
 }
@@ -107,7 +131,27 @@ function PastDay({ day, lookup }: { day: string; lookup: FeedLookup }) {
       </p>
       <ErrorNote error={archive.error} />
       {archive.data ? (
-        <DataTable label={`Runs on ${label}`} rows={rows} columns={columns} rowKey={(run) => run.id} initialSort={{ key: "at", direction: "desc" }} filterPlaceholder="Filter by feed, status or error…" downloadName={`runs-${day}`} exportRow={(run) => ({ id: run.id, feedId: run.feedId, feed: lookup.feedsById.get(run.feedId)?.title ?? null, status: run.status, trigger: run.trigger, requestedAt: run.requestedAt, at: run.at, rows: run.rows ?? null, changes: run.revisions ?? null, error: run.error ?? null })} />
+        <DataTable
+          label={`Runs on ${label}`}
+          rows={rows}
+          columns={columns}
+          rowKey={(run) => run.id}
+          initialSort={{ key: "at", direction: "desc" }}
+          filterPlaceholder="Filter by feed, status or error…"
+          downloadName={`runs-${day}`}
+          exportRow={(run) => ({
+            id: run.id,
+            feedId: run.feedId,
+            feed: lookup.feedsById.get(run.feedId)?.title ?? null,
+            status: run.status,
+            trigger: run.trigger,
+            requestedAt: run.requestedAt,
+            at: run.at,
+            rows: run.rows ?? null,
+            changes: run.revisions ?? null,
+            error: run.error ?? null,
+          })}
+        />
       ) : null}
     </div>
   );
@@ -119,7 +163,14 @@ export function Activity({ lookup }: { lookup: FeedLookup }) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const day = picked ? dayOf(picked) : null;
 
-  const runs = useMemo(() => (live.data ?? []).map(runFromAcquisition).sort((a, b) => b.at.localeCompare(a.at)).slice(0, LIVE_ROWS), [live.data]);
+  const runs = useMemo(
+    () =>
+      (live.data ?? [])
+        .map(runFromAcquisition)
+        .sort((a, b) => b.at.localeCompare(a.at))
+        .slice(0, LIVE_ROWS),
+    [live.data],
+  );
   const newest = runs[0];
   // Screen readers hear the newest run when it changes, not every refresh.
   const announcement = newest ? `${lookup.feedsById.get(newest.feedId)?.title ?? newest.feedId}: ${runStatus(newest.status).label}` : "";

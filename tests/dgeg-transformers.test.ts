@@ -14,9 +14,7 @@ function context(feed: "fuel-prices" | "fuel-types"): TransformContext {
       slug: `dgeg-${feed}`,
       title: feed,
       description: "test feed",
-      config: feed === "fuel-prices"
-        ? { feed, fuelTypeId: "3201", districtId: "11" }
-        : { feed },
+      config: feed === "fuel-prices" ? { feed, fuelTypeId: "3201", districtId: "11" } : { feed },
       semantics: {
         boundedness: "bounded",
         changeSemantics: "full-snapshot",
@@ -44,16 +42,20 @@ describe("DGEG transformers", () => {
       role: "reference",
       updateMode: "authoritative-snapshot",
     });
-    expect(transformed.products[0]?.schema.fields).toContainEqual(expect.objectContaining({
-      id: "name",
-      type: "string",
-      display: { badge: { colorField: "color" } },
-    }));
-    expect(transformed.products[0]?.schema.fields).toContainEqual(expect.objectContaining({
-      id: "color",
-      type: "color",
-      nullable: true,
-    }));
+    expect(transformed.products[0]?.schema.fields).toContainEqual(
+      expect.objectContaining({
+        id: "name",
+        type: "string",
+        display: { badge: { colorField: "color" } },
+      }),
+    );
+    expect(transformed.products[0]?.schema.fields).toContainEqual(
+      expect.objectContaining({
+        id: "color",
+        type: "color",
+        nullable: true,
+      }),
+    );
     expect(transformed.products[0]?.records?.[0]).toMatchObject({
       entityKey: expect.any(String),
       payload: {
@@ -71,10 +73,7 @@ describe("DGEG transformers", () => {
   });
 
   it("maps station prices and coordinates into current state with stable entity keys", () => {
-    const transformed = transformer.transform(
-      fixture("fuel-prices-lisbon.json"),
-      context("fuel-prices"),
-    );
+    const transformed = transformer.transform(fixture("fuel-prices-lisbon.json"), context("fuel-prices"));
     const stations = transformed.products[0];
 
     expect(stations).toMatchObject({
@@ -82,23 +81,31 @@ describe("DGEG transformers", () => {
       role: "current-state",
       updateMode: "authoritative-snapshot",
     });
-    expect(stations?.schema.fields).toContainEqual(expect.objectContaining({
-      id: "latitude",
-      type: "latitude",
-    }));
-    expect(stations?.schema.fields).toContainEqual(expect.objectContaining({
-      id: "longitude",
-      type: "longitude",
-    }));
-    expect(stations?.schema.fields).toContainEqual(expect.objectContaining({
-      id: "price",
-      type: "number",
-      unit: "EUR/l",
-    }));
-    expect(stations?.schema.fields).toContainEqual(expect.objectContaining({
-      id: "updatedAt",
-      type: "datetime",
-    }));
+    expect(stations?.schema.fields).toContainEqual(
+      expect.objectContaining({
+        id: "latitude",
+        type: "latitude",
+      }),
+    );
+    expect(stations?.schema.fields).toContainEqual(
+      expect.objectContaining({
+        id: "longitude",
+        type: "longitude",
+      }),
+    );
+    expect(stations?.schema.fields).toContainEqual(
+      expect.objectContaining({
+        id: "price",
+        type: "number",
+        unit: "EUR/l",
+      }),
+    );
+    expect(stations?.schema.fields).toContainEqual(
+      expect.objectContaining({
+        id: "updatedAt",
+        type: "datetime",
+      }),
+    );
     expect(stations?.records?.[0]).toMatchObject({
       entityKey: "66364",
       eventTime: "2026-09-01T07:35:00.000Z",
@@ -117,10 +124,7 @@ describe("DGEG transformers", () => {
   });
 
   it("creates one median point per municipality per day, with dimensions", () => {
-    const transformed = transformer.transform(
-      fixture("fuel-prices-lisbon.json"),
-      context("fuel-prices"),
-    );
+    const transformed = transformer.transform(fixture("fuel-prices-lisbon.json"), context("fuel-prices"));
     const series = transformed.products[1];
     const loures = series?.points?.find((point) => point.seriesKey === "Loures");
 

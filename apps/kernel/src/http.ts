@@ -1,11 +1,4 @@
-import {
-  asObject,
-  asString,
-  isJsonString,
-  parseJson,
-  type JsonObject,
-  type JsonValue,
-} from "@open-data-pt/gatekeeper-shared";
+import { asObject, asString, isJsonString, parseJson, type JsonObject, type JsonValue } from "@open-data-pt/gatekeeper-shared";
 
 import { CADENCE_HEADER } from "./cache";
 import { REGISTRY_ROOM, type ProductDetail, type Registry } from "./coordinators";
@@ -130,7 +123,11 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
         const end = new Date(Date.parse(start) + 86_400_000).toISOString();
         const [activity, feeds] = await Promise.all([reg.activityBetween(start, end, limit, feedId), reg.listFeeds()]);
         const open = new Set(feeds.map((feed) => feed.id));
-        return json({ day, complete: activity.oldest !== null && activity.oldest <= start, data: activity.items.filter((acquisition) => open.has(acquisition.feedId)).map(publicAcquisition) });
+        return json({
+          day,
+          complete: activity.oldest !== null && activity.oldest <= start,
+          data: activity.items.filter((acquisition) => open.has(acquisition.feedId)).map(publicAcquisition),
+        });
       }
       const limit = parseInteger(url, "limit", 50, 1, 200);
       const [acquisitions, feeds] = await Promise.all([reg.listAcquisitions(limit, feedId), reg.listFeeds()]);
@@ -159,14 +156,20 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
       const product = await service.product(decodeURIComponent(slug));
       if (!product) throw new NotFoundError("Product was not found");
       if (geoJsonMatch) {
-        return withCadence(new Response(await service.geoJson(product, rowFilters(url)), {
-          headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/geo+json" },
-        }), product);
+        return withCadence(
+          new Response(await service.geoJson(product, rowFilters(url)), {
+            headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/geo+json" },
+          }),
+          product,
+        );
       }
       if (allRecordsMatch) {
-        return withCadence(new Response(await service.allRecords(product, rowFilters(url)), {
-          headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json; charset=utf-8" },
-        }), product);
+        return withCadence(
+          new Response(await service.allRecords(product, rowFilters(url)), {
+            headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json; charset=utf-8" },
+          }),
+          product,
+        );
       }
       if (summaryMatch) {
         requireHistory(product, "time-series");
@@ -240,7 +243,9 @@ async function seriesSummary(ctx: ApiContext, url: URL, product: ProductDetail, 
   }
   const resolution = optionalQuery(url, "resolution");
   if (resolution !== undefined && !isResolution(resolution)) throw new RequestError("resolution must be hour, day or month", 400);
-  return json(await readSummaryRange(objects, product.slug, { from: requiredDate(url, "from"), to: requiredDate(url, "to"), resolution, seriesKeys: url.searchParams.getAll("seriesKey") }));
+  return json(
+    await readSummaryRange(objects, product.slug, { from: requiredDate(url, "from"), to: requiredDate(url, "to"), resolution, seriesKeys: url.searchParams.getAll("seriesKey") }),
+  );
 }
 
 /* ---------- History ---------- */
@@ -268,9 +273,25 @@ async function eventRange(ctx: ApiContext, registry: () => RegistryStub, url: UR
     : "";
   const sql = `WITH ranked AS (SELECT revision_id, entity_key, operation, event_time, valid_from, valid_to, source_published_at, observed_at, ingested_at, payload, ROW_NUMBER() OVER (PARTITION BY entity_key ORDER BY observed_at DESC, revision_id DESC) AS rn FROM open_data.records WHERE feed_id = '${sqlString(product.feedId)}' AND product_slug = '${sqlString(product.slug)}'${ingestFloor(feed, from, start)} AND observed_at <= TIMESTAMP '${knownAt ?? new Date().toISOString()}') SELECT revision_id, entity_key, operation, event_time, valid_from, valid_to, source_published_at, observed_at, ingested_at, payload FROM ranked WHERE rn = 1 AND operation != 'retract' AND event_time >= TIMESTAMP '${from}' AND event_time < TIMESTAMP '${to}'${cursorClause} ORDER BY event_time DESC, entity_key ASC, revision_id DESC LIMIT ${limit + 1}`;
   const result = await runTypedHistoryQuery(registry, ctx, sql, `events:${product.slug}`);
-  const page = result.rows.slice(0, limit).map((row) => ({ ...lakePayload(row.payload), id: row.entity_key, operation: row.operation, eventTime: isoTime(row.event_time), sourcePublishedAt: isoTime(row.source_published_at) ?? null, sourceSequence: lakeSourceSequence(row.payload), observedAt: isoTime(row.observed_at), ingestedAt: isoTime(row.ingested_at) }));
+  const page = result.rows.slice(0, limit).map((row) => ({
+    ...lakePayload(row.payload),
+    id: row.entity_key,
+    operation: row.operation,
+    eventTime: isoTime(row.event_time),
+    sourcePublishedAt: isoTime(row.source_published_at) ?? null,
+    sourceSequence: lakeSourceSequence(row.payload),
+    observedAt: isoTime(row.observed_at),
+    ingestedAt: isoTime(row.ingested_at),
+  }));
   const last = result.rows[limit - 1];
-  return json({ data: page, nextCursor: result.rows.length > limit && last ? encodeHistoryCursor(String(last.event_time), String(last.entity_key), String(last.revision_id)) : null, knownAt: knownAt ?? null, freshness: { updatedAt: product.updatedAt, stale: product.stale }, coverage: coverageFor(feed, from, to, start), source: "lake" });
+  return json({
+    data: page,
+    nextCursor: result.rows.length > limit && last ? encodeHistoryCursor(String(last.event_time), String(last.entity_key), String(last.revision_id)) : null,
+    knownAt: knownAt ?? null,
+    freshness: { updatedAt: product.updatedAt, stale: product.stale },
+    coverage: coverageFor(feed, from, to, start),
+    source: "lake",
+  });
 }
 
 /** Every record revision ingested in [from, to), newest knowledge first. */
@@ -285,9 +306,27 @@ async function recordChangeRange(ctx: ApiContext, registry: () => RegistryStub, 
   // Knowledge time never precedes ingestion, so the ingest-day partitions before `from` can be skipped.
   const sql = `WITH unique_revisions AS (SELECT revision_id, entity_key, operation, event_time, valid_from, valid_to, source_published_at, observed_at, ingested_at, payload, ROW_NUMBER() OVER (PARTITION BY revision_id ORDER BY ingested_at DESC) AS duplicate_rank FROM open_data.records WHERE feed_id = '${sqlString(product.feedId)}' AND product_slug = '${sqlString(product.slug)}' AND __ingest_ts >= TIMESTAMP '${latest(from, start)}') SELECT revision_id, entity_key, operation, event_time, valid_from, valid_to, source_published_at, observed_at, ingested_at, payload FROM unique_revisions WHERE duplicate_rank = 1 AND observed_at >= TIMESTAMP '${from}' AND observed_at < TIMESTAMP '${to}'${cursorClause} ORDER BY observed_at DESC, entity_key ASC, revision_id DESC LIMIT ${limit + 1}`;
   const result = await runTypedHistoryQuery(registry, ctx, sql, `changes:${product.slug}`);
-  const page = result.rows.slice(0, limit).map((row) => ({ revisionId: row.revision_id, entityKey: row.entity_key, operation: row.operation, eventTime: isoTime(row.event_time) ?? null, validFrom: isoTime(row.valid_from) ?? null, validTo: isoTime(row.valid_to) ?? null, sourcePublishedAt: isoTime(row.source_published_at) ?? null, sourceSequence: lakeSourceSequence(row.payload), observedAt: isoTime(row.observed_at), ingestedAt: isoTime(row.ingested_at), payload: lakePayload(row.payload) }));
+  const page = result.rows.slice(0, limit).map((row) => ({
+    revisionId: row.revision_id,
+    entityKey: row.entity_key,
+    operation: row.operation,
+    eventTime: isoTime(row.event_time) ?? null,
+    validFrom: isoTime(row.valid_from) ?? null,
+    validTo: isoTime(row.valid_to) ?? null,
+    sourcePublishedAt: isoTime(row.source_published_at) ?? null,
+    sourceSequence: lakeSourceSequence(row.payload),
+    observedAt: isoTime(row.observed_at),
+    ingestedAt: isoTime(row.ingested_at),
+    payload: lakePayload(row.payload),
+  }));
   const last = result.rows[limit - 1];
-  return json({ data: page, nextCursor: result.rows.length > limit && last ? encodeHistoryCursor(String(last.observed_at), String(last.entity_key), String(last.revision_id)) : null, freshness: { updatedAt: product.updatedAt, stale: product.stale }, coverage: coverageFor(feed, from, to, start), source: "lake" });
+  return json({
+    data: page,
+    nextCursor: result.rows.length > limit && last ? encodeHistoryCursor(String(last.observed_at), String(last.entity_key), String(last.revision_id)) : null,
+    freshness: { updatedAt: product.updatedAt, stale: product.stale },
+    coverage: coverageFor(feed, from, to, start),
+    source: "lake",
+  });
 }
 
 /**
@@ -309,9 +348,23 @@ async function seriesRange(ctx: ApiContext, registry: () => RegistryStub, url: U
     : "";
   const sql = `WITH ranked AS (SELECT revision_id, series_key, event_time, value, unit, dimensions, observed_at, ROW_NUMBER() OVER (PARTITION BY series_key, event_time ORDER BY observed_at DESC, revision_id DESC) AS rn FROM open_data.points WHERE feed_id = '${sqlString(product.feedId)}' AND product_slug = '${sqlString(product.slug)}'${ingestFloor(feed, from, start)}${seriesClause}${knownClause}) SELECT revision_id, series_key, event_time, value, unit, dimensions, observed_at FROM ranked WHERE rn = 1 AND event_time >= TIMESTAMP '${from}' AND event_time < TIMESTAMP '${to}'${cursorClause} ORDER BY event_time DESC, series_key ASC, revision_id DESC LIMIT ${limit + 1}`;
   const result = await runTypedHistoryQuery(registry, ctx, sql, `series:${product.slug}`);
-  const page = result.rows.slice(0, limit).map((row) => ({ seriesKey: row.series_key, eventTime: isoTime(row.event_time), value: row.value, unit: row.unit, dimensions: lakeObject(row.dimensions) ?? {}, observedAt: isoTime(row.observed_at) }));
+  const page = result.rows.slice(0, limit).map((row) => ({
+    seriesKey: row.series_key,
+    eventTime: isoTime(row.event_time),
+    value: row.value,
+    unit: row.unit,
+    dimensions: lakeObject(row.dimensions) ?? {},
+    observedAt: isoTime(row.observed_at),
+  }));
   const last = result.rows[limit - 1];
-  return json({ data: page, nextCursor: result.rows.length > limit && last ? encodeHistoryCursor(String(last.event_time), String(last.series_key), String(last.revision_id)) : null, knownAt: knownAt ?? null, freshness: { updatedAt: product.updatedAt, stale: product.stale }, coverage: coverageFor(feed, from, to, start), source: "lake" });
+  return json({
+    data: page,
+    nextCursor: result.rows.length > limit && last ? encodeHistoryCursor(String(last.event_time), String(last.series_key), String(last.revision_id)) : null,
+    knownAt: knownAt ?? null,
+    freshness: { updatedAt: product.updatedAt, stale: product.stale },
+    coverage: coverageFor(feed, from, to, start),
+    source: "lake",
+  });
 }
 
 /** Every point revision ingested in [from, to): new points and corrections, newest knowledge first. */
@@ -328,9 +381,23 @@ async function seriesChangeRange(ctx: ApiContext, registry: () => RegistryStub, 
   // A revision is observed no later than it is ingested, so partitions before `from` hold none of the window.
   const sql = `WITH unique_revisions AS (SELECT revision_id, series_key, event_time, value, unit, dimensions, observed_at, ROW_NUMBER() OVER (PARTITION BY revision_id ORDER BY observed_at DESC) AS duplicate_rank FROM open_data.points WHERE feed_id = '${sqlString(product.feedId)}' AND product_slug = '${sqlString(product.slug)}' AND __ingest_ts >= TIMESTAMP '${latest(from, start)}'${seriesClause}) SELECT revision_id, series_key, event_time, value, unit, dimensions, observed_at FROM unique_revisions WHERE duplicate_rank = 1 AND observed_at >= TIMESTAMP '${from}' AND observed_at < TIMESTAMP '${to}'${cursorClause} ORDER BY observed_at DESC, series_key ASC, revision_id DESC LIMIT ${limit + 1}`;
   const result = await runTypedHistoryQuery(registry, ctx, sql, `series-changes:${product.slug}`);
-  const page = result.rows.slice(0, limit).map((row) => ({ revisionId: row.revision_id, seriesKey: row.series_key, eventTime: isoTime(row.event_time), value: row.value, unit: row.unit, dimensions: lakeObject(row.dimensions) ?? {}, observedAt: isoTime(row.observed_at) }));
+  const page = result.rows.slice(0, limit).map((row) => ({
+    revisionId: row.revision_id,
+    seriesKey: row.series_key,
+    eventTime: isoTime(row.event_time),
+    value: row.value,
+    unit: row.unit,
+    dimensions: lakeObject(row.dimensions) ?? {},
+    observedAt: isoTime(row.observed_at),
+  }));
   const last = result.rows[limit - 1];
-  return json({ data: page, nextCursor: result.rows.length > limit && last ? encodeHistoryCursor(String(last.observed_at), String(last.series_key), String(last.revision_id)) : null, freshness: { updatedAt: product.updatedAt, stale: product.stale }, coverage: coverageFor(feed, from, to, start), source: "lake" });
+  return json({
+    data: page,
+    nextCursor: result.rows.length > limit && last ? encodeHistoryCursor(String(last.observed_at), String(last.series_key), String(last.revision_id)) : null,
+    freshness: { updatedAt: product.updatedAt, stale: product.stale },
+    coverage: coverageFor(feed, from, to, start),
+    source: "lake",
+  });
 }
 
 /** The product a history endpoint serves, as the public catalog shows it. */
@@ -353,7 +420,8 @@ function historyWindow(url: URL): HistoryWindow {
   const from = requiredDate(url, "from");
   const to = requiredDate(url, "to");
   if (from >= to) throw new RequestError("from must be before to", 400);
-  if (Date.parse(to) - Date.parse(from) > MAX_HISTORY_WINDOW_MS) throw new RequestError("A history window cannot exceed 366 days; page through longer spans one window at a time", 400);
+  if (Date.parse(to) - Date.parse(from) > MAX_HISTORY_WINDOW_MS)
+    throw new RequestError("A history window cannot exceed 366 days; page through longer spans one window at a time", 400);
   return { from, to };
 }
 
@@ -465,8 +533,18 @@ const STANDARD_FORMATS = new Set(["arcgis", "ckan", "gbfs", "gtfs", "opendatasof
  */
 function publicFeed(feed: Feed, cadenceSeconds: number | undefined) {
   const {
-    feedEpoch: _epoch, resolved: _resolved, checkpoint: _checkpoint, policyId: _policy, gatekeeperKind: _collector, semantics: _semantics,
-    config, cooldownUntil: _cooldown, lastError: _error, historyBacklog: _backlog, backfill: _backfill, ...publicValue
+    feedEpoch: _epoch,
+    resolved: _resolved,
+    checkpoint: _checkpoint,
+    policyId: _policy,
+    gatekeeperKind: _collector,
+    semantics: _semantics,
+    config,
+    cooldownUntil: _cooldown,
+    lastError: _error,
+    historyBacklog: _backlog,
+    backfill: _backfill,
+    ...publicValue
   } = feed;
   const source = config.source ?? "";
   return { ...publicValue, format: STANDARD_FORMATS.has(source) ? source : "own-api", cadenceSeconds: cadenceSeconds ?? null };
@@ -573,7 +651,10 @@ function lakeSourceSequence(payload: JsonValue | undefined): string | null {
 }
 
 function encodeCursor(value: string): string {
-  return btoa(unescape(encodeURIComponent(value))).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
+  return btoa(unescape(encodeURIComponent(value)))
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replaceAll("=", "");
 }
 
 function decodeCursor(value: string): string {
@@ -617,7 +698,12 @@ export function problem(status: number, title: string, detail: string, headers: 
 /** A failed history query told as the caller can act on it; the store's own message stays in the log. */
 function historyFailure(failure: QueryError["failure"]) {
   if (failure === "timeout") return { status: 504, title: "History query timed out", detail: "The history store took too long to answer. Ask for a shorter window." };
-  if (failure === "refused") return { status: 500, title: "History query failed", detail: "open-data.pt built a history query that its own safety check refused. That is a bug on our side, not in your request." };
+  if (failure === "refused")
+    return {
+      status: 500,
+      title: "History query failed",
+      detail: "open-data.pt built a history query that its own safety check refused. That is a bug on our side, not in your request.",
+    };
   if (failure === "unreadable") return { status: 502, title: "History query failed", detail: "The history store answered with something open-data.pt could not read." };
   return { status: 502, title: "History query failed", detail: "The history store could not run this query. Try again, or ask for a shorter window." };
 }

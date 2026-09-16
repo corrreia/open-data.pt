@@ -48,7 +48,9 @@ export function CommandBlock({ command, highlight, label }: { command: string; h
       </pre>
       {/* Icon only; the text is for screen readers (Kumo's square variant trips the repo's naming rule). */}
       <Button variant="ghost" size="sm" icon={copied ? <CheckIcon /> : <CopyIcon />} onClick={copy} className="absolute right-1.5 top-1.5 gap-0 px-1.5">
-        <span className="sr-only" aria-live="polite">{copied ? "Copied" : `Copy ${label ?? "command"}`}</span>
+        <span className="sr-only" aria-live="polite">
+          {copied ? "Copied" : `Copy ${label ?? "command"}`}
+        </span>
       </Button>
     </div>
   );

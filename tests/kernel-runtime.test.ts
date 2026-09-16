@@ -5,17 +5,28 @@ import { openApiDocument } from "../apps/kernel/src/openapi";
 import { jsonBody } from "./support";
 
 // Isolated local Workers: the real kernel, a real Workflow executor, Durable Objects and R2; no production config and no operator.
-const server = createTestHarness({ workers: [{ config: {
-  name: "kernel-runtime-test",
-  main: "tests/fixtures/kernel-runtime-worker.ts",
-  compatibility_date: "2026-09-09",
-  compatibility_flags: ["nodejs_compat"],
-  r2_buckets: [{ binding: "DATA_OBJECTS", bucket_name: "test-only-data" }],
-  durable_objects: { bindings: [{ name: "Registry", class_name: "Registry" }, { name: "FeedRunner", class_name: "FeedRunner" }] },
-  workflows: [{ name: "open-data-pt-collections", binding: "COLLECTIONS", class_name: "CollectionWorkflow" }],
-  services: [{ binding: "GATEKEEPER_FIXTURE", service: "kernel-runtime-test", entrypoint: "FixtureGatekeeper" }],
-  migrations: [{ tag: "test-only", new_sqlite_classes: ["Registry", "FeedRunner"] }],
-} }] });
+const server = createTestHarness({
+  workers: [
+    {
+      config: {
+        name: "kernel-runtime-test",
+        main: "tests/fixtures/kernel-runtime-worker.ts",
+        compatibility_date: "2026-09-09",
+        compatibility_flags: ["nodejs_compat"],
+        r2_buckets: [{ binding: "DATA_OBJECTS", bucket_name: "test-only-data" }],
+        durable_objects: {
+          bindings: [
+            { name: "Registry", class_name: "Registry" },
+            { name: "FeedRunner", class_name: "FeedRunner" },
+          ],
+        },
+        workflows: [{ name: "open-data-pt-collections", binding: "COLLECTIONS", class_name: "CollectionWorkflow" }],
+        services: [{ binding: "GATEKEEPER_FIXTURE", service: "kernel-runtime-test", entrypoint: "FixtureGatekeeper" }],
+        migrations: [{ tag: "test-only", new_sqlite_classes: ["Registry", "FeedRunner"] }],
+      },
+    },
+  ],
+});
 
 const FINAL = ["succeeded", "unchanged", "failed"];
 let feedId = "";
@@ -83,11 +94,17 @@ async function records(): Promise<Array<{ id: string; name: string }>> {
 
 beforeAll(async () => {
   await server.listen();
-  await source([{ key: "a", name: "Alpha" }, { key: "b", name: "Beta" }, { key: "c", name: "Gamma" }]);
+  await source([
+    { key: "a", name: "Alpha" },
+    { key: "b", name: "Beta" },
+    { key: "c", name: "Gamma" },
+  ]);
   // Nobody bootstraps: the first request wakes the Registry, whose first alarm installs every example.
   feedId = await waitFor(async () => (await feeds()).find((feed) => feed.slug === "fixture-things")?.id, "the example to be installed");
 }, 90_000);
-afterAll(async () => { await server.close(); }, 30_000);
+afterAll(async () => {
+  await server.close();
+}, 30_000);
 
 describe("a kernel nobody operates", () => {
   it("collects an installed example by itself, then follows example updates under the same feed ID", async () => {
@@ -95,7 +112,11 @@ describe("a kernel nobody operates", () => {
     expect(await settled(() => true)).toMatchObject({ trigger: "scheduled", status: "succeeded" });
     expect((await records()).map((row) => row.id)).toEqual(["a", "b", "c"]);
 
-    await source([{ key: "a", name: "Alpha" }, { key: "b", name: "Beta 2" }, { key: "c", name: "Gamma" }]);
+    await source([
+      { key: "a", name: "Alpha" },
+      { key: "b", name: "Beta 2" },
+      { key: "c", name: "Gamma" },
+    ]);
     let seen = await knownIds();
     await renameExample("Fixture things, renamed");
     expect(await settled((item) => !seen.has(item.id))).toMatchObject({ status: "succeeded", revisions: 1 });

@@ -20,9 +20,10 @@ export function eurostatCollector(options: EurostatCollectorOptions): Normalized
   return {
     normalizer: EUROSTAT_NORMALIZER,
     resolve: (value) => resolveEurostatFeed(value),
-    source: (state, mode, signal) => mode.kind === "history"
-      ? collectEurostatDatasetHistory(options.config, mode.cursor, options.apiOrigin, (input, init) => options.fetcher(input, { ...init, signal }))
-      : collectEurostatDataset(options.config, sourceValidator(state), options.apiOrigin, (input, init) => options.fetcher(input, { ...init, signal })),
+    source: (state, mode, signal) =>
+      mode.kind === "history"
+        ? collectEurostatDatasetHistory(options.config, mode.cursor, options.apiOrigin, (input, init) => options.fetcher(input, { ...init, signal }))
+        : collectEurostatDataset(options.config, sourceValidator(state), options.apiOrigin, (input, init) => options.fetcher(input, { ...init, signal })),
     normalize: { kind: "buffered", transform: (bytes, context) => transformEurostatDataset(bytes, context) },
   };
 }

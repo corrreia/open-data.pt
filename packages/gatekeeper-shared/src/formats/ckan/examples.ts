@@ -169,14 +169,10 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "7c2f6153-f9f9-488d-867c-ceb050e48d43",
     ["mobility", "cities"],
   ),
-  cascaisExample(
-    "cascais-cycle-paths-feed",
-    "Cascais cycle paths",
-    "Cycle path segments in Cascais.",
-    "geocascais-ciclovia",
-    "74649057-6245-4214-a68c-d4acc3753b7d",
-    ["mobility", "cities"],
-  ),
+  cascaisExample("cascais-cycle-paths-feed", "Cascais cycle paths", "Cycle path segments in Cascais.", "geocascais-ciclovia", "74649057-6245-4214-a68c-d4acc3753b7d", [
+    "mobility",
+    "cities",
+  ]),
   cascaisExample(
     "cascais-forest-fires-feed",
     "Cascais forest fire areas",
@@ -201,14 +197,10 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "f6c7b517-7663-4f7c-bcd9-2db8cfab5036",
     ["environment", "society"],
   ),
-  cascaisExample(
-    "cascais-beaches-feed",
-    "Cascais beaches",
-    "Beaches in Cascais with their location and facilities.",
-    "geocascais-praia",
-    "0ba066ff-383d-484b-baf6-a7769c2316dd",
-    ["environment", "cities"],
-  ),
+  cascaisExample("cascais-beaches-feed", "Cascais beaches", "Beaches in Cascais with their location and facilities.", "geocascais-praia", "0ba066ff-383d-484b-baf6-a7769c2316dd", [
+    "environment",
+    "cities",
+  ]),
   cascaisExample(
     "cascais-drinking-fountains-feed",
     "Cascais drinking fountains",
@@ -225,14 +217,9 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "52ac6f20-e436-4270-93c7-35d2529da157",
     ["economy", "cities"],
   ),
-  cascaisExample(
-    "cascais-playgrounds-feed",
-    "Cascais playgrounds",
-    "Public playgrounds in Cascais.",
-    "geocascais-parqueinfantil",
-    "684f9e58-2c4f-4f5b-b0a1-a5455acbed64",
-    ["cities"],
-  ),
+  cascaisExample("cascais-playgrounds-feed", "Cascais playgrounds", "Public playgrounds in Cascais.", "geocascais-parqueinfantil", "684f9e58-2c4f-4f5b-b0a1-a5455acbed64", [
+    "cities",
+  ]),
   cascaisExample(
     "cascais-public-schools-feed",
     "Cascais public schools",
@@ -257,17 +244,77 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "9b899d53-8e7f-4d61-bac1-86449853a87b",
     ["culture", "cities"],
   ),
-  aguedaExample("flood-marks", "Águeda flood-level reference marks", "Surveyed flood-height reference marks, not current river levels or flood warnings.", "cotas-de-cheia", "51ebb54b-0249-46b6-8aa9-edf5365a9976", { idField: "gid", crs: "EPSG:3763" }, ["environment", "cities"], "Creative Commons Attribution (CC BY)"),
-  aguedaExample("waste-bins", "Águeda municipal waste-bin locations", "Municipal solid-waste container location inventory. No live bin fullness is provided.", "contentores-rsu", "5ec1ab1d-998b-41f5-b35d-860d63ec869c", { idField: "id", crs: "EPSG:3763" }, ["cities", "environment"]),
-  aguedaExample("textile-bins", "Águeda textile collection-bin locations", "Textile recycling container location inventory, not live capacity or fullness.", "f2f9d71f-ffab-4678-b4a1-6a2709879020", "df073fc9-441e-4385-b50e-0290881a5729", { idField: "id", crs: "EPSG:3763" }, ["cities", "environment"], "Creative Commons Attribution (CC BY)"),
-  aguedaExample("electronics-bins", "Águeda electronics collection-bin locations", "Electrical and electronic waste collection points, not live capacity or fullness.", "contentores-reee", "a7963739-44fd-47ec-b9bf-481141cfcda5", { idField: "id", crs: "EPSG:3763" }, ["cities", "environment"], "Creative Commons Attribution (CC BY)"),
-  aguedaExample("waste-operators", "Águeda waste-management operators", "Reference locations and published details of waste-management establishments.", "b2d1563d-683f-4dff-a472-a68789c9df74", "4a836cd0-eed9-4ecd-b9fc-ebeee1323aae", { idField: "id_ogr" }, ["cities", "environment"]),
-  aguedaExample("charging-locations", "Águeda electric-vehicle charging locations", "Published charging-point location inventory and technical details. This is not live charging availability.", "ponto-de-carregamento-de-veiculos-eletricos", "8a0e420f-ebe4-452c-956f-870427811bcd", { idField: "id_pontocve" }, ["mobility", "energy", "cities"]),
-  aguedaExample("beagueda-stations", "beÁgueda bicycle station locations", "Reference locations and dock capacities of beÁgueda bicycle stations, not live bicycle or dock availability.", "estacoes-beagueda", "c6da7509-f4b1-4a3c-a39b-5af5e4908288", { idField: "id" }, ["mobility", "cities"]),
+  aguedaExample(
+    "flood-marks",
+    "Águeda flood-level reference marks",
+    "Surveyed flood-height reference marks, not current river levels or flood warnings.",
+    "cotas-de-cheia",
+    "51ebb54b-0249-46b6-8aa9-edf5365a9976",
+    { idField: "gid", crs: "EPSG:3763" },
+    ["environment", "cities"],
+    "Creative Commons Attribution (CC BY)",
+  ),
+  aguedaExample(
+    "waste-bins",
+    "Águeda municipal waste-bin locations",
+    "Municipal solid-waste container location inventory. No live bin fullness is provided.",
+    "contentores-rsu",
+    "5ec1ab1d-998b-41f5-b35d-860d63ec869c",
+    { idField: "id", crs: "EPSG:3763" },
+    ["cities", "environment"],
+  ),
+  aguedaExample(
+    "textile-bins",
+    "Águeda textile collection-bin locations",
+    "Textile recycling container location inventory, not live capacity or fullness.",
+    "f2f9d71f-ffab-4678-b4a1-6a2709879020",
+    "df073fc9-441e-4385-b50e-0290881a5729",
+    { idField: "id", crs: "EPSG:3763" },
+    ["cities", "environment"],
+    "Creative Commons Attribution (CC BY)",
+  ),
+  aguedaExample(
+    "electronics-bins",
+    "Águeda electronics collection-bin locations",
+    "Electrical and electronic waste collection points, not live capacity or fullness.",
+    "contentores-reee",
+    "a7963739-44fd-47ec-b9bf-481141cfcda5",
+    { idField: "id", crs: "EPSG:3763" },
+    ["cities", "environment"],
+    "Creative Commons Attribution (CC BY)",
+  ),
+  aguedaExample(
+    "waste-operators",
+    "Águeda waste-management operators",
+    "Reference locations and published details of waste-management establishments.",
+    "b2d1563d-683f-4dff-a472-a68789c9df74",
+    "4a836cd0-eed9-4ecd-b9fc-ebeee1323aae",
+    { idField: "id_ogr" },
+    ["cities", "environment"],
+  ),
+  aguedaExample(
+    "charging-locations",
+    "Águeda electric-vehicle charging locations",
+    "Published charging-point location inventory and technical details. This is not live charging availability.",
+    "ponto-de-carregamento-de-veiculos-eletricos",
+    "8a0e420f-ebe4-452c-956f-870427811bcd",
+    { idField: "id_pontocve" },
+    ["mobility", "energy", "cities"],
+  ),
+  aguedaExample(
+    "beagueda-stations",
+    "beÁgueda bicycle station locations",
+    "Reference locations and dock capacities of beÁgueda bicycle stations, not live bicycle or dock availability.",
+    "estacoes-beagueda",
+    "c6da7509-f4b1-4a3c-a39b-5af5e4908288",
+    { idField: "id" },
+    ["mobility", "cities"],
+  ),
   {
     slug: "oeiras-hourly-environment-feed",
     title: "Oeiras hourly air quality, noise and weather",
-    description: "Hourly QART station measurements from the latest published monthly CSV. Monthly publication, not live observations; timestamps and units are those supplied by the municipality.",
+    description:
+      "Hourly QART station measurements from the latest published monthly CSV. Monthly publication, not live observations; timestamps and units are those supplied by the municipality.",
     config: {
       source: "ckan",
       host: "oeirasinterativa.oeiras.pt",
@@ -279,10 +326,23 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
       delimiter: ";",
       decimal: ",",
       measures: JSON.stringify({
-        "CO - µg/m3": "µg/m³", "O3 - µg/m3": "µg/m³", "NO - µg/m3": "µg/m³", "NO2 - µg/m3": "µg/m³", "SO2 - µg/m3": "µg/m³",
-        "Humidade - %": "%", "Temperatura - ℃": "°C",
-        "PM 0.5 - µg/m3": "µg/m³", "PM 0.7 - µg/m3": "µg/m³", "PM 1 - µg/m3": "µg/m³", "PM 2.5 - µg/m3": "µg/m³", "PM 10 - µg/m3": "µg/m³",
-        "LAeq,T - dB(A)": "dB(A)", "Velocidade do Vento - m/s": "m/s", "Direção do Vento - °": "°", "Pressão - mbar": "mbar", "Precipitação - mm": "mm",
+        "CO - µg/m3": "µg/m³",
+        "O3 - µg/m3": "µg/m³",
+        "NO - µg/m3": "µg/m³",
+        "NO2 - µg/m3": "µg/m³",
+        "SO2 - µg/m3": "µg/m³",
+        "Humidade - %": "%",
+        "Temperatura - ℃": "°C",
+        "PM 0.5 - µg/m3": "µg/m³",
+        "PM 0.7 - µg/m3": "µg/m³",
+        "PM 1 - µg/m3": "µg/m³",
+        "PM 2.5 - µg/m3": "µg/m³",
+        "PM 10 - µg/m3": "µg/m³",
+        "LAeq,T - dB(A)": "dB(A)",
+        "Velocidade do Vento - m/s": "m/s",
+        "Direção do Vento - °": "°",
+        "Pressão - mbar": "mbar",
+        "Precipitação - mm": "mm",
       }),
     },
     policy: {
@@ -298,9 +358,20 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
 ];
 
 /** One slowly changing municipal location inventory, with no live availability claim. */
-function aguedaExample(slug: string, title: string, description: string, dataset: string, resource: string, options: SourceConfig, topics: string[], licence = "Creative Commons CCZero"): ExampleFeed {
+function aguedaExample(
+  slug: string,
+  title: string,
+  description: string,
+  dataset: string,
+  resource: string,
+  options: SourceConfig,
+  topics: string[],
+  licence = "Creative Commons CCZero",
+): ExampleFeed {
   return {
-    slug: `agueda-${slug}-feed`, title, description,
+    slug: `agueda-${slug}-feed`,
+    title,
+    description,
     config: { source: "ckan", host: "dadosabertos.cm-agueda.pt", dataset, resource, ...options },
     policy: {
       name: "Águeda municipal reference inventory, monthly",
@@ -316,14 +387,7 @@ function aguedaExample(slug: string, title: string, description: string, dataset
 }
 
 /** One GeoJSON resource from the Cascais open data portal, collected daily. */
-function cascaisExample(
-  slug: string,
-  title: string,
-  description: string,
-  dataset: string,
-  resource: string,
-  topics: string[],
-): ExampleFeed {
+function cascaisExample(slug: string, title: string, description: string, dataset: string, resource: string, topics: string[]): ExampleFeed {
   return {
     slug,
     title,

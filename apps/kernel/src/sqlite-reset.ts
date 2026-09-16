@@ -20,7 +20,7 @@ export function dropAllTables(sql: SqlStorage): void {
     let lastError: Error | undefined;
     for (const name of remaining) {
       try {
-        sql.exec(`DROP TABLE IF EXISTS "${name.replaceAll("\"", "")}"`);
+        sql.exec(`DROP TABLE IF EXISTS "${name.replaceAll('"', "")}"`);
       } catch (error) {
         blocked.push(name);
         lastError = error instanceof Error ? error : new Error(String(error));

@@ -66,9 +66,7 @@ interface RowSource {
 type DatePart = "end" | "start";
 
 /** One column decision taken over the sample and replayed on every row, in order. */
-type PreparationStep =
-  | { kind: "geometry"; field: string }
-  | { kind: "structured"; field: string; multilingual: boolean; dateParts: DatePart[] };
+type PreparationStep = { kind: "geometry"; field: string } | { kind: "structured"; field: string; multilingual: boolean; dateParts: DatePart[] };
 
 interface PreparationPlan {
   epsg: number | undefined;
@@ -93,11 +91,7 @@ interface ColumnCounts {
  * sample and then applied to every row; the schema reported by `finish` adds
  * what later rows showed (nullability, new columns).
  */
-export async function transformCkan(
-  body: ReadableStream<Uint8Array>,
-  context: TransformContext,
-  metadata: CkanResourceMetadata,
-): Promise<StreamingTransform> {
+export async function transformCkan(body: ReadableStream<Uint8Array>, context: TransformContext, metadata: CkanResourceMetadata): Promise<StreamingTransform> {
   const series = csvSeriesOptions(context.feed.config);
   if (series) {
     if (metadata.source.kind !== "file" || metadata.source.format !== "csv") throw new Error("CKAN observations require a CSV distribution");
@@ -134,7 +128,10 @@ export async function transformCkan(
   const preparedSample = sample.map((row) => prepareRow(row, plan));
   sample.length = 0;
   const fields = plan.fields.map((sourceField) =>
-    inferField(sourceField, preparedSample.map((row) => row[sourceField.name] ?? null)),
+    inferField(
+      sourceField,
+      preparedSample.map((row) => row[sourceField.name] ?? null),
+    ),
   );
   applyColorBadge(fields);
   const table = new RecordTable(fields, context.feed.config.idField);
@@ -144,16 +141,8 @@ export async function transformCkan(
   const resourceId = stringValue(metadata.resource.id) ?? "resource";
   const dataset = stringValue(metadata.package.name) ?? context.feed.config.dataset ?? "dataset";
   const productSlug = context.feed.slug.replace(/-feed$/, "") || `ckan-${slugPart(dataset)}-${slugPart(resourceId)}`;
-  const title = resourceTitle(
-    stringValue(metadata.resource.name) ??
-    stringValue(metadata.resource.title) ??
-    stringValue(metadata.package.title) ??
-    dataset,
-  );
-  const description =
-    stringValue(metadata.resource.description) ??
-    stringValue(metadata.package.notes) ??
-    `Resource ${resourceId} from the CKAN dataset ${dataset}.`;
+  const title = resourceTitle(stringValue(metadata.resource.name) ?? stringValue(metadata.resource.title) ?? stringValue(metadata.package.title) ?? dataset);
+  const description = stringValue(metadata.resource.description) ?? stringValue(metadata.package.notes) ?? `Resource ${resourceId} from the CKAN dataset ${dataset}.`;
 
   const products: ProductDeclaration[] = [
     {
@@ -214,7 +203,10 @@ class RecordTable {
   private readonly counts = new Map<string, ColumnCounts>();
   private readonly eventTimeField: CanonicalField | undefined;
 
-  constructor(private readonly fields: CanonicalField[], private readonly idField?: string) {
+  constructor(
+    private readonly fields: CanonicalField[],
+    private readonly idField?: string,
+  ) {
     this.known = new Set(fields.map((column) => column.name));
     this.eventTimeField = fields.find((column) => column.type === "datetime" || column.type === "date");
   }
@@ -232,19 +224,10 @@ class RecordTable {
     if (this.idField && !(isJsonString(datastoreId) && datastoreId.trim() !== "") && !isJsonNumber(datastoreId)) {
       throw new Error(`CKAN record omitted its configured identity ${this.idField}`);
     }
-    const identifierField = this.fields.find(
-      (candidate) => candidate.type === "identifier" && isPresent(payload[candidate.name]),
-    );
-    const entityKey =
-      isJsonString(datastoreId) || isJsonNumber(datastoreId)
-        ? String(datastoreId)
-        : identifierField
-          ? String(payload[identifierField.name])
-          : stableHash(row);
+    const identifierField = this.fields.find((candidate) => candidate.type === "identifier" && isPresent(payload[candidate.name]));
+    const entityKey = isJsonString(datastoreId) || isJsonNumber(datastoreId) ? String(datastoreId) : identifierField ? String(payload[identifierField.name]) : stableHash(row);
     const record: CanonicalRecord = { entityKey, payload };
-    const eventTime = this.eventTimeField
-      ? eventTimeValue(payload[this.eventTimeField.name], this.eventTimeField.type)
-      : undefined;
+    const eventTime = this.eventTimeField ? eventTimeValue(payload[this.eventTimeField.name], this.eventTimeField.type) : undefined;
     if (eventTime) {
       record.eventTime = eventTime;
       if (this.latestEventTime === undefined || eventTime > this.latestEventTime) this.latestEventTime = eventTime;
@@ -347,9 +330,7 @@ async function* csvObjects(raw: AsyncIterator<string[]>, header: string[]): Asyn
       if (next.done) return;
       const values = next.value;
       if (values.every((value) => value === "")) continue;
-      yield values.length === header.length
-        ? Object.fromEntries(header.map((name, index) => [name, emptyToNull(values[index] ?? "")]))
-        : null;
+      yield values.length === header.length ? Object.fromEntries(header.map((name, index) => [name, emptyToNull(values[index] ?? "")])) : null;
     }
   } finally {
     await raw.return?.(undefined);
@@ -364,7 +345,11 @@ async function* noRows(): AsyncGenerator<SourceRow> {
 async function jsonRows(body: ReadableStream<Uint8Array>, epsg?: number): Promise<RowSource> {
   const peeked = await peek(body, (text) => layoutDecided(scanTopLevel(text)));
   const layout = scanTopLevel(peeked.text);
-  if (layout.root === "object" && layout.arrays.has("features") && (layout.strings.get("type") === "FeatureCollection" || (!layout.strings.has("type") && !layout.arrays.has("records")))) {
+  if (
+    layout.root === "object" &&
+    layout.arrays.has("features") &&
+    (layout.strings.get("type") === "FeatureCollection" || (!layout.strings.has("type") && !layout.arrays.has("records")))
+  ) {
     return geoJsonRows(peeked.body, false, epsg);
   }
   if (layout.root === "array" || (layout.root === "object" && layout.arrays.has("records"))) {
@@ -432,7 +417,7 @@ function geoJsonGeometry(geometry: JsonObject, epsg?: number): JsonObject | unde
   if (!isJsonString(geometry.type) || !["Point", "MultiPoint", "LineString", "MultiLineString", "Polygon", "MultiPolygon"].includes(geometry.type)) return undefined;
   const coordinates = mapCoordinates(geometry.coordinates, epsg ?? 4326, true);
   if (coordinates === undefined) return undefined;
-  const result: JsonObject = { ...geometry, coordinates: epsg === 3763 ? coordinates : geometry.coordinates ?? coordinates };
+  const result: JsonObject = { ...geometry, coordinates: epsg === 3763 ? coordinates : (geometry.coordinates ?? coordinates) };
   if (epsg === 3763) {
     // A source-space bounding box or CRS would contradict the transformed coordinates.
     delete result.bbox;
@@ -555,8 +540,7 @@ function scanTopLevel(text: string): TopLevelMembers {
 }
 
 function layoutDecided(members: TopLevelMembers): boolean {
-  return members.root === "array" || members.root === "other" || members.closed
-    || members.arrays.has("records") || (members.arrays.has("features") && members.strings.has("type"));
+  return members.root === "array" || members.root === "other" || members.closed || members.arrays.has("records") || (members.arrays.has("features") && members.strings.has("type"));
 }
 
 function closingQuote(text: string, start: number): number {
@@ -647,7 +631,7 @@ interface DetectedDelimiter {
 function detectDelimiter(text: string, allowSingleQuotes: boolean): DetectedDelimiter {
   const counts = { comma: 0, semicolon: 0 };
   let complete = false;
-  let quote: "\"" | "'" | undefined;
+  let quote: '"' | "'" | undefined;
   for (let index = text.charCodeAt(0) === 0xfeff ? 1 : 0; index < text.length; index += 1) {
     const character = text[index]!;
     if (quote) {
@@ -655,7 +639,7 @@ function detectDelimiter(text: string, allowSingleQuotes: boolean): DetectedDeli
       else if (character === quote) quote = undefined;
       continue;
     }
-    if (character === "\"" || (allowSingleQuotes && character === "'")) quote = character;
+    if (character === '"' || (allowSingleQuotes && character === "'")) quote = character;
     else if (character === ",") counts.comma += 1;
     else if (character === ";") counts.semicolon += 1;
     else if (character === "\n" || character === "\r") {
@@ -800,21 +784,14 @@ function removeField(fields: SourceField[], name: string): void {
   if (index >= 0) fields.splice(index, 1);
 }
 
-function upsertField(
-  fields: SourceField[],
-  name: string,
-  canonicalType: FieldType,
-  after?: string,
-): void {
+function upsertField(fields: SourceField[], name: string, canonicalType: FieldType, after?: string): void {
   const existing = fields.find((field) => field.name === name);
   if (existing) {
     existing.canonicalType = canonicalType;
     return;
   }
   const fieldValue = { name, canonicalType };
-  const afterIndex = after
-    ? fields.findIndex((field) => field.name === after)
-    : -1;
+  const afterIndex = after ? fields.findIndex((field) => field.name === after) : -1;
   if (afterIndex >= 0) fields.splice(afterIndex + 1, 0, fieldValue);
   else fields.push(fieldValue);
 }
@@ -881,9 +858,7 @@ export function parsePythonLiteral(text: string): JsonValue | null {
     return fail;
   };
   const parseNumber = (): number | typeof fail => {
-    const match = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?/i.exec(
-      text.slice(index),
-    );
+    const match = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?/i.exec(text.slice(index));
     if (!match) return fail;
     index += match[0].length;
     const value = Number(match[0]);
@@ -981,24 +956,12 @@ interface MultilingualValue extends JsonObject {
 }
 
 function isMultilingualList(value: JsonValue | undefined): value is MultilingualValue[] {
-  return (
-    Array.isArray(value) &&
-    value.length > 0 &&
-    value.every(
-      (entry) =>
-        isJsonObject(entry) &&
-        isJsonString(entry.lang) &&
-        isJsonString(entry.value),
-    )
-  );
+  return Array.isArray(value) && value.length > 0 && value.every((entry) => isJsonObject(entry) && isJsonString(entry.lang) && isJsonString(entry.value));
 }
 
 function selectTranslation(value: JsonValue | undefined): string | null {
   if (!isMultilingualList(value)) return null;
-  const preferred =
-    value.find((entry) => entry.lang.toLowerCase() === "pt-pt") ??
-    value.find((entry) => entry.lang.toLowerCase() === "en-gb") ??
-    value[0];
+  const preferred = value.find((entry) => entry.lang.toLowerCase() === "pt-pt") ?? value.find((entry) => entry.lang.toLowerCase() === "en-gb") ?? value[0];
   return isJsonString(preferred?.value) ? preferred.value : null;
 }
 
@@ -1023,10 +986,7 @@ function nestedDate(value: JsonValue | undefined, key: "end" | "start"): string 
   return undefined;
 }
 
-function nestedCoordinates(
-  value: JsonValue | undefined,
-  epsg: number | undefined,
-): Coordinate | undefined {
+function nestedCoordinates(value: JsonValue | undefined, epsg: number | undefined): Coordinate | undefined {
   if (Array.isArray(value)) {
     for (const child of value) {
       const found = nestedCoordinates(child, epsg);
@@ -1057,30 +1017,18 @@ function isGenericGeometryValue(value: JsonValue | undefined): boolean {
   if (!geometry) return false;
   if (geometry.type !== "Point") return true;
   const structured = structuredLiteral(value);
-  if (
-    isJsonObject(structured) &&
-    parseFiniteNumber(structured.x) !== undefined &&
-    parseFiniteNumber(structured.y) !== undefined
-  ) {
+  if (isJsonObject(structured) && parseFiniteNumber(structured.x) !== undefined && parseFiniteNumber(structured.y) !== undefined) {
     return true;
   }
   const pair = coordinatePair(geometry.coordinates);
   return Boolean(pair && isProjectedTm06(pair));
 }
 
-function arcGisGeometry(
-  value: JsonValue | undefined,
-  metadataEpsg: number | undefined,
-): JsonObject | undefined {
+function arcGisGeometry(value: JsonValue | undefined, metadataEpsg: number | undefined): JsonObject | undefined {
   const geometry = rawGeometry(value);
   if (!geometry) return undefined;
-  const converted = mapCoordinates(
-    geometry.coordinates,
-    geometry.epsg ?? metadataEpsg,
-  );
-  return converted === undefined
-    ? undefined
-    : { type: geometry.type, coordinates: converted };
+  const converted = mapCoordinates(geometry.coordinates, geometry.epsg ?? metadataEpsg);
+  return converted === undefined ? undefined : { type: geometry.type, coordinates: converted };
 }
 
 function rawGeometry(value: JsonValue | undefined): RawGeometry | undefined {
@@ -1113,11 +1061,7 @@ function rawGeometry(value: JsonValue | undefined): RawGeometry | undefined {
   const paths = asArray(value.paths);
   if (paths !== undefined) {
     const single = paths.length === 1 ? paths[0] : undefined;
-    return stamp(
-      single === undefined
-        ? { type: "MultiLineString", coordinates: paths }
-        : { type: "LineString", coordinates: single },
-    );
+    return stamp(single === undefined ? { type: "MultiLineString", coordinates: paths } : { type: "LineString", coordinates: single });
   }
   const rings = asArray(value.rings);
   if (rings !== undefined) return stamp({ type: "Polygon", coordinates: rings });
@@ -1126,11 +1070,7 @@ function rawGeometry(value: JsonValue | undefined): RawGeometry | undefined {
   return undefined;
 }
 
-function mapCoordinates(
-  value: JsonValue | undefined,
-  epsg: number | undefined,
-  explicitCrs = false,
-): JsonValue | undefined {
+function mapCoordinates(value: JsonValue | undefined, epsg: number | undefined, explicitCrs = false): JsonValue | undefined {
   const pair = coordinatePair(value);
   if (pair) {
     const converted = convertCoordinate(pair, epsg, explicitCrs);
@@ -1146,11 +1086,7 @@ function mapCoordinates(
   return children;
 }
 
-function convertCoordinate(
-  pair: [number, number],
-  epsg: number | undefined,
-  explicitCrs = false,
-): [number, number] | undefined {
+function convertCoordinate(pair: [number, number], epsg: number | undefined, explicitCrs = false): [number, number] | undefined {
   if (explicitCrs && epsg === 3763) {
     const [x, y] = pair;
     if (x < -200_000 || x > 300_000 || y < -400_000 || y > 400_000) return undefined;
@@ -1165,33 +1101,18 @@ function convertCoordinate(
 }
 
 function isWgs84([longitude, latitude]: [number, number]): boolean {
-  return (
-    longitude >= -180 &&
-    longitude <= 180 &&
-    latitude >= -90 &&
-    latitude <= 90
-  );
+  return longitude >= -180 && longitude <= 180 && latitude >= -90 && latitude <= 90;
 }
 
 function isProjectedTm06([x, y]: [number, number]): boolean {
-  return (
-    Math.abs(x) < 1_000_000 &&
-    Math.abs(y) > 90 &&
-    Math.abs(y) < 1_000_000 &&
-    x >= -200_000 &&
-    x <= 300_000 &&
-    y >= -400_000 &&
-    y <= 400_000
-  );
+  return Math.abs(x) < 1_000_000 && Math.abs(y) > 90 && Math.abs(y) < 1_000_000 && x >= -200_000 && x <= 300_000 && y >= -400_000 && y <= 400_000;
 }
 
 function findMetadataCrs(value: JsonValue | undefined, key = ""): number | undefined {
   if (isJsonString(value) || isJsonNumber(value)) {
     const mentioned = epsgMention(value);
     if (mentioned) return mentioned;
-    return /^(?:coordinate_system|crs|spatial|srid)$/i.test(key)
-      ? numericEpsg(value)
-      : undefined;
+    return /^(?:coordinate_system|crs|spatial|srid)$/i.test(key) ? numericEpsg(value) : undefined;
   }
   if (Array.isArray(value)) {
     for (const child of value) {
@@ -1220,95 +1141,47 @@ function epsgMention(value: JsonValue | undefined): number | undefined {
 }
 
 function numericEpsg(value: JsonValue | undefined): number | undefined {
-  const numeric =
-    isJsonNumber(value)
-      ? value
-      : isJsonString(value) && /^\d{4,6}$/.test(value.trim())
-        ? Number(value.trim())
-        : undefined;
-  return numeric !== undefined && Number.isSafeInteger(numeric)
-    ? numeric
-    : undefined;
+  const numeric = isJsonNumber(value) ? value : isJsonString(value) && /^\d{4,6}$/.test(value.trim()) ? Number(value.trim()) : undefined;
+  return numeric !== undefined && Number.isSafeInteger(numeric) ? numeric : undefined;
 }
 
 /** Exact inverse Transverse Mercator for EPSG:3763 (ETRS89 / Portugal TM06). */
-export function epsg3763ToWgs84(
-  x: number,
-  y: number,
-): Coordinate {
+export function epsg3763ToWgs84(x: number, y: number): Coordinate {
   const semiMajorAxis = 6_378_137;
   const flattening = 1 / 298.257_222_101;
   const eccentricitySquared = 2 * flattening - flattening * flattening;
-  const secondEccentricitySquared =
-    eccentricitySquared / (1 - eccentricitySquared);
+  const secondEccentricitySquared = eccentricitySquared / (1 - eccentricitySquared);
   const latitudeOrigin = degreesToRadians(39.668_258_333_333_33);
   const longitudeOrigin = degreesToRadians(-8.133_108_333_333_334);
-  const meridionalOrigin = meridionalArc(
-    latitudeOrigin,
-    semiMajorAxis,
-    eccentricitySquared,
-  );
+  const meridionalOrigin = meridionalArc(latitudeOrigin, semiMajorAxis, eccentricitySquared);
   const meridional = meridionalOrigin + y;
-  const mu =
-    meridional /
-    (semiMajorAxis *
-      (1 -
-        eccentricitySquared / 4 -
-        (3 * eccentricitySquared ** 2) / 64 -
-        (5 * eccentricitySquared ** 3) / 256));
-  const e1 =
-    (1 - Math.sqrt(1 - eccentricitySquared)) /
-    (1 + Math.sqrt(1 - eccentricitySquared));
+  const mu = meridional / (semiMajorAxis * (1 - eccentricitySquared / 4 - (3 * eccentricitySquared ** 2) / 64 - (5 * eccentricitySquared ** 3) / 256));
+  const e1 = (1 - Math.sqrt(1 - eccentricitySquared)) / (1 + Math.sqrt(1 - eccentricitySquared));
   const footprint =
     mu +
-    (3 * e1 / 2 - 27 * e1 ** 3 / 32) * Math.sin(2 * mu) +
-    (21 * e1 ** 2 / 16 - 55 * e1 ** 4 / 32) * Math.sin(4 * mu) +
-    (151 * e1 ** 3 / 96) * Math.sin(6 * mu) +
-    (1097 * e1 ** 4 / 512) * Math.sin(8 * mu);
+    ((3 * e1) / 2 - (27 * e1 ** 3) / 32) * Math.sin(2 * mu) +
+    ((21 * e1 ** 2) / 16 - (55 * e1 ** 4) / 32) * Math.sin(4 * mu) +
+    ((151 * e1 ** 3) / 96) * Math.sin(6 * mu) +
+    ((1097 * e1 ** 4) / 512) * Math.sin(8 * mu);
   const sine = Math.sin(footprint);
   const cosine = Math.cos(footprint);
   const tangent = Math.tan(footprint);
-  const primeVerticalRadius =
-    semiMajorAxis /
-    Math.sqrt(1 - eccentricitySquared * sine * sine);
-  const meridionalRadius =
-    (semiMajorAxis * (1 - eccentricitySquared)) /
-    (1 - eccentricitySquared * sine * sine) ** 1.5;
+  const primeVerticalRadius = semiMajorAxis / Math.sqrt(1 - eccentricitySquared * sine * sine);
+  const meridionalRadius = (semiMajorAxis * (1 - eccentricitySquared)) / (1 - eccentricitySquared * sine * sine) ** 1.5;
   const tangentSquared = tangent * tangent;
   const etaSquared = secondEccentricitySquared * cosine * cosine;
   const d = x / primeVerticalRadius;
   const latitude =
     footprint -
-    (primeVerticalRadius * tangent) /
-      meridionalRadius *
+    ((primeVerticalRadius * tangent) / meridionalRadius) *
       (d ** 2 / 2 -
-        ((5 +
-          3 * tangentSquared +
-          10 * etaSquared -
-          4 * etaSquared ** 2 -
-          9 * secondEccentricitySquared) *
-          d ** 4) /
-          24 +
-        ((61 +
-          90 * tangentSquared +
-          298 * etaSquared +
-          45 * tangentSquared ** 2 -
-          252 * secondEccentricitySquared -
-          3 * etaSquared ** 2) *
-          d ** 6) /
-          720);
+        ((5 + 3 * tangentSquared + 10 * etaSquared - 4 * etaSquared ** 2 - 9 * secondEccentricitySquared) * d ** 4) / 24 +
+        ((61 + 90 * tangentSquared + 298 * etaSquared + 45 * tangentSquared ** 2 - 252 * secondEccentricitySquared - 3 * etaSquared ** 2) * d ** 6) / 720);
   const longitude =
     longitudeOrigin +
     (d -
       ((1 + 2 * tangentSquared + etaSquared) * d ** 3) / 6 +
-      ((5 -
-        2 * etaSquared +
-        28 * tangentSquared -
-        3 * etaSquared ** 2 +
-        8 * secondEccentricitySquared +
-        24 * tangentSquared ** 2) *
-        d ** 5) /
-        120) /
+      ((5 - 2 * etaSquared + 28 * tangentSquared - 3 * etaSquared ** 2 + 8 * secondEccentricitySquared + 24 * tangentSquared ** 2) * d ** 5) / 120) /
       cosine;
   return {
     latitude: radiansToDegrees(latitude),
@@ -1316,27 +1189,13 @@ export function epsg3763ToWgs84(
   };
 }
 
-function meridionalArc(
-  latitude: number,
-  semiMajorAxis: number,
-  eccentricitySquared: number,
-): number {
+function meridionalArc(latitude: number, semiMajorAxis: number, eccentricitySquared: number): number {
   return (
     semiMajorAxis *
-    ((1 -
-      eccentricitySquared / 4 -
-      (3 * eccentricitySquared ** 2) / 64 -
-      (5 * eccentricitySquared ** 3) / 256) *
-      latitude -
-      (3 * eccentricitySquared / 8 +
-        (3 * eccentricitySquared ** 2) / 32 +
-        (45 * eccentricitySquared ** 3) / 1024) *
-        Math.sin(2 * latitude) +
-      ((15 * eccentricitySquared ** 2) / 256 +
-        (45 * eccentricitySquared ** 3) / 1024) *
-        Math.sin(4 * latitude) -
-      ((35 * eccentricitySquared ** 3) / 3072) *
-        Math.sin(6 * latitude))
+    ((1 - eccentricitySquared / 4 - (3 * eccentricitySquared ** 2) / 64 - (5 * eccentricitySquared ** 3) / 256) * latitude -
+      ((3 * eccentricitySquared) / 8 + (3 * eccentricitySquared ** 2) / 32 + (45 * eccentricitySquared ** 3) / 1024) * Math.sin(2 * latitude) +
+      ((15 * eccentricitySquared ** 2) / 256 + (45 * eccentricitySquared ** 3) / 1024) * Math.sin(4 * latitude) -
+      ((35 * eccentricitySquared ** 3) / 3072) * Math.sin(6 * latitude))
   );
 }
 
@@ -1395,9 +1254,7 @@ function canonicalValue(value: JsonValue | undefined, type: FieldType): JsonValu
     case "boolean":
       return parseBoolean(value) ?? null;
     case "date":
-      return isJsonString(value) && isDateOnly(value)
-        ? value.slice(0, 10)
-        : null;
+      return isJsonString(value) && isDateOnly(value) ? value.slice(0, 10) : null;
     case "datetime": {
       if (!isJsonString(value) || !isDateTime(value)) return null;
       return new Date(value).toISOString();
@@ -1438,15 +1295,8 @@ function applyColorBadge(fields: CanonicalField[]): void {
   const color = fields.find((candidate) => candidate.type === "color");
   if (!color) return;
   const label =
-    fields.find(
-      (candidate) =>
-        candidate.name !== color.name &&
-        (candidate.type === "string" || candidate.type === "category"),
-    ) ??
-    fields.find(
-      (candidate) =>
-        candidate.name !== color.name && candidate.type === "identifier",
-    );
+    fields.find((candidate) => candidate.name !== color.name && (candidate.type === "string" || candidate.type === "category")) ??
+    fields.find((candidate) => candidate.name !== color.name && candidate.type === "identifier");
   if (label) {
     label.display = {
       ...label.display,
@@ -1455,10 +1305,7 @@ function applyColorBadge(fields: CanonicalField[]): void {
   }
 }
 
-function appendUnknownFields(
-  fields: SourceField[],
-  rows: JsonObject[],
-): void {
+function appendUnknownFields(fields: SourceField[], rows: JsonObject[]): void {
   const known = new Set(fields.map((sourceField) => sourceField.name));
   const unknown = new Set<string>();
   for (const row of rows) {
@@ -1490,50 +1337,30 @@ interface WeightedCentroid {
   weight: number;
 }
 
-function geometryCentroid(
-  geometry: JsonObject,
-): Coordinate | undefined {
+function geometryCentroid(geometry: JsonObject): Coordinate | undefined {
   const weighted = weightedGeometryCentroid(geometry);
-  return weighted
-    ? { longitude: weighted.longitude, latitude: weighted.latitude }
-    : undefined;
+  return weighted ? { longitude: weighted.longitude, latitude: weighted.latitude } : undefined;
 }
 
-function weightedGeometryCentroid(
-  geometry: JsonObject,
-): WeightedCentroid | undefined {
+function weightedGeometryCentroid(geometry: JsonObject): WeightedCentroid | undefined {
   const type = stringValue(geometry.type);
   switch (type) {
     case "Point": {
       const point = coordinatePair(geometry.coordinates);
-      return point
-        ? { longitude: point[0], latitude: point[1], weight: 1 }
-        : undefined;
+      return point ? { longitude: point[0], latitude: point[1], weight: 1 } : undefined;
     }
     case "MultiPoint":
       return averageCoordinates(geometry.coordinates);
     case "LineString":
       return lineCentroid(geometry.coordinates);
     case "MultiLineString":
-      return combineWeighted(
-        Array.isArray(geometry.coordinates)
-          ? geometry.coordinates.map(lineCentroid)
-          : [],
-      );
+      return combineWeighted(Array.isArray(geometry.coordinates) ? geometry.coordinates.map(lineCentroid) : []);
     case "Polygon":
       return polygonCentroid(geometry.coordinates);
     case "MultiPolygon":
-      return combineWeighted(
-        Array.isArray(geometry.coordinates)
-          ? geometry.coordinates.map(polygonCentroid)
-          : [],
-      );
+      return combineWeighted(Array.isArray(geometry.coordinates) ? geometry.coordinates.map(polygonCentroid) : []);
     case "GeometryCollection":
-      return combineWeighted(
-        Array.isArray(geometry.geometries)
-          ? geometry.geometries.filter(isJsonObject).map(weightedGeometryCentroid)
-          : [],
-      );
+      return combineWeighted(Array.isArray(geometry.geometries) ? geometry.geometries.filter(isJsonObject).map(weightedGeometryCentroid) : []);
     default:
       return averageCoordinates(geometry.coordinates);
   }
@@ -1611,9 +1438,7 @@ function averageCoordinates(value: JsonValue | undefined): WeightedCentroid | un
   };
 }
 
-function combineWeighted(
-  values: Array<WeightedCentroid | undefined>,
-): WeightedCentroid | undefined {
+function combineWeighted(values: Array<WeightedCentroid | undefined>): WeightedCentroid | undefined {
   const centroids = values.filter((value): value is WeightedCentroid => Boolean(value));
   const weight = centroids.reduce((total, centroid) => total + centroid.weight, 0);
   if (centroids.length === 0 || weight <= 0) return undefined;
@@ -1625,22 +1450,13 @@ function combineWeighted(
 }
 
 function coordinatePair(value: JsonValue | undefined): [number, number] | undefined {
-  if (
-    !Array.isArray(value) ||
-    !isJsonNumber(value[0]) ||
-    !Number.isFinite(value[0]) ||
-    !isJsonNumber(value[1]) ||
-    !Number.isFinite(value[1])
-  ) {
+  if (!Array.isArray(value) || !isJsonNumber(value[0]) || !Number.isFinite(value[0]) || !isJsonNumber(value[1]) || !Number.isFinite(value[1])) {
     return undefined;
   }
   return [value[0], value[1]];
 }
 
-function collectCoordinatePairs(
-  value: JsonValue | undefined,
-  pairs: Array<[number, number]>,
-): void {
+function collectCoordinatePairs(value: JsonValue | undefined, pairs: Array<[number, number]>): void {
   const pair = coordinatePair(value);
   if (pair) {
     pairs.push(pair);
@@ -1662,12 +1478,7 @@ function isLongitudeName(name: string): boolean {
 
 function isIdentifierName(name: string): boolean {
   const normalized = name.toLowerCase().replaceAll(/[^a-z0-9]+/g, "_");
-  return (
-    normalized === "id" ||
-    normalized === "_id" ||
-    normalized.endsWith("_id") ||
-    ["uuid", "guid", "globalid", "objectid", "identifier"].includes(normalized)
-  );
+  return normalized === "id" || normalized === "_id" || normalized.endsWith("_id") || ["uuid", "guid", "globalid", "objectid", "identifier"].includes(normalized);
 }
 
 function parseBoolean(value: JsonValue | undefined): boolean | undefined {
@@ -1707,10 +1518,7 @@ function isDateOnly(value: JsonValue | undefined): value is string {
 }
 
 function isDateTime(value: JsonValue | undefined): value is string {
-  if (
-    !isJsonString(value) ||
-    !/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(value.trim())
-  ) {
+  if (!isJsonString(value) || !/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(value.trim())) {
     return false;
   }
   return !Number.isNaN(Date.parse(value));
@@ -1741,9 +1549,7 @@ function eventTimeValue(value: JsonValue | undefined, type: FieldType): string |
   if (type === "date" && isJsonString(value) && isDateOnly(value)) {
     return `${value}T00:00:00.000Z`;
   }
-  return type === "datetime" && isJsonString(value) && isDateTime(value)
-    ? new Date(value).toISOString()
-    : undefined;
+  return type === "datetime" && isJsonString(value) && isDateTime(value) ? new Date(value).toISOString() : undefined;
 }
 
 function stableHash(value: JsonValue | undefined): string {

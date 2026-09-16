@@ -22,8 +22,7 @@ export const OMIE_EXAMPLES: ExampleFeed[] = [
   {
     slug: "omie-portuguese-day-ahead-prices-feed",
     title: "OMIE Portuguese day-ahead price file",
-    description:
-      "The latest two available day-ahead price files from OMIE's Portuguese file family.",
+    description: "The latest two available day-ahead price files from OMIE's Portuguese file family.",
     config: { source: "omie", series: "marginalpdbcpt", days: "2" },
     policy: POLICY,
     staleAfterSeconds: 172_800,
@@ -33,8 +32,7 @@ export const OMIE_EXAMPLES: ExampleFeed[] = [
   {
     slug: "omie-seven-day-day-ahead-prices-feed",
     title: "OMIE seven-day day-ahead price window",
-    description:
-      "The latest seven available day-ahead price files from OMIE's Spanish file family.",
+    description: "The latest seven available day-ahead price files from OMIE's Spanish file family.",
     config: { source: "omie", series: "marginalpdbc", days: "7" },
     policy: POLICY,
     staleAfterSeconds: 172_800,

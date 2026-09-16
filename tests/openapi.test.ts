@@ -13,7 +13,22 @@ describe("public API contract", () => {
     expect(document.paths["/api/products/{slug}/events"]).toBeDefined();
     expect(document.paths["/api/products/{slug}/changes/range"]).toBeDefined();
     expect(document.paths["/api/products/{slug}/series/range"]).toBeDefined();
-    for (const removed of ["/api/feeds/reconcile", "/api/catalog/baselines", "/api/feeds/{feedId}/late-records", "/api/transform-runs", "/api/feeds/{feedId}/transform-runs", "/api/usage", "/api/sync", "/api/policies", "/api/gatekeepers", "/api/feed-kinds", "/api/activity", "/api/feeds/{feedId}/acquisitions", "/api/feeds/{feedId}/backfill"]) expect(Object.keys(document.paths)).not.toContain(removed);
+    for (const removed of [
+      "/api/feeds/reconcile",
+      "/api/catalog/baselines",
+      "/api/feeds/{feedId}/late-records",
+      "/api/transform-runs",
+      "/api/feeds/{feedId}/transform-runs",
+      "/api/usage",
+      "/api/sync",
+      "/api/policies",
+      "/api/gatekeepers",
+      "/api/feed-kinds",
+      "/api/activity",
+      "/api/feeds/{feedId}/acquisitions",
+      "/api/feeds/{feedId}/backfill",
+    ])
+      expect(Object.keys(document.paths)).not.toContain(removed);
     expect(document.paths["/api/query"]).toBeUndefined();
     expect(document.paths["/api/products/{slug}/records/asof"]).toBeUndefined();
     expect(Object.keys(document.paths).some((path) => path.includes("artifact") || path.includes("replay"))).toBe(false);
@@ -24,7 +39,8 @@ describe("public API contract", () => {
     const document = openApiDocument("https://open-data.pt");
     const paths = Object.keys(document.paths);
     for (const path of ["/api", "/api/health", "/api/products/{slug}/series/changes/range"]) expect(paths).toContain(path);
-    for (const removed of ["/api/bootstrap", "/api/config", "/api/feeds/{feedId}/collect", "/api/feeds/{feedId}/resume", "/api/feeds/{feedId}/enabled"]) expect(paths).not.toContain(removed);
+    for (const removed of ["/api/bootstrap", "/api/config", "/api/feeds/{feedId}/collect", "/api/feeds/{feedId}/resume", "/api/feeds/{feedId}/enabled"])
+      expect(paths).not.toContain(removed);
     expect(new Set(Object.values(document.paths).flatMap((item) => Object.keys(item)))).toEqual(new Set(["get"]));
     expect(JSON.stringify(document)).not.toMatch(/operator|bearer/i);
     expect(document.paths["/api/products/{slug}/series/range"].get.parameters.map((parameter) => parameter.name)).toContain("knownAt");
@@ -57,7 +73,10 @@ describe("public API contract", () => {
       const index = readFileSync(`packages/${name}/src/index.ts`, "utf8");
       expect(index).not.toMatch(/async\s+transform\s*\(/);
       expect(index).not.toMatch(/async\s+collectHistory\s*\(/);
-      const sources = readdirSync(`packages/${name}/src`).filter((file) => file.endsWith(".ts")).map((file) => readFileSync(`packages/${name}/src/${file}`, "utf8")).join("\n");
+      const sources = readdirSync(`packages/${name}/src`)
+        .filter((file) => file.endsWith(".ts"))
+        .map((file) => readFileSync(`packages/${name}/src/${file}`, "utf8"))
+        .join("\n");
       expect(sources, name).toContain("collectNormalized");
     }
   });

@@ -25,8 +25,7 @@ export const BPSTAT_EXAMPLES: ExampleFeed[] = [
   {
     slug: "bpstat-consumer-price-index",
     title: "Consumer price index",
-    description:
-      "Monthly consumer price index year-on-year changes for Portugal by consumption aggregate.",
+    description: "Monthly consumer price index year-on-year changes for Portugal by consumption aggregate.",
     config: {
       source: "bpstat",
       domain: "12",
@@ -46,8 +45,7 @@ export const BPSTAT_EXAMPLES: ExampleFeed[] = [
   {
     slug: "bpstat-employment-and-unemployment",
     title: "Population, employment and unemployment indicators",
-    description:
-      "Population, unemployment benefit, job application, vacancy, and placement indicators for Portugal.",
+    description: "Population, unemployment benefit, job application, vacancy, and placement indicators for Portugal.",
     config: {
       source: "bpstat",
       domain: "13",
@@ -62,8 +60,7 @@ export const BPSTAT_EXAMPLES: ExampleFeed[] = [
   {
     slug: "bpstat-payment-system-participants",
     title: "Direct debit system participants",
-    description:
-      "Monthly and annual counts of active creditors and direct debit authorisations by SEPA scheme.",
+    description: "Monthly and annual counts of active creditors and direct debit authorisations by SEPA scheme.",
     config: {
       source: "bpstat",
       domain: "8",
@@ -78,8 +75,7 @@ export const BPSTAT_EXAMPLES: ExampleFeed[] = [
   {
     slug: "bpstat-housing-loan-reference-rates",
     title: "Housing loans with other reference rates",
-    description:
-      "Monthly shares of new and outstanding permanent-home loans using reference rates outside the named benchmarks.",
+    description: "Monthly shares of new and outstanding permanent-home loans using reference rates outside the named benchmarks.",
     config: {
       source: "bpstat",
       domain: "186",

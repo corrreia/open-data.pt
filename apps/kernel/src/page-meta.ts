@@ -84,7 +84,12 @@ async function pageMeta(url: URL, title: string, description: string, host: Site
   canonical.searchParams.set(parameter, value);
   const named = await namedBy(path, value, host, canonical.href);
   if (!named) return general;
-  const meta: PageMeta = { title: `${named.heading} · ${SITE_NAME}`, heading: named.heading, description: clip(named.description || description, MAX_DESCRIPTION), canonical: canonical.href };
+  const meta: PageMeta = {
+    title: `${named.heading} · ${SITE_NAME}`,
+    heading: named.heading,
+    description: clip(named.description || description, MAX_DESCRIPTION),
+    canonical: canonical.href,
+  };
   if (named.dataset) meta.dataset = named.dataset;
   return meta;
 }
@@ -106,7 +111,10 @@ async function namedBy(path: string, value: string, host: SiteHost, canonical: s
   }
   if (!feeds.some((feed) => feed.topics?.includes(value))) return undefined;
   const label = topicLabel(value);
-  return { heading: `${label} datasets`, description: `Portuguese public data about ${label.toLocaleLowerCase()}: every dataset open-data.pt collects on it, with its publisher and its API links.` };
+  return {
+    heading: `${label} datasets`,
+    description: `Portuguese public data about ${label.toLocaleLowerCase()}: every dataset open-data.pt collects on it, with its publisher and its API links.`,
+  };
 }
 
 /**

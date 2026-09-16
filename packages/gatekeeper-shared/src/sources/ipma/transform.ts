@@ -1,23 +1,5 @@
-import type {
-  CanonicalRecord,
-  CanonicalSchema,
-  JsonObject,
-  JsonValue,
-  ProductBuild,
-  SeriesPoint,
-  TransformContext,
-  TransformResult,
-} from "../../index";
-import {
-  field,
-  lisbonToUtc,
-  sha256Hex,
-  isJsonBoolean,
-  isJsonNumber,
-  isJsonObject,
-  isJsonString,
-  parseJsonBytes,
-} from "../../index";
+import type { CanonicalRecord, CanonicalSchema, JsonObject, JsonValue, ProductBuild, SeriesPoint, TransformContext, TransformResult } from "../../index";
+import { field, lisbonToUtc, sha256Hex, isJsonBoolean, isJsonNumber, isJsonObject, isJsonString, parseJsonBytes } from "../../index";
 
 const LATEST_STATION_SCHEMA: CanonicalSchema = {
   fields: [
@@ -364,7 +346,11 @@ function transformDailyForecast(root: JsonObject): Omit<TransformResult, "transf
     }
   }
   records.sort((left, right) => left.entityKey.localeCompare(right.entityKey));
-  const watermark = records.map((record) => record.eventTime).filter((value): value is string => Boolean(value)).sort().at(-1);
+  const watermark = records
+    .map((record) => record.eventTime)
+    .filter((value): value is string => Boolean(value))
+    .sort()
+    .at(-1);
   const product: ProductBuild = {
     productKey: "forecast-daily",
     slug: "ipma-forecast-daily",
@@ -425,7 +411,10 @@ async function transformSeismic(root: JsonObject): Promise<Omit<TransformResult,
     }
   }
   records.sort((left, right) => String(left.eventTime).localeCompare(String(right.eventTime)) || left.entityKey.localeCompare(right.entityKey));
-  const watermark = records.map((record) => record.eventTime).filter((value): value is string => Boolean(value)).at(-1);
+  const watermark = records
+    .map((record) => record.eventTime)
+    .filter((value): value is string => Boolean(value))
+    .at(-1);
   const product: ProductBuild = {
     productKey: "earthquakes",
     slug: "ipma-earthquakes",
@@ -504,7 +493,11 @@ function transformWarnings(root: JsonObject): Omit<TransformResult, "transformer
     byId.set(warningId, record);
   }
   const records = [...byId.values()].sort((left, right) => left.entityKey.localeCompare(right.entityKey));
-  const watermark = records.map((record) => record.eventTime).filter((value): value is string => Boolean(value)).sort().at(-1);
+  const watermark = records
+    .map((record) => record.eventTime)
+    .filter((value): value is string => Boolean(value))
+    .sort()
+    .at(-1);
   const product: ProductBuild = {
     productKey: "warnings",
     slug: "ipma-warnings",
@@ -575,20 +568,24 @@ function transformUvIndex(root: JsonObject): Omit<TransformResult, "transformer"
     }));
   // One product: the forecast table. A daily-maximum series restated the same
   // values (one forecast period per location and day in practice).
-  const watermark = records.map((record) => record.eventTime ?? "").sort().at(-1) || undefined;
+  const watermark =
+    records
+      .map((record) => record.eventTime ?? "")
+      .sort()
+      .at(-1) || undefined;
   const products: ProductBuild[] = [
-      {
-        productKey: "uv-index",
-        slug: "ipma-uv-index",
-        title: "IPMA UV index forecast",
-        description: "UV index forecasts by location, day, and forecast period.",
-        role: "reference",
-        schema: UV_SCHEMA,
-        records,
-        kind: "record",
-        updateMode: "authoritative-snapshot",
-        completeness: "complete",
-      },
+    {
+      productKey: "uv-index",
+      slug: "ipma-uv-index",
+      title: "IPMA UV index forecast",
+      description: "UV index forecasts by location, day, and forecast period.",
+      role: "reference",
+      schema: UV_SCHEMA,
+      records,
+      kind: "record",
+      updateMode: "authoritative-snapshot",
+      completeness: "complete",
+    },
   ];
   if (watermark) for (const product of products) product.watermark = watermark;
   return {
@@ -643,7 +640,11 @@ function transformFireRisk(root: JsonObject): Omit<TransformResult, "transformer
     }
   }
   records.sort((left, right) => left.entityKey.localeCompare(right.entityKey));
-  const watermark = records.map((record) => record.eventTime).filter((value): value is string => Boolean(value)).sort().at(-1);
+  const watermark = records
+    .map((record) => record.eventTime)
+    .filter((value): value is string => Boolean(value))
+    .sort()
+    .at(-1);
   const product: ProductBuild = {
     productKey: "fire-risk",
     slug: "ipma-fire-risk",
@@ -704,7 +705,11 @@ function transformSeaForecast(root: JsonObject): Omit<TransformResult, "transfor
     }
   }
   records.sort((left, right) => left.entityKey.localeCompare(right.entityKey));
-  const watermark = records.map((record) => record.eventTime).filter((value): value is string => Boolean(value)).sort().at(-1);
+  const watermark = records
+    .map((record) => record.eventTime)
+    .filter((value): value is string => Boolean(value))
+    .sort()
+    .at(-1);
   const product: ProductBuild = {
     productKey: "sea-forecast",
     slug: "ipma-sea-forecast",
@@ -757,18 +762,14 @@ function municipalityLookup(value: JsonValue | undefined): Map<string, string> {
 function warningLevel(value: JsonValue | undefined): WarningLevel | undefined {
   // SAFETY: `WARNING_LEVELS` is keyed by the warning levels IPMA publishes, so
   // a value it owns is one of them.
-  return isJsonString(value) && Object.hasOwn(WARNING_LEVELS, value)
-    ? value as WarningLevel
-    : undefined;
+  return isJsonString(value) && Object.hasOwn(WARNING_LEVELS, value) ? (value as WarningLevel) : undefined;
 }
 
 function fireLevel(value: JsonValue | undefined): keyof typeof FIRE_LEVELS | undefined {
   const level = finiteNumber(value);
   // SAFETY: `FIRE_LEVELS` is keyed by the danger levels IPMA publishes, so a
   // whole number it owns is one of them.
-  return level !== null && Number.isInteger(level) && Object.hasOwn(FIRE_LEVELS, level)
-    ? level as keyof typeof FIRE_LEVELS
-    : undefined;
+  return level !== null && Number.isInteger(level) && Object.hasOwn(FIRE_LEVELS, level) ? (level as keyof typeof FIRE_LEVELS) : undefined;
 }
 
 function lookup(value: JsonValue | undefined, idField: string, labelField: string): Map<string, string> {
@@ -786,7 +787,6 @@ function lookup(value: JsonValue | undefined, idField: string, labelField: strin
 function quality(input: number, accepted: number): TransformResult["quality"] {
   return { acceptedRecords: accepted, rejectedRecords: input - accepted };
 }
-
 
 function identifier(value: JsonValue | undefined): string | undefined {
   if (isJsonString(value) && value.trim() !== "") return value.trim();

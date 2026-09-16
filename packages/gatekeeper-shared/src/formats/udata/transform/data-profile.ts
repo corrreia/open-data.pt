@@ -1,12 +1,4 @@
-import {
-  asArray,
-  isJsonArray,
-  isJsonObject,
-  parseJson,
-  readBoundedBytes,
-  streamCsvRecords,
-  streamJsonArray,
-} from "../../../index";
+import { asArray, isJsonArray, isJsonObject, parseJson, readBoundedBytes, streamCsvRecords, streamJsonArray } from "../../../index";
 import type { JsonObject, JsonValue } from "../../../index";
 import { isUtf8, peekBody, sniffJson, sniffText } from "./body";
 
@@ -49,11 +41,7 @@ interface ColumnReadings {
  * type and nullability come from every row through bounded counters; the
  * samples are the first 50 rows.
  */
-export async function profileStream(
-  body: ReadableStream<Uint8Array>,
-  format: string | undefined,
-  mediaType: string,
-): Promise<DataProfile> {
+export async function profileStream(body: ReadableStream<Uint8Array>, format: string | undefined, mediaType: string): Promise<DataProfile> {
   const normalizedFormat = format?.toLowerCase();
   const media = mediaType.toLowerCase();
   if (normalizedFormat === "csv" || media.includes("text/csv")) {
@@ -71,11 +59,7 @@ export async function profileStream(
   return { columns: [], sampleRows: [] };
 }
 
-export async function readCsvPage(
-  body: ReadableStream<Uint8Array>,
-  offset: number,
-  limit: number,
-): Promise<CsvPage> {
+export async function readCsvPage(body: ReadableStream<Uint8Array>, offset: number, limit: number): Promise<CsvPage> {
   const csv = streamCsvRecords(body);
   const columns = await csv.header;
   const rows: Record<string, string | null>[] = [];
@@ -111,10 +95,7 @@ async function* jsonRows(values: AsyncIterable<JsonValue> | Iterable<JsonValue>)
   }
 }
 
-async function profileRows(
-  header: string[],
-  rows: AsyncIterable<Record<string, string | null>>,
-): Promise<DataProfile> {
+async function profileRows(header: string[], rows: AsyncIterable<Record<string, string | null>>): Promise<DataProfile> {
   const readings = new Map<string, ColumnReadings>();
   const reading = (name: string): ColumnReadings => {
     let found = readings.get(name);
@@ -149,13 +130,16 @@ async function profileRows(
     rowCount,
     columns: [...readings.values()].map((column) => ({
       name: column.name,
-      type: column.present === 0
-        ? "string"
-        : column.booleans === column.present
-          ? "boolean"
-          : column.numbers === column.present
-            ? "number"
-            : column.dates === column.present ? "date" : "string",
+      type:
+        column.present === 0
+          ? "string"
+          : column.booleans === column.present
+            ? "boolean"
+            : column.numbers === column.present
+              ? "number"
+              : column.dates === column.present
+                ? "date"
+                : "string",
       nullable: column.missing,
     })),
     sampleRows,
@@ -178,17 +162,8 @@ function listRecords(value: JsonValue): JsonValue[] {
   return [];
 }
 
-function jsonRecordToRow(
-  record: JsonObject,
-): Record<string, string | null> {
+function jsonRecordToRow(record: JsonObject): Record<string, string | null> {
   return Object.fromEntries(
-    Object.entries(record).map(([key, value]) => [
-      key,
-      value === null
-        ? null
-        : isJsonObject(value) || isJsonArray(value)
-          ? JSON.stringify(value)
-          : String(value),
-    ]),
+    Object.entries(record).map(([key, value]) => [key, value === null ? null : isJsonObject(value) || isJsonArray(value) ? JSON.stringify(value) : String(value)]),
   );
 }

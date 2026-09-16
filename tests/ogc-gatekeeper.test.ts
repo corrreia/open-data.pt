@@ -15,14 +15,7 @@ import {
   type SourceBody,
   type SourceFetch,
 } from "@open-data-pt/gatekeeper-shared";
-import {
-  OgcTransformer,
-  collectOgcFeed,
-  itemsUrl,
-  ogcCollector,
-  resolveOgcFeed,
-  validateOgcFeedConfig,
-} from "../packages/gatekeeper-shared/src/formats/ogc";
+import { OgcTransformer, collectOgcFeed, itemsUrl, ogcCollector, resolveOgcFeed, validateOgcFeedConfig } from "../packages/gatekeeper-shared/src/formats/ogc";
 import { OGC_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/ogc/examples";
 
 const DGT_HOST = "ogcapi.dgterritorio.gov.pt";
@@ -70,9 +63,7 @@ function itemsPage(options: PageOptions): JsonObject {
   const host = options.host ?? DGT_HOST;
   const collection = options.collection ?? "municipios";
   const first = options.first ?? 0;
-  const links: JsonObject[] = [
-    { rel: "self", type: "application/geo+json", href: `https://${host}/collections/${collection}/items?f=json` },
-  ];
+  const links: JsonObject[] = [{ rel: "self", type: "application/geo+json", href: `https://${host}/collections/${collection}/items?f=json` }];
   if (options.next !== undefined) {
     links.push({ rel: "next", type: "application/geo+json", href: `https://${host}/collections/${collection}/items?f=json&offset=${options.next}` });
   }
@@ -152,11 +143,14 @@ async function request(overrides: Partial<CollectionRequest> = {}): Promise<Coll
 }
 
 async function frames(stream: ReadableStream<Uint8Array>): Promise<JsonObject[]> {
-  return (await readText(stream)).trim().split("\n").map((line) => {
-    const frame = parseJson(line);
-    if (!isJsonObject(frame)) throw new Error("Every frame is a JSON object");
-    return frame;
-  });
+  return (await readText(stream))
+    .trim()
+    .split("\n")
+    .map((line) => {
+      const frame = parseJson(line);
+      if (!isJsonObject(frame)) throw new Error("Every frame is a JSON object");
+      return frame;
+    });
 }
 
 function chunked(text: string, size: number): ReadableStream<Uint8Array> {
@@ -197,10 +191,7 @@ describe("OGC API Features configuration", () => {
   });
 
   it("keeps a base path and a requested property list", () => {
-    expect(validateOgcFeedConfig(
-      { host: AZORES_HOST, basePath: "/idea-api/", collection: "Farois", properties: " unique_id , designacao ,unique_id" },
-      hosts,
-    )).toEqual({
+    expect(validateOgcFeedConfig({ host: AZORES_HOST, basePath: "/idea-api/", collection: "Farois", properties: " unique_id , designacao ,unique_id" }, hosts)).toEqual({
       host: AZORES_HOST,
       basePath: "idea-api",
       collection: "Farois",
@@ -229,8 +220,7 @@ describe("OGC API Features configuration", () => {
   });
 
   it("refuses a host outside the allowlist", () => {
-    expect(() => validateOgcFeedConfig({ host: "attacker.example", collection: "municipios" }, hosts))
-      .toThrow(/not allowed/);
+    expect(() => validateOgcFeedConfig({ host: "attacker.example", collection: "municipios" }, hosts)).toThrow(/not allowed/);
   });
 
   it.each(OGC_EXAMPLES)("validates the curated $slug example", (example) => {
@@ -239,15 +229,12 @@ describe("OGC API Features configuration", () => {
   });
 
   it("builds every resource URL from validated identifiers alone", () => {
-    expect(itemsUrl(config).toString()).toBe(
-      `https://${DGT_HOST}/collections/municipios/items?f=json&limit=1000&skipGeometry=true`,
-    );
-    expect(itemsUrl(config, 1000).toString()).toBe(
-      `https://${DGT_HOST}/collections/municipios/items?f=json&limit=1000&offset=1000&skipGeometry=true`,
-    );
+    expect(itemsUrl(config).toString()).toBe(`https://${DGT_HOST}/collections/municipios/items?f=json&limit=1000&skipGeometry=true`);
+    expect(itemsUrl(config, 1000).toString()).toBe(`https://${DGT_HOST}/collections/municipios/items?f=json&limit=1000&offset=1000&skipGeometry=true`);
     // A geometry-bearing feed names CRS84 explicitly rather than trusting the service default.
-    expect(itemsUrl({ host: AZORES_HOST, basePath: "idea-api", collection: "Farois", geometry: "include", properties: "unique_id,designacao" }).toString())
-      .toBe(`https://${AZORES_HOST}/idea-api/collections/Farois/items?f=json&limit=500&crs=${encodeURIComponent("http://www.opengis.net/def/crs/OGC/1.3/CRS84")}&properties=unique_id%2Cdesignacao`);
+    expect(itemsUrl({ host: AZORES_HOST, basePath: "idea-api", collection: "Farois", geometry: "include", properties: "unique_id,designacao" }).toString()).toBe(
+      `https://${AZORES_HOST}/idea-api/collections/Farois/items?f=json&limit=500&crs=${encodeURIComponent("http://www.opengis.net/def/crs/OGC/1.3/CRS84")}&properties=unique_id%2Cdesignacao`,
+    );
   });
 
   it("gives two feeds that differ only in how much they read the same resource key", async () => {
@@ -276,10 +263,7 @@ describe("OGC API Features configuration", () => {
 
 describe("OGC API Features collection", () => {
   it("walks pages the service links, rebuilding every URL from its offset", async () => {
-    const fetcher = serviceFetcher(
-      (offset) => itemsPage({ count: offset < 4 ? 2 : 1, matched: 5, first: offset, next: offset + 2 <= 4 ? offset + 2 : undefined }),
-      5,
-    );
+    const fetcher = serviceFetcher((offset) => itemsPage({ count: offset < 4 ? 2 : 1, matched: 5, first: offset, next: offset + 2 <= 4 ? offset + 2 : undefined }), 5);
     const fetched = await collectOgcFeed({ ...config, pageSize: "2", maxPages: "5" }, undefined, hosts, fetcher);
     const document = await readDocument(fetched);
     expect(featureIds(document)).toEqual(["m0", "m1", "m2", "m3", "m4"]);
@@ -390,27 +374,27 @@ describe("OGC API Features collection", () => {
     ["a sibling with a suffixed name", `https://${DGT_HOST}/collections/municipios-antigos/items`],
   ])("refuses a redirect to %s", async (_label, location) => {
     const fetcher = serviceFetcher(() => itemsPage({ count: 1, matched: 1 }), 1, {
-      onRequest: (url) => (url.pathname.endsWith("/items") && url.searchParams.get("resulttype") === null
-        ? new Response(null, { status: 302, headers: { location } })
-        : undefined),
+      onRequest: (url) => (url.pathname.endsWith("/items") && url.searchParams.get("resulttype") === null ? new Response(null, { status: 302, headers: { location } }) : undefined),
     });
     await expect(collectOgcFeed(config, undefined, hosts, fetcher)).rejects.toThrow(GatekeeperError);
   });
 
   it("stops after a few redirects rather than following a loop", async () => {
     const fetcher = serviceFetcher(() => itemsPage({ count: 1, matched: 1 }), 1, {
-      onRequest: (url) => (url.pathname.endsWith("/items") && url.searchParams.get("resulttype") === null
-        ? new Response(null, { status: 302, headers: { location: `https://${DGT_HOST}/collections/municipios/items?f=json&hop=${Math.random()}` } })
-        : undefined),
+      onRequest: (url) =>
+        url.pathname.endsWith("/items") && url.searchParams.get("resulttype") === null
+          ? new Response(null, { status: 302, headers: { location: `https://${DGT_HOST}/collections/municipios/items?f=json&hop=${Math.random()}` } })
+          : undefined,
     });
     await expect(collectOgcFeed(config, undefined, hosts, fetcher)).rejects.toThrow(/redirected too many times/);
   });
 
   it("refuses features in a coordinate reference system that is not WGS 84", async () => {
     const fetcher = serviceFetcher(() => itemsPage({ count: 1, matched: 1 }), 1, {
-      onRequest: (url) => (url.pathname.endsWith("/items") && url.searchParams.get("resulttype") === null
-        ? Response.json(itemsPage({ count: 1, matched: 1 }), { headers: { "content-crs": "<http://www.opengis.net/def/crs/EPSG/0/3763>" } })
-        : undefined),
+      onRequest: (url) =>
+        url.pathname.endsWith("/items") && url.searchParams.get("resulttype") === null
+          ? Response.json(itemsPage({ count: 1, matched: 1 }), { headers: { "content-crs": "<http://www.opengis.net/def/crs/EPSG/0/3763>" } })
+          : undefined,
     });
     await expect(collectOgcFeed({ ...config, geometry: "include" }, undefined, hosts, fetcher)).rejects.toThrow(/not WGS 84/);
   });
@@ -471,31 +455,51 @@ describe("OGC API Features freshness", () => {
 
   it("keeps no transport state, so a grown collection can never be suppressed by a stale ETag", async () => {
     const fetcher = serviceFetcher(() => itemsPage({ count: 2, matched: 2 }), 2, {
-      onRequest: (url) => (url.pathname.endsWith("/items") && url.searchParams.get("resulttype") === null
-        ? Response.json(itemsPage({ count: 2, matched: 2 }), { headers: { etag: '"page-one"' } })
-        : undefined),
+      onRequest: (url) =>
+        url.pathname.endsWith("/items") && url.searchParams.get("resulttype") === null
+          ? Response.json(itemsPage({ count: 2, matched: 2 }), { headers: { etag: '"page-one"' } })
+          : undefined,
     });
     expect(bodyOf(await collectOgcFeed({ ...config, pageSize: "10" }, undefined, hosts, fetcher)).state).toEqual({});
   });
 
   it("refuses a 304, which it never asked for", async () => {
     const fetcher = serviceFetcher(() => itemsPage({ count: 1, matched: 1 }), 1, {
-      onRequest: (url) => (url.pathname.endsWith("/items") && url.searchParams.get("resulttype") === null
-        ? new Response(null, { status: 304 })
-        : undefined),
+      onRequest: (url) => (url.pathname.endsWith("/items") && url.searchParams.get("resulttype") === null ? new Response(null, { status: 304 }) : undefined),
     });
     await expect(collectOgcFeed(config, undefined, hosts, fetcher)).rejects.toThrow(/304 to an unconditional request/);
   });
 
   it("collects the same document twice from the same source, with no clock of its own", async () => {
-    const first = await readDocument(await collectOgcFeed(config, undefined, hosts, serviceFetcher(() => municipiosPage, 278)));
-    const second = await readDocument(await collectOgcFeed(config, undefined, hosts, serviceFetcher(() => municipiosPage, 278)));
+    const first = await readDocument(
+      await collectOgcFeed(
+        config,
+        undefined,
+        hosts,
+        serviceFetcher(() => municipiosPage, 278),
+      ),
+    );
+    const second = await readDocument(
+      await collectOgcFeed(
+        config,
+        undefined,
+        hosts,
+        serviceFetcher(() => municipiosPage, 278),
+      ),
+    );
     expect(second).toEqual(first);
     expect(JSON.stringify(first)).not.toMatch(/2026-09-1[56]T\d\d:\d\d/);
   });
 
   it("dates no row, because neither service publishes a modification time", async () => {
-    const fetched = bodyOf(await collectOgcFeed(config, undefined, hosts, serviceFetcher(() => municipiosPage, 278)));
+    const fetched = bodyOf(
+      await collectOgcFeed(
+        config,
+        undefined,
+        hosts,
+        serviceFetcher(() => municipiosPage, 278),
+      ),
+    );
     expect(fetched.provenance.sourcePublishedAt).toBeUndefined();
     expect(fetched.provenance.sourceUrl).toBe(`https://${DGT_HOST}/collections/municipios/items?f=json&limit=1000&skipGeometry=true`);
   });
@@ -549,7 +553,9 @@ describe("OGC API Features membership safety", () => {
     const fetched = await collectOgcFeed({ ...config, pageSize: "10" }, undefined, hosts, fetcher);
     const text = await readText(bodyOf(fetched).body);
     const transform = await new OgcTransformer().transform(chunked(text, text.length), transformContext);
-    for await (const _row of transform.rows) { /* drained */ }
+    for await (const _row of transform.rows) {
+      /* drained */
+    }
     expect(transform.finish().products?.[0]?.completeness).toBe("partial");
   });
 });
@@ -566,9 +572,10 @@ describe("OGC API Features coordinate reference systems", () => {
   it("refuses ETRS89 geometry rather than calling it WGS 84", async () => {
     // EPSG:4258 is a different datum. It must not pass as WGS 84.
     const fetcher = serviceFetcher(() => itemsPage({ count: 1, matched: 1 }), 1, {
-      onRequest: (url) => (url.pathname.endsWith("/items") && url.searchParams.get("resulttype") === null
-        ? Response.json(itemsPage({ count: 1, matched: 1 }), { headers: { "content-crs": "<http://www.opengis.net/def/crs/EPSG/0/4258>" } })
-        : undefined),
+      onRequest: (url) =>
+        url.pathname.endsWith("/items") && url.searchParams.get("resulttype") === null
+          ? Response.json(itemsPage({ count: 1, matched: 1 }), { headers: { "content-crs": "<http://www.opengis.net/def/crs/EPSG/0/4258>" } })
+          : undefined,
     });
     await expect(collectOgcFeed({ ...config, geometry: "include" }, undefined, hosts, fetcher)).rejects.toThrow(/not WGS 84/);
   });
@@ -576,18 +583,30 @@ describe("OGC API Features coordinate reference systems", () => {
   it("ignores the response CRS of an attributes-only feed, which publishes no coordinates", async () => {
     // DGT answers skipGeometry responses with its storage CRS; no geometry is emitted, so it does not matter.
     const fetcher = serviceFetcher(() => itemsPage({ count: 1, matched: 1 }), 1, {
-      onRequest: (url) => (url.pathname.endsWith("/items") && url.searchParams.get("resulttype") === null
-        ? Response.json(itemsPage({ count: 1, matched: 1 }), { headers: { "content-crs": "<http://www.opengis.net/def/crs/EPSG/0/3763>" } })
-        : undefined),
+      onRequest: (url) =>
+        url.pathname.endsWith("/items") && url.searchParams.get("resulttype") === null
+          ? Response.json(itemsPage({ count: 1, matched: 1 }), { headers: { "content-crs": "<http://www.opengis.net/def/crs/EPSG/0/3763>" } })
+          : undefined,
     });
     expect(featureIds(await readDocument(await collectOgcFeed(config, undefined, hosts, fetcher)))).toEqual(["m0"]);
   });
 
   it("refuses a geometry collection that advertises no readable CRS, and accepts an attributes-only one", async () => {
     const onlyPortuguese = { id: "municipios", itemType: "feature", title: "Municipalities", crs: ["http://www.opengis.net/def/crs/EPSG/0/3763"] };
-    await expect(collectOgcFeed({ ...config, geometry: "include" }, undefined, hosts, serviceFetcher(() => itemsPage({ count: 1, matched: 1 }), 1, { collection: onlyPortuguese })))
-      .rejects.toThrow(/advertises no WGS 84/);
-    const attributesOnly = await collectOgcFeed(config, undefined, hosts, serviceFetcher(() => itemsPage({ count: 1, matched: 1 }), 1, { collection: onlyPortuguese }));
+    await expect(
+      collectOgcFeed(
+        { ...config, geometry: "include" },
+        undefined,
+        hosts,
+        serviceFetcher(() => itemsPage({ count: 1, matched: 1 }), 1, { collection: onlyPortuguese }),
+      ),
+    ).rejects.toThrow(/advertises no WGS 84/);
+    const attributesOnly = await collectOgcFeed(
+      config,
+      undefined,
+      hosts,
+      serviceFetcher(() => itemsPage({ count: 1, matched: 1 }), 1, { collection: onlyPortuguese }),
+    );
     expect(bodyOf(attributesOnly).kind).toBe("body");
   });
 });
@@ -608,7 +627,12 @@ describe("OGC API Features normalization", () => {
   }
 
   it("publishes each municipality once, with the properties the service typed", async () => {
-    const fetched = await collectOgcFeed(config, undefined, hosts, serviceFetcher(() => municipiosPage, 278));
+    const fetched = await collectOgcFeed(
+      config,
+      undefined,
+      hosts,
+      serviceFetcher(() => municipiosPage, 278),
+    );
     const text = await readText(bodyOf(fetched).body);
     const transform = await transformer.transform(chunked(text, text.length), transformContext);
     const records: Array<{ entityKey: string; payload: JsonObject }> = [];
@@ -652,7 +676,12 @@ describe("OGC API Features normalization", () => {
   });
 
   it("refines a declared string into a category only once every feature was seen", async () => {
-    const fetched = await collectOgcFeed(config, undefined, hosts, serviceFetcher(() => municipiosPage, 278));
+    const fetched = await collectOgcFeed(
+      config,
+      undefined,
+      hosts,
+      serviceFetcher(() => municipiosPage, 278),
+    );
     const { transform } = await normalize(fetched);
     const declared = transform.products[0]?.schema.fields.find((field) => field.id === "nuts1");
     expect(declared?.type).toBe("string");
@@ -669,7 +698,12 @@ describe("OGC API Features normalization", () => {
         item.properties.updated = "2026-02-01T09:00:00+00:00";
       }
     }
-    const fetched = await collectOgcFeed({ ...config, geometry: "include" }, undefined, hosts, serviceFetcher(() => page, 2));
+    const fetched = await collectOgcFeed(
+      { ...config, geometry: "include" },
+      undefined,
+      hosts,
+      serviceFetcher(() => page, 2),
+    );
     const { transform } = await normalize(fetched);
     const fields = transform.finish().products?.[0]?.schema?.fields ?? [];
     expect(fields.find((field) => field.id === "site")?.type).toBe("url");
@@ -681,7 +715,12 @@ describe("OGC API Features normalization", () => {
     const features = Array.isArray(page.features) ? page.features : [];
     const only = features[0];
     if (isJsonObject(only) && isJsonObject(only.properties)) only.properties.latitude = "38,7";
-    const fetched = await collectOgcFeed({ ...config, geometry: "include" }, undefined, hosts, serviceFetcher(() => page, 1));
+    const fetched = await collectOgcFeed(
+      { ...config, geometry: "include" },
+      undefined,
+      hosts,
+      serviceFetcher(() => page, 1),
+    );
     const { transform, rows } = await normalize(fetched);
     const fields = transform.finish().products?.[0]?.schema?.fields ?? [];
     expect(fields.filter((field) => field.name === "latitude")).toHaveLength(1);
@@ -701,9 +740,13 @@ describe("OGC API Features normalization", () => {
       geometry: "include",
     })},"features":[{"type":"Feature","properties":{"dtmn":"0101"},"geometry":null,"id":"0101"},{"type":"Point","coordinates":[0,0]}]}`;
     const transform = await transformer.transform(chunked(document, 64), transformContext);
-    await expect((async () => {
-      for await (const _row of transform.rows) { /* drained until it throws */ }
-    })()).rejects.toThrow(/malformed feature/);
+    await expect(
+      (async () => {
+        for await (const _row of transform.rows) {
+          /* drained until it throws */
+        }
+      })(),
+    ).rejects.toThrow(/malformed feature/);
   });
 
   it("leaves out a feature with no identity at all, counting it as rejected", async () => {
@@ -711,7 +754,12 @@ describe("OGC API Features normalization", () => {
     const features = Array.isArray(page.features) ? page.features : [];
     const second = features[1];
     if (isJsonObject(second)) delete second.id;
-    const fetched = await collectOgcFeed({ ...config, geometry: "include" }, undefined, hosts, serviceFetcher(() => page, 2, { schema: { type: "object", properties: {} } }));
+    const fetched = await collectOgcFeed(
+      { ...config, geometry: "include" },
+      undefined,
+      hosts,
+      serviceFetcher(() => page, 2, { schema: { type: "object", properties: {} } }),
+    );
     const { transform, rows } = await normalize(fetched);
     expect(rows).toHaveLength(1);
     expect(transform.finish().quality).toEqual({ acceptedRecords: 1, rejectedRecords: 1 });
@@ -722,7 +770,12 @@ describe("OGC API Features normalization", () => {
     const features = Array.isArray(page.features) ? page.features : [];
     const second = features[1];
     if (isJsonObject(second)) delete second.id;
-    const fetched = await collectOgcFeed({ ...config, geometry: "include" }, undefined, hosts, serviceFetcher(() => page, 2, { schema: { type: "object", properties: {} } }));
+    const fetched = await collectOgcFeed(
+      { ...config, geometry: "include" },
+      undefined,
+      hosts,
+      serviceFetcher(() => page, 2, { schema: { type: "object", properties: {} } }),
+    );
     const { transform } = await normalize(fetched);
     expect(transform.finish().products?.[0]?.completeness).toBe("partial");
   });
@@ -736,7 +789,12 @@ describe("OGC API Features normalization", () => {
     const features = Array.isArray(page.features) ? page.features : [];
     const first = features[0];
     if (isJsonObject(first) && isJsonObject(first.properties)) first.properties.notes = "\u3042".repeat(400_000);
-    const fetched = await collectOgcFeed({ ...config, geometry: "include" }, undefined, hosts, serviceFetcher(() => page, 2));
+    const fetched = await collectOgcFeed(
+      { ...config, geometry: "include" },
+      undefined,
+      hosts,
+      serviceFetcher(() => page, 2),
+    );
     const text = await readText(bodyOf(fetched).body);
     const transform = await transformer.transform(chunked(text, 65_536), transformContext);
     const kept: string[] = [];
@@ -753,7 +811,12 @@ describe("OGC API Features normalization", () => {
     const features = Array.isArray(page.features) ? page.features : [];
     const first = features[0];
     if (isJsonObject(first) && isJsonObject(first.properties)) first.properties.notes = "x".repeat(1_100_000);
-    const fetched = await collectOgcFeed({ ...config, geometry: "include" }, undefined, hosts, serviceFetcher(() => page, 2));
+    const fetched = await collectOgcFeed(
+      { ...config, geometry: "include" },
+      undefined,
+      hosts,
+      serviceFetcher(() => page, 2),
+    );
     const text = await readText(bodyOf(fetched).body);
     const transform = await transformer.transform(chunked(text, 65_536), transformContext);
     const kept: string[] = [];
@@ -782,9 +845,7 @@ describe("OGC API Features through the shared collector", () => {
 
   it("fails rather than trusting a 304 it never asked for", async () => {
     const fetcher = serviceFetcher(() => itemsPage({ count: 2, matched: 2 }), 2, {
-      onRequest: (url) => (url.pathname.endsWith("/items") && url.searchParams.get("resulttype") === null
-        ? new Response(null, { status: 304 })
-        : undefined),
+      onRequest: (url) => (url.pathname.endsWith("/items") && url.searchParams.get("resulttype") === null ? new Response(null, { status: 304 }) : undefined),
     });
     const singlePage = { ...config, pageSize: "10" };
     const resolved = await resolveOgcFeed(singlePage, hosts);

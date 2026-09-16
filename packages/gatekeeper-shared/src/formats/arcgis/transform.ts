@@ -169,9 +169,7 @@ function featureRecord(feature: GeojsonFeature, fields: PreparedField[], keyFiel
   for (const field of fields) {
     const raw = feature.properties[field.source.name] ?? null;
     if (field.codedLabels) {
-      payload[field.outputName] = raw === null
-        ? null
-        : field.codedLabels.get(String(raw)) ?? String(raw);
+      payload[field.outputName] = raw === null ? null : (field.codedLabels.get(String(raw)) ?? String(raw));
       payload[`${field.outputName} code`] = raw;
     } else {
       payload[field.outputName] = canonicalValue(raw, field.type);
@@ -192,9 +190,7 @@ function featureRecord(feature: GeojsonFeature, fields: PreparedField[], keyFiel
 function layerSchema(fields: PreparedField[], total: number | undefined): CanonicalSchema {
   const final = total !== undefined;
   const typed = fields.map((field) => {
-    const type = final && field.type === "string" && field.source.type === "esriFieldTypeString" && !field.codedLabels
-      ? field.profile.stringType()
-      : field.type;
+    const type = final && field.type === "string" && field.source.type === "esriFieldTypeString" && !field.codedLabels ? field.profile.stringType() : field.type;
     const canonical: CanonicalField = {
       id: fieldId(field.source.name),
       name: field.outputName,
@@ -204,9 +200,11 @@ function layerSchema(fields: PreparedField[], total: number | undefined): Canoni
     return { field, canonical };
   });
   if (final) applyColorBadge(typed);
-  const schemaFields = typed.flatMap(({ field, canonical }) => field.codedLabels
-    ? [canonical, { id: `${field.source.name}__code`, name: `${field.outputName} code`, type: "identifier" as const, nullable: canonical.nullable }]
-    : [canonical]);
+  const schemaFields = typed.flatMap(({ field, canonical }) =>
+    field.codedLabels
+      ? [canonical, { id: `${field.source.name}__code`, name: `${field.outputName} code`, type: "identifier" as const, nullable: canonical.nullable }]
+      : [canonical],
+  );
   schemaFields.push(
     { id: "geometry", name: "geometry", type: "geometry", nullable: true },
     { id: "latitude", name: "latitude", type: "latitude", nullable: true },
@@ -224,8 +222,7 @@ function parseMetadata(value: JsonObject): ArcgisMetadata {
     layerUrl: requiredString(value.layerUrl, "layer URL"),
     name: requiredString(value.name, "layer name"),
     description: isJsonString(value.description) ? value.description : "",
-    copyrightText:
-      isJsonString(value.copyrightText) ? value.copyrightText : "",
+    copyrightText: isJsonString(value.copyrightText) ? value.copyrightText : "",
     geometryType: requiredString(value.geometryType, "geometry type"),
     objectIdField: requiredString(value.objectIdField, "object ID field"),
     fields: value.fields.map(parseField),
@@ -252,11 +249,7 @@ function parseDomain(value: JsonValue | undefined): ArcgisField["domain"] | unde
     return undefined;
   }
   const codedValues = value.codedValues.flatMap((entry) => {
-    if (
-      !isJsonObject(entry) ||
-      !isJsonString(entry.name) ||
-      (!isJsonString(entry.code) && !isJsonNumber(entry.code))
-    ) {
+    if (!isJsonObject(entry) || !isJsonString(entry.name) || (!isJsonString(entry.code) && !isJsonNumber(entry.code))) {
       return [];
     }
     return [{ name: entry.name, code: entry.code }];
@@ -279,9 +272,7 @@ function prepareFields(metadata: ArcgisMetadata): PreparedField[] {
   return metadata.fields.map((source) => {
     const outputName = uniqueOutputName(source.alias, source.name, outputNames);
     outputNames.add(outputName);
-    const codedLabels = source.domain
-      ? new Map(source.domain.codedValues.map((item) => [String(item.code), item.name]))
-      : undefined;
+    const codedLabels = source.domain ? new Map(source.domain.codedValues.map((item) => [String(item.code), item.name])) : undefined;
     const prepared: PreparedField = {
       source,
       outputName,
@@ -324,9 +315,7 @@ function canonicalValue(value: JsonValue | undefined, type: CanonicalField["type
   if (type === "datetime") {
     const timestamp = isJsonNumber(value) ? value : Date.parse(String(value));
     const date = new Date(timestamp);
-    return Number.isFinite(timestamp) && !Number.isNaN(date.getTime())
-      ? date.toISOString()
-      : null;
+    return Number.isFinite(timestamp) && !Number.isNaN(date.getTime()) ? date.toISOString() : null;
   }
   return value;
 }
@@ -340,17 +329,14 @@ interface TypedField {
 function applyColorBadge(fields: TypedField[]): void {
   const color = fields.find((entry) => entry.canonical.type === "color");
   if (!color) return;
-  const textual = (entry: TypedField) => entry !== color &&
-    (entry.canonical.type === "string" || entry.canonical.type === "category");
+  const textual = (entry: TypedField) => entry !== color && (entry.canonical.type === "string" || entry.canonical.type === "category");
   const label = fields.find((entry) => textual(entry) && entry.field.codedLabels === undefined) ?? fields.find(textual);
   if (label) {
     label.canonical.display = { badge: { colorField: color.field.outputName } };
   }
 }
 
-function geometryCentroid(
-  geometry: JsonObject | null,
-): [number, number] | undefined {
+function geometryCentroid(geometry: JsonObject | null): [number, number] | undefined {
   if (!geometry || !isJsonString(geometry.type)) return undefined;
   if (geometry.type === "Point") {
     return position(geometry.coordinates);
@@ -390,9 +376,7 @@ function collectPositions(value: JsonValue | undefined): Array<[number, number]>
   return value.flatMap(collectPositions);
 }
 
-function collectLineSegments(
-  value: JsonValue | undefined,
-): Array<[[number, number], [number, number]]> {
+function collectLineSegments(value: JsonValue | undefined): Array<[[number, number], [number, number]]> {
   if (!Array.isArray(value)) return [];
   const points = value.map(position).filter((item) => item !== undefined);
   if (points.length === value.length && points.length >= 2) {
@@ -437,13 +421,7 @@ function collectRings(value: JsonValue | undefined): Array<Array<[number, number
 }
 
 function position(value: JsonValue | undefined): [number, number] | undefined {
-  if (
-    !Array.isArray(value) ||
-    !isJsonNumber(value[0]) ||
-    !isJsonNumber(value[1]) ||
-    !Number.isFinite(value[0]) ||
-    !Number.isFinite(value[1])
-  ) {
+  if (!Array.isArray(value) || !isJsonNumber(value[0]) || !isJsonNumber(value[1]) || !Number.isFinite(value[0]) || !Number.isFinite(value[1])) {
     return undefined;
   }
   return [value[0], value[1]];
@@ -457,15 +435,14 @@ function productSlug(feedSlug: string): string {
 function productDescription(metadata: ArcgisMetadata): string {
   const sourceDescription = plainText(metadata.description);
   const copyright = plainText(metadata.copyrightText);
-  return [
-    `ArcGIS layer “${metadata.name}”.`,
-    sourceDescription,
-    `Source copyright: ${copyright || "not stated"}.`,
-  ].filter(Boolean).join(" ");
+  return [`ArcGIS layer “${metadata.name}”.`, sourceDescription, `Source copyright: ${copyright || "not stated"}.`].filter(Boolean).join(" ");
 }
 
 function plainText(value: string): string {
-  return value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  return value
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /** Fields every feature carries, derived from its geometry rather than read from an attribute. */
@@ -480,11 +457,7 @@ function fieldId(sourceName: string): string {
   return GEOMETRY_FIELDS.includes(sourceName) ? `${sourceName}__source` : sourceName;
 }
 
-function uniqueOutputName(
-  alias: string,
-  sourceName: string,
-  existing: ReadonlySet<string>,
-): string {
+function uniqueOutputName(alias: string, sourceName: string, existing: ReadonlySet<string>): string {
   if (!existing.has(alias) && !GEOMETRY_FIELDS.includes(alias)) {
     return alias;
   }

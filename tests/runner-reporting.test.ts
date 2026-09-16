@@ -19,9 +19,32 @@ describe("Registry ingestion", () => {
     const database = new DatabaseSync(":memory:");
     const store = new RegistryStore(sqliteStorage(database));
     store.migrate();
-    store.upsertPolicy({ id: "policy_1", name: "Fixture", version: 1, createdAt: "2026-09-10T00:00:00.000Z", collection: { cadenceSeconds: 60, timeoutSeconds: 30, maxBytes: 1024, historyMode: "changes" }, serving: {} });
+    store.upsertPolicy({
+      id: "policy_1",
+      name: "Fixture",
+      version: 1,
+      createdAt: "2026-09-10T00:00:00.000Z",
+      collection: { cadenceSeconds: 60, timeoutSeconds: 30, maxBytes: 1024, historyMode: "changes" },
+      serving: {},
+    });
     const resolved = await fixtureResolved();
-    store.upsertFeed({ id: "feed_1", slug: "things", title: "Things", description: "", gatekeeperKind: "fixture", config: resolved.config, semantics: resolved.semantics, resolved, feedEpoch: "e", policyId: "policy_1", enabled: true, staleAfterSeconds: 60, topics: [], createdAt: "2026-09-10T00:00:00.000Z", updatedAt: "2026-09-10T00:00:00.000Z" });
+    store.upsertFeed({
+      id: "feed_1",
+      slug: "things",
+      title: "Things",
+      description: "",
+      gatekeeperKind: "fixture",
+      config: resolved.config,
+      semantics: resolved.semantics,
+      resolved,
+      feedEpoch: "e",
+      policyId: "policy_1",
+      enabled: true,
+      staleAfterSeconds: 60,
+      topics: [],
+      createdAt: "2026-09-10T00:00:00.000Z",
+      updatedAt: "2026-09-10T00:00:00.000Z",
+    });
     const payload = report("r1", [acquisition("a", "2026-09-10T01:00:00.000Z")]);
     expect(ingestRunnerReport(store, payload, "2026-09-10T01:00:01.000Z").known).toBe(true);
     const changes = () => Number(database.prepare("SELECT total_changes() AS n").get()?.n ?? 0);
@@ -38,9 +61,32 @@ describe("Registry ingestion", () => {
 async function registryWithFeed(): Promise<RegistryStore> {
   const store = new RegistryStore(sqliteStorage(new DatabaseSync(":memory:")));
   store.migrate();
-  store.upsertPolicy({ id: "policy_1", name: "Fixture", version: 1, createdAt: "2026-09-10T00:00:00.000Z", collection: { cadenceSeconds: 60, timeoutSeconds: 30, maxBytes: 1024, historyMode: "changes" }, serving: {} });
+  store.upsertPolicy({
+    id: "policy_1",
+    name: "Fixture",
+    version: 1,
+    createdAt: "2026-09-10T00:00:00.000Z",
+    collection: { cadenceSeconds: 60, timeoutSeconds: 30, maxBytes: 1024, historyMode: "changes" },
+    serving: {},
+  });
   const resolved = await fixtureResolved();
-  store.upsertFeed({ id: "feed_1", slug: "things", title: "Things", description: "", gatekeeperKind: "fixture", config: resolved.config, semantics: resolved.semantics, resolved, feedEpoch: "e", policyId: "policy_1", enabled: true, staleAfterSeconds: 60, topics: [], createdAt: "2026-09-10T00:00:00.000Z", updatedAt: "2026-09-10T00:00:00.000Z" });
+  store.upsertFeed({
+    id: "feed_1",
+    slug: "things",
+    title: "Things",
+    description: "",
+    gatekeeperKind: "fixture",
+    config: resolved.config,
+    semantics: resolved.semantics,
+    resolved,
+    feedEpoch: "e",
+    policyId: "policy_1",
+    enabled: true,
+    staleAfterSeconds: 60,
+    topics: [],
+    createdAt: "2026-09-10T00:00:00.000Z",
+    updatedAt: "2026-09-10T00:00:00.000Z",
+  });
   return store;
 }
 
@@ -65,22 +111,42 @@ describe("outages", () => {
     const recovered = run("a3", "2026-09-10T10:05:00.000Z", "unchanged");
     const later = run("a4", "2026-09-10T10:06:00.000Z", "succeeded");
     // A lost report means the next one may already hold several successes: the first one ended it.
-    ingestRunnerReport(store, { feedId: "feed_1", gatekeeperKind: "fixture", status: { consecutiveFailures: 0 }, acquisitions: [later, recovered, second, first] }, "2026-09-10T10:06:01.000Z");
-    expect(store.outagesBetween(...WINDOW)).toEqual([{ feedId: "feed_1", startedAt: first.completedAt, endedAt: recovered.completedAt, cause: "source", failures: 2, lastError: upstream }]);
+    ingestRunnerReport(
+      store,
+      { feedId: "feed_1", gatekeeperKind: "fixture", status: { consecutiveFailures: 0 }, acquisitions: [later, recovered, second, first] },
+      "2026-09-10T10:06:01.000Z",
+    );
+    expect(store.outagesBetween(...WINDOW)).toEqual([
+      { feedId: "feed_1", startedAt: first.completedAt, endedAt: recovered.completedAt, cause: "source", failures: 2, lastError: upstream },
+    ]);
     expect(store.openOutage("feed_1")).toBeUndefined();
   });
 
   it("tells a source that did not answer from a failure on this platform's side, and ignores failed history walks", async () => {
     const store = await registryWithFeed();
-    ingestRunnerReport(store, { feedId: "feed_1", gatekeeperKind: "fixture", status: { consecutiveFailures: 0 }, acquisitions: [run("h1", "2026-09-10T10:00:00.000Z", "failed", "Gatekeeper collection failed: upstream-error", "history")] }, "2026-09-10T10:00:01.000Z");
+    ingestRunnerReport(
+      store,
+      {
+        feedId: "feed_1",
+        gatekeeperKind: "fixture",
+        status: { consecutiveFailures: 0 },
+        acquisitions: [run("h1", "2026-09-10T10:00:00.000Z", "failed", "Gatekeeper collection failed: upstream-error", "history")],
+      },
+      "2026-09-10T10:00:01.000Z",
+    );
     expect(store.outagesBetween(...WINDOW)).toEqual([]);
-    ingestRunnerReport(store, { feedId: "feed_1", gatekeeperKind: "fixture", status: { consecutiveFailures: 1 }, acquisitions: [run("a1", "2026-09-10T10:01:00.000Z", "failed", "Illegal invocation")] }, "2026-09-10T10:01:01.000Z");
+    ingestRunnerReport(
+      store,
+      { feedId: "feed_1", gatekeeperKind: "fixture", status: { consecutiveFailures: 1 }, acquisitions: [run("a1", "2026-09-10T10:01:00.000Z", "failed", "Illegal invocation")] },
+      "2026-09-10T10:01:01.000Z",
+    );
     expect(store.outagesBetween(...WINDOW).map((outage) => outage.cause)).toEqual(["collection"]);
   });
 
   it("records a platform gap when no report arrives for more than ten minutes", async () => {
     const store = await registryWithFeed();
-    const tick = (at: string) => ingestRunnerReport(store, { feedId: "feed_1", gatekeeperKind: "fixture", status: { consecutiveFailures: 0 }, acquisitions: [run(at, at, "succeeded")] }, at);
+    const tick = (at: string) =>
+      ingestRunnerReport(store, { feedId: "feed_1", gatekeeperKind: "fixture", status: { consecutiveFailures: 0 }, acquisitions: [run(at, at, "succeeded")] }, at);
     tick("2026-09-10T10:00:00.000Z");
     tick("2026-09-10T10:09:00.000Z");
     expect(store.outagesBetween(...WINDOW)).toEqual([]);

@@ -1,18 +1,10 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type {
-  JsonValue,
-  TransformContext,
-} from "@open-data-pt/gatekeeper-shared";
-import {
-  normalizeEurostatPeriod,
-  transformEurostatDataset,
-} from "../packages/gatekeeper-shared/src/sources/eurostat/transform";
+import type { JsonValue, TransformContext } from "@open-data-pt/gatekeeper-shared";
+import { normalizeEurostatPeriod, transformEurostatDataset } from "../packages/gatekeeper-shared/src/sources/eurostat/transform";
 
 function fixture(name: string): Uint8Array {
-  return new Uint8Array(
-    readFileSync(new URL(`./fixtures/eurostat/${name}`, import.meta.url)),
-  );
+  return new Uint8Array(readFileSync(new URL(`./fixtures/eurostat/${name}`, import.meta.url)));
 }
 
 function context(slug: string, title: string): TransformContext {
@@ -51,13 +43,7 @@ function bytes(value: JsonValue | undefined): Uint8Array {
 
 describe("Eurostat JSON-stat transformer", () => {
   it("decodes a live sparse monthly dataset without inventing missing rows", () => {
-    const result = transformEurostatDataset(
-      fixture("unemployment-monthly.json"),
-      context(
-        "eurostat-unemployment",
-        "Portugal monthly unemployment rate",
-      ),
-    );
+    const result = transformEurostatDataset(fixture("unemployment-monthly.json"), context("eurostat-unemployment", "Portugal monthly unemployment rate"));
 
     expect(result.transformer).toEqual({
       id: "eurostat-jsonstat-dataset",
@@ -68,9 +54,7 @@ describe("Eurostat JSON-stat transformer", () => {
       rejectedRecords: 0,
     });
     // Every value is published once: no record product repeats the points.
-    expect(result.products.map(({ role, kind }) => [role, kind])).toEqual([
-      ["time-series", "series"],
-    ]);
+    expect(result.products.map(({ role, kind }) => [role, kind])).toEqual([["time-series", "series"]]);
 
     const series = result.products[0];
     expect(series?.points).toHaveLength(2);
@@ -95,16 +79,11 @@ describe("Eurostat JSON-stat transformer", () => {
       unit: "Percentage of population in the labour force",
       dimensions: {},
     });
-    expect(series?.description).toContain(
-      "Geopolitical entity (reporting): Portugal",
-    );
+    expect(series?.description).toContain("Geopolitical entity (reporting): Portugal");
   });
 
   it("decodes live quarterly values and sparse status flags", () => {
-    const result = transformEurostatDataset(
-      fixture("gdp-quarterly.json"),
-      context("eurostat-gdp", "Portugal quarterly GDP"),
-    );
+    const result = transformEurostatDataset(fixture("gdp-quarterly.json"), context("eurostat-gdp", "Portugal quarterly GDP"));
 
     expect(result.quality).toMatchObject({
       acceptedRecords: 8,
@@ -150,10 +129,7 @@ describe("Eurostat JSON-stat transformer", () => {
       value: { "0": 1.2, "1": 2.3 },
       status: { "1": "p" },
     };
-    const result = transformEurostatDataset(
-      bytes(dataset),
-      context("eurostat-example", "Example"),
-    );
+    const result = transformEurostatDataset(bytes(dataset), context("eurostat-example", "Example"));
     expect(result.products).toHaveLength(1);
     expect(result.products[0]?.points).toEqual([
       expect.objectContaining({
@@ -185,31 +161,12 @@ describe("Eurostat JSON-stat transformer", () => {
     expect(second).toEqual(first);
     for (const product of first.products) {
       for (const field of product.schema.fields) {
-        expect([
-          "identifier",
-          "category",
-          "latitude",
-          "longitude",
-          "number",
-          "date",
-          "datetime",
-          "string",
-          "url",
-          "boolean",
-          "color",
-          "geometry",
-          "json",
-        ]).toContain(field.type);
+        expect(["identifier", "category", "latitude", "longitude", "number", "date", "datetime", "string", "url", "boolean", "color", "geometry", "json"]).toContain(field.type);
       }
     }
   });
 
   it("rejects malformed JSON-stat input", () => {
-    expect(() =>
-      transformEurostatDataset(
-        bytes({ class: "dataset" }),
-        context("eurostat-broken", "Broken"),
-      ),
-    ).toThrow("JSON-stat 2.0");
+    expect(() => transformEurostatDataset(bytes({ class: "dataset" }), context("eurostat-broken", "Broken"))).toThrow("JSON-stat 2.0");
   });
 });

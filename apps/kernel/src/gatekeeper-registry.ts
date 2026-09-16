@@ -6,9 +6,7 @@ export type GatekeeperService = Service<FeedGatekeeper>;
  * Every GATEKEEPER_* service binding becomes an available source driver.
  * Adding a Gatekeeper does not change the kernel.
  */
-export function buildGatekeeperRegistry(
-  env: Env,
-): ReadonlyMap<string, GatekeeperService> {
+export function buildGatekeeperRegistry(env: Env): ReadonlyMap<string, GatekeeperService> {
   const gatekeepers = new Map<string, GatekeeperService>();
   for (const [bindingName, binding] of Object.entries(env)) {
     if (!bindingName.startsWith("GATEKEEPER_")) continue;
@@ -20,10 +18,7 @@ export function buildGatekeeperRegistry(
   return gatekeepers;
 }
 
-export function getFeedGatekeeper(
-  gatekeepers: ReadonlyMap<string, GatekeeperService>,
-  kind: string,
-): GatekeeperService {
+export function getFeedGatekeeper(gatekeepers: ReadonlyMap<string, GatekeeperService>, kind: string): GatekeeperService {
   const gatekeeper = gatekeepers.get(kind);
   if (!gatekeeper) throw new Error(`Unknown feed gatekeeper: ${kind}`);
   return gatekeeper;

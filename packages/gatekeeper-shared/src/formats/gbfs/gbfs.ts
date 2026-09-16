@@ -22,12 +22,7 @@ export const GBFS_MAX_BYTES = 4 * 1024 * 1024;
 const DISCOVERY_MAX_BYTES = 256 * 1024;
 const REQUEST_TIMEOUT_MS = 20_000;
 const CONFIG_KEYS = new Set(["url", "language"]);
-const COLLECTED_FEEDS = [
-  "system_information",
-  "vehicle_types",
-  "station_information",
-  "station_status",
-] as const;
+const COLLECTED_FEEDS = ["system_information", "vehicle_types", "station_information", "station_status"] as const;
 
 type CollectedFeedName = (typeof COLLECTED_FEEDS)[number] | "free_bike_status";
 type Fetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
@@ -46,8 +41,7 @@ export const GBFS_FEEDS = {
   system: {
     kind: "system",
     title: "GBFS shared-mobility system",
-    description:
-      "A GBFS system snapshot with vehicles, stations, fleet counts, and system reference information.",
+    description: "A GBFS system snapshot with vehicles, stations, fleet counts, and system reference information.",
     semantics: {
       domainSubject: "observation",
       defaultProductRole: "current-state",
@@ -63,10 +57,7 @@ export function allowedGbfsHosts(value: string): ReadonlySet<string> {
   return hosts;
 }
 
-export function validateGbfsFeedConfig(
-  config: SourceConfig,
-  allowedHosts: ReadonlySet<string>,
-): SourceConfig {
+export function validateGbfsFeedConfig(config: SourceConfig, allowedHosts: ReadonlySet<string>): SourceConfig {
   const unknown = Object.keys(config).filter((key) => !CONFIG_KEYS.has(key));
   if (unknown.length > 0) {
     throw new GatekeeperError(`GBFS configuration does not accept ${unknown.sort().join(", ")}`, "invalid-config");
@@ -88,36 +79,18 @@ export function validateGbfsFeedConfig(
   return normalized;
 }
 
-export async function collectGbfsFeed(
-  config: SourceConfig,
-  checkpoint: SourceValidator | undefined,
-  allowedHostsValue: string,
-  fetcher: Fetcher,
-): Promise<SourceFetch> {
+export async function collectGbfsFeed(config: SourceConfig, checkpoint: SourceValidator | undefined, allowedHostsValue: string, fetcher: Fetcher): Promise<SourceFetch> {
   const allowedHosts = allowedGbfsHosts(allowedHostsValue);
   const validated = validateGbfsFeedConfig(config, allowedHosts);
   const discoveryUrl = new URL(validated.url!);
-  const discoveryResponse = await upstreamFetch(
-    fetcher,
-    discoveryUrl,
-    conditionalHeaders(checkpoint),
-  );
+  const discoveryResponse = await upstreamFetch(fetcher, discoveryUrl, conditionalHeaders(checkpoint));
   if (discoveryResponse.status === 304) {
     return notModified(discoveryResponse.headers, checkpoint);
   }
   assertSuccessful(discoveryResponse, "GBFS discovery");
-  const discovery = await readJsonResource(
-    discoveryResponse,
-    discoveryUrl,
-    DISCOVERY_MAX_BYTES,
-    false,
-  );
+  const discovery = await readJsonResource(discoveryResponse, discoveryUrl, DISCOVERY_MAX_BYTES, false);
   if (!discovery) throw tooLarge("GBFS discovery");
-  const descriptors = parseDiscovery(
-    discovery.value,
-    validated.language,
-    allowedHosts,
-  );
+  const descriptors = parseDiscovery(discovery.value, validated.language, allowedHosts);
 
   const parts: Array<string | Uint8Array> = ['{"discovery":', discovery.bytes];
   let size = encodedSize(parts) + 1;
@@ -135,12 +108,7 @@ export async function collectGbfsFeed(
     }
     const prefix = `,"${name}":`;
     const remaining = GBFS_MAX_BYTES - size - new TextEncoder().encode(prefix).byteLength;
-    const resource = await fetchResource(
-      fetcher,
-      descriptor,
-      remaining,
-      name !== "system_information",
-    );
+    const resource = await fetchResource(fetcher, descriptor, remaining, name !== "system_information");
     if (!resource) {
       partial = true;
       continue;
@@ -151,17 +119,11 @@ export async function collectGbfsFeed(
     collected.set(name, resource);
   }
 
-  const vehicleDescriptor =
-    descriptors.get("vehicle_status") ?? descriptors.get("free_bike_status");
+  const vehicleDescriptor = descriptors.get("vehicle_status") ?? descriptors.get("free_bike_status");
   if (vehicleDescriptor) {
     const prefix = ',"free_bike_status":';
     const remaining = GBFS_MAX_BYTES - size - new TextEncoder().encode(prefix).byteLength;
-    const resource = await fetchResource(
-      fetcher,
-      vehicleDescriptor,
-      remaining,
-      true,
-    );
+    const resource = await fetchResource(fetcher, vehicleDescriptor, remaining, true);
     if (!resource) {
       partial = true;
     } else {
@@ -176,16 +138,9 @@ export async function collectGbfsFeed(
   const body = joinBytes(parts);
   if (body.byteLength > GBFS_MAX_BYTES) throw tooLarge("GBFS document");
 
-  const publicationResource =
-    collected.get("free_bike_status") ??
-    collected.get("station_status") ??
-    discovery;
-  const sourcePublishedAt = normalizeLastUpdated(
-    publicationResource.value.last_updated,
-  );
-  const etag = sourcePublishedAt
-    ? syntheticEtag(sourcePublishedAt)
-    : discoveryResponse.headers.get("etag") ?? undefined;
+  const publicationResource = collected.get("free_bike_status") ?? collected.get("station_status") ?? discovery;
+  const sourcePublishedAt = normalizeLastUpdated(publicationResource.value.last_updated);
+  const etag = sourcePublishedAt ? syntheticEtag(sourcePublishedAt) : (discoveryResponse.headers.get("etag") ?? undefined);
   if (etag && checkpoint?.etag && equivalentEtags(etag, checkpoint.etag)) {
     return notModified(discoveryResponse.headers, checkpoint, etag);
   }
@@ -197,19 +152,12 @@ export async function collectGbfsFeed(
     completeness: partial ? "partial" : "complete",
   };
   if (sourcePublishedAt) fetched.provenance.sourcePublishedAt = sourcePublishedAt;
-  const validator = validatorFrom(
-    etag,
-    discoveryResponse.headers.get("last-modified") ?? undefined,
-  );
+  const validator = validatorFrom(etag, discoveryResponse.headers.get("last-modified") ?? undefined);
   if (validator) fetched.validator = validator;
   return fetched;
 }
 
-function parseDiscovery(
-  value: JsonObject,
-  requestedLanguage: string | undefined,
-  allowedHosts: ReadonlySet<string>,
-): Map<string, FeedDescriptor> {
+function parseDiscovery(value: JsonObject, requestedLanguage: string | undefined, allowedHosts: ReadonlySet<string>): Map<string, FeedDescriptor> {
   const version = value.version;
   if (!isJsonString(version) || !/^[123](?:\.\d+)*$/u.test(version)) {
     throw invalidResponse("GBFS discovery has an unsupported version");
@@ -223,18 +171,11 @@ function parseDiscovery(
   if (Array.isArray(value.data.feeds)) {
     block = value.data;
   } else {
-    const languages = Object.entries(value.data).filter(
-      (entry): entry is [string, JsonObject] =>
-        isJsonObject(entry[1]) && Array.isArray(entry[1].feeds),
-    );
+    const languages = Object.entries(value.data).filter((entry): entry is [string, JsonObject] => isJsonObject(entry[1]) && Array.isArray(entry[1].feeds));
     if (requestedLanguage) {
-      block = languages.find(
-        ([language]) => language.toLowerCase() === requestedLanguage,
-      )?.[1];
+      block = languages.find(([language]) => language.toLowerCase() === requestedLanguage)?.[1];
       if (!block) {
-        throw invalidResponse(
-          `GBFS discovery does not offer language ${requestedLanguage}`,
-        );
+        throw invalidResponse(`GBFS discovery does not offer language ${requestedLanguage}`);
       }
     } else {
       block = languages[0]?.[1];
@@ -252,12 +193,7 @@ function parseDiscovery(
     if (descriptors.has(item.name)) {
       throw invalidResponse(`GBFS discovery repeated feed ${item.name}`);
     }
-    const url = validateSourceUrl(
-      item.url,
-      allowedHosts,
-      `GBFS ${item.name} URL`,
-      "invalid-response",
-    );
+    const url = validateSourceUrl(item.url, allowedHosts, `GBFS ${item.name} URL`, "invalid-response");
     descriptors.set(item.name, { name: item.name, url });
   }
   if (major === 3 && !descriptors.has("vehicle_status") && descriptors.has("free_bike_status")) {
@@ -266,32 +202,14 @@ function parseDiscovery(
   return descriptors;
 }
 
-async function fetchResource(
-  fetcher: Fetcher,
-  descriptor: FeedDescriptor,
-  maximumBytes: number,
-  allowOmission: boolean,
-): Promise<ParsedResource | undefined> {
+async function fetchResource(fetcher: Fetcher, descriptor: FeedDescriptor, maximumBytes: number, allowOmission: boolean): Promise<ParsedResource | undefined> {
   if (maximumBytes <= 0) return undefined;
-  const response = await upstreamFetch(
-    fetcher,
-    descriptor.url,
-    new Headers({ Accept: "application/json" }),
-  );
+  const response = await upstreamFetch(fetcher, descriptor.url, new Headers({ Accept: "application/json" }));
   assertSuccessful(response, `GBFS ${descriptor.name}`);
-  return readJsonResource(
-    response,
-    descriptor.url,
-    maximumBytes,
-    allowOmission,
-  );
+  return readJsonResource(response, descriptor.url, maximumBytes, allowOmission);
 }
 
-async function upstreamFetch(
-  fetcher: Fetcher,
-  url: URL,
-  headers: Headers,
-): Promise<Response> {
+async function upstreamFetch(fetcher: Fetcher, url: URL, headers: Headers): Promise<Response> {
   try {
     return await fetcher(url, {
       headers,
@@ -309,12 +227,7 @@ function assertSuccessful(response: Response, resource: string): void {
   }
 }
 
-async function readJsonResource(
-  response: Response,
-  url: URL,
-  maximumBytes: number,
-  allowOmission: boolean,
-): Promise<ParsedResource | undefined> {
+async function readJsonResource(response: Response, url: URL, maximumBytes: number, allowOmission: boolean): Promise<ParsedResource | undefined> {
   const declared = response.headers.get("content-length");
   if (declared !== null) {
     const length = Number(declared);
@@ -369,11 +282,7 @@ function validateEnvelope(value: JsonObject, resource: string): void {
   if (normalizeLastUpdated(value.last_updated) === undefined) {
     throw invalidResponse(`GBFS ${resource} omitted a valid last_updated`);
   }
-  if (
-    !isJsonNumber(value.ttl) ||
-    !Number.isFinite(value.ttl) ||
-    value.ttl < 0
-  ) {
+  if (!isJsonNumber(value.ttl) || !Number.isFinite(value.ttl) || value.ttl < 0) {
     throw invalidResponse(`GBFS ${resource} omitted a valid ttl`);
   }
 }
@@ -394,12 +303,7 @@ function validateResource(name: CollectedFeedName, value: JsonObject): void {
   }
 }
 
-function validateSourceUrl(
-  value: string | undefined,
-  allowedHosts: ReadonlySet<string>,
-  label: string,
-  code: "invalid-config" | "invalid-response" = "invalid-config",
-): URL {
+function validateSourceUrl(value: string | undefined, allowedHosts: ReadonlySet<string>, label: string, code: "invalid-config" | "invalid-response" = "invalid-config"): URL {
   let url: URL;
   try {
     url = new URL(value ?? "");
@@ -407,13 +311,7 @@ function validateSourceUrl(
     throw new GatekeeperError(`${label} is invalid`, code, code === "invalid-response" ? 502 : 400);
   }
   const hostname = url.hostname.toLowerCase();
-  if (
-    url.protocol !== "https:" ||
-    url.username !== "" ||
-    url.password !== "" ||
-    url.port !== "" ||
-    url.hash !== ""
-  ) {
+  if (url.protocol !== "https:" || url.username !== "" || url.password !== "" || url.port !== "" || url.hash !== "") {
     throw new GatekeeperError(`${label} must be an HTTPS URL without credentials, a port, or a fragment`, code, code === "invalid-response" ? 502 : 400);
   }
   if (!allowedHosts.has(hostname)) {
@@ -435,24 +333,14 @@ function conditionalHeaders(checkpoint: SourceValidator | undefined): Headers {
  * Unchanged since the checkpoint: either the discovery document answered 304,
  * or the newest feed's `last_updated` (the synthetic etag) did not move.
  */
-function notModified(
-  upstream: Headers,
-  checkpoint: SourceValidator | undefined,
-  synthetic?: string,
-): SourceNotModified {
+function notModified(upstream: Headers, checkpoint: SourceValidator | undefined, synthetic?: string): SourceNotModified {
   const fetched: SourceNotModified = { kind: "not-modified" };
-  const validator = validatorFrom(
-    synthetic ?? upstream.get("etag") ?? checkpoint?.etag,
-    upstream.get("last-modified") ?? checkpoint?.lastModified,
-  );
+  const validator = validatorFrom(synthetic ?? upstream.get("etag") ?? checkpoint?.etag, upstream.get("last-modified") ?? checkpoint?.lastModified);
   if (validator) fetched.validator = validator;
   return fetched;
 }
 
-function validatorFrom(
-  etag: string | undefined,
-  lastModified: string | undefined,
-): SourceValidator | undefined {
+function validatorFrom(etag: string | undefined, lastModified: string | undefined): SourceValidator | undefined {
   const validator: SourceValidator = {};
   if (etag) validator.etag = etag;
   if (lastModified) validator.lastModified = lastModified;
@@ -471,9 +359,7 @@ function normalizeLastUpdated(value: JsonValue | undefined): string | undefined 
 function normalizeDate(value: string | null | undefined): string | undefined {
   if (!value) return undefined;
   const milliseconds = Date.parse(value);
-  return Number.isNaN(milliseconds)
-    ? undefined
-    : new Date(milliseconds).toISOString();
+  return Number.isNaN(milliseconds) ? undefined : new Date(milliseconds).toISOString();
 }
 
 function syntheticEtag(sourcePublishedAt: string): string {
@@ -482,12 +368,8 @@ function syntheticEtag(sourcePublishedAt: string): string {
 
 function joinBytes(parts: Array<string | Uint8Array>): Uint8Array {
   const encoder = new TextEncoder();
-  const encoded = parts.map((part) =>
-    part instanceof Uint8Array ? part : encoder.encode(part),
-  );
-  const result = new Uint8Array(
-    encoded.reduce((total, part) => total + part.byteLength, 0),
-  );
+  const encoded = parts.map((part) => (part instanceof Uint8Array ? part : encoder.encode(part)));
+  const result = new Uint8Array(encoded.reduce((total, part) => total + part.byteLength, 0));
   let offset = 0;
   for (const part of encoded) {
     result.set(part, offset);
@@ -498,12 +380,7 @@ function joinBytes(parts: Array<string | Uint8Array>): Uint8Array {
 
 function encodedSize(parts: Array<string | Uint8Array>): number {
   const encoder = new TextEncoder();
-  return parts.reduce(
-    (total, part) =>
-      total +
-      (part instanceof Uint8Array ? part.byteLength : encoder.encode(part).byteLength),
-    0,
-  );
+  return parts.reduce((total, part) => total + (part instanceof Uint8Array ? part.byteLength : encoder.encode(part).byteLength), 0);
 }
 
 function isHostname(value: string): boolean {
@@ -520,11 +397,7 @@ function nonEmptyString(value: JsonValue | undefined): value is string {
 }
 
 function nonEmptyLocalizedString(value: JsonValue | undefined): boolean {
-  return (
-    nonEmptyString(value) ||
-    (Array.isArray(value) &&
-      value.some((entry) => isJsonObject(entry) && nonEmptyString(entry.text)))
-  );
+  return nonEmptyString(value) || (Array.isArray(value) && value.some((entry) => isJsonObject(entry) && nonEmptyString(entry.text)));
 }
 
 function tooLarge(resource: string): GatekeeperError {

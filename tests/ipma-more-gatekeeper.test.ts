@@ -1,10 +1,6 @@
 import type { JsonValue } from "@open-data-pt/gatekeeper-shared";
 import { describe, expect, it, vi } from "vitest";
-import {
-  collectIpmaFeed,
-  IPMA_FEED_LIMITS,
-  validateIpmaFeedConfig,
-} from "../packages/gatekeeper-shared/src/sources/ipma/ipma";
+import { collectIpmaFeed, IPMA_FEED_LIMITS, validateIpmaFeedConfig } from "../packages/gatekeeper-shared/src/sources/ipma/ipma";
 
 const ORIGIN = "https://api.ipma.pt";
 
@@ -19,8 +15,7 @@ describe("IPMA additional Gatekeeper feeds", () => {
     for (const feed of ["warnings", "uv-index", "fire-risk", "sea-forecast"]) {
       expect(validateIpmaFeedConfig({ feed })).toEqual({ feed });
     }
-    expect(() => validateIpmaFeedConfig({ feed: "warnings", host: "evil.example" }))
-      .toThrow("does not accept host");
+    expect(() => validateIpmaFeedConfig({ feed: "warnings", host: "evil.example" })).toThrow("does not accept host");
   });
 
   it("collects warnings with lookup metadata and provenance", async () => {
@@ -64,32 +59,27 @@ describe("IPMA additional Gatekeeper feeds", () => {
         : jsonResponse({ data: [{ globalIdLocal: 1110600, local: "Lisboa" }] });
     });
 
-    const fetched = await collectIpmaFeed(
-      { feed: "uv-index" },
-      { etag: '"uv-v1"', lastModified: "Mon, 07 Sep 2026 20:00:17 GMT" },
-      ORIGIN,
-      fetcher,
-    );
+    const fetched = await collectIpmaFeed({ feed: "uv-index" }, { etag: '"uv-v1"', lastModified: "Mon, 07 Sep 2026 20:00:17 GMT" }, ORIGIN, fetcher);
 
     expect(fetched).toMatchObject({ kind: "body", validator: { etag: '"uv-v2"' } });
     expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
   it("enforces the fire-risk byte cap before buffering", async () => {
-    const fetcher = vi.fn(async () => new Response("{}", {
-      headers: { "Content-Length": String(IPMA_FEED_LIMITS["fire-risk"] + 1) },
-    }));
+    const fetcher = vi.fn(
+      async () =>
+        new Response("{}", {
+          headers: { "Content-Length": String(IPMA_FEED_LIMITS["fire-risk"] + 1) },
+        }),
+    );
 
-    await expect(collectIpmaFeed({ feed: "fire-risk" }, undefined, ORIGIN, fetcher))
-      .rejects.toMatchObject({ code: "response-too-large" });
+    await expect(collectIpmaFeed({ feed: "fire-risk" }, undefined, ORIGIN, fetcher)).rejects.toMatchObject({ code: "response-too-large" });
   });
 
   it("rejects a misconfigured origin and reports provider errors without exposing the body", async () => {
-    await expect(collectIpmaFeed({ feed: "sea-forecast" }, undefined, "https://evil.example", vi.fn()))
-      .rejects.toMatchObject({ code: "source-denied" });
+    await expect(collectIpmaFeed({ feed: "sea-forecast" }, undefined, "https://evil.example", vi.fn())).rejects.toMatchObject({ code: "source-denied" });
 
     const fetcher = vi.fn(async () => new Response("provider details", { status: 503 }));
-    await expect(collectIpmaFeed({ feed: "sea-forecast" }, undefined, ORIGIN, fetcher))
-      .rejects.toMatchObject({ code: "upstream-error" });
+    await expect(collectIpmaFeed({ feed: "sea-forecast" }, undefined, ORIGIN, fetcher)).rejects.toMatchObject({ code: "upstream-error" });
   });
 });

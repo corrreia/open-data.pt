@@ -31,17 +31,13 @@ const MAX_PAGE_SIZE = 1000;
  */
 const MAX_PAGES = 100;
 
-export type Fetcher = (
-  input: RequestInfo | URL,
-  init?: RequestInit,
-) => Promise<Response>;
+export type Fetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
 export const ARCGIS_FEEDS = {
   layer: {
     kind: "layer",
     title: "ArcGIS feature layer",
-    description:
-      "A complete, periodically refreshed ArcGIS FeatureServer or MapServer layer with canonical attributes and geometry.",
+    description: "A complete, periodically refreshed ArcGIS FeatureServer or MapServer layer with canonical attributes and geometry.",
     semantics: {
       domainSubject: "feature",
       defaultProductRole: "reference",
@@ -95,9 +91,7 @@ interface LayerAddress {
 }
 
 /** How a layer is walked: offset pages, or pages of object IDs listed up front. */
-type PagePlan =
-  | { mode: "offset"; pageSize: number; partial: boolean }
-  | { mode: "object-ids"; pageSize: number; partial: boolean; ids: Array<string | number> };
+type PagePlan = { mode: "offset"; pageSize: number; partial: boolean } | { mode: "object-ids"; pageSize: number; partial: boolean; ids: Array<string | number> };
 
 /** One query page: its features stream, and its paging flag is known once they are read. */
 interface QueryPage {
@@ -105,10 +99,7 @@ interface QueryPage {
   exceededTransferLimit(): boolean;
 }
 
-export function validateArcgisFeedConfig(
-  config: SourceConfig,
-  hosts: ReadonlySet<string>,
-): SourceConfig {
+export function validateArcgisFeedConfig(config: SourceConfig, hosts: ReadonlySet<string>): SourceConfig {
   const keys = Object.keys(config).sort();
   if (keys.length === 1 && keys[0] === "layerUrl") {
     const parsed = parseLayerUrl(config.layerUrl ?? "", hosts);
@@ -119,12 +110,7 @@ export function validateArcgisFeedConfig(
     };
   }
 
-  if (
-    keys.length !== 3 ||
-    !keys.includes("host") ||
-    !keys.includes("service") ||
-    !keys.includes("layer")
-  ) {
+  if (keys.length !== 3 || !keys.includes("host") || !keys.includes("service") || !keys.includes("layer")) {
     throw new GatekeeperError("ArcGIS layers require host, service, and layer, or one layerUrl", "invalid-config");
   }
 
@@ -143,12 +129,7 @@ export function layerUrlFromConfig(config: SourceConfig): URL {
  * are fetched page by page only as the normalizer pulls them. Completeness is
  * decided here, before the first page, because the kernel receives it first.
  */
-export async function collectArcgisFeed(
-  config: SourceConfig,
-  checkpoint: SourceValidator | undefined,
-  hosts: ReadonlySet<string>,
-  fetcher: Fetcher,
-): Promise<SourceFetch> {
+export async function collectArcgisFeed(config: SourceConfig, checkpoint: SourceValidator | undefined, hosts: ReadonlySet<string>, fetcher: Fetcher): Promise<SourceFetch> {
   const validated = validateArcgisFeedConfig(config, hosts);
   const layerUrl = layerUrlFromConfig(validated);
   const metadataUrl = new URL(layerUrl);
@@ -163,27 +144,20 @@ export async function collectArcgisFeed(
     return notModified(responseValidator(metadataResponse.headers) ?? checkpoint);
   }
   assertUpstreamResponse(metadataResponse, "layer metadata");
-  const metadataPayload = parseDocument(
-    await readBoundedResponse(metadataResponse, MAX_METADATA_BYTES, "ArcGIS layer metadata"),
-    "layer metadata",
-  );
+  const metadataPayload = parseDocument(await readBoundedResponse(metadataResponse, MAX_METADATA_BYTES, "ArcGIS layer metadata"), "layer metadata");
   assertNoArcgisError(metadataPayload, "layer metadata");
   const metadata = parseLayerMetadata(metadataPayload, layerUrl.toString());
   const revision = revisionValidator(metadata.lastEditDate);
   if (
     revision !== undefined &&
     metadata.lastEditDate !== undefined &&
-    (checkpoint?.etag === revision.etag ||
-      (checkpoint?.lastModified !== undefined &&
-        validDate(checkpoint.lastModified) >= metadata.lastEditDate))
+    (checkpoint?.etag === revision.etag || (checkpoint?.lastModified !== undefined && validDate(checkpoint.lastModified) >= metadata.lastEditDate))
   ) {
     return notModified(revision);
   }
 
   const pageSize = Math.min(metadata.maxRecordCount, MAX_PAGE_SIZE);
-  const plan = metadata.supportsPagination
-    ? await planOffsetPages(layerUrl, pageSize, fetcher)
-    : await planObjectIdPages(layerUrl, pageSize, fetcher);
+  const plan = metadata.supportsPagination ? await planOffsetPages(layerUrl, pageSize, fetcher) : await planObjectIdPages(layerUrl, pageSize, fetcher);
   const body: SourceBody = {
     kind: "body",
     body: layerDocument(describeLayer(metadata), layerFeatures(layerUrl, metadata, plan, fetcher)),
@@ -255,10 +229,7 @@ async function planOffsetPages(layerUrl: URL, pageSize: number, fetcher: Fetcher
 async function planObjectIdPages(layerUrl: URL, pageSize: number, fetcher: Fetcher): Promise<PagePlan> {
   const idsResponse = await fetcher(buildObjectIdsUrl(layerUrl), { headers: { Accept: "application/json" } });
   assertUpstreamResponse(idsResponse, "object ID query");
-  const idsPayload = parseDocument(
-    await readBoundedResponse(idsResponse, MAX_OBJECT_ID_BYTES, "ArcGIS object ID query"),
-    "object ID query",
-  );
+  const idsPayload = parseDocument(await readBoundedResponse(idsResponse, MAX_OBJECT_ID_BYTES, "ArcGIS object ID query"), "object ID query");
   assertNoArcgisError(idsPayload, "object ID query");
   const objectIds = parseObjectIds(idsPayload).sort(compareObjectIds);
   const ids = objectIds.slice(0, pageSize * MAX_PAGES);
@@ -296,11 +267,7 @@ async function* layerFeatures(layerUrl: URL, metadata: LayerMetadata, plan: Page
   }
 }
 
-async function fetchQueryPage(
-  queryUrl: URL,
-  metadata: LayerMetadata,
-  fetcher: Fetcher,
-): Promise<QueryPage> {
+async function fetchQueryPage(queryUrl: URL, metadata: LayerMetadata, fetcher: Fetcher): Promise<QueryPage> {
   const pageResponse = await fetcher(queryUrl, {
     headers: { Accept: "application/geo+json, application/json" },
   });
@@ -350,30 +317,18 @@ function esriFeature(value: JsonValue, index: number, geometryType: string): Jso
     type: "Feature",
     id: index,
     properties: value.attributes,
-    geometry: value.geometry === null || value.geometry === undefined
-      ? null
-      : esriGeometryToGeojson(value.geometry, geometryType),
+    geometry: value.geometry === null || value.geometry === undefined ? null : esriGeometryToGeojson(value.geometry, geometryType),
   };
 }
 
-function parseLayerUrl(
-  value: string,
-  hosts: ReadonlySet<string>,
-): LayerAddress {
+function parseLayerUrl(value: string, hosts: ReadonlySet<string>): LayerAddress {
   let url: URL;
   try {
     url = new URL(value);
   } catch {
     throw new GatekeeperError("layerUrl must be a valid URL", "invalid-config");
   }
-  if (
-    url.protocol !== "https:" ||
-    url.username !== "" ||
-    url.password !== "" ||
-    url.port !== "" ||
-    url.search !== "" ||
-    url.hash !== ""
-  ) {
+  if (url.protocol !== "https:" || url.username !== "" || url.password !== "" || url.port !== "" || url.search !== "" || url.hash !== "") {
     throw new GatekeeperError("layerUrl must be an HTTPS URL without credentials, port, query, or fragment", "invalid-config");
   }
   const parts = url.pathname.replace(/^\/+|\/+$/g, "").split("/");
@@ -401,9 +356,7 @@ function normalizeService(value: string): string {
     throw new GatekeeperError("service must end in FeatureServer or MapServer and contain only path-safe characters", "invalid-config");
   }
   const segments = service.split("/");
-  if (
-    segments.some((segment) => segment === "" || segment === "." || segment === "..")
-  ) {
+  if (segments.some((segment) => segment === "" || segment === "." || segment === "..")) {
     throw new GatekeeperError("service contains an unsafe path segment", "invalid-config");
   }
   return service;
@@ -420,62 +373,39 @@ function normalizeLayer(value: string): number {
   return layer;
 }
 
-function parseLayerMetadata(
-  value: JsonValue | undefined,
-  layerUrl: string,
-): LayerMetadata {
+function parseLayerMetadata(value: JsonValue | undefined, layerUrl: string): LayerMetadata {
   if (!isJsonObject(value)) invalid("ArcGIS layer metadata must be an object");
   const name = nonEmptyString(value.name, "layer name");
   const geometryType = nonEmptyString(value.geometryType, "geometry type");
-  if (
-    ![
-      "esriGeometryPoint",
-      "esriGeometryMultipoint",
-      "esriGeometryPolyline",
-      "esriGeometryPolygon",
-    ].includes(geometryType)
-  ) {
+  if (!["esriGeometryPoint", "esriGeometryMultipoint", "esriGeometryPolyline", "esriGeometryPolygon"].includes(geometryType)) {
     invalid(`Unsupported ArcGIS geometry type: ${geometryType}`);
   }
   if (!Array.isArray(value.fields) || value.fields.length === 0) {
     invalid("ArcGIS layer metadata has no fields");
   }
   const fields = value.fields.map(parseFieldMetadata);
-  const objectIdField = optionalNonEmptyString(value.objectIdField) ??
-    fields.find((field) => field.type === "esriFieldTypeOID")?.name;
+  const objectIdField = optionalNonEmptyString(value.objectIdField) ?? fields.find((field) => field.type === "esriFieldTypeOID")?.name;
   if (!objectIdField) invalid("ArcGIS object ID field is missing");
   if (!fields.some((field) => field.name === objectIdField)) {
     invalid("ArcGIS object ID field is absent from the field list");
   }
-  const globalIdField = optionalNonEmptyString(value.globalIdField) ??
-    fields.find((field) => field.type === "esriFieldTypeGlobalID")?.name;
-  const maxRecordCount = finitePositiveInteger(value.maxRecordCount)
-    ? value.maxRecordCount
-    : MAX_PAGE_SIZE;
+  const globalIdField = optionalNonEmptyString(value.globalIdField) ?? fields.find((field) => field.type === "esriFieldTypeGlobalID")?.name;
+  const maxRecordCount = finitePositiveInteger(value.maxRecordCount) ? value.maxRecordCount : MAX_PAGE_SIZE;
   const editingInfo = isJsonObject(value.editingInfo) ? value.editingInfo : undefined;
-  const lastEditDate = editingInfo && finiteNonNegativeInteger(editingInfo.lastEditDate)
-    ? editingInfo.lastEditDate
-    : undefined;
-  const advanced = isJsonObject(value.advancedQueryCapabilities)
-    ? value.advancedQueryCapabilities
-    : undefined;
-  const supportedFormats = isJsonString(value.supportedQueryFormats)
-    ? value.supportedQueryFormats
-    : undefined;
+  const lastEditDate = editingInfo && finiteNonNegativeInteger(editingInfo.lastEditDate) ? editingInfo.lastEditDate : undefined;
+  const advanced = isJsonObject(value.advancedQueryCapabilities) ? value.advancedQueryCapabilities : undefined;
+  const supportedFormats = isJsonString(value.supportedQueryFormats) ? value.supportedQueryFormats : undefined;
   const metadata: LayerMetadata = {
     layerUrl,
     name,
     description: isJsonString(value.description) ? value.description : "",
-    copyrightText:
-      isJsonString(value.copyrightText) ? value.copyrightText : "",
+    copyrightText: isJsonString(value.copyrightText) ? value.copyrightText : "",
     geometryType,
     objectIdField,
     fields,
     maxRecordCount,
     supportsPagination: advanced?.supportsPagination !== false,
-    queryFormat: supportedFormats !== undefined && /geojson/i.test(supportedFormats)
-      ? "geojson"
-      : "json",
+    queryFormat: supportedFormats !== undefined && /geojson/i.test(supportedFormats) ? "geojson" : "json",
   };
   if (globalIdField) metadata.globalIdField = globalIdField;
   if (lastEditDate !== undefined) metadata.lastEditDate = lastEditDate;
@@ -498,18 +428,12 @@ function parseFieldMetadata(value: JsonValue | undefined): ArcgisFieldMetadata {
   return field;
 }
 
-function parseCodedDomain(
-  value: JsonValue | undefined,
-): ArcgisFieldMetadata["domain"] | undefined {
+function parseCodedDomain(value: JsonValue | undefined): ArcgisFieldMetadata["domain"] | undefined {
   if (!isJsonObject(value) || value.type !== "codedValue" || !Array.isArray(value.codedValues)) {
     return undefined;
   }
   const codedValues = value.codedValues.flatMap((entry) => {
-    if (
-      !isJsonObject(entry) ||
-      !isJsonString(entry.name) ||
-      (!isJsonString(entry.code) && !isJsonNumber(entry.code))
-    ) {
+    if (!isJsonObject(entry) || !isJsonString(entry.name) || (!isJsonString(entry.code) && !isJsonNumber(entry.code))) {
       return [];
     }
     return [{ name: entry.name, code: entry.code }];
@@ -517,10 +441,7 @@ function parseCodedDomain(
   return { type: "codedValue", codedValues };
 }
 
-function esriGeometryToGeojson(
-  value: JsonValue | undefined,
-  geometryType: string,
-): JsonObject {
+function esriGeometryToGeojson(value: JsonValue | undefined, geometryType: string): JsonObject {
   if (!isJsonObject(value)) invalid("ArcGIS query returned malformed Esri JSON geometry");
   assertWgs84SpatialReference(value.spatialReference);
   switch (geometryType) {
@@ -530,9 +451,7 @@ function esriGeometryToGeojson(
       return { type: "MultiPoint", coordinates: coordinateList(value.points) };
     case "esriGeometryPolyline": {
       const paths = coordinateParts(value.paths, 2);
-      return paths.length === 1 && paths[0] !== undefined
-        ? { type: "LineString", coordinates: paths[0] }
-        : { type: "MultiLineString", coordinates: paths };
+      return paths.length === 1 && paths[0] !== undefined ? { type: "LineString", coordinates: paths[0] } : { type: "MultiLineString", coordinates: paths };
     }
     case "esriGeometryPolygon":
       return polygonGeometry(value.rings);
@@ -551,25 +470,16 @@ function polygonGeometry(value: JsonValue | undefined): JsonObject {
 
   for (const hole of exteriorRings.length > 0 ? holeRings : rings.slice(1)) {
     const point = hole[0];
-    const owner = point
-      ? polygons.find((polygon) => pointInRing(point, polygon[0] ?? []))
-      : undefined;
+    const owner = point ? polygons.find((polygon) => pointInRing(point, polygon[0] ?? [])) : undefined;
     if (owner) owner.push(orientRing(hole, true));
     else polygons.push([orientRing(hole, false)]);
   }
 
-  return polygons.length === 1 && polygons[0] !== undefined
-    ? { type: "Polygon", coordinates: polygons[0] }
-    : { type: "MultiPolygon", coordinates: polygons };
+  return polygons.length === 1 && polygons[0] !== undefined ? { type: "Polygon", coordinates: polygons[0] } : { type: "MultiPolygon", coordinates: polygons };
 }
 
 function coordinate(x: JsonValue | undefined, y: JsonValue | undefined): number[] {
-  if (
-    !isJsonNumber(x) ||
-    !isJsonNumber(y) ||
-    !Number.isFinite(x) ||
-    !Number.isFinite(y)
-  ) {
+  if (!isJsonNumber(x) || !isJsonNumber(y) || !Number.isFinite(x) || !Number.isFinite(y)) {
     invalid("ArcGIS query returned a non-finite coordinate");
   }
   return [x, y];
@@ -598,9 +508,7 @@ function closeRing(ring: number[][]): number[][] {
   const first = ring[0];
   const last = ring.at(-1);
   if (!first || !last) return ring;
-  return first[0] === last[0] && first[1] === last[1]
-    ? ring
-    : [...ring, [...first]];
+  return first[0] === last[0] && first[1] === last[1] ? ring : [...ring, [...first]];
 }
 
 function signedArea(ring: number[][]): number {
@@ -631,12 +539,8 @@ function pointInRing(point: number[], ring: number[][]): boolean {
     const currentY = currentPoint[1];
     const previousX = previousPoint[0];
     const previousY = previousPoint[1];
-    if (
-      currentX === undefined || currentY === undefined ||
-      previousX === undefined || previousY === undefined
-    ) continue;
-    const intersects = (currentY > y) !== (previousY > y) &&
-      x < ((previousX - currentX) * (y - currentY)) / (previousY - currentY) + currentX;
+    if (currentX === undefined || currentY === undefined || previousX === undefined || previousY === undefined) continue;
+    const intersects = currentY > y !== previousY > y && x < ((previousX - currentX) * (y - currentY)) / (previousY - currentY) + currentX;
     if (intersects) inside = !inside;
   }
   return inside;
@@ -656,11 +560,7 @@ function parseObjectIds(value: JsonValue | undefined): Array<string | number> {
     invalid("ArcGIS object ID query did not return objectIds");
   }
   return value.objectIds.map((id) => {
-    if (
-      (!isJsonString(id) && !isJsonNumber(id)) ||
-      String(id) === "" ||
-      (isJsonNumber(id) && !Number.isFinite(id))
-    ) {
+    if ((!isJsonString(id) && !isJsonNumber(id)) || String(id) === "" || (isJsonNumber(id) && !Number.isFinite(id))) {
       invalid("ArcGIS object ID query returned an invalid object ID");
     }
     return id;
@@ -680,12 +580,7 @@ function buildCountUrl(layerUrl: URL): URL {
   return queryUrl;
 }
 
-function buildOffsetQueryUrl(
-  layerUrl: URL,
-  metadata: LayerMetadata,
-  offset: number,
-  pageSize: number,
-): URL {
+function buildOffsetQueryUrl(layerUrl: URL, metadata: LayerMetadata, offset: number, pageSize: number): URL {
   const queryUrl = new URL(`${layerUrl.toString()}/query`);
   queryUrl.searchParams.set("where", "1=1");
   queryUrl.searchParams.set("outFields", "*");
@@ -705,11 +600,7 @@ function buildObjectIdsUrl(layerUrl: URL): URL {
   return queryUrl;
 }
 
-function buildObjectIdQueryUrl(
-  layerUrl: URL,
-  metadata: LayerMetadata,
-  ids: Array<string | number>,
-): URL {
+function buildObjectIdQueryUrl(layerUrl: URL, metadata: LayerMetadata, ids: Array<string | number>): URL {
   const queryUrl = new URL(`${layerUrl.toString()}/query`);
   queryUrl.searchParams.set("objectIds", ids.join(","));
   queryUrl.searchParams.set("outFields", "*");
@@ -748,9 +639,7 @@ function assertUpstreamResponse(response: Response, operation: string): void {
 
 function assertNoArcgisError(value: JsonValue | undefined, operation: string): void {
   if (!isJsonObject(value) || !isJsonObject(value.error)) return;
-  const message = isJsonString(value.error.message)
-    ? `: ${value.error.message}`
-    : "";
+  const message = isJsonString(value.error.message) ? `: ${value.error.message}` : "";
   throw new GatekeeperError(`ArcGIS ${operation} returned an error${message}`, "upstream-error");
 }
 

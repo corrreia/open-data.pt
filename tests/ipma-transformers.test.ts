@@ -35,10 +35,7 @@ describe("IPMA transformers", () => {
   const transformer = new IpmaTransformer();
 
   it("creates latest station records and one hourly series per measure", async () => {
-    const result = await transformer.transform(
-      fixture("station-observations"),
-      context("station-observations"),
-    );
+    const result = await transformer.transform(fixture("station-observations"), context("station-observations"));
 
     expect(result.transformer).toEqual({ id: "ipma-open-data", version: "3" });
     expect(result.products.map((product) => [product.slug, product.role])).toEqual([
@@ -67,10 +64,7 @@ describe("IPMA transformers", () => {
   });
 
   it("joins three forecast days to city, weather, and wind descriptions", async () => {
-    const result = await transformer.transform(
-      fixture("daily-forecast"),
-      context("daily-forecast"),
-    );
+    const result = await transformer.transform(fixture("daily-forecast"), context("daily-forecast"));
     const product = result.products[0];
 
     expect(product).toMatchObject({
@@ -121,7 +115,8 @@ describe("IPMA transformers", () => {
   });
 
   it("rejects malformed compound documents", async () => {
-    await expect(transformer.transform(new TextEncoder().encode("{}"), context("daily-forecast")))
-      .rejects.toThrow("requires forecasts, cities, weatherTypes, and windSpeedClasses");
+    await expect(transformer.transform(new TextEncoder().encode("{}"), context("daily-forecast"))).rejects.toThrow(
+      "requires forecasts, cities, weatherTypes, and windSpeedClasses",
+    );
   });
 });

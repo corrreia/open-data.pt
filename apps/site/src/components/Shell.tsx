@@ -88,15 +88,33 @@ export function Shell({ section, children }: { section: Section; children: React
         <div className="mx-auto flex w-full max-w-7xl flex-wrap justify-between gap-x-6 gap-y-2 px-4 py-6 text-xs text-kumo-subtle sm:px-6">
           <span>open-data.pt · data from its publishers, under their licences</span>
           <span className="flex flex-wrap gap-x-3 gap-y-1">
-            <a className="text-kumo-subtle hover:text-kumo-strong" href="/contribute/">Contribute</a>
-            <a className="text-kumo-subtle hover:text-kumo-strong" href={REPOSITORY}>Source code</a>
-            <a className="text-kumo-subtle hover:text-kumo-strong" href="/status/">Status</a>
-            <a className="text-kumo-subtle hover:text-kumo-strong" href="/operations/">Operations</a>
-            <a className="text-kumo-subtle hover:text-kumo-strong" href="/docs">API reference</a>
-            <a className="text-kumo-subtle hover:text-kumo-strong" href="/openapi.json">OpenAPI 3.1</a>
-            <a className="text-kumo-subtle hover:text-kumo-strong" href="/start/#mcp">MCP server</a>
-            <a className="text-kumo-subtle hover:text-kumo-strong" href="/llms.txt">llms.txt</a>
-            <a className="text-kumo-subtle hover:text-kumo-strong" href="/api/catalog.dcat.json">DCAT catalog</a>
+            <a className="text-kumo-subtle hover:text-kumo-strong" href="/contribute/">
+              Contribute
+            </a>
+            <a className="text-kumo-subtle hover:text-kumo-strong" href={REPOSITORY}>
+              Source code
+            </a>
+            <a className="text-kumo-subtle hover:text-kumo-strong" href="/status/">
+              Status
+            </a>
+            <a className="text-kumo-subtle hover:text-kumo-strong" href="/operations/">
+              Operations
+            </a>
+            <a className="text-kumo-subtle hover:text-kumo-strong" href="/docs">
+              API reference
+            </a>
+            <a className="text-kumo-subtle hover:text-kumo-strong" href="/openapi.json">
+              OpenAPI 3.1
+            </a>
+            <a className="text-kumo-subtle hover:text-kumo-strong" href="/start/#mcp">
+              MCP server
+            </a>
+            <a className="text-kumo-subtle hover:text-kumo-strong" href="/llms.txt">
+              llms.txt
+            </a>
+            <a className="text-kumo-subtle hover:text-kumo-strong" href="/api/catalog.dcat.json">
+              DCAT catalog
+            </a>
           </span>
         </div>
       </footer>

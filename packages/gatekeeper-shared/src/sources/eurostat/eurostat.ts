@@ -21,10 +21,7 @@ import {
   type SourceValidator,
   type SourceConfig,
 } from "../../index";
-import {
-  normalizeEurostatPeriod,
-  validateEurostatDatasetStructure,
-} from "./transform";
+import { normalizeEurostatPeriod, validateEurostatDatasetStructure } from "./transform";
 
 export const EUROSTAT_MAX_BYTES = 8 * 1024 * 1024;
 export const EUROSTAT_HISTORY_MAX_BYTES = 1024 * 1024;
@@ -34,12 +31,7 @@ const ERROR_BODY_MAX_BYTES = 64 * 1024;
 const DATASET_PATTERN = /^[a-z0-9_]{2,40}$/;
 const FILTER_KEY_PATTERN = /^[a-z0-9_]+$/;
 const FILTER_VALUE_PATTERN = /^[A-Za-z0-9_.-]+$/;
-const RESERVED_FILTER_KEYS = new Set([
-  "lang",
-  "lastTimePeriod",
-  "sinceTimePeriod",
-  "untilTimePeriod",
-]);
+const RESERVED_FILTER_KEYS = new Set(["lang", "lastTimePeriod", "sinceTimePeriod", "untilTimePeriod"]);
 const HISTORY_PERIODS = 120;
 const HISTORY_MAX_OBSERVATIONS = 3_000;
 
@@ -47,8 +39,7 @@ export const EUROSTAT_FEEDS = {
   dataset: {
     kind: "dataset",
     title: "Eurostat statistical dataset",
-    description:
-      "A bounded Portugal-focused snapshot of one Eurostat JSON-stat 2.0 dataset, published once as time-series points.",
+    description: "A bounded Portugal-focused snapshot of one Eurostat JSON-stat 2.0 dataset, published once as time-series points.",
     semantics: {
       domainSubject: "observation",
       defaultProductRole: "time-series",
@@ -108,12 +99,7 @@ export function validateEurostatFeedConfig(config: SourceConfig): SourceConfig {
 /** A stated unit: letters, digits, spaces and the punctuation units use. */
 const UNIT_PATTERN = /^[\p{L}\p{N} .,()%=/€²³-]+$/u;
 
-export async function collectEurostatDataset(
-  config: SourceConfig,
-  checkpoint: SourceValidator | undefined,
-  apiOrigin: string,
-  fetcher: typeof fetch,
-): Promise<SourceFetch> {
+export async function collectEurostatDataset(config: SourceConfig, checkpoint: SourceValidator | undefined, apiOrigin: string, fetcher: typeof fetch): Promise<SourceFetch> {
   const validated = validateEurostatFeedConfig(config);
   const origin = validatedOrigin(apiOrigin);
   const dataset = validated.dataset;
@@ -124,13 +110,7 @@ export async function collectEurostatDataset(
     throw new GatekeeperError("Eurostat config normalization failed", "invalid-config");
   }
 
-  const sourceUrl = datasetUrl(
-    origin,
-    dataset,
-    filters,
-    lastTimePeriod,
-    lang,
-  );
+  const sourceUrl = datasetUrl(origin, dataset, filters, lastTimePeriod, lang);
   const headers = new Headers({ Accept: "application/json" });
   if (checkpoint?.etag) headers.set("If-None-Match", checkpoint.etag);
   if (checkpoint?.lastModified) {
@@ -152,9 +132,7 @@ export async function collectEurostatDataset(
     return notModified(checkpoint, response.headers);
   }
   if (response.status === 400) {
-    const bytes = await readBoundedBody(response, ERROR_BODY_MAX_BYTES, () =>
-      new GatekeeperError("Eurostat error response exceeded 64 KiB", "invalid-config"),
-    );
+    const bytes = await readBoundedBody(response, ERROR_BODY_MAX_BYTES, () => new GatekeeperError("Eurostat error response exceeded 64 KiB", "invalid-config"));
     throw new GatekeeperError(eurostatErrorMessage(bytes) ?? "Eurostat rejected the dataset configuration", "invalid-config");
   }
   if (!response.ok || !response.body) {
@@ -170,11 +148,7 @@ export async function collectEurostatDataset(
   }
   const etag = syntheticEtag(dataset, publishedAt);
   const upstreamEtag = response.headers.get("etag") ?? undefined;
-  if (
-    checkpoint?.etag &&
-    (equivalentEtags(checkpoint.etag, etag) ||
-      (upstreamEtag !== undefined && equivalentEtags(checkpoint.etag, upstreamEtag)))
-  ) {
+  if (checkpoint?.etag && (equivalentEtags(checkpoint.etag, etag) || (upstreamEtag !== undefined && equivalentEtags(checkpoint.etag, upstreamEtag)))) {
     return notModified({ ...checkpoint, etag }, response.headers, etag);
   }
 
@@ -200,12 +174,7 @@ export async function collectEurostatDataset(
  * to request everything before the cursor in one call. A 1 MiB/3,000-value cap
  * keeps every history artifact well below the feed policy's 8 MiB maximum.
  */
-export async function collectEurostatDatasetHistory(
-  config: SourceConfig,
-  cursor: HistoryCursor,
-  apiOrigin: string,
-  fetcher: typeof fetch,
-): Promise<SourceFetch> {
+export async function collectEurostatDatasetHistory(config: SourceConfig, cursor: HistoryCursor, apiOrigin: string, fetcher: typeof fetch): Promise<SourceFetch> {
   const validated = validateEurostatFeedConfig(config);
   const origin = validatedOrigin(apiOrigin);
   const dataset = validated.dataset;
@@ -218,14 +187,7 @@ export async function collectEurostatDatasetHistory(
   const before = historyBefore(cursor.before);
   const frequency = historyFrequency(dataset, filters);
   const range = historyRange(before, frequency);
-  const sourceUrl = historyDatasetUrl(
-    origin,
-    dataset,
-    filters,
-    lang,
-    range.since,
-    range.until,
-  );
+  const sourceUrl = historyDatasetUrl(origin, dataset, filters, lang, range.since, range.until);
 
   let response: Response;
   try {
@@ -239,9 +201,7 @@ export async function collectEurostatDatasetHistory(
   }
 
   if (response.status === 400) {
-    const bytes = await readBoundedBody(response, ERROR_BODY_MAX_BYTES, () =>
-      new GatekeeperError("Eurostat history error response exceeded 64 KiB", "invalid-response"),
-    );
+    const bytes = await readBoundedBody(response, ERROR_BODY_MAX_BYTES, () => new GatekeeperError("Eurostat history error response exceeded 64 KiB", "invalid-response"));
     if (isNoDataError(bytes)) return { kind: "exhausted" };
     throw new GatekeeperError(eurostatErrorMessage(bytes) ?? "Eurostat rejected the history query", "invalid-config");
   }
@@ -249,11 +209,7 @@ export async function collectEurostatDatasetHistory(
     throw new GatekeeperError(`Eurostat history request returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
   }
 
-  const bytes = await readBoundedBody(
-    response,
-    EUROSTAT_HISTORY_MAX_BYTES,
-    historyTooLarge,
-  );
+  const bytes = await readBoundedBody(response, EUROSTAT_HISTORY_MAX_BYTES, historyTooLarge);
   const datasetResponse = parseCollectedDataset(bytes);
   const observations = historyObservations(datasetResponse);
   if (observations.empty) return { kind: "exhausted" };
@@ -262,9 +218,7 @@ export async function collectEurostatDatasetHistory(
 
   const from = observations.earliest;
   if (!from || from >= before) {
-    throw invalidResponse(
-      "Eurostat history response did not contain an event before the cursor",
-    );
+    throw invalidResponse("Eurostat history response did not contain an event before the cursor");
   }
   const publishedAt = isoDate(datasetResponse.updated);
   if (!publishedAt) {
@@ -301,10 +255,7 @@ function normalizeFilters(value: string | undefined): string {
     }
   }
   if (!entries.some(([key]) => key === "geo")) entries.push(["geo", "PT"]);
-  entries.sort(
-    ([leftKey, leftValue], [rightKey, rightValue]) =>
-      leftKey.localeCompare(rightKey) || leftValue.localeCompare(rightValue),
-  );
+  entries.sort(([leftKey, leftValue], [rightKey, rightValue]) => leftKey.localeCompare(rightKey) || leftValue.localeCompare(rightValue));
   const normalized = new URLSearchParams();
   for (const [key, filterValue] of entries) normalized.append(key, filterValue);
   return normalized.toString();
@@ -317,30 +268,14 @@ function validatedOrigin(value: string): URL {
   } catch {
     throw new GatekeeperError("Eurostat API origin is invalid", "source-denied");
   }
-  if (
-    url.origin !== EUROSTAT_ORIGIN ||
-    url.username !== "" ||
-    url.password !== "" ||
-    url.pathname !== "/" ||
-    url.search !== "" ||
-    url.hash !== ""
-  ) {
+  if (url.origin !== EUROSTAT_ORIGIN || url.username !== "" || url.password !== "" || url.pathname !== "/" || url.search !== "" || url.hash !== "") {
     throw new GatekeeperError(`Eurostat requests are restricted to ${EUROSTAT_ORIGIN}`, "source-denied");
   }
   return url;
 }
 
-function datasetUrl(
-  origin: URL,
-  dataset: string,
-  filters: string,
-  lastTimePeriod: string,
-  lang: string,
-): URL {
-  const url = new URL(
-    `/eurostat/api/dissemination/statistics/1.0/data/${dataset}`,
-    origin,
-  );
+function datasetUrl(origin: URL, dataset: string, filters: string, lastTimePeriod: string, lang: string): URL {
+  const url = new URL(`/eurostat/api/dissemination/statistics/1.0/data/${dataset}`, origin);
   for (const [key, value] of new URLSearchParams(filters)) {
     url.searchParams.append(key, value);
   }
@@ -349,18 +284,8 @@ function datasetUrl(
   return url;
 }
 
-function historyDatasetUrl(
-  origin: URL,
-  dataset: string,
-  filters: string,
-  lang: string,
-  since: string | undefined,
-  until: string,
-): URL {
-  const url = new URL(
-    `/eurostat/api/dissemination/statistics/1.0/data/${dataset}`,
-    origin,
-  );
+function historyDatasetUrl(origin: URL, dataset: string, filters: string, lang: string, since: string | undefined, until: string): URL {
+  const url = new URL(`/eurostat/api/dissemination/statistics/1.0/data/${dataset}`, origin);
   for (const [key, value] of new URLSearchParams(filters)) {
     url.searchParams.append(key, value);
   }
@@ -373,13 +298,7 @@ function historyDatasetUrl(
 type EurostatFrequency = "A" | "M" | "Q";
 
 function historyFrequency(dataset: string, filters: string): EurostatFrequency {
-  const configured = [
-    ...new Set(
-      new URLSearchParams(filters)
-        .getAll("freq")
-        .map((value) => value.toUpperCase()),
-    ),
-  ];
+  const configured = [...new Set(new URLSearchParams(filters).getAll("freq").map((value) => value.toUpperCase()))];
   if (configured.length === 1 && isHistoryFrequency(configured[0])) {
     return configured[0];
   }
@@ -397,10 +316,7 @@ function historyFrequency(dataset: string, filters: string): EurostatFrequency {
   if (/(?:^|_)nama(?:_|$)/.test(dataset) || /(?:^|_)a(?:_|$)/.test(dataset)) {
     return "A";
   }
-  if (
-    /(?:^|_)m(?:_|$)/.test(dataset) ||
-    /(?:^|_)(?:manr|nim)$/.test(dataset)
-  ) {
+  if (/(?:^|_)m(?:_|$)/.test(dataset) || /(?:^|_)(?:manr|nim)$/.test(dataset)) {
     return "M";
   }
   throw new GatekeeperError("Eurostat history could not infer the dataset frequency; add freq=A, freq=Q, or freq=M to filters", "invalid-config");
@@ -424,10 +340,7 @@ interface HistoryRange {
   until: string;
 }
 
-function historyRange(
-  before: string,
-  frequency: EurostatFrequency,
-): HistoryRange {
+function historyRange(before: string, frequency: EurostatFrequency): HistoryRange {
   const date = new Date(before);
   const year = date.getUTCFullYear();
   const month = date.getUTCMonth();
@@ -508,12 +421,7 @@ function historyObservations(dataset: JsonObject): HistoryObservations {
   const ids = asStringList(dataset.id);
   const sizes = asNumberList(dataset.size);
   const dimensions = asObject(dataset.dimension);
-  if (
-    ids === undefined ||
-    sizes === undefined ||
-    !sizes.every((size) => Number.isSafeInteger(size) && size >= 0) ||
-    dimensions === undefined
-  ) {
+  if (ids === undefined || sizes === undefined || !sizes.every((size) => Number.isSafeInteger(size) && size >= 0) || dimensions === undefined) {
     throw invalidResponse("Eurostat history response dimensions were malformed");
   }
   const timeIndex = ids.indexOf("time");
@@ -522,9 +430,7 @@ function historyObservations(dataset: JsonObject): HistoryObservations {
     throw invalidResponse("Eurostat history response omitted its time dimension");
   }
   const codes = historyCategoryCodes(timeDimension.category.index);
-  const stride = sizes
-    .slice(timeIndex + 1)
-    .reduce((product, size) => product * size, 1);
+  const stride = sizes.slice(timeIndex + 1).reduce((product, size) => product * size, 1);
   const timeSize = sizes[timeIndex];
   if (!timeSize || stride < 1 || codes.length !== timeSize) {
     throw invalidResponse("Eurostat history time dimension was malformed");
@@ -561,9 +467,7 @@ function historyCategoryCodes(value: JsonValue | undefined): string[] {
     throw invalidResponse("Eurostat history time categories were malformed");
   }
   const entries = Object.entries(value);
-  if (!entries.every(([, position]) =>
-    isJsonNumber(position) && Number.isSafeInteger(position) && position >= 0
-  )) {
+  if (!entries.every(([, position]) => isJsonNumber(position) && Number.isSafeInteger(position) && position >= 0)) {
     throw invalidResponse("Eurostat history time category positions were malformed");
   }
   entries.sort(([, left], [, right]) => Number(left) - Number(right));
@@ -574,11 +478,7 @@ function eurostatErrorMessage(bytes: Uint8Array): string | undefined {
   try {
     const parsed: JsonValue = parseJsonBytes(bytes);
     if (!isJsonObject(parsed) || !Array.isArray(parsed.error)) return undefined;
-    const labels = parsed.error.flatMap((item) =>
-      isJsonObject(item) && isJsonString(item.label) && item.label.trim()
-        ? [item.label.trim()]
-        : [],
-    );
+    const labels = parsed.error.flatMap((item) => (isJsonObject(item) && isJsonString(item.label) && item.label.trim() ? [item.label.trim()] : []));
     return labels.length > 0 ? `Eurostat rejected the dataset configuration: ${labels.join("; ")}` : undefined;
   } catch {
     return undefined;
@@ -589,32 +489,20 @@ function isNoDataError(bytes: Uint8Array): boolean {
   try {
     const parsed: JsonValue = parseJsonBytes(bytes);
     if (!isJsonObject(parsed) || !Array.isArray(parsed.error)) return false;
-    const labels = parsed.error.flatMap((item) =>
-      isJsonObject(item) && isJsonString(item.label) ? [item.label] : [],
-    );
-    return labels.length > 0 && labels.every((label) =>
-      /(?:no[_ ]results?|no data|no observations?|results? not found)/i.test(label),
-    );
+    const labels = parsed.error.flatMap((item) => (isJsonObject(item) && isJsonString(item.label) ? [item.label] : []));
+    return labels.length > 0 && labels.every((label) => /(?:no[_ ]results?|no data|no observations?|results? not found)/i.test(label));
   } catch {
     return false;
   }
 }
 
-function notModified(
-  checkpoint: SourceValidator | undefined,
-  upstreamHeaders: Headers,
-  etagOverride?: string,
-): SourceFetch {
+function notModified(checkpoint: SourceValidator | undefined, upstreamHeaders: Headers, etagOverride?: string): SourceFetch {
   const validator: SourceValidator = {};
-  const etag =
-    etagOverride ?? upstreamHeaders.get("etag") ?? checkpoint?.etag;
-  const lastModified =
-    upstreamHeaders.get("last-modified") ?? checkpoint?.lastModified;
+  const etag = etagOverride ?? upstreamHeaders.get("etag") ?? checkpoint?.etag;
+  const lastModified = upstreamHeaders.get("last-modified") ?? checkpoint?.lastModified;
   if (etag) validator.etag = etag;
   if (lastModified) validator.lastModified = lastModified;
-  return Object.keys(validator).length > 0
-    ? { kind: "not-modified", validator }
-    : { kind: "not-modified" };
+  return Object.keys(validator).length > 0 ? { kind: "not-modified", validator } : { kind: "not-modified" };
 }
 
 function syntheticEtag(dataset: string, updated: string): string {

@@ -16,13 +16,7 @@ import {
   type TransformContext,
 } from "@open-data-pt/gatekeeper-shared";
 import type { CkanResourceMetadata } from "../packages/gatekeeper-shared/src/formats/ckan/ckan";
-import {
-  CKAN_NORMALIZER,
-  CKAN_SAMPLE_ROWS,
-  epsg3763ToWgs84,
-  parsePythonLiteral,
-  transformCkan,
-} from "../packages/gatekeeper-shared/src/formats/ckan/transform";
+import { CKAN_NORMALIZER, CKAN_SAMPLE_ROWS, epsg3763ToWgs84, parsePythonLiteral, transformCkan } from "../packages/gatekeeper-shared/src/formats/ckan/transform";
 import { ckanCollector } from "../packages/gatekeeper-shared/src/formats/ckan";
 
 const context: TransformContext = {
@@ -113,23 +107,19 @@ function datastore(field: string, value: JsonValue, resource: JsonObject = {}): 
   return datastoreResource(
     { name: "geometry-test" },
     { id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", ...resource },
-    [{ id: "_id", type: "int" }, { id: field, type: "text" }],
+    [
+      { id: "_id", type: "int" },
+      { id: field, type: "text" },
+    ],
     [{ _id: 7, [field]: value }],
   );
 }
 
-function distanceMetres(
-  actual: { latitude: number; longitude: number },
-  expected: { latitude: number; longitude: number },
-): number {
+function distanceMetres(actual: { latitude: number; longitude: number }, expected: { latitude: number; longitude: number }): number {
   const radians = (value: number) => (value * Math.PI) / 180;
   const latitudeDelta = radians(expected.latitude - actual.latitude);
   const longitudeDelta = radians(expected.longitude - actual.longitude);
-  const a =
-    Math.sin(latitudeDelta / 2) ** 2 +
-    Math.cos(radians(actual.latitude)) *
-      Math.cos(radians(expected.latitude)) *
-      Math.sin(longitudeDelta / 2) ** 2;
+  const a = Math.sin(latitudeDelta / 2) ** 2 + Math.cos(radians(actual.latitude)) * Math.cos(radians(expected.latitude)) * Math.sin(longitudeDelta / 2) ** 2;
   return 6_371_000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
@@ -152,12 +142,32 @@ const SENSOR_READINGS = datastoreResource(
   ],
   [
     {
-      _id: 1, station: "A", status: "good", color: "#00aa44", latitude: "41.15", longitude: "-8.61", reading: "12.5",
-      measured_at: "2026-09-07T10:00:00Z", installed_on: "2024-01-02", active: "sim", metadata: { pollutant: "NO2" }, website: "https://example.test/a",
+      _id: 1,
+      station: "A",
+      status: "good",
+      color: "#00aa44",
+      latitude: "41.15",
+      longitude: "-8.61",
+      reading: "12.5",
+      measured_at: "2026-09-07T10:00:00Z",
+      installed_on: "2024-01-02",
+      active: "sim",
+      metadata: { pollutant: "NO2" },
+      website: "https://example.test/a",
     },
     {
-      _id: 2, station: "A", status: "warning", color: "#ffaa00", latitude: 41.15, longitude: -8.61, reading: 15,
-      measured_at: "2026-09-07T11:00:00Z", installed_on: "2024-01-02", active: "não", metadata: { pollutant: "NO2" }, website: "https://example.test/a",
+      _id: 2,
+      station: "A",
+      status: "warning",
+      color: "#ffaa00",
+      latitude: 41.15,
+      longitude: -8.61,
+      reading: 15,
+      measured_at: "2026-09-07T11:00:00Z",
+      installed_on: "2024-01-02",
+      active: "não",
+      metadata: { pollutant: "NO2" },
+      website: "https://example.test/a",
     },
   ],
 );
@@ -201,9 +211,7 @@ describe("CKAN transformers", () => {
     // The task's stated city-hall WGS84 position corresponds to approximately
     // (-40108, 164602) in EPSG:3763 (not the stated (-41500, 165500)).
     const cityHall = epsg3763ToWgs84(-40_108, 164_602);
-    expect(
-      distanceMetres(cityHall, { latitude: 41.1496, longitude: -8.6109 }),
-    ).toBeLessThan(20);
+    expect(distanceMetres(cityHall, { latitude: 41.1496, longitude: -8.6109 })).toBeLessThan(20);
 
     const statedProjectedPair = epsg3763ToWgs84(-41_500, 165_500);
     expect(statedProjectedPair).toEqual({
@@ -233,19 +241,20 @@ describe("CKAN transformers", () => {
     {
       field: "esriGeometryPolygon",
       value: JSON.stringify({
-        rings: [[
-          [-41_621, 164_508],
-          [-41_600, 164_508],
-          [-41_600, 164_530],
-          [-41_621, 164_508],
-        ]],
+        rings: [
+          [
+            [-41_621, 164_508],
+            [-41_600, 164_508],
+            [-41_600, 164_530],
+            [-41_621, 164_508],
+          ],
+        ],
       }),
       type: "Polygon",
     },
     {
       field: "esriGeometryMultipoint",
-      value:
-        "{'points': [[-41621.9676, 164508.9791], [-39877.7826, 163844.745]], 'spatialReference': {'wkid': 3763}}",
+      value: "{'points': [[-41621.9676, 164508.9791], [-39877.7826, 163844.745]], 'spatialReference': {'wkid': 3763}}",
       type: "MultiPoint",
     },
   ])("detects and converts $field", async ({ field, value, type }) => {
@@ -275,23 +284,16 @@ describe("CKAN transformers", () => {
     expect(payload).not.toHaveProperty("position");
   });
 
-  it.each(["esriGeometryPoint", "coordinates"])(
-    "keeps WGS84 JSON point values from %s as longitude and latitude",
-    async (field) => {
-      const result = await run(datastore(field, { x: -8.6109, y: 41.1496 }));
-      expect(result.records[0]?.payload).toMatchObject({
-        latitude: 41.1496,
-        longitude: -8.6109,
-      });
-    },
-  );
+  it.each(["esriGeometryPoint", "coordinates"])("keeps WGS84 JSON point values from %s as longitude and latitude", async (field) => {
+    const result = await run(datastore(field, { x: -8.6109, y: 41.1496 }));
+    expect(result.records[0]?.payload).toMatchObject({
+      latitude: 41.1496,
+      longitude: -8.6109,
+    });
+  });
 
   it("parses safe Python-style literals without evaluating them", () => {
-    expect(
-      parsePythonLiteral(
-        String.raw`{'quote': 'it\'s', "nested": [True, False, None, {'x': 1.5}], 'escaped': 'line\nnext'}`,
-      ),
-    ).toEqual({
+    expect(parsePythonLiteral(String.raw`{'quote': 'it\'s', "nested": [True, False, None, {'x': 1.5}], 'escaped': 'line\nnext'}`)).toEqual({
       quote: "it's",
       nested: [true, false, null, { x: 1.5 }],
       escaped: "line\nnext",
@@ -355,12 +357,7 @@ describe("CKAN transformers", () => {
     expect(result.summary.products?.[0]).toMatchObject({ productKey: "records", watermark: "2026-09-09T11:00:00.000Z" });
   });
 
-  it.each([
-    "parking-csv.json",
-    "trees-csv.json",
-    "cultural-agenda-csv.json",
-    "museums-csv.json",
-  ])("turns live example fixture %s into a mappable product", async (name) => {
+  it.each(["parking-csv.json", "trees-csv.json", "cultural-agenda-csv.json", "museums-csv.json"])("turns live example fixture %s into a mappable product", async (name) => {
     const result = await run(fixture(name));
     const fields = result.products[0]?.schema.fields ?? [];
     expect(fields.find((field) => field.type === "latitude")).toBeDefined();
@@ -402,9 +399,7 @@ describe("CKAN transformers", () => {
     // Numeric columns are not guessed into time series: the resource is published once, as its table.
     expect(result.products.map((product) => product.productKey)).toEqual(["records"]);
     expect(result.points).toEqual([]);
-    expect(result.summary.products).toEqual([
-      expect.objectContaining({ productKey: "records", watermark: "2026-09-07T11:00:00.000Z" }),
-    ]);
+    expect(result.summary.products).toEqual([expect.objectContaining({ productKey: "records", watermark: "2026-09-07T11:00:00.000Z" })]);
   });
 
   it("computes GeoJSON polygon centroids and preserves null geometry", async () => {
@@ -414,7 +409,17 @@ describe("CKAN transformers", () => {
         {
           type: "Feature",
           properties: { id: "triangle" },
-          geometry: { type: "Polygon", coordinates: [[[0, 0], [4, 0], [0, 2], [0, 0]]] },
+          geometry: {
+            type: "Polygon",
+            coordinates: [
+              [
+                [0, 0],
+                [4, 0],
+                [0, 2],
+                [0, 0],
+              ],
+            ],
+          },
         },
         { type: "Feature", properties: { id: "unknown-location" }, geometry: null },
         { type: "Feature", properties: { id: "broken" }, geometry: "nowhere" },
@@ -478,7 +483,10 @@ describe("CKAN transformers", () => {
     const late = await run(file("json", lateKey), 8192);
     expect(late.products[0]?.schema.fields.map((field) => field.name)).toEqual(["id"]);
     expect(late.records.at(-1)?.payload).toEqual({ id: "extra", note: "new" });
-    expect(late.summary.products?.[0]?.schema?.fields.map((field) => [field.name, field.nullable])).toEqual([["id", false], ["note", true]]);
+    expect(late.summary.products?.[0]?.schema?.fields.map((field) => [field.name, field.nullable])).toEqual([
+      ["id", false],
+      ["note", true],
+    ]);
   });
 });
 
@@ -519,7 +527,10 @@ describe("CKAN streaming through the shared collector", () => {
 
     const result = await collectNormalized(request, collector);
     if (result.kind !== "batch") throw new Error(`Expected a batch, got ${result.kind}`);
-    const frames = (await new Response(result.stream).text()).trim().split("\n").map((line) => parseJson(line));
+    const frames = (await new Response(result.stream).text())
+      .trim()
+      .split("\n")
+      .map((line) => parseJson(line));
 
     expect(frames[0]).toMatchObject({
       type: "header",
@@ -528,9 +539,7 @@ describe("CKAN streaming through the shared collector", () => {
         sourceUrl: `https://opendata.porto.digital/api/3/action/datastore_search?resource_id=${resourceId}&limit=2&offset=0`,
         sourcePublishedAt: "2026-09-07T12:00:00.000Z",
       },
-      products: [
-        { productKey: "records", suggestedSlug: "porto-sensors", completeness: "complete" },
-      ],
+      products: [{ productKey: "records", suggestedSlug: "porto-sensors", completeness: "complete" }],
       checkpoint: { normalizer: { id: "ckan-resource", version: "6" }, state: { validators: { default: { etag: `"ckan:6:${resourceId}:2026-09-07T12:00:00.000Z"` } } } },
     });
     expect(frames.filter((frame) => isJsonObject(frame) && frame.type === "record")).toHaveLength(2);
@@ -539,9 +548,7 @@ describe("CKAN streaming through the shared collector", () => {
       type: "complete",
       counts: { records: 2, points: 0 },
       quality: { acceptedRecords: 2, rejectedRecords: 0 },
-      products: [
-        { productKey: "records", watermark: "2026-09-07T11:00:00.000Z" },
-      ],
+      products: [{ productKey: "records", watermark: "2026-09-07T11:00:00.000Z" }],
     });
   });
 });

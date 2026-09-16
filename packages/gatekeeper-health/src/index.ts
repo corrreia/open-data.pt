@@ -23,10 +23,7 @@ import { HEALTH_EXAMPLES } from "./examples";
  * One Worker per catalog topic. It holds no parsing: it names its libraries,
  * hands each the vars and secrets it needs, and lists the example feeds it owns.
  */
-export default class HealthGatekeeper
-  extends WorkerEntrypoint<Env>
-  implements FeedGatekeeper
-{
+export default class HealthGatekeeper extends WorkerEntrypoint<Env> implements FeedGatekeeper {
   override async fetch(): Promise<Response> {
     return new Response("This Gatekeeper is available through RPC only.", { status: 404 });
   }
@@ -58,7 +55,13 @@ export default class HealthGatekeeper
   /** The wiring: which library answers for a feed, and what it is given to do it with. */
   private libraries(): GatekeeperLibraries {
     return new Map<string, GatekeeperLibrary>([
-      ["opendatasoft", { kinds: Object.values(OPENDATASOFT_FEEDS), collector: (config: SourceConfig) => opendatasoftCollector({ config, hosts: this.env.OPENDATASOFT_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }) }],
+      [
+        "opendatasoft",
+        {
+          kinds: Object.values(OPENDATASOFT_FEEDS),
+          collector: (config: SourceConfig) => opendatasoftCollector({ config, hosts: this.env.OPENDATASOFT_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }),
+        },
+      ],
     ]);
   }
 }

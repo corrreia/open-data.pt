@@ -1,18 +1,42 @@
 import type { ExampleFeed, FeedKindDescription } from "@open-data-pt/gatekeeper-shared";
 import { describe, expect, it } from "vitest";
-import { SYNC_BATCH, SYNC_CHECK_MS, SYNC_RESOLVE_ALL_MS, syncStep, type CatalogEntry, type SyncFeed, type SyncPorts, type SyncProgress, type SyncState } from "../apps/kernel/src/example-sync";
+import {
+  SYNC_BATCH,
+  SYNC_CHECK_MS,
+  SYNC_RESOLVE_ALL_MS,
+  syncStep,
+  type CatalogEntry,
+  type SyncFeed,
+  type SyncPorts,
+  type SyncProgress,
+  type SyncState,
+} from "../apps/kernel/src/example-sync";
 
 function example(slug: string, title = slug): ExampleFeed {
   return {
-    slug, title, description: "Fixture", config: { feed: slug }, staleAfterSeconds: 3600,
+    slug,
+    title,
+    description: "Fixture",
+    config: { feed: slug },
+    staleAfterSeconds: 3600,
     policy: { name: "Fixture", version: 1, collection: { cadenceSeconds: 3600, timeoutSeconds: 30, maxBytes: 1024, historyMode: "changes" }, serving: {} },
   };
 }
 
 function kind(name: string, title = name): FeedKindDescription {
   return {
-    kind: name, title, description: "Fixture",
-    semantics: { boundedness: "bounded", changeSemantics: "full-snapshot", cadence: "periodic", domainSubject: "reference", defaultProductRole: "reference", completeness: "complete", ordering: "none" },
+    kind: name,
+    title,
+    description: "Fixture",
+    semantics: {
+      boundedness: "bounded",
+      changeSemantics: "full-snapshot",
+      cadence: "periodic",
+      domainSubject: "reference",
+      defaultProductRole: "reference",
+      completeness: "complete",
+      ordering: "none",
+    },
   };
 }
 
@@ -32,9 +56,15 @@ class FakeRegistry implements SyncPorts {
   clock = 1_000_000;
   private nextId = 1;
 
-  boundKinds(): string[] { return this.bound; }
-  async readCatalog(): Promise<CatalogEntry[]> { return structuredClone(this.catalog); }
-  feeds(): SyncFeed[] { return [...this.installed.values()]; }
+  boundKinds(): string[] {
+    return this.bound;
+  }
+  async readCatalog(): Promise<CatalogEntry[]> {
+    return structuredClone(this.catalog);
+  }
+  feeds(): SyncFeed[] {
+    return [...this.installed.values()];
+  }
 
   async apply(gatekeeperKind: string, feed: ExampleFeed): Promise<void> {
     if (this.failing.has(feed.slug)) throw new Error("resolution failed");
@@ -48,9 +78,15 @@ class FakeRegistry implements SyncPorts {
     for (const [slug, feed] of this.installed) if (feed.id === feedId) this.installed.delete(slug);
   }
 
-  load(): SyncState | undefined { return this.state === undefined ? undefined : structuredClone(this.state); }
-  save(state: SyncState): void { this.state = structuredClone(state); }
-  now(): number { return this.clock; }
+  load(): SyncState | undefined {
+    return this.state === undefined ? undefined : structuredClone(this.state);
+  }
+  save(state: SyncState): void {
+    this.state = structuredClone(state);
+  }
+  now(): number {
+    return this.clock;
+  }
 
   /** Run steps the way the Registry alarm does: again at once while operations are queued. */
   async drain(check = false): Promise<SyncProgress[]> {

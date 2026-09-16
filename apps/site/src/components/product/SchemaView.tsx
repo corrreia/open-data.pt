@@ -6,7 +6,8 @@ export function SchemaView({ product }: { product: Product }) {
   return (
     <div className="grid gap-3">
       <p className="text-sm text-kumo-subtle">
-        The schema written for version {product.version}. Every record also carries a <code>_time</code> object with its event, validity, source-published, observed and ingested clocks.
+        The schema written for version {product.version}. Every record also carries a <code>_time</code> object with its event, validity, source-published, observed and ingested
+        clocks.
       </p>
       <LayerCard className="overflow-hidden p-0">
         <div className="overflow-x-auto">

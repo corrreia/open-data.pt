@@ -37,7 +37,7 @@ function popupHtml(properties: JsonRecord) {
     .map((key) => `<dt>${escapeHtml(humanize(key).replace(/ ID$/, ""))}</dt><dd>${escapeHtml(fmt.cell(properties[key]))}</dd>`)
     .join("");
   const time = properties._time;
-  const when = time && isRecord(time) ? time.event ?? time.observed : undefined;
+  const when = time && isRecord(time) ? (time.event ?? time.observed) : undefined;
   const title = properties.name ?? properties.title ?? properties.id;
   return `<strong>${escapeHtml(isText(title) || Number.isFinite(title) ? String(title) : "")}</strong>${isText(when) ? `<div style="opacity:.7">${escapeHtml(fmt.dateTime(when))}</div>` : ""}<dl>${rows}</dl>`;
 }
@@ -271,11 +271,11 @@ export default function MapView({ product, refreshKey }: { product: Product; ref
 
   const features = geojson.data?.features ?? [];
   const choices = useMemo(() => colourFields(product.schema.fields, features), [product.schema.fields, features]);
-  const field = colourBy === null ? choices[0]?.name ?? "" : colourBy;
+  const field = colourBy === null ? (choices[0]?.name ?? "") : colourBy;
   const categoryOf = (feature: Feature) => (field ? String(feature.properties[field] ?? "unknown") : "all");
   const categories = useMemo(() => (field ? [...new Set(features.map(categoryOf))].sort() : []), [features, field]);
   const palette = dark ? SERIES_COLORS.dark : SERIES_COLORS.light;
-  const colorOf = (category: string) => (field ? palette[categories.indexOf(category) % palette.length] ?? palette[0] : palette[0]) ?? "#1b7a4f";
+  const colorOf = (category: string) => (field ? (palette[categories.indexOf(category) % palette.length] ?? palette[0]) : palette[0]) ?? "#1b7a4f";
 
   useEffect(() => {
     if (refreshKey > 0) void geojson.refetch();
@@ -417,7 +417,8 @@ export default function MapView({ product, refreshKey }: { product: Product; ref
               {fmt.int(features.length)} {noun} · fetched <RelativeTime value={fetchedAt} />
               {newest ? (
                 <>
-                  {" "}· positions as of <RelativeTime value={newest} />
+                  {" "}
+                  · positions as of <RelativeTime value={newest} />
                 </>
               ) : null}
             </>
@@ -433,10 +434,17 @@ export default function MapView({ product, refreshKey }: { product: Product; ref
                 setColourBy(value ?? "");
                 setHidden(new Set());
               }}
-              items={Object.fromEntries([["", "No colours"], ...choices.map((choice) => [choice.name, `Colour by ${humanize(choice.name).replace(/ ID$/, "").toLocaleLowerCase()}`])])}
+              items={Object.fromEntries([
+                ["", "No colours"],
+                ...choices.map((choice) => [choice.name, `Colour by ${humanize(choice.name).replace(/ ID$/, "").toLocaleLowerCase()}`]),
+              ])}
             />
           ) : null}
-          <Button variant="secondary" icon={<CrosshairIcon />} onClick={() => boundsRef.current?.isValid() && mapRef.current?.fitBounds(boundsRef.current, { padding: [24, 24], maxZoom: 17 })}>
+          <Button
+            variant="secondary"
+            icon={<CrosshairIcon />}
+            onClick={() => boundsRef.current?.isValid() && mapRef.current?.fitBounds(boundsRef.current, { padding: [24, 24], maxZoom: 17 })}
+          >
             Fit to data
           </Button>
         </div>
@@ -470,7 +478,12 @@ export default function MapView({ product, refreshKey }: { product: Product; ref
       ) : null}
 
       {geojson.error ? <Empty icon={<MapTrifoldIcon size={40} className="text-kumo-inactive" />} title="Could not load the map" description={geojson.error.message} /> : null}
-      <div ref={container} role="region" aria-label={`${product.title} on a map`} className="h-[min(70vh,36rem)] min-h-80 w-full overflow-hidden rounded-xl ring-1 ring-kumo-line" />
+      <div
+        ref={container}
+        role="region"
+        aria-label={`${product.title} on a map`}
+        className="h-[min(70vh,36rem)] min-h-80 w-full overflow-hidden rounded-xl ring-1 ring-kumo-line"
+      />
       <p className="text-xs text-kumo-subtle">
         Shapes come straight from the current records. Select one for its details, switch a category off in the legend, or open the Records tab for the same rows as text.
       </p>

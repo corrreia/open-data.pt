@@ -13,16 +13,10 @@ export function marketPeriodStart(date: string, period: number): string {
   const minutes = date >= OMIE_QUARTER_HOURLY_START ? 15 : 60;
   const start = madridMidnightUtc(parts.year, parts.month, parts.day);
   const nextDate = new Date(Date.UTC(parts.year, parts.month - 1, parts.day + 1));
-  const next = madridMidnightUtc(
-    nextDate.getUTCFullYear(),
-    nextDate.getUTCMonth() + 1,
-    nextDate.getUTCDate(),
-  );
+  const next = madridMidnightUtc(nextDate.getUTCFullYear(), nextDate.getUTCMonth() + 1, nextDate.getUTCDate());
   const periodCount = (next - start) / (minutes * 60_000);
   if (period < 1 || period > periodCount) {
-    throw new Error(
-      `Invalid OMIE market period ${date} #${period}; expected 1-${periodCount}`,
-    );
+    throw new Error(`Invalid OMIE market period ${date} #${period}; expected 1-${periodCount}`);
   }
   return new Date(start + (period - 1) * minutes * 60_000).toISOString();
 }
@@ -44,25 +38,17 @@ export function marketDateBefore(before: Date): string {
 export function shiftMarketDate(date: string, days: number): string {
   const parts = parseMarketDate(date);
   if (!parts) throw new Error(`Invalid OMIE market date ${date}`);
-  return new Date(Date.UTC(parts.year, parts.month - 1, parts.day + days))
-    .toISOString()
-    .slice(0, 10);
+  return new Date(Date.UTC(parts.year, parts.month - 1, parts.day + days)).toISOString().slice(0, 10);
 }
 
-export function parseMarketDate(
-  value: string,
-): { year: number; month: number; day: number } | undefined {
+export function parseMarketDate(value: string): { year: number; month: number; day: number } | undefined {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/u.exec(value);
   if (!match) return undefined;
   const year = Number(match[1]);
   const month = Number(match[2]);
   const day = Number(match[3]);
   const date = new Date(Date.UTC(year, month - 1, day));
-  if (
-    date.getUTCFullYear() !== year ||
-    date.getUTCMonth() !== month - 1 ||
-    date.getUTCDate() !== day
-  ) {
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
     return undefined;
   }
   return { year, month, day };
@@ -73,11 +59,7 @@ function madridMidnightUtc(year: number, month: number, day: number): number {
   return Date.UTC(year, month - 1, day) - offsetHours * 3_600_000;
 }
 
-function madridOffsetAtLocalMidnight(
-  year: number,
-  month: number,
-  day: number,
-): 1 | 2 {
+function madridOffsetAtLocalMidnight(year: number, month: number, day: number): 1 | 2 {
   if (month < 3 || month > 10) return 1;
   if (month > 3 && month < 10) return 2;
   if (month === 3) return day > lastSunday(year, 3) ? 2 : 1;

@@ -11,26 +11,9 @@ import {
 } from "../../index";
 import { MAX_ARCHIVE_BYTES } from "./zip";
 
-export const GTFS_ENTRY_NAMES = [
-  "agency",
-  "stops",
-  "routes",
-  "calendar",
-  "calendar_dates",
-  "trips",
-  "shapes",
-  "stop_times",
-  "feed_info",
-] as const;
+export const GTFS_ENTRY_NAMES = ["agency", "stops", "routes", "calendar", "calendar_dates", "trips", "shapes", "stop_times", "feed_info"] as const;
 
-export const DEFAULT_GTFS_FILES = [
-  "agency",
-  "stops",
-  "routes",
-  "calendar",
-  "calendar_dates",
-  "feed_info",
-] as const;
+export const DEFAULT_GTFS_FILES = ["agency", "stops", "routes", "calendar", "calendar_dates", "feed_info"] as const;
 
 export const GTFS_FEEDS = {
   static: {
@@ -44,10 +27,7 @@ export const GTFS_FEEDS = {
   },
 } as const satisfies Record<string, FeedKindDescription>;
 
-export function validateGtfsFeedConfig(
-  config: SourceConfig,
-  allowedHostsValue: string,
-): SourceConfig {
+export function validateGtfsFeedConfig(config: SourceConfig, allowedHostsValue: string): SourceConfig {
   const rawUrl = config.url?.trim();
   if (!rawUrl) {
     throw new GatekeeperError("GTFS feeds require a url", "invalid-config");
@@ -61,23 +41,13 @@ export function validateGtfsFeedConfig(
  * Open the archive and hand its body on unread: the streaming normalizer reads
  * it entry by entry, so nothing here buffers it.
  */
-export async function collectGtfsFeed(
-  config: SourceConfig,
-  checkpoint: SourceValidator | undefined,
-  allowedHostsValue: string,
-  fetcher: typeof fetch,
-): Promise<SourceFetch> {
+export async function collectGtfsFeed(config: SourceConfig, checkpoint: SourceValidator | undefined, allowedHostsValue: string, fetcher: typeof fetch): Promise<SourceFetch> {
   const validated = validateGtfsFeedConfig(config, allowedHostsValue);
   const requestHeaders = new Headers({ Accept: "application/zip, application/x-zip-compressed, application/octet-stream;q=0.9, */*;q=0.1" });
   if (checkpoint?.etag) requestHeaders.set("If-None-Match", checkpoint.etag);
   if (checkpoint?.lastModified) requestHeaders.set("If-Modified-Since", checkpoint.lastModified);
 
-  const { response, sourceUrl } = await fetchFollowingAllowedRedirects(
-    new URL(validated.url ?? ""),
-    requestHeaders,
-    allowedHostsValue,
-    fetcher,
-  );
+  const { response, sourceUrl } = await fetchFollowingAllowedRedirects(new URL(validated.url ?? ""), requestHeaders, allowedHostsValue, fetcher);
 
   if (response.status === 304) {
     await response.body?.cancel("GTFS archive not modified").catch(() => undefined);

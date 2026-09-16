@@ -52,7 +52,7 @@ export interface ChunkSink {
  * reused byte for byte by splitting lines instead of re-serializing them.
  */
 export async function writeChunk(sink: ChunkSink, rows: ServingRow[]): Promise<ManifestChunk> {
-  let body = "{\"rows\":[\n";
+  let body = '{"rows":[\n';
   for (let index = 0; index < rows.length; index += 1) {
     if (index > 0) body += ",\n";
     body += rows[index]!.json;
@@ -80,8 +80,8 @@ function rowKey(json: string): string {
   return servedIdentity(json).key;
 }
 
-const HASH_MARK = ",\"_hash\":\"";
-const ID_MARK = "\"id\":";
+const HASH_MARK = ',"_hash":"';
+const ID_MARK = '"id":';
 const QUOTE = 34;
 
 /** Which entity a served row is, and the semantic hash it was served with. */
@@ -99,10 +99,14 @@ export interface ServedIdentity {
 export function servedIdentity(json: string): ServedIdentity {
   const hashAt = json.lastIndexOf(HASH_MARK);
   const idAt = hashAt < 0 ? -1 : json.lastIndexOf(ID_MARK, hashAt);
-  const hashEnd = hashAt < 0 ? -1 : json.indexOf("\"", hashAt + HASH_MARK.length);
+  const hashEnd = hashAt < 0 ? -1 : json.indexOf('"', hashAt + HASH_MARK.length);
   if (idAt >= 0 && hashEnd > 0 && json.charCodeAt(idAt + ID_MARK.length) === QUOTE && json.charCodeAt(hashAt - 1) === QUOTE) {
     let key: JsonValue | undefined;
-    try { key = parseJson(json.slice(idAt + ID_MARK.length, hashAt)); } catch { /* not the layout servingJson writes: parse it whole */ }
+    try {
+      key = parseJson(json.slice(idAt + ID_MARK.length, hashAt));
+    } catch {
+      /* not the layout servingJson writes: parse it whole */
+    }
     if (isJsonString(key)) return { key, hash: json.slice(hashAt + HASH_MARK.length, hashEnd) };
   }
   // SAFETY: chunk rows are written only by servingJson as JSON objects with a string `id` and `_hash`.
@@ -172,7 +176,10 @@ export function chunkIndexFor(chunks: readonly ManifestChunk[], key: string): nu
   let found = 0;
   while (low <= high) {
     const middle = (low + high) >> 1;
-    if (compareKeys(chunks[middle]!.first, key) <= 0) { found = middle; low = middle + 1; } else high = middle - 1;
+    if (compareKeys(chunks[middle]!.first, key) <= 0) {
+      found = middle;
+      low = middle + 1;
+    } else high = middle - 1;
   }
   return found;
 }
@@ -186,7 +193,13 @@ export type OrderedRows = (after: string | null, limit: number) => ServingRow[] 
  * from there on the old chunks are, by construction, what a full rebuild would
  * produce. With no previous chunks this is a full rebuild.
  */
-export async function regenerateChunks(previous: readonly ManifestChunk[], dirty: readonly boolean[], rows: OrderedRows, sink: ChunkSink, pageSize = 1000): Promise<ManifestChunk[]> {
+export async function regenerateChunks(
+  previous: readonly ManifestChunk[],
+  dirty: readonly boolean[],
+  rows: OrderedRows,
+  sink: ChunkSink,
+  pageSize = 1000,
+): Promise<ManifestChunk[]> {
   if (previous.length === 0) return rebuildFrom(null, rows, sink, pageSize, () => undefined);
   const output: ManifestChunk[] = [];
   let index = 0;

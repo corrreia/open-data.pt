@@ -34,7 +34,17 @@ type Rows = (kind: QueryKind, day: string) => JsonObject[];
 function powerRows(day: string): JsonObject[] {
   const start = Date.parse(lisbonDayBounds(day).from);
   return [
-    ...[0, 1, 2].map((hour) => ({ product_slug: "power-series", series_key: "consumption", hour: lakeHour(start + hour * 3_600_000), n: 4, mean: 100 + hour, low: 90 + hour, high: 110 + hour, unit: "MW", dimensions: '{"source":"Consumption"}' })),
+    ...[0, 1, 2].map((hour) => ({
+      product_slug: "power-series",
+      series_key: "consumption",
+      hour: lakeHour(start + hour * 3_600_000),
+      n: 4,
+      mean: 100 + hour,
+      low: 90 + hour,
+      high: 110 + hour,
+      unit: "MW",
+      dimensions: '{"source":"Consumption"}',
+    })),
     { product_slug: "private-series", series_key: "x", hour: lakeHour(start), n: 1, mean: 1, low: 1, high: 1, unit: "", dimensions: "{}" },
   ];
 }
@@ -44,7 +54,18 @@ function bigRows(day: string): JsonObject[] {
   const start = Date.parse(lisbonDayBounds(day).from);
   const rows: JsonObject[] = [];
   for (let series = 0; series < 2_600; series += 1) {
-    for (let hour = 0; hour < 24; hour += 1) rows.push({ product_slug: "big-series", series_key: `s${String(series).padStart(4, "0")}`, hour: lakeHour(start + hour * 3_600_000), n: 1, mean: hour, low: hour, high: hour, unit: "°C", dimensions: "{}" });
+    for (let hour = 0; hour < 24; hour += 1)
+      rows.push({
+        product_slug: "big-series",
+        series_key: `s${String(series).padStart(4, "0")}`,
+        hour: lakeHour(start + hour * 3_600_000),
+        n: 1,
+        mean: hour,
+        low: hour,
+        high: hour,
+        unit: "°C",
+        dimensions: "{}",
+      });
   }
   return rows;
 }
@@ -66,12 +87,17 @@ function fakeLake(rowsFor: Rows) {
     // SAFETY: runLakeQuery always posts `{ query }` as its JSON body.
     const { query } = JSON.parse(String(init?.body)) as { query: string };
     queries.push(query);
-    if (query.includes("MIN(__ingest_ts)")) return Response.json({ success: true, result: { rows: [{ first_ingest: "2026-09-09T10:00:00.000000Z" }], metrics: { bytes_scanned: 10 } } });
+    if (query.includes("MIN(__ingest_ts)"))
+      return Response.json({ success: true, result: { rows: [{ first_ingest: "2026-09-09T10:00:00.000000Z" }], metrics: { bytes_scanned: 10 } } });
     const kind: QueryKind = query.includes("ROW_NUMBER") ? "fresh" : query.includes("local_time") ? "late-day" : "late-hour";
     const column = kind === "late-day" ? "day" : "hour";
     const bound = kind === "fresh" ? /event_time >= TIMESTAMP '([^']+)'/.exec(query)?.[1] : /__ingest_ts >= TIMESTAMP '([^']+)'/.exec(query)?.[1];
     const id = `${kind}|${lisbonDay(Date.parse(bound ?? ""))}`;
-    const all = sorted.get(id) ?? rowsFor(kind, lisbonDay(Date.parse(bound ?? ""))).map((row) => ({ key: order(row, column), row })).sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+    const all =
+      sorted.get(id) ??
+      rowsFor(kind, lisbonDay(Date.parse(bound ?? "")))
+        .map((row) => ({ key: order(row, column), row }))
+        .sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
     sorted.set(id, all);
     const cursor = /AND product_slug > '((?:[^']|'')*)'/.exec(query)?.[1];
     const afterProduct = /WHERE product_slug > '((?:[^']|'')*)' OR/.exec(query)?.[1];
@@ -121,10 +147,17 @@ describe("the fresh pass", () => {
     const month = await readSummaryFile(objects, "power-series", "2026-09");
     expect(month).toMatchObject({ version: 1, product: "power-series", month: "2026-09", timeZone: "Europe/Lisbon", resolution: "hour", days: ["2026-09-09", "2026-09-10"] });
     expect(month?.series).toEqual([{ key: "consumption", unit: "MW", dimensions: { source: "Consumption" } }]);
-    expect(month?.buckets.slice(0, 2)).toEqual([["consumption", "2026-09-08T23:00:00.000Z", 4, 100, 90, 110], ["consumption", "2026-09-09T00:00:00.000Z", 4, 101, 91, 111]]);
+    expect(month?.buckets.slice(0, 2)).toEqual([
+      ["consumption", "2026-09-08T23:00:00.000Z", 4, 100, 90, 110],
+      ["consumption", "2026-09-09T00:00:00.000Z", 4, 101, 91, 111],
+    ]);
     expect(month?.buckets).toHaveLength(6);
     expect(await readSummaryFile(objects, "private-series", "2026-09")).toBeUndefined();
-    expect(await readSummaryFile(objects, "power-series", "2026")).toMatchObject({ year: "2026", resolution: "month", buckets: [["consumption", "2026-08-31T23:00:00.000Z", 24, 101, 90, 112]] });
+    expect(await readSummaryFile(objects, "power-series", "2026")).toMatchObject({
+      year: "2026",
+      resolution: "month",
+      buckets: [["consumption", "2026-08-31T23:00:00.000Z", 24, 101, 90, 112]],
+    });
 
     const again = await summariseSettledDays(deps, NOW, 7, 0);
     expect(again.summarised).toEqual([]);
@@ -153,12 +186,22 @@ describe("the fresh pass", () => {
 describe("the late pass", () => {
   /** A backfill landing on 9 September (two days of 2018, and an hour of 3 September) and walked again on the 10th. */
   const backfill: Rows = (kind, day) => {
-    const history = (rows: Array<[string, number, number]>) => rows.map(([date, n, mean]) => ({ product_slug: "power-series", series_key: "consumption", day: lakeDay(date), n, mean, low: mean - 100, high: mean + 100, unit: "MW" }));
+    const history = (rows: Array<[string, number, number]>) =>
+      rows.map(([date, n, mean]) => ({ product_slug: "power-series", series_key: "consumption", day: lakeDay(date), n, mean, low: mean - 100, high: mean + 100, unit: "MW" }));
     if (kind === "fresh") return powerRows(day);
-    if (kind === "late-day" && day === "2026-09-09") return history([["2018-01-15", 96, 5000], ["2018-07-15", 96, 5000]]);
+    if (kind === "late-day" && day === "2026-09-09")
+      return history([
+        ["2018-01-15", 96, 5000],
+        ["2018-07-15", 96, 5000],
+      ]);
     // The second walk brings a complete 15 January and a partial 15 July: the complete day replaces, the partial one does not.
-    if (kind === "late-day" && day === "2026-09-10") return history([["2018-01-15", 96, 5100], ["2018-07-15", 50, 1]]);
-    if (kind === "late-hour" && day === "2026-09-09") return [{ product_slug: "power-series", series_key: "consumption", hour: "2026-09-03T10:00:00.000000Z", n: 4, mean: 200, low: 190, high: 210, unit: "MW" }];
+    if (kind === "late-day" && day === "2026-09-10")
+      return history([
+        ["2018-01-15", 96, 5100],
+        ["2018-07-15", 50, 1],
+      ]);
+    if (kind === "late-hour" && day === "2026-09-09")
+      return [{ product_slug: "power-series", series_key: "consumption", hour: "2026-09-03T10:00:00.000000Z", n: 4, mean: 200, low: 190, high: 210, unit: "MW" }];
     return [];
   };
 
@@ -181,20 +224,37 @@ describe("the late pass", () => {
     // The lake's first day has no fresh pass for the day before it, so its ingest covers everything before it.
     expect(hourly).toContain("event_time >= TIMESTAMP '2026-08-31T23:00:00.000Z' AND event_time < TIMESTAMP '2026-09-08T23:00:00.000Z'");
 
-    expect(await readSummaryFile(objects, "power-series", "2018-01")).toMatchObject({ resolution: "day", days: ["2018-01-15"], buckets: [["consumption", "2018-01-15T00:00:00.000Z", 96, 5100, 5000, 5200]] });
+    expect(await readSummaryFile(objects, "power-series", "2018-01")).toMatchObject({
+      resolution: "day",
+      days: ["2018-01-15"],
+      buckets: [["consumption", "2018-01-15T00:00:00.000Z", 96, 5100, 5000, 5200]],
+    });
     expect((await readSummaryFile(objects, "power-series", "2018-07"))?.buckets).toEqual([["consumption", "2018-07-14T23:00:00.000Z", 96, 5000, 4900, 5100]]);
     const september = await readSummaryFile(objects, "power-series", "2026-09");
     expect(september?.resolution).toBe("hour");
     expect(september?.buckets).toContainEqual(["consumption", "2026-09-03T10:00:00.000Z", 4, 200, 190, 210]);
-    expect(await readSummaryFile(objects, "power-series", "2018")).toMatchObject({ resolution: "month", buckets: [["consumption", "2018-01-01T00:00:00.000Z", 96, 5100, 5000, 5200], ["consumption", "2018-06-30T23:00:00.000Z", 96, 5000, 4900, 5100]] });
-    expect(await objects.read<SummaryIndex>("summaries/v1/index.json")).toMatchObject({ firstDay: "2026-09-09", through: "2026-09-10", earliestDay: "2018-01-15", lateThrough: "2026-09-10" });
+    expect(await readSummaryFile(objects, "power-series", "2018")).toMatchObject({
+      resolution: "month",
+      buckets: [
+        ["consumption", "2018-01-01T00:00:00.000Z", 96, 5100, 5000, 5200],
+        ["consumption", "2018-06-30T23:00:00.000Z", 96, 5000, 4900, 5100],
+      ],
+    });
+    expect(await objects.read<SummaryIndex>("summaries/v1/index.json")).toMatchObject({
+      firstDay: "2026-09-09",
+      through: "2026-09-10",
+      earliestDay: "2018-01-15",
+      lateThrough: "2026-09-10",
+    });
   });
 
   it("spreads a heavy backfill day over several wakes, whole products at a time", async () => {
     const rowsFor: Rows = (kind, day) => {
       if (kind === "fresh") return powerRows(day);
       if (kind !== "late-day" || day !== "2026-09-09") return [];
-      return ["gas-series", "power-series"].flatMap((product) => ["2018-01-15", "2018-02-15", "2018-03-15"].map((date) => ({ product_slug: product, series_key: "x", day: lakeDay(date), n: 1, mean: 1, low: 1, high: 1, unit: "" })));
+      return ["gas-series", "power-series"].flatMap((product) =>
+        ["2018-01-15", "2018-02-15", "2018-03-15"].map((date) => ({ product_slug: product, series_key: "x", day: lakeDay(date), n: 1, mean: 1, low: 1, high: 1, unit: "" })),
+      );
     };
     // Each product costs three month merges (six calls) and one year rebuild (thirteen): a budget of 20 takes one product per wake.
     const { lake, objects, deps } = setup(rowsFor, 20);
@@ -239,7 +299,13 @@ describe("reading summaries", () => {
   });
 
   it("reaches back into backfilled history by month, reading only the years that hold it", async () => {
-    const objects = await summarised((kind, day) => (kind === "fresh" ? powerRows(day) : kind === "late-day" && day === "2026-09-09" ? [{ product_slug: "power-series", series_key: "consumption", day: lakeDay("2016-10-02"), n: 96, mean: 4000, low: 3000, high: 5000, unit: "MW" }] : []));
+    const objects = await summarised((kind, day) =>
+      kind === "fresh"
+        ? powerRows(day)
+        : kind === "late-day" && day === "2026-09-09"
+          ? [{ product_slug: "power-series", series_key: "consumption", day: lakeDay("2016-10-02"), n: 96, mean: 4000, low: 3000, high: 5000, unit: "MW" }]
+          : [],
+    );
     const forty = await readSummaryRange(objects, "power-series", { from: "1986-09-01T00:00:00Z", to: "2026-09-12T00:00:00Z", seriesKeys: [] });
     expect(forty.resolution).toBe("month");
     expect(forty.coverage.firstDay).toBe("2016-10-02");
@@ -262,11 +328,23 @@ describe("reading summaries", () => {
     const objects = new ObjectStore(new MemorySnapshots());
     const index: SummaryIndex = { version: 1, firstDay: "2020-01-01", through: "2026-09-10", updatedAt: "2026-09-12T00:00:00.000Z" };
     await objects.write("summaries/v1/index.json", index);
-    await expect(readSummaryRange(objects, "power-series", { from: "2020-01-01T00:00:00Z", to: "2026-09-01T00:00:00Z", resolution: "day", seriesKeys: [] })).rejects.toThrow(/at most 36 months/);
+    await expect(readSummaryRange(objects, "power-series", { from: "2020-01-01T00:00:00Z", to: "2026-09-01T00:00:00Z", resolution: "day", seriesKeys: [] })).rejects.toThrow(
+      /at most 36 months/,
+    );
     await expect(readSummaryRange(objects, "power-series", { from: "2026-09-01T00:00:00Z", to: "2026-08-01T00:00:00Z", seriesKeys: [] })).rejects.toThrow(/before to/);
 
     const crowded: SummaryBucket[] = Array.from({ length: MAX_SUMMARY_BUCKETS + 1 }, (_, index) => [`s${index}`, "2026-09-09T00:00:00.000Z", 1, 1, 1, 1]);
-    const month: SummaryMonth = { version: 1, product: "crowded", month: "2026-09", timeZone: "Europe/Lisbon", resolution: "hour", days: ["2026-09-09"], series: [], buckets: crowded, updatedAt: "2026-09-12T00:00:00.000Z" };
+    const month: SummaryMonth = {
+      version: 1,
+      product: "crowded",
+      month: "2026-09",
+      timeZone: "Europe/Lisbon",
+      resolution: "hour",
+      days: ["2026-09-09"],
+      series: [],
+      buckets: crowded,
+      updatedAt: "2026-09-12T00:00:00.000Z",
+    };
     await objects.write(summaryKey("crowded", "2026-09"), month);
     await expect(readSummaryRange(objects, "crowded", { from: "2026-09-09T00:00:00Z", to: "2026-09-10T00:00:00Z", seriesKeys: [] })).rejects.toThrow(/name fewer series/);
   });

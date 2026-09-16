@@ -48,13 +48,7 @@ function attributePolicy(name: string, serving: ServingPolicyDefinition, maxByte
  * it was measured, not guessed, and a feature past it is rejected rather than
  * silently truncated, which leaves the product partial.
  */
-function outlinePolicy(
-  name: string,
-  serving: ServingPolicyDefinition,
-  maxBytes: number,
-  maxOutputBytes: number,
-  cadenceSeconds: number,
-): ExampleFeed["policy"] {
+function outlinePolicy(name: string, serving: ServingPolicyDefinition, maxBytes: number, maxOutputBytes: number, cadenceSeconds: number): ExampleFeed["policy"] {
   return {
     name,
     version: 3,
@@ -161,8 +155,7 @@ export const OGC_EXAMPLES: ExampleFeed[] = [
   {
     slug: "azores-operadores-residuos-feed",
     title: "Azores waste management operators",
-    description:
-      "Installations of licensed waste management operators in the Azores, with address, island and the regional waste information system listing each entry came from.",
+    description: "Installations of licensed waste management operators in the Azores, with address, island and the regional waste information system listing each entry came from.",
     config: {
       source: "ogc",
       host: AZORES_HOST,
@@ -218,8 +211,7 @@ export const OGC_EXAMPLES: ExampleFeed[] = [
   {
     slug: "azores-lagoas-feed",
     title: "Azores lakes and lagoons",
-    description:
-      "Lakes and lagoons of Corvo, Faial, Flores, Pico, São Jorge, Terceira and São Miguel, with altitude, depth, volume and outline.",
+    description: "Lakes and lagoons of Corvo, Faial, Flores, Pico, São Jorge, Terceira and São Miguel, with altitude, depth, volume and outline.",
     config: {
       source: "ogc",
       host: AZORES_HOST,
@@ -237,8 +229,7 @@ export const OGC_EXAMPLES: ExampleFeed[] = [
   {
     slug: "azores-zonas-especiais-conservacao-feed",
     title: "Azores special areas of conservation",
-    description:
-      "The Natura 2000 special areas of conservation of the Azores, with their site codes, the instruments that designated them, and their outlines.",
+    description: "The Natura 2000 special areas of conservation of the Azores, with their site codes, the instruments that designated them, and their outlines.",
     config: {
       source: "ogc",
       host: AZORES_HOST,

@@ -8,7 +8,18 @@ import { apiGet, productHref } from "../lib/api";
 import { fetchFeeds, fetchProducts, publisherHref, slugify } from "../lib/catalog";
 import { fmt, plural } from "../lib/format";
 import { useQuery } from "../lib/query";
-import { STATUS_DAYS as DAYS, STATUS_HOURS, statusHours, measureStatus as measure, outageSpan as spanOf, type StatusBar as Bar, type StatusIncident as Incident, type StatusLevel as Level, type StatusMeasurement as Measured, type StatusMember as Member } from "../lib/status-history";
+import {
+  STATUS_DAYS as DAYS,
+  STATUS_HOURS,
+  statusHours,
+  measureStatus as measure,
+  outageSpan as spanOf,
+  type StatusBar as Bar,
+  type StatusIncident as Incident,
+  type StatusLevel as Level,
+  type StatusMeasurement as Measured,
+  type StatusMember as Member,
+} from "../lib/status-history";
 import type { Feed, Outage, OutageCause, OutagesResponse, Product } from "../lib/types";
 
 const INCIDENTS_SHOWN = 25;
@@ -105,7 +116,21 @@ function barTip(bar: Bar, describe: (incident: Incident) => string, now: number)
   );
 }
 
-function Bars({ measured, label, describe, onTip, now, height = "h-8" }: { measured: Measured; label: string; describe: (incident: Incident) => string; onTip: (tip: TipState | null) => void; now: number; height?: string }) {
+function Bars({
+  measured,
+  label,
+  describe,
+  onTip,
+  now,
+  height = "h-8",
+}: {
+  measured: Measured;
+  label: string;
+  describe: (incident: Incident) => string;
+  onTip: (tip: TipState | null) => void;
+  now: number;
+  height?: string;
+}) {
   const root = useRef<HTMLSpanElement>(null);
   const instructions = useId();
   const detailsPrefix = useId();
@@ -117,26 +142,72 @@ function Bars({ measured, label, describe, onTip, now, height = "h-8" }: { measu
   };
   return (
     <span>
-      <span id={instructions} className="sr-only">One bar per hour. Use left and right arrows to inspect hours, Home and End to jump, and Escape to dismiss details.</span>
-      {descriptions.map((description, index) => (description ? <span key={index} id={`${detailsPrefix}-${index}`} className="sr-only">{description}</span> : null))}
-      <span ref={root} role="group" data-status-timeline aria-describedby={instructions} aria-label={`${label}: ${uptimeText(measured.uptime)} over ${STATUS_HOURS} hourly slots`} className={`flex ${height} gap-px sm:gap-[2px]`}
-        onPointerLeave={(event) => { if (event.pointerType === "mouse" && !root.current?.contains(document.activeElement)) onTip(null); }}
-        onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) onTip(null); }}
+      <span id={instructions} className="sr-only">
+        One bar per hour. Use left and right arrows to inspect hours, Home and End to jump, and Escape to dismiss details.
+      </span>
+      {descriptions.map((description, index) =>
+        description ? (
+          <span key={index} id={`${detailsPrefix}-${index}`} className="sr-only">
+            {description}
+          </span>
+        ) : null,
+      )}
+      <span
+        ref={root}
+        role="group"
+        data-status-timeline
+        aria-describedby={instructions}
+        aria-label={`${label}: ${uptimeText(measured.uptime)} over ${STATUS_HOURS} hourly slots`}
+        className={`flex ${height} gap-px sm:gap-[2px]`}
+        onPointerLeave={(event) => {
+          if (event.pointerType === "mouse" && !root.current?.contains(document.activeElement)) onTip(null);
+        }}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) onTip(null);
+        }}
         onKeyDown={(event) => {
-          if (event.key === "Escape") { onTip(null); return; }
-          const next = event.key === "ArrowLeft" ? Math.max(0, active - 1) : event.key === "ArrowRight" ? Math.min(STATUS_HOURS - 1, active + 1) : event.key === "Home" ? 0 : event.key === "End" ? STATUS_HOURS - 1 : undefined;
+          if (event.key === "Escape") {
+            onTip(null);
+            return;
+          }
+          const next =
+            event.key === "ArrowLeft"
+              ? Math.max(0, active - 1)
+              : event.key === "ArrowRight"
+                ? Math.min(STATUS_HOURS - 1, active + 1)
+                : event.key === "Home"
+                  ? 0
+                  : event.key === "End"
+                    ? STATUS_HOURS - 1
+                    : undefined;
           if (next === undefined) return;
           event.preventDefault();
           root.current?.querySelectorAll<HTMLButtonElement>("button")[next]?.focus();
-        }}>
+        }}
+      >
         {measured.bars.map((bar, index) => (
-          <button key={bar.hour.start} type="button" tabIndex={active === index ? 0 : -1} data-level={bar.level} data-hour-start={bar.hour.start} data-current={bar.hour.end > now}
+          <button
+            key={bar.hour.start}
+            type="button"
+            tabIndex={active === index ? 0 : -1}
+            data-level={bar.level}
+            data-hour-start={bar.hour.start}
+            data-current={bar.hour.end > now}
             aria-label={`${hourLabel(bar)}: ${hourSummary(bar)}${bar.hour.end > now ? "; current hour in progress" : ""}`}
             aria-describedby={descriptions[index] ? `${detailsPrefix}-${index}` : undefined}
-            onPointerEnter={(event) => { if (event.pointerType === "mouse") show(event.currentTarget, bar); }}
-            onFocus={(event) => { setActive(index); show(event.currentTarget, bar); }}
-            onClick={(event) => { setActive(index); show(event.currentTarget, bar); }}
-            className="uptime-bar min-w-0 flex-1 rounded-[2px] border-0 p-0 transition-opacity hover:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kumo-strong" />
+            onPointerEnter={(event) => {
+              if (event.pointerType === "mouse") show(event.currentTarget, bar);
+            }}
+            onFocus={(event) => {
+              setActive(index);
+              show(event.currentTarget, bar);
+            }}
+            onClick={(event) => {
+              setActive(index);
+              show(event.currentTarget, bar);
+            }}
+            className="uptime-bar min-w-0 flex-1 rounded-[2px] border-0 p-0 transition-opacity hover:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kumo-strong"
+          />
         ))}
       </span>
     </span>
@@ -193,7 +264,12 @@ function StatusPage() {
         slug: slugify(name),
         members,
         failing: members.filter(openOf),
-        measured: measure(members.map((feed) => feedMember(feed, byFeed.get(feed.id) ?? [])), hours, now, tracked),
+        measured: measure(
+          members.map((feed) => feedMember(feed, byFeed.get(feed.id) ?? [])),
+          hours,
+          now,
+          tracked,
+        ),
       }))
       .sort((a, b) => Number(b.failing.length > 0) - Number(a.failing.length > 0) || a.name.localeCompare(b.name));
     return {
@@ -204,7 +280,11 @@ function StatusPage() {
       openOf,
       rows,
       platform: measure([{ label: "Collection", outages: platform }], hours, now, tracked),
-      lastAttempt: enabled.map((feed) => feed.lastAttemptAt).filter((value): value is string => Boolean(value)).sort().at(-1),
+      lastAttempt: enabled
+        .map((feed) => feed.lastAttemptAt)
+        .filter((value): value is string => Boolean(value))
+        .sort()
+        .at(-1),
     };
   }, [outages.data, feeds.data, now]);
 
@@ -233,9 +313,17 @@ function StatusPage() {
       <section className="grid gap-5">
         <PageHead eyebrow="Status" title="Is everything being collected?" />
         <ErrorNote error={outages.error ?? feeds.error} />
-        {model ? <StateBanner model={model} now={now} /> : <div className="flex items-center gap-2 text-sm text-kumo-subtle"><Loader size="sm" /> Checking collection…</div>}
+        {model ? (
+          <StateBanner model={model} now={now} />
+        ) : (
+          <div className="flex items-center gap-2 text-sm text-kumo-subtle">
+            <Loader size="sm" /> Checking collection…
+          </div>
+        )}
         <p className="text-xs text-kumo-subtle">
-          {outages.data?.trackedSince ? `Collection incidents have been recorded since ${fmt.dateTime(outages.data.trackedSince)}; earlier hours are not tracked. Updated every minute.` : "No collection history has been recorded yet."}
+          {outages.data?.trackedSince
+            ? `Collection incidents have been recorded since ${fmt.dateTime(outages.data.trackedSince)}; earlier hours are not tracked. Updated every minute.`
+            : "No collection history has been recorded yet."}
         </p>
       </section>
 
@@ -250,7 +338,9 @@ function StatusPage() {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-semibold text-kumo-strong">Collection runs</span>
                   <span className="flex items-center gap-3">
-                    <Badge variant="success" appearance="dot">Running</Badge>
+                    <Badge variant="success" appearance="dot">
+                      Running
+                    </Badge>
                     <span className="font-mono text-xs text-kumo-subtle">{uptimeText(model.platform.uptime)}</span>
                   </span>
                 </div>
@@ -261,7 +351,8 @@ function StatusPage() {
 
           <section aria-labelledby="sources-title">
             <SectionHead eyebrow="Sources" title="Each publisher, hour by hour" id="sources-title">
-              One bar per hour across {DAYS} days, including the current hour in progress. Colours summarize recorded collection issues, not independent website uptime checks. Percentages exclude untracked time. Dataset collection schedules are unchanged.
+              One bar per hour across {DAYS} days, including the current hour in progress. Colours summarize recorded collection issues, not independent website uptime checks.
+              Percentages exclude untracked time. Dataset collection schedules are unchanged.
             </SectionHead>
             <Legend start={model.hours[0]?.start ?? now} />
             <LayerCard className="overflow-hidden p-0">
@@ -273,7 +364,12 @@ function StatusPage() {
                     <li key={row.slug} id={id} className="scroll-mt-24">
                       <div className="grid gap-3 px-4 py-3.5">
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                          <button type="button" onClick={() => toggle(id)} aria-expanded={expanded} className="flex min-w-0 items-center gap-1.5 text-left font-semibold text-kumo-strong">
+                          <button
+                            type="button"
+                            onClick={() => toggle(id)}
+                            aria-expanded={expanded}
+                            className="flex min-w-0 items-center gap-1.5 text-left font-semibold text-kumo-strong"
+                          >
                             <CaretRightIcon size={14} className={`shrink-0 text-kumo-subtle transition-transform ${expanded ? "rotate-90" : ""}`} />
                             <span className="truncate">{row.name}</span>
                           </button>
@@ -281,16 +377,35 @@ function StatusPage() {
                             <ArrowSquareOutIcon size={14} />
                           </a>
                           <span className="ml-auto flex items-center gap-3">
-                            {row.failing.length ? <Badge variant="warning" appearance="dot">{row.failing.length} of {row.members.length} not collecting</Badge> : <Badge variant="success" appearance="dot">Collecting</Badge>}
+                            {row.failing.length ? (
+                              <Badge variant="warning" appearance="dot">
+                                {row.failing.length} of {row.members.length} not collecting
+                              </Badge>
+                            ) : (
+                              <Badge variant="success" appearance="dot">
+                                Collecting
+                              </Badge>
+                            )}
                             <span className="hidden font-mono text-xs text-kumo-subtle sm:inline">{uptimeText(row.measured.uptime)}</span>
                           </span>
                         </div>
-                        <Bars now={now} measured={row.measured} label={row.name} onTip={setTip} describe={(incident) => `${incident.label}: ${fmt.duration(incident.ms)}, ${CAUSE_TEXT[incident.outage.cause](row.name).toLowerCase()}`} />
+                        <Bars
+                          now={now}
+                          measured={row.measured}
+                          label={row.name}
+                          onTip={setTip}
+                          describe={(incident) => `${incident.label}: ${fmt.duration(incident.ms)}, ${CAUSE_TEXT[incident.outage.cause](row.name).toLowerCase()}`}
+                        />
                       </div>
                       {expanded ? (
                         <div className="grid gap-4 border-t border-kumo-hairline bg-kumo-recessed px-4 py-4 sm:pl-9">
                           {row.measured.uptime !== null ? (
-                            <Meter label={`${row.name} over the last ${DAYS} days`} value={Math.round(row.measured.uptime * 10_000) / 100} customValue={uptimeText(row.measured.uptime)} indicatorClassName="from-kumo-success via-kumo-success to-kumo-success" />
+                            <Meter
+                              label={`${row.name} over the last ${DAYS} days`}
+                              value={Math.round(row.measured.uptime * 10_000) / 100}
+                              customValue={uptimeText(row.measured.uptime)}
+                              indicatorClassName="from-kumo-success via-kumo-success to-kumo-success"
+                            />
                           ) : null}
                           <ul className="grid gap-3">
                             {row.members.map((feed) => {
@@ -300,13 +415,34 @@ function StatusPage() {
                               return (
                                 <li key={feed.id} className="grid gap-2">
                                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                                    {product ? <a href={productHref(product.slug)} className="font-medium text-kumo-default hover:underline">{feed.title}</a> : <span className="font-medium">{feed.title}</span>}
+                                    {product ? (
+                                      <a href={productHref(product.slug)} className="font-medium text-kumo-default hover:underline">
+                                        {feed.title}
+                                      </a>
+                                    ) : (
+                                      <span className="font-medium">{feed.title}</span>
+                                    )}
                                     <span className="ml-auto flex items-center gap-3">
-                                      {current ? <Badge variant={CAUSE_BADGE[current.cause]} appearance="dot">{CAUSE_LABEL[current.cause]}</Badge> : <Badge variant="success" appearance="dot">Collecting</Badge>}
+                                      {current ? (
+                                        <Badge variant={CAUSE_BADGE[current.cause]} appearance="dot">
+                                          {CAUSE_LABEL[current.cause]}
+                                        </Badge>
+                                      ) : (
+                                        <Badge variant="success" appearance="dot">
+                                          Collecting
+                                        </Badge>
+                                      )}
                                       <span className="hidden font-mono text-xs text-kumo-subtle sm:inline">{uptimeText(measured.uptime)}</span>
                                     </span>
                                   </div>
-                                  <Bars now={now} measured={measured} label={feed.title} height="h-5" onTip={setTip} describe={(incident) => `${fmt.duration(incident.ms)}, ${CAUSE_TEXT[incident.outage.cause](feed.publisher).toLowerCase()}`} />
+                                  <Bars
+                                    now={now}
+                                    measured={measured}
+                                    label={feed.title}
+                                    height="h-5"
+                                    onTip={setTip}
+                                    describe={(incident) => `${fmt.duration(incident.ms)}, ${CAUSE_TEXT[incident.outage.cause](feed.publisher).toLowerCase()}`}
+                                  />
                                 </li>
                               );
                             })}
@@ -322,7 +458,10 @@ function StatusPage() {
 
           <section aria-labelledby="incidents-title">
             <SectionHead eyebrow="History" title="Past incidents" id="incidents-title">
-              The last {DAYS} days, newest first. <a href="/operations/#activity" className="font-medium text-kumo-link">Every run, as it happens</a>
+              The last {DAYS} days, newest first.{" "}
+              <a href="/operations/#activity" className="font-medium text-kumo-link">
+                Every run, as it happens
+              </a>
             </SectionHead>
             <Incidents outages={outages.data?.data ?? []} feeds={feeds.data ?? []} firstProduct={firstProduct} now={now} showAll={showAll} onShowAll={() => setShowAll(true)} />
           </section>
@@ -330,7 +469,11 @@ function StatusPage() {
       ) : null}
 
       {tip ? (
-        <div role="tooltip" className="pointer-events-none fixed z-50 grid max-h-[min(240px,calc(100vh-1rem))] max-w-[min(22rem,calc(100vw-1rem))] -translate-x-1/2 gap-0.5 overflow-hidden rounded-lg bg-kumo-base px-3 py-2 text-xs shadow-lg ring-1 ring-kumo-line" style={{ left: Math.max(tipHalfWidth + 8, Math.min(window.innerWidth - tipHalfWidth - 8, tip.x)), top: Math.max(8, Math.min(window.innerHeight - 248, tip.y)) }}>
+        <div
+          role="tooltip"
+          className="pointer-events-none fixed z-50 grid max-h-[min(240px,calc(100vh-1rem))] max-w-[min(22rem,calc(100vw-1rem))] -translate-x-1/2 gap-0.5 overflow-hidden rounded-lg bg-kumo-base px-3 py-2 text-xs shadow-lg ring-1 ring-kumo-line"
+          style={{ left: Math.max(tipHalfWidth + 8, Math.min(window.innerWidth - tipHalfWidth - 8, tip.x)), top: Math.max(8, Math.min(window.innerHeight - 248, tip.y)) }}
+        >
           {tip.content}
         </div>
       ) : null}
@@ -347,7 +490,14 @@ interface Model {
 function StateBanner({ model, now }: { model: Model; now: number }) {
   const failing = model.enabled.filter(model.openOf);
   if (model.lastAttempt && now - Date.parse(model.lastAttempt) > STALL_MS) {
-    return <Banner variant="error" icon={<WarningCircleIcon weight="fill" />} title="Collection seems to have stopped." description={`No dataset has been collected since ${fmt.dateTime(model.lastAttempt)}. Data already published stays available.`} />;
+    return (
+      <Banner
+        variant="error"
+        icon={<WarningCircleIcon weight="fill" />}
+        title="Collection seems to have stopped."
+        description={`No dataset has been collected since ${fmt.dateTime(model.lastAttempt)}. Data already published stays available.`}
+      />
+    );
   }
   if (failing.length > 0) {
     const publishers = [...new Set(failing.map((feed) => feed.publisher))];
@@ -388,7 +538,21 @@ function Legend({ start }: { start: number }) {
   );
 }
 
-function Incidents({ outages, feeds, firstProduct, now, showAll, onShowAll }: { outages: Outage[]; feeds: Feed[]; firstProduct: Map<string, Product>; now: number; showAll: boolean; onShowAll: () => void }) {
+function Incidents({
+  outages,
+  feeds,
+  firstProduct,
+  now,
+  showAll,
+  onShowAll,
+}: {
+  outages: Outage[];
+  feeds: Feed[];
+  firstProduct: Map<string, Product>;
+  now: number;
+  showAll: boolean;
+  onShowAll: () => void;
+}) {
   const feedsById = new Map(feeds.map((feed) => [feed.id, feed]));
   const since = now - DAYS * DAY_MS;
   const recent = outages
@@ -422,9 +586,7 @@ function Incidents({ outages, feeds, firstProduct, now, showAll, onShowAll }: { 
             return (
               <LayerCard key={`${outage.feedId}-${outage.startedAt}`} className={ongoing ? "ring-2 ring-kumo-warning/40" : undefined}>
                 <LayerCard.Secondary className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span className="tabular-nums">
-                    {ongoing ? `Since ${fmt.time(outage.startedAt)}` : `${fmt.time(outage.startedAt)} to ${fmt.time(outage.endedAt)}`}
-                  </span>
+                  <span className="tabular-nums">{ongoing ? `Since ${fmt.time(outage.startedAt)}` : `${fmt.time(outage.startedAt)} to ${fmt.time(outage.endedAt)}`}</span>
                   <span className="flex items-center gap-2">
                     <Badge variant={CAUSE_BADGE[outage.cause]}>{CAUSE_LABEL[outage.cause]}</Badge>
                     <Badge variant={ongoing ? "warning" : "outline"}>{ongoing ? `ongoing, ${fmt.duration(end - start)} so far` : fmt.duration(end - start)}</Badge>
@@ -434,9 +596,17 @@ function Incidents({ outages, feeds, firstProduct, now, showAll, onShowAll }: { 
                   <p className="font-medium text-kumo-strong">
                     {feed ? (
                       <>
-                        <a href={publisherHref(feed.publisher)} className="hover:underline">{feed.publisher}</a>
+                        <a href={publisherHref(feed.publisher)} className="hover:underline">
+                          {feed.publisher}
+                        </a>
                         <span className="text-kumo-subtle"> · </span>
-                        {product ? <a href={productHref(product.slug)} className="hover:underline">{feed.title}</a> : feed.title}
+                        {product ? (
+                          <a href={productHref(product.slug)} className="hover:underline">
+                            {feed.title}
+                          </a>
+                        ) : (
+                          feed.title
+                        )}
                       </>
                     ) : (
                       "All datasets"
@@ -446,7 +616,11 @@ function Incidents({ outages, feeds, firstProduct, now, showAll, onShowAll }: { 
                     {CAUSE_TEXT[outage.cause](feed?.publisher)}
                     {outage.failures > 1 ? ` (${plural(outage.failures, "attempt")})` : ""}.
                   </p>
-                  {outage.lastError ? <p className="break-words font-mono text-[0.72rem] text-kumo-subtle">{outage.lastError.length > 180 ? `${outage.lastError.slice(0, 177)}…` : outage.lastError}</p> : null}
+                  {outage.lastError ? (
+                    <p className="break-words font-mono text-[0.72rem] text-kumo-subtle">
+                      {outage.lastError.length > 180 ? `${outage.lastError.slice(0, 177)}…` : outage.lastError}
+                    </p>
+                  ) : null}
                 </LayerCard.Primary>
               </LayerCard>
             );

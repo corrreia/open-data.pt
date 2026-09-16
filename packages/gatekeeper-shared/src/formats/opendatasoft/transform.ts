@@ -173,30 +173,37 @@ class DatasetNormalization {
     scopedTitle: string,
   ) {
     const seriesFields = seriesNames(config.series);
-    this.title = (config.timeField || config.groupBy) && scopedTitle ? scopedTitle : text(captured.metas.title) ?? text(captured.dataset.dataset_id) ?? "Opendatasoft dataset";
+    this.title = (config.timeField || config.groupBy) && scopedTitle ? scopedTitle : (text(captured.metas.title) ?? text(captured.dataset.dataset_id) ?? "Opendatasoft dataset");
     this.description = stripHtml(text(captured.metas.description) ?? "Opendatasoft dataset.") + (config.timeField || config.groupBy ? ` Scope: ${scope}` : "");
     this.mapped = buildFieldMapping(captured.fields, sample);
     applyBadgeDisplay(this.mapped.flatMap((field) => field.canonical));
     this.mappedNames = new Set(this.mapped.map((field) => field.source.name));
     this.metadataFields = new Map(captured.fields.map((field) => [field.name, field]));
-    this.idFields = config.idFields ? configuredFields(config.idFields, captured.fields, "idFields") : captured.fields.filter(
-      (field) => field.annotations.id === true || field.name === "_id" || field.name === "id",
-    );
-    this.timeField = config.timeField ? configuredFields(config.timeField, captured.fields, "timeField")[0] : captured.fields.find(
-      (field) =>
-        temporalType(field, sample) !== undefined &&
-        (isJsonString(field.annotations.timeserie_precision) || isLikelySeriesTimeField(field.name)),
-    );
-    this.timeType = this.timeField ? temporalType(this.timeField, sample) ?? (config.timeField ? "date" : this.timeField.type) : "";
-    this.dimensions = config.dimensions !== undefined
-      ? configuredFields(config.dimensions, captured.fields, "dimensions")
-      : this.timeField ? seriesDimensions(captured.fields, this.timeField, sample) : [];
-    if (config.dimensions !== undefined && this.dimensions.some((field) => field === this.timeField || seriesFields.includes(field.name))) throw new GatekeeperError("Series dimensions must not include its time or measures", "invalid-config");
+    this.idFields = config.idFields
+      ? configuredFields(config.idFields, captured.fields, "idFields")
+      : captured.fields.filter((field) => field.annotations.id === true || field.name === "_id" || field.name === "id");
+    this.timeField = config.timeField
+      ? configuredFields(config.timeField, captured.fields, "timeField")[0]
+      : captured.fields.find((field) => temporalType(field, sample) !== undefined && (isJsonString(field.annotations.timeserie_precision) || isLikelySeriesTimeField(field.name)));
+    this.timeType = this.timeField ? (temporalType(this.timeField, sample) ?? (config.timeField ? "date" : this.timeField.type)) : "";
+    this.dimensions =
+      config.dimensions !== undefined
+        ? configuredFields(config.dimensions, captured.fields, "dimensions")
+        : this.timeField
+          ? seriesDimensions(captured.fields, this.timeField, sample)
+          : [];
+    if (config.dimensions !== undefined && this.dimensions.some((field) => field === this.timeField || seriesFields.includes(field.name)))
+      throw new GatekeeperError("Series dimensions must not include its time or measures", "invalid-config");
     for (const name of [config.monthField, config.quarterField]) if (name) configuredFields(name, captured.fields, "date part");
-    const units = new Map((config.units ?? "").split(",").filter(Boolean).map((pair) => {
-      const split = pair.indexOf("=");
-      return [pair.slice(0, split), pair.slice(split + 1)];
-    }));
+    const units = new Map(
+      (config.units ?? "")
+        .split(",")
+        .filter(Boolean)
+        .map((pair) => {
+          const split = pair.indexOf("=");
+          return [pair.slice(0, split), pair.slice(split + 1)];
+        }),
+    );
     for (const mapped of this.mapped) {
       const unit = units.get(mapped.source.name);
       if (!unit) continue;
@@ -241,9 +248,7 @@ class DatasetNormalization {
       role: "time-series",
       kind: "series",
       schema: {
-        fields: SERIES_SCHEMA.fields.map((field) =>
-          field.id === "value" ? { ...field, unit } : field,
-        ),
+        fields: SERIES_SCHEMA.fields.map((field) => (field.id === "value" ? { ...field, unit } : field)),
       },
       updateMode: "delta",
       completeness: "complete",
@@ -299,7 +304,7 @@ class DatasetNormalization {
       .map((field) => value[field.name])
       .filter((part) => part !== null && part !== undefined && String(part) !== "")
       .map(String);
-    const entityKey = keyParts.length > 0 ? this.config.idFields ? JSON.stringify(keyParts) : keyParts.join("|") : `row-${hashString(stableStringify(value))}`;
+    const entityKey = keyParts.length > 0 ? (this.config.idFields ? JSON.stringify(keyParts) : keyParts.join("|")) : `row-${hashString(stableStringify(value))}`;
     const record: CanonicalRecord = { entityKey, payload };
     if (eventTime) {
       record.eventTime = eventTime;
@@ -314,7 +319,10 @@ class DatasetNormalization {
       const dimension = value[field.name];
       if (nonEmptyPrimitive(dimension)) dimensions[field.name] = String(dimension);
     }
-    const seriesKey = Object.entries(dimensions).map(([key, item]) => `${key}=${this.config.dimensions !== undefined ? encodeURIComponent(item) : item}`).join("|") || "all";
+    const seriesKey =
+      Object.entries(dimensions)
+        .map(([key, item]) => `${key}=${this.config.dimensions !== undefined ? encodeURIComponent(item) : item}`)
+        .join("|") || "all";
     for (const series of this.series) {
       const measured = value[series.measure.name];
       if (!isJsonNumber(measured) || !Number.isFinite(measured)) continue;
@@ -378,12 +386,7 @@ function parseCaptured(envelope: JsonObject, exhausted: boolean): CapturedDatase
   const datasetId = dataset.dataset_id;
   const fieldsValue = dataset.fields;
   const metasValue = dataset.metas;
-  if (
-    !isJsonString(datasetId) ||
-    !Array.isArray(fieldsValue) ||
-    !isJsonObject(metasValue) ||
-    !isJsonObject(metasValue.default)
-  ) {
+  if (!isJsonString(datasetId) || !Array.isArray(fieldsValue) || !isJsonObject(metasValue) || !isJsonObject(metasValue.default)) {
     throw new Error("Opendatasoft capture has invalid dataset metadata");
   }
   return { dataset, fields: fieldsValue.map(parseField), metas: metasValue.default };
@@ -408,14 +411,9 @@ function emptyProfile(): ColumnProfile {
   return { nonNull: 0, text: 0, colors: 0, distinct: new Set(), temporalMisses: 0 };
 }
 
-function buildFieldMapping(
-  fields: OdsField[],
-  records: Array<JsonObject>,
-): MappedField[] {
+function buildFieldMapping(fields: OdsField[], records: Array<JsonObject>): MappedField[] {
   const known = new Set(fields.map((field) => field.name));
-  const selectedFields = records.length === 0
-    ? fields
-    : fields.filter((field) => records.some((record) => Object.hasOwn(record, field.name)));
+  const selectedFields = records.length === 0 ? fields : fields.filter((field) => records.some((record) => Object.hasOwn(record, field.name)));
   const unknownFields = [...new Set(records.flatMap((record) => Object.keys(record)))]
     .filter((name) => !known.has(name))
     .sort()
@@ -433,13 +431,8 @@ function buildFieldMapping(
   }));
 }
 
-function canonicalFieldsFor(
-  field: OdsField,
-  records: Array<JsonObject>,
-): CanonicalField[] {
-  const nullable = records.length === 0 || records.some(
-    (record) => record[field.name] === null || record[field.name] === undefined,
-  );
+function canonicalFieldsFor(field: OdsField, records: Array<JsonObject>): CanonicalField[] {
+  const nullable = records.length === 0 || records.some((record) => record[field.name] === null || record[field.name] === undefined);
   const display = field.label === field.name ? undefined : { label: field.label };
   const unit = fieldUnit(field);
   if (field.type === "geo_point_2d") {
@@ -468,9 +461,8 @@ function finalFields(mapped: MappedField, total: number): CanonicalField[] {
   let type = locked;
   // Text typing never changes the payload, so it can wait for every value.
   if (field.type === "text" && locked !== "identifier" && locked !== "date" && locked !== "datetime") {
-    type = colorName(field) && profile.text > 0 && profile.colors === profile.text
-      ? "color"
-      : field.annotations.facet === true && profile.distinct.size <= 24 ? "category" : "string";
+    type =
+      colorName(field) && profile.text > 0 && profile.colors === profile.text ? "color" : field.annotations.facet === true && profile.distinct.size <= 24 ? "category" : "string";
   }
   return [canonicalField(field.name, type, nullable, fieldUnit(field), display)];
 }
@@ -489,10 +481,7 @@ function observe(mapped: MappedField, value: JsonValue | undefined): void {
   }
 }
 
-function canonicalType(
-  field: OdsField,
-  records: Array<JsonObject>,
-): CanonicalField["type"] {
+function canonicalType(field: OdsField, records: Array<JsonObject>): CanonicalField["type"] {
   if (field.annotations.id === true || field.name === "_id" || field.name === "id") {
     return "identifier";
   }
@@ -515,11 +504,7 @@ function canonicalType(
     case "boolean":
       return "boolean";
     case "text": {
-      const values = new Set(
-        records
-          .map((record) => record[field.name])
-          .filter((value): value is string => isJsonString(value) && value !== ""),
-      );
+      const values = new Set(records.map((record) => record[field.name]).filter((value): value is string => isJsonString(value) && value !== ""));
       if (isColorField(field, values)) return "color";
       return field.annotations.facet === true && values.size <= 24 ? "category" : "string";
     }
@@ -528,11 +513,7 @@ function canonicalType(
   }
 }
 
-function mapValue(
-  value: JsonValue | undefined,
-  mapped: MappedField,
-  payload: JsonObject,
-): void {
+function mapValue(value: JsonValue | undefined, mapped: MappedField, payload: JsonObject): void {
   const field = mapped.source;
   if (field.type === "geo_point_2d") {
     const point = geoPoint(value);
@@ -551,9 +532,7 @@ function mapValue(
   }
   switch (field.type) {
     case "geo_shape":
-      payload[field.name] = isJsonObject(value) && value.type === "Feature" && value.geometry !== undefined
-        ? value.geometry
-        : value ?? null;
+      payload[field.name] = isJsonObject(value) && value.type === "Feature" && value.geometry !== undefined ? value.geometry : (value ?? null);
       return;
     case "file":
     case "image":
@@ -575,28 +554,19 @@ function seriesDimensions(fields: OdsField[], timeField: OdsField, records: Arra
     if (field === timeField || temporalType(field, records)) return false;
     if (field.type !== "text") return false;
     if (isDatePartName(field.name)) return false;
-    const values = new Set(
-      records
-        .map((record) => record[field.name])
-        .filter(nonEmptyPrimitive),
-    );
+    const values = new Set(records.map((record) => record[field.name]).filter(nonEmptyPrimitive));
     if ([...values].every((value) => DATE_PART_VALUE.test(String(value)))) return false;
-    return (
-      values.size > 0 &&
-      values.size <= 1_000 &&
-      [...values].every((value) => String(value).length <= 120)
-    );
+    return values.size > 0 && values.size <= 1_000 && [...values].every((value) => String(value).length <= 120);
   });
 }
 
 function applyBadgeDisplay(fields: CanonicalField[]): void {
   const color = fields.find((field) => field.type === "color");
   if (!color) return;
-  const label = fields.find((field) =>
-    field.id !== color.id &&
-    (field.type === "string" || field.type === "category") &&
-    /(^|_)(name|nome|title|titulo|label|designacao)(_|$)/i.test(field.id),
-  ) ?? fields.find((field) => field.id !== color.id && (field.type === "string" || field.type === "category"));
+  const label =
+    fields.find(
+      (field) => field.id !== color.id && (field.type === "string" || field.type === "category") && /(^|_)(name|nome|title|titulo|label|designacao)(_|$)/i.test(field.id),
+    ) ?? fields.find((field) => field.id !== color.id && (field.type === "string" || field.type === "category"));
   if (label) {
     label.display = {
       ...label.display,
@@ -605,13 +575,7 @@ function applyBadgeDisplay(fields: CanonicalField[]): void {
   }
 }
 
-function canonicalField(
-  id: string,
-  type: CanonicalField["type"],
-  nullable: boolean,
-  unit?: string,
-  display?: CanonicalField["display"],
-): CanonicalField {
+function canonicalField(id: string, type: CanonicalField["type"], nullable: boolean, unit?: string, display?: CanonicalField["display"]): CanonicalField {
   const canonical: CanonicalField = { id, name: id, type, nullable };
   if (unit !== undefined) canonical.unit = unit;
   if (display !== undefined) canonical.display = display;
@@ -639,18 +603,10 @@ function isColorField(field: OdsField, values: Set<string>): boolean {
 }
 
 function geoPoint(value: JsonValue | undefined): { latitude: number; longitude: number } | undefined {
-  if (
-    isJsonObject(value) &&
-    isJsonNumber(value.lat) && Number.isFinite(value.lat) &&
-    isJsonNumber(value.lon) && Number.isFinite(value.lon)
-  ) {
+  if (isJsonObject(value) && isJsonNumber(value.lat) && Number.isFinite(value.lat) && isJsonNumber(value.lon) && Number.isFinite(value.lon)) {
     return { latitude: value.lat, longitude: value.lon };
   }
-  if (
-    Array.isArray(value) &&
-    isJsonNumber(value[0]) && Number.isFinite(value[0]) &&
-    isJsonNumber(value[1]) && Number.isFinite(value[1])
-  ) {
+  if (Array.isArray(value) && isJsonNumber(value[0]) && Number.isFinite(value[0]) && isJsonNumber(value[1]) && Number.isFinite(value[1])) {
     return { latitude: value[0], longitude: value[1] };
   }
   return undefined;
@@ -688,15 +644,10 @@ function normalizeDate(value: JsonValue | undefined): string | null {
   return Number.isNaN(milliseconds) ? null : new Date(milliseconds).toISOString().slice(0, 10);
 }
 
-function temporalType(
-  field: OdsField,
-  records: Array<JsonObject>,
-): "date" | "datetime" | undefined {
+function temporalType(field: OdsField, records: Array<JsonObject>): "date" | "datetime" | undefined {
   if (field.type === "date" || field.type === "datetime") return field.type;
   if (field.type !== "text" || !isLikelySeriesTimeField(field.name)) return undefined;
-  const values = records
-    .map((record) => record[field.name])
-    .filter((value): value is string => isJsonString(value) && value !== "");
+  const values = records.map((record) => record[field.name]).filter((value): value is string => isJsonString(value) && value !== "");
   if (values.length === 0 || !values.every((value) => normalizeDate(value) !== null)) {
     return undefined;
   }
@@ -710,7 +661,10 @@ function isDatePartName(name: string): boolean {
 
 /** The fields an example names in `series`; none means the dataset is published as a table. */
 function seriesNames(value: string | undefined): string[] {
-  return (value ?? "").split(",").map((name) => name.trim()).filter((name) => name !== "");
+  return (value ?? "")
+    .split(",")
+    .map((name) => name.trim())
+    .filter((name) => name !== "");
 }
 
 function isLikelySeriesTimeField(name: string): boolean {
@@ -721,11 +675,7 @@ function normalizeEventTime(value: JsonValue | undefined, type: string): string 
   if (!isJsonString(value)) return undefined;
   const date = type === "date" ? normalizeDate(value) : value;
   if (!date) return undefined;
-  const timestamp = type === "date"
-    ? `${date}T00:00:00Z`
-    : /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(date)
-      ? `${date}Z`
-      : date;
+  const timestamp = type === "date" ? `${date}T00:00:00Z` : /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(date) ? `${date}Z` : date;
   const milliseconds = Date.parse(timestamp);
   return Number.isNaN(milliseconds) ? undefined : new Date(milliseconds).toISOString();
 }
@@ -739,11 +689,7 @@ function inferOdsType(values: JsonValue[]): string {
 }
 
 function nonEmptyPrimitive(value: JsonValue | undefined): value is string | number | boolean {
-  return (
-    (isJsonString(value) && value !== "") ||
-    (isJsonNumber(value) && Number.isFinite(value)) ||
-    isJsonBoolean(value)
-  );
+  return (isJsonString(value) && value !== "") || (isJsonNumber(value) && Number.isFinite(value)) || isJsonBoolean(value);
 }
 
 function text(value: JsonValue | undefined): string | undefined {
@@ -791,7 +737,10 @@ const MAX_PRODUCT_SLUG = 200;
  * the whole slug within the kernel's 200-character limit.
  */
 export function seriesSlug(feedSlug: string, measureName: string): string {
-  const measure = measureName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  const measure = measureName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
   const room = MAX_PRODUCT_SLUG - feedSlug.length - "--series".length;
   const shortened = measure.slice(0, Math.max(0, room)).replace(/-+$/, "");
   return shortened === "" ? `${feedSlug}-series` : `${feedSlug}-${shortened}-series`;

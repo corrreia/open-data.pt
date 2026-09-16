@@ -12,8 +12,7 @@ import { CKAN_LIMITS, CkanSource } from "../packages/gatekeeper-shared/src/forma
 import { ckanCollector } from "../packages/gatekeeper-shared/src/formats/ckan";
 
 const RESOURCE_ID = "418c7837-95ee-4943-be22-3d9d09e5b4e9";
-const RESOURCE_URL =
-  "https://opendata.porto.digital/dataset/example/resource/418c7837-95ee-4943-be22-3d9d09e5b4e9/download/data.csv";
+const RESOURCE_URL = "https://opendata.porto.digital/dataset/example/resource/418c7837-95ee-4943-be22-3d9d09e5b4e9/download/data.csv";
 const LAST_MODIFIED = "2026-03-18T03:25:30.243935";
 const SYNTHETIC_ETAG = `"ckan:6:${RESOURCE_ID}:2026-03-18T03:25:30.243Z"`;
 
@@ -82,12 +81,8 @@ describe("CKAN Gatekeeper", () => {
         resource: RESOURCE_ID.toUpperCase(),
       }),
     ).toEqual(config);
-    expect(() =>
-      ckan.validateConfig({ host: "opendata.porto.digital", dataset: "Bad Dataset" }),
-    ).toThrow("dataset must match");
-    expect(() =>
-      ckan.validateConfig({ ...config, resource: "not-a-uuid" }),
-    ).toThrow("resource must be a UUID");
+    expect(() => ckan.validateConfig({ host: "opendata.porto.digital", dataset: "Bad Dataset" })).toThrow("dataset must match");
+    expect(() => ckan.validateConfig({ ...config, resource: "not-a-uuid" })).toThrow("resource must be a UUID");
   });
 
   it("rejects hosts outside the deployment allowlist", () => {
@@ -107,9 +102,7 @@ describe("CKAN Gatekeeper", () => {
         expect(input.toString()).toBe(RESOURCE_URL);
         const headers = new Headers(init?.headers);
         expect(headers.get("if-none-match")).toBe('"previous"');
-        expect(headers.get("if-modified-since")).toBe(
-          "Tue, 17 Mar 2026 03:25:30 GMT",
-        );
+        expect(headers.get("if-modified-since")).toBe("Tue, 17 Mar 2026 03:25:30 GMT");
         return new Response("id,name\n1,Aliados\n", {
           headers: { "Content-Type": "text/csv" },
         });
@@ -133,9 +126,7 @@ describe("CKAN Gatekeeper", () => {
     });
     expect(collected.metadata?.package).not.toHaveProperty("resources");
     expect(await bodyText(collected.fetch)).toBe("id,name\n1,Aliados\n");
-    expect(fetcher.mock.calls[0]?.[0].toString()).toBe(
-      "https://opendata.porto.digital/api/3/action/package_show?id=parques-de-estacionamento-municipais",
-    );
+    expect(fetcher.mock.calls[0]?.[0].toString()).toBe("https://opendata.porto.digital/api/3/action/package_show?id=parques-de-estacionamento-municipais");
   });
 
   it("hands the publisher's body over as a stream instead of buffering it", async () => {
@@ -180,9 +171,7 @@ describe("CKAN Gatekeeper", () => {
 
     expect(collected.fetch.kind).toBe("not-modified");
     expect(collected.metadata).toBeUndefined();
-    expect(new Headers(fetcher.mock.calls[1]?.[1]?.headers).get("if-none-match")).toBe(
-      '"provider-v1"',
-    );
+    expect(new Headers(fetcher.mock.calls[1]?.[1]?.headers).get("if-none-match")).toBe('"provider-v1"');
   });
 
   it("falls back to the declared file when CKAN has a stale DataStore flag", async () => {
@@ -224,11 +213,7 @@ describe("CKAN Gatekeeper", () => {
   });
 
   it("rejects a package resource URL outside the allowlist", async () => {
-    const fetcher = vi
-      .fn<typeof fetch>()
-      .mockResolvedValueOnce(
-        packageResponse({ url: "https://files.attacker.example/data.csv" }),
-      );
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(packageResponse({ url: "https://files.attacker.example/data.csv" }));
 
     await expect(source(fetcher).collect(config)).rejects.toMatchObject({
       code: "source-denied",
@@ -237,9 +222,7 @@ describe("CKAN Gatekeeper", () => {
   });
 
   it("reports provider errors with their status and Retry-After, without their body", async () => {
-    const unavailable = vi
-      .fn<typeof fetch>()
-      .mockResolvedValueOnce(new Response("maintenance", { status: 503, headers: { "Retry-After": "120" } }));
+    const unavailable = vi.fn<typeof fetch>().mockResolvedValueOnce(new Response("maintenance", { status: 503, headers: { "Retry-After": "120" } }));
     await expect(source(unavailable).collect(config)).rejects.toMatchObject({
       code: "upstream-error",
       retryAfterSeconds: 120,
@@ -250,7 +233,9 @@ describe("CKAN Gatekeeper", () => {
       .fn<typeof fetch>()
       .mockResolvedValueOnce(packageResponse())
       .mockResolvedValueOnce(new Response("oops", { status: 500, headers: { "Retry-After": "soon" } }));
-    const error = await source(broken).collect(config).catch((caught: Error) => caught);
+    const error = await source(broken)
+      .collect(config)
+      .catch((caught: Error) => caught);
     expect(error).toMatchObject({ code: "upstream-error", message: "CKAN resource download returned HTTP 500" });
     expect(error).toHaveProperty("retryAfterSeconds", undefined);
   });

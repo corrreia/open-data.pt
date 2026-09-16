@@ -8,11 +8,17 @@ import { HEALTH_EXAMPLES } from "../packages/gatekeeper-health/src/examples";
 import { MOBILITY_EXAMPLES } from "../packages/gatekeeper-mobility/src/examples";
 import { STATISTICS_EXAMPLES } from "../packages/gatekeeper-statistics/src/examples";
 
-interface TopicExamples { topic: string; examples: ExampleFeed[] }
+interface TopicExamples {
+  topic: string;
+  examples: ExampleFeed[];
+}
 const topics: TopicExamples[] = [
-  { topic: "cities", examples: CITIES_EXAMPLES }, { topic: "energy", examples: ENERGY_EXAMPLES },
-  { topic: "environment", examples: ENVIRONMENT_EXAMPLES }, { topic: "health", examples: HEALTH_EXAMPLES },
-  { topic: "mobility", examples: MOBILITY_EXAMPLES }, { topic: "statistics", examples: STATISTICS_EXAMPLES },
+  { topic: "cities", examples: CITIES_EXAMPLES },
+  { topic: "energy", examples: ENERGY_EXAMPLES },
+  { topic: "environment", examples: ENVIRONMENT_EXAMPLES },
+  { topic: "health", examples: HEALTH_EXAMPLES },
+  { topic: "mobility", examples: MOBILITY_EXAMPLES },
+  { topic: "statistics", examples: STATISTICS_EXAMPLES },
 ];
 const baseline = new Set(asStringList(parseJson(readFileSync(new URL("./fixtures/source-expansion-baseline-slugs.json", import.meta.url), "utf8"))));
 
@@ -39,6 +45,7 @@ describe("source expansion inventory", () => {
       expect(example.policy.collection.timeoutSeconds).toBeGreaterThan(0);
     }
     // Optional release evidence, never an automatic change to application state.
-    if (process.env.SOURCE_EXPANSION_REPORT) writeFileSync(process.env.SOURCE_EXPANSION_REPORT, JSON.stringify({ baselineCount: baseline.size, addedCount: additions.length, additions }, null, 2));
+    if (process.env.SOURCE_EXPANSION_REPORT)
+      writeFileSync(process.env.SOURCE_EXPANSION_REPORT, JSON.stringify({ baselineCount: baseline.size, addedCount: additions.length, additions }, null, 2));
   });
 });

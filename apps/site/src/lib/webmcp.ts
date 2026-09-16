@@ -61,7 +61,8 @@ const TOOLS: WebMcpTool[] = [
       const results: JsonValue[] = [];
       for (const dataset of buildDatasets(products, feeds)) {
         for (const { product, label } of dataset.products) {
-          const haystack = `${dataset.title} ${label} ${product.title} ${product.slug} ${dataset.publisher} ${dataset.topics.join(" ")} ${dataset.feed.description}`.toLocaleLowerCase();
+          const haystack =
+            `${dataset.title} ${label} ${product.title} ${product.slug} ${dataset.publisher} ${dataset.topics.join(" ")} ${dataset.feed.description}`.toLocaleLowerCase();
           if (!words.every((word) => haystack.includes(word))) continue;
           results.push({
             slug: product.slug,
@@ -83,8 +84,7 @@ const TOOLS: WebMcpTool[] = [
   {
     name: "get_product",
     title: "Describe a product",
-    description:
-      "One table or series on open-data.pt: title, description, role, schema (field ids, types and units), row count, freshness, licence and attribution.",
+    description: "One table or series on open-data.pt: title, description, role, schema (field ids, types and units), row count, freshness, licence and attribution.",
     inputSchema: { type: "object", properties: { slug: SLUG }, required: ["slug"] },
     annotations: { readOnlyHint: true },
     execute: async (input) => apiGet<JsonValue>(productPath(text(input.slug))),

@@ -13,10 +13,7 @@ import {
   type TransformResult,
 } from "../../index";
 import { OMIE_SERIES, type OmieSeries } from "./omie";
-import {
-  marketPeriodStart,
-  parseMarketDate,
-} from "./market-time";
+import { marketPeriodStart, parseMarketDate } from "./market-time";
 
 export { marketPeriodStart } from "./market-time";
 
@@ -71,9 +68,7 @@ export class OmieTransformer {
       throw new Error(`Unsupported OMIE series: ${configuredSeries ?? "(missing)"}`);
     }
     if (root.series !== configuredSeries) {
-      throw new Error(
-        `OMIE captured series ${root.series} does not match configured series ${configuredSeries}`,
-      );
+      throw new Error(`OMIE captured series ${root.series} does not match configured series ${configuredSeries}`);
     }
 
     const files = capturedFiles(root.files, root.series);
@@ -102,11 +97,7 @@ export class OmieTransformer {
       });
     }
 
-    points.sort(
-      (left, right) =>
-        left.eventTime.localeCompare(right.eventTime) ||
-        left.seriesKey.localeCompare(right.seriesKey),
-    );
+    points.sort((left, right) => left.eventTime.localeCompare(right.eventTime) || left.seriesKey.localeCompare(right.seriesKey));
     records.sort((left, right) => left.entityKey.localeCompare(right.entityKey));
     if (points.length === 0) {
       throw new Error("OMIE captured document contains no valid price rows");
@@ -118,8 +109,7 @@ export class OmieTransformer {
         productKey: "prices",
         slug: `${productBase}-prices`,
         title: `OMIE ${seriesLabel(root.series)} day-ahead prices`,
-        description:
-          "Hourly through 2025-09-30 and quarter-hourly from 2025-10-01: day-ahead electricity prices for Portugal and Spain.",
+        description: "Hourly through 2025-09-30 and quarter-hourly from 2025-10-01: day-ahead electricity prices for Portugal and Spain.",
         role: "time-series",
         schema: PRICE_SERIES_SCHEMA,
         points,
@@ -132,8 +122,7 @@ export class OmieTransformer {
         productKey: "daily-summary",
         slug: `${productBase}-daily`,
         title: `OMIE ${seriesLabel(root.series)} daily price summary`,
-        description:
-          "Daily minimum, maximum, and arithmetic mean day-ahead prices for Portugal and Spain.",
+        description: "Daily minimum, maximum, and arithmetic mean day-ahead prices for Portugal and Spain.",
         role: "reference",
         schema: DAILY_SCHEMA,
         records,
@@ -179,12 +168,7 @@ function capturedFiles(value: JsonValue | undefined, series: OmieSeries): Captur
     const date = isJsonString(item.date) ? item.date : "";
     const filename = isJsonString(item.filename) ? item.filename : "";
     const text = isJsonString(item.text) ? item.text : undefined;
-    if (
-      !parseMarketDate(date) ||
-      (filename !== `${series}_${date.replaceAll("-", "")}.1` &&
-        filename !== legacyReportFilename(date)) ||
-      text === undefined
-    ) {
+    if (!parseMarketDate(date) || (filename !== `${series}_${date.replaceAll("-", "")}.1` && filename !== legacyReportFilename(date)) || text === undefined) {
       throw new Error("OMIE captured file has invalid date, filename, or text");
     }
     files.push({ date, filename, text });
@@ -216,9 +200,7 @@ function parsePriceFile(file: CapturedFile, series: OmieSeries): ParsedFile {
     const day = integer(columns[2]);
     const period = integer(columns[3]);
     const rowDate =
-      year === null || month === null || day === null
-        ? undefined
-        : `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      year === null || month === null || day === null ? undefined : `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     if (rowDate !== file.date || period === null) {
       rejectedRows += 1;
       continue;
@@ -253,29 +235,19 @@ function parsePriceFile(file: CapturedFile, series: OmieSeries): ParsedFile {
   return { points, prices, candidateRows, rejectedRows };
 }
 
-function parseLegacyPriceReport(
-  file: CapturedFile,
-  lines: string[],
-): ParsedFile {
+function parseLegacyPriceReport(file: CapturedFile, lines: string[]): ParsedFile {
   const periodHeader = lines.findIndex((line) => line.startsWith(";"));
   const priceLines = lines
     .slice(periodHeader + 1)
     .filter((line) => line !== "")
     .slice(0, 2);
-  if (
-    periodHeader < 0 ||
-    priceLines.length !== 2 ||
-    priceLines.some((line) => !line.toLocaleLowerCase("es").startsWith("precio marginal"))
-  ) {
+  if (periodHeader < 0 || priceLines.length !== 2 || priceLines.some((line) => !line.toLocaleLowerCase("es").startsWith("precio marginal"))) {
     throw new Error(`${file.filename} has an invalid OMIE legacy price report`);
   }
 
   const header = lines[0] ?? "";
   const [year, month, day] = file.date.split("-");
-  if (
-    !header.includes(`;${day}/${month}/${year};`) &&
-    !header.includes(`;${file.date};`)
-  ) {
+  if (!header.includes(`;${day}/${month}/${year};`) && !header.includes(`;${file.date};`)) {
     throw new Error(`${file.filename} does not contain its captured date`);
   }
   const multiplier = /cent\/kwh/iu.test(header) ? 10 : 1;
@@ -293,14 +265,7 @@ function parseLegacyPriceReport(
     for (const [index, value] of prices[seriesKey].entries()) {
       candidateRows += 1;
       try {
-        points.push(
-          point(
-            seriesKey,
-            country,
-            marketPeriodStart(file.date, index + 1),
-            value,
-          ),
-        );
+        points.push(point(seriesKey, country, marketPeriodStart(file.date, index + 1), value));
       } catch {
         rejectedRows += 1;
       }
@@ -324,12 +289,7 @@ function legacyPrices(line: string, multiplier: number): number[] {
     });
 }
 
-function point(
-  seriesKey: "PT" | "ES",
-  country: "Portugal" | "Spain",
-  eventTime: string,
-  value: number,
-): SeriesPoint {
+function point(seriesKey: "PT" | "ES", country: "Portugal" | "Spain", eventTime: string, value: number): SeriesPoint {
   return {
     seriesKey,
     eventTime,
@@ -367,7 +327,6 @@ function mean(values: number[]): number | null {
 function seriesLabel(series: OmieSeries): string {
   return series === "marginalpdbc" ? "Spanish file" : "Portuguese file";
 }
-
 
 function isOmieSeries(value: JsonValue | undefined): value is OmieSeries {
   return isJsonString(value) && OMIE_SERIES.some((series) => series === value);

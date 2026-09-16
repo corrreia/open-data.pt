@@ -3,11 +3,7 @@ import type { SnapshotStore } from "./ports";
 export class R2SnapshotStore implements SnapshotStore {
   constructor(private readonly bucket: R2Bucket) {}
 
-  async putStream(
-    objectKey: string,
-    content: ReadableStream<Uint8Array> | Uint8Array,
-    metadata: Parameters<SnapshotStore["putStream"]>[2],
-  ): Promise<void> {
+  async putStream(objectKey: string, content: ReadableStream<Uint8Array> | Uint8Array, metadata: Parameters<SnapshotStore["putStream"]>[2]): Promise<void> {
     await this.bucket.put(objectKey, content, {
       httpMetadata: { contentType: metadata.contentType },
     });

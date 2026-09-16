@@ -1,13 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  isJsonObject,
-  parseJson,
-  streamJsonArray,
-  streamNdjson,
-  type JsonArrayStreamOptions,
-  type JsonObject,
-  type JsonValue,
-} from "@open-data-pt/gatekeeper-shared";
+import { isJsonObject, parseJson, streamJsonArray, streamNdjson, type JsonArrayStreamOptions, type JsonObject, type JsonValue } from "@open-data-pt/gatekeeper-shared";
 
 /** A small deterministic PRNG so failures reproduce. */
 function random(seed: number): () => number {
@@ -21,7 +13,7 @@ function random(seed: number): () => number {
   };
 }
 
-const ALPHABET = ["a", "Z", " ", "\"", "\\", "\n", "\t", "/", "ç", "ã", "€", "😀", "", "]", "}", ",", "[", "{", ":"];
+const ALPHABET = ["a", "Z", " ", '"', "\\", "\n", "\t", "/", "ç", "ã", "€", "😀", "", "]", "}", ",", "[", "{", ":"];
 
 function randomString(next: () => number): string {
   let text = "";
@@ -33,12 +25,18 @@ function randomString(next: () => number): string {
 function randomValue(next: () => number, depth: number): JsonValue {
   const pick = Math.floor(next() * (depth > 3 ? 5 : 7));
   switch (pick) {
-    case 0: return randomString(next);
-    case 1: return Math.round((next() - 0.5) * 1e6) / 100;
-    case 2: return next() > 0.5;
-    case 3: return null;
-    case 4: return Math.floor(next() * 1e9);
-    case 5: return Array.from({ length: Math.floor(next() * 4) }, () => randomValue(next, depth + 1));
+    case 0:
+      return randomString(next);
+    case 1:
+      return Math.round((next() - 0.5) * 1e6) / 100;
+    case 2:
+      return next() > 0.5;
+    case 3:
+      return null;
+    case 4:
+      return Math.floor(next() * 1e9);
+    case 5:
+      return Array.from({ length: Math.floor(next() * 4) }, () => randomValue(next, depth + 1));
     default: {
       const object: JsonObject = {};
       const size = Math.floor(next() * 4);
@@ -110,7 +108,7 @@ describe("streamJsonArray", () => {
   });
 
   it("streams a top-level array with nested arrays, whitespace and escapes split across chunks", async () => {
-    const values: JsonValue[] = [[1, [2, [3]]], { "a\"]": "x\\\"y", b: [] }, "😀 ç €", -1.5e3, true, null];
+    const values: JsonValue[] = [[1, [2, [3]]], { 'a"]': 'x\\"y', b: [] }, "😀 ç €", -1.5e3, true, null];
     const text = ` \n[ ${values.map((value) => JSON.stringify(value)).join(" ,\r\n ")} ]\n`;
     for (const sizes of ["one", "whole"] as const) {
       const result = await collect(textStream(text, sizes), []);
@@ -142,28 +140,47 @@ describe("streamJsonArray", () => {
     const iterator = stream.elements[Symbol.asyncIterator]();
     expect(await iterator.next()).toEqual({ done: false, value: { a: 1 } });
     expect(stream.envelope()).toEqual({ total_count: 3, links: { next: "x" }, results: [] });
-    while (!(await iterator.next()).done) { /* drain */ }
+    while (!(await iterator.next()).done) {
+      /* drain */
+    }
     expect(stream.envelope()).toEqual({ total_count: 3, links: { next: "x" }, results: [], tail: true });
   });
 
   it("rejects an element or envelope larger than its bound", async () => {
-    await expect(collect(textStream(`{"features": [${JSON.stringify("x".repeat(100))}]}`, "one"), ["features"], { maxElementBytes: 64 }))
-      .rejects.toMatchObject({ code: "response-too-large" });
-    await expect(collect(textStream(`{"meta": ${JSON.stringify("x".repeat(100))}, "features": []}`), ["features"], { maxEnvelopeBytes: 64 }))
-      .rejects.toMatchObject({ code: "response-too-large" });
+    await expect(collect(textStream(`{"features": [${JSON.stringify("x".repeat(100))}]}`, "one"), ["features"], { maxElementBytes: 64 })).rejects.toMatchObject({
+      code: "response-too-large",
+    });
+    await expect(collect(textStream(`{"meta": ${JSON.stringify("x".repeat(100))}, "features": []}`), ["features"], { maxEnvelopeBytes: 64 })).rejects.toMatchObject({
+      code: "response-too-large",
+    });
     const fits = await collect(textStream(`{"features": [${JSON.stringify("x".repeat(40))}]}`, "one"), ["features"], { maxElementBytes: 64 });
     expect(fits.elements).toEqual(["x".repeat(40)]);
   });
 
   it("rejects truncated and malformed documents", async () => {
-    for (const text of ['{"features": [1, 2', '{"features": [1,]}', '{"features": [1,,2]}', '{"features": [1 2]}', '{"features": [{"a":}]}', '{"features": [1]}}', '{"features": [1]', '', '{"features": [1], "x": }']) {
+    for (const text of [
+      '{"features": [1, 2',
+      '{"features": [1,]}',
+      '{"features": [1,,2]}',
+      '{"features": [1 2]}',
+      '{"features": [{"a":}]}',
+      '{"features": [1]}}',
+      '{"features": [1]',
+      "",
+      '{"features": [1], "x": }',
+    ]) {
       await expect(collect(textStream(text, "one"), ["features"]), text).rejects.toMatchObject({ code: "invalid-response" });
     }
   });
 
   it("cancels the source when the consumer stops early", async () => {
     let cancelled = false;
-    const stream = streamJsonArray(streamOf(chunk(new TextEncoder().encode("[1, 2, 3, 4]"), "one"), () => { cancelled = true; }), []);
+    const stream = streamJsonArray(
+      streamOf(chunk(new TextEncoder().encode("[1, 2, 3, 4]"), "one"), () => {
+        cancelled = true;
+      }),
+      [],
+    );
     for await (const element of stream.elements) {
       expect(element).toBe(1);
       break;
@@ -177,7 +194,10 @@ describe("streamNdjson", () => {
     const next = random(42);
     for (let round = 0; round < 60; round += 1) {
       const values = Array.from({ length: 1 + Math.floor(next() * 6) }, () => randomValue(next, 0));
-      const text = values.map((value, index) => `${JSON.stringify(value)}${index % 2 === 0 ? "\r\n" : "\n\n"}`).join("").trimEnd();
+      const text = values
+        .map((value, index) => `${JSON.stringify(value)}${index % 2 === 0 ? "\r\n" : "\n\n"}`)
+        .join("")
+        .trimEnd();
       for (const sizes of ["whole", "one", next] as const) {
         const parsed: JsonValue[] = [];
         for await (const value of streamNdjson(textStream(text, sizes))) parsed.push(value);

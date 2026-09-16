@@ -39,17 +39,29 @@ const TEMPERATURE_MEASURES: readonly ClimateMeasure[] = [
   { column: "mean_meant2m", key: "mean-temperature", label: "Mean temperature", unit: "°C" },
   { column: "mean_maxt2m", key: "maximum-temperature", label: "Maximum temperature", unit: "°C" },
 ];
-const SERIES_SCHEMA: CanonicalSchema = { fields: [
-  field("seriesKey", "identifier", false), field("eventTime", "datetime", false),
-  field("value", "number", false), field("unit", "category", false), field("dimensions", "json", false),
-] };
-const SHELLFISH_SCHEMA: CanonicalSchema = { fields: [
-  field("zoneCode", "identifier", false), field("name", "string", false),
-  field("region", "category", false), field("zoneType", "category", false),
-  field("status", "category", false), field("openSpecies", "json", false),
-  field("closedSpecies", "json", false), field("geometry", "geometry", false),
-  field("latitude", "latitude", true), field("longitude", "longitude", true),
-] };
+const SERIES_SCHEMA: CanonicalSchema = {
+  fields: [
+    field("seriesKey", "identifier", false),
+    field("eventTime", "datetime", false),
+    field("value", "number", false),
+    field("unit", "category", false),
+    field("dimensions", "json", false),
+  ],
+};
+const SHELLFISH_SCHEMA: CanonicalSchema = {
+  fields: [
+    field("zoneCode", "identifier", false),
+    field("name", "string", false),
+    field("region", "category", false),
+    field("zoneType", "category", false),
+    field("status", "category", false),
+    field("openSpecies", "json", false),
+    field("closedSpecies", "json", false),
+    field("geometry", "geometry", false),
+    field("latitude", "latitude", true),
+    field("longitude", "longitude", true),
+  ],
+};
 
 /** Streaming files use their own normalizer identity; existing IPMA products keep theirs. */
 export class IpmaDatasetTransformer {
@@ -68,10 +80,15 @@ export class IpmaDatasetTransformer {
 
 function declaration(context: TransformContext, productKey: string, kind: "series" | "record", schema: CanonicalSchema): ProductDeclaration {
   return {
-    productKey, slug: context.feed.slug.replace(/-feed$/, ""), title: context.feed.title,
-    description: context.feed.description, kind, schema,
+    productKey,
+    slug: context.feed.slug.replace(/-feed$/, ""),
+    title: context.feed.title,
+    description: context.feed.description,
+    kind,
+    schema,
     role: kind === "series" ? "time-series" : "current-state",
-    updateMode: kind === "series" ? "source-window" : "authoritative-snapshot", completeness: "complete",
+    updateMode: kind === "series" ? "source-window" : "authoritative-snapshot",
+    completeness: "complete",
   };
 }
 
@@ -90,7 +107,10 @@ async function climate(body: ReadableStream<Uint8Array>, context: TransformConte
       const code = row.zid?.trim();
       const municipality = row.zname?.trim();
       const time = climateDay(row.time ?? "");
-      if (!code || !/^\d{4}$/.test(code) || !municipality || !time) { rejected += 1; continue; }
+      if (!code || !/^\d{4}$/.test(code) || !municipality || !time) {
+        rejected += 1;
+        continue;
+      }
       const identity = `${code}:${time}`;
       if (seen.has(identity)) throw new GatekeeperError("IPMA climate file repeats a municipality/day", "invalid-response");
       seen.add(identity);
@@ -99,20 +119,29 @@ async function climate(body: ReadableStream<Uint8Array>, context: TransformConte
       for (const measure of measures) {
         const raw = row[measure.column]?.trim();
         const value = raw ? Number(raw) : Number.NaN;
-        if (!Number.isFinite(value) || value === -99 || value === -999 || value === -9999) { rejected += 1; continue; }
+        if (!Number.isFinite(value) || value === -99 || value === -999 || value === -9999) {
+          rejected += 1;
+          continue;
+        }
         accepted += 1;
         if (!watermark || time > watermark) watermark = time;
-        yield { productKey: "observations", point: {
-          seriesKey: `${code}:${measure.key}`, eventTime: time, value, unit: measure.unit,
-          dimensions: { municipalityCode: code, municipality, measure: measure.label, spatialStatistic: "mean" },
-        } };
+        yield {
+          productKey: "observations",
+          point: {
+            seriesKey: `${code}:${measure.key}`,
+            eventTime: time,
+            value,
+            unit: measure.unit,
+            dimensions: { municipalityCode: code, municipality, measure: measure.label, spatialStatistic: "mean" },
+          },
+        };
       }
     }
   }
   return {
-    products: [declaration(context, "observations", "series", SERIES_SCHEMA)], rows: rows(),
-    finish: () => ({ quality: { acceptedRecords: accepted, rejectedRecords: rejected },
-      products: [finalization("observations", watermark)] }),
+    products: [declaration(context, "observations", "series", SERIES_SCHEMA)],
+    rows: rows(),
+    finish: () => ({ quality: { acceptedRecords: accepted, rejectedRecords: rejected }, products: [finalization("observations", watermark)] }),
   };
 }
 
@@ -154,9 +183,9 @@ function shellfish(body: ReadableStream<Uint8Array>, context: TransformContext):
     }
   }
   return {
-    products: [declaration(context, "zones", "record", SHELLFISH_SCHEMA)], rows: rows(),
-    finish: () => ({ quality: { acceptedRecords: accepted, rejectedRecords: 0 },
-      products: [finalization("zones", watermark)] }),
+    products: [declaration(context, "zones", "record", SHELLFISH_SCHEMA)],
+    rows: rows(),
+    finish: () => ({ quality: { acceptedRecords: accepted, rejectedRecords: 0 }, products: [finalization("zones", watermark)] }),
   };
 }
 
@@ -185,16 +214,23 @@ function shellfishRecord(value: JsonValue): CanonicalRecord {
   }
   if (!isJsonObject(properties.interdictions)) throw new GatekeeperError("IPMA shellfish zone lacks interdictions", "invalid-response");
   const code = requiredString(properties.code ?? properties.samp, "zone code");
-  const point = isJsonString(properties.representative_point)
-    ? /^POINT\s*\(\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\)$/.exec(properties.representative_point) : null;
+  const point = isJsonString(properties.representative_point) ? /^POINT\s*\(\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\)$/.exec(properties.representative_point) : null;
   const longitude = point?.[1] ? Number(point[1]) : null;
   const latitude = point?.[2] ? Number(point[2]) : null;
   const validPoint = longitude !== null && latitude !== null && Math.abs(longitude) <= 180 && Math.abs(latitude) <= 90;
-  return { entityKey: code, payload: {
-    zoneCode: code, name: requiredString(properties.name, "zone name"),
-    region: requiredString(properties.region_name, "region"), zoneType: requiredString(properties.zone_type, "zone type"),
-    status: requiredString(properties.status, "status"),
-    openSpecies: species(properties.interdictions.open), closedSpecies: species(properties.interdictions.close),
-    geometry: value.geometry, latitude: validPoint ? latitude : null, longitude: validPoint ? longitude : null,
-  } };
+  return {
+    entityKey: code,
+    payload: {
+      zoneCode: code,
+      name: requiredString(properties.name, "zone name"),
+      region: requiredString(properties.region_name, "region"),
+      zoneType: requiredString(properties.zone_type, "zone type"),
+      status: requiredString(properties.status, "status"),
+      openSpecies: species(properties.interdictions.open),
+      closedSpecies: species(properties.interdictions.close),
+      geometry: value.geometry,
+      latitude: validPoint ? latitude : null,
+      longitude: validPoint ? longitude : null,
+    },
+  };
 }

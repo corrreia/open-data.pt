@@ -1,13 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { TabularTransformer } from "../packages/gatekeeper-shared/src/formats/udata/transform/tabular";
-import type {
-  CanonicalRecord,
-  CanonicalSchema,
-  SeriesPoint,
-  StreamingSummary,
-  StreamingTransform,
-  TransformContext,
-} from "@open-data-pt/gatekeeper-shared";
+import type { CanonicalRecord, CanonicalSchema, SeriesPoint, StreamingSummary, StreamingTransform, TransformContext } from "@open-data-pt/gatekeeper-shared";
 
 const feed: TransformContext["feed"] = {
   id: "feed_csv",
@@ -78,10 +71,7 @@ function finalSchema(drained: Drained, productKey = "records"): CanonicalSchema 
 
 describe("Tabular transformer", () => {
   it("publishes typed records with stable source keys, one byte at a time", async () => {
-    const drained = await drain(await new TabularTransformer().transform(
-      textStream("municipality,score,pages,active\nAmadora,7.8,248,true\nPorto,,100,false\n", 1),
-      context(),
-    ));
+    const drained = await drain(await new TabularTransformer().transform(textStream("municipality,score,pages,active\nAmadora,7.8,248,true\nPorto,,100,false\n", 1), context()));
 
     expect(drained.transform.products[0]).toMatchObject({
       slug: "municipal-accessibility",
@@ -113,10 +103,12 @@ describe("Tabular transformer", () => {
   });
 
   it("detects a preamble, semicolons, decimal commas, Portuguese dates, and x/y coordinates", async () => {
-    const drained = await drain(await new TabularTransformer().transform(
-      textStream('Relatório;;;;\nNome;Valor;Data;X;Y\nA;"1.234,56";31/12/2025;-9,14;38,72\nB;"2.000,00";01/01/2026;-8,61;41,15\n', 3),
-      context({ feed: "distribution", format: "csv", productSlug: "sample" }),
-    ));
+    const drained = await drain(
+      await new TabularTransformer().transform(
+        textStream('Relatório;;;;\nNome;Valor;Data;X;Y\nA;"1.234,56";31/12/2025;-9,14;38,72\nB;"2.000,00";01/01/2026;-8,61;41,15\n', 3),
+        context({ feed: "distribution", format: "csv", productSlug: "sample" }),
+      ),
+    );
 
     expect(drained.transform.products[0]?.schema.fields).toEqual(
       expect.arrayContaining([
@@ -141,10 +133,9 @@ describe("Tabular transformer", () => {
       const amount = index === 6_000 ? "n/a" : String(index);
       lines.push(`${id},${kind},${amount},${index < 5_000 ? "x" : ""}`);
     }
-    const drained = await drain(await new TabularTransformer().transform(
-      textStream(`${lines.join("\n")}\n`),
-      context({ feed: "distribution", format: "csv", productSlug: "large" }),
-    ));
+    const drained = await drain(
+      await new TabularTransformer().transform(textStream(`${lines.join("\n")}\n`), context({ feed: "distribution", format: "csv", productSlug: "large" })),
+    );
 
     expect(drained.records).toHaveLength(51_000);
     expect(drained.summary.quality.acceptedRecords).toBe(51_000);
@@ -176,18 +167,15 @@ describe("Tabular transformer", () => {
         { type: "Feature", id: 2, properties: { nome: "Porto", tipo: "B" }, geometry: { type: "Point", coordinates: [-8.61, 41.15] } },
       ],
     };
-    const drained = await drain(await new TabularTransformer().transform(
-      textStream(JSON.stringify(document), 1),
-      context({ feed: "distribution", format: "geojson", productSlug: "stations" }),
-    ));
+    const drained = await drain(
+      await new TabularTransformer().transform(textStream(JSON.stringify(document), 1), context({ feed: "distribution", format: "geojson", productSlug: "stations" })),
+    );
     expect(drained.records[1]?.payload).toMatchObject({ nome: "Porto", featureId: 2, longitude: -8.61, latitude: 41.15, geometry: { type: "Point" } });
   });
 
   it("streams nested and top-level JSON arrays, and buffers a single object", async () => {
-    const run = async (text: string) => drain(await new TabularTransformer().transform(
-      textStream(text, 5),
-      context({ feed: "distribution", format: "json", productSlug: "items" }),
-    ));
+    const run = async (text: string) =>
+      drain(await new TabularTransformer().transform(textStream(text, 5), context({ feed: "distribution", format: "json", productSlug: "items" })));
     const nested = await run('{"meta":{"page":1},"results":[{"code":"A","value":"1"},{"code":"B","value":"2"},{"code":"C","late":{"a":1}}]}');
     expect(nested.records.map((record) => record.payload)).toEqual([
       { code: "A", value: 1, late: null },

@@ -58,15 +58,10 @@ const DATASET_PATTERN = /^[a-z0-9_-]+$/;
 const RESOURCE_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SUPPORTED_FORMATS = new Set(["csv", "json", "geojson"]);
 
-export type Fetcher = (
-  input: RequestInfo | URL,
-  init?: RequestInit,
-) => Promise<Response>;
+export type Fetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
 /** Where the rows of a collected resource come from, which decides how the body is read. */
-export type CkanRowSource =
-  | { kind: "datastore"; fields: JsonValue[] }
-  | { kind: "file"; format: "csv" | "json" | "geojson" };
+export type CkanRowSource = { kind: "datastore"; fields: JsonValue[] } | { kind: "file"; format: "csv" | "json" | "geojson" };
 
 /** What the transform needs besides the body: the package and resource it describes. */
 export interface CkanResourceMetadata {
@@ -172,10 +167,7 @@ export class CkanSource {
    * stream: the DataStore table page by page when it has one, otherwise the
    * declared file as the publisher serves it. Nothing is buffered whole.
    */
-  async collect(
-    config: SourceConfig,
-    checkpoint?: SourceValidator,
-  ): Promise<CkanCollected> {
+  async collect(config: SourceConfig, checkpoint?: SourceValidator): Promise<CkanCollected> {
     const validated = this.validateConfig(config);
     const origin = `https://${validated.host!}${validated.apiPath ?? ""}/`;
     const packageUrl = actionUrl(origin, "package_show", {
@@ -187,10 +179,7 @@ export class CkanSource {
     if (!packageResponse.ok) {
       throw upstreamError("package_show", packageResponse);
     }
-    const packageEnvelope = parseActionEnvelope(
-      await readBoundedResponse(packageResponse, CKAN_LIMITS.metadataBytes, "CKAN package metadata"),
-      "package_show",
-    );
+    const packageEnvelope = parseActionEnvelope(await readBoundedResponse(packageResponse, CKAN_LIMITS.metadataBytes, "CKAN package metadata"), "package_show");
     const packageResult = requireActionResult(packageEnvelope, "package_show");
     const resource = selectResource(packageResult, validated.resource, validated.resourcePrefix);
     if (validated.measures && resource.format !== "csv") throw invalidResponse("CKAN observations require a CSV distribution");
@@ -208,8 +197,7 @@ export class CkanSource {
 
     // Catalogue validators are scoped to a resource. Never forward one (or its
     // date) to a new distribution when latest-month selection rotates.
-    const fileCheckpoint = checkpoint?.etag?.startsWith('"ckan:') || validated.resourceSelection
-      ? undefined : checkpoint;
+    const fileCheckpoint = checkpoint?.etag?.startsWith('"ckan:') || validated.resourceSelection ? undefined : checkpoint;
     const packageDocument = compactPackage(packageResult);
     if (resource.datastoreActive && !validated.measures) {
       const datastore = await this.collectDatastore(origin, resource.id, fileCheckpoint);
@@ -245,9 +233,7 @@ export class CkanSource {
     }
     // Without a catalogue timestamp, the publisher's own validators are the
     // only way to ask for the file conditionally next time.
-    const fileValidator = Object.keys(validator).length > 0
-      ? validator
-      : responseValidator(fileResponse.headers) ?? {};
+    const fileValidator = Object.keys(validator).length > 0 ? validator : (responseValidator(fileResponse.headers) ?? {});
     return {
       fetch: sourceBody(fileResponse.body, resource.url, publishedAt, "complete", fileValidator),
       metadata: {
@@ -262,11 +248,7 @@ export class CkanSource {
    * Ask the DataStore for the table's fields and total alone, so completeness
    * is known before the first row; the records then stream page by page.
    */
-  private async collectDatastore(
-    origin: string,
-    resourceId: string,
-    checkpoint: SourceValidator | undefined,
-  ): Promise<DatastoreResult> {
+  private async collectDatastore(origin: string, resourceId: string, checkpoint: SourceValidator | undefined): Promise<DatastoreResult> {
     const probe = actionUrl(origin, "datastore_search", {
       resource_id: resourceId,
       limit: "0",
@@ -281,10 +263,7 @@ export class CkanSource {
     if (!response.ok && response.status !== 404) {
       throw upstreamError("datastore_search", response);
     }
-    const envelope = parseActionEnvelope(
-      await readBoundedResponse(response, CKAN_LIMITS.metadataBytes, "CKAN DataStore metadata"),
-      "datastore_search",
-    );
+    const envelope = parseActionEnvelope(await readBoundedResponse(response, CKAN_LIMITS.metadataBytes, "CKAN DataStore metadata"), "datastore_search");
     if (response.status === 404) {
       if (isNotFoundEnvelope(envelope)) return { kind: "unavailable" };
       throw upstreamError("datastore_search", response);
@@ -320,46 +299,49 @@ export class CkanSource {
       page = undefined;
       await current?.records.return?.(undefined);
     };
-    return new ReadableStream<Uint8Array>({
-      pull: async (controller) => {
-        while (true) {
-          if (!page) {
-            if (offset >= planned) {
-              controller.close();
+    return new ReadableStream<Uint8Array>(
+      {
+        pull: async (controller) => {
+          while (true) {
+            if (!page) {
+              if (offset >= planned) {
+                controller.close();
+                return;
+              }
+              page = await this.datastorePage(origin, resourceId, offset, Math.min(CKAN_LIMITS.datastorePageRows, planned - offset));
+            }
+            const next = await page.records.next();
+            if (!next.done) {
+              if (offset >= planned) {
+                // The page held more than was asked for: the planned rows are all read.
+                await release();
+                continue;
+              }
+              if (!isJsonObject(next.value)) {
+                throw invalidResponse("datastore_search returned a non-object record");
+              }
+              page.count += 1;
+              offset += 1;
+              controller.enqueue(encoder.encode(`${JSON.stringify(next.value)}\n`));
               return;
             }
-            page = await this.datastorePage(origin, resourceId, offset, Math.min(CKAN_LIMITS.datastorePageRows, planned - offset));
-          }
-          const next = await page.records.next();
-          if (!next.done) {
-            if (offset >= planned) {
-              // The page held more than was asked for: the planned rows are all read.
-              await release();
-              continue;
+            const finished = page;
+            page = undefined;
+            const result = requireActionResult(finished.envelope(), "datastore_search");
+            if (result.total !== total) {
+              throw invalidResponse("datastore_search changed total during pagination");
             }
-            if (!isJsonObject(next.value)) {
-              throw invalidResponse("datastore_search returned a non-object record");
+            if (finished.count === 0) {
+              throw invalidResponse("datastore_search stopped before total records");
             }
-            page.count += 1;
-            offset += 1;
-            controller.enqueue(encoder.encode(`${JSON.stringify(next.value)}\n`));
-            return;
           }
-          const finished = page;
-          page = undefined;
-          const result = requireActionResult(finished.envelope(), "datastore_search");
-          if (result.total !== total) {
-            throw invalidResponse("datastore_search changed total during pagination");
-          }
-          if (finished.count === 0) {
-            throw invalidResponse("datastore_search stopped before total records");
-          }
-        }
+        },
+        cancel: async () => {
+          await release();
+        },
       },
-      cancel: async () => {
-        await release();
-      },
-    }, { highWaterMark: 0 });
+      { highWaterMark: 0 },
+    );
   }
 
   private async datastorePage(origin: string, resourceId: string, offset: number, limit: number): Promise<DatastorePage> {
@@ -380,7 +362,19 @@ export class CkanSource {
     const headers = new Headers(init.headers);
     headers.set("User-Agent", "open-data.pt/1.0 (+https://open-data.pt)");
     const response = await this.fetcher(url, { ...init, headers, redirect: "manual" });
-    if (response.status >= 400) console.warn(JSON.stringify({ event: "source_http_status", source: "ckan", host: url.hostname, path: url.pathname, status: response.status, server: response.headers.get("server"), mitigation: response.headers.get("cf-mitigated"), contentType: response.headers.get("content-type") }));
+    if (response.status >= 400)
+      console.warn(
+        JSON.stringify({
+          event: "source_http_status",
+          source: "ckan",
+          host: url.hostname,
+          path: url.pathname,
+          status: response.status,
+          server: response.headers.get("server"),
+          mitigation: response.headers.get("cf-mitigated"),
+          contentType: response.headers.get("content-type"),
+        }),
+      );
     if (response.status >= 300 && response.status < 400 && response.status !== 304) {
       throw new GatekeeperError(`CKAN redirect from ${url.hostname} was refused`, "source-denied");
     }
@@ -388,11 +382,7 @@ export class CkanSource {
   }
 }
 
-function actionUrl(
-  origin: string,
-  action: "datastore_search" | "package_show",
-  parameters: Record<string, string>,
-): URL {
+function actionUrl(origin: string, action: "datastore_search" | "package_show", parameters: Record<string, string>): URL {
   const url = new URL(`api/3/action/${action}`, origin);
   for (const [key, value] of Object.entries(parameters)) {
     url.searchParams.set(key, value);
@@ -408,11 +398,7 @@ function datastorePageUrl(origin: string, resourceId: string, offset: number, li
   });
 }
 
-function selectResource(
-  packageResult: JsonObject,
-  requestedId: string | undefined,
-  monthlyPrefix?: string,
-): SelectedResource {
+function selectResource(packageResult: JsonObject, requestedId: string | undefined, monthlyPrefix?: string): SelectedResource {
   if (!Array.isArray(packageResult.resources)) {
     throw invalidResponse("package_show omitted resources");
   }
@@ -449,8 +435,11 @@ function latestMonthlyResource(candidates: JsonObject[], prefix: string): JsonOb
     const url = optionalString(resource, "url");
     if (!url) return [];
     let basename: string;
-    try { basename = new URL(url).pathname.split("/").at(-1) ?? ""; }
-    catch { return []; }
+    try {
+      basename = new URL(url).pathname.split("/").at(-1) ?? "";
+    } catch {
+      return [];
+    }
     const match = new RegExp(`^${prefix}(0[1-9]|1[0-2])_(\\d{4}|\\d{2})\\.csv$`, "i").exec(basename);
     if (!match) return [];
     const year = Number(match[2]) + (match[2]?.length === 2 ? 2000 : 0);
@@ -464,48 +453,33 @@ function latestMonthlyResource(candidates: JsonObject[], prefix: string): JsonOb
 }
 
 function compactPackage(value: JsonObject): JsonObject {
-  const excluded = new Set([
-    "resources",
-    "relationships_as_object",
-    "relationships_as_subject",
-    "tracking_summary",
-  ]);
-  return Object.fromEntries(
-    Object.entries(value).filter(([key]) => !excluded.has(key)),
-  );
+  const excluded = new Set(["resources", "relationships_as_object", "relationships_as_subject", "tracking_summary"]);
+  return Object.fromEntries(Object.entries(value).filter(([key]) => !excluded.has(key)));
 }
 
 function normalizeFormat(value: JsonValue | undefined): string {
   return isJsonString(value)
-    ? value.trim().toLowerCase().replace(/^application\//, "")
+    ? value
+        .trim()
+        .toLowerCase()
+        .replace(/^application\//, "")
     : "";
 }
 
-function validateResourceUrl(
-  value: string,
-  allowedHosts: ReadonlySet<string>,
-): URL {
+function validateResourceUrl(value: string, allowedHosts: ReadonlySet<string>): URL {
   let url: URL;
   try {
     url = new URL(value);
   } catch {
     throw invalidResponse("Resource URL is invalid");
   }
-  if (
-    url.protocol !== "https:" ||
-    url.username !== "" ||
-    url.password !== "" ||
-    !allowedHosts.has(url.hostname.toLowerCase())
-  ) {
+  if (url.protocol !== "https:" || url.username !== "" || url.password !== "" || !allowedHosts.has(url.hostname.toLowerCase())) {
     throw new GatekeeperError(`Resource host ${url.hostname || "unknown"} is not allowed`, "source-denied");
   }
   return url;
 }
 
-function sourcePublishedAt(
-  resource: JsonObject,
-  packageResult: JsonObject,
-): string | undefined {
+function sourcePublishedAt(resource: JsonObject, packageResult: JsonObject): string | undefined {
   for (const value of [resource.last_modified, packageResult.metadata_modified]) {
     if (!isJsonString(value)) continue;
     const milliseconds = metadataTimestamp(value);
@@ -522,23 +496,12 @@ function metadataTimestamp(value: JsonValue | undefined): number {
   return Date.parse(utc);
 }
 
-function checkpointMatches(
-  checkpoint: SourceValidator | undefined,
-  etag: string | undefined,
-  lastModified: string | undefined,
-): boolean {
+function checkpointMatches(checkpoint: SourceValidator | undefined, etag: string | undefined, lastModified: string | undefined): boolean {
   if (checkpoint?.etag) return etag !== undefined && checkpoint.etag === etag;
-  return Boolean(
-    checkpoint?.lastModified &&
-      lastModified &&
-      checkpoint.lastModified === lastModified,
-  );
+  return Boolean(checkpoint?.lastModified && lastModified && checkpoint.lastModified === lastModified);
 }
 
-function conditionalHeaders(
-  checkpoint: SourceValidator | undefined,
-  accept: string,
-): Headers {
+function conditionalHeaders(checkpoint: SourceValidator | undefined, accept: string): Headers {
   const headers = new Headers({ Accept: accept });
   if (checkpoint?.etag) headers.set("If-None-Match", checkpoint.etag);
   if (checkpoint?.lastModified) {
@@ -553,13 +516,7 @@ function notModified(validator: SourceValidator): SourceNotModified {
   return fetch;
 }
 
-function sourceBody(
-  body: ReadableStream<Uint8Array>,
-  sourceUrl: string,
-  publishedAt: string | undefined,
-  completeness: Completeness,
-  validator: SourceValidator,
-): SourceBody {
+function sourceBody(body: ReadableStream<Uint8Array>, sourceUrl: string, publishedAt: string | undefined, completeness: Completeness, validator: SourceValidator): SourceBody {
   const provenance: SourceProvenance = { sourceUrl };
   if (publishedAt) provenance.sourcePublishedAt = publishedAt;
   const fetch: SourceBody = { kind: "body", body, provenance, completeness };
@@ -568,10 +525,7 @@ function sourceBody(
   return fetch;
 }
 
-function parseActionEnvelope(
-  bytes: Uint8Array,
-  action: string,
-): JsonObject {
+function parseActionEnvelope(bytes: Uint8Array, action: string): JsonObject {
   let value: JsonValue;
   try {
     value = parseJsonBytes(bytes);
@@ -584,10 +538,7 @@ function parseActionEnvelope(
   return value;
 }
 
-function requireActionResult(
-  envelope: JsonObject,
-  action: string,
-): JsonObject {
+function requireActionResult(envelope: JsonObject, action: string): JsonObject {
   if (envelope.success !== true) {
     throw new GatekeeperError(`CKAN ${action} action failed`, "upstream-error");
   }
@@ -607,4 +558,3 @@ function isNotFoundEnvelope(envelope: JsonObject): boolean {
 function upstreamError(action: string, response: Response): GatekeeperError {
   return new GatekeeperError(`CKAN ${action} returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
 }
-

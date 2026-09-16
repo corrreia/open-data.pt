@@ -1,11 +1,5 @@
 import { field, streamCsvRows } from "../../../index";
-import type {
-  NormalizedRow,
-  ProductDeclaration,
-  ProductFinalization,
-  StreamingTransform,
-  TransformContext,
-} from "../../../index";
+import type { NormalizedRow, ProductDeclaration, ProductFinalization, StreamingTransform, TransformContext } from "../../../index";
 import { isUtf8, peekBody } from "./body";
 import type { Transformer } from "./transformer";
 
@@ -41,12 +35,7 @@ const PRODUCTS: ProductDeclaration[] = [
     role: "time-series",
     kind: "series",
     schema: {
-      fields: [
-        field("seriesKey", "string", false),
-        field("eventTime", "datetime", false),
-        field("value", "number", false, "tonne"),
-        field("dimensions", "json", false),
-      ],
+      fields: [field("seriesKey", "string", false), field("eventTime", "datetime", false), field("value", "number", false, "tonne"), field("dimensions", "json", false)],
     },
     updateMode: "delta",
     completeness: "complete",
@@ -151,4 +140,3 @@ function slug(value: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 }
-

@@ -1,15 +1,10 @@
 import { parseJson } from "@open-data-pt/gatekeeper-shared";
 import type { JsonValue, SourceBody, SourceFetch } from "@open-data-pt/gatekeeper-shared";
 import { describe, expect, it, vi } from "vitest";
-import {
-  BPSTAT_MAX_BYTES,
-  collectBpstatDataset,
-  validateBpstatFeedConfig,
-} from "../packages/gatekeeper-shared/src/sources/bpstat/bpstat";
+import { BPSTAT_MAX_BYTES, collectBpstatDataset, validateBpstatFeedConfig } from "../packages/gatekeeper-shared/src/sources/bpstat/bpstat";
 
 const DATASET_ID = "7f13efcd65fc6bd0c5adb0e8d29d9b44";
-const SOURCE_URL =
-  `https://bpstat.bportugal.pt/data/v1/domains/12/datasets/${DATASET_ID}/?lang=EN`;
+const SOURCE_URL = `https://bpstat.bportugal.pt/data/v1/domains/12/datasets/${DATASET_ID}/?lang=EN`;
 const PAGE = {
   version: "2.0",
   class: "dataset",
@@ -60,18 +55,12 @@ describe("BPstat Gatekeeper", () => {
         lang: "en",
       }),
     ).toEqual({ domain: "12", dataset: DATASET_ID, lang: "EN" });
-    expect(
-      validateBpstatFeedConfig({ domain: "12", dataset: DATASET_ID }),
-    ).toEqual({ domain: "12", dataset: DATASET_ID, lang: "PT" });
+    expect(validateBpstatFeedConfig({ domain: "12", dataset: DATASET_ID })).toEqual({ domain: "12", dataset: DATASET_ID, lang: "PT" });
   });
 
   it("rejects malformed configs and caller-provided hosts", () => {
-    expect(() =>
-      validateBpstatFeedConfig({ domain: "0", dataset: DATASET_ID }),
-    ).toThrow("positive integer");
-    expect(() =>
-      validateBpstatFeedConfig({ domain: "12", dataset: "not-an-id" }),
-    ).toThrow("32-character hexadecimal");
+    expect(() => validateBpstatFeedConfig({ domain: "0", dataset: DATASET_ID })).toThrow("positive integer");
+    expect(() => validateBpstatFeedConfig({ domain: "12", dataset: "not-an-id" })).toThrow("32-character hexadecimal");
     expect(() =>
       validateBpstatFeedConfig({
         domain: "12",
@@ -82,42 +71,33 @@ describe("BPstat Gatekeeper", () => {
   });
 
   it("rejects a deployment origin outside the BPstat allowlist", async () => {
-    await expect(
-      collectBpstatDataset(
-        { domain: "12", dataset: DATASET_ID },
-        undefined,
-        "https://attacker.example",
-        vi.fn(),
-      ),
-    ).rejects.toMatchObject({ code: "source-denied" });
+    await expect(collectBpstatDataset({ domain: "12", dataset: DATASET_ID }, undefined, "https://attacker.example", vi.fn())).rejects.toMatchObject({ code: "source-denied" });
   });
 
   it("collects JSON-stat bytes with provenance and checkpoint validators", async () => {
-    const fetcher = vi.fn(
-      async (input: URL | RequestInfo, init?: RequestInit) => {
-        expect(input.toString()).toBe(SOURCE_URL);
-        const headers = new Headers(init?.headers);
-        expect(headers.get("if-none-match")).toBe('"old"');
-        expect(headers.get("if-modified-since")).toBe(
-          "Wed, 19 Aug 2026 16:00:00 GMT",
-        );
-        return jsonResponse(PAGE, {
-          headers: {
-            "Last-Modified": "Thu, 20 Aug 2026 16:00:00 GMT",
-          },
-        });
-      },
-    );
+    const fetcher = vi.fn(async (input: URL | RequestInfo, init?: RequestInit) => {
+      expect(input.toString()).toBe(SOURCE_URL);
+      const headers = new Headers(init?.headers);
+      expect(headers.get("if-none-match")).toBe('"old"');
+      expect(headers.get("if-modified-since")).toBe("Wed, 19 Aug 2026 16:00:00 GMT");
+      return jsonResponse(PAGE, {
+        headers: {
+          "Last-Modified": "Thu, 20 Aug 2026 16:00:00 GMT",
+        },
+      });
+    });
 
-    const fetched = sourceBody(await collectBpstatDataset(
-      { domain: "12", dataset: DATASET_ID, lang: "EN" },
-      {
-        etag: '"old"',
-        lastModified: "Wed, 19 Aug 2026 16:00:00 GMT",
-      },
-      "https://bpstat.bportugal.pt",
-      fetcher,
-    ));
+    const fetched = sourceBody(
+      await collectBpstatDataset(
+        { domain: "12", dataset: DATASET_ID, lang: "EN" },
+        {
+          etag: '"old"',
+          lastModified: "Wed, 19 Aug 2026 16:00:00 GMT",
+        },
+        "https://bpstat.bportugal.pt",
+        fetcher,
+      ),
+    );
 
     expect(fetched.provenance).toEqual({
       sourceUrl: SOURCE_URL,
@@ -134,12 +114,7 @@ describe("BPstat Gatekeeper", () => {
   it("reports not-modified when the source publication checkpoint is unchanged", async () => {
     const etag = `"bpstat:12:${DATASET_ID}:EN:2026-08-20T16:00:00.000Z"`;
     const fetcher = vi.fn(async () => jsonResponse(PAGE));
-    const fetched = await collectBpstatDataset(
-      { domain: "12", dataset: DATASET_ID, lang: "EN" },
-      { etag },
-      "https://bpstat.bportugal.pt",
-      fetcher,
-    );
+    const fetched = await collectBpstatDataset({ domain: "12", dataset: DATASET_ID, lang: "EN" }, { etag }, "https://bpstat.bportugal.pt", fetcher);
 
     expect(fetched).toEqual({ kind: "not-modified", validator: { etag } });
     expect(fetcher).toHaveBeenCalledOnce();
@@ -147,17 +122,13 @@ describe("BPstat Gatekeeper", () => {
 
   it("reports an upstream 304 as not-modified with its validators", async () => {
     const fetcher = vi.fn(
-      async () => new Response(null, {
-        status: 304,
-        headers: { ETag: '"upstream"', "Last-Modified": "Thu, 20 Aug 2026 16:00:00 GMT" },
-      }),
+      async () =>
+        new Response(null, {
+          status: 304,
+          headers: { ETag: '"upstream"', "Last-Modified": "Thu, 20 Aug 2026 16:00:00 GMT" },
+        }),
     );
-    const fetched = await collectBpstatDataset(
-      { domain: "12", dataset: DATASET_ID, lang: "EN" },
-      { etag: '"upstream"' },
-      "https://bpstat.bportugal.pt",
-      fetcher,
-    );
+    const fetched = await collectBpstatDataset({ domain: "12", dataset: DATASET_ID, lang: "EN" }, { etag: '"upstream"' }, "https://bpstat.bportugal.pt", fetcher);
     expect(fetched).toEqual({
       kind: "not-modified",
       validator: { etag: '"upstream"', lastModified: "Thu, 20 Aug 2026 16:00:00 GMT" },
@@ -178,17 +149,9 @@ describe("BPstat Gatekeeper", () => {
       extension: PAGE.extension,
       value: [2.7],
     };
-    const fetcher = vi
-      .fn()
-      .mockResolvedValueOnce(jsonResponse(first))
-      .mockResolvedValueOnce(jsonResponse(second));
+    const fetcher = vi.fn().mockResolvedValueOnce(jsonResponse(first)).mockResolvedValueOnce(jsonResponse(second));
 
-    const fetched = sourceBody(await collectBpstatDataset(
-      { domain: "12", dataset: DATASET_ID, lang: "EN" },
-      undefined,
-      "https://bpstat.bportugal.pt",
-      fetcher,
-    ));
+    const fetched = sourceBody(await collectBpstatDataset({ domain: "12", dataset: DATASET_ID, lang: "EN" }, undefined, "https://bpstat.bportugal.pt", fetcher));
 
     expect(fetched.completeness).toBe("complete");
     expect(fetched.provenance.sourceUrl).toBe(SOURCE_URL);
@@ -208,16 +171,8 @@ describe("BPstat Gatekeeper", () => {
     const oversizedPage = new Response("{}", {
       headers: { "Content-Length": String(BPSTAT_MAX_BYTES) },
     });
-    const paginatedFetcher = vi
-      .fn()
-      .mockResolvedValueOnce(jsonResponse(first))
-      .mockResolvedValueOnce(oversizedPage);
-    const partial = sourceBody(await collectBpstatDataset(
-      { domain: "12", dataset: DATASET_ID, lang: "EN" },
-      undefined,
-      "https://bpstat.bportugal.pt",
-      paginatedFetcher,
-    ));
+    const paginatedFetcher = vi.fn().mockResolvedValueOnce(jsonResponse(first)).mockResolvedValueOnce(oversizedPage);
+    const partial = sourceBody(await collectBpstatDataset({ domain: "12", dataset: DATASET_ID, lang: "EN" }, undefined, "https://bpstat.bportugal.pt", paginatedFetcher));
     expect(partial.completeness).toBe("partial");
     await expect(bodyJson(partial)).resolves.toEqual({ pages: [first] });
 
@@ -227,51 +182,29 @@ describe("BPstat Gatekeeper", () => {
           headers: { "Content-Length": String(BPSTAT_MAX_BYTES + 1) },
         }),
     );
-    await expect(
-      collectBpstatDataset(
-        { domain: "12", dataset: DATASET_ID, lang: "EN" },
-        undefined,
-        "https://bpstat.bportugal.pt",
-        tooLargeFetcher,
-      ),
-    ).rejects.toMatchObject({ code: "response-too-large" });
+    await expect(collectBpstatDataset({ domain: "12", dataset: DATASET_ID, lang: "EN" }, undefined, "https://bpstat.bportugal.pt", tooLargeFetcher)).rejects.toMatchObject({
+      code: "response-too-large",
+    });
   });
 
   it("rejects malformed successful provider payloads", async () => {
     const fetcher = vi.fn(async () => jsonResponse({ ...PAGE, role: {} }));
-    await expect(
-      collectBpstatDataset(
-        { domain: "12", dataset: DATASET_ID, lang: "EN" },
-        undefined,
-        "https://bpstat.bportugal.pt",
-        fetcher,
-      ),
-    ).rejects.toMatchObject({ code: "invalid-response" });
+    await expect(collectBpstatDataset({ domain: "12", dataset: DATASET_ID, lang: "EN" }, undefined, "https://bpstat.bportugal.pt", fetcher)).rejects.toMatchObject({
+      code: "invalid-response",
+    });
   });
 
   it("maps provider HTTP and request failures to retryable upstream errors", async () => {
-    const httpFailure = vi.fn(
-      async () => new Response("temporary failure", { status: 503 }),
-    );
-    await expect(
-      collectBpstatDataset(
-        { domain: "12", dataset: DATASET_ID, lang: "EN" },
-        undefined,
-        "https://bpstat.bportugal.pt",
-        httpFailure,
-      ),
-    ).rejects.toMatchObject({ code: "upstream-error" });
+    const httpFailure = vi.fn(async () => new Response("temporary failure", { status: 503 }));
+    await expect(collectBpstatDataset({ domain: "12", dataset: DATASET_ID, lang: "EN" }, undefined, "https://bpstat.bportugal.pt", httpFailure)).rejects.toMatchObject({
+      code: "upstream-error",
+    });
 
     const requestFailure = vi.fn(async () => {
       throw new Error("request timed out");
     });
-    await expect(
-      collectBpstatDataset(
-        { domain: "12", dataset: DATASET_ID, lang: "EN" },
-        undefined,
-        "https://bpstat.bportugal.pt",
-        requestFailure,
-      ),
-    ).rejects.toMatchObject({ code: "upstream-error" });
+    await expect(collectBpstatDataset({ domain: "12", dataset: DATASET_ID, lang: "EN" }, undefined, "https://bpstat.bportugal.pt", requestFailure)).rejects.toMatchObject({
+      code: "upstream-error",
+    });
   });
 });

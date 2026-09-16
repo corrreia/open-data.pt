@@ -47,13 +47,7 @@ export interface RenServiceDefinition {
   earliest: string;
 }
 
-export type RenServiceName =
-  | "production-breakdown"
-  | "consumption"
-  | "renewables-share"
-  | "interconnection-exchanges"
-  | "gas-consumption"
-  | "gas-network-balance";
+export type RenServiceName = "production-breakdown" | "consumption" | "renewables-share" | "interconnection-exchanges" | "gas-consumption" | "gas-network-balance";
 
 /** Every REN service this Gatekeeper knows, keyed by the feed kind it offers. */
 type RenServiceCatalogue = { [Service in RenServiceName]: RenServiceDefinition };
@@ -119,22 +113,22 @@ const REN_CHART_FEEDS: RenFeedCatalogue =
   // SAFETY: the entries are built from REN_SERVICES, so the result carries one
   // feed kind for every service name and no others.
   Object.fromEntries(
-  Object.entries(REN_SERVICES).map(([kind, definition]) => [
-    kind,
-    {
+    Object.entries(REN_SERVICES).map(([kind, definition]) => [
       kind,
-      title: definition.title,
-      description: definition.description,
-      semantics: {
-        domainSubject: "observation",
-        defaultProductRole: "time-series",
-      },
-      history: {
-        earliest: definition.earliest,
-      },
-    } satisfies FeedKindDescription,
-  ]),
-) as RenFeedCatalogue;
+      {
+        kind,
+        title: definition.title,
+        description: definition.description,
+        semantics: {
+          domainSubject: "observation",
+          defaultProductRole: "time-series",
+        },
+        history: {
+          earliest: definition.earliest,
+        },
+      } satisfies FeedKindDescription,
+    ]),
+  ) as RenFeedCatalogue;
 
 export const REN_FEEDS = { ...REN_CHART_FEEDS, ...REN_PERIODIC_FEEDS };
 
@@ -148,9 +142,7 @@ export function validateRenFeedConfig(config: SourceConfig): SourceConfig {
   if (Object.hasOwn(config, "host") || Object.hasOwn(config, "url")) {
     throw new GatekeeperError("REN feed hosts and URLs are fixed by the Gatekeeper", "source-denied");
   }
-  const unexpected = Object.keys(config).filter(
-    (key) => key !== "service" && key !== "day" && key !== "feed",
-  );
+  const unexpected = Object.keys(config).filter((key) => key !== "service" && key !== "day" && key !== "feed");
   if (unexpected.length > 0) {
     throw new GatekeeperError(`Unsupported REN configuration field: ${unexpected[0]}`, "invalid-config");
   }
@@ -248,12 +240,7 @@ export async function collectRenFeed(
 }
 
 /** Collect exactly one Europe/Lisbon civil day strictly before the cursor. */
-export async function collectRenHistory(
-  config: SourceConfig,
-  cursor: HistoryCursor,
-  apiOrigin: string,
-  fetcher: typeof fetch,
-): Promise<SourceFetch> {
+export async function collectRenHistory(config: SourceConfig, cursor: HistoryCursor, apiOrigin: string, fetcher: typeof fetch): Promise<SourceFetch> {
   const validated = validateRenFeedConfig(config);
   // SAFETY: `validateRenFeedConfig` has just confirmed `service` names one of
   // the services REN_SERVICES declares.
@@ -299,8 +286,7 @@ export async function collectRenHistory(
     value = parsed;
   }
 
-  const noData = isRenNoDataResponse(value) ||
-    (isChartResponse(value) && !chartHasSeriesData(value, definition));
+  const noData = isRenNoDataResponse(value) || (isChartResponse(value) && !chartHasSeriesData(value, definition));
   if (!response.ok && !noData) {
     throw historyUpstreamError(service, response);
   }
@@ -329,10 +315,7 @@ export async function collectRenHistory(
 }
 
 export function isRenNoDataResponse(value: JsonObject): boolean {
-  return (
-    isJsonString(value.message) &&
-    /there\s+is\s+no\s+data[\s\S]*selected\s+date/i.test(value.message)
-  );
+  return isJsonString(value.message) && /there\s+is\s+no\s+data[\s\S]*selected\s+date/i.test(value.message);
 }
 
 export function defaultCollectionDays(now: Date): string[] {
@@ -342,10 +325,7 @@ export function defaultCollectionDays(now: Date): string[] {
 }
 
 export function dotNetTicks(day: string): string {
-  return (
-    BigInt(Date.parse(`${day}T00:00:00.000Z`)) * 10_000n +
-    DOTNET_UNIX_EPOCH_TICKS
-  ).toString();
+  return (BigInt(Date.parse(`${day}T00:00:00.000Z`)) * 10_000n + DOTNET_UNIX_EPOCH_TICKS).toString();
 }
 
 function endpointFor(origin: string, path: string, day: string): URL {
@@ -372,19 +352,13 @@ function isChartResponse(value: JsonValue | undefined): value is JsonObject {
   return Array.isArray(value.xAxis.categories) && Array.isArray(value.series);
 }
 
-function chartHasSeriesData(
-  chart: JsonObject,
-  definition: RenServiceDefinition,
-): boolean {
+function chartHasSeriesData(chart: JsonObject, definition: RenServiceDefinition): boolean {
   const series = Array.isArray(chart.series) ? chart.series : [];
   return series.some((item) => {
     if (!isJsonObject(item) || !isJsonString(item.name) || !Array.isArray(item.data)) {
       return false;
     }
-    if (
-      definition.selectedSeries !== undefined &&
-      !definition.selectedSeries.includes(item.name)
-    ) {
+    if (definition.selectedSeries !== undefined && !definition.selectedSeries.includes(item.name)) {
       return false;
     }
     return item.data.some((point) => isJsonNumber(point) && Number.isFinite(point));
@@ -416,21 +390,14 @@ function emptyDayToken(day: string): string {
 }
 
 /** An upstream 304: the provider's validators win, the checkpoint's fill any gap. */
-function notModified(
-  upstream: Response,
-  checkpoint: SourceValidator | undefined,
-): SourceNotModified {
+function notModified(upstream: Response, checkpoint: SourceValidator | undefined): SourceNotModified {
   const fetched: SourceNotModified = { kind: "not-modified" };
   const validator: SourceValidator = { ...checkpoint, ...responseValidator(upstream.headers) };
   if (validator.etag || validator.lastModified) fetched.validator = validator;
   return fetched;
 }
 
-function collectionIsComplete(
-  document: RenCollectionDocument,
-  definition: RenServiceDefinition,
-  now: Date,
-): boolean {
+function collectionIsComplete(document: RenCollectionDocument, definition: RenServiceDefinition, now: Date): boolean {
   const today = lisbonDay(now);
   return document.days.every(({ day, response }) => {
     if (day >= today) return false;
@@ -438,17 +405,9 @@ function collectionIsComplete(
     const series = Array.isArray(response.series) ? response.series : [];
     const selected = series.filter((item) => {
       if (!isJsonObject(item) || !isJsonString(item.name)) return false;
-      return (
-        definition.selectedSeries === undefined ||
-        definition.selectedSeries.includes(item.name)
-      );
+      return definition.selectedSeries === undefined || definition.selectedSeries.includes(item.name);
     });
-    return (
-      selected.length > 0 &&
-      selected.every(
-        (item) => isJsonObject(item) && Array.isArray(item.data) && item.data.length >= expected,
-      )
-    );
+    return selected.length > 0 && selected.every((item) => isJsonObject(item) && Array.isArray(item.data) && item.data.length >= expected);
   });
 }
 

@@ -68,7 +68,12 @@ describe("collection engine: current state", () => {
     expect((await h.collect()).revisions).toBe(1);
     h.source.records = rows(10);
     expect((await h.collect()).revisions).toBe(1);
-    expect(h.lakeRows("records").slice(10).map((row) => row.entity_key)).toEqual(["k000003", "k000003"]);
+    expect(
+      h
+        .lakeRows("records")
+        .slice(10)
+        .map((row) => row.entity_key),
+    ).toEqual(["k000003", "k000003"]);
   });
 
   it("retracts entities missing from a complete authoritative snapshot, but not from a partial one", async () => {
@@ -144,7 +149,12 @@ describe("collection engine: large products use the SQLite index", () => {
     const outcome = await h.run(acquisition.id);
     expect(outcome.revisions).toBe(SMALL_PRODUCT_ROWS + 50 - 100);
     await h.deliver();
-    expect(h.lakeRows("records").slice(100).every((row) => row.operation === "create")).toBe(true);
+    expect(
+      h
+        .lakeRows("records")
+        .slice(100)
+        .every((row) => row.operation === "create"),
+    ).toBe(true);
   }, 60_000);
 });
 
@@ -232,7 +242,9 @@ describe("collection engine: history per product and fewer round trips", () => {
     const sent: number[] = [];
     const first = h.core.collectNow("manual");
     h.core.markStarted(first.id, "inline");
-    const delivered = await h.run(first.id, async (_table, lakeRows) => { sent.push(lakeRows.length); });
+    const delivered = await h.run(first.id, async (_table, lakeRows) => {
+      sent.push(lakeRows.length);
+    });
     expect(delivered).toMatchObject({ status: "succeeded", historyRows: 5, undelivered: false });
     expect(sent).toEqual([5]);
     expect(h.core.committedOutboxRows()).toBe(0);
@@ -240,7 +252,9 @@ describe("collection engine: history per product and fewer round trips", () => {
     h.source.records = rows(5, (index) => `v${index}`);
     const second = h.core.collectNow("manual");
     h.core.markStarted(second.id, "inline-refused");
-    const refused = await h.run(second.id, async () => { throw new Error("Pipeline submission timed out"); });
+    const refused = await h.run(second.id, async () => {
+      throw new Error("Pipeline submission timed out");
+    });
     expect(refused).toMatchObject({ status: "succeeded", historyRows: 5, undelivered: true });
     expect(h.core.committedOutboxRows()).toBe(5);
     expect(await h.deliver()).toBe(1);
@@ -251,7 +265,10 @@ describe("collection engine: history per product and fewer round trips", () => {
     const h = await kernelHarness({ history: null });
     let declares = 0;
     const declare = h.port.declare;
-    h.port.declare = async (id, input) => { declares += 1; return declare(id, input); };
+    h.port.declare = async (id, input) => {
+      declares += 1;
+      return declare(id, input);
+    };
     await baseline(h, 3);
     expect(declares).toBe(1);
     h.source.records = rows(3, (index) => (index === 1 ? "changed" : index));
@@ -261,7 +278,9 @@ describe("collection engine: history per product and fewer round trips", () => {
     const promoted = h.core.collectNow("manual");
     h.core.markStarted(promoted.id, "promote");
     // The attempt that outgrows memory still declares locally; its retry, now kept in the index, asks the runner.
-    await h.run(promoted.id).catch(async (error: Error) => { if (error instanceof PromotionRequired) await h.port.promote(error.productKey); });
+    await h.run(promoted.id).catch(async (error: Error) => {
+      if (error instanceof PromotionRequired) await h.port.promote(error.productKey);
+    });
     expect(declares).toBe(1);
     await h.run(promoted.id);
     expect(declares).toBe(2);
@@ -324,13 +343,23 @@ describe("collection engine: the Workflow step", () => {
 
   it("throws only what a quick step retry can cure", async () => {
     const { h, id } = await begun();
-    const lost: CollectingGatekeeper = { collect: async () => { throw new Error("Network connection lost"); } };
+    const lost: CollectingGatekeeper = {
+      collect: async () => {
+        throw new Error("Network connection lost");
+      },
+    };
     await expect(collectionStep(id, { runner: h.port, gatekeeper: lost, objects: h.objects })).rejects.toThrow("Network connection lost");
   });
 
   it("returns a missed deadline to the runner, which retries it later", async () => {
     const { h, id } = await begun();
-    const slow: CollectingGatekeeper = { collect: async () => { throw new Error("Collection deadline exceeded"); } };
-    await expect(collectionStep(id, { runner: h.port, gatekeeper: slow, objects: h.objects })).resolves.toMatchObject({ failure: { message: "Collection deadline exceeded", retryable: true } });
+    const slow: CollectingGatekeeper = {
+      collect: async () => {
+        throw new Error("Collection deadline exceeded");
+      },
+    };
+    await expect(collectionStep(id, { runner: h.port, gatekeeper: slow, objects: h.objects })).resolves.toMatchObject({
+      failure: { message: "Collection deadline exceeded", retryable: true },
+    });
   });
 });

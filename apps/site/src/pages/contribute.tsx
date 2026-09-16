@@ -73,7 +73,9 @@ function Contribute() {
             <LayerCard key={way.id} className="flex h-full flex-col">
               <LayerCard.Secondary className="flex flex-wrap items-center justify-between gap-2">
                 <span className="flex items-center gap-2">
-                  <span aria-hidden="true" className="text-kumo-brand">{way.icon}</span>
+                  <span aria-hidden="true" className="text-kumo-brand">
+                    {way.icon}
+                  </span>
                   <span className="font-medium text-kumo-strong">{way.title}</span>
                 </span>
                 <span className="text-xs text-kumo-subtle">{way.needs}</span>
@@ -95,7 +97,11 @@ function Contribute() {
         <SectionHead eyebrow="Before a pull request" title="How changes land" id="landing-title" />
         <ol className="grid max-w-3xl list-decimal gap-3 pl-5 text-sm leading-relaxed text-kumo-default marker:text-kumo-subtle">
           <li>
-            Read <a className={LINK} href={CONTRIBUTING}>CONTRIBUTING.md</a>: where code lives, and what a Worker may send.
+            Read{" "}
+            <a className={LINK} href={CONTRIBUTING}>
+              CONTRIBUTING.md
+            </a>
+            : where code lives, and what a Worker may send.
           </li>
           <li>Run a new example against the real source, as CONTRIBUTING.md shows, so the pull request is known to collect.</li>
           <li>Run the checks: lint, types and tests. Unit tests use saved responses, never the network.</li>

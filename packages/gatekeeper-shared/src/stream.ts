@@ -7,16 +7,18 @@ import { GatekeeperError } from "./index";
  */
 export function limitBytes(body: ReadableStream<Uint8Array>, maximumBytes: number): ReadableStream<Uint8Array> {
   let seen = 0;
-  return body.pipeThrough(new TransformStream<Uint8Array, Uint8Array>({
-    transform(chunk, controller) {
-      seen += chunk.byteLength;
-      if (seen > maximumBytes) {
-        controller.error(new GatekeeperError(`Source response exceeds ${maximumBytes} bytes`, "response-too-large"));
-        return;
-      }
-      controller.enqueue(chunk);
-    },
-  }));
+  return body.pipeThrough(
+    new TransformStream<Uint8Array, Uint8Array>({
+      transform(chunk, controller) {
+        seen += chunk.byteLength;
+        if (seen > maximumBytes) {
+          controller.error(new GatekeeperError(`Source response exceeds ${maximumBytes} bytes`, "response-too-large"));
+          return;
+        }
+        controller.enqueue(chunk);
+      },
+    }),
+  );
 }
 
 /** Buffer a whole body, failing as soon as it exceeds `maximumBytes`. Only for formats that cannot stream. */

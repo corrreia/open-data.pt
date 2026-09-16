@@ -20,8 +20,7 @@ function chunkedText(value: string, sizes: number[]): ReadableStream<Uint8Array>
 
 describe("CSV profiling", () => {
   it("handles semicolons, quoted delimiters, newlines, and nullable values", async () => {
-    const value =
-      'name;score;note\r\n"Lisbon; city";42;"line one\nline two"\r\nPorto;51;\r\n';
+    const value = 'name;score;note\r\n"Lisbon; city";42;"line one\nline two"\r\nPorto;51;\r\n';
 
     expect(await profileStream(chunkedText(value, [19]), "csv", "text/csv")).toEqual({
       rowCount: 2,
@@ -38,7 +37,13 @@ describe("CSV profiling", () => {
   });
 
   it("profiles JSON rows streamed from a nested array, one byte at a time", async () => {
-    const value = JSON.stringify({ total: 2, results: [{ day: "2026-09-01", open: true, count: 3 }, { day: "2026-09-02", open: false, count: null }] });
+    const value = JSON.stringify({
+      total: 2,
+      results: [
+        { day: "2026-09-01", open: true, count: 3 },
+        { day: "2026-09-02", open: false, count: null },
+      ],
+    });
     const sizes = Array.from({ length: value.length }, () => 1);
     expect(await profileStream(chunkedText(value, sizes), "json", "application/json")).toEqual({
       rowCount: 2,
@@ -55,11 +60,7 @@ describe("CSV profiling", () => {
   });
 
   it("returns an arbitrary page of rows", async () => {
-    const page = await readCsvPage(
-      chunkedText("name,value\nA,1\nB,2\nC,3\nD,4\n", [13]),
-      1,
-      2,
-    );
+    const page = await readCsvPage(chunkedText("name,value\nA,1\nB,2\nC,3\nD,4\n", [13]), 1, 2);
 
     expect(page.columns).toEqual(["name", "value"]);
     expect(page.rows).toEqual([

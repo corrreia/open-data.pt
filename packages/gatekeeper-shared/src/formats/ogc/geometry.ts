@@ -106,13 +106,7 @@ function meanPosition(positions: Array<[number, number]>): [number, number] | un
 }
 
 function position(value: JsonValue | undefined): [number, number] | undefined {
-  if (
-    !Array.isArray(value) ||
-    !isJsonNumber(value[0]) ||
-    !isJsonNumber(value[1]) ||
-    !Number.isFinite(value[0]) ||
-    !Number.isFinite(value[1])
-  ) {
+  if (!Array.isArray(value) || !isJsonNumber(value[0]) || !isJsonNumber(value[1]) || !Number.isFinite(value[0]) || !Number.isFinite(value[1])) {
     return undefined;
   }
   return [value[0], value[1]];

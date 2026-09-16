@@ -13,13 +13,7 @@ import {
   type SourceFetch,
   libraryConfig,
 } from "@open-data-pt/gatekeeper-shared";
-import {
-  MAX_METADATA_BYTES,
-  arcgisCollector,
-  collectArcgisFeed,
-  resolveArcgisFeed,
-  validateArcgisFeedConfig,
-} from "../packages/gatekeeper-shared/src/formats/arcgis";
+import { MAX_METADATA_BYTES, arcgisCollector, collectArcgisFeed, resolveArcgisFeed, validateArcgisFeedConfig } from "../packages/gatekeeper-shared/src/formats/arcgis";
 import { ARCGIS_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/arcgis/examples";
 
 const allowedHosts = "services.arcgis.com";
@@ -29,12 +23,9 @@ const config = {
   service: "account/arcgis/rest/services/Useful_Layer/FeatureServer",
   layer: "0",
 };
-const layerUrl =
-  "https://services.arcgis.com/account/arcgis/rest/services/Useful_Layer/FeatureServer/0";
+const layerUrl = "https://services.arcgis.com/account/arcgis/rest/services/Useful_Layer/FeatureServer/0";
 const revision = { etag: 'W/"1788509530839"', lastModified: "Fri, 04 Sep 2026 08:12:10 GMT" };
-const newLisbonExamples = ARCGIS_EXAMPLES.filter((example) =>
-  example.slug.startsWith("lisbon-")
-);
+const newLisbonExamples = ARCGIS_EXAMPLES.filter((example) => example.slug.startsWith("lisbon-"));
 
 const metadata = {
   name: "Useful layer",
@@ -126,45 +117,41 @@ async function request(overrides: Partial<CollectionRequest> = {}): Promise<Coll
 }
 
 async function frames(stream: ReadableStream<Uint8Array>): Promise<JsonObject[]> {
-  return (await readText(stream)).trim().split("\n").map((line) => {
-    const frame = parseJson(line);
-    if (!isJsonObject(frame)) throw new Error("Every frame is a JSON object");
-    return frame;
-  });
+  return (await readText(stream))
+    .trim()
+    .split("\n")
+    .map((line) => {
+      const frame = parseJson(line);
+      if (!isJsonObject(frame)) throw new Error("Every frame is a JSON object");
+      return frame;
+    });
 }
 
 describe("ArcGIS Gatekeeper", () => {
   it("normalizes structured and layerUrl configurations", () => {
     expect(validateArcgisFeedConfig(config, hosts)).toEqual(config);
-    expect(
-      validateArcgisFeedConfig({ layerUrl }, hosts),
-    ).toEqual(config);
+    expect(validateArcgisFeedConfig({ layerUrl }, hosts)).toEqual(config);
   });
 
-  it.each(newLisbonExamples)(
-    "validates the curated $title example",
-    (example) => {
-      const config = libraryConfig(example.config);
-      expect(validateArcgisFeedConfig(config, hosts)).toEqual(config);
-    },
-  );
+  it.each(newLisbonExamples)("validates the curated $title example", (example) => {
+    const config = libraryConfig(example.config);
+    expect(validateArcgisFeedConfig(config, hosts)).toEqual(config);
+  });
 
   it("ships every newly curated Lisbon layer", () => {
     expect(newLisbonExamples).toHaveLength(24);
     const permits = newLisbonExamples.find((example) => example.slug === "lisbon-building-permits-feed");
     expect(permits?.policy.collection.maxBytes).toBe(24 * 1024 * 1024);
-    expect(newLisbonExamples.every((example) =>
-      (example === permits || example.policy.collection.maxBytes === 5 * 1024 * 1024) &&
-      example.policy.collection.historyMode === "changes"
-    )).toBe(true);
+    expect(
+      newLisbonExamples.every((example) => (example === permits || example.policy.collection.maxBytes === 5 * 1024 * 1024) && example.policy.collection.historyMode === "changes"),
+    ).toBe(true);
   });
 
   it("rejects denied hosts and unsafe service paths", () => {
     expect(() =>
       validateArcgisFeedConfig(
         {
-          layerUrl:
-            "https://internal.example.test/account/arcgis/rest/services/Layer/FeatureServer/0",
+          layerUrl: "https://internal.example.test/account/arcgis/rest/services/Layer/FeatureServer/0",
         },
         hosts,
       ),
@@ -205,7 +192,10 @@ describe("ArcGIS Gatekeeper", () => {
   it("answers a request on another protocol release with a passing failure, not a permanent one", async () => {
     // During a deploy the kernel and this Gatekeeper differ for a minute; a permanent failure would cool the feed down for hours.
     // SAFETY: an older release's protocol string is exactly what this test needs to send through the typed request.
-    const result = await collectNormalized(await request({ protocol: "open-data-normalized/3" as typeof NORMALIZED_PROTOCOL }), arcgisCollector({ config, hosts: allowedHosts, fetcher: layerFetcher(3) }));
+    const result = await collectNormalized(
+      await request({ protocol: "open-data-normalized/3" as typeof NORMALIZED_PROTOCOL }),
+      arcgisCollector({ config, hosts: allowedHosts, fetcher: layerFetcher(3) }),
+    );
     expect(result).toEqual({ kind: "failure", code: "protocol-mismatch", retryable: true, retryAfterSeconds: 60 });
   });
 
@@ -219,7 +209,14 @@ describe("ArcGIS Gatekeeper", () => {
   });
 
   it("fails the stream when a layer declared complete outgrows the page cap while paging", async () => {
-    const fetched = bodyOf(await collectArcgisFeed(config, undefined, hosts, layerFetcher(3, (offset) => page(offset + 1, 2, true))));
+    const fetched = bodyOf(
+      await collectArcgisFeed(
+        config,
+        undefined,
+        hosts,
+        layerFetcher(3, (offset) => page(offset + 1, 2, true)),
+      ),
+    );
 
     expect(fetched.completeness).toBe("complete");
     await expect(readText(fetched.body)).rejects.toMatchObject({ code: "upstream-error" });
@@ -243,25 +240,20 @@ describe("ArcGIS Gatekeeper", () => {
   });
 
   it("enforces the metadata byte cap before buffering", async () => {
-    const fetcher = vi.fn(async () =>
-      new Response("{}", {
-        headers: { "Content-Length": String(MAX_METADATA_BYTES + 1) },
-      }),
+    const fetcher = vi.fn(
+      async () =>
+        new Response("{}", {
+          headers: { "Content-Length": String(MAX_METADATA_BYTES + 1) },
+        }),
     );
 
-    await expect(
-      collectArcgisFeed(config, undefined, hosts, fetcher),
-    ).rejects.toMatchObject({ code: "response-too-large" });
+    await expect(collectArcgisFeed(config, undefined, hosts, fetcher)).rejects.toMatchObject({ code: "response-too-large" });
   });
 
   it("reports provider failures with their status and Retry-After without attempting a query", async () => {
-    const fetcher = vi.fn(async () =>
-      new Response("temporarily unavailable", { status: 503, headers: { "Retry-After": "120" } }),
-    );
+    const fetcher = vi.fn(async () => new Response("temporarily unavailable", { status: 503, headers: { "Retry-After": "120" } }));
 
-    await expect(
-      collectArcgisFeed(config, undefined, hosts, fetcher),
-    ).rejects.toMatchObject({ code: "upstream-error", retryAfterSeconds: 120 });
+    await expect(collectArcgisFeed(config, undefined, hosts, fetcher)).rejects.toMatchObject({ code: "upstream-error", retryAfterSeconds: 120 });
     expect(fetcher).toHaveBeenCalledOnce();
   });
 });
@@ -281,11 +273,15 @@ describe("ArcGIS collection through the shared collector", () => {
       products: [{ productKey: "features", suggestedSlug: "useful-layer", kind: "record", completeness: "complete" }],
       checkpoint: { state: { validators: { default: revision } } },
     });
-    expect(rest.slice(0, -1)).toEqual([1, 2, 3].map((id) => expect.objectContaining({
-      type: "record",
-      productKey: "features",
-      value: expect.objectContaining({ entityKey: `global-${id}` }),
-    })));
+    expect(rest.slice(0, -1)).toEqual(
+      [1, 2, 3].map((id) =>
+        expect.objectContaining({
+          type: "record",
+          productKey: "features",
+          value: expect.objectContaining({ entityKey: `global-${id}` }),
+        }),
+      ),
+    );
     expect(complete).toMatchObject({
       type: "complete",
       counts: { records: 3, points: 0 },
@@ -296,15 +292,28 @@ describe("ArcGIS collection through the shared collector", () => {
 
   it("reports an unchanged layer from the checkpoint's revision", async () => {
     const req = await request();
-    const unchanged = await collectNormalized({
-      ...req,
-      checkpoint: { version: 2, resourceKey: req.resolved.resourceKey, configHash: req.resolved.configHash, feedEpoch: req.feedEpoch, normalizer: { id: "arcgis-rest-layer", version: "2" }, state: { validators: { default: { etag: revision.etag } } } },
-    }, arcgisCollector({ config, hosts: allowedHosts, fetcher: layerFetcher(3) }));
+    const unchanged = await collectNormalized(
+      {
+        ...req,
+        checkpoint: {
+          version: 2,
+          resourceKey: req.resolved.resourceKey,
+          configHash: req.resolved.configHash,
+          feedEpoch: req.feedEpoch,
+          normalizer: { id: "arcgis-rest-layer", version: "2" },
+          state: { validators: { default: { etag: revision.etag } } },
+        },
+      },
+      arcgisCollector({ config, hosts: allowedHosts, fetcher: layerFetcher(3) }),
+    );
     expect(unchanged).toMatchObject({ kind: "unchanged", checkpoint: { state: { validators: { default: revision } } } });
   });
 
   it("fails when the streamed layer exceeds the source byte budget", async () => {
-    const result = await collectNormalized(await request({ limits: { sourceBytes: 64, outputBytes: 1_048_576, frameBytes: 65_536, recordBytes: 65_536, records: 100, products: 4 } }), arcgisCollector({ config, hosts: allowedHosts, fetcher: layerFetcher(3) }));
+    const result = await collectNormalized(
+      await request({ limits: { sourceBytes: 64, outputBytes: 1_048_576, frameBytes: 65_536, recordBytes: 65_536, records: 100, products: 4 } }),
+      arcgisCollector({ config, hosts: allowedHosts, fetcher: layerFetcher(3) }),
+    );
     expect(result).toEqual({ kind: "failure", code: "response-too-large", retryable: false });
   });
 });

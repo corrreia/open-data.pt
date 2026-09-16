@@ -1,31 +1,6 @@
-import {
-  field,
-  isJsonNumber,
-  isJsonObject,
-  isJsonString,
-  lisbonDay,
-  lisbonInstants,
-  parseJsonBytes,
-} from "../../index";
-import type {
-  CanonicalRecord,
-  CanonicalSchema,
-  JsonObject,
-  JsonValue,
-  ProductBuild,
-  SeriesPoint,
-  TransformContext,
-  Transformer,
-  UnstampedResult,
-} from "../../index";
-import {
-  isRenNoDataResponse,
-  REN_SERVICES,
-  validateRenFeedConfig,
-  type RenCollectionDocument,
-  type RenServiceName,
-} from "./ren";
-
+import { field, isJsonNumber, isJsonObject, isJsonString, lisbonDay, lisbonInstants, parseJsonBytes } from "../../index";
+import type { CanonicalRecord, CanonicalSchema, JsonObject, JsonValue, ProductBuild, SeriesPoint, TransformContext, Transformer, UnstampedResult } from "../../index";
+import { isRenNoDataResponse, REN_SERVICES, validateRenFeedConfig, type RenCollectionDocument, type RenServiceName } from "./ren";
 
 interface ParsedSeries {
   name: string;
@@ -45,12 +20,10 @@ export class RenTransformer implements Transformer {
     const document = parseDocument(value);
     const config = validateRenFeedConfig(context.feed.config);
     // SAFETY: the feed config was validated by this Gatekeeper, so `service`
-  // names one of the services REN_SERVICES declares.
-  const service = config.service as RenServiceName;
+    // names one of the services REN_SERVICES declares.
+    const service = config.service as RenServiceName;
     if (document.service !== service) {
-      throw new Error(
-        `REN collection service ${document.service} does not match feed service ${service}`,
-      );
+      throw new Error(`REN collection service ${document.service} does not match feed service ${service}`);
     }
     const definition = REN_SERVICES[service];
     // Only a finished day is summarised: today's totals change with every quarter-hour, and would be a new revision on every collection.
@@ -62,11 +35,7 @@ export class RenTransformer implements Transformer {
     for (const day of document.days) {
       if (isRenNoDataResponse(day.response)) continue;
       const chart = parseChart(day.response);
-      const eventTimes = categoryEventTimes(
-        day.day,
-        chart.categories,
-        definition.gasDayStartHour,
-      );
+      const eventTimes = categoryEventTimes(day.day, chart.categories, definition.gasDayStartHour);
       const usedKeys = new Map<string, number>();
       const parsedSeries: ParsedSeries[] = [];
       for (const rawSeries of chart.series) {
@@ -74,10 +43,7 @@ export class RenTransformer implements Transformer {
           rejectedRecords += 1;
           continue;
         }
-        if (
-          definition.selectedSeries !== undefined &&
-          !definition.selectedSeries.includes(rawSeries.name)
-        ) {
+        if (definition.selectedSeries !== undefined && !definition.selectedSeries.includes(rawSeries.name)) {
           continue;
         }
         if (!Array.isArray(rawSeries.data)) {
@@ -107,11 +73,7 @@ export class RenTransformer implements Transformer {
         if (chart.series.length === 0) continue;
         throw new Error(`REN chart for ${service} has no supported series`);
       }
-      if (
-        parsedSeries.every((series) =>
-          series.values.every((value) => value === null),
-        )
-      ) {
+      if (parsedSeries.every((series) => series.values.every((value) => value === null))) {
         continue;
       }
 
@@ -135,24 +97,12 @@ export class RenTransformer implements Transformer {
         });
       }
 
-      const consumption = parsedSeries.find(
-        (series) => series.name.toLowerCase() === "consumption",
-      );
-      const consumptionTotal = consumption
-        ? energyMWh(consumption.values, consumption.unit, definition.intervalMinutes)
-        : null;
+      const consumption = parsedSeries.find((series) => series.name.toLowerCase() === "consumption");
+      const consumptionTotal = consumption ? energyMWh(consumption.values, consumption.unit, definition.intervalMinutes) : null;
       for (const series of day.day < today ? parsedSeries : []) {
-        const numeric = series.values.filter(
-          (item): item is number => item !== null,
-        );
-        const total = energyMWh(
-          series.values,
-          series.unit,
-          definition.intervalMinutes,
-        );
-        const lastEventTime = series.eventTimes
-          .filter((item): item is string => item !== undefined)
-          .at(-1);
+        const numeric = series.values.filter((item): item is number => item !== null);
+        const total = energyMWh(series.values, series.unit, definition.intervalMinutes);
+        const lastEventTime = series.eventTimes.filter((item): item is string => item !== undefined).at(-1);
         const summary: CanonicalRecord = {
           entityKey: `${day.day}:${series.key}`,
           payload: {
@@ -165,10 +115,7 @@ export class RenTransformer implements Transformer {
             totalEnergyMWh: total,
             minimum: numeric.length === 0 ? null : Math.min(...numeric),
             maximum: numeric.length === 0 ? null : Math.max(...numeric),
-            shareOfConsumption:
-              total !== null && consumptionTotal !== null && consumptionTotal !== 0
-                ? round((total / consumptionTotal) * 100)
-                : null,
+            shareOfConsumption: total !== null && consumptionTotal !== null && consumptionTotal !== 0 ? round((total / consumptionTotal) * 100) : null,
           },
         };
         if (lastEventTime) summary.eventTime = lastEventTime;
@@ -176,7 +123,10 @@ export class RenTransformer implements Transformer {
       }
     }
 
-    const watermark = points.map((point) => point.eventTime).sort().at(-1);
+    const watermark = points
+      .map((point) => point.eventTime)
+      .sort()
+      .at(-1);
     const products: ProductBuild[] = [
       {
         productKey: "series",
@@ -194,8 +144,7 @@ export class RenTransformer implements Transformer {
         productKey: "daily-summary",
         slug: `ren-${service}-daily-summary`,
         title: `${definition.title} daily summary`,
-        description:
-          "Energy, minimum, maximum, and share of consumption of each finished day, derived from the source chart values.",
+        description: "Energy, minimum, maximum, and share of consumption of each finished day, derived from the source chart values.",
         role: "reference",
         schema: summarySchema(definition.unit),
         records: summaries,
@@ -223,12 +172,7 @@ function parseDocument(value: JsonValue | undefined): RenCollectionDocument {
   // names one of the services REN_SERVICES declares.
   const service = config.service as RenServiceName;
   const days = value.days.map((entry) => {
-    if (
-      !isJsonObject(entry) ||
-      !isJsonString(entry.day) ||
-      !/^\d{4}-\d{2}-\d{2}$/.test(entry.day) ||
-      !isJsonObject(entry.response)
-    ) {
+    if (!isJsonObject(entry) || !isJsonString(entry.day) || !/^\d{4}-\d{2}-\d{2}$/.test(entry.day) || !isJsonObject(entry.response)) {
       throw new Error("REN collection contains an invalid day response");
     }
     return { day: entry.day, response: entry.response };
@@ -245,18 +189,10 @@ interface RenChart {
 }
 
 function parseChart(response: JsonObject): RenChart {
-  if (
-    !isJsonObject(response.xAxis) ||
-    !Array.isArray(response.xAxis.categories) ||
-    !isJsonObject(response.yAxis) ||
-    !Array.isArray(response.series)
-  ) {
+  if (!isJsonObject(response.xAxis) || !Array.isArray(response.xAxis.categories) || !isJsonObject(response.yAxis) || !Array.isArray(response.series)) {
     throw new Error("REN response is not a supported time-axis chart");
   }
-  const unit =
-    isJsonObject(response.yAxis.title) && isJsonString(response.yAxis.title.text)
-      ? response.yAxis.title.text.trim()
-      : "";
+  const unit = isJsonObject(response.yAxis.title) && isJsonString(response.yAxis.title.text) ? response.yAxis.title.text.trim() : "";
   return {
     categories: response.xAxis.categories,
     unit,
@@ -264,19 +200,14 @@ function parseChart(response: JsonObject): RenChart {
   };
 }
 
-function categoryEventTimes(
-  day: string,
-  categories: JsonValue[],
-  gasDayStartHour: number | undefined,
-): Array<string | undefined> {
+function categoryEventTimes(day: string, categories: JsonValue[], gasDayStartHour: number | undefined): Array<string | undefined> {
   const occurrences = new Map<string, number>();
   return categories.map((category) => {
     if (!isJsonString(category) || !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(category)) {
       return undefined;
     }
     const hour = Number(category.slice(0, 2));
-    const effectiveDay =
-      gasDayStartHour !== undefined && hour < gasDayStartHour ? addDays(day, 1) : day;
+    const effectiveDay = gasDayStartHour !== undefined && hour < gasDayStartHour ? addDays(day, 1) : day;
     const occurrenceKey = `${effectiveDay}|${category}`;
     const occurrence = occurrences.get(occurrenceKey) ?? 0;
     occurrences.set(occurrenceKey, occurrence + 1);
@@ -284,11 +215,7 @@ function categoryEventTimes(
   });
 }
 
-function energyMWh(
-  values: Array<number | null>,
-  unit: string,
-  intervalMinutes: number,
-): number | null {
+function energyMWh(values: Array<number | null>, unit: string, intervalMinutes: number): number | null {
   const numeric = values.filter((value): value is number => value !== null);
   if (numeric.length === 0) return null;
   const total = numeric.reduce((sum, value) => sum + value, 0);
@@ -333,7 +260,6 @@ function summarySchema(unit: string): CanonicalSchema {
   };
 }
 
-
 function slug(value: string): string {
   const normalized = value
     .normalize("NFKD")
@@ -345,9 +271,7 @@ function slug(value: string): string {
 }
 
 function hexColor(value: JsonValue | undefined): string | null {
-  return isJsonString(value) && /^#[0-9a-f]{6}$/i.test(value)
-    ? value.toUpperCase()
-    : null;
+  return isJsonString(value) && /^#[0-9a-f]{6}$/i.test(value) ? value.toUpperCase() : null;
 }
 
 function addDays(day: string, amount: number): string {
@@ -355,4 +279,3 @@ function addDays(day: string, amount: number): string {
   date.setUTCDate(date.getUTCDate() + amount);
   return date.toISOString().slice(0, 10);
 }
-

@@ -47,7 +47,10 @@ import { jsonAs } from "./support";
  * Opt-in because it calls public services: set LIVE_EXAMPLES to "all" or to
  * a comma-separated list of example slugs.
  */
-const SELECTED = process.env.LIVE_EXAMPLES?.split(",").map((slug) => slug.trim()).filter(Boolean) ?? [];
+const SELECTED =
+  process.env.LIVE_EXAMPLES?.split(",")
+    .map((slug) => slug.trim())
+    .filter(Boolean) ?? [];
 const MIB = 1024 * 1024;
 
 /** A deployed var, read from the topic Worker's checked-in Wrangler config so the test never invents one. */
@@ -70,12 +73,17 @@ const TOPICS: Array<{ kind: string; libraries: Map<string, GatekeeperLibrary>; e
     examples: MOBILITY_EXAMPLES,
     libraries: new Map([
       ["carris", library(CARRIS_FEEDS, (config) => carrisCollector({ config, apiOrigin: configured("mobility", "CARRIS_API_ORIGIN"), fetcher: fetch }))],
-      ["metrolisboa", library(METRO_FEEDS, (config) => metrolisboaCollector({
-        config,
-        apiOrigin: configured("mobility", "METROLISBOA_API_ORIGIN"),
-        credentials: { key: process.env.ML_CONSUMER_KEY, secret: process.env.ML_CONSUMER_SECRET },
-        fetcher: fetch,
-      }))],
+      [
+        "metrolisboa",
+        library(METRO_FEEDS, (config) =>
+          metrolisboaCollector({
+            config,
+            apiOrigin: configured("mobility", "METROLISBOA_API_ORIGIN"),
+            credentials: { key: process.env.ML_CONSUMER_KEY, secret: process.env.ML_CONSUMER_SECRET },
+            fetcher: fetch,
+          }),
+        ),
+      ],
       ["gtfs", library(GTFS_FEEDS, (config) => gtfsCollector({ config, hosts: configured("mobility", "GTFS_ALLOWED_HOSTS"), fetcher: fetch }))],
       ["gbfs", library(GBFS_FEEDS, (config) => gbfsCollector({ config, hosts: configured("mobility", "GBFS_ALLOWED_HOSTS"), fetcher: fetch }))],
     ]),
@@ -84,7 +92,12 @@ const TOPICS: Array<{ kind: string; libraries: Map<string, GatekeeperLibrary>; e
     kind: "energy",
     examples: ENERGY_EXAMPLES,
     libraries: new Map([
-      ["ren", library(REN_FEEDS, (config) => renCollector({ config, apiOrigin: configured("energy", "REN_API_ORIGIN"), dataApiOrigin: configured("energy", "REN_DATA_API_ORIGIN"), fetcher: fetch }))],
+      [
+        "ren",
+        library(REN_FEEDS, (config) =>
+          renCollector({ config, apiOrigin: configured("energy", "REN_API_ORIGIN"), dataApiOrigin: configured("energy", "REN_DATA_API_ORIGIN"), fetcher: fetch }),
+        ),
+      ],
       ["omie", library(OMIE_FEEDS, (config) => omieCollector({ config, apiOrigin: configured("energy", "OMIE_API_ORIGIN"), fetcher: fetch }))],
       ["dgeg", library(DGEG_FEEDS, (config) => dgegCollector({ config, apiOrigin: configured("energy", "DGEG_API_ORIGIN"), fetcher: fetch }))],
       ["opendatasoft", library(OPENDATASOFT_FEEDS, (config) => opendatasoftCollector({ config, hosts: configured("energy", "OPENDATASOFT_ALLOWED_HOSTS"), fetcher: fetch }))],
@@ -153,39 +166,45 @@ function liveRequest(example: ExampleFeed, resolved: ResolvedFeed): CollectionRe
   };
 }
 
-const cases = TOPICS.flatMap((topic) => topic.examples
-  .filter((example) => SELECTED.includes("all") || SELECTED.includes(example.slug))
-  .map((example) => ({ slug: example.slug, example, options: { gatekeeperKind: topic.kind, libraries: topic.libraries } satisfies TopicOptions })));
+const cases = TOPICS.flatMap((topic) =>
+  topic.examples
+    .filter((example) => SELECTED.includes("all") || SELECTED.includes(example.slug))
+    .map((example) => ({ slug: example.slug, example, options: { gatekeeperKind: topic.kind, libraries: topic.libraries } satisfies TopicOptions })),
+);
 
 describe.skipIf(cases.length === 0)("live examples", () => {
-  it.each(cases)("collects $slug", async ({ example, options }) => {
-    const resolved = await resolveTopicFeed(example.config, options);
-    const request = liveRequest(example, resolved);
-    const result = await collectNormalized(request, topicCollector(resolved.config, options));
-    if (result.kind !== "batch") throw new Error(`${example.slug} returned ${JSON.stringify(result)}`);
-    const counts = new Map<string, number>();
-    const scope = {
-      collectionId: request.collectionId,
-      resourceKey: resolved.resourceKey,
-      configHash: resolved.configHash,
-      feedEpoch: request.feedEpoch,
-      mode: request.mode,
-      deadline: request.deadline,
-    };
-    // Buffer the output (at most 16 MiB) so a rejected frame can be shown, not only counted.
-    const text = await new Response(result.stream).text();
-    const rejected = text.split("\n").find((line) => line !== "" && !isNormalizedFrame(jsonAs<JsonObject>(line)));
-    if (rejected !== undefined) {
-      const saved = join(tmpdir(), `live-rejected-${example.slug}.json`);
-      writeFileSync(saved, rejected);
-      throw new Error(`${example.slug} emitted an invalid frame, saved to ${saved}: ${rejected.slice(0, 500)}`);
-    }
-    for await (const frame of readFrames(new Response(text).body!, request.limits, scope)) {
-      counts.set(frame.type, (counts.get(frame.type) ?? 0) + 1);
-    }
-    console.info(`${example.slug}: ${JSON.stringify(Object.fromEntries(counts))}`);
-    expect(counts.get("header")).toBe(1);
-    expect(counts.get("complete")).toBe(1);
-    expect((counts.get("record") ?? 0) + (counts.get("point") ?? 0)).toBeGreaterThan(0);
-  }, 300_000);
+  it.each(cases)(
+    "collects $slug",
+    async ({ example, options }) => {
+      const resolved = await resolveTopicFeed(example.config, options);
+      const request = liveRequest(example, resolved);
+      const result = await collectNormalized(request, topicCollector(resolved.config, options));
+      if (result.kind !== "batch") throw new Error(`${example.slug} returned ${JSON.stringify(result)}`);
+      const counts = new Map<string, number>();
+      const scope = {
+        collectionId: request.collectionId,
+        resourceKey: resolved.resourceKey,
+        configHash: resolved.configHash,
+        feedEpoch: request.feedEpoch,
+        mode: request.mode,
+        deadline: request.deadline,
+      };
+      // Buffer the output (at most 16 MiB) so a rejected frame can be shown, not only counted.
+      const text = await new Response(result.stream).text();
+      const rejected = text.split("\n").find((line) => line !== "" && !isNormalizedFrame(jsonAs<JsonObject>(line)));
+      if (rejected !== undefined) {
+        const saved = join(tmpdir(), `live-rejected-${example.slug}.json`);
+        writeFileSync(saved, rejected);
+        throw new Error(`${example.slug} emitted an invalid frame, saved to ${saved}: ${rejected.slice(0, 500)}`);
+      }
+      for await (const frame of readFrames(new Response(text).body!, request.limits, scope)) {
+        counts.set(frame.type, (counts.get(frame.type) ?? 0) + 1);
+      }
+      console.info(`${example.slug}: ${JSON.stringify(Object.fromEntries(counts))}`);
+      expect(counts.get("header")).toBe(1);
+      expect(counts.get("complete")).toBe(1);
+      expect((counts.get("record") ?? 0) + (counts.get("point") ?? 0)).toBeGreaterThan(0);
+    },
+    300_000,
+  );
 });

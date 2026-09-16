@@ -50,11 +50,7 @@ interface LocalEntry {
  * to the final one. Reading stops at the central directory or as soon as every
  * wanted entry was read, and the body is cancelled either way.
  */
-export async function* gtfsZipEntries(
-  body: ReadableStream<Uint8Array>,
-  wanted: ReadonlySet<string>,
-  options: GtfsZipOptions = {},
-): AsyncGenerator<GtfsZipEntry> {
+export async function* gtfsZipEntries(body: ReadableStream<Uint8Array>, wanted: ReadonlySet<string>, options: GtfsZipOptions = {}): AsyncGenerator<GtfsZipEntry> {
   const input = new ZipInput(body, options.maximumArchiveBytes ?? MAX_ARCHIVE_BYTES);
   const maximumEntryBytes = options.maximumEntryBytes ?? MAX_ENTRY_BYTES;
   const remaining = new Set(wanted);
@@ -78,9 +74,7 @@ export async function* gtfsZipEntries(
       }
     }
   } catch (error) {
-    throw error instanceof GatekeeperError
-      ? error
-      : invalidZip(error instanceof Error ? error.message : String(error));
+    throw error instanceof GatekeeperError ? error : invalidZip(error instanceof Error ? error.message : String(error));
   } finally {
     await input.cancel("GTFS ZIP reading finished").catch(() => undefined);
   }
@@ -144,9 +138,7 @@ class EntryReader {
     const { entry, input, maximumBytes } = this;
     try {
       const boundary = entryBoundary(entry, maximumBytes);
-      const compressed = boundary
-        ? deflateUntilFinalBlock(input, boundary)
-        : sizedChunks(input, entry.compressedSize);
+      const compressed = boundary ? deflateUntilFinalBlock(input, boundary) : sizedChunks(input, entry.compressedSize);
       let inflated = 0;
       for await (const chunk of entry.method === STORED ? compressed : inflate(compressed)) {
         inflated += chunk.byteLength;
@@ -165,9 +157,7 @@ class EntryReader {
       }
       this.finished = true;
     } catch (error) {
-      throw error instanceof GatekeeperError
-        ? error
-        : invalidZip(`GTFS entry ${entry.name} could not be inflated: ${error instanceof Error ? error.message : String(error)}`);
+      throw error instanceof GatekeeperError ? error : invalidZip(`GTFS entry ${entry.name} could not be inflated: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 }
@@ -252,12 +242,7 @@ async function* inflate(compressed: AsyncIterable<Uint8Array>): AsyncGenerator<U
   }
 }
 
-async function readDataDescriptor(
-  input: ZipInput,
-  entry: LocalEntry,
-  compressedBytes: number,
-  uncompressedBytes: number,
-): Promise<void> {
+async function readDataDescriptor(input: ZipInput, entry: LocalEntry, compressedBytes: number, uncompressedBytes: number): Promise<void> {
   // The descriptor signature is optional; without it the first word is the CRC-32.
   if (uint32(await input.readExact(4), 0) === DATA_DESCRIPTOR) await input.discard(4);
   const sizes = await input.readExact(entry.zip64 ? 16 : 8);
@@ -273,7 +258,10 @@ class ZipInput {
   private pending: Uint8Array[] = [];
   private received = 0;
 
-  constructor(body: ReadableStream<Uint8Array>, private readonly maximumBytes: number) {
+  constructor(
+    body: ReadableStream<Uint8Array>,
+    private readonly maximumBytes: number,
+  ) {
     this.reader = body.getReader();
   }
 
@@ -609,9 +597,7 @@ function reverseBits(value: number, length: number): number {
 }
 
 function fixedLiteralLengths(): number[] {
-  return Array.from({ length: 288 }, (_, symbol) =>
-    symbol <= 143 ? 8 : symbol <= 255 ? 9 : symbol <= 279 ? 7 : 8,
-  );
+  return Array.from({ length: 288 }, (_, symbol) => (symbol <= 143 ? 8 : symbol <= 255 ? 9 : symbol <= 279 ? 7 : 8));
 }
 
 const FIXED_LITERAL_TREE = buildTree(fixedLiteralLengths());
@@ -641,12 +627,7 @@ function uint16(bytes: Uint8Array, offset: number): number {
 }
 
 function uint32(bytes: Uint8Array, offset: number): number {
-  return (
-    (bytes[offset] ?? 0) +
-    (bytes[offset + 1] ?? 0) * 2 ** 8 +
-    (bytes[offset + 2] ?? 0) * 2 ** 16 +
-    (bytes[offset + 3] ?? 0) * 2 ** 24
-  );
+  return (bytes[offset] ?? 0) + (bytes[offset + 1] ?? 0) * 2 ** 8 + (bytes[offset + 2] ?? 0) * 2 ** 16 + (bytes[offset + 3] ?? 0) * 2 ** 24;
 }
 
 function uint64(bytes: Uint8Array, offset: number): number {
@@ -664,7 +645,5 @@ function entryTooLarge(name: string, maximumBytes: number): GatekeeperError {
 }
 
 function undelimitedEntry(entry: LocalEntry): GatekeeperError {
-  return invalidZip(
-    `GTFS entry ${entry.name} (ZIP method ${entry.method}) has its size only in a trailing data descriptor, so its end cannot be found while streaming`,
-  );
+  return invalidZip(`GTFS entry ${entry.name} (ZIP method ${entry.method}) has its size only in a trailing data descriptor, so its end cannot be found while streaming`);
 }

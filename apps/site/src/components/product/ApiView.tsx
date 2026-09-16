@@ -24,18 +24,37 @@ function endpointsFor(product: Product): Endpoint[] {
   if (product.role === "time-series") {
     list.push(
       { title: "Current points", path: `${base}/series?limit=500`, description: "The newest points, newest first. Filter with seriesKey, from and to." },
-      { title: "History", path: `${base}/series/range?${dataSpan}&limit=500`, description: "Every point of a past window from the durable history. Windows span up to 366 days; page with the returned cursor." },
-      { title: "As known then", path: `${base}/series/range?${dataSpan}&knownAt=${knownAt}&limit=500`, description: "The same window as it had been published at knownAt: later corrections are left out." },
+      {
+        title: "History",
+        path: `${base}/series/range?${dataSpan}&limit=500`,
+        description: "Every point of a past window from the durable history. Windows span up to 366 days; page with the returned cursor.",
+      },
+      {
+        title: "As known then",
+        path: `${base}/series/range?${dataSpan}&knownAt=${knownAt}&limit=500`,
+        description: "The same window as it had been published at knownAt: later corrections are left out.",
+      },
       { title: "Recent corrections", path: `${base}/series/changes?limit=200`, description: "Points revised after they were first published." },
       { title: "Corrections in a window", path: `${base}/series/changes/range?${changeSpan}&limit=500`, description: "Every new or corrected point ingested in a past window." },
     );
   } else {
     list.push({ title: "Current records", path: `${base}/records?limit=50`, description: "The current rows, paged with a cursor." });
     const filterable = product.schema.fields.find((field) => ["category", "identifier", "string"].includes(field.type));
-    if (filterable) list.push({ title: "Filtered records", path: `${base}/records?where=${encodeURIComponent(filterable.id)}:VALUE&limit=50`, template: true, description: `Rows whose ${filterable.name} equals VALUE. Repeat where= for up to five fields.` });
+    if (filterable)
+      list.push({
+        title: "Filtered records",
+        path: `${base}/records?where=${encodeURIComponent(filterable.id)}:VALUE&limit=50`,
+        template: true,
+        description: `Rows whose ${filterable.name} equals VALUE. Repeat where= for up to five fields.`,
+      });
     if (product.schema.fields.some((field) => field.type === "geometry" || field.type === "latitude")) {
       list.push(
-        { title: "Records in an area", path: `${base}/records?bbox=MIN_LON,MIN_LAT,MAX_LON,MAX_LAT&limit=50`, template: true, description: "Rows inside a bounding box, in degrees." },
+        {
+          title: "Records in an area",
+          path: `${base}/records?bbox=MIN_LON,MIN_LAT,MAX_LON,MAX_LAT&limit=50`,
+          template: true,
+          description: "Rows inside a bounding box, in degrees.",
+        },
         { title: "GeoJSON", path: `${base}.geojson`, description: "The current rows as a GeoJSON FeatureCollection." },
       );
     }

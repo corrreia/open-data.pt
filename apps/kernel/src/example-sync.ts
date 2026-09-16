@@ -34,9 +34,7 @@ export interface SyncFeed {
 }
 
 /** Install or update one example, or retire a feed whose example is gone. */
-export type SyncOp =
-  | { op: "apply"; kind: string; example: ExampleFeed; hash: string }
-  | { op: "retire"; feedId: string; slug: string };
+export type SyncOp = { op: "apply"; kind: string; example: ExampleFeed; hash: string } | { op: "retire"; feedId: string; slug: string };
 
 export interface SyncState {
   nextCheckAt: number;
