@@ -6,7 +6,10 @@ import { ENERGY_EXAMPLES } from "../packages/gatekeeper-energy/src/examples";
 import { ENVIRONMENT_EXAMPLES } from "../packages/gatekeeper-environment/src/examples";
 import { HEALTH_EXAMPLES } from "../packages/gatekeeper-health/src/examples";
 import { MOBILITY_EXAMPLES } from "../packages/gatekeeper-mobility/src/examples";
-import { STATISTICS_EXAMPLES } from "../packages/gatekeeper-statistics/src/examples";
+import { ECONOMY_EXAMPLES } from "../packages/gatekeeper-economy/src/examples";
+import { GOVERNMENT_EXAMPLES } from "../packages/gatekeeper-government/src/examples";
+import { SOCIETY_EXAMPLES } from "../packages/gatekeeper-society/src/examples";
+import { TELECOM_EXAMPLES } from "../packages/gatekeeper-telecom/src/examples";
 
 interface TopicExamples {
   topic: string;
@@ -18,7 +21,10 @@ const topics: TopicExamples[] = [
   { topic: "environment", examples: ENVIRONMENT_EXAMPLES },
   { topic: "health", examples: HEALTH_EXAMPLES },
   { topic: "mobility", examples: MOBILITY_EXAMPLES },
-  { topic: "statistics", examples: STATISTICS_EXAMPLES },
+  { topic: "economy", examples: ECONOMY_EXAMPLES },
+  { topic: "society", examples: SOCIETY_EXAMPLES },
+  { topic: "government", examples: GOVERNMENT_EXAMPLES },
+  { topic: "telecom", examples: TELECOM_EXAMPLES },
 ];
 const baseline = new Set(asStringList(parseJson(readFileSync(new URL("./fixtures/source-expansion-baseline-slugs.json", import.meta.url), "utf8"))));
 

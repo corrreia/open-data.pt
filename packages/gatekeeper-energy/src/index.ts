@@ -18,6 +18,7 @@ import {
 } from "@open-data-pt/gatekeeper-shared";
 import { OPENDATASOFT_FEEDS, opendatasoftCollector } from "@open-data-pt/gatekeeper-shared/formats/opendatasoft";
 import { DGEG_FEEDS, dgegCollector } from "@open-data-pt/gatekeeper-shared/sources/dgeg";
+import { EUROSTAT_FEEDS, eurostatCollector } from "@open-data-pt/gatekeeper-shared/sources/eurostat";
 import { OMIE_FEEDS, omieCollector } from "@open-data-pt/gatekeeper-shared/sources/omie";
 import { REN_FEEDS, renCollector } from "@open-data-pt/gatekeeper-shared/sources/ren";
 import { ENERGY_EXAMPLES } from "./examples";
@@ -85,6 +86,13 @@ export default class EnergyGatekeeper extends WorkerEntrypoint<Env> implements F
         {
           kinds: Object.values(OPENDATASOFT_FEEDS),
           collector: (config: SourceConfig) => opendatasoftCollector({ config, hosts: this.env.OPENDATASOFT_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }),
+        },
+      ],
+      [
+        "eurostat",
+        {
+          kinds: Object.values(EUROSTAT_FEEDS),
+          collector: (config: SourceConfig) => eurostatCollector({ config, apiOrigin: this.env.EUROSTAT_API_ORIGIN, fetcher: (input, init) => fetch(input, init) }),
         },
       ],
     ]);

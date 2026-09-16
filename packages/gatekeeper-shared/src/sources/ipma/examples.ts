@@ -26,7 +26,7 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
     },
     staleAfterSeconds: 7_200,
     publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
-    topics: ["weather"],
+    topics: ["weather", "environment"],
   },
   {
     slug: "ipma-daily-forecast-feed",
@@ -46,7 +46,7 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
     },
     staleAfterSeconds: 3_600,
     publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
-    topics: ["weather"],
+    topics: ["weather", "environment"],
   },
   {
     slug: "ipma-seismic-feed",
@@ -86,7 +86,7 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
     },
     staleAfterSeconds: 3_600,
     publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
-    topics: ["weather"],
+    topics: ["weather", "environment"],
   },
   {
     slug: "ipma-uv-index-feed",
@@ -106,7 +106,7 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
     },
     staleAfterSeconds: 28_800,
     publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
-    topics: ["weather"],
+    topics: ["weather", "environment"],
   },
   {
     slug: "ipma-fire-risk-feed",
@@ -146,7 +146,7 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
     },
     staleAfterSeconds: 7_200,
     publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
-    topics: ["weather"],
+    topics: ["weather", "environment"],
   },
   {
     slug: "ipma-municipal-precipitation-feed",

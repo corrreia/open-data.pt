@@ -17,6 +17,7 @@ import {
   type TopicOptions,
 } from "@open-data-pt/gatekeeper-shared";
 import { OPENDATASOFT_FEEDS, opendatasoftCollector } from "@open-data-pt/gatekeeper-shared/formats/opendatasoft";
+import { UDATA_FEEDS, udataCollector } from "@open-data-pt/gatekeeper-shared/formats/udata";
 import { HEALTH_EXAMPLES } from "./examples";
 
 /**
@@ -60,6 +61,13 @@ export default class HealthGatekeeper extends WorkerEntrypoint<Env> implements F
         {
           kinds: Object.values(OPENDATASOFT_FEEDS),
           collector: (config: SourceConfig) => opendatasoftCollector({ config, hosts: this.env.OPENDATASOFT_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }),
+        },
+      ],
+      [
+        "udata",
+        {
+          kinds: Object.values(UDATA_FEEDS),
+          collector: (config: SourceConfig) => udataCollector({ config, hosts: this.env.UDATA_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }),
         },
       ],
     ]);

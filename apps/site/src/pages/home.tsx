@@ -2,6 +2,7 @@ import { Badge, Button, Input, LayerCard, Loader } from "@cloudflare/kumo";
 import {
   ArrowRightIcon,
   BankIcon,
+  BroadcastIcon,
   BuildingsIcon,
   ChartLineUpIcon,
   CloudSunIcon,
@@ -10,6 +11,7 @@ import {
   LeafIcon,
   LightningIcon,
   MagnifyingGlassIcon,
+  ScalesIcon,
   TrainIcon,
   UsersThreeIcon,
 } from "@phosphor-icons/react";
@@ -34,6 +36,8 @@ const TOPIC_ICON = new Map<string, ReactNode>([
   ["society", <UsersThreeIcon size={22} />],
   ["culture", <BankIcon size={22} />],
   ["weather", <CloudSunIcon size={22} />],
+  ["government", <ScalesIcon size={22} />],
+  ["telecom", <BroadcastIcon size={22} />],
 ]);
 
 const newest = (a: Dataset, b: Dataset) => (b.updatedAt ?? "").localeCompare(a.updatedAt ?? "");

@@ -6,16 +6,16 @@ open-data.pt collects Portuguese public data and publishes it as cacheable JSON.
 
 ```
 packages/gatekeeper-shared/src/
-  formats/<format>/     arcgis  ckan  opendatasoft  gtfs  gbfs  udata
-  sources/<name>/       carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat
+  formats/<format>/     arcgis  ckan  opendatasoft  gtfs  gbfs  udata  ogc
+  sources/<name>/       carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat  parliament  ripestat  peeringdb
 packages/gatekeeper-<topic>/
-                        mobility  energy  statistics  health  cities  environment
+                        cities  economy  energy  environment  government  health  mobility  society  telecom
 apps/kernel/            storage, history, the API and the site
 ```
 
-1. **A library per format.** Anything with a standard — GTFS, GBFS, ArcGIS, CKAN, Opendatasoft, uData — is parsed once, under `formats/`. A Worker never contains parsing.
-2. **A library per bespoke source,** under `sources/`: Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat.
-3. **A Worker per topic:** `mobility`, `energy`, `statistics`, `health`, `cities`, `environment`. A Worker is wiring: its libraries, its vars and secrets, its example feeds. The publisher is a label on each feed, shown on the site; it is not a code boundary.
+1. **A library per format.** Anything with a standard — GTFS, GBFS, ArcGIS, CKAN, Opendatasoft, uData, OGC API Features — is parsed once, under `formats/`. A Worker never contains parsing.
+2. **A library per bespoke source,** under `sources/`: Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, RIPEstat, PeeringDB.
+3. **One Worker per topic:** `cities`, `economy`, `energy`, `environment`, `government`, `health`, `mobility`, `society`, `telecom`. A Worker is named for what its data is about, never for who publishes it or how: there is no `statistics` Worker, and INE's indicators live in `economy`, `society`, `mobility` and `telecom`. A Worker is wiring: its libraries, its vars and secrets, its example feeds. A feed lives in a Worker whose topic its `topics` list carries (a test checks it), and a library several topics need is wired into each of them. The publisher is a label on each feed, shown on the site; it is not a code boundary.
 4. **Feed slugs never change.** A feed's ID derives from its slug, so moving a feed between Workers keeps its history. Renaming a slug throws that history away.
 
 A library exports its feed-kind table, `validate<Name>FeedConfig`, `collect<Name>Feed`, its transformer, its examples array, and `<name>Collector(options)` — the factory a Worker calls. Every example configuration carries `source: "<library>"`, which is what routes it inside its Worker; the library never sees that key.
@@ -39,7 +39,7 @@ One entry in that library's `examples.ts`. Nothing else.
 }
 ```
 
-If the Worker that carries the library selects its examples (ArcGIS is split between `cities` and `environment`, Opendatasoft between `energy` and `health`), check `packages/gatekeeper-<topic>/src/examples.ts` picks yours up.
+If several Workers carry the library, each selects its share (ArcGIS is split between `cities` and `environment`, Opendatasoft between `energy` and `health`, INE and Eurostat by a feed's first topic, uData by topic), so check `packages/gatekeeper-<topic>/src/examples.ts` picks yours up.
 
 ### A new source on a format we already read
 
@@ -47,7 +47,7 @@ The example above, plus its hostname in the Worker's allowlist var (`CKAN_ALLOWE
 
 ### A new bespoke source
 
-A directory under `packages/gatekeeper-shared/src/sources/<name>/`: `<name>.ts` (feed kinds, validation, fetching), `transform.ts` (bytes to products), `examples.ts`, `collector.ts` (the factory), `index.ts` (the barrel). Then one line in the topic Worker's `libraries()` and its `<NAME>_API_ORIGIN` var. Fixture tests under `tests/` with saved source responses — no network in unit tests, and no module mocking.
+A directory under `packages/gatekeeper-shared/src/sources/<name>/`: `<name>.ts` (feed kinds, validation, fetching), `transform.ts` (bytes to products), `examples.ts`, `collector.ts` (the factory), `index.ts` (the barrel). Then one line in the `libraries()` of the Worker for its topic and its `<NAME>_API_ORIGIN` var. A topic with no Worker yet gets a new `packages/gatekeeper-<topic>/` and `pnpm packages:sync`. Fixture tests under `tests/` with saved source responses — no network in unit tests, and no module mocking.
 
 ### A new format
 
@@ -66,7 +66,7 @@ The same, under `formats/<format>/`, with an allowlist var rather than a fixed o
 pnpm install
 pnpm types
 pnpm dev -- mobility        # the kernel and one Gatekeeper
-pnpm dev                    # the kernel and all six
+pnpm dev                    # the kernel and every Worker
 ```
 
 A Gatekeeper the kernel is bound to but that is not running is not an error. The Registry's example sync logs `gatekeeper_unavailable` for it, installs the feeds of the Workers that answered, and keeps the missing one's feeds rather than retiring them. So a single-Worker session gives you that Worker's feeds and leaves everything else alone.

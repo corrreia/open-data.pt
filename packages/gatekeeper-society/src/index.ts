@@ -18,22 +18,20 @@ import {
 } from "@open-data-pt/gatekeeper-shared";
 import { OGC_FEEDS, ogcCollector } from "@open-data-pt/gatekeeper-shared/formats/ogc";
 import { UDATA_FEEDS, udataCollector } from "@open-data-pt/gatekeeper-shared/formats/udata";
-import { BPSTAT_FEEDS, bpstatCollector } from "@open-data-pt/gatekeeper-shared/sources/bpstat";
-import { EUROSTAT_FEEDS, eurostatCollector } from "@open-data-pt/gatekeeper-shared/sources/eurostat";
 import { INE_FEEDS, ineCollector } from "@open-data-pt/gatekeeper-shared/sources/ine";
-import { STATISTICS_EXAMPLES } from "./examples";
+import { SOCIETY_EXAMPLES } from "./examples";
 
 /**
  * One Worker per catalog topic. It holds no parsing: it names its libraries,
  * hands each the vars and secrets it needs, and lists the example feeds it owns.
  */
-export default class StatisticsGatekeeper extends WorkerEntrypoint<Env> implements FeedGatekeeper {
+export default class SocietyGatekeeper extends WorkerEntrypoint<Env> implements FeedGatekeeper {
   override async fetch(): Promise<Response> {
     return new Response("This Gatekeeper is available through RPC only.", { status: 404 });
   }
 
   async describe(): Promise<GatekeeperDescription> {
-    return { kind: "statistics", name: "Official statistics" };
+    return { kind: "society", name: "Society, culture and territory" };
   }
 
   async listFeedKinds(): Promise<FeedKindDescription[]> {
@@ -49,16 +47,23 @@ export default class StatisticsGatekeeper extends WorkerEntrypoint<Env> implemen
   }
 
   async exampleFeeds(): Promise<ExampleFeed[]> {
-    return STATISTICS_EXAMPLES;
+    return SOCIETY_EXAMPLES;
   }
 
   private topic(): TopicOptions {
-    return { gatekeeperKind: "statistics", libraries: this.libraries() };
+    return { gatekeeperKind: "society", libraries: this.libraries() };
   }
 
   /** The wiring: which library answers for a feed, and what it is given to do it with. */
   private libraries(): GatekeeperLibraries {
     return new Map<string, GatekeeperLibrary>([
+      [
+        "ine",
+        {
+          kinds: Object.values(INE_FEEDS),
+          collector: (config: SourceConfig) => ineCollector({ config, apiOrigin: this.env.INE_API_ORIGIN, fetcher: (input, init) => fetch(input, init) }),
+        },
+      ],
       [
         "ogc",
         {
@@ -71,27 +76,6 @@ export default class StatisticsGatekeeper extends WorkerEntrypoint<Env> implemen
         {
           kinds: Object.values(UDATA_FEEDS),
           collector: (config: SourceConfig) => udataCollector({ config, hosts: this.env.UDATA_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }),
-        },
-      ],
-      [
-        "ine",
-        {
-          kinds: Object.values(INE_FEEDS),
-          collector: (config: SourceConfig) => ineCollector({ config, apiOrigin: this.env.INE_API_ORIGIN, fetcher: (input, init) => fetch(input, init) }),
-        },
-      ],
-      [
-        "bpstat",
-        {
-          kinds: Object.values(BPSTAT_FEEDS),
-          collector: (config: SourceConfig) => bpstatCollector({ config, apiOrigin: this.env.BPSTAT_API_ORIGIN, fetcher: (input, init) => fetch(input, init) }),
-        },
-      ],
-      [
-        "eurostat",
-        {
-          kinds: Object.values(EUROSTAT_FEEDS),
-          collector: (config: SourceConfig) => eurostatCollector({ config, apiOrigin: this.env.EUROSTAT_API_ORIGIN, fetcher: (input, init) => fetch(input, init) }),
         },
       ],
     ]);

@@ -5,19 +5,29 @@ description: Create, modify, or review open-data.pt Gatekeeper libraries and top
 
 # Writing an open-data.pt Gatekeeper
 
-A Gatekeeper is one Cloudflare Worker per catalog topic — `mobility`, `energy`, `statistics`, `health`, `cities`, `environment` — reached through private RPC. Together they own upstream access, parsing, validation, normalization, source clocks, validators, coverage, and source-supported history. They never return original source bytes to the kernel and own no canonical storage.
+A Gatekeeper is one Cloudflare Worker per catalog topic — `cities`, `economy`, `energy`, `environment`, `government`, `health`, `mobility`, `society`, `telecom` — reached through private RPC. Together they own upstream access, parsing, validation, normalization, source clocks, validators, coverage, and source-supported history. They never return original source bytes to the kernel and own no canonical storage.
 
 The code that does the reading is a **library**, not a Worker (ADR 0015):
 
 ```
-packages/gatekeeper-shared/src/formats/<format>/   arcgis  ckan  opendatasoft  gtfs  gbfs  udata
-packages/gatekeeper-shared/src/sources/<name>/     carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat
+packages/gatekeeper-shared/src/formats/<format>/   arcgis  ckan  opendatasoft  gtfs  gbfs  udata  ogc
+packages/gatekeeper-shared/src/sources/<name>/     carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat  parliament  ripestat  peeringdb
 packages/gatekeeper-<topic>/src/                   index.ts (wiring) and examples.ts (what it owns)
 ```
 
 A library is `<name>.ts` (feed kinds, validation, fetching), `transform.ts` (bytes to products), `examples.ts`, `collector.ts` (`<name>Collector(options)`), and `index.ts` (the barrel). It exports its feed-kind table, `validate<Name>FeedConfig`, `collect<Name>Feed`, its transformer, exactly one examples array, and the collector factory.
 
 A Worker contains no parsing. It names its libraries in `libraries()`, hands each the vars and secrets it needs, lists the examples it owns, and routes. Routing is one rule: every example configuration carries `source: "<library>"`; `resolveTopicFeed` and `topicCollector` pick the library from it, and the library validates the rest of the configuration and never sees that key. `listFeedKinds()` returns the union of the Worker's libraries' kinds, each renamed `<library>:<kind>`; a resolved resource key is `<topic>:<library>:<kind>:<digest>`.
+
+## One Worker per topic
+
+A topic is what the data is about, never who publishes it or how it is published. There is no `statistics`, `open-data-portal` or per-publisher Worker: INE's indicators are split across `economy`, `society`, `mobility` and `telecom`, and dados.gov.pt feeds across `cities`, `government`, `health` and `society`.
+
+- A feed lives in a Worker whose topic its `topics` list carries. When a feed carries several Worker topics, pick the one it is most about and put it first (INE and Eurostat select by first topic). `tests/examples-consistency.test.ts` fails on a feed in a Worker whose topic it does not carry.
+- A library several topics need is wired into each of those Workers, with the same var values, and each Worker's `examples.ts` selects its share.
+- A new source whose topic has no Worker gets a new package under `packages/gatekeeper-<topic>/`, not a place in the nearest existing Worker.
+- Telecommunications data (INE's telecom surveys, RIPEstat routing, PeeringDB exchanges) is `gatekeeper-telecom`.
+- A source under a publication hold (`packages/gatekeeper-shared/src/publication-holds.json`: Parliament, RIPEstat, PeeringDB) is wired into its topic Worker's `libraries()` with its vars, but its examples stay out of that Worker's `examples.ts` until the owner lifts the hold. Every library must be wired into some Worker; the consistency test checks that too.
 
 Feed slugs never change: a feed's ID derives from its slug, so moving a feed between Workers keeps its history.
 
@@ -69,9 +79,9 @@ Archive-only document/media/coverage feeds are unsupported unless explicitly app
 
 ## Implement the library
 
-Most work is a library, not a Worker. Add a directory under `formats/` or `sources/`, export the surface above, and wire it into the topic that wants it with one entry in that Worker's `libraries()` map and one namespaced var (`<LIBRARY>_ALLOWED_HOSTS` for an allowlist, `<LIBRARY>_API_ORIGIN` for a fixed origin). A library that two topics carry declares its var in both, with the same value.
+Most work is a library, not a Worker. Add a directory under `formats/` or `sources/`, export the surface above, and wire it into the Worker of its topic with one entry in that Worker's `libraries()` map and one namespaced var (`<LIBRARY>_ALLOWED_HOSTS` for an allowlist, `<LIBRARY>_API_ORIGIN` for a fixed origin). A library that two topics carry declares its var in both, with the same value.
 
-A new dataset from a source already read is one entry in that library's `examples.ts` and nothing else. Check the owning Worker's `examples.ts` picks it up: ArcGIS is split between `cities` and `environment` by slug prefix, Opendatasoft between `energy` and `health`.
+A new dataset from a source already read is one entry in that library's `examples.ts` and nothing else. Check the owning Worker's `examples.ts` picks it up: ArcGIS is split between `cities` and `environment` by slug prefix, Opendatasoft between `energy` and `health`, INE and Eurostat by first topic, uData by topic, and OGC between `society` (DGT) and `environment` (Azores).
 
 ## Implement the Worker
 

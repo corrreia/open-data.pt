@@ -2,11 +2,15 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { isJsonObject, isJsonString, parseJson, type ExampleFeed } from "@open-data-pt/gatekeeper-shared";
 import { CITIES_EXAMPLES } from "../packages/gatekeeper-cities/src/examples";
+import { ECONOMY_EXAMPLES } from "../packages/gatekeeper-economy/src/examples";
 import { ENERGY_EXAMPLES } from "../packages/gatekeeper-energy/src/examples";
 import { ENVIRONMENT_EXAMPLES } from "../packages/gatekeeper-environment/src/examples";
+import { GOVERNMENT_EXAMPLES } from "../packages/gatekeeper-government/src/examples";
 import { HEALTH_EXAMPLES } from "../packages/gatekeeper-health/src/examples";
 import { MOBILITY_EXAMPLES } from "../packages/gatekeeper-mobility/src/examples";
-import { STATISTICS_EXAMPLES } from "../packages/gatekeeper-statistics/src/examples";
+import { SOCIETY_EXAMPLES } from "../packages/gatekeeper-society/src/examples";
+import { TELECOM_EXAMPLES } from "../packages/gatekeeper-telecom/src/examples";
+import { workerTopics } from "../tools/packages";
 
 /** One library's module namespace, as this test reads it: exported values, one of which is its examples. */
 interface LibraryModule {
@@ -55,7 +59,7 @@ async function libraryExamples(): Promise<Map<string, readonly ExampleFeed[]>> {
 
 /** Explicit review holds are not runtime feature flags: their examples must stay out of Worker install lists. */
 function publicationHolds(): Map<string, string> {
-  const rows = parseJson(readFileSync(new URL("../research/source-publication-holds.json", import.meta.url), "utf8"));
+  const rows = parseJson(readFileSync(new URL("../packages/gatekeeper-shared/src/publication-holds.json", import.meta.url), "utf8"));
   if (!Array.isArray(rows)) throw new Error("Publication holds must be an array");
   const result = new Map<string, string>();
   for (const row of rows) {
@@ -70,8 +74,19 @@ function publicationHolds(): Map<string, string> {
 
 const PUBLICATION_HOLDS = publicationHolds();
 
-/** What the six Workers actually install, which is what the Registry turns into feeds. */
-const DEPLOYED: ExampleFeed[] = [...CITIES_EXAMPLES, ...ENERGY_EXAMPLES, ...ENVIRONMENT_EXAMPLES, ...HEALTH_EXAMPLES, ...MOBILITY_EXAMPLES, ...STATISTICS_EXAMPLES];
+/** What each topic Worker installs, which is what the Registry turns into feeds. */
+const WORKERS = new Map<string, readonly ExampleFeed[]>([
+  ["cities", CITIES_EXAMPLES],
+  ["economy", ECONOMY_EXAMPLES],
+  ["energy", ENERGY_EXAMPLES],
+  ["environment", ENVIRONMENT_EXAMPLES],
+  ["government", GOVERNMENT_EXAMPLES],
+  ["health", HEALTH_EXAMPLES],
+  ["mobility", MOBILITY_EXAMPLES],
+  ["society", SOCIETY_EXAMPLES],
+  ["telecom", TELECOM_EXAMPLES],
+]);
+const DEPLOYED: ExampleFeed[] = [...WORKERS.values()].flat();
 
 describe("example feed policies", () => {
   it("never call a feed stale before its next collection is due", () => {
@@ -118,6 +133,27 @@ describe("libraries and the Workers that carry them", () => {
       "ripestat",
       "udata",
     ]);
+  });
+
+  it("lists every Worker package here", () => {
+    expect([...WORKERS.keys()]).toEqual(workerTopics());
+  });
+
+  it("puts every feed in a Worker whose topic the feed carries", () => {
+    const misplaced = [...WORKERS].flatMap(([topic, examples]) =>
+      examples.filter((example) => !example.topics?.includes(topic)).map((example) => `${example.slug} (${(example.topics ?? []).join(", ")}) is in ${topic}`),
+    );
+    expect(misplaced).toEqual([]);
+  });
+
+  it("wires every library, held or not, into a Worker", () => {
+    const wiring = workerTopics()
+      .map((topic) => readFileSync(new URL(`../packages/gatekeeper-${topic}/src/index.ts`, import.meta.url), "utf8"))
+      .join("\n");
+    const unwired = Object.keys(LIBRARIES)
+      .map(libraryName)
+      .filter((name) => !new RegExp(`\\[\\s*"${name}",\\s*\\{`).test(wiring));
+    expect(unwired).toEqual([]);
   });
 
   it("gives every cleared library example to exactly one Worker", async () => {

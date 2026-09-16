@@ -2,13 +2,13 @@
 
 ## Gatekeeper
 
-One trusted Worker per catalog topic: `mobility`, `energy`, `statistics`, `health`, `cities`, `environment`. It validates configuration, accesses allowlisted upstream resources, parses and normalizes source data, and returns a bounded versioned normalized stream over private RPC. It owns source identity, clocks, validators, pagination, coverage, and source-supported history. It owns no canonical storage or publication state.
+One trusted Worker per catalog topic: `cities`, `economy`, `energy`, `environment`, `government`, `health`, `mobility`, `society`, `telecom`. A topic is what the data is about, never who publishes it or how: telecom data, from INE's surveys or from network registries, belongs to `telecom`. It validates configuration, accesses allowlisted upstream resources, parses and normalizes source data, and returns a bounded versioned normalized stream over private RPC. It owns source identity, clocks, validators, pagination, coverage, and source-supported history. It owns no canonical storage or publication state.
 
 A Worker is wiring: the libraries it carries, the vars and secrets it hands them, and the example feeds it owns. Format and source code are shared libraries, not deployment units. The publisher is a label on the feed, shown on the site; it is not a code boundary.
 
 ## Library
 
-The code that reads one thing, under `packages/gatekeeper-shared/src`. A format library under `formats/` parses anything with a standard (ArcGIS, CKAN, Opendatasoft, GTFS, GBFS, uData); a source library under `sources/` reads one bespoke API (Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat). Each exports its feed-kind table, its validator, its collect function, its transformer, its examples array, and a collector factory. A feed's configuration names its library in `source`; that key routes the feed inside its Worker, and the library never sees it.
+The code that reads one thing, under `packages/gatekeeper-shared/src`. A format library under `formats/` parses anything with a standard (ArcGIS, CKAN, Opendatasoft, GTFS, GBFS, uData, OGC API Features); a source library under `sources/` reads one bespoke API (Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, RIPEstat, PeeringDB). Each exports its feed-kind table, its validator, its collect function, its transformer, its examples array, and a collector factory. A feed's configuration names its library in `source`; that key routes the feed inside its Worker, and the library never sees it.
 
 ## Source
 
