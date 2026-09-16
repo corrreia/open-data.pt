@@ -58,6 +58,8 @@ export interface Feed {
   enabled: boolean;
   staleAfterSeconds: number;
   sourceUrl?: string;
+  /** Feed creation time; collection history cannot be known before it existed. */
+  createdAt?: string;
   lastSuccessAt?: string;
   lastAttemptAt?: string;
   nextRunAt?: string;

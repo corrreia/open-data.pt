@@ -84,8 +84,19 @@
   // A first baseline of a large product applies its whole index in one runner
   // transaction; Workflow steps also run under this CPU limit.
   "limits": { "cpu_ms": 120000 },
+  // Every invocation is logged and traced. Each span counts as one
+  // observability event against the same quota as logs.
   "observability": {
-    "enabled": true,
-    "head_sampling_rate": 1
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true
+    },
+    "traces": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "persist": true
+    }
   }
 }
