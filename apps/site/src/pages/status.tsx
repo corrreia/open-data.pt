@@ -12,6 +12,8 @@ import { STATUS_DAYS as DAYS, STATUS_HOURS, statusHours, measureStatus as measur
 import type { Feed, Outage, OutageCause, OutagesResponse, Product } from "../lib/types";
 
 const INCIDENTS_SHOWN = 25;
+/** Incidents read out per hour; the tooltip shows four. */
+const SPOKEN_INCIDENTS = 10;
 const DAY_MS = 86_400_000;
 /** Real-time feeds run every minute; nothing attempted for this long means collection has stopped. */
 const STALL_MS = 10 * 60_000;
@@ -64,14 +66,35 @@ function hourSummary(bar: Bar): string {
   return `${bar.affected} of ${bar.trackedMembers} tracked datasets affected, up to ${fmt.duration(bar.longest)} in this hour`;
 }
 
+interface BarNotes {
+  partlyTracked: boolean;
+  lines: string[];
+}
+
+/** Details beyond the hour's summary: a partially tracked hour and each incident. Shared by the tooltip and screen readers. */
+function barNotes(bar: Bar, describe: (incident: Incident) => string, now: number): BarNotes {
+  return {
+    partlyTracked: bar.observedMs > 0 && bar.observedMs < Math.min(bar.hour.end, now) - bar.hour.start,
+    lines: bar.incidents.map(describe),
+  };
+}
+
+/** A bounded, spoken form of the tooltip's details, or undefined when there is nothing beyond the label. */
+function barDescription(bar: Bar, describe: (incident: Incident) => string, now: number): string | undefined {
+  const { partlyTracked, lines } = barNotes(bar, describe, now);
+  const spoken = [...(partlyTracked ? ["Tracking began during this hour."] : []), ...lines.slice(0, SPOKEN_INCIDENTS)];
+  if (lines.length > SPOKEN_INCIDENTS) spoken.push(`and ${lines.length - SPOKEN_INCIDENTS} more`);
+  return spoken.length > 0 ? spoken.join(". ") : undefined;
+}
+
 function barTip(bar: Bar, describe: (incident: Incident) => string, now: number): ReactNode {
-  const lines = bar.incidents.map(describe);
+  const { partlyTracked, lines } = barNotes(bar, describe, now);
   return (
     <>
       <strong className="text-kumo-strong">{hourLabel(bar)}</strong>
       {bar.hour.end > now ? <span>Current hour, in progress</span> : null}
       <span>{hourSummary(bar)}</span>
-      {bar.observedMs > 0 && bar.observedMs < Math.min(bar.hour.end, now) - bar.hour.start ? <span>Tracking began during this hour.</span> : null}
+      {partlyTracked ? <span>Tracking began during this hour.</span> : null}
       {lines.slice(0, 4).map((line, index) => (
         <span key={index} className="text-kumo-subtle">
           {line}
@@ -85,6 +108,8 @@ function barTip(bar: Bar, describe: (incident: Incident) => string, now: number)
 function Bars({ measured, label, describe, onTip, now, height = "h-8" }: { measured: Measured; label: string; describe: (incident: Incident) => string; onTip: (tip: TipState | null) => void; now: number; height?: string }) {
   const root = useRef<HTMLSpanElement>(null);
   const instructions = useId();
+  const detailsPrefix = useId();
+  const descriptions = measured.bars.map((bar) => barDescription(bar, describe, now));
   const [active, setActive] = useState(STATUS_HOURS - 1);
   const show = (element: HTMLButtonElement, bar: Bar) => {
     const box = element.getBoundingClientRect();
@@ -93,6 +118,7 @@ function Bars({ measured, label, describe, onTip, now, height = "h-8" }: { measu
   return (
     <span>
       <span id={instructions} className="sr-only">One bar per hour. Use left and right arrows to inspect hours, Home and End to jump, and Escape to dismiss details.</span>
+      {descriptions.map((description, index) => (description ? <span key={index} id={`${detailsPrefix}-${index}`} className="sr-only">{description}</span> : null))}
       <span ref={root} role="group" data-status-timeline aria-describedby={instructions} aria-label={`${label}: ${uptimeText(measured.uptime)} over ${STATUS_HOURS} hourly slots`} className={`flex ${height} gap-px sm:gap-[2px]`}
         onPointerLeave={(event) => { if (event.pointerType === "mouse" && !root.current?.contains(document.activeElement)) onTip(null); }}
         onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) onTip(null); }}
@@ -106,6 +132,7 @@ function Bars({ measured, label, describe, onTip, now, height = "h-8" }: { measu
         {measured.bars.map((bar, index) => (
           <button key={bar.hour.start} type="button" tabIndex={active === index ? 0 : -1} data-level={bar.level} data-hour-start={bar.hour.start} data-current={bar.hour.end > now}
             aria-label={`${hourLabel(bar)}: ${hourSummary(bar)}${bar.hour.end > now ? "; current hour in progress" : ""}`}
+            aria-describedby={descriptions[index] ? `${detailsPrefix}-${index}` : undefined}
             onPointerEnter={(event) => { if (event.pointerType === "mouse") show(event.currentTarget, bar); }}
             onFocus={(event) => { setActive(index); show(event.currentTarget, bar); }}
             onClick={(event) => { setActive(index); show(event.currentTarget, bar); }}
