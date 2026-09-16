@@ -1,0 +1,278 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "ano",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "timeserie_precision": "year",
+          "facetsort": "-alphanum"
+        },
+        "label": "Ano",
+        "type": "date",
+        "label_pt": "Ano",
+        "label_en": "Ano",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "trimestre",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "Trimestre",
+        "type": "text",
+        "label_pt": "Trimestre",
+        "label_en": "Trimestre",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "regiao",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "Região",
+        "type": "text",
+        "label_pt": "Região",
+        "label_en": "Região",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "instituicao",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "facetsort": "alphanum"
+        },
+        "label": "Instituição",
+        "type": "text",
+        "label_pt": "Instituição",
+        "label_en": "Instituição",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "cod_capitulo",
+        "description": "Código Capítulo Diagnóstico ICD9CM/ICD10CMPCS: Identificação do capítulo da ICD (Classificação Internacional de Doenças) para agregação de códigos de diagnóstico.",
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Código Capítulo Diagnóstico ICD9CM/ICD10CMPCS",
+        "type": "int",
+        "label_pt": "Código Capítulo Diagnóstico ICD9CM/ICD10CMPCS",
+        "label_en": "Código Capítulo Diagnóstico ICD9CM/ICD10CMPCS",
+        "description_pt": "Código Capítulo Diagnóstico ICD9CM/ICD10CMPCS: Identificação do capítulo da ICD (Classificação Internacional de Doenças) para agregação de códigos de diagnóstico.",
+        "description_en": "Código Capítulo Diagnóstico ICD9CM/ICD10CMPCS: Identificação do capítulo da ICD (Classificação Internacional de Doenças) para agregação de códigos de diagnóstico."
+      },
+      {
+        "name": "desc_capitulo",
+        "description": null,
+        "annotations": {
+          "facet": true
+        },
+        "label": "Descrição Capítulo Diagnóstico ICD9CM/ICD10CMPCS",
+        "type": "text",
+        "label_pt": "Descrição Capítulo Diagnóstico ICD9CM/ICD10CMPCS",
+        "label_en": "Descrição Capítulo Diagnóstico ICD9CM/ICD10CMPCS",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "taxa_internamento",
+        "description": null,
+        "annotations": {
+          "unit": "%",
+          "decimals": 2,
+          "facetsort": "-count"
+        },
+        "label": "Taxa Internamento",
+        "type": "double",
+        "label_pt": "Taxa Internamento",
+        "label_en": "Taxa Internamento",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "dias_internamento",
+        "description": "",
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Dias de Internamento",
+        "type": "int",
+        "label_pt": "Dias de Internamento",
+        "label_en": "Dias de Internamento",
+        "description_pt": "",
+        "description_en": ""
+      },
+      {
+        "name": "taxa_mortalidade",
+        "description": null,
+        "annotations": {
+          "unit": "%",
+          "decimals": 2,
+          "facetsort": "-count"
+        },
+        "label": "Taxa Mortalidade",
+        "type": "double",
+        "label_pt": "Taxa Mortalidade",
+        "label_en": "Taxa Mortalidade",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "dataset_id": "morbilidade-e-mortalidade-hospitalar",
+    "dataset_uid": "da_tgz6ya",
+    "has_records": true,
+    "features": [
+      "analyze",
+      "timeserie"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "dcat": {
+        "created": "2016-11-30",
+        "issued": "2018-12-31",
+        "creator": "SPMS",
+        "contributor": "ACSS",
+        "contact_name": null,
+        "contact_email": null,
+        "accrualperiodicity": "Mensal",
+        "spatial": "Portugal Continental",
+        "temporal": "Janeiro de 2019 até ao trimestre N-1",
+        "granularity": null,
+        "dataquality": null,
+        "publisher_type": null,
+        "conforms_to": null,
+        "temporal_coverage_start": null,
+        "temporal_coverage_end": null,
+        "accessRights": null,
+        "relation": null
+      },
+      "default": {
+        "title": "Morbilidade e Mortalidade Hospitalar por Instituição",
+        "title_pt": "Morbilidade e Mortalidade Hospitalar por Instituição",
+        "title_en": "Morbilidade e Mortalidade Hospitalar por Instituição",
+        "description": "<div>\n<p>\n\t\tEvolução trimestral da taxa de internamento, dias de internamento e taxa de mortalidade, por instituição e capítulo do diagnóstico principal da ICD9CM/ICD10CM/PCS</p><p>Taxa de internamento, Total de dias de internamento e Taxa de mortalidade considerando:</p><ul><li>Ano e Trimestre de alta;</li><li>Região da Inst. Hospitalar e Instituição Hospitalar;</li><li>Código e descrição do capítulo do diagnóstico principal da ICD9CM/ICD10CM/PCS.</li></ul></div>\n<div><strong><br></strong></div><div><strong>Observações: </strong>Calculado tendo em consideração a portaria 207/2017, o âmbito de análise de Estatística e tipo de produção Internamento.</div><div><br></div><div>Os dados resultam da codificação clínica efetuada pelos hospitais em ICD9CM/ICD10CM/PCS após a alta do doente, podendo existir em algumas instituições maior atraso nesta codificação (o que pode resultar numa diminuição temporária dos episódios reportados). Os registos administrativos e de codificação clínica são da exclusiva responsabilidade de cada instituição hospitalar.</div><div><br></div><div>As instituições apresentadas correspondem às instituições presentes no site de Benchmarking Hospitais da ACSS (Grupos B,C, D, E e F, https://benchmarking-acss.min-saude.pt/BH_Enquadramento/GrupoInstituicoes).</div><div><br></div><div>Diagnóstico principal ICD9CM/ICD10CM/PCS diz respeito ao diagnóstico que, após a alta do utente e o estudo completo do episódio de internamento, é considerado (em sede de codificação clinica) como a causa da admissão do utente ao internamento. A codificação clínica ICD9CM/ICD10CM/PCS não corresponde à classificação de causas de morte, em sede de certificados de óbito.</div><p><strong><br></strong></p>",
+        "description_pt": "<div>\n<p>\n\t\tEvolução trimestral da taxa de internamento, dias de internamento e taxa de mortalidade, por instituição e capítulo do diagnóstico principal da ICD9CM/ICD10CM/PCS</p><p>Taxa de internamento, Total de dias de internamento e Taxa de mortalidade considerando:</p><ul><li>Ano e Trimestre de alta;</li><li>Região da Inst. Hospitalar e Instituição Hospitalar;</li><li>Código e descrição do capítulo do diagnóstico principal da ICD9CM/ICD10CM/PCS.</li></ul></div>\n<div><strong><br></strong></div><div><strong>Observações: </strong>Calculado tendo em consideração a portaria 207/2017, o âmbito de análise de Estatística e tipo de produção Internamento.</div><div><br></div><div>Os dados resultam da codificação clínica efetuada pelos hospitais em ICD9CM/ICD10CM/PCS após a alta do doente, podendo existir em algumas instituições maior atraso nesta codificação (o que pode resultar numa diminuição temporária dos episódios reportados). Os registos administrativos e de codificação clínica são da exclusiva responsabilidade de cada instituição hospitalar.</div><div><br></div><div>As instituições apresentadas correspondem às instituições presentes no site de Benchmarking Hospitais da ACSS (Grupos B,C, D, E e F, https://benchmarking-acss.min-saude.pt/BH_Enquadramento/GrupoInstituicoes).</div><div><br></div><div>Diagnóstico principal ICD9CM/ICD10CM/PCS diz respeito ao diagnóstico que, após a alta do utente e o estudo completo do episódio de internamento, é considerado (em sede de codificação clinica) como a causa da admissão do utente ao internamento. A codificação clínica ICD9CM/ICD10CM/PCS não corresponde à classificação de causas de morte, em sede de certificados de óbito.</div><p><strong><br></strong></p>",
+        "description_en": "<div>\n<p>\n\t\tEvolução trimestral da taxa de internamento, dias de internamento e taxa de mortalidade, por instituição e capítulo do diagnóstico principal da ICD9CM/ICD10CM/PCS</p><p>Taxa de internamento, Total de dias de internamento e Taxa de mortalidade considerando:</p><ul><li>Ano e Trimestre de alta;</li><li>Região da Inst. Hospitalar e Instituição Hospitalar;</li><li>Código e descrição do capítulo do diagnóstico principal da ICD9CM/ICD10CM/PCS.</li></ul></div>\n<div><strong><br></strong></div><div><strong>Observações: </strong>Calculado tendo em consideração a portaria 207/2017, o âmbito de análise de Estatística e tipo de produção Internamento.</div><div><br></div><div>Os dados resultam da codificação clínica efetuada pelos hospitais em ICD9CM/ICD10CM/PCS após a alta do doente, podendo existir em algumas instituições maior atraso nesta codificação (o que pode resultar numa diminuição temporária dos episódios reportados). Os registos administrativos e de codificação clínica são da exclusiva responsabilidade de cada instituição hospitalar.</div><div><br></div><div>As instituições apresentadas correspondem às instituições presentes no site de Benchmarking Hospitais da ACSS (Grupos B,C, D, E e F, https://benchmarking-acss.min-saude.pt/BH_Enquadramento/GrupoInstituicoes).</div><div><br></div><div>Diagnóstico principal ICD9CM/ICD10CM/PCS diz respeito ao diagnóstico que, após a alta do utente e o estudo completo do episódio de internamento, é considerado (em sede de codificação clinica) como a causa da admissão do utente ao internamento. A codificação clínica ICD9CM/ICD10CM/PCS não corresponde à classificação de causas de morte, em sede de certificados de óbito.</div><p><strong><br></strong></p>",
+        "theme": [
+          "Saúde dos Portugueses"
+        ],
+        "theme_pt": [
+          "Saúde dos Portugueses"
+        ],
+        "theme_en": [
+          "Saúde dos Portugueses"
+        ],
+        "keyword": [
+          "Morbilidade",
+          "Mortalidade",
+          "Internamento Hospitalar",
+          "ICD9CM/ICD10CM/PCS"
+        ],
+        "keyword_pt": [
+          "Morbilidade",
+          "Mortalidade",
+          "Internamento Hospitalar",
+          "ICD9CM/ICD10CM/PCS"
+        ],
+        "keyword_en": [
+          "Morbilidade",
+          "Mortalidade",
+          "Internamento Hospitalar",
+          "ICD9CM/ICD10CM/PCS"
+        ],
+        "license": null,
+        "license_pt": null,
+        "license_en": null,
+        "license_url": null,
+        "license_url_pt": null,
+        "license_url_en": null,
+        "language": "pt",
+        "metadata_languages": [
+          "pt"
+        ],
+        "timezone": null,
+        "modified": "2026-09-14T04:55:27.224000+00:00",
+        "modified_updates_on_metadata_change": true,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2026-09-14T04:55:27.224000+00:00",
+        "metadata_processed": "2026-09-15T23:00:00.927000+00:00",
+        "geographic_reference": [
+          "world_pt"
+        ],
+        "geographic_reference_auto": true,
+        "territory": [
+          "Portugal"
+        ],
+        "geometry_types": null,
+        "bbox": null,
+        "publisher": "ACSS",
+        "publisher_pt": "ACSS",
+        "publisher_en": "ACSS",
+        "references": null,
+        "records_count": 65268,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": null
+      },
+      "custom": {
+        "dataset-id-number": "28",
+        "measure-unit": "% e Dias",
+        "source-data": "BDMH",
+        "version": null,
+        "formula": "Taxa de internamento: (Total de internamentos por período (ano/trimestre), inst.hospitalar, capítulo do diagnóstico principal da ICD9CM/ICD10CM/PCS (causa de internamento))/(Total de internamentos por período (ano/trimestre), inst.hospitalar) x 100;   Dias de internamento: Total de dias de internamentos por período (ano/trimestre), inst.hospitalar, capítulo do diagnóstico principal da ICD9CM/ICD10CM/PCS (causa de internamento);   Taxa de mortalidade: (Total de episódios com destino após a alta Falecido por período (ano/trimestre), inst.hospitalar, capítulo do diagnóstico principal da ICD9CM/ICD10CM/PCS (causa de internamento))/(Total de internamentos por período (ano/trimestre), inst.hospitalar, capítulo do diagnóstico principal da ICD9CM/ICD10CM/PCS (causa de internamento)) x 100."
+      }
+    }
+  },
+  "records": [
+    {
+      "ano": "2026-01-01T00:00:00+00:00",
+      "trimestre": "Primeiro",
+      "regiao": "Região de Saúde LVT",
+      "instituicao": "Hospital de Cascais Dr. José de Almeida",
+      "cod_capitulo": 1,
+      "desc_capitulo": "Algumas doenças infecciosas e parasitárias",
+      "taxa_internamento": 4.63,
+      "dias_internamento": 2590,
+      "taxa_mortalidade": 25.0
+    },
+    {
+      "ano": "2026-01-01T00:00:00+00:00",
+      "trimestre": "Primeiro",
+      "regiao": "Região de Saúde LVT",
+      "instituicao": "Hospital de Cascais Dr. José de Almeida",
+      "cod_capitulo": 1,
+      "desc_capitulo": "Algumas doenças infecciosas e parasitárias",
+      "taxa_internamento": 4.73,
+      "dias_internamento": 3081,
+      "taxa_mortalidade": 25.48
+    },
+    {
+      "ano": "2026-01-01T00:00:00+00:00",
+      "trimestre": "Primeiro",
+      "regiao": "Região de Saúde LVT",
+      "instituicao": "Hospital de Cascais Dr. José de Almeida",
+      "cod_capitulo": 1,
+      "desc_capitulo": "Algumas doenças infecciosas e parasitárias",
+      "taxa_internamento": 4.78,
+      "dias_internamento": 3094,
+      "taxa_mortalidade": 25.16
+    }
+  ]
+}

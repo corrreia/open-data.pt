@@ -61,7 +61,7 @@ export default class EnergyGatekeeper
   /** The wiring: which library answers for a feed, and what it is given to do it with. */
   private libraries(): GatekeeperLibraries {
     return new Map<string, GatekeeperLibrary>([
-      ["ren", { kinds: Object.values(REN_FEEDS), collector: (config: SourceConfig) => renCollector({ config, apiOrigin: this.env.REN_API_ORIGIN, fetcher: (input, init) => fetch(input, init) }) }],
+      ["ren", { kinds: Object.values(REN_FEEDS), collector: (config: SourceConfig) => renCollector({ config, apiOrigin: this.env.REN_API_ORIGIN, dataApiOrigin: this.env.REN_DATA_API_ORIGIN, fetcher: (input, init) => fetch(input, init) }) }],
       ["omie", { kinds: Object.values(OMIE_FEEDS), collector: (config: SourceConfig) => omieCollector({ config, apiOrigin: this.env.OMIE_API_ORIGIN, fetcher: (input, init) => fetch(input, init) }) }],
       ["dgeg", { kinds: Object.values(DGEG_FEEDS), collector: (config: SourceConfig) => dgegCollector({ config, apiOrigin: this.env.DGEG_API_ORIGIN, fetcher: (input, init) => fetch(input, init) }) }],
       ["opendatasoft", { kinds: Object.values(OPENDATASOFT_FEEDS), collector: (config: SourceConfig) => opendatasoftCollector({ config, hosts: this.env.OPENDATASOFT_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }) }],

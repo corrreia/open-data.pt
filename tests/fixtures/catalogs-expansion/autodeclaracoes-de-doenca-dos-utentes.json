@@ -1,0 +1,198 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "des_dia",
+        "description": null,
+        "annotations": {},
+        "label": "Data",
+        "type": "date",
+        "label_pt": "Data",
+        "label_en": "Data",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "des_semana_do_ano",
+        "description": null,
+        "annotations": {},
+        "label": "Semana do Ano",
+        "type": "text",
+        "label_pt": "Semana do Ano",
+        "label_en": "Semana do Ano",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "tipo_origem",
+        "description": null,
+        "annotations": {},
+        "label": "Origem",
+        "type": "text",
+        "label_pt": "Origem",
+        "label_en": "Origem",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "des_sexo",
+        "description": null,
+        "annotations": {},
+        "label": "Sexo",
+        "type": "text",
+        "label_pt": "Sexo",
+        "label_en": "Sexo",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "grupo_etario",
+        "description": null,
+        "annotations": {},
+        "label": "Grupo Etário",
+        "type": "text",
+        "label_pt": "Grupo Etário",
+        "label_en": "Grupo Etário",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "qtd_add",
+        "description": null,
+        "annotations": {},
+        "label": "Nº ADD Emitidas",
+        "type": "int",
+        "label_pt": "Nº ADD Emitidas",
+        "label_en": "Nº ADD Emitidas",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "dataset_id": "autodeclaracoes-de-doenca-dos-utentes",
+    "dataset_uid": "da_w6g6vt",
+    "has_records": true,
+    "features": [
+      "analyze",
+      "timeserie"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "dcat": {
+        "created": null,
+        "issued": null,
+        "creator": "SPMS",
+        "contributor": "SPMS",
+        "contact_name": null,
+        "contact_email": null,
+        "accrualperiodicity": "monthly",
+        "spatial": null,
+        "temporal": "01 Maio 2023 até ao último dia do mês anterior",
+        "granularity": "Diária",
+        "dataquality": null,
+        "publisher_type": null,
+        "conforms_to": null,
+        "temporal_coverage_start": null,
+        "temporal_coverage_end": null,
+        "accessRights": null,
+        "relation": null
+      },
+      "default": {
+        "title": "Autodeclarações de Doença dos Utentes",
+        "title_pt": "Autodeclarações de Doença dos Utentes",
+        "title_en": "Autodeclarações de Doença dos Utentes",
+        "description": "<div><font face=\"Arial, sans-serif\"><span style=\"font-size: 16px;\">Monitorizar a evolução e o acesso às Autodeclarações de Doença (ADD) dos utentes por dia, semana, género, grupo etário e origem. A informação é disponibilizada em tempo útil.</span></font></div><div><font face=\"Arial, sans-serif\"><span style=\"font-size: 16px;\"><br></span></font></div><div><font face=\"Arial, sans-serif\"><span style=\"font-size: 16px;\"><b>Observações: </b></span></font><span style=\"font-size: 16px; font-family: Arial, sans-serif;\">Os dados relativos a este indicador são publicados por regra, no primeiro dia do mês relativamente aos dados do mês anterior, existirá uma atualização dos mesmos, sendo provável o seu aumento a nível nacional.</span></div><div><br></div>",
+        "description_pt": "<div><font face=\"Arial, sans-serif\"><span style=\"font-size: 16px;\">Monitorizar a evolução e o acesso às Autodeclarações de Doença (ADD) dos utentes por dia, semana, género, grupo etário e origem. A informação é disponibilizada em tempo útil.</span></font></div><div><font face=\"Arial, sans-serif\"><span style=\"font-size: 16px;\"><br></span></font></div><div><font face=\"Arial, sans-serif\"><span style=\"font-size: 16px;\"><b>Observações: </b></span></font><span style=\"font-size: 16px; font-family: Arial, sans-serif;\">Os dados relativos a este indicador são publicados por regra, no primeiro dia do mês relativamente aos dados do mês anterior, existirá uma atualização dos mesmos, sendo provável o seu aumento a nível nacional.</span></div><div><br></div>",
+        "description_en": "<div><font face=\"Arial, sans-serif\"><span style=\"font-size: 16px;\">Monitorizar a evolução e o acesso às Autodeclarações de Doença (ADD) dos utentes por dia, semana, género, grupo etário e origem. A informação é disponibilizada em tempo útil.</span></font></div><div><font face=\"Arial, sans-serif\"><span style=\"font-size: 16px;\"><br></span></font></div><div><font face=\"Arial, sans-serif\"><span style=\"font-size: 16px;\"><b>Observações: </b></span></font><span style=\"font-size: 16px; font-family: Arial, sans-serif;\">Os dados relativos a este indicador são publicados por regra, no primeiro dia do mês relativamente aos dados do mês anterior, existirá uma atualização dos mesmos, sendo provável o seu aumento a nível nacional.</span></div><div><br></div>",
+        "theme": [
+          "Acesso"
+        ],
+        "theme_pt": [
+          "Acesso"
+        ],
+        "theme_en": [
+          "Acesso"
+        ],
+        "keyword": [
+          "ADD"
+        ],
+        "keyword_pt": [
+          "ADD"
+        ],
+        "keyword_en": [
+          "ADD"
+        ],
+        "license": null,
+        "license_pt": null,
+        "license_en": null,
+        "license_url": null,
+        "license_url_pt": null,
+        "license_url_en": null,
+        "language": "pt",
+        "metadata_languages": [
+          "pt"
+        ],
+        "timezone": null,
+        "modified": "2026-09-06T06:39:19.388000+00:00",
+        "modified_updates_on_metadata_change": false,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2026-09-06T06:39:19.388000+00:00",
+        "metadata_processed": "2026-09-15T23:00:05.596000+00:00",
+        "geographic_reference": null,
+        "geographic_reference_auto": false,
+        "territory": null,
+        "geometry_types": null,
+        "bbox": null,
+        "publisher": "SPMS",
+        "publisher_pt": "SPMS",
+        "publisher_en": "SPMS",
+        "references": null,
+        "records_count": 19665,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": "MONTHLY"
+      },
+      "custom": {
+        "dataset-id-number": "79",
+        "measure-unit": null,
+        "source-data": "SIMSNS",
+        "version": null,
+        "formula": null
+      }
+    }
+  },
+  "records": [
+    {
+      "des_dia": "2026-08-31",
+      "des_semana_do_ano": "2026-36",
+      "tipo_origem": "APP SNS 24",
+      "des_sexo": "Homem",
+      "grupo_etario": "Dos 19 aos 44 anos",
+      "qtd_add": 694
+    },
+    {
+      "des_dia": "2026-08-31",
+      "des_semana_do_ano": "2026-36",
+      "tipo_origem": "APP SNS 24",
+      "des_sexo": "Homem",
+      "grupo_etario": "Dos 45 aos 64 anos",
+      "qtd_add": 158
+    },
+    {
+      "des_dia": "2026-08-31",
+      "des_semana_do_ano": "2026-36",
+      "tipo_origem": "APP SNS 24",
+      "des_sexo": "Homem",
+      "grupo_etario": "Dos 65 aos 74 anos",
+      "qtd_add": 5
+    }
+  ]
+}

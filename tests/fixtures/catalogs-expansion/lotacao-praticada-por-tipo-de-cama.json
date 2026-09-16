@@ -1,0 +1,264 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "tempo",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "timeserie_precision": "month",
+          "facetsort": "-alphanum"
+        },
+        "label": "Período",
+        "type": "date",
+        "label_pt": "Período",
+        "label_en": "Período",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "regiao",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "sortable": true
+        },
+        "label": "Região",
+        "type": "text",
+        "label_pt": "Região",
+        "label_en": "Região",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "instituicao",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "sortable": true
+        },
+        "label": "Instituição",
+        "type": "text",
+        "label_pt": "Instituição",
+        "label_en": "Instituição",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "localizacao_geografica",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Localização Geográfica",
+        "type": "geo_point_2d",
+        "label_pt": "Localização Geográfica",
+        "label_en": "Localização Geográfica",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "tipo_de_camas",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "sortable": true
+        },
+        "label": "Tipo de Camas",
+        "type": "text",
+        "label_pt": "Tipo de Camas",
+        "label_en": "Tipo de Camas",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "lotacao",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Lotação",
+        "type": "int",
+        "label_pt": "Lotação",
+        "label_en": "Lotação",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "dataset_id": "lotacao-praticada-por-tipo-de-cama",
+    "dataset_uid": "da_zq5q64",
+    "has_records": true,
+    "features": [
+      "timeserie",
+      "geo",
+      "analyze"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "dcat": {
+        "created": "2016-01-28",
+        "issued": "2018-06-30",
+        "creator": "SPMS",
+        "contributor": "DE-SNS",
+        "contact_name": null,
+        "contact_email": null,
+        "accrualperiodicity": "Mensal",
+        "spatial": "Portugal Continental",
+        "temporal": "De janeiro de 2013 ao mês n-2 anterior ao atual (valores acumulados)",
+        "granularity": null,
+        "dataquality": null,
+        "publisher_type": null,
+        "conforms_to": null,
+        "temporal_coverage_start": null,
+        "temporal_coverage_end": null,
+        "accessRights": null,
+        "relation": null
+      },
+      "default": {
+        "title": "Lotação Hospitalar para Doentes Agudos",
+        "title_pt": "Lotação Hospitalar para Doentes Agudos",
+        "title_en": "Lotação Hospitalar para Doentes Agudos",
+        "description": "<p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Monitorização da lotação praticada para doentes agudos, representando as camas disponíveis para internamento imediato em estabelecimentos de saúde</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">A lotação praticada é apresentada por tipo de cama, incluindo as seguintes categorias:</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Lotação Praticada: Refere-se ao número de camas disponíveis e equipadas para internamento imediato de doentes agudos no estabelecimento de saúde.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Camas Neutras: Camas que não estão atribuídas a uma especialidade específica, sendo geridas de forma integrada de acordo com as necessidades de internamento.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Camas Outras: Camas utilizadas nos serviços de cuidados intensivos e intermédios.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Camas Cirúrgicas: Camas destinadas ao internamento nas especialidades cirúrgicas.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Camas Médicas: Camas utilizadas para internamento nas especialidades médicas.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\"><b>Observações:</b></span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Os dados relativos ao mês n-2, publicados até ao último dia útil do mês n, têm caráter provisório, sujeitos a eventuais atualizações.</span></font></p>",
+        "description_pt": "<p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Monitorização da lotação praticada para doentes agudos, representando as camas disponíveis para internamento imediato em estabelecimentos de saúde</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">A lotação praticada é apresentada por tipo de cama, incluindo as seguintes categorias:</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Lotação Praticada: Refere-se ao número de camas disponíveis e equipadas para internamento imediato de doentes agudos no estabelecimento de saúde.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Camas Neutras: Camas que não estão atribuídas a uma especialidade específica, sendo geridas de forma integrada de acordo com as necessidades de internamento.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Camas Outras: Camas utilizadas nos serviços de cuidados intensivos e intermédios.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Camas Cirúrgicas: Camas destinadas ao internamento nas especialidades cirúrgicas.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Camas Médicas: Camas utilizadas para internamento nas especialidades médicas.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\"><b>Observações:</b></span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Os dados relativos ao mês n-2, publicados até ao último dia útil do mês n, têm caráter provisório, sujeitos a eventuais atualizações.</span></font></p>",
+        "description_en": "<p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Monitorização da lotação praticada para doentes agudos, representando as camas disponíveis para internamento imediato em estabelecimentos de saúde</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">A lotação praticada é apresentada por tipo de cama, incluindo as seguintes categorias:</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Lotação Praticada: Refere-se ao número de camas disponíveis e equipadas para internamento imediato de doentes agudos no estabelecimento de saúde.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Camas Neutras: Camas que não estão atribuídas a uma especialidade específica, sendo geridas de forma integrada de acordo com as necessidades de internamento.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Camas Outras: Camas utilizadas nos serviços de cuidados intensivos e intermédios.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Camas Cirúrgicas: Camas destinadas ao internamento nas especialidades cirúrgicas.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Camas Médicas: Camas utilizadas para internamento nas especialidades médicas.</span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\"><b>Observações:</b></span></font></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"></p><p style=\"margin: 0cm 0cm 12pt; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial;\"><font face=\"Arial, sans-serif\"><span style=\"font-size: 14.6667px;\">Os dados relativos ao mês n-2, publicados até ao último dia útil do mês n, têm caráter provisório, sujeitos a eventuais atualizações.</span></font></p>",
+        "theme": [
+          "Acesso"
+        ],
+        "theme_pt": [
+          "Acesso"
+        ],
+        "theme_en": [
+          "Acesso"
+        ],
+        "keyword": [
+          "Lotação",
+          "Cuidados Hospitalares"
+        ],
+        "keyword_pt": [
+          "Lotação",
+          "Cuidados Hospitalares"
+        ],
+        "keyword_en": [
+          "Lotação",
+          "Cuidados Hospitalares"
+        ],
+        "license": null,
+        "license_pt": null,
+        "license_en": null,
+        "license_url": null,
+        "license_url_pt": null,
+        "license_url_en": null,
+        "language": "pt",
+        "metadata_languages": [
+          "pt"
+        ],
+        "timezone": null,
+        "modified": "2026-08-31T16:33:59.660000+00:00",
+        "modified_updates_on_metadata_change": true,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2026-08-31T16:33:59.660000+00:00",
+        "metadata_processed": "2026-08-31T16:33:59.711000+00:00",
+        "geographic_reference": [
+          "world_pt"
+        ],
+        "geographic_reference_auto": true,
+        "territory": [
+          "Portugal"
+        ],
+        "geometry_types": [
+          "Point"
+        ],
+        "bbox": {
+          "type": "Feature",
+          "geometry": {
+            "coordinates": [
+              [
+                [
+                  -6.768198050558567,
+                  41.80565318092704
+                ],
+                [
+                  -9.418267076835036,
+                  41.80565318092704
+                ],
+                [
+                  -9.418267076835036,
+                  37.02389728277922
+                ],
+                [
+                  -6.768198050558567,
+                  37.02389728277922
+                ],
+                [
+                  -6.768198050558567,
+                  41.80565318092704
+                ]
+              ]
+            ],
+            "type": "Polygon"
+          },
+          "properties": {}
+        },
+        "publisher": "DE-SNS",
+        "publisher_pt": "DE-SNS",
+        "publisher_en": "DE-SNS",
+        "references": null,
+        "records_count": 18809,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": null
+      },
+      "custom": {
+        "dataset-id-number": "58",
+        "measure-unit": "Nº de Camas",
+        "source-data": "SICA",
+        "version": null,
+        "formula": null
+      }
+    }
+  },
+  "records": [
+    {
+      "tempo": "2026-06",
+      "regiao": "Região de Saúde do Alentejo",
+      "instituicao": "Unidade Local de Saúde do Alentejo Central, EPE",
+      "localizacao_geografica": {
+        "lon": -7.903064,
+        "lat": 38.568838
+      },
+      "tipo_de_camas": "Camas Cirúrgicas",
+      "lotacao": 134
+    },
+    {
+      "tempo": "2026-06",
+      "regiao": "Região de Saúde do Alentejo",
+      "instituicao": "Unidade Local de Saúde do Alentejo Central, EPE",
+      "localizacao_geografica": {
+        "lon": -7.903064,
+        "lat": 38.568838
+      },
+      "tipo_de_camas": "Camas Médicas",
+      "lotacao": 128
+    },
+    {
+      "tempo": "2026-06",
+      "regiao": "Região de Saúde do Alentejo",
+      "instituicao": "Unidade Local de Saúde do Alentejo Central, EPE",
+      "localizacao_geografica": {
+        "lon": -7.903064,
+        "lat": 38.568838
+      },
+      "tipo_de_camas": "Outras Camas",
+      "lotacao": 33
+    }
+  ]
+}

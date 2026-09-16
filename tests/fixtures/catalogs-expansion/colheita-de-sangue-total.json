@@ -1,0 +1,289 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "periodo",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "timeserie_precision": "month",
+          "facetsort": "-alphanum",
+          "timerangeFilter": true
+        },
+        "label": "Período",
+        "type": "date",
+        "label_pt": "Período",
+        "label_en": "Período",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "regiao",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "disjunctive": true,
+          "sortable": true,
+          "facetsort": "alphanum"
+        },
+        "label": "Região",
+        "type": "text",
+        "label_pt": "Região",
+        "label_en": "Região",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "entidade",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "facetsort": "alphanum",
+          "disjunctive": true,
+          "sortable": true
+        },
+        "label": "Entidade ",
+        "type": "text",
+        "label_pt": "Entidade ",
+        "label_en": "Entidade ",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "localizacao_geografica",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": " Localização Geográfica",
+        "type": "geo_point_2d",
+        "label_pt": " Localização Geográfica",
+        "label_en": " Localização Geográfica",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "grupo_sanguineo",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "disjunctive": true,
+          "sortable": true
+        },
+        "label": "Grupo Sanguíneo",
+        "type": "text",
+        "label_pt": "Grupo Sanguíneo",
+        "label_en": "Grupo Sanguíneo",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "no_total_de_unidades_de_sangue_colhidas",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Nº Total de Unidades de Sangue Colhidas",
+        "type": "int",
+        "label_pt": "Nº Total de Unidades de Sangue Colhidas",
+        "label_en": "Nº Total de Unidades de Sangue Colhidas",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "no_total_de_unidades_de_sangue_colhidas_no_grupo_etario_25_anos",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Nº Total de Unidades de Sangue Colhidas no Grupo Etário <25 anos",
+        "type": "int",
+        "label_pt": "Nº Total de Unidades de Sangue Colhidas no Grupo Etário <25 anos",
+        "label_en": "Nº Total de Unidades de Sangue Colhidas no Grupo Etário <25 anos",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "dataset_id": "colheita-de-sangue-total",
+    "dataset_uid": "da_fqtjth",
+    "has_records": true,
+    "features": [
+      "analyze",
+      "timeserie",
+      "geo"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "dcat": {
+        "created": "2016-01-30",
+        "issued": "2019-02-28",
+        "creator": "SPMS",
+        "contributor": "IPST",
+        "contact_name": null,
+        "contact_email": null,
+        "accrualperiodicity": "Anual | Mensal",
+        "spatial": "Portugal Continental",
+        "temporal": "2011 a 2014 (valores anuais); janeiro 2015 a julho 2019 e janeiro a dezembro 2023 (valores mensais), exceto 2022",
+        "granularity": null,
+        "dataquality": null,
+        "publisher_type": null,
+        "conforms_to": null,
+        "temporal_coverage_start": null,
+        "temporal_coverage_end": null,
+        "accessRights": null,
+        "relation": null
+      },
+      "default": {
+        "title": "Colheita de Sangue",
+        "title_pt": "Colheita de Sangue",
+        "title_en": "Colheita de Sangue",
+        "description": "<p>\n\tAcompanhar o número total de colheitas de sangue.</p><p>\n<strong>Métricas:</strong></p><ul>\n<li><strong style=\"background-color: initial;\">Nº total de unidades de sangue total colhidas pela Instituição:</strong> uma unidade de sangue total é o produto que se obtém quando um dador se inscreve para a dádiva de sangue total, é aprovado em triagem clínica e é aprovado em colheita.</li>\n<li><strong style=\"background-color: initial;\">Nº total de unidades de sangue total colhidas pelo grupo etário &lt;25 anos:</strong> corresponde a inscrições para a dádiva de sangue total aprovadas em triagem clínica e em colheita. O cálculo do grupo etário é feito com base na idade à data em que o dador se inscreveu.</li></ul><p>\n<br>\n<strong>Observações:</strong> A informação referente ao IPST, IP é da sua responsabilidade. Os dados relativos às entidades hospitalares são da sua responsabilidade, resultam do reporte efetuado por estas entidades neste âmbito podendo estar sujeitos a alterações decorrentes de eventuais atualizações efetuadas pelas próprias entidades hospitalares. </p>",
+        "description_pt": "<p>\n\tAcompanhar o número total de colheitas de sangue.</p><p>\n<strong>Métricas:</strong></p><ul>\n<li><strong style=\"background-color: initial;\">Nº total de unidades de sangue total colhidas pela Instituição:</strong> uma unidade de sangue total é o produto que se obtém quando um dador se inscreve para a dádiva de sangue total, é aprovado em triagem clínica e é aprovado em colheita.</li>\n<li><strong style=\"background-color: initial;\">Nº total de unidades de sangue total colhidas pelo grupo etário &lt;25 anos:</strong> corresponde a inscrições para a dádiva de sangue total aprovadas em triagem clínica e em colheita. O cálculo do grupo etário é feito com base na idade à data em que o dador se inscreveu.</li></ul><p>\n<br>\n<strong>Observações:</strong> A informação referente ao IPST, IP é da sua responsabilidade. Os dados relativos às entidades hospitalares são da sua responsabilidade, resultam do reporte efetuado por estas entidades neste âmbito podendo estar sujeitos a alterações decorrentes de eventuais atualizações efetuadas pelas próprias entidades hospitalares. </p>",
+        "description_en": "<p>\n\tAcompanhar o número total de colheitas de sangue.</p><p>\n<strong>Métricas:</strong></p><ul>\n<li><strong style=\"background-color: initial;\">Nº total de unidades de sangue total colhidas pela Instituição:</strong> uma unidade de sangue total é o produto que se obtém quando um dador se inscreve para a dádiva de sangue total, é aprovado em triagem clínica e é aprovado em colheita.</li>\n<li><strong style=\"background-color: initial;\">Nº total de unidades de sangue total colhidas pelo grupo etário &lt;25 anos:</strong> corresponde a inscrições para a dádiva de sangue total aprovadas em triagem clínica e em colheita. O cálculo do grupo etário é feito com base na idade à data em que o dador se inscreveu.</li></ul><p>\n<br>\n<strong>Observações:</strong> A informação referente ao IPST, IP é da sua responsabilidade. Os dados relativos às entidades hospitalares são da sua responsabilidade, resultam do reporte efetuado por estas entidades neste âmbito podendo estar sujeitos a alterações decorrentes de eventuais atualizações efetuadas pelas próprias entidades hospitalares. </p>",
+        "theme": [
+          "Acesso"
+        ],
+        "theme_pt": [
+          "Acesso"
+        ],
+        "theme_en": [
+          "Acesso"
+        ],
+        "keyword": [
+          "Colheitas",
+          "Sangue",
+          "Dádivas"
+        ],
+        "keyword_pt": [
+          "Colheitas",
+          "Sangue",
+          "Dádivas"
+        ],
+        "keyword_en": [
+          "Colheitas",
+          "Sangue",
+          "Dádivas"
+        ],
+        "license": null,
+        "license_pt": null,
+        "license_en": null,
+        "license_url": null,
+        "license_url_pt": null,
+        "license_url_en": null,
+        "language": "pt",
+        "metadata_languages": [
+          "pt"
+        ],
+        "timezone": null,
+        "modified": "2026-06-24T15:03:14.772000+00:00",
+        "modified_updates_on_metadata_change": true,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2025-06-18T09:25:45.681000+00:00",
+        "metadata_processed": "2026-06-24T15:03:18.336000+00:00",
+        "geographic_reference": [
+          "world_pt"
+        ],
+        "geographic_reference_auto": true,
+        "territory": [
+          "Portugal"
+        ],
+        "geometry_types": [
+          "Point"
+        ],
+        "bbox": {
+          "type": "Feature",
+          "geometry": {
+            "coordinates": [
+              [
+                [
+                  -6.788819711655378,
+                  41.80565318092704
+                ],
+                [
+                  -9.418412083759904,
+                  41.80565318092704
+                ],
+                [
+                  -9.418412083759904,
+                  37.02389728277922
+                ],
+                [
+                  -6.788819711655378,
+                  37.02389728277922
+                ],
+                [
+                  -6.788819711655378,
+                  41.80565318092704
+                ]
+              ]
+            ],
+            "type": "Polygon"
+          },
+          "properties": {}
+        },
+        "publisher": "IPST",
+        "publisher_pt": "IPST",
+        "publisher_en": "IPST",
+        "references": "http://www.sns.gov.pt/monitorizacao-do-sns/colheita-de-sangue-2/",
+        "records_count": 24083,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": null
+      },
+      "custom": {
+        "dataset-id-number": "131",
+        "measure-unit": "Nº de unidades de sangue",
+        "source-data": "ASIS",
+        "version": null,
+        "formula": null
+      }
+    }
+  },
+  "records": [
+    {
+      "periodo": "2023-12",
+      "regiao": "Entidade Central",
+      "entidade": "Instituto Português do Sangue e Transplantação (IPST), I.P",
+      "localizacao_geografica": {
+        "lon": -9.1505021,
+        "lat": 38.7567758
+      },
+      "grupo_sanguineo": "A-",
+      "no_total_de_unidades_de_sangue_colhidas": 558,
+      "no_total_de_unidades_de_sangue_colhidas_no_grupo_etario_25_anos": 53
+    },
+    {
+      "periodo": "2023-12",
+      "regiao": "Entidade Central",
+      "entidade": "Instituto Português do Sangue e Transplantação (IPST), I.P",
+      "localizacao_geografica": {
+        "lon": -9.1505021,
+        "lat": 38.7567758
+      },
+      "grupo_sanguineo": "A+",
+      "no_total_de_unidades_de_sangue_colhidas": 2680,
+      "no_total_de_unidades_de_sangue_colhidas_no_grupo_etario_25_anos": 276
+    },
+    {
+      "periodo": "2023-12",
+      "regiao": "Entidade Central",
+      "entidade": "Instituto Português do Sangue e Transplantação (IPST), I.P",
+      "localizacao_geografica": {
+        "lon": -9.1505021,
+        "lat": 38.7567758
+      },
+      "grupo_sanguineo": "AB-",
+      "no_total_de_unidades_de_sangue_colhidas": 34,
+      "no_total_de_unidades_de_sangue_colhidas_no_grupo_etario_25_anos": 2
+    }
+  ]
+}

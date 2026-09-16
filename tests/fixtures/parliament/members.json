@@ -1,0 +1,10 @@
+{
+  "CirculosEleitorais": [{"cpDes":"Example constituency","cpId":400001.0,"legDes":"XVII"}],
+  "Deputados": [
+    {"DepCadId":40000001.0,"DepId":50000001.0,"DepCPDes":"Example constituency","DepCPId":400001.0,"DepNomeCompleto":"Synthetic Member A","DepNomeParlamentar":"Member A","DepGP":[{"gpDtFim":"2026-06-10","gpDtInicio":"2026-06-01","gpId":400001.0,"gpSigla":"EX"}],"DepSituacao":[{"sioDes":"Renunciou","sioDtInicio":"2026-06-10","sioDtFim":null}],"LegDes":"XVII"},
+    {"DepCadId":40000002.0,"DepId":50000002.0,"DepCPDes":"Example constituency","DepCPId":400001.0,"DepNomeCompleto":"Synthetic Member B","DepNomeParlamentar":"Member B","DepGP":[{"gpDtFim":null,"gpDtInicio":"2026-06-11","gpId":400001.0,"gpSigla":"EX"}],"DepSituacao":[{"sioDes":"Efetivo","sioDtInicio":"2026-06-11","sioDtFim":null}],"LegDes":"XVII"}
+  ],
+  "DetalheLegislatura":{"dtfim":null,"dtini":"2026-06-01","id":"400001","sigla":"XVII","siglaAntiga":"XVII"},
+  "GruposParlamentares":[{"nome":"Example parliamentary group","sigla":"EX"}],
+  "SessoesLegislativas":[{"dataFim":null,"dataInicio":"2026-06-01","numSessao":"1"}]
+}

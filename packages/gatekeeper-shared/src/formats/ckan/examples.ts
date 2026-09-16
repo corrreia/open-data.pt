@@ -1,4 +1,4 @@
-import type { ExampleFeed } from "../../index";
+import type { ExampleFeed, SourceConfig } from "../../index";
 
 const SERVING = {
   licence: "Creative Commons CCZero",
@@ -257,7 +257,63 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "9b899d53-8e7f-4d61-bac1-86449853a87b",
     ["culture", "cities"],
   ),
+  aguedaExample("flood-marks", "Águeda flood-level reference marks", "Surveyed flood-height reference marks, not current river levels or flood warnings.", "cotas-de-cheia", "51ebb54b-0249-46b6-8aa9-edf5365a9976", { idField: "gid", crs: "EPSG:3763" }, ["environment", "cities"], "Creative Commons Attribution (CC BY)"),
+  aguedaExample("waste-bins", "Águeda municipal waste-bin locations", "Municipal solid-waste container location inventory. No live bin fullness is provided.", "contentores-rsu", "5ec1ab1d-998b-41f5-b35d-860d63ec869c", { idField: "id", crs: "EPSG:3763" }, ["cities", "environment"]),
+  aguedaExample("textile-bins", "Águeda textile collection-bin locations", "Textile recycling container location inventory, not live capacity or fullness.", "f2f9d71f-ffab-4678-b4a1-6a2709879020", "df073fc9-441e-4385-b50e-0290881a5729", { idField: "id", crs: "EPSG:3763" }, ["cities", "environment"], "Creative Commons Attribution (CC BY)"),
+  aguedaExample("electronics-bins", "Águeda electronics collection-bin locations", "Electrical and electronic waste collection points, not live capacity or fullness.", "contentores-reee", "a7963739-44fd-47ec-b9bf-481141cfcda5", { idField: "id", crs: "EPSG:3763" }, ["cities", "environment"], "Creative Commons Attribution (CC BY)"),
+  aguedaExample("waste-operators", "Águeda waste-management operators", "Reference locations and published details of waste-management establishments.", "b2d1563d-683f-4dff-a472-a68789c9df74", "4a836cd0-eed9-4ecd-b9fc-ebeee1323aae", { idField: "id_ogr" }, ["cities", "environment"]),
+  aguedaExample("charging-locations", "Águeda electric-vehicle charging locations", "Published charging-point location inventory and technical details. This is not live charging availability.", "ponto-de-carregamento-de-veiculos-eletricos", "8a0e420f-ebe4-452c-956f-870427811bcd", { idField: "id_pontocve" }, ["mobility", "energy", "cities"]),
+  aguedaExample("beagueda-stations", "beÁgueda bicycle station locations", "Reference locations and dock capacities of beÁgueda bicycle stations, not live bicycle or dock availability.", "estacoes-beagueda", "c6da7509-f4b1-4a3c-a39b-5af5e4908288", { idField: "id" }, ["mobility", "cities"]),
+  {
+    slug: "oeiras-hourly-environment-feed",
+    title: "Oeiras hourly air quality, noise and weather",
+    description: "Hourly QART station measurements from the latest published monthly CSV. Monthly publication, not live observations; timestamps and units are those supplied by the municipality.",
+    config: {
+      source: "ckan",
+      host: "oeirasinterativa.oeiras.pt",
+      apiPath: "/dadosabertos",
+      dataset: "sensorizacao-relatorios-mensais-com-dados-de-qualidade-do-ar-pressao-sonora-e-meteorologia",
+      resourceSelection: "latest-month",
+      resourcePrefix: "qart_dados_medias_1h_",
+      timeField: "Date",
+      delimiter: ";",
+      decimal: ",",
+      measures: JSON.stringify({
+        "CO - µg/m3": "µg/m³", "O3 - µg/m3": "µg/m³", "NO - µg/m3": "µg/m³", "NO2 - µg/m3": "µg/m³", "SO2 - µg/m3": "µg/m³",
+        "Humidade - %": "%", "Temperatura - ℃": "°C",
+        "PM 0.5 - µg/m3": "µg/m³", "PM 0.7 - µg/m3": "µg/m³", "PM 1 - µg/m3": "µg/m³", "PM 2.5 - µg/m3": "µg/m³", "PM 10 - µg/m3": "µg/m³",
+        "LAeq,T - dB(A)": "dB(A)", "Velocidade do Vento - m/s": "m/s", "Direção do Vento - °": "°", "Pressão - mbar": "mbar", "Precipitação - mm": "mm",
+      }),
+    },
+    policy: {
+      name: "Oeiras monthly observations checked weekly",
+      version: 1,
+      collection: { cadenceSeconds: 604_800, timeoutSeconds: 90, maxBytes: 2 * 1024 * 1024, maxOutputBytes: 8 * 1024 * 1024, historyMode: "changes" },
+      serving: { licence: "Creative Commons Attribution (CC BY)", attribution: "Câmara Municipal de Oeiras via oeirasinterativa.oeiras.pt" },
+    },
+    staleAfterSeconds: 45 * 86_400,
+    publisher: "Câmara Municipal de Oeiras",
+    topics: ["environment", "cities"],
+  },
 ];
+
+/** One slowly changing municipal location inventory, with no live availability claim. */
+function aguedaExample(slug: string, title: string, description: string, dataset: string, resource: string, options: SourceConfig, topics: string[], licence = "Creative Commons CCZero"): ExampleFeed {
+  return {
+    slug: `agueda-${slug}-feed`, title, description,
+    config: { source: "ckan", host: "dadosabertos.cm-agueda.pt", dataset, resource, ...options },
+    policy: {
+      name: "Águeda municipal reference inventory, monthly",
+      // Reconfigure the two feeds whose initial origin requests exhausted retries.
+      version: slug === "textile-bins" || slug === "waste-operators" ? 2 : 1,
+      collection: { cadenceSeconds: 30 * 86_400, timeoutSeconds: 90, maxBytes: 4 * 1024 * 1024, historyMode: "changes" },
+      serving: { licence, attribution: "Câmara Municipal de Águeda via dadosabertos.cm-agueda.pt" },
+    },
+    staleAfterSeconds: 90 * 86_400,
+    publisher: "Câmara Municipal de Águeda",
+    topics,
+  };
+}
 
 /** One GeoJSON resource from the Cascais open data portal, collected daily. */
 function cascaisExample(

@@ -17,6 +17,7 @@ import {
   type TopicOptions,
 } from "@open-data-pt/gatekeeper-shared";
 import { ARCGIS_FEEDS, arcgisCollector } from "@open-data-pt/gatekeeper-shared/formats/arcgis";
+import { OGC_FEEDS, ogcCollector } from "@open-data-pt/gatekeeper-shared/formats/ogc";
 import { IPMA_FEEDS, ipmaCollector } from "@open-data-pt/gatekeeper-shared/sources/ipma";
 import { ENVIRONMENT_EXAMPLES } from "./examples";
 
@@ -59,6 +60,7 @@ export default class EnvironmentGatekeeper
   /** The wiring: which library answers for a feed, and what it is given to do it with. */
   private libraries(): GatekeeperLibraries {
     return new Map<string, GatekeeperLibrary>([
+      ["ogc", { kinds: Object.values(OGC_FEEDS), collector: (config: SourceConfig) => ogcCollector({ config, hosts: this.env.OGC_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }) }],
       ["ipma", { kinds: Object.values(IPMA_FEEDS), collector: (config: SourceConfig) => ipmaCollector({ config, apiOrigin: this.env.IPMA_API_ORIGIN, fetcher: (input, init) => fetch(input, init) }) }],
       ["arcgis", { kinds: Object.values(ARCGIS_FEEDS), collector: (config: SourceConfig) => arcgisCollector({ config, hosts: this.env.ARCGIS_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }) }],
     ]);

@@ -1,0 +1,91 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "dtmn": "0101",
+        "municipio": "Águeda",
+        "distrito_ilha": "Aveiro",
+        "nuts3_cod": "191",
+        "nuts3": "Região de Aveiro",
+        "nuts2": "Centro",
+        "nuts1": "Continente",
+        "area_ha": 33527.44,
+        "perimetro_km": 105,
+        "n_freguesias": 15
+      },
+      "id": "0101",
+      "geometry": null
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "dtmn": "1106",
+        "municipio": "Lisboa",
+        "distrito_ilha": "Lisboa",
+        "nuts3_cod": "1A0",
+        "nuts3": "Grande Lisboa",
+        "nuts2": "Grande Lisboa",
+        "nuts1": "Continente",
+        "area_ha": 10005.43,
+        "perimetro_km": 50,
+        "n_freguesias": 24
+      },
+      "id": "1106",
+      "geometry": null
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "dtmn": "1824",
+        "municipio": "Vouzela",
+        "distrito_ilha": "Viseu",
+        "nuts3_cod": "194",
+        "nuts3": "Viseu Dão Lafões",
+        "nuts2": "Centro",
+        "nuts1": "Continente",
+        "area_ha": 19369.46,
+        "perimetro_km": 76,
+        "n_freguesias": 9
+      },
+      "id": "1824",
+      "geometry": null
+    }
+  ],
+  "numberReturned": 3,
+  "numberMatched": 278,
+  "links": [
+    {
+      "type": "application/geo+json",
+      "rel": "self",
+      "title": "This document as GeoJSON",
+      "href": "https://ogcapi.dgterritorio.gov.pt/collections/municipios/items?f=json&limit=400&skipGeometry=true"
+    },
+    {
+      "rel": "alternate",
+      "type": "application/ld+json",
+      "title": "This document as RDF (JSON-LD)",
+      "href": "https://ogcapi.dgterritorio.gov.pt/collections/municipios/items?f=jsonld&limit=400&skipGeometry=true"
+    },
+    {
+      "type": "text/html",
+      "rel": "alternate",
+      "title": "This document as HTML",
+      "href": "https://ogcapi.dgterritorio.gov.pt/collections/municipios/items?f=html&limit=400&skipGeometry=true"
+    },
+    {
+      "type": "text/csv; charset=utf-8",
+      "rel": "alternate",
+      "title": "This document as CSV",
+      "href": "https://ogcapi.dgterritorio.gov.pt/collections/municipios/items?f=csv&limit=400&skipGeometry=true"
+    },
+    {
+      "type": "application/json",
+      "title": "CAOP2025 Municípios",
+      "rel": "collection",
+      "href": "https://ogcapi.dgterritorio.gov.pt/collections/municipios"
+    }
+  ],
+  "timeStamp": "2026-09-15T22:39:11.036031Z"
+}

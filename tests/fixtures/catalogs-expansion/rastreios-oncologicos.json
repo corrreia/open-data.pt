@@ -1,0 +1,333 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "tempo",
+        "description": null,
+        "annotations": {
+          "timeserie_precision": "month",
+          "facet": true,
+          "facetsort": "-alphanum",
+          "timerangeFilter": true
+        },
+        "label": "Período",
+        "type": "date",
+        "label_pt": "Período",
+        "label_en": "Período",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "regiao",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "sortable": true,
+          "disjunctive": true,
+          "facetsort": "alphanum"
+        },
+        "label": "Região",
+        "type": "text",
+        "label_pt": "Região",
+        "label_en": "Região",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "area_csp",
+        "description": null,
+        "annotations": {},
+        "label": "Área CSP",
+        "type": "text",
+        "label_pt": "Área CSP",
+        "label_en": "Área CSP",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "localizacao_geografica",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Localização Geográfica",
+        "type": "geo_point_2d",
+        "label_pt": "Localização Geográfica",
+        "label_en": "Localização Geográfica",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "contagem_de_mulheres_com_registo_de_mamografia_nos_ultimos_dois_anos",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Mulheres com Registo de Mamografia nos Últimos Dois Anos",
+        "type": "int",
+        "label_pt": "Mulheres com Registo de Mamografia nos Últimos Dois Anos",
+        "label_en": "Mulheres com Registo de Mamografia nos Últimos Dois Anos",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "proporcao_mulheres_50_70_a_c_mamogr_2_anos",
+        "description": null,
+        "annotations": {
+          "unit": "%",
+          "decimals": 2
+        },
+        "label": "Mulheres [50; 70[ A, c/ mamogr. (2 anos)",
+        "type": "double",
+        "label_pt": "Mulheres [50; 70[ A, c/ mamogr. (2 anos)",
+        "label_en": "Mulheres [50; 70[ A, c/ mamogr. (2 anos)",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "contagem_de_mulheres_com_colpocitologia_atualizada",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Mulheres com Colpocitologia Atualizada",
+        "type": "int",
+        "label_pt": "Mulheres com Colpocitologia Atualizada",
+        "label_en": "Mulheres com Colpocitologia Atualizada",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "proporcao_mulheres_25_60_a_c_colpoc_atuali",
+        "description": null,
+        "annotations": {
+          "unit": "%",
+          "decimals": 2
+        },
+        "label": "Mulheres [25; 60[ A, c/ colpoc. Atualizada",
+        "type": "double",
+        "label_pt": "Mulheres [25; 60[ A, c/ colpoc. Atualizada",
+        "label_en": "Mulheres [25; 60[ A, c/ colpoc. Atualizada",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "contagem_de_utentes_inscritos_com_rastreio_do_cancro_do_colon_e_reto_efetuado",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Utentes Inscritos com Rastreio do Cancro do Colon e Reto Efetuado",
+        "type": "int",
+        "label_pt": "Utentes Inscritos com Rastreio do Cancro do Colon e Reto Efetuado",
+        "label_en": "Utentes Inscritos com Rastreio do Cancro do Colon e Reto Efetuado",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "proporcao_utentes_50_75_a_c_rastreio_cancro_cr",
+        "description": null,
+        "annotations": {
+          "unit": "%",
+          "decimals": 2
+        },
+        "label": "Utentes [50; 75[ A, c/ rastreio cancro CR",
+        "type": "double",
+        "label_pt": "Utentes [50; 75[ A, c/ rastreio cancro CR",
+        "label_en": "Utentes [50; 75[ A, c/ rastreio cancro CR",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "dataset_id": "rastreios-oncologicos",
+    "dataset_uid": "da_l3i0sf",
+    "has_records": true,
+    "features": [
+      "timeserie",
+      "geo",
+      "analyze"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "dcat": {
+        "created": "2016-01-29",
+        "issued": "2018-12-31",
+        "creator": "SPMS",
+        "contributor": "DE-SNS",
+        "contact_name": null,
+        "contact_email": null,
+        "accrualperiodicity": "Mensal",
+        "spatial": "Portugal Continental",
+        "temporal": "janeiro 2015 a julho 2026 (valores acumulados)",
+        "granularity": null,
+        "dataquality": null,
+        "publisher_type": null,
+        "conforms_to": null,
+        "temporal_coverage_start": null,
+        "temporal_coverage_end": null,
+        "accessRights": null,
+        "relation": null
+      },
+      "default": {
+        "title": "Rastreios Oncológicos",
+        "title_pt": "Rastreios Oncológicos",
+        "title_en": "Rastreios Oncológicos",
+        "description": "<p>\n\tMonitorização do programa de rastreio oncológico nos cuidados de saúde primários.</p><p>\n<strong>Fórmula:</strong></p><ul><li><a href=\"https://sdm.min-saude.pt/bi.aspx?id=44&amp;clusters=S\" target=\"_blank\">https://sdm.min-saude.pt/bi.aspx?id=44&amp;clusters=S</a><span style=\"font-family: inherit; font-size: 0.875rem;\"></span></li><li><a href=\"https://sdm.min-saude.pt/bi.aspx?id=45&amp;clusters=S\" target=\"_blank\">https://sdm.min-saude.pt/bi.aspx?id=45&amp;clusters=S</a></li><li><a href=\"https://sdm.min-saude.pt/bi.aspx?id=46&amp;clusters=S\" target=\"_blank\">https://sdm.min-saude.pt/bi.aspx?id=46&amp;clusters=S</a></li></ul><p><strong></strong></p><p>\n<br>\n<strong>Observações:</strong> </p><ul><li>Devido a questões técnicas, para os registos de novembro 2016, os dados não incluem registos da Região de Saúde LVT. Não foram considerados dados provenientes do sistema Vitacare.</li><li><p class=\"MsoNormal\"><span lang=\"PT\">Os dados\nrelativos a este indicador são de caráter temporário para o mês publicado mais\nrecente. Por regra, no último dia do mês N+1 (N=\"último mês\npublicado\"), existirá uma atualização dos mesmos, sendo provável o seu\naumento a nível nacional.</span></p><p class=\"MsoNormal\"><br></p></li></ul>",
+        "description_pt": "<p>\n\tMonitorização do programa de rastreio oncológico nos cuidados de saúde primários.</p><p>\n<strong>Fórmula:</strong></p><ul><li><a href=\"https://sdm.min-saude.pt/bi.aspx?id=44&amp;clusters=S\" target=\"_blank\">https://sdm.min-saude.pt/bi.aspx?id=44&amp;clusters=S</a><span style=\"font-family: inherit; font-size: 0.875rem;\"></span></li><li><a href=\"https://sdm.min-saude.pt/bi.aspx?id=45&amp;clusters=S\" target=\"_blank\">https://sdm.min-saude.pt/bi.aspx?id=45&amp;clusters=S</a></li><li><a href=\"https://sdm.min-saude.pt/bi.aspx?id=46&amp;clusters=S\" target=\"_blank\">https://sdm.min-saude.pt/bi.aspx?id=46&amp;clusters=S</a></li></ul><p><strong></strong></p><p>\n<br>\n<strong>Observações:</strong> </p><ul><li>Devido a questões técnicas, para os registos de novembro 2016, os dados não incluem registos da Região de Saúde LVT. Não foram considerados dados provenientes do sistema Vitacare.</li><li><p class=\"MsoNormal\"><span lang=\"PT\">Os dados\nrelativos a este indicador são de caráter temporário para o mês publicado mais\nrecente. Por regra, no último dia do mês N+1 (N=\"último mês\npublicado\"), existirá uma atualização dos mesmos, sendo provável o seu\naumento a nível nacional.</span></p><p class=\"MsoNormal\"><br></p></li></ul>",
+        "description_en": "<p>\n\tMonitorização do programa de rastreio oncológico nos cuidados de saúde primários.</p><p>\n<strong>Fórmula:</strong></p><ul><li><a href=\"https://sdm.min-saude.pt/bi.aspx?id=44&amp;clusters=S\" target=\"_blank\">https://sdm.min-saude.pt/bi.aspx?id=44&amp;clusters=S</a><span style=\"font-family: inherit; font-size: 0.875rem;\"></span></li><li><a href=\"https://sdm.min-saude.pt/bi.aspx?id=45&amp;clusters=S\" target=\"_blank\">https://sdm.min-saude.pt/bi.aspx?id=45&amp;clusters=S</a></li><li><a href=\"https://sdm.min-saude.pt/bi.aspx?id=46&amp;clusters=S\" target=\"_blank\">https://sdm.min-saude.pt/bi.aspx?id=46&amp;clusters=S</a></li></ul><p><strong></strong></p><p>\n<br>\n<strong>Observações:</strong> </p><ul><li>Devido a questões técnicas, para os registos de novembro 2016, os dados não incluem registos da Região de Saúde LVT. Não foram considerados dados provenientes do sistema Vitacare.</li><li><p class=\"MsoNormal\"><span lang=\"PT\">Os dados\nrelativos a este indicador são de caráter temporário para o mês publicado mais\nrecente. Por regra, no último dia do mês N+1 (N=\"último mês\npublicado\"), existirá uma atualização dos mesmos, sendo provável o seu\naumento a nível nacional.</span></p><p class=\"MsoNormal\"><br></p></li></ul>",
+        "theme": [
+          "Saúde dos Portugueses"
+        ],
+        "theme_pt": [
+          "Saúde dos Portugueses"
+        ],
+        "theme_en": [
+          "Saúde dos Portugueses"
+        ],
+        "keyword": [
+          "Rastreios",
+          "Oncologia",
+          "Cuidados de Saúde Primários"
+        ],
+        "keyword_pt": [
+          "Rastreios",
+          "Oncologia",
+          "Cuidados de Saúde Primários"
+        ],
+        "keyword_en": [
+          "Rastreios",
+          "Oncologia",
+          "Cuidados de Saúde Primários"
+        ],
+        "license": null,
+        "license_pt": null,
+        "license_en": null,
+        "license_url": null,
+        "license_url_pt": null,
+        "license_url_en": null,
+        "language": "pt",
+        "metadata_languages": [
+          "pt"
+        ],
+        "timezone": null,
+        "modified": "2026-08-14T15:52:12.872000+00:00",
+        "modified_updates_on_metadata_change": true,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2026-08-14T15:52:12.872000+00:00",
+        "metadata_processed": "2026-08-14T15:52:12.920000+00:00",
+        "geographic_reference": [
+          "world_pt"
+        ],
+        "geographic_reference_auto": true,
+        "territory": [
+          "Portugal"
+        ],
+        "geometry_types": [
+          "Point"
+        ],
+        "bbox": {
+          "type": "Feature",
+          "geometry": {
+            "coordinates": [
+              [
+                [
+                  -6.758797746151686,
+                  41.806968385353684
+                ],
+                [
+                  -9.381800852715969,
+                  41.806968385353684
+                ],
+                [
+                  -9.381800852715969,
+                  37.02742639929056
+                ],
+                [
+                  -6.758797746151686,
+                  37.02742639929056
+                ],
+                [
+                  -6.758797746151686,
+                  41.806968385353684
+                ]
+              ]
+            ],
+            "type": "Polygon"
+          },
+          "properties": {}
+        },
+        "publisher": "DE-SNS",
+        "publisher_pt": "DE-SNS",
+        "publisher_en": "DE-SNS",
+        "references": null,
+        "records_count": 7145,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": null
+      },
+      "custom": {
+        "dataset-id-number": "108",
+        "measure-unit": "%",
+        "source-data": "SIMSNS",
+        "version": null,
+        "formula": null
+      }
+    }
+  },
+  "records": [
+    {
+      "tempo": "2026-07",
+      "regiao": "Alentejo",
+      "area_csp": "Área dos CSP da ULS Alentejo Central",
+      "localizacao_geografica": {
+        "lon": -7.903064,
+        "lat": 38.568838
+      },
+      "contagem_de_mulheres_com_registo_de_mamografia_nos_ultimos_dois_anos": 16799,
+      "proporcao_mulheres_50_70_a_c_mamogr_2_anos": 47.81681,
+      "contagem_de_mulheres_com_colpocitologia_atualizada": 24866,
+      "proporcao_mulheres_25_60_a_c_colpoc_atuali": 56.87167,
+      "contagem_de_utentes_inscritos_com_rastreio_do_cancro_do_colon_e_reto_efetuado": 24610,
+      "proporcao_utentes_50_75_a_c_rastreio_cancro_cr": 44.03056
+    },
+    {
+      "tempo": "2026-07",
+      "regiao": "Alentejo",
+      "area_csp": "Área dos CSP da ULS Alto Alentejo",
+      "localizacao_geografica": {
+        "lon": -7.42635033349663,
+        "lat": 39.3004940975133
+      },
+      "contagem_de_mulheres_com_registo_de_mamografia_nos_ultimos_dois_anos": 8962,
+      "proporcao_mulheres_50_70_a_c_mamogr_2_anos": 37.74904,
+      "contagem_de_mulheres_com_colpocitologia_atualizada": 15866,
+      "proporcao_mulheres_25_60_a_c_colpoc_atuali": 55.60189,
+      "contagem_de_utentes_inscritos_com_rastreio_do_cancro_do_colon_e_reto_efetuado": 17035,
+      "proporcao_utentes_50_75_a_c_rastreio_cancro_cr": 44.16989
+    },
+    {
+      "tempo": "2026-07",
+      "regiao": "Alentejo",
+      "area_csp": "Área dos CSP da ULS Baixo Alentejo",
+      "localizacao_geografica": {
+        "lon": -7.8559468083,
+        "lat": 38.009362882
+      },
+      "contagem_de_mulheres_com_registo_de_mamografia_nos_ultimos_dois_anos": 11022,
+      "proporcao_mulheres_50_70_a_c_mamogr_2_anos": 43.40054,
+      "contagem_de_mulheres_com_colpocitologia_atualizada": 13356,
+      "proporcao_mulheres_25_60_a_c_colpoc_atuali": 43.3369,
+      "contagem_de_utentes_inscritos_com_rastreio_do_cancro_do_colon_e_reto_efetuado": 14634,
+      "proporcao_utentes_50_75_a_c_rastreio_cancro_cr": 34.63669
+    }
+  ]
+}

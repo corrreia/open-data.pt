@@ -1,0 +1,223 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "data",
+        "description": null,
+        "annotations": {
+          "timeserie_precision": "month"
+        },
+        "label": "Date",
+        "type": "date",
+        "label_en": "Date",
+        "label_pt": "Data",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "ano",
+        "description": null,
+        "annotations": {},
+        "label": "Year",
+        "type": "text",
+        "label_en": "Year",
+        "label_pt": "Ano",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "mes",
+        "description": null,
+        "annotations": {},
+        "label": "Month",
+        "type": "text",
+        "label_en": "Month",
+        "label_pt": "Mês",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "dis_name",
+        "description": null,
+        "annotations": {},
+        "label": "District",
+        "type": "text",
+        "label_en": "District",
+        "label_pt": "Distrito",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "con_name",
+        "description": null,
+        "annotations": {},
+        "label": "Municipality",
+        "type": "text",
+        "label_en": "Municipality",
+        "label_pt": "Concelho",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "fre_name",
+        "description": null,
+        "annotations": {},
+        "label": "Parish",
+        "type": "text",
+        "label_en": "Parish",
+        "label_pt": "Freguesia",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "potencia_contratada",
+        "description": null,
+        "annotations": {},
+        "label": "Contracted Power",
+        "type": "double",
+        "label_en": "Contracted Power",
+        "label_pt": "Potência Contratada",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "numero_de_contratos",
+        "description": null,
+        "annotations": {},
+        "label": "Number of Contracts",
+        "type": "double",
+        "label_en": "Number of Contracts",
+        "label_pt": "Número de Contratos",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "dis_code",
+        "description": null,
+        "annotations": {},
+        "label": "District Code",
+        "type": "text",
+        "label_en": "District Code",
+        "label_pt": "Código Distrito",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "con_code",
+        "description": null,
+        "annotations": {},
+        "label": "Municipality Code",
+        "type": "text",
+        "label_en": "Municipality Code",
+        "label_pt": "Código Concelho",
+        "description_en": null,
+        "description_pt": null
+      },
+      {
+        "name": "fre_code",
+        "description": null,
+        "annotations": {},
+        "label": "Parish Code",
+        "type": "text",
+        "label_en": "Parish Code",
+        "label_pt": "Código Freguesia",
+        "description_en": null,
+        "description_pt": null
+      }
+    ],
+    "dataset_id": "potencia-contratada-contratos-ativos-municipio",
+    "dataset_uid": "da_lhz6kh",
+    "has_records": true,
+    "features": [
+      "analyze",
+      "timeserie",
+      "custom_view"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "default": {
+        "title": "Contracted Power",
+        "title_en": "Contracted Power",
+        "title_pt": "Potência contratada",
+        "description": "<p>This dataset presents the contracted power capacity and the corresponding number of active contracts within the electricity distribution network operated by E-REDES, aggregated by district, municipality, and parish.</p><p>The data makes it possible to characterize the contracted power installed in each territory and relate it to the number of associated contracts, enabling the analysis of electrification intensity and the average contract size in each geographic location.</p><p>It allows the monthly monitoring of both contracted power and the number of contracts, supporting studies on the planning and reinforcement of the electricity network, as well as the characterization of potential electricity consumption associated with each territory.</p><p><br></p><p><b>Use cases:</b></p><ul><li>Network electrification.</li><li>Analysis of contracted power by district, municipality, and parish.</li><li>Monitoring the monthly evolution of the number of contracts and contracted power.</li><li>Support for the planning, sizing, and reinforcement of the electricity distribution network.</li><li>Identification of areas with a higher density of contracts or contracted power.</li></ul><p><br></p><p><br></p><p><b>Update frequency:</b> monthly</p><p><br></p><p><b>Included variables:</b></p><ul><li>Year/Month — Reference period of the information, in year and month format.</li><li>District — Name of the district where the contracts are located.</li><li>District Code — Identification code of the district.</li><li>Municipality — Name of the municipality where the contracts are located.</li><li>Municipality Code — Identification code of the municipality.</li><li>Parish — Name of the parish where the contracts are located.</li><li>Parish Code — Identification code of the parish.</li><li>Contracted Power — Total contracted power associated with active contracts within the territory under analysis.</li><li>Number of Contracts — Number of active contracts associated with the territory under analysis.</li></ul><p><br></p><p><br></p><p>1. The information made available by E-REDES is an approximation of the values extracted from its systems and reflects the moment at which the data was collected. As connection points, the electricity distribution network, and consumption and generation values are naturally highly dynamic, E-REDES notes that the information provided may be subject to subsequent changes and updates. Possible omissions and/or occasional location inaccuracies may also exist in the data.</p><p><br></p><p>2. Accordingly, E-REDES shall not be held liable towards third parties, including partners, service providers, contractors, users, and customers, for any damages arising directly or indirectly from the use of this information, particularly when carrying out interventions, calculations, and/or estimates without verifying the accuracy and timeliness of the data. It is therefore expressly stated that consulting this information does not remove the obligation to contact E-REDES directly in order to obtain updated information.</p><p><br></p><p>The data provided through the E-REDES Open Data Portal is covered by open licenses (CC BY 4.0). There are no restrictions on access, provided that users cite the publisher. We therefore suggest the following citation:</p><p><br></p><p>E-REDES – Electricity Distribution, “E-REDES Open Data Portal”. Accessed on “Date”. \\[Online] Available at: &lt;https://e-redes.opendatasoft.com/pages/homepage/&gt;</p><p><br></p><p>If you share content on social media, please add #PortalOpenData\\_E\\_REDES.</p><p><br></p>",
+        "description_en": "<p>This dataset presents the contracted power capacity and the corresponding number of active contracts within the electricity distribution network operated by E-REDES, aggregated by district, municipality, and parish.</p><p>The data makes it possible to characterize the contracted power installed in each territory and relate it to the number of associated contracts, enabling the analysis of electrification intensity and the average contract size in each geographic location.</p><p>It allows the monthly monitoring of both contracted power and the number of contracts, supporting studies on the planning and reinforcement of the electricity network, as well as the characterization of potential electricity consumption associated with each territory.</p><p><br></p><p><b>Use cases:</b></p><ul><li>Network electrification.</li><li>Analysis of contracted power by district, municipality, and parish.</li><li>Monitoring the monthly evolution of the number of contracts and contracted power.</li><li>Support for the planning, sizing, and reinforcement of the electricity distribution network.</li><li>Identification of areas with a higher density of contracts or contracted power.</li></ul><p><br></p><p><br></p><p><b>Update frequency:</b> monthly</p><p><br></p><p><b>Included variables:</b></p><ul><li>Year/Month — Reference period of the information, in year and month format.</li><li>District — Name of the district where the contracts are located.</li><li>District Code — Identification code of the district.</li><li>Municipality — Name of the municipality where the contracts are located.</li><li>Municipality Code — Identification code of the municipality.</li><li>Parish — Name of the parish where the contracts are located.</li><li>Parish Code — Identification code of the parish.</li><li>Contracted Power — Total contracted power associated with active contracts within the territory under analysis.</li><li>Number of Contracts — Number of active contracts associated with the territory under analysis.</li></ul><p><br></p><p><br></p><p>1. The information made available by E-REDES is an approximation of the values extracted from its systems and reflects the moment at which the data was collected. As connection points, the electricity distribution network, and consumption and generation values are naturally highly dynamic, E-REDES notes that the information provided may be subject to subsequent changes and updates. Possible omissions and/or occasional location inaccuracies may also exist in the data.</p><p><br></p><p>2. Accordingly, E-REDES shall not be held liable towards third parties, including partners, service providers, contractors, users, and customers, for any damages arising directly or indirectly from the use of this information, particularly when carrying out interventions, calculations, and/or estimates without verifying the accuracy and timeliness of the data. It is therefore expressly stated that consulting this information does not remove the obligation to contact E-REDES directly in order to obtain updated information.</p><p><br></p><p>The data provided through the E-REDES Open Data Portal is covered by open licenses (CC BY 4.0). There are no restrictions on access, provided that users cite the publisher. We therefore suggest the following citation:</p><p><br></p><p>E-REDES – Electricity Distribution, “E-REDES Open Data Portal”. Accessed on “Date”. \\[Online] Available at: &lt;https://e-redes.opendatasoft.com/pages/homepage/&gt;</p><p><br></p><p>If you share content on social media, please add #PortalOpenData\\_E\\_REDES.</p><p><br></p>",
+        "description_pt": "<p>Este dataset apresenta a potência contratada e o respetivo número de contratos ativos na rede de distribuição operada pela E-REDES, agregados por distrito, concelho e freguesia. </p><p>Os dados permitem caracterizar a potência contratada instalada em cada território, relacionando-a com o número de contratos associados, o que possibilita analisar a intensidade de eletrificação e a dimensão média dos contratos em cada localização geográfica. </p><p>Permite acompanhar a evolução mensal da potência contratada e do número de contratos, apoiando estudos sobre o dimensionamento e reforço da rede elétrica, bem como a caracterização do consumo potencial associado a cada território. </p><p><br></p><p><b>Casos de uso:</b></p><ul><li>Eletrificação da rede.</li><li>Análise da potência contratada por distrito, concelho e freguesia.</li><li>Acompanhamento da evolução mensal do número de contratos e da potência contratada.</li><li>Apoio ao planeamento, dimensionamento e reforço da rede elétrica.</li><li>Identificação de zonas com maior densidade de contratos ou potência contratada.</li></ul><p><br></p><p><b>Periodicidade de atualização: </b>mensal</p><p><br></p><p><b>Variáveis incluídas:</b></p><ul><li><b>Ano/Mês</b> — Período de referência da informação, no formato ano e mês.</li><li><b>Distrito </b>— Nome do distrito onde se localizam os contratos.</li><li><b>Código Distrito</b> — Código identificativo do distrito.</li><li><b>Concelho </b>— Nome do concelho onde se localizam os contratos.</li><li><b>Código Concelho</b> — Código identificativo do concelho.</li><li><b>Freguesia </b>— Nome da freguesia onde se localizam os contratos.</li><li><b>Código Freguesia</b> — Código identificativo da freguesia.</li><li><b>Potência Contratada</b> — Soma da potência contratada nos contratos ativos, associada ao território em análise.</li><li><b>Número de Contratos</b> — Quantidade de contratos ativos associados ao território em análise.</li></ul><p><br></p><p><br></p><p>1. A Informação disponibilizada pela E-REDES constitui uma aproximação aos valores retirados de sistema e tem por referência o momento em que a mesma é recolhida. Atendendo a que os pontos de ligação, a rede de distribuição de eletricidade, e os próprios valores de consumo e de produção são naturalmente muito dinâmicos, salvaguarda-se que a informação disponibilizada poderá ser objeto de subsequentes alterações e atualizações, ficando igualmente ressalvadas eventuais omissões e/ou pontuais imprecisões de localização que a informação poderá conter.</p><p><br></p><p>2. Desta forma a E-REDES não se responsabiliza perante terceiros, nomeadamente, parceiros, prestadores de serviços, empreiteiros, utentes e clientes, pelos danos que possam surgir em consequência, direta ou indireta, do uso da presente Informação, em particular aquando da realização de intervenções, cálculos e/ou estimativas, sem confirmação da exatidão e atualização dos dados, pelo que devidamente se ressalva de que a consulta da presente informação não prejudica o dever de se promover uma consulta direta à E-REDES para obter informação atualizada.</p><p><br></p><p><br></p><p>Os dados fornecidos pelo Portal Open Data da E-REDES são abrangidos por licenças abertas (CC BY 4.0). Não existem restrições ao seu acesso, sob o compromisso de os utilizadores dos dados citarem o publicador. Assim, sugerimos que cite o Portal Open Data E-REDES como:</p><p><br></p><p>E-REDES – Distribuição de eletricidade, “Portal Open Data E-REDES”. Acedido em “Data”. [Online] Disponível em https://e-redes.opendatasoft.com/pages/homepage/</p><p><br></p><p>Se partilhar nas redes sociais, por favor acrescente #PortalOpenData_E_REDES</p>",
+        "theme": [
+          "Consumption and Energy"
+        ],
+        "theme_en": [
+          "Consumption and Energy"
+        ],
+        "theme_pt": [
+          "Consumos e Energia"
+        ],
+        "keyword": null,
+        "keyword_en": null,
+        "keyword_pt": null,
+        "license": "CC BY 4.0",
+        "license_en": "CC BY 4.0",
+        "license_pt": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_url_en": "https://creativecommons.org/licenses/by/4.0/",
+        "license_url_pt": "https://creativecommons.org/licenses/by/4.0/",
+        "language": "pt",
+        "metadata_languages": [
+          "pt",
+          "en"
+        ],
+        "timezone": "Europe/Lisbon",
+        "modified": "2026-08-18T13:57:55+00:00",
+        "modified_updates_on_metadata_change": false,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2026-08-18T13:57:55+00:00",
+        "metadata_processed": "2026-09-03T12:39:16.726000+00:00",
+        "geographic_reference": null,
+        "geographic_reference_auto": false,
+        "territory": null,
+        "geometry_types": null,
+        "bbox": null,
+        "publisher": "E-REDES",
+        "publisher_en": "E-REDES",
+        "publisher_pt": "E-REDES",
+        "references": null,
+        "records_count": 124525,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": "MONTHLY"
+      },
+      "custom": {
+        "perfis-de-utilizacao": null,
+        "atualizado": null
+      }
+    }
+  },
+  "records": [
+    {
+      "data": "2026-07-01T00:00:00+00:00",
+      "con_code": "0101",
+      "con_name": "Águeda",
+      "potencia_contratada": 265253.14
+    },
+    {
+      "data": "2026-07-01T00:00:00+00:00",
+      "con_code": "0102",
+      "con_name": "Albergaria-a-Velha",
+      "potencia_contratada": 137534.43
+    },
+    {
+      "data": "2026-07-01T00:00:00+00:00",
+      "con_code": "0103",
+      "con_name": "Anadia",
+      "potencia_contratada": 150529.67
+    }
+  ]
+}

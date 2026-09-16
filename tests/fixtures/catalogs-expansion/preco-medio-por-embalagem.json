@@ -1,0 +1,260 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "tempo",
+        "description": null,
+        "annotations": {
+          "timeserie_precision": "month",
+          "facet": true,
+          "facetsort": "-alphanum",
+          "timerangeFilter": true
+        },
+        "label": "Período",
+        "type": "date",
+        "label_pt": "Período",
+        "label_en": "Período",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "regiao",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "sortable": true,
+          "facetsort": "alphanum",
+          "disjunctive": true
+        },
+        "label": "Região",
+        "type": "text",
+        "label_pt": "Região",
+        "label_en": "Região",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "valor_pvp_ambulatorio",
+        "description": null,
+        "annotations": {
+          "unit": "€"
+        },
+        "label": "Valor PVP (Ambulatório)",
+        "type": "double",
+        "label_pt": "Valor PVP (Ambulatório)",
+        "label_en": "Valor PVP (Ambulatório)",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "n_o_de_embalagens_ambulatorio",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Nº Embalagens (Ambulatório)",
+        "type": "int",
+        "label_pt": "Nº Embalagens (Ambulatório)",
+        "label_en": "Nº Embalagens (Ambulatório)",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "preco_medio_por_embalagem_ambulatorio",
+        "description": null,
+        "annotations": {
+          "unit": "€",
+          "decimals": 2
+        },
+        "label": "Preço Médio por Embalagem (Ambulatório)",
+        "type": "double",
+        "label_pt": "Preço Médio por Embalagem (Ambulatório)",
+        "label_en": "Preço Médio por Embalagem (Ambulatório)",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "valor_pvp_genericos",
+        "description": null,
+        "annotations": {
+          "unit": "€"
+        },
+        "label": "Valor PVP (Genéricos)",
+        "type": "double",
+        "label_pt": "Valor PVP (Genéricos)",
+        "label_en": "Valor PVP (Genéricos)",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "n_o_de_embalagens_genericos",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "Nº Embalagens (Genéricos)",
+        "type": "int",
+        "label_pt": "Nº Embalagens (Genéricos)",
+        "label_en": "Nº Embalagens (Genéricos)",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "preco_medio_por_embalagem_genericos",
+        "description": null,
+        "annotations": {
+          "unit": "€",
+          "decimals": 2
+        },
+        "label": "Preço Médio por Embalagem (Genéricos)",
+        "type": "double",
+        "label_pt": "Preço Médio por Embalagem (Genéricos)",
+        "label_en": "Preço Médio por Embalagem (Genéricos)",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "dataset_id": "preco-medio-por-embalagem",
+    "dataset_uid": "da_b6djij",
+    "has_records": true,
+    "features": [
+      "timeserie",
+      "analyze"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "dcat": {
+        "created": "2016-01-27",
+        "issued": "2018-11-30",
+        "creator": "SPMS",
+        "contributor": "INFARMED",
+        "contact_name": null,
+        "contact_email": null,
+        "accrualperiodicity": "Mensal",
+        "spatial": "Portugal Continental",
+        "temporal": "janeiro 2011 a maio 2026",
+        "granularity": null,
+        "dataquality": null,
+        "publisher_type": null,
+        "conforms_to": null,
+        "temporal_coverage_start": null,
+        "temporal_coverage_end": null,
+        "accessRights": null,
+        "relation": null
+      },
+      "default": {
+        "title": "Preço Médio das Embalagens de Medicamentos",
+        "title_pt": "Preço Médio das Embalagens de Medicamentos",
+        "title_en": "Preço Médio das Embalagens de Medicamentos",
+        "description": "<p>Monitorizar o preço médio das embalagens de medicamentos, dispensadas em farmácias comunitárias a utentes do SNS e subsistemas públicos.</p><p><strong>Observações:</strong> Os dados podem estar sujeitos a atualizações.</p>",
+        "description_pt": "<p>Monitorizar o preço médio das embalagens de medicamentos, dispensadas em farmácias comunitárias a utentes do SNS e subsistemas públicos.</p><p><strong>Observações:</strong> Os dados podem estar sujeitos a atualizações.</p>",
+        "description_en": "<p>Monitorizar o preço médio das embalagens de medicamentos, dispensadas em farmácias comunitárias a utentes do SNS e subsistemas públicos.</p><p><strong>Observações:</strong> Os dados podem estar sujeitos a atualizações.</p>",
+        "theme": [
+          "Eficiência"
+        ],
+        "theme_pt": [
+          "Eficiência"
+        ],
+        "theme_en": [
+          "Eficiência"
+        ],
+        "keyword": [
+          "Preços",
+          "Medicamentos",
+          "Genéricos"
+        ],
+        "keyword_pt": [
+          "Preços",
+          "Medicamentos",
+          "Genéricos"
+        ],
+        "keyword_en": [
+          "Preços",
+          "Medicamentos",
+          "Genéricos"
+        ],
+        "license": null,
+        "license_pt": null,
+        "license_en": null,
+        "license_url": null,
+        "license_url_pt": null,
+        "license_url_en": null,
+        "language": "pt",
+        "metadata_languages": [
+          "pt"
+        ],
+        "timezone": null,
+        "modified": "2026-08-13T14:02:44.412000+00:00",
+        "modified_updates_on_metadata_change": true,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2026-08-13T14:02:44.412000+00:00",
+        "metadata_processed": "2026-08-13T14:02:44.462000+00:00",
+        "geographic_reference": [
+          "world_pt"
+        ],
+        "geographic_reference_auto": true,
+        "territory": [
+          "Portugal"
+        ],
+        "geometry_types": null,
+        "bbox": null,
+        "publisher": "INFARMED",
+        "publisher_pt": "INFARMED",
+        "publisher_en": "INFARMED",
+        "references": null,
+        "records_count": 925,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": null
+      },
+      "custom": {
+        "dataset-id-number": "85",
+        "measure-unit": "Euros",
+        "source-data": "CCF",
+        "version": null,
+        "formula": "Preço Médio por Embalagem (Ambulatório) = Valor PVP (Ambulatório)/N.º de Embalagens (Ambulatório). - Preço Médio por Embalagem (Genéricos) = Valor PVP (Genéricos)/N.º de Embalagens (Genéricos)."
+      }
+    }
+  },
+  "records": [
+    {
+      "tempo": "2026-05",
+      "regiao": "Alentejo",
+      "valor_pvp_ambulatorio": 10153300.26,
+      "n_o_de_embalagens_ambulatorio": 721130,
+      "preco_medio_por_embalagem_ambulatorio": 14.0797085962309,
+      "valor_pvp_genericos": 2952049.97,
+      "n_o_de_embalagens_genericos": 338198,
+      "preco_medio_por_embalagem_genericos": 8.72876235223153
+    },
+    {
+      "tempo": "2026-05",
+      "regiao": "Algarve",
+      "valor_pvp_ambulatorio": 10063002.98,
+      "n_o_de_embalagens_ambulatorio": 676819,
+      "preco_medio_por_embalagem_ambulatorio": 14.8680858250138,
+      "valor_pvp_genericos": 2511776.81,
+      "n_o_de_embalagens_genericos": 287011,
+      "preco_medio_por_embalagem_genericos": 8.75150015156214
+    },
+    {
+      "tempo": "2026-05",
+      "regiao": "Centro",
+      "valor_pvp_ambulatorio": 61470940.44,
+      "n_o_de_embalagens_ambulatorio": 4238598,
+      "preco_medio_por_embalagem_ambulatorio": 14.502658765941,
+      "valor_pvp_genericos": 16477635.25,
+      "n_o_de_embalagens_genericos": 1902178,
+      "preco_medio_por_embalagem_genericos": 8.66250963369359
+    }
+  ]
+}

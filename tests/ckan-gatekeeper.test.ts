@@ -15,7 +15,7 @@ const RESOURCE_ID = "418c7837-95ee-4943-be22-3d9d09e5b4e9";
 const RESOURCE_URL =
   "https://opendata.porto.digital/dataset/example/resource/418c7837-95ee-4943-be22-3d9d09e5b4e9/download/data.csv";
 const LAST_MODIFIED = "2026-03-18T03:25:30.243935";
-const SYNTHETIC_ETAG = `"ckan:5:${RESOURCE_ID}:2026-03-18T03:25:30.243Z"`;
+const SYNTHETIC_ETAG = `"ckan:6:${RESOURCE_ID}:2026-03-18T03:25:30.243Z"`;
 
 function packageResponse(overrides: JsonObject = {}, packageOverrides: JsonObject = {}): Response {
   return Response.json({
@@ -314,7 +314,7 @@ describe("CKAN collection through the shared collector", () => {
         resourceKey: resolved.resourceKey,
         configHash: resolved.configHash,
         feedEpoch: "epoch-1",
-        normalizer: { id: "ckan-resource", version: "5" },
+        normalizer: { id: "ckan-resource", version: "6" },
         state: { validators: { default: { etag: checkpointEtag } } },
       };
     }

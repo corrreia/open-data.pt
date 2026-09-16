@@ -1,0 +1,43 @@
+{
+    "type":"object",
+    "title":"CAOP2025 Munic\u00edpios",
+    "properties":{
+        "geometry":{
+            "format":"geometry-any",
+            "x-ogc-role":"primary-geometry"
+        },
+        "dtmn":{
+            "type":"string",
+            "x-ogc-role":"id"
+        },
+        "municipio":{
+            "type":"string"
+        },
+        "distrito_ilha":{
+            "type":"string"
+        },
+        "nuts3_cod":{
+            "type":"string"
+        },
+        "nuts3":{
+            "type":"string"
+        },
+        "nuts2":{
+            "type":"string"
+        },
+        "nuts1":{
+            "type":"string"
+        },
+        "area_ha":{
+            "type":"number"
+        },
+        "perimetro_km":{
+            "type":"integer"
+        },
+        "n_freguesias":{
+            "type":"integer"
+        }
+    },
+    "$schema":"http://json-schema.org/draft/2019-09/schema",
+    "$id":"https://ogcapi.dgterritorio.gov.pt/collections/municipios/schema"
+}

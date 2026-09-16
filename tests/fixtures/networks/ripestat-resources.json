@@ -1,0 +1,12 @@
+{
+  "messages": [], "version": "0.2", "data_call_name": "country-resource-list", "data_call_status": "supported",
+  "status": "ok", "status_code": 200, "query_id": "synthetic-query", "time": "2026-09-16T12:34:56",
+  "data": {
+    "query_time": "2026-09-14T00:00:00",
+    "resources": {
+      "asn": ["64496", "64497"],
+      "ipv4": ["192.0.2.0/24", "198.51.100.1-198.51.100.3"],
+      "ipv6": ["2001:0DB8::/32"]
+    }
+  }
+}

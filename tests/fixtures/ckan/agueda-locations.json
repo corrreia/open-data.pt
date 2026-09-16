@@ -1,0 +1,393 @@
+[
+  {
+    "slug": "agueda-flood-marks-feed",
+    "geojson": {
+      "type": "FeatureCollection",
+      "name": "cotas_de_cheia",
+      "crs": {
+        "type": "name",
+        "properties": {
+          "name": "urn:ogc:def:crs:EPSG::3763"
+        }
+      },
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {
+            "gid": 64,
+            "x": -26521.846,
+            "y": 100376.971,
+            "z": 10.55,
+            "descricao": "Rua Vasco da Gama - Águeda | Ponto 43 - cota 10,55m",
+            "freguesia": "Águeda",
+            "lugar": null,
+            "elevation": 10.55,
+            "fonte": "registo: Municipio e/ou Protecao Civil",
+            "id": "Pt 43",
+            "ano": 2016
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -26521.846,
+              100376.971
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "gid": 65,
+            "x": -26556.177,
+            "y": 100369.942,
+            "z": 10.4,
+            "descricao": "levantamento CAD - Proteção Civil | dados anteriores a 2016",
+            "freguesia": "Águeda",
+            "lugar": null,
+            "elevation": 10.4,
+            "fonte": "registo Protecao Civil",
+            "id": "42",
+            "ano": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -26556.177,
+              100369.942
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "slug": "agueda-waste-operators-feed",
+    "geojson": {
+      "type": "FeatureCollection",
+      "name": "ogr",
+      "crs": {
+        "type": "name",
+        "properties": {
+          "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+        }
+      },
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {
+            "id_ogr": 1,
+            "fid": 1,
+            "nome_estab": "Constantino Fernandes Oliveira & Filhos, S.A.",
+            "cae_princi": "38321-Valorização de resíduos metálicos",
+            "lat": "40.595370000426",
+            "lon": "-8.485759999823",
+            "fonte_dados": null,
+            "data_dados": null,
+            "sitio_web": null,
+            "email": null,
+            "telefone": null,
+            "obs": null
+          },
+          "geometry": {
+            "type": "MultiPoint",
+            "coordinates": [
+              [
+                -8.485759999823,
+                40.595370000426
+              ]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "id_ogr": 2,
+            "fid": 2,
+            "nome_estab": "PORTARY - Gestão de Resíduos, S.A.",
+            "cae_princi": "38321-Valorização de resíduos metálicos",
+            "lat": "40.582120000039",
+            "lon": "-8.469419999932",
+            "fonte_dados": null,
+            "data_dados": null,
+            "sitio_web": null,
+            "email": null,
+            "telefone": null,
+            "obs": null
+          },
+          "geometry": {
+            "type": "MultiPoint",
+            "coordinates": [
+              [
+                -8.469419999932,
+                40.582120000039
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "slug": "agueda-charging-locations-feed",
+    "geojson": {
+      "type": "FeatureCollection",
+      "name": "ponto_cve",
+      "crs": {
+        "type": "name",
+        "properties": {
+          "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+        }
+      },
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {
+            "fid": 1,
+            "id_pontocve": 1,
+            "id_via": null,
+            "lugar": "Águeda",
+            "bairro": "Chãs",
+            "endereco": "Rua Joaquim francisco Oliveira, Águeda",
+            "estado": "operacional",
+            "acesso": "público",
+            "tipo": "2",
+            "potencia": "22Kw",
+            "dono": "MOBI-E",
+            "operador": "EDP Comercial",
+            "contacto": null,
+            "url": null,
+            "data_ini": null,
+            "data_fim": null,
+            "obs": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -8.44494803363585,
+              40.57721178451194
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "fid": 2,
+            "id_pontocve": 2,
+            "id_via": null,
+            "lugar": "Águeda",
+            "bairro": "Chãs",
+            "endereco": "Rua Infantaria 28, Águeda",
+            "estado": "operacional",
+            "acesso": "público",
+            "tipo": "2",
+            "potencia": "22Kw",
+            "dono": "ESTGA",
+            "operador": "MOBI-E",
+            "contacto": null,
+            "url": null,
+            "data_ini": null,
+            "data_fim": null,
+            "obs": null
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -8.443935560332084,
+              40.57371819344993
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "slug": "agueda-beagueda-stations-feed",
+    "geojson": {
+      "type": "FeatureCollection",
+      "name": "estacoesBEAgueda",
+      "crs": {
+        "type": "name",
+        "properties": {
+          "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+        }
+      },
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {
+            "id": 1,
+            "local_pt": "CÂMARA MUNICIPAL",
+            "place": "CITY HALL",
+            "morada/adress": "PRAÇA DO MUNICÍPIO, ÁGUEDA",
+            "latitude": "40°34'30.56\"N",
+            "longitude": "8°26'48.85\"W",
+            "docas/docks": 8
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -8.446902777777778,
+              40.575155555555554
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "id": 2,
+            "local_pt": "ESCOLA SEC. ADOLFO PORTELA",
+            "place": "ADOLFO PORTELA SCHOOL",
+            "morada/adress": "RUA JOAQUIM VALENTE DE ALMEIDA Nr. 242, ÁGUEDA",
+            "latitude": "40°35'3.23\"N",
+            "longitude": "8°26'55.16\"W",
+            "docas/docks": 10
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -8.448655555555556,
+              40.58423055555556
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "slug": "agueda-waste-bins-feed",
+    "geojson": {
+      "type": "FeatureCollection",
+      "name": "contentores_rsu",
+      "crs": {
+        "type": "name",
+        "properties": {
+          "name": "urn:ogc:def:crs:EPSG::3763"
+        }
+      },
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {
+            "id": "1",
+            "nome": "0101ÁGU0006/",
+            "local": "R. 25 de Abril 87, 3750 Trofa, Portugal/Trofa<br></br> 0169/22/VV<br></br>"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -27834.451386394667,
+              105477.57209727677,
+              0.0
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "id": "2",
+            "nome": "0101ÁGU0011/",
+            "local": "R. Dr. Matheus Pereira Pinto 31, 3750-064 Barrô, Portugal/Barrô<br></br> 0066/22/BAB<br></br>0111/22/BAB<br></br>"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -28899.18996336796,
+              96318.8964397019,
+              0.0
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "slug": "agueda-textile-bins-feed",
+    "geojson": {
+      "type": "FeatureCollection",
+      "name": "contentores_texteis",
+      "crs": {
+        "type": "name",
+        "properties": {
+          "name": "urn:ogc:def:crs:EPSG::3763"
+        }
+      },
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {
+            "id": "14",
+            "nome_ident": "Box 465"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -27089.70501881423,
+              109446.95674335603,
+              0.0
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "id": "12",
+            "nome_ident": "Box 463"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -27802.58624924544,
+              109671.62045103568,
+              0.0
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "slug": "agueda-electronics-bins-feed",
+    "geojson": {
+      "type": "FeatureCollection",
+      "name": "contentores_reee",
+      "crs": {
+        "type": "name",
+        "properties": {
+          "name": "urn:ogc:def:crs:EPSG::3763"
+        }
+      },
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {
+            "id": "1",
+            "nome": "CM Águeda - Garagem"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -26575.663505052817,
+              100768.91910689337,
+              0.0
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "id": "2",
+            "nome": "Escola Secundária Adolfo Portela"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -26669.995742036357,
+              101607.91958468183,
+              0.0
+            ]
+          }
+        }
+      ]
+    }
+  }
+]

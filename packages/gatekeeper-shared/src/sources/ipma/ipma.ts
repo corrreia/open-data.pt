@@ -12,6 +12,8 @@ import {
   type SourceValidator,
   type SourceConfig,
 } from "../../index";
+import { limitBytes } from "../../stream";
+import { isIpmaDatasetFeed, type IpmaDatasetFeed } from "./datasets";
 
 const ALLOWED_ORIGIN = "https://api.ipma.pt";
 
@@ -79,6 +81,24 @@ export const IPMA_FEEDS = {
       defaultProductRole: "reference",
     },
   },
+  "municipal-precipitation": {
+    kind: "municipal-precipitation",
+    title: "Daily municipal precipitation",
+    description: "Spatial municipal means of interpolated daily precipitation totals and maximum rates in the latest 20-day window.",
+    semantics: { domainSubject: "observation", defaultProductRole: "time-series" },
+  },
+  "municipal-temperature": {
+    kind: "municipal-temperature",
+    title: "Daily municipal temperature",
+    description: "Spatial municipal means of interpolated daily minimum, mean and maximum temperatures in the latest 20-day window.",
+    semantics: { domainSubject: "observation", defaultProductRole: "time-series" },
+  },
+  "shellfish-restrictions": {
+    kind: "shellfish-restrictions",
+    title: "Shellfish harvesting restrictions",
+    description: "Current permissions and restrictions by coastal production zone and species, including partially open zones.",
+    semantics: { domainSubject: "feature", defaultProductRole: "current-state" },
+  },
 } as const satisfies Record<string, FeedKindDescription>;
 
 export type IpmaFeedName = keyof typeof IPMA_FEEDS;
@@ -94,6 +114,9 @@ export const IPMA_FEED_LIMITS: FeedLimits = {
   "uv-index": 128 * 1024,
   "fire-risk": 128 * 1024,
   "sea-forecast": 64 * 1024,
+  "municipal-precipitation": 2 * 1024 * 1024,
+  "municipal-temperature": 2 * 1024 * 1024,
+  "shellfish-restrictions": 8 * 1024 * 1024,
 };
 
 /** The IPMA paths each feed collects, in the order it reads them. */
@@ -136,6 +159,9 @@ const ENDPOINTS: FeedEndpoints = {
     "/open-data/forecast/oceanography/daily/hp-daily-sea-forecast-day2.json",
     "/open-data/sea-locations.json",
   ],
+  "municipal-precipitation": ["/open-data/observation/climate/precipitation/prec-p1d-continental-obssup-idw-concelhos-20d.csv"],
+  "municipal-temperature": ["/open-data/observation/climate/temperature/t2m-p1d-continental-obssup-idw-concelhos-20d.csv"],
+  "shellfish-restrictions": ["/open-data/observation/biology/bivalves/CI_SNMB.geojson"],
 };
 
 interface CollectedResource {
@@ -148,7 +174,7 @@ interface CollectedResource {
 export function validateIpmaFeedConfig(config: SourceConfig): SourceConfig {
   const feed = config.feed;
   if (!isFeedName(feed)) {
-    throw new GatekeeperError("IPMA feeds require feed=station-observations, daily-forecast, seismic, warnings, uv-index, fire-risk, or sea-forecast", "invalid-config");
+    throw new GatekeeperError(`IPMA feeds require feed=${Object.keys(IPMA_FEEDS).join(", ")}`, "invalid-config");
   }
   const unsupported = Object.keys(config).filter((key) => key !== "feed");
   if (unsupported.length > 0) {
@@ -169,7 +195,7 @@ export async function collectIpmaFeed(
   const feed = validated.feed as IpmaFeedName;
   const origin = fixedOrigin(apiOrigin, ALLOWED_ORIGIN);
   const paths = ENDPOINTS[feed];
-  const requestHeaders = new Headers({ Accept: "application/json" });
+  const requestHeaders = new Headers({ Accept: "application/json, text/csv, application/geo+json" });
   // A validator from one component cannot prove a compound feed unchanged.
   // Multi-resource feeds fetch every component and rely on semantic no-op
   // suppression after normalization.
@@ -179,12 +205,29 @@ export async function collectIpmaFeed(
   }
 
   const primaryUrl = new URL(paths[0]!, origin);
-  const primaryResponse = await fetcher(primaryUrl, { headers: requestHeaders });
+  const primaryResponse = await fetcher(primaryUrl, { headers: requestHeaders, redirect: "manual" });
   const validator = responseValidator(primaryResponse.headers);
   if (primaryResponse.status === 304) {
+    if (isIpmaDatasetFeed(feed) && !checkpoint?.etag && !checkpoint?.lastModified) {
+      throw new GatekeeperError("IPMA returned unsolicited not-modified", "invalid-response");
+    }
     return validator ? { kind: "not-modified", validator } : { kind: "not-modified" };
   }
   const maximumBytes = IPMA_FEED_LIMITS[feed];
+  if (isIpmaDatasetFeed(feed)) {
+    if (!primaryResponse.ok || !primaryResponse.body) throw new GatekeeperError(`IPMA returned HTTP ${primaryResponse.status}`, "upstream-error");
+    const declared = primaryResponse.headers.get("content-length");
+    if (declared && Number(declared) > maximumBytes) throw new GatekeeperError("IPMA dataset exceeds its byte limit", "response-too-large");
+    const fetched: SourceBody = {
+      kind: "body", body: limitBytes(primaryResponse.body, maximumBytes),
+      provenance: { sourceUrl: primaryUrl.toString() }, completeness: "complete",
+    };
+    const published = normalizeDateTime(primaryResponse.headers.get("last-modified"));
+    if (published) fetched.provenance.sourcePublishedAt = published;
+    if (validator) fetched.validator = validator;
+    else fetched.state = {};
+    return fetched;
+  }
   const primary = await readJsonResource(primaryResponse, primaryUrl, maximumBytes);
   const resources: CollectedResource[] = [primary];
   let remainingBytes = maximumBytes - primary.bytes.byteLength;
@@ -193,6 +236,7 @@ export async function collectIpmaFeed(
     const url = new URL(path, origin);
     const response = await fetcher(url, {
       headers: { Accept: "application/json" },
+      redirect: "manual",
     });
     const resource = await readJsonResource(response, url, remainingBytes);
     resources.push(resource);
@@ -263,7 +307,7 @@ async function readJsonResource(
   return { bytes, parsed, response, url };
 }
 
-function combinedDocument(feed: IpmaFeedName, resources: Uint8Array[]): Uint8Array {
+function combinedDocument(feed: Exclude<IpmaFeedName, IpmaDatasetFeed>, resources: Uint8Array[]): Uint8Array {
   switch (feed) {
     case "station-observations":
       return joinJson([

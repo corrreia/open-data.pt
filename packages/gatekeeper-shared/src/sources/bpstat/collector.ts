@@ -10,7 +10,7 @@ export interface BpstatCollectorOptions {
   fetcher: typeof fetch;
 }
 
-export const BPSTAT_NORMALIZER = { id: "bpstat-jsonstat-dataset", version: "3" } as const;
+export const BPSTAT_NORMALIZER = { id: "bpstat-jsonstat-dataset", version: "4" } as const;
 
 export function resolveBpstatFeed(config: SourceConfig): Promise<ResolvedFeed> {
   return resolveFeed(config, { gatekeeperKind: "bpstat", kinds: BPSTAT_FEEDS, validate: validateBpstatFeedConfig });

@@ -87,7 +87,7 @@ interface JsonRows {
 
 export class TabularTransformer implements Transformer {
   readonly id = "tabular-v2";
-  readonly version = "4";
+  readonly version = "5";
 
   async transform(body: ReadableStream<Uint8Array>, context: TransformContext): Promise<StreamingTransform> {
     const format = context.feed.config.format?.toLowerCase();
@@ -121,6 +121,12 @@ export class TabularTransformer implements Transformer {
       columns = profileColumns(names, sample);
       applyColorBadge(columns);
       keyField = chooseKeyField(context.feed.config.keyField, columns, sample);
+      if (context.feed.config.keyField) {
+        // A configured provider identity is opaque even when the sample contains
+        // only digits. Preserve leading zeroes and later alphanumeric tax IDs.
+        const identity = columns.find((column) => column.name === keyField);
+        if (identity) { identity.type = "identifier"; delete identity.unit; }
+      }
       eventTimeColumn = chooseEventTimeColumn(context.feed.config.eventTimeField, columns);
     } catch (error) {
       await table.rows.return(undefined);

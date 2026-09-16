@@ -13,8 +13,11 @@ export interface OpendatasoftCollectorOptions {
 const transformer = new OpendatasoftTransformer();
 
 /** Canonical feed resolution, shared by the Worker entrypoint and its collector. */
-export function resolveOpendatasoftFeed(config: SourceConfig, hosts: ReadonlySet<string>): Promise<ResolvedFeed> {
-  return resolveFeed(config, { gatekeeperKind: "opendatasoft", kinds: OPENDATASOFT_FEEDS, validate: (value) => validateOpendatasoftFeedConfig(value, hosts) });
+export async function resolveOpendatasoftFeed(config: SourceConfig, hosts: ReadonlySet<string>): Promise<ResolvedFeed> {
+  const resolved = await resolveFeed(config, { gatekeeperKind: "opendatasoft", kinds: OPENDATASOFT_FEEDS, validate: (value) => validateOpendatasoftFeedConfig(value, hosts) });
+  // The history walker filters one source field; compound year/month or year/quarter clocks cannot use it.
+  if (config.monthField || config.quarterField) delete resolved.history;
+  return resolved;
 }
 
 /** The collection wiring the Worker serves over RPC, kept outside the entrypoint so tests drive exactly it. */

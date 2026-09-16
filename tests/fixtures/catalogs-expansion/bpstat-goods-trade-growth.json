@@ -1,0 +1,237 @@
+{
+  "version": "2.0",
+  "label": "Source; Flows, stocks and prices; Indicators; Valuation method; Metrics; Periodicity; Reference territory; Unit of measure",
+  "id": [
+    "18",
+    "19",
+    "23",
+    "28",
+    "29",
+    "40",
+    "63",
+    "70",
+    "reference_date"
+  ],
+  "size": [
+    1,
+    1,
+    2,
+    1,
+    1,
+    1,
+    1,
+    1,
+    2
+  ],
+  "extension": {
+    "num_series": 4,
+    "obs_updated_at": "2026-09-15T16:00:00Z",
+    "series": [
+      {
+        "id": 12587117,
+        "label": "Exports of goods-Monthly-CYoY",
+        "dimension_category": [
+          {
+            "dimension_id": 18,
+            "category_id": 4308
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 7
+          },
+          {
+            "dimension_id": 23,
+            "category_id": 3557
+          },
+          {
+            "dimension_id": 28,
+            "category_id": 18
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3654
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12587117&lang=EN"
+      },
+      {
+        "id": 12587123,
+        "label": "Imports of goods-Monthly-CYoY",
+        "dimension_category": [
+          {
+            "dimension_id": 18,
+            "category_id": 4308
+          },
+          {
+            "dimension_id": 19,
+            "category_id": 7
+          },
+          {
+            "dimension_id": 23,
+            "category_id": 3558
+          },
+          {
+            "dimension_id": 28,
+            "category_id": 18
+          },
+          {
+            "dimension_id": 29,
+            "category_id": 3654
+          },
+          {
+            "dimension_id": 40,
+            "category_id": 4264
+          },
+          {
+            "dimension_id": 63,
+            "category_id": 349
+          },
+          {
+            "dimension_id": 70,
+            "category_id": 3327
+          }
+        ],
+        "href": "https://bpstat.bportugal.pt/data/v1/series/?series_ids=12587123&lang=EN"
+      }
+    ]
+  },
+  "value": [
+    1.8,
+    2.5,
+    6.5,
+    5.5
+  ],
+  "status": [
+    "F",
+    "F",
+    "F",
+    "F"
+  ],
+  "dimension": {
+    "18": {
+      "label": "Source",
+      "category": {
+        "index": [
+          "4308"
+        ],
+        "label": {
+          "4308": "Statistics Portugal"
+        }
+      }
+    },
+    "19": {
+      "label": "Flows, stocks and prices",
+      "category": {
+        "index": [
+          "7"
+        ],
+        "label": {
+          "7": "Transactions"
+        }
+      }
+    },
+    "23": {
+      "label": "Indicators",
+      "category": {
+        "index": [
+          "3557",
+          "3558"
+        ],
+        "label": {
+          "3557": "Exports",
+          "3558": "Imports"
+        }
+      }
+    },
+    "28": {
+      "label": "Valuation method",
+      "category": {
+        "index": [
+          "18"
+        ],
+        "label": {
+          "18": "Nominal value"
+        }
+      }
+    },
+    "40": {
+      "label": "Periodicity",
+      "category": {
+        "index": [
+          "4264"
+        ],
+        "label": {
+          "4264": "Monthly"
+        }
+      }
+    },
+    "70": {
+      "label": "Unit of measure",
+      "category": {
+        "index": [
+          "3327"
+        ],
+        "label": {
+          "3327": "Percentage"
+        }
+      }
+    },
+    "reference_date": {
+      "label": "Date",
+      "category": {
+        "index": [
+          "2026-06-30",
+          "2026-07-31"
+        ]
+      }
+    },
+    "29": {
+      "label": "Metrics",
+      "category": {
+        "index": [
+          "3654"
+        ],
+        "label": {
+          "3654": "Cumulative year-on-year rate of change"
+        }
+      }
+    },
+    "63": {
+      "label": "Reference territory",
+      "category": {
+        "index": [
+          "349"
+        ],
+        "label": {
+          "349": "Portugal"
+        }
+      }
+    }
+  },
+  "class": "dataset",
+  "href": "https://bpstat.bportugal.pt/data/v1/domains/53/datasets/34e4f2e4ddae13cba3e74c926fc23f48/?lang=EN&series_ids=12587117%2C12587123&obs_last_n=2&page_size=100",
+  "source": "Bank of Portugal",
+  "role": {
+    "time": [
+      "reference_date"
+    ],
+    "metric": [
+      "29"
+    ],
+    "geo": [
+      "63"
+    ]
+  }
+}

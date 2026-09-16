@@ -1,0 +1,4 @@
+[
+  {"CadId":40000001.0,"CadNomeCompleto":"Synthetic Professional A","CadProfissao":"Engineer","CadHabilitacoes":[{"HabDes":"Synthetic qualification","HabEstado":"Concluído","HabId":400001.0,"HabTipoId":1.0}],"CadCargosFuncoes":[{"FunAntiga":"S","FunDes":"Example public service role","FunId":400001.0,"FunOrdem":1}],"CadObrasPublicadas":[{"PubDes":"Example professional publication","PubId":400001.0,"PubOrdem":1}],"CadTitulos":[{"TitDes":"Example professional title","TitId":400001.0,"TitOrdem":1}],"CadCondecoracoes":[{"CodDes":"Example public-service distinction","CodId":400001.0,"CodOrdem":1}]},
+  {"CadId":40000002.0,"CadNomeCompleto":"Synthetic Professional B","CadProfissao":null,"CadHabilitacoes":[],"CadCargosFuncoes":[],"CadObrasPublicadas":[],"CadTitulos":[],"CadCondecoracoes":[]}
+]

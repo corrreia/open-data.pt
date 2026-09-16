@@ -18,6 +18,7 @@ import { ARCGIS_FEEDS, arcgisCollector } from "@open-data-pt/gatekeeper-shared/f
 import { CKAN_FEEDS, ckanCollector } from "@open-data-pt/gatekeeper-shared/formats/ckan";
 import { GBFS_FEEDS, gbfsCollector } from "@open-data-pt/gatekeeper-shared/formats/gbfs";
 import { GTFS_FEEDS, gtfsCollector } from "@open-data-pt/gatekeeper-shared/formats/gtfs";
+import { OGC_FEEDS, ogcCollector } from "@open-data-pt/gatekeeper-shared/formats/ogc";
 import { OPENDATASOFT_FEEDS, opendatasoftCollector } from "@open-data-pt/gatekeeper-shared/formats/opendatasoft";
 import { UDATA_FEEDS, udataCollector } from "@open-data-pt/gatekeeper-shared/formats/udata";
 import { BPSTAT_FEEDS, bpstatCollector } from "@open-data-pt/gatekeeper-shared/sources/bpstat";
@@ -37,6 +38,7 @@ import { HEALTH_EXAMPLES } from "../packages/gatekeeper-health/src/examples";
 import { MOBILITY_EXAMPLES } from "../packages/gatekeeper-mobility/src/examples";
 import { STATISTICS_EXAMPLES } from "../packages/gatekeeper-statistics/src/examples";
 import { readFrames } from "../apps/kernel/src/frames";
+import { MAX_RECORD_BYTES } from "../apps/kernel/src/blob-budget";
 import { jsonAs } from "./support";
 
 /**
@@ -82,7 +84,7 @@ const TOPICS: Array<{ kind: string; libraries: Map<string, GatekeeperLibrary>; e
     kind: "energy",
     examples: ENERGY_EXAMPLES,
     libraries: new Map([
-      ["ren", library(REN_FEEDS, (config) => renCollector({ config, apiOrigin: configured("energy", "REN_API_ORIGIN"), fetcher: fetch }))],
+      ["ren", library(REN_FEEDS, (config) => renCollector({ config, apiOrigin: configured("energy", "REN_API_ORIGIN"), dataApiOrigin: configured("energy", "REN_DATA_API_ORIGIN"), fetcher: fetch }))],
       ["omie", library(OMIE_FEEDS, (config) => omieCollector({ config, apiOrigin: configured("energy", "OMIE_API_ORIGIN"), fetcher: fetch }))],
       ["dgeg", library(DGEG_FEEDS, (config) => dgegCollector({ config, apiOrigin: configured("energy", "DGEG_API_ORIGIN"), fetcher: fetch }))],
       ["opendatasoft", library(OPENDATASOFT_FEEDS, (config) => opendatasoftCollector({ config, hosts: configured("energy", "OPENDATASOFT_ALLOWED_HOSTS"), fetcher: fetch }))],
@@ -92,6 +94,8 @@ const TOPICS: Array<{ kind: string; libraries: Map<string, GatekeeperLibrary>; e
     kind: "statistics",
     examples: STATISTICS_EXAMPLES,
     libraries: new Map([
+      ["ogc", library(OGC_FEEDS, (config) => ogcCollector({ config, hosts: configured("statistics", "OGC_ALLOWED_HOSTS"), fetcher: fetch }))],
+      ["udata", library(UDATA_FEEDS, (config) => udataCollector({ config, hosts: configured("statistics", "UDATA_ALLOWED_HOSTS"), fetcher: fetch }))],
       ["ine", library(INE_FEEDS, (config) => ineCollector({ config, apiOrigin: configured("statistics", "INE_API_ORIGIN"), fetcher: fetch }))],
       ["bpstat", library(BPSTAT_FEEDS, (config) => bpstatCollector({ config, apiOrigin: configured("statistics", "BPSTAT_API_ORIGIN"), fetcher: fetch }))],
       ["eurostat", library(EUROSTAT_FEEDS, (config) => eurostatCollector({ config, apiOrigin: configured("statistics", "EUROSTAT_API_ORIGIN"), fetcher: fetch }))],
@@ -117,6 +121,7 @@ const TOPICS: Array<{ kind: string; libraries: Map<string, GatekeeperLibrary>; e
     kind: "environment",
     examples: ENVIRONMENT_EXAMPLES,
     libraries: new Map([
+      ["ogc", library(OGC_FEEDS, (config) => ogcCollector({ config, hosts: configured("environment", "OGC_ALLOWED_HOSTS"), fetcher: fetch }))],
       ["ipma", library(IPMA_FEEDS, (config) => ipmaCollector({ config, apiOrigin: configured("environment", "IPMA_API_ORIGIN"), fetcher: fetch }))],
       ["arcgis", library(ARCGIS_FEEDS, (config) => arcgisCollector({ config, hosts: configured("environment", "ARCGIS_ALLOWED_HOSTS"), fetcher: fetch }))],
     ]),
@@ -127,7 +132,7 @@ const TOPICS: Array<{ kind: string; libraries: Map<string, GatekeeperLibrary>; e
 function liveRequest(example: ExampleFeed, resolved: ResolvedFeed): CollectionRequest {
   const policy = example.policy.collection;
   const outputBytes = policy.maxOutputBytes ?? Math.max(MIB, Math.min(16 * MIB, policy.maxBytes * 4));
-  const recordBytes = policy.maxRecordBytes ?? 256 * 1024;
+  const recordBytes = Math.min(policy.maxRecordBytes ?? 256 * 1024, MAX_RECORD_BYTES);
   return {
     protocol: NORMALIZED_PROTOCOL,
     collectionId: `live_${example.slug}`,

@@ -15,7 +15,7 @@ import { GtfsCsvReader, type GtfsRow } from "./csv";
 import { requestedGtfsFiles } from "./gtfs";
 import { gtfsZipEntries, MAX_ENTRY_BYTES } from "./zip";
 
-export const GTFS_NORMALIZER = { id: "gtfs-schedule", version: "2" };
+export const GTFS_NORMALIZER = { id: "gtfs-schedule", version: "3" };
 
 /**
  * Most shapes.txt points held while they are assembled into LineStrings, which

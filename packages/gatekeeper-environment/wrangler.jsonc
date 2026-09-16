@@ -8,7 +8,8 @@
   "preview_urls": false,
   "vars": {
     "IPMA_API_ORIGIN": "https://api.ipma.pt",
-    "ARCGIS_ALLOWED_HOSTS": "services.arcgis.com,sniambgeoogc.apambiente.pt"
+    "ARCGIS_ALLOWED_HOSTS": "services.arcgis.com,sniambgeoogc.apambiente.pt",
+    "OGC_ALLOWED_HOSTS": "ogcapi.dgterritorio.gov.pt,ambiente.azores.gov.pt"
   },
   "observability": {
     "enabled": true,

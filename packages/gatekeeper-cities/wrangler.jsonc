@@ -8,7 +8,7 @@
   "preview_urls": false,
   "vars": {
     "ARCGIS_ALLOWED_HOSTS": "services.arcgis.com,sniambgeoogc.apambiente.pt",
-    "CKAN_ALLOWED_HOSTS": "opendata.porto.digital,dadosabertos.cascais.pt",
+    "CKAN_ALLOWED_HOSTS": "opendata.porto.digital,dadosabertos.cascais.pt,dadosabertos.cm-agueda.pt,oeirasinterativa.oeiras.pt",
     "UDATA_ALLOWED_HOSTS": "dados.gov.pt"
   },
   "observability": {

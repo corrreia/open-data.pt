@@ -81,6 +81,26 @@ export const GTFS_EXAMPLES: ExampleFeed[] = [
     publisher: "Metropolitano de Lisboa",
     topics: ["mobility"],
   },
+  staticExample("cp", "CP", "https://publico.cp.pt/gtfs/gtfs.zip", "agency,stops,routes,calendar,calendar_dates"),
+  staticExample("fertagus", "Fertagus", "https://www.fertagus.pt/GTFSTMLzip/Fertagus_GTFS.zip", "agency,stops,routes,calendar,calendar_dates,shapes"),
+  staticExample("tub-braga", "TUB Braga", "https://www.tub.pt/developer/gtfs/feed/tub.zip", "agency,stops,routes,calendar,calendar_dates,shapes"),
+  staticExample("tcb-barreiro", "Transportes Colectivos do Barreiro", "https://backend.tcbarreiro.pt/download-gtfs", "agency,stops,routes,calendar,calendar_dates,shapes"),
+  // HF publishes service days only in calendar_dates.txt, not calendar.txt.
+  staticExample("horarios-do-funchal", "Horários do Funchal", "https://www.horariosdofunchal.pt/googletransit.zip", "agency,stops,routes,calendar_dates,shapes"),
   // SMTUC (Coimbra) withdrew its GTFS archive from dados.gov.pt in September 2026 and now publishes NeTEx only;
   // a NeTEx library would bring Coimbra back.
 ];
+
+/** Selected static reference tables, not live vehicle positions or train delays. */
+function staticExample(slug: string, publisher: string, url: string, files: string): ExampleFeed {
+  return {
+    slug: `${slug}-gtfs-feed`,
+    title: `${publisher} GTFS`,
+    description: `Stops, routes, agencies and service days${files.includes("shapes") ? ", with route shapes," : ""} from ${publisher}'s current static schedule archive. Not live service or delay information.`,
+    config: { source: "gtfs", url, files },
+    policy: DAILY_STATIC,
+    staleAfterSeconds: 259_200,
+    publisher,
+    topics: ["mobility"],
+  };
+}

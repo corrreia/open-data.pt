@@ -50,7 +50,7 @@ describe("BPstat JSON-stat transformer", () => {
 
     expect(result.transformer).toEqual({
       id: "bpstat-jsonstat-dataset",
-      version: "3",
+      version: "4",
     });
     expect(result.quality).toEqual({
       acceptedRecords: 6,

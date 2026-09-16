@@ -7,5 +7,5 @@ import { UDATA_EXAMPLES } from "@open-data-pt/gatekeeper-shared/formats/udata";
 export const CITIES_EXAMPLES: ExampleFeed[] = [
   ...ARCGIS_EXAMPLES.filter((example) => example.slug.startsWith("lisbon-") || example.slug.startsWith("lisboa-")),
   ...CKAN_EXAMPLES,
-  ...UDATA_EXAMPLES,
+  ...UDATA_EXAMPLES.filter((example) => !example.topics?.includes("government")),
 ];

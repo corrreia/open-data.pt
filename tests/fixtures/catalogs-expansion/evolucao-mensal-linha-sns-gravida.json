@@ -1,0 +1,234 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "mes",
+        "description": null,
+        "annotations": {
+          "timeserie_precision": "month"
+        },
+        "label": "Período",
+        "type": "date",
+        "label_pt": "Período",
+        "label_en": "Período",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "uls",
+        "description": null,
+        "annotations": {},
+        "label": "ULS",
+        "type": "text",
+        "label_pt": "ULS",
+        "label_en": "ULS",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "n_tt_triag_snsgrav",
+        "description": null,
+        "annotations": {},
+        "label": "Nº total de triagens linha SNS Grávida",
+        "type": "int",
+        "label_pt": "Nº total de triagens linha SNS Grávida",
+        "label_en": "Nº total de triagens linha SNS Grávida",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "n_triag_snsgrav_ac",
+        "description": null,
+        "annotations": {},
+        "label": "Nº de triagens linha SNS Grávida encaminhadas para Autocuidados",
+        "type": "int",
+        "label_pt": "Nº de triagens linha SNS Grávida encaminhadas para Autocuidados",
+        "label_en": "Nº de triagens linha SNS Grávida encaminhadas para Autocuidados",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "n_triag_snsgrav_csp",
+        "description": null,
+        "annotations": {},
+        "label": "Nº de triagens linha SNS Grávida encaminhadas para Cuidados de Saúde Primários",
+        "type": "int",
+        "label_pt": "Nº de triagens linha SNS Grávida encaminhadas para Cuidados de Saúde Primários",
+        "label_en": "Nº de triagens linha SNS Grávida encaminhadas para Cuidados de Saúde Primários",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "n_triag_snsgrav_cah",
+        "description": null,
+        "annotations": {},
+        "label": "Nº de triagens linha SNS Grávida encaminhadas para Consulta Aberta Hospitalar de Obstetrícia e Ginecologia",
+        "type": "int",
+        "label_pt": "Nº de triagens linha SNS Grávida encaminhadas para Consulta Aberta Hospitalar de Obstetrícia e Ginecologia",
+        "label_en": "Nº de triagens linha SNS Grávida encaminhadas para Consulta Aberta Hospitalar de Obstetrícia e Ginecologia",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "n_triag_snsgrav_su",
+        "description": null,
+        "annotations": {},
+        "label": "Nº de triagens linha SNS Grávida encaminhadas para Serviço de Urgência",
+        "type": "int",
+        "label_pt": "Nº de triagens linha SNS Grávida encaminhadas para Serviço de Urgência",
+        "label_en": "Nº de triagens linha SNS Grávida encaminhadas para Serviço de Urgência",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "n_triag_snsgrav_inem",
+        "description": null,
+        "annotations": {},
+        "label": "Nº de triagens linha SNS Grávida encaminhadas para INEM",
+        "type": "int",
+        "label_pt": "Nº de triagens linha SNS Grávida encaminhadas para INEM",
+        "label_en": "Nº de triagens linha SNS Grávida encaminhadas para INEM",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "dataset_id": "evolucao-mensal-linha-sns-gravida",
+    "dataset_uid": "da_448u5m",
+    "has_records": true,
+    "features": [
+      "analyze",
+      "timeserie"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "dcat": {
+        "created": "2025-10-07",
+        "issued": null,
+        "creator": "SPMS",
+        "contributor": "SPMS",
+        "contact_name": null,
+        "contact_email": null,
+        "accrualperiodicity": null,
+        "spatial": null,
+        "temporal": "Valores mensais desde dezembro 2024 a abril 2026",
+        "granularity": "Mensal",
+        "dataquality": null,
+        "publisher_type": null,
+        "conforms_to": null,
+        "temporal_coverage_start": null,
+        "temporal_coverage_end": null,
+        "accessRights": null,
+        "relation": null
+      },
+      "default": {
+        "title": "Evolução Mensal Linha SNS Grávida",
+        "title_pt": "Evolução Mensal Linha SNS Grávida",
+        "title_en": "Evolução Mensal Linha SNS Grávida",
+        "description": "<p class=\"MsoNormal\" style=\"font-family: sans-serif;\"><span style=\"line-height: 14.98px;\"><span data-teams=\"true\">Monitorização da atividade da Linha SNS Grávida.</span><br><br><span style=\"font-size: 10.5pt;\"><span style=\"font-weight: bolder;\">Nº total de triagens linha SNS Grávida (Nº total triagens SNS Grávida) </span></span></span><span style=\"font-size: 10.5pt; line-height: 14.98px;\">o Nº de encontros de triagem efetuados na linha SNS Grávida com utilização dos algoritmos que constam no anexo VI da Portaria n.º 325/2024/1.<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\"><span style=\"font-size: 10.5pt; line-height: 14.98px;\">Nº de triagens linha SNS Grávida encaminhadas para Autocuidados (Nº triagens SNS Grávida - Autocuidados)</span></span><span style=\"font-size: 10.5pt; line-height: 14.98px;\"> o Nº de encontros de triagem efetuados no âmbito da linha SNS Grávida com orientação clínica para \"Autocuidados\".<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\"><span style=\"font-size: 10.5pt; line-height: 14.98px;\">Nº de triagens linha SNS Grávida encaminhadas para Cuidados de Saúde Primários (Nº triagens SNS Grávida - Cuidados de Saúde Primários) </span></span><span style=\"font-size: 10.5pt; line-height: 14.98px;\">o Nº de encontros de triagem efetuados no âmbito da linha SNS Grávida com orientação clínica para “Observação médica em Cuidados de Saúde Primários”.<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\"><span style=\"font-size: 10.5pt; line-height: 14.98px;\">Nº de triagens linha SNS Grávida encaminhadas para Consulta Aberta Hospitalar de Obstetrícia e Ginecologia (Nº triagens SNS Grávida - Consulta Aberta Hospitalar) </span></span><span style=\"font-size: 10.5pt; line-height: 14.98px;\">o Nº de encontros de triagem efetuados no âmbito da linha SNS Grávida com orientação clínica para \"Consulta Aberta Hospitalar\".<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\"><span style=\"font-size: 10.5pt; line-height: 14.98px;\">Nº de triagens linha SNS Grávida encaminhadas para Serviço de Urgência (Nº triagens SNS Grávida - Serviço de Urgência) </span></span><span style=\"font-size: 10.5pt; line-height: 14.98px;\">o Nº de encontros de triagem efetuados no âmbito da linha SNS Grávida com orientação clínica para \"Serviço de Urgência\".<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\"><span style=\"font-size: 10.5pt; line-height: 14.98px;\">Nº de triagens linha SNS Grávida encaminhadas para INEM (Nº triagens SNS Grávida - INEM) </span></span><span style=\"font-size: 10.5pt; line-height: 14.98px;\">o Nº de encontros de triagem efetuados no âmbito da linha SNS Grávida com orientação clínica para \"INEM\".<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder; font-family: inherit; font-size: 0.875rem;\"><span style=\"font-size: 10.5pt; line-height: 14.98px;\">Observações</span></span><span style=\"font-family: inherit; font-size: 10.5pt; line-height: 14.98px;\">: Detalhe mensal e por ULS</span></p>",
+        "description_pt": "<p class=\"MsoNormal\" style=\"font-family: sans-serif;\"><span style=\"line-height: 14.98px;\"><span data-teams=\"true\">Monitorização da atividade da Linha SNS Grávida.</span><br><br><span style=\"font-size: 10.5pt;\"><span style=\"font-weight: bolder;\">Nº total de triagens linha SNS Grávida (Nº total triagens SNS Grávida) </span></span></span><span style=\"font-size: 10.5pt; line-height: 14.98px;\">o Nº de encontros de triagem efetuados na linha SNS Grávida com utilização dos algoritmos que constam no anexo VI da Portaria n.º 325/2024/1.<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\"><span style=\"font-size: 10.5pt; line-height: 14.98px;\">Nº de triagens linha SNS Grávida encaminhadas para Autocuidados (Nº triagens SNS Grávida - Autocuidados)</span></span><span style=\"font-size: 10.5pt; line-height: 14.98px;\"> o Nº de encontros de triagem efetuados no âmbito da linha SNS Grávida com orientação clínica para \"Autocuidados\".<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\"><span style=\"font-size: 10.5pt; line-height: 14.98px;\">Nº de triagens linha SNS Grávida encaminhadas para Cuidados de Saúde Primários (Nº triagens SNS Grávida - Cuidados de Saúde Primários) </span></span><span style=\"font-size: 10.5pt; line-height: 14.98px;\">o Nº de encontros de triagem efetuados no âmbito da linha SNS Grávida com orientação clínica para “Observação médica em Cuidados de Saúde Primários”.<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\"><span style=\"font-size: 10.5pt; line-height: 14.98px;\">Nº de triagens linha SNS Grávida encaminhadas para Consulta Aberta Hospitalar de Obstetrícia e Ginecologia (Nº triagens SNS Grávida - Consulta Aberta Hospitalar) </span></span><span style=\"font-size: 10.5pt; line-height: 14.98px;\">o Nº de encontros de triagem efetuados no âmbito da linha SNS Grávida com orientação clínica para \"Consulta Aberta Hospitalar\".<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\"><span style=\"font-size: 10.5pt; line-height: 14.98px;\">Nº de triagens linha SNS Grávida encaminhadas para Serviço de Urgência (Nº triagens SNS Grávida - Serviço de Urgência) </span></span><span style=\"font-size: 10.5pt; line-height: 14.98px;\">o Nº de encontros de triagem efetuados no âmbito da linha SNS Grávida com orientação clínica para \"Serviço de Urgência\".<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\"><span style=\"font-size: 10.5pt; line-height: 14.98px;\">Nº de triagens linha SNS Grávida encaminhadas para INEM (Nº triagens SNS Grávida - INEM) </span></span><span style=\"font-size: 10.5pt; line-height: 14.98px;\">o Nº de encontros de triagem efetuados no âmbito da linha SNS Grávida com orientação clínica para \"INEM\".<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder; font-family: inherit; font-size: 0.875rem;\"><span style=\"font-size: 10.5pt; line-height: 14.98px;\">Observações</span></span><span style=\"font-family: inherit; font-size: 10.5pt; line-height: 14.98px;\">: Detalhe mensal e por ULS</span></p>",
+        "description_en": "<p class=\"MsoNormal\" style=\"font-family: sans-serif;\"><span style=\"line-height: 14.98px;\"><span data-teams=\"true\">Monitorização da atividade da Linha SNS Grávida.</span><br><br><span style=\"font-size: 10.5pt;\"><span style=\"font-weight: bolder;\">Nº total de triagens linha SNS Grávida (Nº total triagens SNS Grávida) </span></span></span><span style=\"font-size: 10.5pt; line-height: 14.98px;\">o Nº de encontros de triagem efetuados na linha SNS Grávida com utilização dos algoritmos que constam no anexo VI da Portaria n.º 325/2024/1.<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\"><span style=\"font-size: 10.5pt; line-height: 14.98px;\">Nº de triagens linha SNS Grávida encaminhadas para Autocuidados (Nº triagens SNS Grávida - Autocuidados)</span></span><span style=\"font-size: 10.5pt; line-height: 14.98px;\"> o Nº de encontros de triagem efetuados no âmbito da linha SNS Grávida com orientação clínica para \"Autocuidados\".<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\"><span style=\"font-size: 10.5pt; line-height: 14.98px;\">Nº de triagens linha SNS Grávida encaminhadas para Cuidados de Saúde Primários (Nº triagens SNS Grávida - Cuidados de Saúde Primários) </span></span><span style=\"font-size: 10.5pt; line-height: 14.98px;\">o Nº de encontros de triagem efetuados no âmbito da linha SNS Grávida com orientação clínica para “Observação médica em Cuidados de Saúde Primários”.<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\"><span style=\"font-size: 10.5pt; line-height: 14.98px;\">Nº de triagens linha SNS Grávida encaminhadas para Consulta Aberta Hospitalar de Obstetrícia e Ginecologia (Nº triagens SNS Grávida - Consulta Aberta Hospitalar) </span></span><span style=\"font-size: 10.5pt; line-height: 14.98px;\">o Nº de encontros de triagem efetuados no âmbito da linha SNS Grávida com orientação clínica para \"Consulta Aberta Hospitalar\".<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\"><span style=\"font-size: 10.5pt; line-height: 14.98px;\">Nº de triagens linha SNS Grávida encaminhadas para Serviço de Urgência (Nº triagens SNS Grávida - Serviço de Urgência) </span></span><span style=\"font-size: 10.5pt; line-height: 14.98px;\">o Nº de encontros de triagem efetuados no âmbito da linha SNS Grávida com orientação clínica para \"Serviço de Urgência\".<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder;\"><span style=\"font-size: 10.5pt; line-height: 14.98px;\">Nº de triagens linha SNS Grávida encaminhadas para INEM (Nº triagens SNS Grávida - INEM) </span></span><span style=\"font-size: 10.5pt; line-height: 14.98px;\">o Nº de encontros de triagem efetuados no âmbito da linha SNS Grávida com orientação clínica para \"INEM\".<o:p></o:p></span></p><p class=\"MsoNormal\" style=\"font-family: sans-serif;\"><span style=\"font-weight: bolder; font-family: inherit; font-size: 0.875rem;\"><span style=\"font-size: 10.5pt; line-height: 14.98px;\">Observações</span></span><span style=\"font-family: inherit; font-size: 10.5pt; line-height: 14.98px;\">: Detalhe mensal e por ULS</span></p>",
+        "theme": [
+          "Eficiência"
+        ],
+        "theme_pt": [
+          "Eficiência"
+        ],
+        "theme_en": [
+          "Eficiência"
+        ],
+        "keyword": [
+          "Chamadas",
+          "Encaminhamento",
+          "SNS Grávida"
+        ],
+        "keyword_pt": [
+          "Chamadas",
+          "Encaminhamento",
+          "SNS Grávida"
+        ],
+        "keyword_en": [
+          "Chamadas",
+          "Encaminhamento",
+          "SNS Grávida"
+        ],
+        "license": null,
+        "license_pt": null,
+        "license_en": null,
+        "license_url": null,
+        "license_url_pt": null,
+        "license_url_en": null,
+        "language": "pt",
+        "metadata_languages": [
+          "pt"
+        ],
+        "timezone": null,
+        "modified": "2026-08-25T06:03:50.441000+00:00",
+        "modified_updates_on_metadata_change": true,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2026-08-25T06:03:50.441000+00:00",
+        "metadata_processed": "2026-09-15T23:00:27.591000+00:00",
+        "geographic_reference": null,
+        "geographic_reference_auto": false,
+        "territory": null,
+        "geometry_types": null,
+        "bbox": null,
+        "publisher": "SPMS | SNS 24",
+        "publisher_pt": "SPMS | SNS 24",
+        "publisher_en": "SPMS | SNS 24",
+        "references": null,
+        "records_count": 370,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": null
+      },
+      "custom": {
+        "dataset-id-number": "231",
+        "measure-unit": null,
+        "source-data": "SNS 24",
+        "version": null,
+        "formula": null
+      }
+    }
+  },
+  "records": [
+    {
+      "mes": "2026-07",
+      "uls": "Hospital de Cascais Dr. José de Almeida",
+      "n_tt_triag_snsgrav": 678,
+      "n_triag_snsgrav_ac": 0,
+      "n_triag_snsgrav_csp": 0,
+      "n_triag_snsgrav_cah": 34,
+      "n_triag_snsgrav_su": 644,
+      "n_triag_snsgrav_inem": 0
+    },
+    {
+      "mes": "2026-07",
+      "uls": "ULS Alentejo Central",
+      "n_tt_triag_snsgrav": 91,
+      "n_triag_snsgrav_ac": 7,
+      "n_triag_snsgrav_csp": 22,
+      "n_triag_snsgrav_cah": 0,
+      "n_triag_snsgrav_su": 62,
+      "n_triag_snsgrav_inem": 0
+    },
+    {
+      "mes": "2026-07",
+      "uls": "ULS Algarve",
+      "n_tt_triag_snsgrav": 290,
+      "n_triag_snsgrav_ac": 13,
+      "n_triag_snsgrav_csp": 28,
+      "n_triag_snsgrav_cah": 10,
+      "n_triag_snsgrav_su": 237,
+      "n_triag_snsgrav_inem": 2
+    }
+  ]
+}

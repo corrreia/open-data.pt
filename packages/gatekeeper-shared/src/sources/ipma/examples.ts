@@ -13,7 +13,7 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
     config: { source: "ipma", feed: "station-observations" },
     policy: {
       name: "IPMA hourly observations",
-      version: 4,
+      version: 5,
       collection: {
         cadenceSeconds: 3_600,
         timeoutSeconds: 30,
@@ -35,7 +35,7 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
     config: { source: "ipma", feed: "daily-forecast" },
     policy: {
       name: "IPMA forecast reference",
-      version: 2,
+      version: 3,
       collection: {
         cadenceSeconds: 3_600,
         timeoutSeconds: 30,
@@ -55,7 +55,7 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
     config: { source: "ipma", feed: "seismic" },
     policy: {
       name: "IPMA seismic changes",
-      version: 2,
+      version: 3,
       collection: {
         cadenceSeconds: 3_600,
         timeoutSeconds: 30,
@@ -75,7 +75,7 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
     config: { source: "ipma", feed: "warnings" },
     policy: {
       name: "IPMA warning changes",
-      version: 2,
+      version: 3,
       collection: {
         cadenceSeconds: 1_800,
         timeoutSeconds: 30,
@@ -95,7 +95,7 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
     config: { source: "ipma", feed: "uv-index" },
     policy: {
       name: "IPMA UV forecast reference",
-      version: 1,
+      version: 2,
       collection: {
         cadenceSeconds: 14_400,
         timeoutSeconds: 30,
@@ -115,7 +115,7 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
     config: { source: "ipma", feed: "fire-risk" },
     policy: {
       name: "IPMA fire-risk current state",
-      version: 1,
+      version: 2,
       collection: {
         cadenceSeconds: 14_400,
         timeoutSeconds: 30,
@@ -135,7 +135,7 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
     config: { source: "ipma", feed: "sea-forecast" },
     policy: {
       name: "IPMA sea forecast reference",
-      version: 2,
+      version: 3,
       collection: {
         cadenceSeconds: 3_600,
         timeoutSeconds: 30,
@@ -147,5 +147,44 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
     staleAfterSeconds: 7_200,
     publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
     topics: ["weather"],
+  },
+  {
+    slug: "ipma-municipal-precipitation-feed",
+    title: "IPMA daily municipal precipitation",
+    description: "Spatial municipal means of interpolated daily precipitation totals and maximum precipitation rates in mainland Portugal. Collects the full 20-day source window; the bounded current-series view can contain fewer days, with the full collected window retained in history after delivery. Other source statistics, including spatial dispersion and quantiles, are not republished.",
+    config: { source: "ipma", feed: "municipal-precipitation" },
+    policy: {
+      name: "IPMA daily municipal climate", version: 2,
+      collection: { cadenceSeconds: 86_400, timeoutSeconds: 120, maxBytes: 2 * 1024 * 1024, maxOutputBytes: 16 * 1024 * 1024, historyMode: "changes" },
+      serving: SERVING,
+    },
+    staleAfterSeconds: 3 * 86_400,
+    publisher: "IPMA · Instituto Português do Mar e da Atmosfera", topics: ["weather", "environment"],
+  },
+  {
+    slug: "ipma-municipal-temperature-feed",
+    title: "IPMA daily municipal temperature",
+    description: "Spatial municipal means of interpolated daily minimum, mean and maximum air temperature in mainland Portugal. Collects the full 20-day source window; the bounded current-series view can contain fewer days, with the full collected window retained in history after delivery. Other source statistics, including spatial dispersion and quantiles, are not republished.",
+    config: { source: "ipma", feed: "municipal-temperature" },
+    policy: {
+      name: "IPMA daily municipal climate", version: 2,
+      collection: { cadenceSeconds: 86_400, timeoutSeconds: 120, maxBytes: 2 * 1024 * 1024, maxOutputBytes: 16 * 1024 * 1024, historyMode: "changes" },
+      serving: SERVING,
+    },
+    staleAfterSeconds: 3 * 86_400,
+    publisher: "IPMA · Instituto Português do Mar e da Atmosfera", topics: ["weather", "environment"],
+  },
+  {
+    slug: "ipma-shellfish-restrictions-feed",
+    title: "IPMA shellfish harvesting restrictions",
+    description: "Production-zone polygons and the latest published permissions and restrictions by marine species. Partially open zones retain their separate open and closed species lists; consult IPMA's official bulletin before harvesting.",
+    config: { source: "ipma", feed: "shellfish-restrictions" },
+    policy: {
+      name: "IPMA shellfish bulletin", version: 2,
+      collection: { cadenceSeconds: 21_600, timeoutSeconds: 90, maxBytes: 8 * 1024 * 1024, maxOutputBytes: 16 * 1024 * 1024, maxRecordBytes: 1024 * 1024, historyMode: "changes" },
+      serving: SERVING,
+    },
+    staleAfterSeconds: 86_400,
+    publisher: "IPMA · Instituto Português do Mar e da Atmosfera", topics: ["environment", "health"],
   },
 ];

@@ -23,9 +23,10 @@ import {
   type TransformContext,
 } from "../../index";
 import type { CkanResourceMetadata } from "./ckan";
+import { csvSeriesOptions, transformCkanCsvSeries } from "./csv-series";
 
 /** The normalizer identity stamped on checkpoints; bumped whenever its output changes meaning. */
-export const CKAN_NORMALIZER = { id: "ckan-resource", version: "5" } as const;
+export const CKAN_NORMALIZER = { id: "ckan-resource", version: "6" } as const;
 
 /** Portals often name a resource after its file format ("Ciclovias - GeoJSON"); the format is not what the data is. */
 const FORMAT_SUFFIX = /\s*[-–—:|]\s*(geojson|json|csv|xlsx?|shp|shapefile|kmz|kml|wms|wfs|api|zip|xml)\s*$/i;
@@ -97,7 +98,16 @@ export async function transformCkan(
   context: TransformContext,
   metadata: CkanResourceMetadata,
 ): Promise<StreamingTransform> {
-  const source = await openRows(body, metadata);
+  const series = csvSeriesOptions(context.feed.config);
+  if (series) {
+    if (metadata.source.kind !== "file" || metadata.source.format !== "csv") throw new Error("CKAN observations require a CSV distribution");
+    return transformCkanCsvSeries(body, context, series);
+  }
+  const configuredCrs = epsgMention(context.feed.config.crs);
+  const epsg = configuredCrs ?? metadataCrs(metadata);
+  // GeoJSON is WGS84 unless explicitly configured otherwise; a dataset's
+  // metadata may describe an original projected layer rather than its export.
+  const source = await openRows(body, metadata, configuredCrs);
   const iterator = source.rows[Symbol.asyncIterator]();
   const sample: JsonObject[] = [];
   let sampleBytes = 0;
@@ -119,14 +129,15 @@ export async function transformCkan(
 
   const sourceFields = source.fields.map((sourceField) => ({ ...sourceField }));
   appendUnknownFields(sourceFields, sample);
-  const plan = planPreparation(sample, sourceFields, metadataCrs(metadata));
+  if (context.feed.config.idField) upsertField(sourceFields, context.feed.config.idField, "identifier");
+  const plan = planPreparation(sample, sourceFields, epsg);
   const preparedSample = sample.map((row) => prepareRow(row, plan));
   sample.length = 0;
   const fields = plan.fields.map((sourceField) =>
     inferField(sourceField, preparedSample.map((row) => row[sourceField.name] ?? null)),
   );
   applyColorBadge(fields);
-  const table = new RecordTable(fields);
+  const table = new RecordTable(fields, context.feed.config.idField);
   const sampleRecords = preparedSample.map((row) => table.record(row));
   preparedSample.length = 0;
 
@@ -203,7 +214,7 @@ class RecordTable {
   private readonly counts = new Map<string, ColumnCounts>();
   private readonly eventTimeField: CanonicalField | undefined;
 
-  constructor(private readonly fields: CanonicalField[]) {
+  constructor(private readonly fields: CanonicalField[], private readonly idField?: string) {
     this.known = new Set(fields.map((column) => column.name));
     this.eventTimeField = fields.find((column) => column.type === "datetime" || column.type === "date");
   }
@@ -217,7 +228,10 @@ class RecordTable {
     const payload: JsonObject = {};
     for (const column of this.fields) payload[column.name] = this.read(row, column);
     for (const column of this.late) payload[column.name] = this.read(row, column);
-    const datastoreId = row._id;
+    const datastoreId = this.idField ? row[this.idField] : row._id;
+    if (this.idField && !(isJsonString(datastoreId) && datastoreId.trim() !== "") && !isJsonNumber(datastoreId)) {
+      throw new Error(`CKAN record omitted its configured identity ${this.idField}`);
+    }
     const identifierField = this.fields.find(
       (candidate) => candidate.type === "identifier" && isPresent(payload[candidate.name]),
     );
@@ -278,12 +292,12 @@ function lateFieldType(name: string, value: JsonValue | undefined): FieldType {
 
 /* ---------- Source layouts ---------- */
 
-async function openRows(body: ReadableStream<Uint8Array>, metadata: CkanResourceMetadata): Promise<RowSource> {
+async function openRows(body: ReadableStream<Uint8Array>, metadata: CkanResourceMetadata, epsg?: number): Promise<RowSource> {
   const source = metadata.source;
   if (source.kind === "datastore") return datastoreRows(body, source.fields);
   if (source.format === "csv") return csvRows(body);
-  if (source.format === "geojson") return geoJsonRows(body, true);
-  return jsonRows(body);
+  if (source.format === "geojson") return geoJsonRows(body, true, epsg);
+  return jsonRows(body, epsg);
 }
 
 /** The Gatekeeper's own NDJSON of DataStore records, with the DataStore's declared fields. */
@@ -347,11 +361,11 @@ async function* noRows(): AsyncGenerator<SourceRow> {
 }
 
 /** A JSON resource: an array of rows, `{"records": [...]}`, a FeatureCollection, or one object. */
-async function jsonRows(body: ReadableStream<Uint8Array>): Promise<RowSource> {
+async function jsonRows(body: ReadableStream<Uint8Array>, epsg?: number): Promise<RowSource> {
   const peeked = await peek(body, (text) => layoutDecided(scanTopLevel(text)));
   const layout = scanTopLevel(peeked.text);
   if (layout.root === "object" && layout.arrays.has("features") && (layout.strings.get("type") === "FeatureCollection" || (!layout.strings.has("type") && !layout.arrays.has("records")))) {
-    return geoJsonRows(peeked.body, false);
+    return geoJsonRows(peeked.body, false, epsg);
   }
   if (layout.root === "array" || (layout.root === "object" && layout.arrays.has("records"))) {
     const stream = streamJsonArray(peeked.body, layout.root === "array" ? [] : ["records"], { maxElementBytes: ELEMENT_BYTES });
@@ -372,23 +386,27 @@ async function* singleObject(body: ReadableStream<Uint8Array>): AsyncGenerator<S
   yield stream.envelope();
 }
 
-function geoJsonRows(body: ReadableStream<Uint8Array>, requireCollection: boolean): RowSource {
+function geoJsonRows(body: ReadableStream<Uint8Array>, requireCollection: boolean, epsg?: number): RowSource {
   const stream = streamJsonArray(body, ["features"], { maxElementBytes: ELEMENT_BYTES });
-  return { sourceType: "geojson-feature-collection", fields: [], rows: featureRows(stream, requireCollection) };
+  return { sourceType: "geojson-feature-collection", fields: [], rows: featureRows(stream, requireCollection, epsg) };
 }
 
-async function* featureRows(stream: JsonArrayStream, requireCollection: boolean): AsyncGenerator<SourceRow> {
-  for await (const feature of stream.elements) yield featureRow(feature);
+async function* featureRows(stream: JsonArrayStream, requireCollection: boolean, epsg?: number): AsyncGenerator<SourceRow> {
+  for await (const feature of stream.elements) yield featureRow(feature, epsg);
   const envelope = stream.envelope();
+  const declaredCrs = findMetadataCrs(envelope.crs);
+  if (declaredCrs && declaredCrs !== (epsg ?? 4326)) throw new Error("GeoJSON CRS does not match the configured coordinate system");
   if (requireCollection && (envelope.type !== "FeatureCollection" || !isJsonArray(envelope.features))) {
     throw new Error("GeoJSON resource must be a FeatureCollection");
   }
 }
 
-function featureRow(feature: JsonValue): SourceRow {
-  if (!isJsonObject(feature) || (feature.geometry !== null && !isJsonObject(feature.geometry))) return null;
-  const properties = isJsonObject(feature.properties) ? feature.properties : {};
-  const geometry = isJsonObject(feature.geometry) ? feature.geometry : null;
+function featureRow(feature: JsonValue, epsg?: number): SourceRow {
+  if (!isJsonObject(feature) || feature.type !== "Feature" || (feature.geometry !== null && !isJsonObject(feature.geometry))) return null;
+  const properties = isJsonObject(feature.properties) ? { ...feature.properties } : {};
+  if (properties.id === undefined && (isJsonNumber(feature.id) || isJsonString(feature.id))) properties.id = feature.id;
+  const geometry = isJsonObject(feature.geometry) ? geoJsonGeometry(feature.geometry, epsg) : null;
+  if (geometry === undefined) return null;
   const centroid = geometry ? geometryCentroid(geometry) : undefined;
   return {
     ...properties,
@@ -396,6 +414,31 @@ function featureRow(feature: JsonValue): SourceRow {
     centroidLatitude: centroid?.latitude ?? null,
     centroidLongitude: centroid?.longitude ?? null,
   };
+}
+
+/** Explicit CRS supports projected municipal exports without buffering a feature collection. */
+function geoJsonGeometry(geometry: JsonObject, epsg?: number): JsonObject | undefined {
+  if (geometry.type === "GeometryCollection") {
+    if (!isJsonArray(geometry.geometries)) return undefined;
+    const geometries: JsonObject[] = [];
+    for (const child of geometry.geometries) {
+      if (!isJsonObject(child)) return undefined;
+      const projected = geoJsonGeometry(child, epsg);
+      if (!projected) return undefined;
+      geometries.push(projected);
+    }
+    return { type: geometry.type, geometries };
+  }
+  if (!isJsonString(geometry.type) || !["Point", "MultiPoint", "LineString", "MultiLineString", "Polygon", "MultiPolygon"].includes(geometry.type)) return undefined;
+  const coordinates = mapCoordinates(geometry.coordinates, epsg ?? 4326, true);
+  if (coordinates === undefined) return undefined;
+  const result: JsonObject = { ...geometry, coordinates: epsg === 3763 ? coordinates : geometry.coordinates ?? coordinates };
+  if (epsg === 3763) {
+    // A source-space bounding box or CRS would contradict the transformed coordinates.
+    delete result.bbox;
+    delete result.crs;
+  }
+  return result;
 }
 
 /** The first bytes of a body, decoded, and a body that still yields every byte. */
@@ -1086,13 +1129,17 @@ function rawGeometry(value: JsonValue | undefined): RawGeometry | undefined {
 function mapCoordinates(
   value: JsonValue | undefined,
   epsg: number | undefined,
+  explicitCrs = false,
 ): JsonValue | undefined {
   const pair = coordinatePair(value);
-  if (pair) return convertCoordinate(pair, epsg);
+  if (pair) {
+    const converted = convertCoordinate(pair, epsg, explicitCrs);
+    return converted && Array.isArray(value) ? [...converted, ...value.slice(2)] : converted;
+  }
   if (!Array.isArray(value)) return undefined;
   const children: JsonValue[] = [];
   for (const child of value) {
-    const converted = mapCoordinates(child, epsg);
+    const converted = mapCoordinates(child, epsg, explicitCrs);
     if (converted === undefined) return undefined;
     children.push(converted);
   }
@@ -1102,7 +1149,14 @@ function mapCoordinates(
 function convertCoordinate(
   pair: [number, number],
   epsg: number | undefined,
+  explicitCrs = false,
 ): [number, number] | undefined {
+  if (explicitCrs && epsg === 3763) {
+    const [x, y] = pair;
+    if (x < -200_000 || x > 300_000 || y < -400_000 || y > 400_000) return undefined;
+    const projected = epsg3763ToWgs84(x, y);
+    return [projected.longitude, projected.latitude];
+  }
   if (isWgs84(pair)) return pair;
   if (epsg !== undefined && epsg !== 3763) return undefined;
   if (!isProjectedTm06(pair)) return undefined;

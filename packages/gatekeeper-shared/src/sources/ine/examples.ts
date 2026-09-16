@@ -193,7 +193,25 @@ export const INE_EXAMPLES: ExampleFeed[] = [
     "0012248",
     ["economy"],
   ),
+  annualLatest("ine-taxpayer-income-distribution", "Declared income after assessed tax by income quintile", "Annual distribution of taxpayers' gross declared income less assessed income tax, by NUTS 2024 geography and income quintile. Uses the current indicator, not the discontinued NUTS 2013 series.", "0012759"),
+  annualLatest("ine-median-household-income-after-tax", "Median declared household income after assessed tax", "Latest annual median gross declared income less assessed income tax per tax household, by NUTS 2024 geography.", "0012741"),
+  annualLatest("ine-household-income-gini", "Household income inequality: Gini coefficient", "Latest annual Gini coefficient of declared household income less assessed income tax, by NUTS 2024 geography.", "0012744"),
+  annualLatest("ine-declared-income-per-inhabitant", "Declared income after assessed tax per inhabitant", "Latest annual gross declared income less assessed income tax per inhabitant, by NUTS 2024 geography.", "0012672"),
+  annualLatest("ine-household-income-p90-p10", "Household income inequality: P90/P10 ratio", "Latest annual ratio between the 90th and 10th percentiles of declared household income less assessed income tax, by NUTS 2024 geography.", "0012746"),
+  annualLatest("ine-fixed-broadband-accesses", "Fixed-location broadband accesses", "Latest annual number of fixed-location broadband accesses by NUTS 2024 geography, published through INE's telecommunications survey. These are accesses, not individual users or real-time availability.", "0013140", ["telecom", "society"]),
+  annualLatest("ine-fixed-broadband-accesses-per-100", "Fixed broadband accesses per 100 inhabitants by technology", "Latest annual fixed-location broadband access rate by NUTS 2024 geography and access technology. This measures subscription penetration, not network coverage or customer outages.", "0013424", ["telecom", "society"]),
+  annualLatest("ine-broadband-accesses-per-100", "Broadband accesses per 100 inhabitants by segment", "Latest annual broadband accesses per 100 inhabitants by NUTS 2024 geography and access segment. The subscription rate is not a count of unique people connected.", "0013135", ["telecom", "society"]),
+  annualLatest("ine-household-broadband-access", "Households with broadband internet access", "Latest annual proportion of private households with at least one resident aged 16 to 74 and a home broadband connection, by NUTS 2024 area. These are aggregate survey statistics, not household-level records.", "0013826", ["telecom", "society"]),
+  annualLatest("ine-fixed-telephone-clients", "Fixed-telephone service clients", "Latest annual number of direct-access fixed-telephone service clients by access segment, from INE's telecommunications survey.", "0006851", ["telecom", "society"]),
+  annualLatest("ine-broadband-data-traffic", "Broadband internet data traffic by network type", "Latest annual broadband internet traffic in gigabytes by network type, from INE's telecommunications survey. Traffic volume is not connection speed or outage information.", "0006868", ["telecom", "society"]),
 ];
+
+function annualLatest(slug: string, title: string, description: string, indicator: string, topics: string[] = ["economy", "society"]): ExampleFeed {
+  const policy = indicator === "0012759" ? { ...ANNUAL_SERIES, version: 2 } : ANNUAL_SERIES;
+  return { slug, title, description, config: { source: "ine", indicator, lang: "PT" },
+    policy, staleAfterSeconds: 5_184_000,
+    publisher: "INE · Instituto Nacional de Estatística", topics };
+}
 
 /**
  * An indicator read without a period filter, so INE returns only its latest

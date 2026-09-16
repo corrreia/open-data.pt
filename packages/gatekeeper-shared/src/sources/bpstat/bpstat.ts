@@ -19,9 +19,9 @@ import {
   type SourceConfig,
 } from "../../index";
 
-// 2 MiB of JSON-stat is roughly 30k observations; beyond that the products
-// stop being servable as single version objects, so pagination stops there
-// and the acquisition is marked partial.
+// JSON-stat is buffered. Keep its source budget small; scoped examples use the
+// provider's series_ids and obs_last_n filters instead of downloading broad
+// domains. Whole-dataset pagination still reports partial at this cap.
 export const BPSTAT_MAX_BYTES = 2 * 1024 * 1024;
 const BPSTAT_ORIGIN = "https://bpstat.bportugal.pt";
 const REQUEST_TIMEOUT_MS = 20_000;
@@ -43,7 +43,7 @@ export const BPSTAT_FEEDS = {
 
 export function validateBpstatFeedConfig(config: SourceConfig): SourceConfig {
   const unknown = Object.keys(config).filter(
-    (key) => key !== "domain" && key !== "dataset" && key !== "lang",
+    (key) => !["domain", "dataset", "lang", "seriesIds", "lastN"].includes(key),
   );
   if (unknown.length > 0) {
     throw new GatekeeperError(`BPstat dataset config does not accept ${unknown.sort().join(", ")}`, "invalid-config");
@@ -68,7 +68,18 @@ export function validateBpstatFeedConfig(config: SourceConfig): SourceConfig {
     throw new GatekeeperError("BPstat dataset config requires lang=PT or lang=EN", "invalid-config");
   }
 
-  return { domain: String(domainNumber), dataset, lang };
+  const normalized: SourceConfig = { domain: String(domainNumber), dataset, lang };
+  if (config.seriesIds !== undefined) {
+    const ids = config.seriesIds.split(",").map((id) => id.trim());
+    if (ids.length > 100 || ids.some((id) => !/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(Number(id)))) throw new GatekeeperError("seriesIds must be 1..100 positive integer series IDs", "invalid-config");
+    normalized.seriesIds = [...new Set(ids)].sort((a, b) => Number(a) - Number(b)).join(",");
+  }
+  if (config.lastN !== undefined) {
+    const count = Number(config.lastN);
+    if (!/^\d+$/.test(config.lastN) || !Number.isSafeInteger(count) || count < 1 || count > 366) throw new GatekeeperError("lastN must be 1..366 observations per series", "invalid-config");
+    normalized.lastN = String(count);
+  }
+  return normalized;
 }
 
 export async function collectBpstatDataset(
@@ -87,6 +98,8 @@ export async function collectBpstatDataset(
   }
 
   const sourceUrl = datasetUrl(origin, domain, dataset, lang);
+  if (validated.seriesIds) sourceUrl.searchParams.set("series_ids", validated.seriesIds);
+  if (validated.lastN) sourceUrl.searchParams.set("obs_last_n", validated.lastN);
   const firstResponse = await upstreamFetch(
     fetcher,
     sourceUrl,
@@ -101,6 +114,7 @@ export async function collectBpstatDataset(
   if (!firstBytes) throw tooLarge();
   const firstPage = parseDatasetPage(firstBytes);
   validateDatasetIdentity(firstPage, sourceUrl, domain, dataset, lang);
+  validateSelectedSeries(firstPage, validated);
 
   const sourcePublishedAt = sourcePublicationTime(
     firstPage,
@@ -126,7 +140,8 @@ export async function collectBpstatDataset(
       partial = true;
       break;
     }
-    const pageUrl = datasetUrl(origin, domain, dataset, lang, nextPage);
+    const pageUrl = new URL(sourceUrl);
+    pageUrl.searchParams.set("page", String(nextPage));
     const response = await upstreamFetch(
       fetcher,
       pageUrl,
@@ -147,6 +162,7 @@ export async function collectBpstatDataset(
     }
     const page = parseDatasetPage(pageBytes);
     validateDatasetIdentity(page, pageUrl, domain, dataset, lang);
+    validateSelectedSeries(page, validated);
     pages.push(pageBytes);
     nextPage = nextPageNumber(page, sourceUrl, nextPage);
   }
@@ -358,6 +374,15 @@ function validateIndexedValues(
   }
 }
 
+function validateSelectedSeries(page: JsonObject, config: SourceConfig): void {
+  if (!config.seriesIds) return;
+  const requested = new Set(config.seriesIds.split(","));
+  const series = isJsonObject(page.extension) ? page.extension.series : undefined;
+  if (!Array.isArray(series) || series.some((item) => !isJsonObject(item) || !isJsonNumber(item.id) || !requested.has(String(item.id)))) {
+    throw invalidResponse("BPstat returned series outside the requested selection");
+  }
+}
+
 function validateDatasetIdentity(
   page: JsonObject,
   requestedUrl: URL,
@@ -407,8 +432,9 @@ function nextPageNumber(
   const pageValues = url.searchParams.getAll("page");
   const langValues = url.searchParams.getAll("lang");
   const unknown = [...url.searchParams.keys()].filter(
-    (key) => key !== "lang" && key !== "page",
+    (key) => key !== "page" && (!sourceUrl.searchParams.has(key) || url.searchParams.getAll(key).length !== 1 || url.searchParams.get(key) !== sourceUrl.searchParams.get(key)),
   );
+  const missingFilter = [...sourceUrl.searchParams.keys()].some((key) => key !== "page" && !url.searchParams.has(key));
   const pageNumber = Number(pageValues[0]);
   if (
     url.origin !== BPSTAT_ORIGIN ||
@@ -416,7 +442,7 @@ function nextPageNumber(
     pageValues.length !== 1 ||
     langValues.length !== 1 ||
     langValues[0] !== sourceUrl.searchParams.get("lang") ||
-    unknown.length > 0 ||
+    unknown.length > 0 || missingFilter ||
     !Number.isSafeInteger(pageNumber) ||
     pageNumber !== currentPage + 1
   ) {
@@ -514,5 +540,5 @@ function positiveInteger(value: JsonValue | undefined): value is number {
 
 
 function tooLarge(): GatekeeperError {
-  return new GatekeeperError("BPstat response exceeded 8 MiB", "response-too-large");
+  return new GatekeeperError(`BPstat response exceeded ${BPSTAT_MAX_BYTES} bytes`, "response-too-large");
 }

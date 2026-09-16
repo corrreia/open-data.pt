@@ -32,7 +32,7 @@ const API = new Map<string, JsonValue>([
   ["/api/products/fuel-stations", FUEL],
   ["/api/feeds/feed_fuel", { data: FUEL_FEED }],
   ["/api/products/fuel-stations/records?limit=10", { data: [{ id: "a", station: "Galp | Lisboa", price: 1.789 }] }],
-  ["/api/outages?days=90", { trackedSince: "2026-09-01T00:00:00.000Z", data: [{ feedId: "feed_power", startedAt: "2026-09-15T08:00:00.000Z", cause: "source", failures: 3 }] }],
+  ["/api/outages?days=3", { trackedSince: "2026-09-01T00:00:00.000Z", data: [{ feedId: "feed_power", startedAt: "2026-09-15T08:00:00.000Z", cause: "source", failures: 3 }] }],
 ]);
 
 /** The API as fixtures, the site's real public files, and one small HTML document for every page. */
@@ -202,6 +202,17 @@ describe("agent discovery", () => {
     const missing = await markdown("/product/?slug=nothing-here");
     expect(missing.status).toBe(404);
     expect(missing.text).toContain("# Product not found");
+  });
+
+  it("uses a three-day window for status history and page metadata", async () => {
+    const answer = await markdown("/status/");
+    expect(answer.status).toBe(200);
+    expect(answer.text).toContain("in the last 3 days");
+    expect(answer.text).toContain(`${ORIGIN}/api/outages?days=3`);
+    expect(answer.text).not.toContain("days=90");
+    const html = readFileSync("apps/site/status/index.html", "utf8");
+    expect(html).toContain("over the last 3 days.");
+    expect(html).not.toContain("90 days");
   });
 
   it("gives the other pages in Markdown too", async () => {

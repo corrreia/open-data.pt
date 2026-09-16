@@ -148,7 +148,7 @@ describe("Opendatasoft Gatekeeper", () => {
   it("ships example feeds whose configurations and policies all validate", () => {
     const instance = source(fetch);
     expect(OPENDATASOFT_FEEDS.dataset.history).toEqual({});
-    expect(OPENDATASOFT_EXAMPLES).toHaveLength(29);
+    expect(OPENDATASOFT_EXAMPLES).toHaveLength(57);
     for (const example of OPENDATASOFT_EXAMPLES) {
       expect(() => instance.validateConfig(libraryConfig(example.config))).not.toThrow();
       expect(["changes", "latest"]).toContain(example.policy.collection.historyMode);
@@ -576,7 +576,7 @@ describe("Opendatasoft through the shared collector", () => {
       sourcePublishedAt: "2026-09-07T11:00:51.432Z",
     });
     expect(header.completeness).toBe("complete");
-    expect(header.normalizer).toEqual({ id: "opendatasoft-explore-v2.1", version: "5" });
+    expect(header.normalizer).toEqual({ id: "opendatasoft-explore-v2.1", version: "6" });
     expect(header.products.map((product) => [product.productKey, product.completeness])).toEqual([["records", "complete"]]);
     expect(header.checkpoint.state).toMatchObject({ validators: { default: { etag: expect.stringMatching(/^"ods-/) } } });
     expect(rest.filter((frame) => frame.type === "record").map((frame) => frame.type === "record" && frame.value.entityKey)).toEqual(["a", "b"]);

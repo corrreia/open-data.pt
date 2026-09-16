@@ -1,0 +1,461 @@
+{
+  "dataset": {
+    "visibility": "domain",
+    "fields": [
+      {
+        "name": "data_de_celebracao_do_contrato",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "facetsort": "-alphanum",
+          "timerangeFilter": true
+        },
+        "label": "Data de Celebração do Contrato",
+        "type": "date",
+        "label_pt": "Data de Celebração do Contrato",
+        "label_en": "Data de Celebração do Contrato",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "objeto_do_contrato",
+        "description": null,
+        "annotations": {},
+        "label": "Objeto do Contrato",
+        "type": "text",
+        "label_pt": "Objeto do Contrato",
+        "label_en": "Objeto do Contrato",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "tipo_de_procedimento",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "facetsort": "alphanum",
+          "disjunctive": true,
+          "sortable": true
+        },
+        "label": "Tipo de Procedimento",
+        "type": "text",
+        "label_pt": "Tipo de Procedimento",
+        "label_en": "Tipo de Procedimento",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "tipos_de_contrato",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "facetsort": "alphanum",
+          "disjunctive": true,
+          "sortable": true
+        },
+        "label": "Tipos de Contrato",
+        "type": "text",
+        "label_pt": "Tipos de Contrato",
+        "label_en": "Tipos de Contrato",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "cpvs",
+        "description": null,
+        "annotations": {},
+        "label": "CPVs",
+        "type": "text",
+        "label_pt": "CPVs",
+        "label_en": "CPVs",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "entidades_adjudicantes_normalizado",
+        "description": null,
+        "annotations": {
+          "facet": true,
+          "facetsort": "alphanum",
+          "disjunctive": true,
+          "sortable": true
+        },
+        "label": "Entidades Adjudicantes",
+        "type": "text",
+        "label_pt": "Entidades Adjudicantes",
+        "label_en": "Entidades Adjudicantes",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "nifs_dos_adjudicantes",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "NIFs dos Adjudicantes",
+        "type": "text",
+        "label_pt": "NIFs dos Adjudicantes",
+        "label_en": "NIFs dos Adjudicantes",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "entidades_adjudicatarias_normalizado",
+        "description": null,
+        "annotations": {},
+        "label": "Entidades Adjudicatárias",
+        "type": "text",
+        "label_pt": "Entidades Adjudicatárias",
+        "label_en": "Entidades Adjudicatárias",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "nifs_das_adjudicatarias",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count"
+        },
+        "label": "NIFs das Adjudicatárias",
+        "type": "text",
+        "label_pt": "NIFs das Adjudicatárias",
+        "label_en": "NIFs das Adjudicatárias",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "preco_contratual",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count",
+          "unit": "€"
+        },
+        "label": "Preço Contratual",
+        "type": "double",
+        "label_pt": "Preço Contratual",
+        "label_en": "Preço Contratual",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "data_de_publicacao",
+        "description": null,
+        "annotations": {},
+        "label": "Data de Publicação",
+        "type": "date",
+        "label_pt": "Data de Publicação",
+        "label_en": "Data de Publicação",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "prazo_de_execucao",
+        "description": null,
+        "annotations": {},
+        "label": "Prazo de Execução",
+        "type": "text",
+        "label_pt": "Prazo de Execução",
+        "label_en": "Prazo de Execução",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "local_de_execucao",
+        "description": null,
+        "annotations": {},
+        "label": "Local de Execução",
+        "type": "text",
+        "label_pt": "Local de Execução",
+        "label_en": "Local de Execução",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "fundamentacao",
+        "description": null,
+        "annotations": {},
+        "label": "Fundamentação",
+        "type": "text",
+        "label_pt": "Fundamentação",
+        "label_en": "Fundamentação",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "data_de_fecho_do_contrato",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count",
+          "timeserie_precision": "day"
+        },
+        "label": "Data de Fecho do Contrato",
+        "type": "date",
+        "label_pt": "Data de Fecho do Contrato",
+        "label_en": "Data de Fecho do Contrato",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "preco_total_efetivo",
+        "description": null,
+        "annotations": {
+          "facetsort": "-count",
+          "unit": "€"
+        },
+        "label": "Preço Total Efetivo",
+        "type": "double",
+        "label_pt": "Preço Total Efetivo",
+        "label_en": "Preço Total Efetivo",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "causas_das_alteracoes_ao_prazo",
+        "description": null,
+        "annotations": {},
+        "label": "Causas das Alterações ao Prazo",
+        "type": "text",
+        "label_pt": "Causas das Alterações ao Prazo",
+        "label_en": "Causas das Alterações ao Prazo",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "causas_das_alteracoes_ao_preco",
+        "description": null,
+        "annotations": {},
+        "label": "Causas das Alterações ao Preço",
+        "type": "text",
+        "label_pt": "Causas das Alterações ao Preço",
+        "label_en": "Causas das Alterações ao Preço",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "estado",
+        "description": null,
+        "annotations": {},
+        "label": "Estado",
+        "type": "text",
+        "label_pt": "Estado",
+        "label_en": "Estado",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "n_o_registo_do_acordo_quadro",
+        "description": null,
+        "annotations": {},
+        "label": "N.º registo do Acordo Quadro",
+        "type": "text",
+        "label_pt": "N.º registo do Acordo Quadro",
+        "label_en": "N.º registo do Acordo Quadro",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "descricao_do_acordo_quadro",
+        "description": null,
+        "annotations": {},
+        "label": "Descrição do Acordo Quadro",
+        "type": "text",
+        "label_pt": "Descrição do Acordo Quadro",
+        "label_en": "Descrição do Acordo Quadro",
+        "description_pt": null,
+        "description_en": null
+      },
+      {
+        "name": "procedimento_centralizado",
+        "description": null,
+        "annotations": {},
+        "label": "Procedimento Centralizado",
+        "type": "text",
+        "label_pt": "Procedimento Centralizado",
+        "label_en": "Procedimento Centralizado",
+        "description_pt": null,
+        "description_en": null
+      }
+    ],
+    "dataset_id": "portal-base",
+    "dataset_uid": "da_0si8yp",
+    "has_records": true,
+    "features": [
+      "timeserie",
+      "analyze"
+    ],
+    "attachments": [],
+    "alternative_exports": [],
+    "data_visible": true,
+    "metas": {
+      "dcat": {
+        "created": "2016-05-10",
+        "issued": "2019-02-28",
+        "creator": "SPMS",
+        "contributor": "IMPIC",
+        "contact_name": null,
+        "contact_email": null,
+        "accrualperiodicity": "Mensal",
+        "spatial": "Mensal",
+        "temporal": "maio 2018 até ao mês anterior ao atual",
+        "granularity": "Diária",
+        "dataquality": null,
+        "publisher_type": null,
+        "conforms_to": null,
+        "temporal_coverage_start": null,
+        "temporal_coverage_end": null,
+        "accessRights": null,
+        "relation": null
+      },
+      "default": {
+        "title": "Contratos Públicos na Saúde",
+        "title_pt": "Contratos Públicos na Saúde",
+        "title_en": "Contratos Públicos na Saúde",
+        "description": "<p>O Portal Base é um espaço público, único e multifuncional, que agrega toda a informação sobre os contratos celebrados ao abrigo do Código dos Contratos Públicos (CCP), abrangendo as suas fases de formação e de execução.</p><p>Trata-se de uma iniciativa que assenta na ideia de maior transparência na divulgação da contratação pública efetuada em Portugal, concretizando um dos objetivos do Código.</p><p>O Portal Base é, nestes termos, um instrumento de <em>accountability </em>da Administração Pública Portuguesa.</p><p>O CPV contém um vocabulário principal e um vocabulário suplementar.</p><p>O vocabulário principal assenta numa estrutura de códigos em árvore, até nove algarismos, aos quais corresponde uma designação que descreve os fornecimentos, as obras ou os serviços objecto do contrato.</p><p>O vocabulário suplementar pode ser utilizado para completar a descrição do objecto dos contratos.</p>",
+        "description_pt": "<p>O Portal Base é um espaço público, único e multifuncional, que agrega toda a informação sobre os contratos celebrados ao abrigo do Código dos Contratos Públicos (CCP), abrangendo as suas fases de formação e de execução.</p><p>Trata-se de uma iniciativa que assenta na ideia de maior transparência na divulgação da contratação pública efetuada em Portugal, concretizando um dos objetivos do Código.</p><p>O Portal Base é, nestes termos, um instrumento de <em>accountability </em>da Administração Pública Portuguesa.</p><p>O CPV contém um vocabulário principal e um vocabulário suplementar.</p><p>O vocabulário principal assenta numa estrutura de códigos em árvore, até nove algarismos, aos quais corresponde uma designação que descreve os fornecimentos, as obras ou os serviços objecto do contrato.</p><p>O vocabulário suplementar pode ser utilizado para completar a descrição do objecto dos contratos.</p>",
+        "description_en": "<p>O Portal Base é um espaço público, único e multifuncional, que agrega toda a informação sobre os contratos celebrados ao abrigo do Código dos Contratos Públicos (CCP), abrangendo as suas fases de formação e de execução.</p><p>Trata-se de uma iniciativa que assenta na ideia de maior transparência na divulgação da contratação pública efetuada em Portugal, concretizando um dos objetivos do Código.</p><p>O Portal Base é, nestes termos, um instrumento de <em>accountability </em>da Administração Pública Portuguesa.</p><p>O CPV contém um vocabulário principal e um vocabulário suplementar.</p><p>O vocabulário principal assenta numa estrutura de códigos em árvore, até nove algarismos, aos quais corresponde uma designação que descreve os fornecimentos, as obras ou os serviços objecto do contrato.</p><p>O vocabulário suplementar pode ser utilizado para completar a descrição do objecto dos contratos.</p>",
+        "theme": [
+          "Eficiência"
+        ],
+        "theme_pt": [
+          "Eficiência"
+        ],
+        "theme_en": [
+          "Eficiência"
+        ],
+        "keyword": [
+          "Contratos Públicos ",
+          "Contratação"
+        ],
+        "keyword_pt": [
+          "Contratos Públicos ",
+          "Contratação"
+        ],
+        "keyword_en": [
+          "Contratos Públicos ",
+          "Contratação"
+        ],
+        "license": null,
+        "license_pt": null,
+        "license_en": null,
+        "license_url": null,
+        "license_url_pt": null,
+        "license_url_en": null,
+        "language": "pt",
+        "metadata_languages": [
+          "pt"
+        ],
+        "timezone": null,
+        "modified": "2026-08-14T15:33:57.539000+00:00",
+        "modified_updates_on_metadata_change": true,
+        "modified_updates_on_data_change": true,
+        "data_processed": "2026-08-14T15:33:57.539000+00:00",
+        "metadata_processed": "2026-08-14T15:33:57.593000+00:00",
+        "geographic_reference": [
+          "world_pt"
+        ],
+        "geographic_reference_auto": true,
+        "territory": [
+          "Portugal"
+        ],
+        "geometry_types": null,
+        "bbox": null,
+        "publisher": "IMPIC",
+        "publisher_pt": "IMPIC",
+        "publisher_en": "IMPIC",
+        "references": "https://www.sns.gov.pt/monitorizacao-do-sns/contratos-publicos/ - 31/12/2017",
+        "records_count": 339562,
+        "attributions": null,
+        "source_domain": null,
+        "source_domain_title": null,
+        "source_domain_address": null,
+        "source_dataset": null,
+        "shared_catalog": null,
+        "federated": false,
+        "parent_domain": null,
+        "update_frequency": null
+      },
+      "custom": {
+        "dataset-id-number": "168",
+        "measure-unit": null,
+        "source-data": "Portal Base",
+        "version": null,
+        "formula": null
+      }
+    }
+  },
+  "records": [
+    {
+      "data_de_celebracao_do_contrato": "2026-06-16",
+      "objeto_do_contrato": "Aquisição de medicamentos em exclusivo à GILEAD SCIENCES LDA.",
+      "tipo_de_procedimento": "Ajuste Direto Regime Geral",
+      "tipos_de_contrato": "Aquisição de bens móveis",
+      "cpvs": "33000000-0, Equipamento médico, medicamentos e produtos para cuidados pessoais",
+      "entidades_adjudicantes_normalizado": "Unidade Local de Saúde do Alto Alentejo, EPE",
+      "nifs_dos_adjudicantes": "508094461",
+      "entidades_adjudicatarias_normalizado": "GILEAD SCIENCES, LDA.",
+      "nifs_das_adjudicatarias": "503604704",
+      "preco_contratual": 72979.2,
+      "data_de_publicacao": "2026-07-15",
+      "prazo_de_execucao": null,
+      "local_de_execucao": "Portugal, Portalegre",
+      "fundamentacao": "Artigo 24.º, n.º 1, alínea e), subalínea ii) do Código dos Contratos Públicos",
+      "data_de_fecho_do_contrato": null,
+      "preco_total_efetivo": null,
+      "causas_das_alteracoes_ao_prazo": null,
+      "causas_das_alteracoes_ao_preco": null,
+      "estado": null,
+      "n_o_registo_do_acordo_quadro": "Não aplicável.",
+      "descricao_do_acordo_quadro": "Não aplicável.",
+      "procedimento_centralizado": "Não"
+    },
+    {
+      "data_de_celebracao_do_contrato": "2026-06-02",
+      "objeto_do_contrato": "SOLUÇÃO ALCOÓLICA P/ DESINFECÇÃO MÃOS EMB 1300 ML",
+      "tipo_de_procedimento": "Ajuste Direto Regime Geral",
+      "tipos_de_contrato": "Aquisição de bens móveis",
+      "cpvs": "33000000-0, Equipamento médico, medicamentos e produtos para cuidados pessoais",
+      "entidades_adjudicantes_normalizado": "Unidade Local de Saúde de Almada-Seixal, EPE",
+      "nifs_dos_adjudicantes": "506361470",
+      "entidades_adjudicatarias_normalizado": "Exaclean - Sistemas de Higiene, Ldª",
+      "nifs_das_adjudicatarias": "508758190",
+      "preco_contratual": 7761.05,
+      "data_de_publicacao": "2026-07-13",
+      "prazo_de_execucao": null,
+      "local_de_execucao": "Portugal, Setúbal, Almada",
+      "fundamentacao": "Artigo 24.º, n.º 1, alínea c) do Código dos Contratos Públicos",
+      "data_de_fecho_do_contrato": null,
+      "preco_total_efetivo": null,
+      "causas_das_alteracoes_ao_prazo": null,
+      "causas_das_alteracoes_ao_preco": null,
+      "estado": null,
+      "n_o_registo_do_acordo_quadro": "Não aplicável.",
+      "descricao_do_acordo_quadro": "Não aplicável.",
+      "procedimento_centralizado": "Não"
+    },
+    {
+      "data_de_celebracao_do_contrato": "2026-06-03",
+      "objeto_do_contrato": "GEMCITABINA 1000 MG PÓ SOL INJ FR IV",
+      "tipo_de_procedimento": "Ajuste Direto Regime Geral",
+      "tipos_de_contrato": "Aquisição de bens móveis",
+      "cpvs": "33000000-0, Equipamento médico, medicamentos e produtos para cuidados pessoais",
+      "entidades_adjudicantes_normalizado": "Unidade Local de Saúde de Almada-Seixal, EPE",
+      "nifs_dos_adjudicantes": "506361470",
+      "entidades_adjudicatarias_normalizado": "HIKMA FARMACÊUTICA (PORTUGAL) SA.",
+      "nifs_das_adjudicatarias": "502266791",
+      "preco_contratual": 8904.0,
+      "data_de_publicacao": "2026-07-13",
+      "prazo_de_execucao": null,
+      "local_de_execucao": "Portugal, Setúbal, Almada",
+      "fundamentacao": "Artigo 24.º, n.º 1, alínea c) do Código dos Contratos Públicos",
+      "data_de_fecho_do_contrato": null,
+      "preco_total_efetivo": null,
+      "causas_das_alteracoes_ao_prazo": null,
+      "causas_das_alteracoes_ao_preco": null,
+      "estado": null,
+      "n_o_registo_do_acordo_quadro": "Não aplicável.",
+      "descricao_do_acordo_quadro": "Não aplicável.",
+      "procedimento_centralizado": "Não"
+    }
+  ]
+}

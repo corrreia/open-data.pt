@@ -22,6 +22,7 @@ import {
   type SourceValidator,
   type SourceConfig,
 } from "../../index";
+import { REN_PERIODIC_FEEDS, REN_PERIODIC_ORIGIN, collectRenPeriodic, isRenPeriodicService, validateRenPeriodicConfig } from "./periodic";
 
 export const REN_ORIGIN = "https://datahub.ren.pt";
 /** The data hub answers only POSTs, so the source link a person can open is its own site. */
@@ -114,7 +115,7 @@ export const REN_SERVICES: RenServiceCatalogue = {
 /** The feed kind each REN service declares. */
 type RenFeedCatalogue = { [Service in RenServiceName]: FeedKindDescription };
 
-export const REN_FEEDS: RenFeedCatalogue =
+const REN_CHART_FEEDS: RenFeedCatalogue =
   // SAFETY: the entries are built from REN_SERVICES, so the result carries one
   // feed kind for every service name and no others.
   Object.fromEntries(
@@ -135,12 +136,15 @@ export const REN_FEEDS: RenFeedCatalogue =
   ]),
 ) as RenFeedCatalogue;
 
+export const REN_FEEDS = { ...REN_CHART_FEEDS, ...REN_PERIODIC_FEEDS };
+
 export interface RenCollectionDocument {
   service: RenServiceName;
   days: Array<{ day: string; response: JsonObject }>;
 }
 
 export function validateRenFeedConfig(config: SourceConfig): SourceConfig {
+  if (isRenPeriodicService(config.service ?? config.feed)) return validateRenPeriodicConfig(config);
   if (Object.hasOwn(config, "host") || Object.hasOwn(config, "url")) {
     throw new GatekeeperError("REN feed hosts and URLs are fixed by the Gatekeeper", "source-denied");
   }
@@ -172,6 +176,9 @@ export async function collectRenFeed(
   now: Date = new Date(),
 ): Promise<SourceFetch> {
   const validated = validateRenFeedConfig(config);
+  if (isRenPeriodicService(validated.service)) {
+    return collectRenPeriodic({ config: validated, apiOrigin: REN_PERIODIC_ORIGIN, fetcher, now: () => now }, checkpoint);
+  }
   // SAFETY: `validateRenFeedConfig` has just confirmed `service` names one of
   // the services REN_SERVICES declares.
   const service = validated.service as RenServiceName;

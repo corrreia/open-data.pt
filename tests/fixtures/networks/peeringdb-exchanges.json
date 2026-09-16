@@ -1,0 +1,12 @@
+{
+  "pages": [
+    {
+      "data": [
+        { "id": 1, "name": "Example IX", "name_long": "Synthetic Example Internet Exchange", "city": "Lisboa", "country": "PT", "website": "https://example.test/", "media": "Ethernet", "proto_unicast": true, "proto_multicast": false, "proto_ipv6": true, "created": "2020-01-01T00:00:00Z", "updated": "2026-06-03T12:00:00Z", "status": "ok", "tech_email": "must-not-publish@example.test", "tech_phone": "+000000000", "notes": "Synthetic private detail that must not be copied" },
+        { "id": 2, "name": "Example IX Two", "name_long": "", "city": "Porto", "country": "PT", "website": "", "media": "Ethernet", "proto_unicast": true, "proto_multicast": false, "proto_ipv6": true, "status": "ok" }
+      ],
+      "meta": { "generated": "2026-09-16T12:00:00Z" }
+    },
+    { "data": [], "meta": {} }
+  ]
+}

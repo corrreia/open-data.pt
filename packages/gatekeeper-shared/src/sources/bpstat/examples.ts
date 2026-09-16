@@ -1,4 +1,5 @@
 import type { ExampleFeed } from "../../index";
+import { CATALOG_EXAMPLES } from "./catalog-examples";
 
 const MEBIBYTE = 1024 * 1024;
 
@@ -90,4 +91,5 @@ export const BPSTAT_EXAMPLES: ExampleFeed[] = [
     publisher: "Banco de Portugal",
     topics: ["economy"],
   },
+  ...CATALOG_EXAMPLES,
 ];

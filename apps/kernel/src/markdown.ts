@@ -295,7 +295,8 @@ async function start(url: URL, host: SiteHost): Promise<PageText> {
 }
 
 async function status(url: URL, host: SiteHost): Promise<PageText> {
-  const [feeds, outages] = await Promise.all([read<{ data: CatalogFeed[] }>(host, "/api/feeds"), read<{ trackedSince: string | null; data: Outage[] }>(host, "/api/outages?days=90")]);
+  const days = 3;
+  const [feeds, outages] = await Promise.all([read<{ data: CatalogFeed[] }>(host, "/api/feeds"), read<{ trackedSince: string | null; data: Outage[] }>(host, `/api/outages?days=${days}`)]);
   const titles = new Map(feeds.data.map((feed) => [feed.id, feed.title]));
   const titleOf = (outage: Outage) => (outage.feedId === null ? "The whole platform" : titles.get(outage.feedId) ?? outage.feedId);
   const open = outages.data.filter((outage) => !outage.endedAt);
@@ -303,7 +304,7 @@ async function status(url: URL, host: SiteHost): Promise<PageText> {
   return found([
     "# Status",
     "",
-    `Whether open-data.pt is collecting every source, and when each was unavailable in the last 90 days${outages.trackedSince ? ` (tracked since ${outages.trackedSince})` : ""}. The same as JSON: ${url.origin}/api/outages?days=90`,
+    `Whether open-data.pt is collecting every source, and when each was unavailable in the last ${days} days${outages.trackedSince ? ` (tracked since ${outages.trackedSince})` : ""}. The same as JSON: ${url.origin}/api/outages?days=${days}`,
     "",
     "## Now",
     "",

@@ -16,6 +16,8 @@ import {
   type SourceConfig,
   type TopicOptions,
 } from "@open-data-pt/gatekeeper-shared";
+import { OGC_FEEDS, ogcCollector } from "@open-data-pt/gatekeeper-shared/formats/ogc";
+import { UDATA_FEEDS, udataCollector } from "@open-data-pt/gatekeeper-shared/formats/udata";
 import { BPSTAT_FEEDS, bpstatCollector } from "@open-data-pt/gatekeeper-shared/sources/bpstat";
 import { EUROSTAT_FEEDS, eurostatCollector } from "@open-data-pt/gatekeeper-shared/sources/eurostat";
 import { INE_FEEDS, ineCollector } from "@open-data-pt/gatekeeper-shared/sources/ine";
@@ -60,6 +62,8 @@ export default class StatisticsGatekeeper
   /** The wiring: which library answers for a feed, and what it is given to do it with. */
   private libraries(): GatekeeperLibraries {
     return new Map<string, GatekeeperLibrary>([
+      ["ogc", { kinds: Object.values(OGC_FEEDS), collector: (config: SourceConfig) => ogcCollector({ config, hosts: this.env.OGC_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }) }],
+      ["udata", { kinds: Object.values(UDATA_FEEDS), collector: (config: SourceConfig) => udataCollector({ config, hosts: this.env.UDATA_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }) }],
       ["ine", { kinds: Object.values(INE_FEEDS), collector: (config: SourceConfig) => ineCollector({ config, apiOrigin: this.env.INE_API_ORIGIN, fetcher: (input, init) => fetch(input, init) }) }],
       ["bpstat", { kinds: Object.values(BPSTAT_FEEDS), collector: (config: SourceConfig) => bpstatCollector({ config, apiOrigin: this.env.BPSTAT_API_ORIGIN, fetcher: (input, init) => fetch(input, init) }) }],
       ["eurostat", { kinds: Object.values(EUROSTAT_FEEDS), collector: (config: SourceConfig) => eurostatCollector({ config, apiOrigin: this.env.EUROSTAT_API_ORIGIN, fetcher: (input, init) => fetch(input, init) }) }],

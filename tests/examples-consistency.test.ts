@@ -1,5 +1,6 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type { ExampleFeed } from "@open-data-pt/gatekeeper-shared";
+import { isJsonObject, isJsonString, parseJson, type ExampleFeed } from "@open-data-pt/gatekeeper-shared";
 import { CITIES_EXAMPLES } from "../packages/gatekeeper-cities/src/examples";
 import { ENERGY_EXAMPLES } from "../packages/gatekeeper-energy/src/examples";
 import { ENVIRONMENT_EXAMPLES } from "../packages/gatekeeper-environment/src/examples";
@@ -52,6 +53,23 @@ async function libraryExamples(): Promise<Map<string, readonly ExampleFeed[]>> {
   return found;
 }
 
+/** Explicit review holds are not runtime feature flags: their examples must stay out of Worker install lists. */
+function publicationHolds(): Map<string, string> {
+  const rows = parseJson(readFileSync(new URL("../research/source-publication-holds.json", import.meta.url), "utf8"));
+  if (!Array.isArray(rows)) throw new Error("Publication holds must be an array");
+  const result = new Map<string, string>();
+  for (const row of rows) {
+    if (!isJsonObject(row) || !isJsonString(row.source) || !isJsonString(row.reason) || row.reason.length < 20) {
+      throw new Error("Every publication hold must name its source and concrete reason");
+    }
+    if (result.has(row.source)) throw new Error("Duplicate publication hold");
+    result.set(row.source, row.reason);
+  }
+  return result;
+}
+
+const PUBLICATION_HOLDS = publicationHolds();
+
 /** What the six Workers actually install, which is what the Registry turns into feeds. */
 const DEPLOYED: ExampleFeed[] = [
   ...CITIES_EXAMPLES,
@@ -88,14 +106,23 @@ describe("libraries and the Workers that carry them", () => {
   it("finds a format library per standard and a source library per bespoke API", () => {
     expect(Object.keys(LIBRARIES).map(libraryName).toSorted()).toEqual([
       "arcgis", "bpstat", "carris", "ckan", "dgeg", "eurostat", "gbfs", "gtfs",
-      "ine", "ipma", "metrolisboa", "omie", "opendatasoft", "ren", "udata",
+      "ine", "ipma", "metrolisboa", "ogc", "omie", "opendatasoft", "parliament", "peeringdb", "ren", "ripestat", "udata",
     ]);
   });
 
-  it("gives every library example to exactly one Worker", async () => {
+  it("gives every cleared library example to exactly one Worker", async () => {
     const libraries = await libraryExamples();
-    const offered = [...libraries.values()].flatMap((examples) => examples.map((example) => example.slug)).toSorted();
+    const offered = [...libraries].filter(([name]) => !PUBLICATION_HOLDS.has(name))
+      .flatMap(([, examples]) => examples.map((example) => example.slug)).toSorted();
     expect(DEPLOYED.map((example) => example.slug).toSorted()).toEqual(offered);
+  });
+
+  it("never auto-publishes an adapter awaiting permission or record validation", async () => {
+    const libraries = await libraryExamples();
+    for (const source of PUBLICATION_HOLDS.keys()) {
+      expect(libraries.has(source), `Unknown publication hold ${source}`).toBe(true);
+      expect(DEPLOYED.filter((example) => example.config.source === source)).toEqual([]);
+    }
   });
 
   it("names its own library in every example configuration", async () => {

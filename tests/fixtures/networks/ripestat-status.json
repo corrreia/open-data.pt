@@ -1,0 +1,13 @@
+{
+  "messages": [["info", "Synthetic schema fixture; not actual routing data"]],
+  "version": "3.4", "data_call_name": "routing-status", "data_call_status": "supported",
+  "status": "ok", "status_code": 200, "query_id": "synthetic-query", "time": "2026-09-16T12:34:56",
+  "data": {
+    "resource": "64496", "query_time": "2026-09-15T16:00:00",
+    "first_seen": { "prefix": "198.51.100.0/24", "origin": "64496", "time": "2020-01-01T00:00:00" },
+    "last_seen": { "prefix": "198.51.100.0/24", "origin": "64496", "time": "2026-09-15T16:00:00" },
+    "visibility": { "v4": { "ris_peers_seeing": 10, "total_ris_peers": 12 }, "v6": { "ris_peers_seeing": 8, "total_ris_peers": 9 } },
+    "announced_space": { "v4": { "prefixes": 1, "ips": 256 }, "v6": { "prefixes": 1, "48s": 0.00390625 } },
+    "observed_neighbours": 2
+  }
+}

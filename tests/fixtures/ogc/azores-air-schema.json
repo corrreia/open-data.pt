@@ -1,0 +1,35 @@
+{
+    "type":"object",
+    "title":"Rede de Monitoriza\u00e7\u00e3o da Qualidade do Ar - Regi\u00e3o Aut\u00f3noma dos A\u00e7ores (RAA)",
+    "properties":{
+        "geometry":{
+            "format":"geometry-any",
+            "x-ogc-role":"primary-geometry"
+        },
+        "unique_id":{
+            "type":"string",
+            "x-ogc-role":"id"
+        },
+        "tema":{
+            "type":"string"
+        },
+        "designacao":{
+            "type":"string"
+        },
+        "concelho":{
+            "type":"string"
+        },
+        "ent_resp":{
+            "type":"string"
+        },
+        "fonte":{
+            "type":"string"
+        },
+        "atualizado":{
+            "type":"string",
+            "format":"date-time"
+        }
+    },
+    "$schema":"http://json-schema.org/draft/2019-09/schema",
+    "$id":"https://ambiente.azores.gov.pt/idea-api/collections/RedeMonitorizacao_QualidadeAr/schema"
+}

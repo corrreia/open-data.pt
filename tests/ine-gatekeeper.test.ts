@@ -157,7 +157,7 @@ function bodyBytes(fetched: SourceBody): Uint8Array {
 
 describe("INE Gatekeeper", () => {
   it("ships example feeds whose configurations all validate", () => {
-    expect(INE_EXAMPLES).toHaveLength(15);
+    expect(INE_EXAMPLES).toHaveLength(26);
     for (const example of INE_EXAMPLES) {
       expect(() => validateIneFeedConfig(libraryConfig(example.config))).not.toThrow();
     }
@@ -377,6 +377,17 @@ describe("INE Gatekeeper", () => {
     });
     expect(transformed.products[0]?.points).toHaveLength(10);
     expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("accepts a single historical period larger than 2 MiB within the live source budget", async () => {
+    const periods = annualPeriods(2023, 2023);
+    const meta = historyMeta("Anual", periods);
+    const data = [{ ...DATA[0], sourceNotes: "x".repeat(3 * 1024 * 1024), Dados: { "2023": [{ geocod: "PT", geodsg: "Portugal", valor: "1" }] } }];
+    const fetcher = vi.fn(async (input: URL | RequestInfo) => new URL(input.toString()).pathname.endsWith("/pindicaMeta.jsp") ? jsonResponse(meta) : jsonResponse(data));
+    const fetched = sourceBody(await collectIneIndicatorHistory({ indicator: "0007976" }, { before: "2024-01-01T00:00:00Z" }, "https://www.ine.pt", fetcher));
+    expect(bodyBytes(fetched).byteLength).toBeGreaterThan(2 * 1024 * 1024);
+    expect(bodyBytes(fetched).byteLength).toBeLessThan(INE_HISTORY_MAX_BYTES);
+    expect(fetched.exhausted).toBe(true);
   });
 
   it("reduces the annual period maximum for a wide indicator", async () => {
