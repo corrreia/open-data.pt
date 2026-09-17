@@ -174,3 +174,22 @@ describe("a kernel nobody operates", () => {
     expect((await records()).map((row) => row.id)).toEqual(["a"]);
   }, 180_000);
 });
+
+describe("the Registry lends each history query one slot", () => {
+  async function slots(take: string[], release: string[] = []): Promise<boolean[]> {
+    const answer = await server.fetch("/test/history-slots", { method: "POST", body: JSON.stringify({ take, release }) });
+    expect(answer.status).toBe(200);
+    return (await jsonBody<{ taken: boolean[] }>(answer)).taken;
+  }
+
+  it("counts a query that asks twice once, and refuses a fifth query", async () => {
+    // The same query asking again is a lost reply retried, not a second reader.
+    expect(await slots(["q1", "q1", "q1"])).toEqual([true, true, true]);
+    // Four readers at a time, and the repeated asks above cost only the one slot.
+    expect(await slots(["q2", "q3", "q4"])).toEqual([true, true, true]);
+    expect(await slots(["q5"])).toEqual([false]);
+    // Releasing is by name, and releasing twice releases once.
+    expect(await slots([], ["q1", "q1", "q2", "q3", "q4"])).toEqual([]);
+    expect(await slots(["q5", "q6", "q7", "q8"], ["q5", "q6", "q7", "q8"])).toEqual([true, true, true, true]);
+  }, 60_000);
+});

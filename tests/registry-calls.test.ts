@@ -13,14 +13,36 @@ class EvictedRegistry implements HistorySlots {
     private readonly failedFinishes = 0,
     private readonly busy = false,
   ) {}
-  async tryStartHistoryQuery(): Promise<boolean> {
+  async tryStartHistoryQuery(_queryId: string): Promise<boolean> {
     this.starts += 1;
     if (this.starts <= this.failedStarts) throw new Error(EVICTED);
     return !this.busy;
   }
-  async finishHistoryQuery(): Promise<void> {
+  async finishHistoryQuery(_queryId: string): Promise<void> {
     this.finishes += 1;
     if (this.finishes <= this.failedFinishes) throw new Error(EVICTED);
+  }
+}
+
+/**
+ * A Registry that survives the call but loses the reply, holding its slots the
+ * way the real one does: by the name the query gave, not by a count.
+ */
+class LiveRegistry implements HistorySlots {
+  readonly held = new Set<string>();
+  private replies = 0;
+  constructor(private readonly lostReplies = 0) {}
+  async tryStartHistoryQuery(queryId: string): Promise<boolean> {
+    if (!this.held.has(queryId)) {
+      if (this.held.size >= 4) return false;
+      this.held.add(queryId);
+    }
+    this.replies += 1;
+    if (this.replies <= this.lostReplies) throw new Error(EVICTED);
+    return true;
+  }
+  async finishHistoryQuery(queryId: string): Promise<void> {
+    this.held.delete(queryId);
   }
 }
 
@@ -39,6 +61,19 @@ describe("a Registry evicted between calls does not fail a public read", () => {
     expect(target.starts).toBe(2);
     // The retry asks for a new stub: the old one names an instance that is gone.
     expect(stubs).toBeGreaterThan(1);
+  });
+
+  it("strands no slot when the Registry ran the call and only the reply was lost", async () => {
+    // The instance is alive and took the slot; the answer never arrived. Taking
+    // it again must ask for the same slot, not a second one.
+    const target = new LiveRegistry(1);
+    expect(
+      await withHistorySlot(
+        () => target,
+        async () => "rows",
+      ),
+    ).toBe("rows");
+    expect(target.held.size).toBe(0);
   });
 
   it("keeps an answer the lake already gave when the slot cannot be released", async () => {
