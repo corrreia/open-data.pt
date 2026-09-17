@@ -32,11 +32,11 @@ const SELECTED =
     .filter(Boolean) ?? [];
 const MIB = 1024 * 1024;
 
-/** The wiring the topic Workers deploy, from the same generated plans and vars, with the real fetch. */
-const TOPICS: Array<{ kind: string; libraries: GatekeeperLibraries; examples: readonly ExampleFeed[] }> = PLANS.map((plan) => ({
-  kind: plan.topic,
-  libraries: workerLibraries(plan.topic, { ML_CONSUMER_KEY: process.env.ML_CONSUMER_KEY, ML_CONSUMER_SECRET: process.env.ML_CONSUMER_SECRET }),
-  examples: workerExamples(plan.topic),
+/** The wiring the library Workers deploy, from the same generated plans and vars, with the real fetch. */
+const WORKERS: Array<{ kind: string; libraries: GatekeeperLibraries; examples: readonly ExampleFeed[] }> = PLANS.map((plan) => ({
+  kind: plan.name,
+  libraries: workerLibraries(plan.name, { ML_CONSUMER_KEY: process.env.ML_CONSUMER_KEY, ML_CONSUMER_SECRET: process.env.ML_CONSUMER_SECRET }),
+  examples: workerExamples(plan.name),
 }));
 
 /** The request the kernel builds for a live collection under this example's policy. */
@@ -64,10 +64,10 @@ function liveRequest(example: ExampleFeed, resolved: ResolvedFeed): CollectionRe
   };
 }
 
-const cases = TOPICS.flatMap((topic) =>
-  topic.examples
+const cases = WORKERS.flatMap((worker) =>
+  worker.examples
     .filter((example) => SELECTED.includes("all") || SELECTED.includes(example.slug))
-    .map((example) => ({ slug: example.slug, example, options: { gatekeeperKind: topic.kind, libraries: topic.libraries } satisfies TopicOptions })),
+    .map((example) => ({ slug: example.slug, example, options: { gatekeeperKind: worker.kind, libraries: worker.libraries } satisfies TopicOptions })),
 );
 
 describe.skipIf(cases.length === 0)("live examples", () => {

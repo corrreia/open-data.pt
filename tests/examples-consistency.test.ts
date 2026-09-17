@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { isJsonObject, isJsonString, isTopic, parseJson, type ExampleFeed } from "@open-data-pt/gatekeeper-shared";
-import { workerTopics } from "../tools/packages";
+import { workerPackages } from "../tools/packages";
 import { INSTALLED, PLANS } from "./catalog";
 
 /** One library's module namespace, as this test reads it: exported values, one of which is its examples. */
@@ -66,7 +66,7 @@ function publicationHolds(): Map<string, string> {
 
 const PUBLICATION_HOLDS = publicationHolds();
 
-/** What the topic Workers install, which is what the Registry turns into feeds. */
+/** What the library Workers install, which is what the Registry turns into feeds. */
 const DEPLOYED: ExampleFeed[] = INSTALLED;
 
 describe("example feed policies", () => {
@@ -117,25 +117,25 @@ describe("libraries and the Workers that carry them", () => {
   });
 
   it("has a Worker package for every generated Worker", () => {
-    expect(PLANS.map((plan) => plan.topic)).toEqual(workerTopics());
+    expect(PLANS.map((plan) => plan.name)).toEqual(workerPackages());
   });
 
-  it("names a catalog topic first on every example, held or not, since that topic's Worker runs it", async () => {
+  it("tags every example, held or not, with catalog topics and nothing else", async () => {
     const libraries = await libraryExamples();
-    const orphans = [...libraries.values()]
+    const strays = [...libraries.values()]
       .flat()
-      .filter((example) => !isTopic(example.topics?.[0]))
+      .filter((example) => (example.topics ?? []).length === 0 || (example.topics ?? []).some((topic) => !isTopic(topic)))
       .map((example) => `${example.slug} (${(example.topics ?? []).join(", ")})`);
-    expect(orphans).toEqual([]);
+    expect(strays).toEqual([]);
   });
 
-  it("wires every library, held or not, into a Worker", () => {
-    const wired = new Set(PLANS.flatMap((plan) => plan.libraries.map((library) => library.source)));
-    expect(
-      Object.keys(LIBRARIES)
-        .map(libraryName)
-        .filter((name) => !wired.has(name)),
-    ).toEqual([]);
+  it("gives every cleared library its own Worker, and a held one none", () => {
+    const planned = new Set(PLANS.map((plan) => plan.name));
+    const cleared = Object.keys(LIBRARIES)
+      .map(libraryName)
+      .filter((name) => !PUBLICATION_HOLDS.has(name));
+    expect(cleared.filter((name) => !planned.has(name))).toEqual([]);
+    expect([...PUBLICATION_HOLDS.keys()].filter((name) => planned.has(name))).toEqual([]);
   });
 
   it("gives every cleared library example to exactly one Worker", async () => {

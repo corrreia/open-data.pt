@@ -4,6 +4,7 @@ import { UDATA_FEEDS, udataCollector } from "./collector";
 /** Hosts its feeds may be read from. */
 export const UDATA_DEPLOYMENT: LibraryDeployment<{ readonly UDATA_ALLOWED_HOSTS: string }> = {
   source: "udata",
+  name: "uData portals",
   vars: { UDATA_ALLOWED_HOSTS: "dados.gov.pt" },
   library: (env) => ({
     kinds: Object.values(UDATA_FEEDS),

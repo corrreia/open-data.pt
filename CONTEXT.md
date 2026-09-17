@@ -2,9 +2,9 @@
 
 ## Gatekeeper
 
-One trusted Worker per catalog topic: `cities`, `economy`, `energy`, `environment`, `government`, `health`, `mobility`, `society`, `telecom`. A topic is what the data is about, never who publishes it or how: telecom data, from INE's surveys or from network registries, belongs to `telecom`. It validates configuration, accesses allowlisted upstream resources, parses and normalizes source data, and returns a bounded versioned normalized stream over private RPC. It owns source identity, clocks, validators, pagination, coverage, and source-supported history. It owns no canonical storage or publication state.
+One trusted Worker per library — `arcgis`, `ckan`, `gtfs`, `ine`, `parliament`, … — named for how the data is read, never for what it is about or who publishes it. It validates configuration, accesses allowlisted upstream resources, parses and normalizes source data, and returns a bounded versioned normalized stream over private RPC. It owns source identity, clocks, validators, pagination, coverage, and source-supported history. It owns no canonical storage or publication state.
 
-A Worker is wiring, and generated: the libraries its feeds use, the vars, secrets and buckets those libraries declare, and the example feeds whose first topic is its own. Format and source code are shared libraries, not deployment units. The publisher is a label on the feed, shown on the site; it is not a code boundary.
+A Worker is wiring, and generated: one library, the vars, secrets and buckets that library declares, and its example feeds. Format and source code are shared libraries; the Worker is only their deployment unit. Topics and the publisher are labels on a feed, not code boundaries: topics overlap, so a Worker cannot follow them.
 
 ## Library
 

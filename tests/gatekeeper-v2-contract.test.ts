@@ -2,10 +2,10 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createTestHarness } from "wrangler";
 import { readdirSync, readFileSync } from "node:fs";
 import { hashSourceConfig } from "@open-data-pt/gatekeeper-shared";
-import { workerTopics } from "../tools/packages";
+import { workerPackages } from "../tools/packages";
 import { workerVars } from "./catalog";
 
-const gatekeepers = workerTopics();
+const gatekeepers = workerPackages();
 const entrypoint = (name: string) => name[0]!.toUpperCase() + name.slice(1);
 const runtimeVars = Object.fromEntries(gatekeepers.map((name) => [name, workerVars(name)]));
 const services = gatekeepers.map((name) => ({ binding: `GK_${name.toUpperCase()}`, service: `conformance-${name}`, entrypoint: entrypoint(name) }));
@@ -29,11 +29,11 @@ afterAll(async () => server.close(), 30_000);
 
 describe("all Gatekeeper entrypoints expose the normalized five-operation contract", () => {
   it("gives every generated Worker the five operations and no legacy RPC", () => {
-    const factory = readFileSync("packages/gatekeeper-shared/src/topic-worker.ts", "utf8");
+    const factory = readFileSync("packages/gatekeeper-shared/src/library-worker.ts", "utf8");
     for (const method of ["describe", "listFeedKinds", "resolveFeed", "collect", "exampleFeeds"]) expect(factory).toContain(`async ${method}(`);
     expect(factory).not.toContain("async validateFeedConfig(");
     expect(factory).not.toContain("async collectHistory(");
-    for (const name of gatekeepers) expect(readFileSync(`packages/gatekeeper-${name}/src/index.ts`, "utf8")).toContain(`topicGatekeeper<Env>(`);
+    for (const name of gatekeepers) expect(readFileSync(`packages/gatekeeper-${name}/src/index.ts`, "utf8")).toContain(`libraryGatekeeper<Env>(`);
   });
 
   it.each(readdirSync("packages/gatekeeper-shared/src", { recursive: true, encoding: "utf8" }).filter((path) => path.endsWith("worker.ts")))(
@@ -62,7 +62,7 @@ describe("all Gatekeeper entrypoints expose the normalized five-operation contra
       expect(row.description.name).toBeTruthy();
       expect(row.kindCount).toBeGreaterThan(0);
       expect(row.resolved.configHash).toBe(await hashSourceConfig(row.resolved.config));
-      // `<topic>:<library>:<kind>:<digest>`, so nothing collides between the libraries one Worker carries.
+      // `<library>:<library>:<kind>:<digest>`, the Worker's own kind before the library's resource key.
       expect(row.resolved.resourceKey).toMatch(/^[a-z0-9-]+:[a-z0-9-]+:[a-z0-9-]+:/);
       expect(row.resolved.kind).toMatch(/^[a-z0-9-]+:[a-z0-9-]+$/);
       expect(row.resolved.config.source).toBeTruthy();

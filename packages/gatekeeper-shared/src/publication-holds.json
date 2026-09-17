@@ -2,13 +2,13 @@
   {
     "source": "ripestat",
     "reason": "RIPEstat Service Terms Article 3.3 restrict repackaging, compilation and redistribution of RIPEstat data. Keyless API access does not establish permission for this public republication service.",
-    "requiredAction": "Establish appropriate republication permission or use a differently licensed underlying source, then add the examples to packages/gatekeeper-telecom/src/examples.ts (the library is already wired there).",
+    "requiredAction": "Establish appropriate republication permission or use a differently licensed underlying source, then clear the hold, which gives the library its own Worker on the next `pnpm packages:sync`.",
     "references": ["https://www.ripe.net/about-us/legal/ripestat-service-terms-and-conditions"]
   },
   {
     "source": "peeringdb",
     "reason": "PeeringDB's acceptable-use policy requires permission for reproduction and bulk sharing outside its approved operational uses. A public general-purpose data API is not assumed to qualify for an exemption.",
-    "requiredAction": "Establish permission for the intended public republication, then add the example to packages/gatekeeper-telecom/src/examples.ts (the library is already wired there).",
+    "requiredAction": "Establish permission for the intended public republication, then clear the hold, which gives the library its own Worker on the next `pnpm packages:sync`.",
     "references": ["https://www.peeringdb.com/aup"]
   }
 ]

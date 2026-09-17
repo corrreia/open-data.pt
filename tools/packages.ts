@@ -4,13 +4,14 @@
  *   node tools/packages.ts            rewrite every generated file
  *   node tools/packages.ts --check    fail when a checked-in file differs
  *
- * A feed runs in the Worker of its first topic. From every library's examples
- * and its deployment declaration (`worker.ts`), this writes each topic Worker's
- * `src/index.ts`, `wrangler.jsonc`, `package.json` and `tsconfig.json`: the
- * libraries its feeds use, their vars, secrets, buckets and CPU limit. It also
- * rewrites the root `package.json` scripts that run every Worker and the
- * kernel's `GATEKEEPER_*` service bindings, leaving the rest of both files as
- * they are. Output goes through Oxfmt, so generated files are formatted files.
+ * A Worker is one library: how the data is read, never what it is about. From
+ * every library's deployment declaration (`worker.ts`) and its examples, this
+ * writes that library's `src/index.ts`, `wrangler.jsonc`, `package.json` and
+ * `tsconfig.json`: its vars, secrets, buckets and CPU limit. A library under a
+ * publication hold gets no Worker until the hold is lifted. It also rewrites
+ * the root `package.json` scripts that run every Worker and the kernel's
+ * `GATEKEEPER_*` service bindings, leaving the rest of both files as they are.
+ * Output goes through Oxfmt, so generated files are formatted files.
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -30,8 +31,8 @@ const SHARED_SOURCE = join(PACKAGES, SHARED, "src");
 const HOLDS = join(SHARED_SOURCE, "publication-holds.json");
 const COMPATIBILITY_DATE = "2026-09-09";
 
-/** Every Gatekeeper Worker package, by its topic name, in directory order. */
-export function workerTopics(): string[] {
+/** Every Gatekeeper Worker package, by the library it carries, in directory order. */
+export function workerPackages(): string[] {
   return (
     readdirSync(PACKAGES, { withFileTypes: true })
       // A directory left behind by a deleted package (its ignored node_modules and .wrangler) is not a Worker: only a Wrangler config makes one.
@@ -41,9 +42,9 @@ export function workerTopics(): string[] {
   );
 }
 
-/** The Wrangler config of one topic Worker, relative to the repository root. */
-export function workerConfig(topic: string): string {
-  return `packages/gatekeeper-${topic}/wrangler.jsonc`;
+/** The Wrangler config of one library's Worker, relative to the repository root. */
+export function workerConfig(library: string): string {
+  return `packages/gatekeeper-${library}/wrangler.jsonc`;
 }
 
 /** The scripts this generator owns; every other script in package.json is left alone. */
@@ -56,8 +57,8 @@ interface GeneratedScripts {
   typecheck: string;
 }
 
-function generatedScripts(topics: string[]): GeneratedScripts {
-  const configs = topics.map(workerConfig);
+function generatedScripts(libraries: string[]): GeneratedScripts {
+  const configs = libraries.map(workerConfig);
   const all = [...configs, `${KERNEL_PACKAGE}/wrangler.jsonc`];
   const typesFile = (config: string) => config.replace("wrangler.jsonc", "worker-configuration.d.ts");
   return {
@@ -71,10 +72,10 @@ function generatedScripts(topics: string[]): GeneratedScripts {
 }
 
 /** The root `package.json` as it should be, with the generated scripts in their existing places. */
-export function expectedPackageJson(topics: string[]): string {
+export function expectedPackageJson(libraries: string[]): string {
   const text = readFileSync(PACKAGE_JSON, "utf8");
   const parsed: { scripts: Record<string, string> } = JSON.parse(text);
-  const generated = generatedScripts(topics);
+  const generated = generatedScripts(libraries);
   for (const [name, value] of Object.entries(generated)) {
     if (!(name in parsed.scripts)) throw new Error(`package.json has no ${name} script to generate into`);
     parsed.scripts[name] = value;
@@ -82,15 +83,15 @@ export function expectedPackageJson(topics: string[]): string {
   return `${JSON.stringify(parsed, null, 2)}\n`;
 }
 
-const SERVICES_COMMENT = "  // One Worker per catalog topic; the kernel discovers them by binding prefix.\n";
+const SERVICES_COMMENT = "  // One Worker per Gatekeeper library; the kernel discovers them by binding prefix.\n";
 
-function servicesBlock(topics: string[]): string {
-  const entries = topics.map((topic) => `    { "binding": "GATEKEEPER_${topic.toUpperCase()}", "service": "open-data-pt-gatekeeper-${topic}" }`).join(",\n");
+function servicesBlock(libraries: string[]): string {
+  const entries = libraries.map((library) => `    { "binding": "GATEKEEPER_${library.toUpperCase()}", "service": "open-data-pt-gatekeeper-${library}" }`).join(",\n");
   return `${SERVICES_COMMENT}  "services": [\n${entries},\n  ],\n`;
 }
 
 /** The kernel's Wrangler config as it should be: only the `services` array and its comment are replaced. */
-export function expectedKernelConfig(topics: string[]): string {
+export function expectedKernelConfig(libraries: string[]): string {
   const text = readFileSync(KERNEL_CONFIG, "utf8");
   const array = text.indexOf('  "services": [');
   if (array < 0) throw new Error("apps/kernel/wrangler.jsonc has no services array");
@@ -103,11 +104,11 @@ export function expectedKernelConfig(topics: string[]): string {
     if (!line.trimStart().startsWith("//")) break;
     start = above + 1;
   }
-  return text.slice(0, start) + servicesBlock(topics) + text.slice(end + "  ],\n".length);
+  return text.slice(0, start) + servicesBlock(libraries) + text.slice(end + "  ],\n".length);
 }
 
 /** One library as the generator reads it: where it lives, what it declares, and its examples. */
-interface Library {
+export interface Library {
   source: string;
   /** `formats` or `sources`. */
   group: string;
@@ -118,10 +119,11 @@ interface Library {
   held: boolean;
 }
 
-/** What one topic Worker carries. */
-interface TopicPlan {
-  topic: string;
-  libraries: Library[];
+/** One Worker: the library it carries and the examples it installs. */
+export interface WorkerPlan {
+  /** The library's name, which is the Worker's name and its `gatekeeperKind`. */
+  name: string;
+  library: Library;
 }
 
 /** Lets plain Node load the shared package's TypeScript, whose imports name no extension. */
@@ -173,20 +175,23 @@ export async function loadLibraries(): Promise<Library[]> {
   return libraries;
 }
 
-/** Each topic some feed names first, with the libraries those feeds use; held libraries are wired but not installed. */
-export async function planTopics(libraries: Library[]): Promise<TopicPlan[]> {
+/**
+ * One Worker per library that has examples and no publication hold. Topics are
+ * catalog tags: every one a feed carries must be in `TOPICS`, and none of them
+ * decides where the feed runs.
+ */
+export async function planWorkers(libraries: Library[]): Promise<WorkerPlan[]> {
   const { TOPICS } = await import(join(SHARED_SOURCE, "topics.ts"));
-  const topics = new Map<string, Set<Library>>();
   for (const library of libraries) {
     for (const example of library.examples) {
-      const topic = example.topics?.[0];
-      if (!topic || !Object.hasOwn(TOPICS, topic)) throw new Error(`${example.slug}: its first topic ${topic ?? "(none)"} is not one of ${Object.keys(TOPICS).join(", ")}`);
-      topics.set(topic, (topics.get(topic) ?? new Set()).add(library));
+      const unknown = (example.topics ?? []).filter((topic) => !Object.hasOwn(TOPICS, topic));
+      if (unknown.length > 0) throw new Error(`${example.slug}: ${unknown.join(", ")} is not one of ${Object.keys(TOPICS).join(", ")}`);
     }
   }
-  return [...topics]
-    .map(([topic, used]) => ({ topic, libraries: [...used].toSorted((left, right) => left.source.localeCompare(right.source)) }))
-    .toSorted((left, right) => left.topic.localeCompare(right.topic));
+  return libraries
+    .filter((library) => !library.held && library.examples.length > 0)
+    .map((library) => ({ name: library.source, library }))
+    .toSorted((left, right) => left.name.localeCompare(right.name));
 }
 
 function format(path: string, text: string): string {
@@ -195,52 +200,34 @@ function format(path: string, text: string): string {
   return result.stdout;
 }
 
-function workerIndex(plan: TopicPlan): string {
-  const imports = plan.libraries.map(
-    (library) =>
-      `import { ${[library.deploymentExport, ...(library.held ? [] : [library.examplesExport])].join(", ")} } from "@open-data-pt/gatekeeper-shared/${library.group}/${library.source}";`,
-  );
-  const held = plan.libraries.filter((library) => library.held).map((library) => library.source);
+function workerIndex(plan: WorkerPlan): string {
+  const library = plan.library;
   return [
-    `// Generated by \`pnpm packages:sync\` from the feeds whose first topic is ${plan.topic}; do not edit.`,
-    `import { topicGatekeeper } from "@open-data-pt/gatekeeper-shared/topic-worker";`,
-    ...imports,
+    `// Generated by \`pnpm packages:sync\` from the ${library.source} library and its examples; do not edit.`,
+    `import { libraryGatekeeper } from "@open-data-pt/gatekeeper-shared/library-worker";`,
+    `import { ${library.deploymentExport}, ${library.examplesExport} } from "@open-data-pt/gatekeeper-shared/${library.group}/${library.source}";`,
     "",
-    ...(held.length > 0 ? [`// Wired but not installed until packages/gatekeeper-shared/src/publication-holds.json clears them: ${held.join(", ")}.`] : []),
-    `export default topicGatekeeper<Env>(`,
-    `  ${JSON.stringify(plan.topic)},`,
-    `  [${plan.libraries.map((library) => library.deploymentExport).join(", ")}],`,
-    `  [${plan.libraries
-      .filter((library) => !library.held)
-      .map((library) => `...${library.examplesExport}`)
-      .join(", ")}],`,
-    `);`,
+    `export default libraryGatekeeper<Env>(${library.deploymentExport}, ${library.examplesExport});`,
     "",
   ].join("\n");
 }
 
-function workerConfigText(plan: TopicPlan): string {
-  const vars: Record<string, string> = {};
-  for (const library of plan.libraries) {
-    for (const [name, value] of Object.entries(library.deployment.vars)) {
-      if (vars[name] !== undefined && vars[name] !== value) throw new Error(`${plan.topic}: two libraries declare ${name} differently`);
-      vars[name] = value;
-    }
-  }
-  const secrets = plan.libraries.flatMap((library) => (library.deployment.secrets ?? []).map((secret) => `${secret} (${library.source})`));
-  const buckets = plan.libraries.flatMap((library) => library.deployment.r2Buckets ?? []);
-  const cpu = Math.max(0, ...plan.libraries.map((library) => library.deployment.cpuMs ?? 0));
+function workerConfigText(plan: WorkerPlan): string {
+  const deployment = plan.library.deployment;
+  const secrets = deployment.secrets ?? [];
+  const buckets = deployment.r2Buckets ?? [];
+  const cpu = deployment.cpuMs ?? 0;
   const lines = [
-    `// Generated by \`pnpm packages:sync\` from the deployment declarations (worker.ts) of the libraries its feeds use; do not edit.`,
+    `// Generated by \`pnpm packages:sync\` from the deployment declaration (worker.ts) of the ${plan.name} library; do not edit.`,
     "{",
     `  "$schema": "../../node_modules/wrangler/config-schema.json",`,
-    `  "name": "open-data-pt-gatekeeper-${plan.topic}",`,
+    `  "name": "open-data-pt-gatekeeper-${plan.name}",`,
     `  "main": "src/index.ts",`,
     `  "compatibility_date": "${COMPATIBILITY_DATE}",`,
     `  "compatibility_flags": ["nodejs_compat"],`,
     `  "workers_dev": false,`,
     `  "preview_urls": false,`,
-    `  "vars": ${JSON.stringify(vars)},`,
+    `  "vars": ${JSON.stringify(deployment.vars)},`,
     ...(secrets.length > 0 ? [`  // Secrets (wrangler secret put): ${secrets.join(", ")}.`] : []),
     ...(buckets.length > 0 ? [`  "r2_buckets": ${JSON.stringify(buckets.map((bucket) => ({ binding: bucket.binding, bucket_name: bucket.bucketName })))},`] : []),
     ...(cpu > 0 ? [`  "limits": { "cpu_ms": ${cpu} },`] : []),
@@ -255,8 +242,8 @@ function workerConfigText(plan: TopicPlan): string {
   return lines.join("\n");
 }
 
-function workerPackageJson(topic: string): string {
-  return `${JSON.stringify({ name: `@open-data-pt/gatekeeper-${topic}`, version: "0.1.0", private: true, type: "module", dependencies: { "@open-data-pt/gatekeeper-shared": "workspace:*" } }, null, 2)}\n`;
+function workerPackageJson(library: string): string {
+  return `${JSON.stringify({ name: `@open-data-pt/gatekeeper-${library}`, version: "0.1.0", private: true, type: "module", dependencies: { "@open-data-pt/gatekeeper-shared": "workspace:*" } }, null, 2)}\n`;
 }
 
 function workerTsconfig(): string {
@@ -270,16 +257,16 @@ interface GeneratedFile {
 }
 
 export async function generatedFiles(): Promise<GeneratedFile[]> {
-  const plans = await planTopics(await loadLibraries());
-  const topics = plans.map((plan) => plan.topic);
+  const plans = await planWorkers(await loadLibraries());
+  const libraries = plans.map((plan) => plan.name);
   const files: GeneratedFile[] = [
-    { path: PACKAGE_JSON, label: "package.json", expected: expectedPackageJson(topics) },
-    { path: KERNEL_CONFIG, label: "apps/kernel/wrangler.jsonc", expected: expectedKernelConfig(topics) },
+    { path: PACKAGE_JSON, label: "package.json", expected: expectedPackageJson(libraries) },
+    { path: KERNEL_CONFIG, label: "apps/kernel/wrangler.jsonc", expected: expectedKernelConfig(libraries) },
   ];
   for (const plan of plans) {
-    const base = `packages/gatekeeper-${plan.topic}`;
+    const base = `packages/gatekeeper-${plan.name}`;
     for (const [name, text] of [
-      ["package.json", workerPackageJson(plan.topic)],
+      ["package.json", workerPackageJson(plan.name)],
       ["tsconfig.json", workerTsconfig()],
       ["wrangler.jsonc", workerConfigText(plan)],
       ["src/index.ts", workerIndex(plan)],
@@ -290,10 +277,10 @@ export async function generatedFiles(): Promise<GeneratedFile[]> {
   return files;
 }
 
-/** Worker packages on disk that no feed names as its first topic. */
+/** Worker packages on disk that carry no library with cleared examples. */
 export async function stalePackages(): Promise<string[]> {
-  const topics = new Set((await planTopics(await loadLibraries())).map((plan) => plan.topic));
-  return workerTopics().filter((topic) => !topics.has(topic));
+  const planned = new Set((await planWorkers(await loadLibraries())).map((plan) => plan.name));
+  return workerPackages().filter((name) => !planned.has(name));
 }
 
 async function main(): Promise<void> {
@@ -307,7 +294,7 @@ async function main(): Promise<void> {
     writeFileSync(file.path, file.expected);
   }
   const orphans = await stalePackages();
-  if (orphans.length > 0) process.stderr.write(`No feed's first topic is ${orphans.join(", ")}: delete ${orphans.map((topic) => `packages/gatekeeper-${topic}`).join(", ")}\n`);
+  if (orphans.length > 0) process.stderr.write(`No cleared library is named ${orphans.join(", ")}: delete ${orphans.map((name) => `packages/gatekeeper-${name}`).join(", ")}\n`);
   if (check && (stale.length > 0 || orphans.length > 0)) {
     if (stale.length > 0) process.stderr.write(`${stale.join(", ")} do not match tools/packages.ts; run \`pnpm packages:sync\`\n`);
     process.exit(1);

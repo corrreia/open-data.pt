@@ -5,6 +5,7 @@ import { BPSTAT_FEEDS } from "./bpstat";
 /** The one origin its API answers on. */
 export const BPSTAT_DEPLOYMENT: LibraryDeployment<{ readonly BPSTAT_API_ORIGIN: string }> = {
   source: "bpstat",
+  name: "BPstat, Banco de Portugal",
   vars: { BPSTAT_API_ORIGIN: "https://bpstat.bportugal.pt" },
   library: (env) => ({
     kinds: Object.values(BPSTAT_FEEDS),

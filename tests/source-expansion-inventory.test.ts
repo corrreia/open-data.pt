@@ -3,17 +3,17 @@ import { describe, expect, it } from "vitest";
 import { asStringList, parseJson, type ExampleFeed } from "@open-data-pt/gatekeeper-shared";
 import { PLANS, workerExamples } from "./catalog";
 
-interface TopicExamples {
-  topic: string;
+interface WorkerExamples {
+  library: string;
   examples: ExampleFeed[];
 }
-const topics: TopicExamples[] = PLANS.map((plan) => ({ topic: plan.topic, examples: workerExamples(plan.topic) }));
+const workers: WorkerExamples[] = PLANS.map((plan) => ({ library: plan.name, examples: workerExamples(plan.name) }));
 const baseline = new Set(asStringList(parseJson(readFileSync(new URL("./fixtures/source-expansion-baseline-slugs.json", import.meta.url), "utf8"))));
 
 describe("source expansion inventory", () => {
-  it("retains every previously installed feed and assigns each slug to exactly one topic", () => {
+  it("retains every previously installed feed and assigns each slug to exactly one Worker", () => {
     expect(baseline.size).toBe(170);
-    const examples = topics.flatMap((topic) => topic.examples);
+    const examples = workers.flatMap((worker) => worker.examples);
     const slugs = new Set(examples.map((example) => example.slug));
     expect(slugs.size).toBe(examples.length);
     for (const slug of baseline) expect(slugs.has(slug), `Removing ${slug} would retire production state`).toBe(true);
@@ -21,7 +21,7 @@ describe("source expansion inventory", () => {
   });
 
   it("gives every added feed an explicit source, positive bounded policy and attribution", () => {
-    const additions = topics.flatMap(({ topic, examples }) => examples.filter((example) => !baseline.has(example.slug)).map((example) => ({ topic, ...example })));
+    const additions = workers.flatMap(({ library, examples }) => examples.filter((example) => !baseline.has(example.slug)).map((example) => ({ library, ...example })));
     for (const example of additions) {
       expect(example.config.source).toBeTruthy();
       expect(example.publisher).toBeTruthy();

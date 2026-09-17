@@ -5,6 +5,7 @@ import { GTFS_FEEDS } from "./gtfs";
 /** Hosts its feeds may be read from. */
 export const GTFS_DEPLOYMENT: LibraryDeployment<{ readonly GTFS_ALLOWED_HOSTS: string }> = {
   source: "gtfs",
+  name: "GTFS transit feeds",
   // One GTFS archive is tens of megabytes of CSV, parsed in a single invocation.
   cpuMs: 120_000,
   vars: {

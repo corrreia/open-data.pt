@@ -1,9 +1,9 @@
 import { GatekeeperError, hashSourceConfig, type FeedKindDescription, type NormalizedCollector, type ResolvedFeed, type SourceConfig, type TransformContext } from "./index";
 
 /**
- * A Worker is wiring. It names the libraries it carries, hands each one its
- * vars and secrets, and routes every feed to one of them on the `source` key
- * its configuration carries. Parsing happens in the library, never here.
+ * A Worker is wiring. It names the library it carries, hands it its vars and
+ * secrets, and routes every feed to it on the `source` key its configuration
+ * carries. Parsing happens in the library, never here.
  */
 export interface GatekeeperLibrary {
   /** Every feed kind this library declares, under its own unprefixed names. */
@@ -12,7 +12,7 @@ export interface GatekeeperLibrary {
   collector: (config: SourceConfig) => NormalizedCollector;
 }
 
-/** The libraries one topic Worker carries, by the `source` value that selects them. */
+/** The libraries a Worker carries, by the `source` value that selects them; today that is one. */
 export type GatekeeperLibraries = ReadonlyMap<string, GatekeeperLibrary>;
 
 /** An R2 bucket a library reads and writes through the Worker that carries it. */
@@ -22,27 +22,29 @@ export interface R2BucketDeployment {
 }
 
 /**
- * What a library needs from any Worker that carries it, and how it is built
+ * What a library needs from the Worker that carries it, and how it is built
  * from that Worker's environment. `pnpm packages:sync` writes the vars,
- * secrets, buckets and CPU limit into the Wrangler config of every topic
- * Worker whose feeds use the library; nothing is copied by hand.
+ * secrets, buckets and CPU limit into that Worker's Wrangler config; nothing
+ * is copied by hand.
  */
 export interface LibraryDeployment<E> {
-  /** The `source` value its examples carry. */
+  /** The `source` value its examples carry, which is also its Worker's name. */
   source: string;
+  /** How the Worker describes itself to the kernel, in words ("CKAN portals"). */
+  name: string;
   /** Vars it reads, with their deployed values. */
   vars: Readonly<Record<string, string>>;
   /** Secret names, set with `wrangler secret put` on the Worker that carries the library. */
   secrets?: readonly string[];
   r2Buckets?: readonly R2BucketDeployment[];
-  /** The CPU limit one collection needs; a Worker takes the largest of its libraries'. */
+  /** The CPU limit one collection needs; its Worker takes it as declared. */
   cpuMs?: number;
   /** Builds the library from the Worker's environment. */
   library: (env: E) => GatekeeperLibrary;
 }
 
 export interface TopicOptions {
-  /** The Worker's own kind, which is its topic (a key of `TOPICS`). */
+  /** The Worker's own kind, which is the name of the library it carries. */
   gatekeeperKind: string;
   libraries: GatekeeperLibraries;
 }
@@ -51,8 +53,8 @@ export interface TopicOptions {
 export const SOURCE_KEY = "source";
 
 /**
- * Kinds are prefixed `<library>:<kind>` so two libraries in one Worker can both
- * declare a `dataset` without colliding.
+ * Kinds are prefixed `<library>:<kind>` so a `dataset` of one library is never
+ * confused with another's, whatever Worker carries them.
  */
 export function topicFeedKinds(libraries: GatekeeperLibraries): FeedKindDescription[] {
   return [...libraries].flatMap(([source, library]) => library.kinds.map((kind) => ({ ...kind, kind: `${source}:${kind.kind}` })));
