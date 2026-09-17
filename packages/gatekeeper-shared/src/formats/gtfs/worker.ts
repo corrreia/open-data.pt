@@ -11,7 +11,8 @@ export const GTFS_DEPLOYMENT: LibraryDeployment<{ readonly GTFS_ALLOWED_HOSTS: s
   vars: {
     // opendata.porto.digital was dropped in September 2026: Porto's portal moved to
     // dadosabertos.cm-porto.pt and the old name no longer resolves at all.
-    GTFS_ALLOWED_HOSTS: "api.carrismetropolitana.pt,dadosabertos.cm-porto.pt,dados.gov.pt,publico.cp.pt,www.fertagus.pt,www.tub.pt,backend.tcbarreiro.pt,www.horariosdofunchal.pt",
+    GTFS_ALLOWED_HOSTS:
+      "api.carrismetropolitana.pt,dadosabertos.cm-porto.pt,dados.gov.pt,publico.cp.pt,www.fertagus.pt,www.metrodoporto.pt,www.tub.pt,backend.tcbarreiro.pt,www.horariosdofunchal.pt",
   },
   library: (env) => ({
     kinds: Object.values(GTFS_FEEDS),

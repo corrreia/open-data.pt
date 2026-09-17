@@ -56,14 +56,17 @@ export const GTFS_EXAMPLES: ExampleFeed[] = [
   {
     slug: "metro-do-porto-gtfs-feed",
     title: "Metro do Porto GTFS",
-    description: "Stops, routes, agencies, service calendars, and route shapes from the latest non-empty Metro do Porto archive.",
-    // Porto's portal moved to dadosabertos.cm-porto.pt in September 2026. Metro do Porto's
-    // two newest uploads there are still zero bytes, as they were on the old portal, so this
-    // is the 7 April 2026 archive: the newest one that has any content. It carries no
+    description: "Stops, routes, agencies, service calendars, and route shapes from Metro do Porto's own schedule archive.",
+    // Read from Metro do Porto rather than from Porto's open-data portal: their two newest
+    // uploads there are zero bytes, as they were on the old portal, leaving the portal's
+    // newest readable archive the one from 7 April 2026. The file linked from
+    // https://www.metrodoporto.pt/pages/337 is the September 2026 schedule.
+    // The name carries its release date, so a new schedule needs this address changed;
+    // the feed goes stale within three days if that is missed. The archive carries no
     // feed_info.txt, which the old configuration asked for and never received.
     config: {
       source: "gtfs",
-      url: "https://dadosabertos.cm-porto.pt/dataset/713a680c-9e19-11f1-84ed-6abdb6d5cf34/resource/28a13723-2af1-4bbb-a2b1-f8b08df8c7e4/download/___",
+      url: "https://www.metrodoporto.pt/metrodoporto/uploads/document/file/794/google_transit_04_09_2026.zip",
       files: "agency,stops,routes,calendar,calendar_dates,shapes",
     },
     policy: DAILY_STATIC,
