@@ -29,7 +29,8 @@ interface GovernmentDistribution {
   title: string;
   description: string;
   dataset: string;
-  distributionId: string;
+  /** Omitted for a publisher that uploads each release as a new resource: the newest in `format` is read. */
+  distributionId?: string;
   format: "csv" | "json";
   publisher: string;
   licence: string;
@@ -47,11 +48,11 @@ function governmentExample(source: GovernmentDistribution): ExampleFeed {
     transformer: "tabular",
     baseUrl: "https://dados.gov.pt",
     dataset: source.dataset,
-    distributionId: source.distributionId,
     format: source.format,
     productSlug: source.slug.replace(/-feed$/, ""),
     productTitle: source.title,
   };
+  if (source.distributionId) config.distributionId = source.distributionId;
   if (source.keyField) config.keyField = source.keyField;
   if (source.eventTimeField) config.eventTimeField = source.eventTimeField;
   return {
@@ -267,8 +268,8 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
     title: "Companies recognised with startup status",
     description:
       "The recognised-startup registry snapshot published by ARTE and Startup Portugal, including the source's file date. Publication licence is not specified in the dataset metadata.",
+    // ARTE uploads every monthly release as a new resource, so no id is pinned.
     dataset: "660c3c451ee8ad9bd6b60608",
-    distributionId: "7ab4544e-66b0-4d40-9d1f-904f74e7e770",
     format: "json",
     keyField: "titularNipc",
     eventTimeField: "fileDate",

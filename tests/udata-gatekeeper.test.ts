@@ -84,7 +84,7 @@ describe("UdataSource", () => {
       );
     const source = new UdataSource(new Set(["dados.gov.pt"]), fetcher);
 
-    const fetched = await source.fetchDistribution({ baseUrl: "https://dados.gov.pt", dataset: "population" }, "resource-1");
+    const fetched = await source.fetchDistribution({ baseUrl: "https://dados.gov.pt", dataset: "population" }, { kind: "id", id: "resource-1" });
 
     expect(fetched).toMatchObject({
       kind: "body",
@@ -105,10 +105,14 @@ describe("UdataSource", () => {
       .mockResolvedValueOnce(new Response(null, { status: 304, headers: { ETag: '"v1"' } }));
     const source = new UdataSource(new Set(["dados.gov.pt"]), fetcher);
 
-    const fetched = await source.fetchDistribution({ baseUrl: "https://dados.gov.pt", dataset: "population" }, "resource-1", {
-      etag: '"v1"',
-      lastModified: "Sat, 01 Aug 2026 12:00:00 GMT",
-    });
+    const fetched = await source.fetchDistribution(
+      { baseUrl: "https://dados.gov.pt", dataset: "population" },
+      { kind: "id", id: "resource-1" },
+      {
+        etag: '"v1"',
+        lastModified: "Sat, 01 Aug 2026 12:00:00 GMT",
+      },
+    );
 
     expect(fetched).toEqual({ kind: "not-modified", validator: { etag: '"v1"' } });
     const headers = new Headers(fetcher.mock.calls[1]?.[1]?.headers);
@@ -119,7 +123,44 @@ describe("UdataSource", () => {
   it("rejects a distribution that is not declared by the dataset", async () => {
     const source = new UdataSource(new Set(["dados.gov.pt"]), async () => Response.json(payload));
 
-    await expect(source.fetchDistribution({ baseUrl: "https://dados.gov.pt", dataset: "population" }, "unknown-resource")).rejects.toMatchObject({ code: "invalid-config" });
+    await expect(source.fetchDistribution({ baseUrl: "https://dados.gov.pt", dataset: "population" }, { kind: "id", id: "unknown-resource" })).rejects.toMatchObject({
+      code: "invalid-config",
+    });
+  });
+
+  it("reads the newest distribution of a format when no id is pinned, and refuses a dataset without one", async () => {
+    const rotating = {
+      ...payload,
+      resources: [
+        { id: "release-08", url: "https://publisher.example/2026-08.json", format: "JSON", last_modified: "2026-08-17T11:00:00+00:00" },
+        { id: "release-09", url: "https://publisher.example/2026-09.json", format: "json", last_modified: "2026-09-17T11:00:15.323000+00:00" },
+        { id: "notes", url: "https://publisher.example/notes.pdf", format: "pdf", last_modified: "2026-09-18T00:00:00+00:00" },
+      ],
+    };
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json(rotating))
+      .mockResolvedValueOnce(Response.json([{ titularNipc: "500000000" }]));
+    const source = new UdataSource(new Set(["dados.gov.pt"]), fetcher);
+
+    const fetched = await source.fetchDistribution({ baseUrl: "https://dados.gov.pt", dataset: "startups" }, { kind: "format", format: "json" });
+    expect(fetched).toMatchObject({ kind: "body", provenance: { sourceUrl: "https://publisher.example/2026-09.json", sourcePublishedAt: "2026-09-17T11:00:15.323Z" } });
+    expect(fetcher.mock.calls[1]?.[0].toString()).toBe("https://dados.gov.pt/api/1/datasets/r/release-09");
+
+    const empty = new UdataSource(new Set(["dados.gov.pt"]), async () => Response.json(payload));
+    await expect(empty.fetchDistribution({ baseUrl: "https://dados.gov.pt", dataset: "population" }, { kind: "format", format: "json" })).rejects.toMatchObject({
+      code: "invalid-config",
+    });
+  });
+
+  it("validates a feed without a distributionId as reading its format's newest distribution", async () => {
+    const { distributionId: _pinned, ...unpinned } = config;
+    const validated = validateUdataFeedConfig(unpinned, new Set([UDATA_HOSTS]));
+    expect(validated.distributionId).toBeUndefined();
+    expect(validated.format).toBe("csv");
+    // The resource identity no longer changes when the publisher rotates the file, so the feed keeps its checkpoint and history.
+    const resolved = await resolveUdataFeed(unpinned, new Set([UDATA_HOSTS]));
+    expect(resolved.resourceKey).toBe((await resolveUdataFeed({ ...unpinned, productTitle: "Renamed" }, new Set([UDATA_HOSTS]))).resourceKey);
   });
 
   it("rejects hosts outside its deployment allowlist", () => {
@@ -135,7 +176,7 @@ describe("UdataSource", () => {
 
   it("turns provider failures into an upstream error carrying status and Retry-After", async () => {
     const metadataDown = new UdataSource(new Set(["dados.gov.pt"]), vi.fn().mockResolvedValueOnce(new Response("unavailable", { status: 503, headers: { "Retry-After": "120" } })));
-    await expect(metadataDown.fetchDistribution({ baseUrl: "https://dados.gov.pt", dataset: "population" }, "resource-1")).rejects.toMatchObject({
+    await expect(metadataDown.fetchDistribution({ baseUrl: "https://dados.gov.pt", dataset: "population" }, { kind: "id", id: "resource-1" })).rejects.toMatchObject({
       code: "upstream-error",
       retryAfterSeconds: 120,
     });
@@ -147,7 +188,7 @@ describe("UdataSource", () => {
         .mockResolvedValueOnce(Response.json(payload))
         .mockResolvedValueOnce(new Response("gone", { status: 410 })),
     );
-    await expect(distributionGone.fetchDistribution({ baseUrl: "https://dados.gov.pt", dataset: "population" }, "resource-1")).rejects.toMatchObject({
+    await expect(distributionGone.fetchDistribution({ baseUrl: "https://dados.gov.pt", dataset: "population" }, { kind: "id", id: "resource-1" })).rejects.toMatchObject({
       code: "upstream-error",
       retryAfterSeconds: undefined,
     });

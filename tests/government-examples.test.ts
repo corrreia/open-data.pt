@@ -21,7 +21,9 @@ async function normalized(example: ExampleFeed, observedAt: string) {
       const url = new URL(input.toString());
       expect(url.origin).toBe("https://dados.gov.pt");
       if (url.pathname.startsWith("/api/1/datasets/r/")) return new Response(text, { headers: { etag: '"fixture"' } });
-      return new Response(JSON.stringify({ resources: [{ id: example.config.distributionId, url: "https://dados.gov.pt/example-data" }] }));
+      return new Response(
+        JSON.stringify({ resources: [{ id: example.config.distributionId ?? "rotating-id", format: example.config.format, url: "https://dados.gov.pt/example-data" }] }),
+      );
     },
   });
   const resolved = await collector.resolve(example.config);

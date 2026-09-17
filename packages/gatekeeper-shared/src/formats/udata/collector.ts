@@ -1,13 +1,13 @@
 import { allowedHosts, requireString, resolveFeed, sourceValidator, type FeedKindDescription, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../index";
 import { validateUdataFeedConfig } from "./config";
 import { chooseTransformer } from "./transform";
-import { UdataSource } from "./udata";
+import { UdataSource, type DistributionSelector } from "./udata";
 
 export const UDATA_FEEDS = {
   distribution: {
     kind: "distribution",
     title: "Tabular uData distribution",
-    description: "One versioned CSV or JSON distribution from a uData dataset.",
+    description: "One CSV or JSON distribution from a uData dataset, by id or the newest in its format.",
     semantics: {
       domainSubject: "reference",
       defaultProductRole: "reference",
@@ -55,7 +55,10 @@ export function udataCollector(options: UdataCollectorOptions): NormalizedCollec
       if (mode.kind === "history") throw new Error("uData distribution history is not supported");
       const upstream = new UdataSource(hosts, (input, init) => options.fetcher(input, { ...init, signal }));
       const validated = validateUdataFeedConfig(options.config, hosts);
-      return upstream.fetchDistribution(validated, requireString(validated, "distributionId"), sourceValidator(state));
+      const selector: DistributionSelector = validated.distributionId
+        ? { kind: "id", id: validated.distributionId }
+        : { kind: "format", format: requireString(validated, "format") };
+      return upstream.fetchDistribution(validated, selector, sourceValidator(state));
     },
     normalize: { kind: "streaming", transform: (body, context) => selected.transform(body, context) },
   };

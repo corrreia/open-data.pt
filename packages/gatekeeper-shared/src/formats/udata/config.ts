@@ -7,8 +7,9 @@ export function validateUdataFeedConfig(config: SourceConfig, hosts: ReadonlySet
   const distributionId = config.distributionId?.trim();
   const format = config.format?.trim().toLowerCase();
   const productSlug = config.productSlug?.trim();
-  if (!distributionId) throw new Error("uData feed requires distributionId");
-  if (!/^[A-Za-z0-9_-]{1,200}$/.test(distributionId)) {
+  // Without a distributionId the feed reads the dataset's newest distribution in its format,
+  // which is what a publisher that uploads every release as a new resource needs.
+  if (distributionId && !/^[A-Za-z0-9_-]{1,200}$/.test(distributionId)) {
     throw new Error("uData distributionId has an invalid format");
   }
   if (!format) throw new Error("uData feed requires format");
@@ -25,11 +26,11 @@ export function validateUdataFeedConfig(config: SourceConfig, hosts: ReadonlySet
   }
   const validated: SourceConfig = {
     ...base,
-    distributionId,
     format,
     productSlug,
     feed,
   };
+  if (distributionId) validated.distributionId = distributionId;
   const optionalSettings = ["productTitle", "productDescription", "keyField", "eventTimeField", "headerRow", "transformer"] as const;
   for (const setting of optionalSettings) {
     const value = config[setting];

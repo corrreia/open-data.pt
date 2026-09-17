@@ -61,8 +61,8 @@ export class UdataSource {
    * never buffered here, so its size is bounded only by the collection's
    * source budget, which the collector enforces on the wire.
    */
-  async fetchDistribution(config: SourceConfig, distributionId: string, checkpoint?: SourceValidator): Promise<SourceFetch> {
-    if (!/^[A-Za-z0-9_-]{1,200}$/.test(distributionId)) {
+  async fetchDistribution(config: SourceConfig, selector: DistributionSelector, checkpoint?: SourceValidator): Promise<SourceFetch> {
+    if (selector.kind === "id" && !/^[A-Za-z0-9_-]{1,200}$/.test(selector.id)) {
       throw new GatekeeperError("distributionId has an invalid format", "invalid-config");
     }
 
@@ -76,14 +76,17 @@ export class UdataSource {
     }
 
     const metadata = parsePayload(await readBoundedBytes(metadataResponse.body, MAX_METADATA_BYTES));
-    const resource = findResource(metadata.resources, distributionId);
+    const resource = selectResource(metadata.resources, selector);
     if (!resource) {
-      throw new GatekeeperError(`Distribution ${distributionId} does not belong to this dataset`, "invalid-config");
+      throw new GatekeeperError(
+        selector.kind === "id" ? `Distribution ${selector.id} does not belong to this dataset` : `This dataset declares no ${selector.format} distribution`,
+        "invalid-config",
+      );
     }
 
     // uData's resource endpoint proxies the publisher URL. Keeping the request
     // on the configured uData host prevents publisher metadata becoming an SSRF URL.
-    const endpoint = new URL(`/api/1/datasets/r/${encodeURIComponent(distributionId)}`, baseUrl);
+    const endpoint = new URL(`/api/1/datasets/r/${encodeURIComponent(resource.id)}`, baseUrl);
     const requestHeaders = new Headers({ Accept: "*/*" });
     if (checkpoint?.etag) requestHeaders.set("If-None-Match", checkpoint.etag);
     if (checkpoint?.lastModified) {
@@ -146,30 +149,53 @@ function parsePayload(raw: Uint8Array): JsonObject {
   return payload;
 }
 
+/**
+ * Which of a dataset's distributions to read: one by its catalogue id, or the
+ * newest one in a format, for publishers that upload each release as a new
+ * resource (the startup registry gets a new id every month).
+ */
+export type DistributionSelector = { kind: "id"; id: string } | { kind: "format"; format: string };
+
 /** One distribution of a uData dataset, as the catalogue lists it. */
 interface UdataResource {
   id: string;
   url: string;
+  format?: string;
   filesize?: number;
   lastModified?: string;
 }
 
-function findResource(value: JsonValue | undefined, distributionId: string): UdataResource | undefined {
-  for (const candidate of asArrayOrEmpty(value)) {
-    if (!isJsonObject(candidate)) continue;
-    const id = optionalString(candidate, "id");
-    const url = optionalString(candidate, "url");
-    if (id !== distributionId || url === undefined) continue;
-    const resource: UdataResource = { id, url };
-    const filesize = asNumber(candidate.filesize);
-    if (filesize !== undefined) resource.filesize = filesize;
-    const lastModified = optionalString(candidate, "last_modified");
-    if (lastModified !== undefined && !Number.isNaN(Date.parse(lastModified))) {
-      resource.lastModified = lastModified;
-    }
-    return resource;
+function selectResource(value: JsonValue | undefined, selector: DistributionSelector): UdataResource | undefined {
+  const resources = asArrayOrEmpty(value).flatMap((candidate) => {
+    const resource = catalogueResource(candidate);
+    return resource ? [resource] : [];
+  });
+  if (selector.kind === "id") return resources.find((resource) => resource.id === selector.id);
+  const format = selector.format.toLowerCase();
+  let newest: UdataResource | undefined;
+  for (const resource of resources) {
+    if (resource.format?.toLowerCase() !== format) continue;
+    if (!newest || (resource.lastModified ?? "") > (newest.lastModified ?? "")) newest = resource;
   }
-  return undefined;
+  return newest;
+}
+
+function catalogueResource(candidate: JsonValue): UdataResource | undefined {
+  if (!isJsonObject(candidate)) return undefined;
+  const id = optionalString(candidate, "id");
+  const url = optionalString(candidate, "url");
+  if (id === undefined || url === undefined) return undefined;
+  const resource: UdataResource = { id, url };
+  const format = optionalString(candidate, "format");
+  if (format !== undefined) resource.format = format;
+  const filesize = asNumber(candidate.filesize);
+  if (filesize !== undefined) resource.filesize = filesize;
+  const lastModified = optionalString(candidate, "last_modified");
+  if (lastModified !== undefined && !Number.isNaN(Date.parse(lastModified))) {
+    // Catalogue timestamps are ISO 8601, so the newest one compares highest as text.
+    resource.lastModified = new Date(lastModified).toISOString();
+  }
+  return resource;
 }
 
 /** A refused upstream response, carrying its status and any `Retry-After` the provider asked for. */
