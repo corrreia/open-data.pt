@@ -166,7 +166,7 @@ export class Serving {
    */
   async allRecords(product: ProductDetail, filters?: RowFilters): Promise<ReadableStream<Uint8Array>> {
     const matches = rowMatcher(product.schema, filters);
-    const matched = matches ? "" : `"numberMatched":${product.rowCount},`;
+    const matched = matches ? "" : `"numberMatched":${servedRows(product)},`;
     return this.streamRows(
       product,
       `{${matched}"data":[`,
@@ -191,7 +191,7 @@ export class Serving {
     if (!geometryField && !(latitudeField && longitudeField)) throw new NotFoundError("Product has no geometry or coordinate fields");
     const matches = rowMatcher(product.schema, filters);
     // Filtered, the number of matching features is only known at the end.
-    const matched = matches ? "" : `"numberMatched":${product.rowCount},`;
+    const matched = matches ? "" : `"numberMatched":${servedRows(product)},`;
     const head = `{"type":"FeatureCollection",${matched}"timeStamp":${JSON.stringify(new Date().toISOString())},"features":[`;
     return this.streamRows(
       product,
@@ -272,6 +272,16 @@ export class Serving {
     if (!chunk) throw new NotFoundError("A chunk of this product is missing; retry shortly");
     return chunk.rows;
   }
+}
+
+/**
+ * The rows the record endpoints actually serve: what the chunk list holds. A
+ * product's `rowCount` counts the rows of whatever it is made of, and for a
+ * time-series product those are points, served by `/series` and never as
+ * records, so only the chunks can state a record count without contradicting it.
+ */
+function servedRows(product: ProductDetail): number {
+  return (product.chunks ?? []).reduce((total, chunk) => total + chunk.rows, 0);
 }
 
 function parseRecordCursor(cursor: string | undefined): { version: number; chunk: number; offset: number } | undefined {

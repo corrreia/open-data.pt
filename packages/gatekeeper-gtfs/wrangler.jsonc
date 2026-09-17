@@ -8,7 +8,7 @@
   "workers_dev": false,
   "preview_urls": false,
   "vars": {
-    "GTFS_ALLOWED_HOSTS": "api.carrismetropolitana.pt,opendata.porto.digital,dados.gov.pt,publico.cp.pt,www.fertagus.pt,www.tub.pt,backend.tcbarreiro.pt,www.horariosdofunchal.pt",
+    "GTFS_ALLOWED_HOSTS": "api.carrismetropolitana.pt,dadosabertos.cm-porto.pt,dados.gov.pt,publico.cp.pt,www.fertagus.pt,www.tub.pt,backend.tcbarreiro.pt,www.horariosdofunchal.pt",
   },
   "limits": { "cpu_ms": 120000 },
   "observability": {

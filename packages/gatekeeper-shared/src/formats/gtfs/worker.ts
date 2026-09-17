@@ -9,7 +9,9 @@ export const GTFS_DEPLOYMENT: LibraryDeployment<{ readonly GTFS_ALLOWED_HOSTS: s
   // One GTFS archive is tens of megabytes of CSV, parsed in a single invocation.
   cpuMs: 120_000,
   vars: {
-    GTFS_ALLOWED_HOSTS: "api.carrismetropolitana.pt,opendata.porto.digital,dados.gov.pt,publico.cp.pt,www.fertagus.pt,www.tub.pt,backend.tcbarreiro.pt,www.horariosdofunchal.pt",
+    // opendata.porto.digital was dropped in September 2026: Porto's portal moved to
+    // dadosabertos.cm-porto.pt and the old name no longer resolves at all.
+    GTFS_ALLOWED_HOSTS: "api.carrismetropolitana.pt,dadosabertos.cm-porto.pt,dados.gov.pt,publico.cp.pt,www.fertagus.pt,www.tub.pt,backend.tcbarreiro.pt,www.horariosdofunchal.pt",
   },
   library: (env) => ({
     kinds: Object.values(GTFS_FEEDS),

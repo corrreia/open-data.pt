@@ -924,14 +924,14 @@ describe("OGC API Features through the shared collector", () => {
 });
 
 describe("OGC API Features examples", () => {
-  it("ships the eleven curated collections, each naming its own library", () => {
-    expect(OGC_EXAMPLES).toHaveLength(11);
+  it("ships the three curated collections, each naming its own library", () => {
+    expect(OGC_EXAMPLES).toHaveLength(3);
     expect(OGC_EXAMPLES.every((example) => example.config.source === "ogc")).toBe(true);
     expect(new Set(OGC_EXAMPLES.map((example) => example.slug)).size).toBe(OGC_EXAMPLES.length);
   });
 
-  it("reads the two services it is allowed to read and no others", () => {
-    expect(new Set(OGC_EXAMPLES.map((example) => example.config.host))).toEqual(new Set([DGT_HOST, AZORES_HOST]));
+  it("reads the one service it is allowed to read and no others", () => {
+    expect(new Set(OGC_EXAMPLES.map((example) => example.config.host))).toEqual(new Set([DGT_HOST]));
   });
 
   it("says in every DGT title and description that the CAOP covers the mainland only", () => {
@@ -942,15 +942,12 @@ describe("OGC API Features examples", () => {
     expect(dgt.every((example) => example.config.geometry === "skip" && /without boundary outlines/i.test(example.description))).toBe(true);
   });
 
-  it("calls a station inventory an inventory, not a measurement", () => {
-    const inventories = OGC_EXAMPLES.filter((example) => /station/i.test(example.title));
-    expect(inventories).toHaveLength(2);
-    expect(inventories.every((example) => /not the measurements/i.test(example.description))).toBe(true);
-  });
-
-  it("claims the Azores licence its own service states, and no licence DGT does not", () => {
+  // The eight Azores collections that used to live here were removed in September 2026:
+  // ambiente.azores.gov.pt answers our Workers with a Cloudflare challenge. The library
+  // tests above still cover the basePath and outline paths those feeds exercised.
+  it("claims no licence DGT does not state", () => {
     for (const example of OGC_EXAMPLES) {
-      expect(example.policy.serving.licence).toBe(example.config.host === AZORES_HOST ? "CC BY 4.0" : "Source terms apply");
+      expect(example.policy.serving.licence).toBe("Source terms apply");
       expect(example.policy.serving.attribution ?? "").not.toBe("");
     }
   });

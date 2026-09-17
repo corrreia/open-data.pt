@@ -4,12 +4,13 @@ import { describe, expect, it } from "vitest";
 import { isJsonString } from "@open-data-pt/gatekeeper-shared";
 import type { JsonObject, TransformContext } from "@open-data-pt/gatekeeper-shared";
 import { GbfsTransformer } from "../packages/gatekeeper-shared/src/formats/gbfs/transform";
+import { prepareRecord } from "../apps/kernel/src/records";
 
 function fixture(name: string): Uint8Array {
   return new Uint8Array(readFileSync(new URL(`./fixtures/gbfs/${name}.json`, import.meta.url)));
 }
 
-function context(slug: string, language = "en"): TransformContext {
+function context(slug: string, language = "en", feed = "status"): TransformContext {
   return {
     feed: {
       id: `feed_${slug}`,
@@ -19,6 +20,7 @@ function context(slug: string, language = "en"): TransformContext {
       config: {
         url: `https://example.invalid/${slug}/gbfs.json`,
         language,
+        feed,
       },
       semantics: {
         boundedness: "bounded",
@@ -40,15 +42,14 @@ function context(slug: string, language = "en"): TransformContext {
 describe("GBFS transformers", () => {
   const transformer = new GbfsTransformer();
 
-  it("transforms a GBFS 1.0 Lime snapshot into all four product roles", () => {
+  it("transforms a GBFS 1.0 Lime status snapshot into vehicles, availability, and a fleet series", () => {
     const result = transformer.transform(fixture("lime-lisbon"), context("lime-lisbon"));
 
-    expect(result.transformer).toEqual({ id: "gbfs", version: "2" });
+    expect(result.transformer).toEqual({ id: "gbfs", version: "3" });
     expect(result.products.map((product) => [product.slug, product.role])).toEqual([
       ["lime-lisbon-vehicles", "current-state"],
       ["lime-lisbon-stations", "current-state"],
       ["lime-lisbon-fleet", "time-series"],
-      ["lime-lisbon-system", "reference"],
     ]);
     const vehicle = result.products[0]?.records?.[0];
     expect(vehicle).toMatchObject({
@@ -63,12 +64,13 @@ describe("GBFS transformers", () => {
         lastReported: null,
       },
     });
-    expect(result.products[1]?.records?.[0]?.payload).toMatchObject({
+    expect(result.products[1]?.records?.[0]?.payload).toEqual({
       id: "lisbon",
-      name: "Lisbon",
       numBikesAvailable: 2548,
       numDocksAvailable: 999999,
+      isInstalled: true,
       isRenting: true,
+      isReturning: true,
     });
     expect(result.products[2]?.points).toContainEqual({
       seriesKey: "scooter:unknown",
@@ -82,17 +84,44 @@ describe("GBFS transformers", () => {
     });
   });
 
+  it("publishes the system and the station descriptions from the reference part alone", () => {
+    const result = transformer.transform(fixture("lime-lisbon"), context("lime-lisbon-reference", "en", "reference"));
+
+    expect(result.products.map((product) => [product.slug, product.role])).toEqual([
+      ["lime-lisbon-reference-stations", "reference"],
+      ["lime-lisbon-reference-system", "reference"],
+    ]);
+    expect(result.products[0]?.records?.[0]?.payload).toEqual({
+      id: "lisbon",
+      name: "Lisbon",
+      latitude: 38.6779,
+      longitude: -9.1598,
+      address: null,
+      capacity: null,
+    });
+    expect(result.products[1]?.records?.[0]?.payload).toMatchObject({ systemId: "lime_lisbon" });
+  });
+
+  it("keeps each value in one part only: no positions in availability, no counts in the reference", () => {
+    const status = transformer.transform(fixture("bird-lisbon"), context("bird-lisbon"));
+    const reference = transformer.transform(fixture("bird-lisbon"), context("bird-lisbon-reference", "en", "reference"));
+    const availability = status.products.find((product) => product.productKey === "stations");
+    const stations = reference.products.find((product) => product.productKey === "stations");
+
+    expect(availability?.schema.fields.map((entry) => entry.id)).toEqual(["id", "numBikesAvailable", "numDocksAvailable", "isInstalled", "isRenting", "isReturning"]);
+    expect(stations?.schema.fields.map((entry) => entry.id)).toEqual(["id", "name", "latitude", "longitude", "address", "capacity"]);
+    expect(status.products.some((product) => product.productKey === "system")).toBe(false);
+    expect(reference.products.some((product) => product.kind === "series")).toBe(false);
+    const keys = new Set(stations?.schema.fields.map((entry) => entry.id));
+    expect(availability?.schema.fields.filter((entry) => entry.id !== "id").some((entry) => keys.has(entry.id))).toBe(false);
+  });
+
   it("decodes GBFS 2.3 vehicle types and normalizes fuel fraction to percent", () => {
     const result = transformer.transform(fixture("bird-lisbon"), context("bird-lisbon"));
     const vehicles = result.products[0];
     const fleet = result.products[2];
 
-    expect(result.products.map((product) => product.title)).toEqual([
-      "Bird vehicles in Lisbon",
-      "Bird stations in Lisbon",
-      "Bird fleet over time in Lisbon",
-      "Bird system information in Lisbon",
-    ]);
+    expect(result.products.map((product) => product.title)).toEqual(["Bird vehicles in Lisbon", "Bird station availability in Lisbon", "Bird fleet over time in Lisbon"]);
     expect(vehicles?.records).toHaveLength(4);
     expect(vehicles?.records?.[0]?.payload).toMatchObject({
       vehicleType: "scooter:electric",
@@ -116,7 +145,8 @@ describe("GBFS transformers", () => {
         expect.objectContaining({ seriesKey: "disabled", value: 0 }),
       ]),
     );
-    expect(result.products[3]?.records?.[0]?.payload).toMatchObject({
+    const system = transformer.transform(fixture("bird-lisbon"), context("bird-lisbon-reference", "en", "reference"));
+    expect(system.products[1]?.records?.[0]?.payload).toMatchObject({
       systemId: "bird-lisbon",
       name: "bird lisbon",
       operator: "Bird Rides, Inc.",
@@ -143,8 +173,6 @@ describe("GBFS transformers", () => {
     });
     expect(first.products[1]?.records?.[0]?.payload).toMatchObject({
       id: "378",
-      name: "Aguiar Beira - Esc. Padre J. Fonseca",
-      capacity: 5,
       numBikesAvailable: 4,
       numDocksAvailable: 1,
     });
@@ -155,19 +183,48 @@ describe("GBFS transformers", () => {
       unit: "vehicles",
       dimensions: { system: "bora_viseu" },
     });
+    const reference = transformer.transform(bytes, context("bora-viseu-reference", "pt", "reference"));
+    expect(reference.products[0]?.records?.[0]?.payload).toMatchObject({
+      id: "378",
+      name: "Aguiar Beira - Esc. Padre J. Fonseca",
+      capacity: 5,
+    });
+  });
+
+  it("gives a station whose counts did not move the same semantic hash, whatever last_reported says", () => {
+    const hashes = (name: string): string[] => {
+      const result = transformer.transform(fixture(name), context("tubabike-barcelos", "pt"));
+      const stations = result.products.find((product) => product.productKey === "stations");
+      return (stations?.records ?? []).map((record) => prepareRecord(record).hash);
+    };
+    const before = hashes("tubabike-barcelos-status");
+
+    expect(before).toHaveLength(3);
+    expect(hashes("tubabike-barcelos-status-restamped")).toEqual(before);
+  });
+
+  it("still revises a station whose counts really moved", () => {
+    const result = transformer.transform(fixture("tubabike-barcelos-status"), context("tubabike-barcelos", "pt"));
+    const station = result.products.find((product) => product.productKey === "stations")?.records?.[0];
+    if (!station) throw new Error("The TubaBike status fixture must carry stations");
+    const moved = { ...station, payload: { ...station.payload, numBikesAvailable: 99 } };
+
+    expect(prepareRecord(moved).hash).not.toBe(prepareRecord(station).hash);
   });
 
   it("derives operator and location titles from a new live TubaBike fixture", () => {
-    const result = transformer.transform(fixture("tubabike-barcelos"), context("tubabike-barcelos", "pt"));
+    const result = transformer.transform(fixture("tubabike-barcelos-status"), context("tubabike-barcelos", "pt"));
+    const reference = transformer.transform(fixture("tubabike-barcelos-reference"), context("tubabike-barcelos-reference", "pt", "reference"));
 
     expect(result.products.map((product) => product.title)).toEqual([
       "TubaBike vehicles in Barcelos",
-      "TubaBike stations in Barcelos",
+      "TubaBike station availability in Barcelos",
       "TubaBike fleet over time in Barcelos",
-      "TubaBike system information in Barcelos",
     ]);
+    expect(reference.products.map((product) => product.title)).toEqual(["TubaBike stations in Barcelos", "TubaBike system information in Barcelos"]);
     expect(result.products[0]?.records).toHaveLength(3);
     expect(result.products[1]?.records).toHaveLength(3);
+    expect(reference.products[0]?.records).toHaveLength(3);
   });
 
   it("falls back to a capitalised feed slug only without system information", () => {
@@ -176,13 +233,14 @@ describe("GBFS transformers", () => {
 
     const result = transformer.transform(new TextEncoder().encode(JSON.stringify(document)), context("coastal-share"));
 
-    expect(result.products.map((product) => product.title)).toEqual(["Coastal Share vehicles", "Coastal Share stations", "Coastal Share fleet over time"]);
+    expect(result.products.map((product) => product.title)).toEqual(["Coastal Share vehicles", "Coastal Share station availability", "Coastal Share fleet over time"]);
     expect(result.products.some((product) => product.role === "reference")).toBe(false);
   });
 
   it("types every published schema field for source-agnostic rendering", () => {
-    const result = transformer.transform(fixture("bird-lisbon"), context("bird-lisbon"));
-    const fields = result.products.flatMap((product) => product.schema.fields);
+    const status = transformer.transform(fixture("bird-lisbon"), context("bird-lisbon"));
+    const reference = transformer.transform(fixture("bird-lisbon"), context("bird-lisbon-reference", "en", "reference"));
+    const fields = [...status.products, ...reference.products].flatMap((product) => product.schema.fields);
 
     expect(fields.every((field) => isJsonString(field.type))).toBe(true);
     expect(fields.find((field) => field.id === "latitude")?.type).toBe("latitude");

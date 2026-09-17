@@ -179,6 +179,29 @@ describe("REN Gatekeeper", () => {
     await expect(collectRenFeed({ service: "consumption", day: "2026-09-06" }, undefined, "https://datahub.ren.pt", fetcher)).rejects.toMatchObject({ code: "response-too-large" });
   });
 
+  it.each([
+    ["400 with its notice", 400],
+    ["204 with no body at all", 204],
+  ])("treats a gas day REN has not published yet, answered %s, as an empty day rather than a failure", async (_case, status) => {
+    const noData = { message: '<div><p class="main-text">There is no data<br>for the selected date</p></div>' };
+    const fetcher = vi.fn(async (input: URL | RequestInfo) => {
+      const day = new URL(input.toString()).searchParams.get("dayToSearchString");
+      if (day === dotNetTicks("2026-09-07")) return jsonResponse(completeChart());
+      return status === 204 ? new Response(null, { status }) : jsonResponse(noData, { status });
+    });
+    // 06:04 Lisbon on a summer morning: the new gas day has started, REN publishes its chart about two hours later.
+    const fetched = sourceBody(await collectRenFeed({ service: "gas-consumption" }, undefined, "https://datahub.ren.pt", fetcher, new Date("2026-09-08T05:04:00Z")));
+
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(fetched.completeness).toBe("partial");
+    expect(jsonAs(fetched.body)).toMatchObject({
+      service: "gas-consumption",
+      days: [{ day: "2026-09-07" }, { day: "2026-09-08" }],
+    });
+    const transformed = new RenTransformer().transform(fetched.body, transformContext("gas-consumption"));
+    expect(transformed.products[0]?.points).toHaveLength(96);
+  });
+
   it("maps provider failures to an upstream error carrying the retry delay", async () => {
     const fetcher = vi.fn(async () => jsonResponse({ message: "unavailable" }, { status: 503, headers: { "Retry-After": "90" } }));
     await expect(collectRenFeed({ service: "gas-consumption", day: "2026-09-06" }, undefined, "https://datahub.ren.pt", fetcher)).rejects.toMatchObject({

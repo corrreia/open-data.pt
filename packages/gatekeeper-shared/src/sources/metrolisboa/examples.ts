@@ -16,9 +16,10 @@ export const METRO_LISBOA_EXAMPLES: ExampleFeed[] = [
     config: { source: "metrolisboa", feed: "line-status" },
     policy: {
       name: "Metro Lisboa line status",
-      version: 2,
+      version: 3,
       // Every change of a line's status is a disruption starting or ending: that is the history worth keeping.
-      collection: { cadenceSeconds: 120, timeoutSeconds: 20, maxBytes: 64 * 1024, historyMode: "changes" },
+      // A line's status changes about three times a day, so five minutes still catches a disruption while it matters.
+      collection: { cadenceSeconds: 300, timeoutSeconds: 20, maxBytes: 64 * 1024, historyMode: "changes" },
       serving: SERVING,
     },
     staleAfterSeconds: 600,

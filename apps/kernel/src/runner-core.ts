@@ -63,8 +63,14 @@ export const BACKFILL_RETRY_FAILED_MS = 7 * 24 * 60 * 60_000;
 const MAX_SEEN = 10_000;
 /** Undelivered history, in UTF-8 bytes, above which a feed takes no new work. */
 const PENDING_MAX_BYTES = 64 * 1024 * 1024;
-/** Retries a failing collection takes at exponential backoff before it falls back to its ordinary cadence. */
+/** Retries a failing collection takes at quick exponential backoff before it starts resting between attempts. */
 const RETRY_LIMIT = 3;
+/**
+ * However long its cadence, a feed that has used up its retries waits at most
+ * this long before trying again: one bad response must not park a monthly feed
+ * for a month.
+ */
+export const MAX_FAILURE_WAIT_SECONDS = 6 * 60 * 60;
 const LOOKUP_BATCH = 2_000;
 /** Superseded serving objects are deleted this long after they stop being selectable: an edge-cached read may still name them. */
 const GARBAGE_GRACE_MS = 60 * 60_000;
@@ -357,7 +363,9 @@ export class RunnerCore {
     if (feed.resolved.history && (backfill?.status === "paused" || backfill?.status === "failed")) {
       this.setState("backfill", { ...backfill, status: "running", failures: 0, updatedAt: at, nextAt: at });
     }
-    const runtime = this.runtime();
+    // A different definition or policy is a fresh chance for the schedule too: the streak of failures
+    // that lengthened this feed's waits was the old configuration's, so the next attempt starts over.
+    const runtime: RunnerState = { ...this.runtime(), consecutiveFailures: 0 };
     if (feed.enabled) {
       const due = runtime.nextRunAt ? Math.min(Date.parse(runtime.nextRunAt), now) : now;
       this.setRuntime({ ...runtime, nextRunAt: new Date(due).toISOString() });
@@ -837,9 +845,13 @@ export class RunnerCore {
       }
       const failures = runtime.consecutiveFailures + 1;
       next.consecutiveFailures = failures;
-      const exponential = Math.min(MAX_RETRY_BACKOFF_SECONDS, 60 * 2 ** Math.min(failures, 6));
-      const backoff = failure.retryAfterSeconds === undefined ? exponential : Math.max(exponential, Math.min(MAX_RETRY_BACKOFF_SECONDS, failure.retryAfterSeconds));
-      next.nextRunAt = new Date(now + (failures <= RETRY_LIMIT ? backoff : policy.collection.cadenceSeconds) * 1000).toISOString();
+      // The same doubling throughout: quick retries up to the limit, then rests that are never longer
+      // than the feed's own cadence, and never longer than MAX_FAILURE_WAIT_SECONDS whatever the cadence.
+      const exponential = 60 * 2 ** Math.min(failures, 9);
+      const backoff =
+        failures <= RETRY_LIMIT ? Math.min(MAX_RETRY_BACKOFF_SECONDS, exponential) : Math.min(policy.collection.cadenceSeconds, MAX_FAILURE_WAIT_SECONDS, exponential);
+      const requested = failure.retryAfterSeconds === undefined ? 0 : Math.min(MAX_RETRY_BACKOFF_SECONDS, failure.retryAfterSeconds);
+      next.nextRunAt = new Date(now + Math.max(backoff, requested) * 1000).toISOString();
       this.setRuntime(next);
     });
   }

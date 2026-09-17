@@ -6,7 +6,7 @@
  * from the same API any client reads and from the site's own files.
  */
 import { sha256Hex } from "./hash";
-import type { HeaderMap } from "./http";
+import type { HeaderMap } from "./errors";
 import { isPage, pageMarkdown, prefersMarkdown, productPage, publisherPage, readCatalog } from "./markdown";
 import { withPageMeta } from "./page-meta";
 

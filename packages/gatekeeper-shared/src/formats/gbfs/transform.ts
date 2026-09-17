@@ -14,6 +14,7 @@ import {
   type TransformContext,
   type TransformResult,
 } from "../../index";
+import { gbfsPart } from "./gbfs";
 
 const VEHICLE_SCHEMA: CanonicalSchema = {
   fields: [
@@ -30,7 +31,8 @@ const VEHICLE_SCHEMA: CanonicalSchema = {
   ],
 };
 
-const STATION_SCHEMA: CanonicalSchema = {
+/** What a station is: the daily reference half, which almost never moves. */
+const STATION_REFERENCE_SCHEMA: CanonicalSchema = {
   fields: [
     field("id", "identifier", false),
     field("name", "string", false),
@@ -38,12 +40,23 @@ const STATION_SCHEMA: CanonicalSchema = {
     field("longitude", "longitude", false),
     field("address", "string", true),
     field("capacity", "number", true, "vehicles"),
+  ],
+};
+
+/**
+ * What a station holds right now, keyed by the same station id. Nothing the
+ * reference product already states is repeated here, and no per-station
+ * timestamp: Nextbike and Bora restamp `last_reported` on every publication,
+ * which would make a revision of every station on every collection.
+ */
+const STATION_AVAILABILITY_SCHEMA: CanonicalSchema = {
+  fields: [
+    field("id", "identifier", false),
     field("numBikesAvailable", "number", true, "vehicles"),
     field("numDocksAvailable", "number", true, "docks"),
     field("isInstalled", "boolean", true),
     field("isRenting", "boolean", true),
     field("isReturning", "boolean", true),
-    field("lastReported", "datetime", true),
   ],
 };
 
@@ -90,10 +103,11 @@ interface TransformedStations {
 
 export class GbfsTransformer {
   readonly id = "gbfs";
-  readonly version = "2";
+  readonly version = "3";
 
   transform(bytes: Uint8Array, context: TransformContext): TransformResult {
     const root = parseDocument(bytes);
+    const part = gbfsPart(context.feed.config);
     const systemResource = optionalResource(root.system_information);
     const systemData = systemResource ? resourceData(systemResource, "system_information") : undefined;
     const systemId = systemData ? requiredString(systemData.system_id, "GBFS system_id") : context.feed.slug;
@@ -102,11 +116,11 @@ export class GbfsTransformer {
     const operator = systemData ? localizedString(systemData.operator ?? systemData.attribution_organization_name, preferredLanguage) : null;
     const titles = productTitles(systemName, operator, context.feed.slug);
     const vehicleTypes = parseVehicleTypes(root.vehicle_types);
-    const vehicleResource = optionalResource(root.free_bike_status);
+    const vehicleResource = part === "status" ? optionalResource(root.free_bike_status) : undefined;
     const stationInformation = optionalResource(root.station_information);
     const stationStatus = optionalResource(root.station_status);
     const products: ProductBuild[] = [];
-    let acceptedRecords = systemData ? 1 : 0;
+    let acceptedRecords = 0;
     let rejectedRecords = 0;
 
     if (vehicleResource) {
@@ -142,17 +156,17 @@ export class GbfsTransformer {
       });
     }
 
-    if (stationInformation || stationStatus) {
-      const stations = transformStations(stationInformation, stationStatus, preferredLanguage);
+    if (part === "status" && stationStatus) {
+      const stations = transformStationAvailability(stationStatus);
       acceptedRecords += stations.records.length;
       rejectedRecords += stations.rejected;
       const stationProduct: ProductBuild = {
         productKey: "stations",
         slug: `${context.feed.slug}-stations`,
-        title: titles.stations,
-        description: "Station locations, capacity, and current vehicle and dock availability.",
+        title: titles.availability,
+        description: "How many vehicles and docks each station holds right now, keyed by station.",
         role: "current-state",
-        schema: STATION_SCHEMA,
+        schema: STATION_AVAILABILITY_SCHEMA,
         records: stations.records,
         kind: "record",
         updateMode: "authoritative-snapshot",
@@ -162,7 +176,30 @@ export class GbfsTransformer {
       products.splice(vehicleResource ? 1 : 0, 0, stationProduct);
     }
 
-    if (systemData && systemName) {
+    if (part === "reference" && stationInformation) {
+      const stations = transformStationReference(stationInformation, preferredLanguage);
+      acceptedRecords += stations.records.length;
+      rejectedRecords += stations.rejected;
+      const stationProduct: ProductBuild = {
+        productKey: "stations",
+        slug: `${context.feed.slug}-stations`,
+        title: titles.stations,
+        description: "Every station's name, position, address, and capacity.",
+        role: "reference",
+        schema: STATION_REFERENCE_SCHEMA,
+        records: stations.records,
+        kind: "record",
+        updateMode: "authoritative-snapshot",
+        completeness: "complete",
+      };
+      if (stations.watermark) stationProduct.watermark = stations.watermark;
+      products.push(stationProduct);
+    }
+
+    // The status half reads `system_information` to name the system and label
+    // its series; the reference half is the one that publishes it.
+    if (part === "reference" && systemData && systemName) {
+      acceptedRecords += 1;
       const systemRecord: CanonicalRecord = {
         entityKey: systemId,
         payload: {
@@ -318,22 +355,13 @@ function transformVehicles(resource: JsonObject, vehicleTypes: Map<string, Vehic
   return { records, points, rejected, eventTime: publicationTime };
 }
 
-function transformStations(informationResource: JsonObject | undefined, statusResource: JsonObject | undefined, preferredLanguage: string | undefined): TransformedStations {
-  const informationData = informationResource ? resourceData(informationResource, "station_information") : undefined;
-  const statusData = statusResource ? resourceData(statusResource, "station_status") : undefined;
-  const information = Array.isArray(informationData?.stations) ? informationData.stations : [];
-  const statuses = Array.isArray(statusData?.stations) ? statusData.stations : [];
-  const statusById = new Map<string, JsonObject>();
-  let rejected = 0;
-  for (const value of statuses) {
-    if (!isJsonObject(value) || !nonEmptyString(value.station_id)) {
-      rejected += 1;
-      continue;
-    }
-    statusById.set(value.station_id, value);
-  }
-
+/** What each station is, from `station_information`: the half that changes about once a year. */
+function transformStationReference(informationResource: JsonObject, preferredLanguage: string | undefined): TransformedStations {
+  const data = resourceData(informationResource, "station_information");
+  const information = Array.isArray(data.stations) ? data.stations : [];
   const records: CanonicalRecord[] = [];
+  let rejected = 0;
+
   for (const value of information) {
     if (!isJsonObject(value) || !nonEmptyString(value.station_id)) {
       rejected += 1;
@@ -345,10 +373,7 @@ function transformStations(informationResource: JsonObject | undefined, statusRe
       rejected += 1;
       continue;
     }
-    const status = statusById.get(value.station_id);
-    if (status) statusById.delete(value.station_id);
-    const lastReported = dateTime(status?.last_reported);
-    const record: CanonicalRecord = {
+    records.push({
       entityKey: value.station_id,
       payload: {
         id: value.station_id,
@@ -357,22 +382,49 @@ function transformStations(informationResource: JsonObject | undefined, statusRe
         longitude,
         address: localizedString(value.address, preferredLanguage),
         capacity: finiteNumber(value.capacity),
-        numBikesAvailable: finiteNumber(status?.num_bikes_available ?? status?.num_vehicles_available),
-        numDocksAvailable: finiteNumber(status?.num_docks_available),
-        isInstalled: nullableBoolean(status?.is_installed),
-        isRenting: nullableBoolean(status?.is_renting),
-        isReturning: nullableBoolean(status?.is_returning),
-        lastReported: lastReported ?? null,
       },
-    };
-    if (lastReported) record.eventTime = lastReported;
-    records.push(record);
+    });
   }
 
-  const unmatched = statusById.size;
-  rejected += unmatched;
-  const watermark = statusResource ? dateTime(statusResource.last_updated) : informationResource ? dateTime(informationResource.last_updated) : undefined;
-  const transformed: TransformedStations = { records, rejected };
+  return withWatermark({ records, rejected }, dateTime(informationResource.last_updated));
+}
+
+/**
+ * What each station holds, from `station_status`. A station's own
+ * `last_reported` is left out of the row on purpose: it is restamped on every
+ * publication, and a hashed row would then change when nothing did. When the
+ * counts were published is the product's watermark and the batch's clock.
+ */
+function transformStationAvailability(statusResource: JsonObject): TransformedStations {
+  const data = resourceData(statusResource, "station_status");
+  const statuses = Array.isArray(data.stations) ? data.stations : [];
+  const records: CanonicalRecord[] = [];
+  const seen = new Set<string>();
+  let rejected = 0;
+
+  for (const value of statuses) {
+    if (!isJsonObject(value) || !nonEmptyString(value.station_id) || seen.has(value.station_id)) {
+      rejected += 1;
+      continue;
+    }
+    seen.add(value.station_id);
+    records.push({
+      entityKey: value.station_id,
+      payload: {
+        id: value.station_id,
+        numBikesAvailable: finiteNumber(value.num_bikes_available ?? value.num_vehicles_available),
+        numDocksAvailable: finiteNumber(value.num_docks_available),
+        isInstalled: nullableBoolean(value.is_installed),
+        isRenting: nullableBoolean(value.is_renting),
+        isReturning: nullableBoolean(value.is_returning),
+      },
+    });
+  }
+
+  return withWatermark({ records, rejected }, dateTime(statusResource.last_updated));
+}
+
+function withWatermark(transformed: TransformedStations, watermark: string | undefined): TransformedStations {
   if (watermark) transformed.watermark = watermark;
   return transformed;
 }
@@ -389,6 +441,7 @@ function localizedString(value: JsonValue | undefined, preferredLanguage: string
 interface ProductTitles {
   vehicles: string;
   stations: string;
+  availability: string;
   fleet: string;
   system: string;
 }
@@ -399,6 +452,7 @@ function productTitles(systemName: string | undefined, operator: string | null, 
   return {
     vehicles: `${identity.brand} vehicles${place}`,
     stations: `${identity.brand} stations${place}`,
+    availability: `${identity.brand} station availability${place}`,
     fleet: `${identity.brand} fleet over time${place}`,
     system: `${identity.brand} system information${place}`,
   };

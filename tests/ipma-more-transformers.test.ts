@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type { JsonValue, TransformContext } from "@open-data-pt/gatekeeper-shared";
+import type { CanonicalRecord, JsonValue, TransformContext } from "@open-data-pt/gatekeeper-shared";
+import { prepareRecord } from "../apps/kernel/src/records";
 import { IpmaTransformer } from "../packages/gatekeeper-shared/src/sources/ipma/transform";
 
 type FeedKind = "warnings" | "uv-index" | "fire-risk" | "sea-forecast";
@@ -174,5 +175,17 @@ describe("IPMA additional transformers", () => {
     expect(product?.schema.fields.find((field) => field.id === "wavePeriodMin")?.unit).toBe("s");
     expect(product?.schema.fields.find((field) => field.id === "totalSeaMax")?.unit).toBe("m");
     expect(product?.schema.fields.find((field) => field.id === "seaSurfaceTemperatureMax")?.unit).toBe("°C");
+  });
+
+  it("gives an unchanged sea forecast the same semantic hash after IPMA restates the document hour", async () => {
+    const restated = new TextEncoder().encode(
+      new TextDecoder().decode(fixture("sea-forecast")).replaceAll('"dataUpdate": "2026-09-07T20:31:01"', '"dataUpdate": "2026-09-07T21:31:04"'),
+    );
+    const first = await transformer.transform(fixture("sea-forecast"), context("sea-forecast"));
+    const second = await transformer.transform(restated, context("sea-forecast"));
+    const hashes = (records: CanonicalRecord[] | undefined): string[] => (records ?? []).map((record) => prepareRecord(record).hash);
+
+    expect(hashes(first.products[0]?.records)).toHaveLength(6);
+    expect(hashes(second.products[0]?.records)).toEqual(hashes(first.products[0]?.records));
   });
 });

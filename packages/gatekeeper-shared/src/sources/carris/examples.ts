@@ -82,9 +82,10 @@ export const CARRIS_EXAMPLES: ExampleFeed[] = [
     config: { source: "carris", feed: "alerts" },
     policy: {
       name: "Carris service alerts",
-      version: 1,
+      version: 2,
       collection: {
-        cadenceSeconds: 300,
+        // Alerts are posted days before the disruption they announce; five-minute polling never saw one change.
+        cadenceSeconds: 900,
         timeoutSeconds: 20,
         maxBytes: 2 * 1024 * 1024,
         historyMode: "changes",

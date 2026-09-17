@@ -41,10 +41,12 @@ export const GTFS_EXAMPLES: ExampleFeed[] = [
   {
     slug: "stcp-gtfs-feed",
     title: "STCP GTFS",
-    description: "Stops, routes, agencies, and service calendars from STCP's 7 September 2026 schedule archive.",
+    description: "Stops, routes, agencies, and service calendars from STCP's 1 September 2026 schedule archive.",
+    // Porto's portal moved to dadosabertos.cm-porto.pt in September 2026 and every
+    // dataset and resource ID changed with it; this is the newest STCP archive there.
     config: {
       source: "gtfs",
-      url: "https://opendata.porto.digital/dataset/5275c986-592c-43f5-8f87-aabbd4e4f3a4/resource/2bfd5b9e-5f09-49df-af33-3df622b2f3c9/download/gtfs_feed.zip",
+      url: "https://dadosabertos.cm-porto.pt/dataset/71490e40-9e19-11f1-84ed-6abdb6d5cf34/resource/51340c18-0ef5-4895-b099-cf7247ea54f4/download/gtfs_feed.zip",
     },
     policy: DAILY_STATIC,
     staleAfterSeconds: 259_200,
@@ -55,10 +57,14 @@ export const GTFS_EXAMPLES: ExampleFeed[] = [
     slug: "metro-do-porto-gtfs-feed",
     title: "Metro do Porto GTFS",
     description: "Stops, routes, agencies, service calendars, and route shapes from the latest non-empty Metro do Porto archive.",
+    // Porto's portal moved to dadosabertos.cm-porto.pt in September 2026. Metro do Porto's
+    // two newest uploads there are still zero bytes, as they were on the old portal, so this
+    // is the 7 April 2026 archive: the newest one that has any content. It carries no
+    // feed_info.txt, which the old configuration asked for and never received.
     config: {
       source: "gtfs",
-      url: "https://opendata.porto.digital/dataset/15f22603-a216-492a-ab1c-40b1d8aa2f08/resource/5e2b445d-b85b-4afb-9116-90b24327151c/download/___",
-      files: "agency,stops,routes,calendar,calendar_dates,shapes,feed_info",
+      url: "https://dadosabertos.cm-porto.pt/dataset/713a680c-9e19-11f1-84ed-6abdb6d5cf34/resource/28a13723-2af1-4bbb-a2b1-f8b08df8c7e4/download/___",
+      files: "agency,stops,routes,calendar,calendar_dates,shapes",
     },
     policy: DAILY_STATIC,
     staleAfterSeconds: 259_200,

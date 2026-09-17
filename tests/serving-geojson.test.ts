@@ -245,3 +245,31 @@ describe("every current record in one streamed response", () => {
     expect(body.data.every((row) => row.kind === "bus")).toBe(true);
   });
 });
+
+describe("a time-series product counts points, and serves none of them as records", () => {
+  /** What the Registry holds for a series product: its points counted in rowCount, and no chunks to serve. */
+  async function series(fields: Array<{ name: string; type: FieldType }>) {
+    const built = await serving(fields, [{ id: "a", lat: 38.7, lon: -9.1, n: 1 }]);
+    const product: ProductDetail = { ...built.product, role: "time-series", kind: "series", rowCount: 351, chunks: null, seriesKey: "series/things/1" };
+    return { serving: built.serving, product };
+  }
+
+  it("states the records it streams, not the points it holds", async () => {
+    const { serving: service, product } = await series([{ name: "n", type: "number" }]);
+    const body = await allRecords(service, product);
+    expect(body.numberMatched).toBe(0);
+    expect(body.numberReturned).toBe(0);
+    expect(body.data).toEqual([]);
+  });
+
+  it("counts GeoJSON features the same way, even with coordinate fields in its schema", async () => {
+    const { serving: service, product } = await series([
+      { name: "lat", type: "latitude" },
+      { name: "lon", type: "longitude" },
+    ]);
+    const body = await geojson(service, product);
+    expect(body.numberMatched).toBe(0);
+    expect(body.numberReturned).toBe(0);
+    expect(body.features).toEqual([]);
+  });
+});

@@ -1,0 +1,270 @@
+{
+  "discovery": {
+    "last_updated": 1788820065,
+    "ttl": 60,
+    "data": {
+      "pt": {
+        "feeds": [
+          {
+            "name": "system_information",
+            "url": "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_bx/pt/system_information.json"
+          },
+          {
+            "name": "vehicle_types",
+            "url": "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_bx/pt/vehicle_types.json"
+          },
+          {
+            "name": "station_information",
+            "url": "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_bx/pt/station_information.json"
+          },
+          {
+            "name": "station_status",
+            "url": "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_bx/pt/station_status.json"
+          },
+          {
+            "name": "free_bike_status",
+            "url": "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_bx/pt/free_bike_status.json"
+          },
+          {
+            "name": "system_hours",
+            "url": "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_bx/pt/system_hours.json"
+          },
+          {
+            "name": "system_regions",
+            "url": "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_bx/pt/system_regions.json"
+          },
+          {
+            "name": "system_pricing_plans",
+            "url": "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_bx/pt/system_pricing_plans.json"
+          }
+        ]
+      },
+      "en": {
+        "feeds": [
+          {
+            "name": "system_information",
+            "url": "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_bx/en/system_information.json"
+          },
+          {
+            "name": "vehicle_types",
+            "url": "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_bx/en/vehicle_types.json"
+          },
+          {
+            "name": "station_information",
+            "url": "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_bx/en/station_information.json"
+          },
+          {
+            "name": "station_status",
+            "url": "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_bx/en/station_status.json"
+          },
+          {
+            "name": "free_bike_status",
+            "url": "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_bx/en/free_bike_status.json"
+          },
+          {
+            "name": "system_hours",
+            "url": "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_bx/en/system_hours.json"
+          },
+          {
+            "name": "system_regions",
+            "url": "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_bx/en/system_regions.json"
+          },
+          {
+            "name": "system_pricing_plans",
+            "url": "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_bx/en/system_pricing_plans.json"
+          }
+        ]
+      }
+    },
+    "version": "2.3"
+  },
+  "system_information": {
+    "last_updated": 1788820126,
+    "ttl": 60,
+    "data": {
+      "system_id": "nextbike_bx",
+      "language": "pt",
+      "name": "TubaBike (Barcelos)",
+      "operator": "Minho Bus - Transportes do Minho Soc. Unip. Lda Praça da Estação Rodoviária, 4700 - 377 Braga",
+      "url": "https://www.tubabike.pt/",
+      "phone_number": "+351 253 797 700",
+      "email": "info@tubabike.pt",
+      "feed_contact_email": "gbfs@nextbike.net",
+      "timezone": "Europe/Lisbon",
+      "license_id": "CC0-1.0",
+      "rental_apps": {
+        "android": {
+          "store_uri": "https://play.google.com/store/apps/details?id=de.nextbike",
+          "discovery_uri": "https://app.nextbike.net/"
+        },
+        "ios": {
+          "store_uri": "https://apps.apple.com/app/id504288371",
+          "discovery_uri": "nextbike://"
+        }
+      }
+    },
+    "version": "2.3"
+  },
+  "station_information": {
+    "last_updated": 1788820126,
+    "ttl": 60,
+    "data": {
+      "stations": [
+        {
+          "station_id": "246239618",
+          "name": "05 - Alcaides Faria I",
+          "short_name": "37200",
+          "lat": 41.543601,
+          "lon": -8.609721,
+          "region_id": "916",
+          "rental_uris": {
+            "android": "https://app.nextbike.net/station?id=246239618",
+            "ios": "https://app.nextbike.net/station?id=246239618",
+            "web": "https://nxtb.it/p/246239618"
+          },
+          "is_virtual_station": true,
+          "station_area": {
+            "type": "MultiPolygon",
+            "coordinates": [
+              [
+                [
+                  [
+                    -8.609721,
+                    41.543826
+                  ],
+                  [
+                    -8.609461,
+                    41.543713
+                  ],
+                  [
+                    -8.609461,
+                    41.543489
+                  ],
+                  [
+                    -8.609721,
+                    41.543376
+                  ],
+                  [
+                    -8.609981,
+                    41.543489
+                  ],
+                  [
+                    -8.609981,
+                    41.543713
+                  ],
+                  [
+                    -8.609721,
+                    41.543826
+                  ]
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "station_id": "246241514",
+          "name": "06 - Alcaides Faria II",
+          "short_name": "37201",
+          "lat": 41.541756,
+          "lon": -8.605862,
+          "region_id": "916",
+          "rental_uris": {
+            "android": "https://app.nextbike.net/station?id=246241514",
+            "ios": "https://app.nextbike.net/station?id=246241514",
+            "web": "https://nxtb.it/p/246241514"
+          },
+          "is_virtual_station": true,
+          "station_area": {
+            "type": "MultiPolygon",
+            "coordinates": [
+              [
+                [
+                  [
+                    -8.605862,
+                    41.541981
+                  ],
+                  [
+                    -8.605602,
+                    41.541868
+                  ],
+                  [
+                    -8.605602,
+                    41.541644
+                  ],
+                  [
+                    -8.605862,
+                    41.541531
+                  ],
+                  [
+                    -8.606122,
+                    41.541644
+                  ],
+                  [
+                    -8.606122,
+                    41.541868
+                  ],
+                  [
+                    -8.605862,
+                    41.541981
+                  ]
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "station_id": "246242479",
+          "name": "09 - Rotunda das Calçadas",
+          "short_name": "37202",
+          "lat": 41.540564,
+          "lon": -8.612227,
+          "region_id": "916",
+          "rental_uris": {
+            "android": "https://app.nextbike.net/station?id=246242479",
+            "ios": "https://app.nextbike.net/station?id=246242479",
+            "web": "https://nxtb.it/p/246242479"
+          },
+          "is_virtual_station": true,
+          "station_area": {
+            "type": "MultiPolygon",
+            "coordinates": [
+              [
+                [
+                  [
+                    -8.612227,
+                    41.540789
+                  ],
+                  [
+                    -8.611967,
+                    41.540676
+                  ],
+                  [
+                    -8.611967,
+                    41.540452
+                  ],
+                  [
+                    -8.612227,
+                    41.540339
+                  ],
+                  [
+                    -8.612487,
+                    41.540452
+                  ],
+                  [
+                    -8.612487,
+                    41.540676
+                  ],
+                  [
+                    -8.612227,
+                    41.540789
+                  ]
+                ]
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    "version": "2.3"
+  }
+}

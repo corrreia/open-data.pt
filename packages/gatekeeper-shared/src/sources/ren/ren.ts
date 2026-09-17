@@ -197,19 +197,31 @@ export async function collectRenFeed(
       body: "{}",
     });
     if (response.status === 304) return notModified(response, checkpoint);
-    if (!response.ok || !response.body) {
-      throw new GatekeeperError(`REN Data Hub returned HTTP ${response.status} for ${service}`, "upstream-error", retryAfterSeconds(response.headers));
-    }
     const remaining = REN_MAX_BYTES - sourceBytes;
     if (remaining <= 0) responseTooLarge();
+    // A day REN has not published yet answers 400 (or 204) with its "no data for the selected date" notice. That is an
+    // empty day, not a failure: the gas charts only appear hours into the gas day, and asking for today before then is
+    // how the request was meant to be answered.
+    if (response.status === 204) {
+      collected.push({ day, response: renNoDataDocument() });
+      continue;
+    }
+    // A provider failure is never read: only REN's own JSON notice can turn a rejected request into an empty day.
+    if (!response.body || (!response.ok && !(response.headers.get("content-type") ?? "").includes("json"))) throw upstreamError(service, response);
     const bytes = await readBoundedResponse(response, remaining, `REN Data Hub ${service} response`);
     sourceBytes += bytes.byteLength;
     let value: JsonValue;
     try {
       value = parseJsonBytes(bytes);
     } catch {
+      if (!response.ok) throw upstreamError(service, response);
       throw new GatekeeperError(`REN Data Hub returned invalid JSON for ${service}`, "invalid-response");
     }
+    if (isJsonObject(value) && isRenNoDataResponse(value)) {
+      collected.push({ day, response: value });
+      continue;
+    }
+    if (!response.ok) throw upstreamError(service, response);
     if (!isChartResponse(value)) {
       throw new GatekeeperError(`REN Data Hub returned an unsupported chart for ${service}`, "invalid-response");
     }
@@ -271,7 +283,7 @@ export async function collectRenHistory(config: SourceConfig, cursor: HistoryCur
 
   let value: JsonObject;
   if (response.status === 204) {
-    value = { message: "There is no data for the selected date" };
+    value = renNoDataDocument();
   } else {
     const bytes = await readBoundedResponse(response, REN_MAX_BYTES, `REN Data Hub ${service} history response`);
     let parsed: JsonValue;
@@ -316,6 +328,11 @@ export async function collectRenHistory(config: SourceConfig, cursor: HistoryCur
 
 export function isRenNoDataResponse(value: JsonObject): boolean {
   return isJsonString(value.message) && /there\s+is\s+no\s+data[\s\S]*selected\s+date/i.test(value.message);
+}
+
+/** What an empty day looks like in the collected document when REN answered with no body at all. */
+function renNoDataDocument(): JsonObject {
+  return { message: "There is no data for the selected date" };
 }
 
 export function defaultCollectionDays(now: Date): string[] {
@@ -371,6 +388,10 @@ function responseTooLarge(): never {
 
 function exhaustedHistory(): SourceExhausted {
   return { kind: "exhausted" };
+}
+
+function upstreamError(service: RenServiceName, response: Response): GatekeeperError {
+  return new GatekeeperError(`REN Data Hub returned HTTP ${response.status} for ${service}`, "upstream-error", retryAfterSeconds(response.headers));
 }
 
 function historyUpstreamError(service: RenServiceName, response: Response): GatekeeperError {
