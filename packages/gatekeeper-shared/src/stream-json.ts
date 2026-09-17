@@ -116,10 +116,13 @@ class BoundedBytes {
   private bytes = new Uint8Array(256);
   private length = 0;
 
-  constructor(
-    private readonly limit: number,
-    private readonly overflow: () => GatekeeperError,
-  ) {}
+  private readonly limit: number;
+  private readonly overflow: () => GatekeeperError;
+
+  constructor(limit: number, overflow: () => GatekeeperError) {
+    this.limit = limit;
+    this.overflow = overflow;
+  }
 
   get size(): number {
     return this.length;
@@ -183,11 +186,10 @@ class ArrayScanner {
   private readonly element: BoundedBytes;
   private readonly outside: BoundedBytes;
 
-  constructor(
-    private readonly path: readonly string[],
-    maxElementBytes: number,
-    maxEnvelopeBytes: number,
-  ) {
+  private readonly path: readonly string[];
+
+  constructor(path: readonly string[], maxElementBytes: number, maxEnvelopeBytes: number) {
+    this.path = path;
     const envelopeTooLarge = () => tooLarge(`JSON envelope exceeds ${maxEnvelopeBytes} bytes`);
     this.key = new BoundedBytes(maxEnvelopeBytes, envelopeTooLarge);
     this.outside = new BoundedBytes(maxEnvelopeBytes, envelopeTooLarge);

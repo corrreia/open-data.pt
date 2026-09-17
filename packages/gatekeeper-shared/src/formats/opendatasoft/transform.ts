@@ -164,14 +164,12 @@ class DatasetNormalization {
   private collapsed = 0;
   private watermark: string | undefined;
 
-  constructor(
-    captured: CapturedDataset,
-    sample: JsonObject[],
-    private readonly feedSlug: string,
-    private readonly config: SourceConfig,
-    scope: string,
-    scopedTitle: string,
-  ) {
+  private readonly feedSlug: string;
+  private readonly config: SourceConfig;
+
+  constructor(captured: CapturedDataset, sample: JsonObject[], feedSlug: string, config: SourceConfig, scope: string, scopedTitle: string) {
+    this.feedSlug = feedSlug;
+    this.config = config;
     const seriesFields = seriesNames(config.series);
     this.title = (config.timeField || config.groupBy) && scopedTitle ? scopedTitle : (text(captured.metas.title) ?? text(captured.dataset.dataset_id) ?? "Opendatasoft dataset");
     this.description = stripHtml(text(captured.metas.description) ?? "Opendatasoft dataset.") + (config.timeField || config.groupBy ? ` Scope: ${scope}` : "");

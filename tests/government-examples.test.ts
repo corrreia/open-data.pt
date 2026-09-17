@@ -2,11 +2,14 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { type ExampleFeed, type NormalizedRow, type TransformContext } from "@open-data-pt/gatekeeper-shared";
 import { UDATA_EXAMPLES, udataCollector } from "@open-data-pt/gatekeeper-shared/formats/udata";
-import { CITIES_EXAMPLES } from "../packages/gatekeeper-cities/src/examples";
-import { GOVERNMENT_EXAMPLES } from "../packages/gatekeeper-government/src/examples";
-import { TELECOM_EXAMPLES } from "../packages/gatekeeper-telecom/src/examples";
+import { INSTALLED } from "./catalog";
 import { INE_EXAMPLES } from "../packages/gatekeeper-shared/src/sources/ine/examples";
 
+/** Topics are catalog tags now, so these are the installed feeds carrying each tag, whatever Worker reads them. */
+const tagged = (topic: string): ExampleFeed[] => INSTALLED.filter((example) => example.topics?.includes(topic));
+const GOVERNMENT_EXAMPLES = tagged("government");
+const CITIES_EXAMPLES = tagged("cities");
+const TELECOM_EXAMPLES = tagged("telecom");
 const government = UDATA_EXAMPLES.filter((example) => example.topics?.includes("government"));
 
 async function normalized(example: ExampleFeed, observedAt: string) {
@@ -35,7 +38,7 @@ async function normalized(example: ExampleFeed, observedAt: string) {
 }
 
 describe("government distribution examples", () => {
-  it("assigns government distributions exactly once to government, not cities", () => {
+  it("tags government distributions as government, never as cities", () => {
     expect(government).toHaveLength(5);
     for (const example of government) {
       expect(GOVERNMENT_EXAMPLES.filter((candidate) => candidate.slug === example.slug)).toHaveLength(1);

@@ -203,10 +203,12 @@ class RecordTable {
   private readonly counts = new Map<string, ColumnCounts>();
   private readonly eventTimeField: CanonicalField | undefined;
 
-  constructor(
-    private readonly fields: CanonicalField[],
-    private readonly idField?: string,
-  ) {
+  private readonly fields: CanonicalField[];
+  private readonly idField: string | undefined;
+
+  constructor(fields: CanonicalField[], idField?: string) {
+    this.fields = fields;
+    this.idField = idField;
     this.known = new Set(fields.map((column) => column.name));
     this.eventTimeField = fields.find((column) => column.type === "datetime" || column.type === "date");
   }

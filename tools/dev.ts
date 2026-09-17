@@ -1,9 +1,9 @@
 /**
  * Run the kernel locally with only the Gatekeepers you are working on.
  *
- *   pnpm dev                      the kernel and every topic Worker
- *   pnpm dev -- mobility          the kernel and the mobility Worker
- *   pnpm dev -- cities energy     the kernel and those two
+ *   pnpm dev                      the kernel and every Gatekeeper Worker
+ *   pnpm dev -- ckan              the kernel and the CKAN Worker
+ *   pnpm dev -- ckan gtfs         the kernel and those two
  *
  * A Gatekeeper the kernel is bound to but that is not running is not an error:
  * the Registry's example sync logs `gatekeeper_unavailable` for it and carries
@@ -15,7 +15,7 @@ import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
-import { workerConfig, workerTopics } from "./packages.ts";
+import { workerConfig, workerPackages } from "./packages.ts";
 
 const KERNEL_CONFIG = "apps/kernel/wrangler.jsonc";
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -27,21 +27,21 @@ function wranglerBinary(): string {
 }
 
 function selected(names: string[]): string[] {
-  const topics = workerTopics();
-  if (names.length === 0) return topics;
-  const unknown = names.filter((name) => !topics.includes(name));
+  const workers = workerPackages();
+  if (names.length === 0) return workers;
+  const unknown = names.filter((name) => !workers.includes(name));
   if (unknown.length > 0) {
-    process.stderr.write(`Unknown Gatekeeper: ${unknown.join(", ")}. Known: ${topics.join(", ")}\n`);
+    process.stderr.write(`Unknown Gatekeeper: ${unknown.join(", ")}. Known: ${workers.join(", ")}\n`);
     process.exit(1);
   }
   return [...new Set(names)];
 }
 
 function main(): void {
-  const topics = selected(process.argv.slice(2));
+  const workers = selected(process.argv.slice(2));
   const args = ["dev", "--config", KERNEL_CONFIG];
-  for (const topic of topics) args.push("--config", workerConfig(topic));
-  process.stdout.write(`wrangler dev: kernel + ${topics.join(", ")}\n`);
+  for (const worker of workers) args.push("--config", workerConfig(worker));
+  process.stdout.write(`wrangler dev: kernel + ${workers.join(", ")}\n`);
   const child = spawn(wranglerBinary(), args, { stdio: "inherit", shell: false, cwd: ROOT });
   child.on("exit", (code, signal) => process.exit(signal ? 1 : (code ?? 0)));
   child.on("error", (error) => {

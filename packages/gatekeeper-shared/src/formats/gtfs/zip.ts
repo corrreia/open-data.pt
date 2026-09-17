@@ -128,11 +128,15 @@ async function skipEntry(input: ZipInput, entry: LocalEntry): Promise<void> {
 class EntryReader {
   finished = false;
 
-  constructor(
-    private readonly input: ZipInput,
-    private readonly entry: LocalEntry,
-    private readonly maximumBytes: number,
-  ) {}
+  private readonly input: ZipInput;
+  private readonly entry: LocalEntry;
+  private readonly maximumBytes: number;
+
+  constructor(input: ZipInput, entry: LocalEntry, maximumBytes: number) {
+    this.input = input;
+    this.entry = entry;
+    this.maximumBytes = maximumBytes;
+  }
 
   async *chunks(): AsyncGenerator<Uint8Array> {
     const { entry, input, maximumBytes } = this;
@@ -258,10 +262,10 @@ class ZipInput {
   private pending: Uint8Array[] = [];
   private received = 0;
 
-  constructor(
-    body: ReadableStream<Uint8Array>,
-    private readonly maximumBytes: number,
-  ) {
+  private readonly maximumBytes: number;
+
+  constructor(body: ReadableStream<Uint8Array>, maximumBytes: number) {
+    this.maximumBytes = maximumBytes;
     this.reader = body.getReader();
   }
 

@@ -70,7 +70,11 @@ class FieldProfile {
   private colors = 0;
   private readonly distinct = new Set<string>();
 
-  constructor(private readonly inferString: boolean) {}
+  private readonly inferString: boolean;
+
+  constructor(inferString: boolean) {
+    this.inferString = inferString;
+  }
 
   observe(value: JsonValue | undefined): void {
     if (value === null || value === undefined) return;

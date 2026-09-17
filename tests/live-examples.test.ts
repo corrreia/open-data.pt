@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -9,43 +9,16 @@ import {
   topicCollector,
   type CollectionRequest,
   type ExampleFeed,
-  type GatekeeperLibrary,
+  type GatekeeperLibraries,
   type JsonObject,
   type ResolvedFeed,
   type TopicOptions,
 } from "@open-data-pt/gatekeeper-shared";
-import { ARCGIS_FEEDS, arcgisCollector } from "@open-data-pt/gatekeeper-shared/formats/arcgis";
-import { CKAN_FEEDS, ckanCollector } from "@open-data-pt/gatekeeper-shared/formats/ckan";
-import { GBFS_FEEDS, gbfsCollector } from "@open-data-pt/gatekeeper-shared/formats/gbfs";
-import { GTFS_FEEDS, gtfsCollector } from "@open-data-pt/gatekeeper-shared/formats/gtfs";
-import { OGC_FEEDS, ogcCollector } from "@open-data-pt/gatekeeper-shared/formats/ogc";
-import { OPENDATASOFT_FEEDS, opendatasoftCollector } from "@open-data-pt/gatekeeper-shared/formats/opendatasoft";
-import { UDATA_FEEDS, udataCollector } from "@open-data-pt/gatekeeper-shared/formats/udata";
-import { BPSTAT_FEEDS, bpstatCollector } from "@open-data-pt/gatekeeper-shared/sources/bpstat";
-import { CARRIS_FEEDS, carrisCollector } from "@open-data-pt/gatekeeper-shared/sources/carris";
-import { DGEG_FEEDS, dgegCollector } from "@open-data-pt/gatekeeper-shared/sources/dgeg";
-import { EUROSTAT_FEEDS, eurostatCollector } from "@open-data-pt/gatekeeper-shared/sources/eurostat";
-import { INE_FEEDS, ineCollector } from "@open-data-pt/gatekeeper-shared/sources/ine";
-import { IPMA_FEEDS, ipmaCollector } from "@open-data-pt/gatekeeper-shared/sources/ipma";
-import { METRO_FEEDS, metrolisboaCollector } from "@open-data-pt/gatekeeper-shared/sources/metrolisboa";
-import { OMIE_FEEDS, omieCollector } from "@open-data-pt/gatekeeper-shared/sources/omie";
-import { PARLIAMENT_FEEDS, parliamentCollector } from "@open-data-pt/gatekeeper-shared/sources/parliament";
-import { PEERINGDB_FEEDS, peeringdbCollector } from "@open-data-pt/gatekeeper-shared/sources/peeringdb";
-import { REN_FEEDS, renCollector } from "@open-data-pt/gatekeeper-shared/sources/ren";
-import { RIPESTAT_FEEDS, ripestatCollector } from "@open-data-pt/gatekeeper-shared/sources/ripestat";
 import { isNormalizedFrame } from "../packages/gatekeeper-shared/src/normalized-validation";
-import { CITIES_EXAMPLES } from "../packages/gatekeeper-cities/src/examples";
-import { ENERGY_EXAMPLES } from "../packages/gatekeeper-energy/src/examples";
-import { ENVIRONMENT_EXAMPLES } from "../packages/gatekeeper-environment/src/examples";
-import { HEALTH_EXAMPLES } from "../packages/gatekeeper-health/src/examples";
-import { MOBILITY_EXAMPLES } from "../packages/gatekeeper-mobility/src/examples";
-import { ECONOMY_EXAMPLES } from "../packages/gatekeeper-economy/src/examples";
-import { GOVERNMENT_EXAMPLES } from "../packages/gatekeeper-government/src/examples";
-import { SOCIETY_EXAMPLES } from "../packages/gatekeeper-society/src/examples";
-import { TELECOM_EXAMPLES } from "../packages/gatekeeper-telecom/src/examples";
 import { readFrames } from "../apps/kernel/src/frames";
 import { MAX_RECORD_BYTES } from "../apps/kernel/src/blob-budget";
 import { jsonAs } from "./support";
+import { PLANS, workerExamples, workerLibraries } from "./catalog";
 
 /**
  * Collects curated examples from their real sources, the way the kernel
@@ -59,120 +32,12 @@ const SELECTED =
     .filter(Boolean) ?? [];
 const MIB = 1024 * 1024;
 
-/** A deployed var, read from the topic Worker's checked-in Wrangler config so the test never invents one. */
-function configured(topic: string, name: string): string {
-  const text = new TextDecoder().decode(readFileSync(new URL(`../packages/gatekeeper-${topic}/wrangler.jsonc`, import.meta.url)));
-  const value = new RegExp(`"${name}":\\s*"([^"]+)"`).exec(text)?.[1];
-  if (!value) throw new Error(`the ${topic} Worker declares no ${name}`);
-  return value;
-}
-
-function library(kinds: Record<string, { kind: string }>, collector: GatekeeperLibrary["collector"]): GatekeeperLibrary {
-  // SAFETY: every `*_FEEDS` table is declared `satisfies Record<string, FeedKindDescription>`.
-  return { kinds: Object.values(kinds) as GatekeeperLibrary["kinds"], collector };
-}
-
-/** The same wiring the topic Workers deploy, with the same vars and the real fetch. */
-const TOPICS: Array<{ kind: string; libraries: Map<string, GatekeeperLibrary>; examples: readonly ExampleFeed[] }> = [
-  {
-    kind: "mobility",
-    examples: MOBILITY_EXAMPLES,
-    libraries: new Map([
-      ["carris", library(CARRIS_FEEDS, (config) => carrisCollector({ config, apiOrigin: configured("mobility", "CARRIS_API_ORIGIN"), fetcher: fetch }))],
-      [
-        "metrolisboa",
-        library(METRO_FEEDS, (config) =>
-          metrolisboaCollector({
-            config,
-            apiOrigin: configured("mobility", "METROLISBOA_API_ORIGIN"),
-            credentials: { key: process.env.ML_CONSUMER_KEY, secret: process.env.ML_CONSUMER_SECRET },
-            fetcher: fetch,
-          }),
-        ),
-      ],
-      ["gtfs", library(GTFS_FEEDS, (config) => gtfsCollector({ config, hosts: configured("mobility", "GTFS_ALLOWED_HOSTS"), fetcher: fetch }))],
-      ["gbfs", library(GBFS_FEEDS, (config) => gbfsCollector({ config, hosts: configured("mobility", "GBFS_ALLOWED_HOSTS"), fetcher: fetch }))],
-      ["ine", library(INE_FEEDS, (config) => ineCollector({ config, apiOrigin: configured("mobility", "INE_API_ORIGIN"), fetcher: fetch }))],
-    ]),
-  },
-  {
-    kind: "energy",
-    examples: ENERGY_EXAMPLES,
-    libraries: new Map([
-      [
-        "ren",
-        library(REN_FEEDS, (config) =>
-          renCollector({ config, apiOrigin: configured("energy", "REN_API_ORIGIN"), dataApiOrigin: configured("energy", "REN_DATA_API_ORIGIN"), fetcher: fetch }),
-        ),
-      ],
-      ["omie", library(OMIE_FEEDS, (config) => omieCollector({ config, apiOrigin: configured("energy", "OMIE_API_ORIGIN"), fetcher: fetch }))],
-      ["dgeg", library(DGEG_FEEDS, (config) => dgegCollector({ config, apiOrigin: configured("energy", "DGEG_API_ORIGIN"), fetcher: fetch }))],
-      ["opendatasoft", library(OPENDATASOFT_FEEDS, (config) => opendatasoftCollector({ config, hosts: configured("energy", "OPENDATASOFT_ALLOWED_HOSTS"), fetcher: fetch }))],
-      ["eurostat", library(EUROSTAT_FEEDS, (config) => eurostatCollector({ config, apiOrigin: configured("energy", "EUROSTAT_API_ORIGIN"), fetcher: fetch }))],
-    ]),
-  },
-  {
-    kind: "economy",
-    examples: ECONOMY_EXAMPLES,
-    libraries: new Map([
-      ["ine", library(INE_FEEDS, (config) => ineCollector({ config, apiOrigin: configured("economy", "INE_API_ORIGIN"), fetcher: fetch }))],
-      ["bpstat", library(BPSTAT_FEEDS, (config) => bpstatCollector({ config, apiOrigin: configured("economy", "BPSTAT_API_ORIGIN"), fetcher: fetch }))],
-      ["eurostat", library(EUROSTAT_FEEDS, (config) => eurostatCollector({ config, apiOrigin: configured("economy", "EUROSTAT_API_ORIGIN"), fetcher: fetch }))],
-    ]),
-  },
-  {
-    kind: "society",
-    examples: SOCIETY_EXAMPLES,
-    libraries: new Map([
-      ["ine", library(INE_FEEDS, (config) => ineCollector({ config, apiOrigin: configured("society", "INE_API_ORIGIN"), fetcher: fetch }))],
-      ["ogc", library(OGC_FEEDS, (config) => ogcCollector({ config, hosts: configured("society", "OGC_ALLOWED_HOSTS"), fetcher: fetch }))],
-      ["udata", library(UDATA_FEEDS, (config) => udataCollector({ config, hosts: configured("society", "UDATA_ALLOWED_HOSTS"), fetcher: fetch }))],
-    ]),
-  },
-  {
-    kind: "government",
-    examples: GOVERNMENT_EXAMPLES,
-    libraries: new Map([
-      ["udata", library(UDATA_FEEDS, (config) => udataCollector({ config, hosts: configured("government", "UDATA_ALLOWED_HOSTS"), fetcher: fetch }))],
-      ["parliament", library(PARLIAMENT_FEEDS, (config) => parliamentCollector({ config, fetcher: fetch }))],
-    ]),
-  },
-  {
-    kind: "telecom",
-    examples: TELECOM_EXAMPLES,
-    libraries: new Map([
-      ["ine", library(INE_FEEDS, (config) => ineCollector({ config, apiOrigin: configured("telecom", "INE_API_ORIGIN"), fetcher: fetch }))],
-      ["ripestat", library(RIPESTAT_FEEDS, (config) => ripestatCollector({ config, apiOrigin: configured("telecom", "RIPESTAT_API_ORIGIN"), fetcher: fetch }))],
-      ["peeringdb", library(PEERINGDB_FEEDS, (config) => peeringdbCollector({ config, apiOrigin: configured("telecom", "PEERINGDB_API_ORIGIN"), fetcher: fetch }))],
-    ]),
-  },
-  {
-    kind: "health",
-    examples: HEALTH_EXAMPLES,
-    libraries: new Map([
-      ["opendatasoft", library(OPENDATASOFT_FEEDS, (config) => opendatasoftCollector({ config, hosts: configured("health", "OPENDATASOFT_ALLOWED_HOSTS"), fetcher: fetch }))],
-      ["udata", library(UDATA_FEEDS, (config) => udataCollector({ config, hosts: configured("health", "UDATA_ALLOWED_HOSTS"), fetcher: fetch }))],
-    ]),
-  },
-  {
-    kind: "cities",
-    examples: CITIES_EXAMPLES,
-    libraries: new Map([
-      ["arcgis", library(ARCGIS_FEEDS, (config) => arcgisCollector({ config, hosts: configured("cities", "ARCGIS_ALLOWED_HOSTS"), fetcher: fetch }))],
-      ["ckan", library(CKAN_FEEDS, (config) => ckanCollector({ config, hosts: configured("cities", "CKAN_ALLOWED_HOSTS"), fetcher: fetch }))],
-      ["udata", library(UDATA_FEEDS, (config) => udataCollector({ config, hosts: configured("cities", "UDATA_ALLOWED_HOSTS"), fetcher: fetch }))],
-    ]),
-  },
-  {
-    kind: "environment",
-    examples: ENVIRONMENT_EXAMPLES,
-    libraries: new Map([
-      ["ogc", library(OGC_FEEDS, (config) => ogcCollector({ config, hosts: configured("environment", "OGC_ALLOWED_HOSTS"), fetcher: fetch }))],
-      ["ipma", library(IPMA_FEEDS, (config) => ipmaCollector({ config, apiOrigin: configured("environment", "IPMA_API_ORIGIN"), fetcher: fetch }))],
-      ["arcgis", library(ARCGIS_FEEDS, (config) => arcgisCollector({ config, hosts: configured("environment", "ARCGIS_ALLOWED_HOSTS"), fetcher: fetch }))],
-    ]),
-  },
-];
+/** The wiring the library Workers deploy, from the same generated plans and vars, with the real fetch. */
+const WORKERS: Array<{ kind: string; libraries: GatekeeperLibraries; examples: readonly ExampleFeed[] }> = PLANS.map((plan) => ({
+  kind: plan.name,
+  libraries: workerLibraries(plan.name, { ML_CONSUMER_KEY: process.env.ML_CONSUMER_KEY, ML_CONSUMER_SECRET: process.env.ML_CONSUMER_SECRET }),
+  examples: workerExamples(plan.name),
+}));
 
 /** The request the kernel builds for a live collection under this example's policy. */
 function liveRequest(example: ExampleFeed, resolved: ResolvedFeed): CollectionRequest {
@@ -199,10 +64,10 @@ function liveRequest(example: ExampleFeed, resolved: ResolvedFeed): CollectionRe
   };
 }
 
-const cases = TOPICS.flatMap((topic) =>
-  topic.examples
+const cases = WORKERS.flatMap((worker) =>
+  worker.examples
     .filter((example) => SELECTED.includes("all") || SELECTED.includes(example.slug))
-    .map((example) => ({ slug: example.slug, example, options: { gatekeeperKind: topic.kind, libraries: topic.libraries } satisfies TopicOptions })),
+    .map((example) => ({ slug: example.slug, example, options: { gatekeeperKind: worker.kind, libraries: worker.libraries } satisfies TopicOptions })),
 );
 
 describe.skipIf(cases.length === 0)("live examples", () => {

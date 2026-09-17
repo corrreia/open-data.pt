@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
@@ -8,8 +9,9 @@ import {
   type JsonObject,
   type NormalizedFrame,
   type SourceFetch,
+  type SourceStaging,
 } from "@open-data-pt/gatekeeper-shared";
-import { PARLIAMENT_EXAMPLES, parliamentCollector, resolveParliamentFeed } from "../packages/gatekeeper-shared/src/sources/parliament";
+import { PARLIAMENT_EXAMPLES, PARLIAMENT_NORMALIZER, parliamentCollector, resolveParliamentFeed } from "../packages/gatekeeper-shared/src/sources/parliament";
 import {
   collectParliamentFeed,
   parliamentDirectoryLink,
@@ -186,6 +188,43 @@ describe("Parliament public-directory source", () => {
     );
   });
 
+  it("stages a download without validators and skips parsing when its digest has not changed", async () => {
+    const initiatives = parliamentDocument({ feed: "initiatives", legislature: "XVII" });
+    const html = links(initiatives);
+    let text = fixture("initiatives");
+    const fetcher: typeof fetch = async (input) => {
+      const url = new URL(input.toString());
+      if (url.origin === "https://www.parlamento.pt") return new Response(url.search ? html.folder : html.landing);
+      const bytes = new TextEncoder().encode(text);
+      return new Response(chunked(text, 64), { headers: { "Content-Length": String(bytes.length) } });
+    };
+    const stored = new Map<string, Uint8Array>();
+    const staging: SourceStaging = {
+      async store(key, body, length) {
+        const bytes = new Uint8Array(await new Response(body).arrayBuffer());
+        expect(bytes.length).toBe(length);
+        stored.set(key, bytes);
+        return `md5:${createHash("md5").update(bytes).digest("hex")}`;
+      },
+      async read(key) {
+        return new Response(stored.get(key)).body!;
+      },
+    };
+    const config = { feed: "initiatives", legislature: "XVII" };
+    const first = await collectParliamentFeed(config, undefined, fetcher, staging);
+    if (first.kind !== "body") throw new Error("Expected a staged body");
+    expect(new TextDecoder().decode(await new Response(first.body).arrayBuffer())).toBe(text);
+    expect(first.state).toEqual({ resource: initiatives.filename, digest: `md5:${createHash("md5").update(text).digest("hex")}` });
+    expect([...stored.keys()]).toEqual([`parliament/${initiatives.filename}`]);
+    expect(await collectParliamentFeed(config, first.state, fetcher, staging)).toEqual({ kind: "not-modified" });
+    // Another legislature's file never counts as this one unchanged.
+    expect((await collectParliamentFeed(config, { ...first.state, resource: "IniciativasXVI_json.txt" }, fetcher, staging)).kind).toBe("body");
+    text = text.replace("Synthetic bill", "Synthetic bill, amended");
+    const changed = await collectParliamentFeed(config, first.state, fetcher, staging);
+    expect(changed.kind).toBe("body");
+    await consume(changed);
+  });
+
   it("rejects unsolicited304s and redirects and clears validators a source stops supplying", async () => {
     await expect(collectParliamentFeed(config, undefined, sourceFetcher(document, 304))).rejects.toThrow("unsolicited");
     await expect(
@@ -254,7 +293,7 @@ describe("Parliament public-directory source", () => {
       deadline: request.deadline,
     }))
       frames.push(frame);
-    expect(frames[0]).toMatchObject({ type: "header", protocol: NORMALIZED_PROTOCOL, normalizer: { id: "parliament-public-records", version: "1" } });
+    expect(frames[0]).toMatchObject({ type: "header", protocol: NORMALIZED_PROTOCOL, normalizer: PARLIAMENT_NORMALIZER });
     expect(frames.at(-1)).toMatchObject({ type: "complete", quality: { rejectedRecords: 0 } });
     expect(frames.filter((frame) => frame.type === "record").length).toBeGreaterThan(0);
     expect(JSON.stringify(frames)).not.toContain("c3ludGhldGljLXBhdGg");

@@ -100,43 +100,97 @@ importers:
         specifier: ^8.3.0
         version: 8.3.0(@types/node@26.4.1)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.13)
 
-  packages/gatekeeper-cities:
+  packages/gatekeeper-arcgis:
     dependencies:
       '@open-data-pt/gatekeeper-shared':
         specifier: workspace:*
         version: link:../gatekeeper-shared
 
-  packages/gatekeeper-economy:
+  packages/gatekeeper-bpstat:
     dependencies:
       '@open-data-pt/gatekeeper-shared':
         specifier: workspace:*
         version: link:../gatekeeper-shared
 
-  packages/gatekeeper-energy:
+  packages/gatekeeper-carris:
     dependencies:
       '@open-data-pt/gatekeeper-shared':
         specifier: workspace:*
         version: link:../gatekeeper-shared
 
-  packages/gatekeeper-environment:
+  packages/gatekeeper-ckan:
     dependencies:
       '@open-data-pt/gatekeeper-shared':
         specifier: workspace:*
         version: link:../gatekeeper-shared
 
-  packages/gatekeeper-government:
+  packages/gatekeeper-dgeg:
     dependencies:
       '@open-data-pt/gatekeeper-shared':
         specifier: workspace:*
         version: link:../gatekeeper-shared
 
-  packages/gatekeeper-health:
+  packages/gatekeeper-eurostat:
     dependencies:
       '@open-data-pt/gatekeeper-shared':
         specifier: workspace:*
         version: link:../gatekeeper-shared
 
-  packages/gatekeeper-mobility:
+  packages/gatekeeper-gbfs:
+    dependencies:
+      '@open-data-pt/gatekeeper-shared':
+        specifier: workspace:*
+        version: link:../gatekeeper-shared
+
+  packages/gatekeeper-gtfs:
+    dependencies:
+      '@open-data-pt/gatekeeper-shared':
+        specifier: workspace:*
+        version: link:../gatekeeper-shared
+
+  packages/gatekeeper-ine:
+    dependencies:
+      '@open-data-pt/gatekeeper-shared':
+        specifier: workspace:*
+        version: link:../gatekeeper-shared
+
+  packages/gatekeeper-ipma:
+    dependencies:
+      '@open-data-pt/gatekeeper-shared':
+        specifier: workspace:*
+        version: link:../gatekeeper-shared
+
+  packages/gatekeeper-metrolisboa:
+    dependencies:
+      '@open-data-pt/gatekeeper-shared':
+        specifier: workspace:*
+        version: link:../gatekeeper-shared
+
+  packages/gatekeeper-ogc:
+    dependencies:
+      '@open-data-pt/gatekeeper-shared':
+        specifier: workspace:*
+        version: link:../gatekeeper-shared
+
+  packages/gatekeeper-omie:
+    dependencies:
+      '@open-data-pt/gatekeeper-shared':
+        specifier: workspace:*
+        version: link:../gatekeeper-shared
+
+  packages/gatekeeper-opendatasoft:
+    dependencies:
+      '@open-data-pt/gatekeeper-shared':
+        specifier: workspace:*
+        version: link:../gatekeeper-shared
+
+  packages/gatekeeper-parliament:
+    dependencies:
+      '@open-data-pt/gatekeeper-shared':
+        specifier: workspace:*
+        version: link:../gatekeeper-shared
+
+  packages/gatekeeper-ren:
     dependencies:
       '@open-data-pt/gatekeeper-shared':
         specifier: workspace:*
@@ -144,13 +198,7 @@ importers:
 
   packages/gatekeeper-shared: {}
 
-  packages/gatekeeper-society:
-    dependencies:
-      '@open-data-pt/gatekeeper-shared':
-        specifier: workspace:*
-        version: link:../gatekeeper-shared
-
-  packages/gatekeeper-telecom:
+  packages/gatekeeper-udata:
     dependencies:
       '@open-data-pt/gatekeeper-shared':
         specifier: workspace:*

@@ -3,3 +3,4 @@ export { ARCGIS_FEEDS, MAX_METADATA_BYTES, collectArcgisFeed, layerUrlFromConfig
 export { arcgisCollector, resolveArcgisFeed, type ArcgisCollectorOptions } from "./collector";
 export { ARCGIS_EXAMPLES } from "./examples";
 export { ArcgisTransformer, MAX_FEATURE_BYTES } from "./transform";
+export { ARCGIS_DEPLOYMENT } from "./worker";

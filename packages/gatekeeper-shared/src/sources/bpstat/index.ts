@@ -3,3 +3,4 @@ export { BPSTAT_FEEDS, BPSTAT_MAX_BYTES, collectBpstatDataset, validateBpstatFee
 export { BPSTAT_NORMALIZER, bpstatCollector, resolveBpstatFeed, type BpstatCollectorOptions } from "./collector";
 export { BPSTAT_EXAMPLES } from "./examples";
 export { normalizeReferenceDate, transformBpstatDataset } from "./transform";
+export { BPSTAT_DEPLOYMENT } from "./worker";

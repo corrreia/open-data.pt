@@ -1,6 +1,105 @@
 {
-  "Comissoes":[
-    {"DetalheOrgao":{"idOrgao":70000001.0,"nomeSigla":"Example parliamentary committee","numeroOrgao":1.0,"siglaLegislatura":"XVII","siglaOrgao":"EX"},"HistoricoComposicao":[{"depCadId":40000001.0,"depId":50000001.0,"depNomeParlamentar":"Synthetic Member A","depGP":[{"gpDtFim":"2026-06-10","gpDtInicio":"2026-06-01","gpId":400001.0,"gpSigla":"EX"}],"depSituacao":[{"sioDes":"Efetivo","sioDtInicio":"2026-06-01","sioDtFim":"2026-06-10","sioTipMem":"Efetivo"}],"legDes":"XVII","orgId":70000001.0}],"Reunioes":[{"reuId":90000001.0,"reuNumero":1,"reuDataHora":"2026-07-08T14:30:00","reuLocal":"Example room","reuTirDes":"Reunião","reuTarDes":"Committee work","reuLink":"https://www.parlamento.pt/example-meeting"}]},
-    {"DetalheOrgao":{"idOrgao":70000002.0,"nomeSigla":"Another example committee","numeroOrgao":2.0,"siglaLegislatura":"XVII","siglaOrgao":"EX2"},"HistoricoComposicao":null,"Reunioes":null}
-  ]
+  "Comissoes": [
+    {
+      "DetalheOrgao": {
+        "idOrgao": 70000001.0,
+        "nomeSigla": "Example parliamentary committee",
+        "numeroOrgao": 1.0,
+        "siglaLegislatura": "XVII",
+        "siglaOrgao": "EX"
+      },
+      "HistoricoComposicao": [
+        {
+          "depCadId": 40000001.0,
+          "depId": 50000001.0,
+          "depNomeParlamentar": "Synthetic Member A",
+          "depGP": [
+            {
+              "gpDtFim": "2026-06-10",
+              "gpDtInicio": "2026-06-01",
+              "gpId": 400001.0,
+              "gpSigla": "EX"
+            }
+          ],
+          "depSituacao": [
+            {
+              "sioDes": "Efetivo",
+              "sioDtInicio": "2026-06-01",
+              "sioDtFim": "2026-06-10",
+              "sioTipMem": "Efetivo"
+            }
+          ],
+          "legDes": "XVII",
+          "orgId": 70000001.0
+        }
+      ],
+      "Reunioes": [
+        {
+          "reuId": 90000001.0,
+          "reuNumero": 1,
+          "reuDataHora": "2026-07-08T14:30:00",
+          "reuLocal": "Example room",
+          "reuTirDes": "Reunião",
+          "reuTarDes": "Committee work",
+          "reuLink": "https://www.parlamento.pt/example-meeting"
+        }
+      ]
+    },
+    {
+      "DetalheOrgao": {
+        "idOrgao": 70000002.0,
+        "nomeSigla": "Another example committee",
+        "numeroOrgao": 2.0,
+        "siglaLegislatura": "XVII",
+        "siglaOrgao": "EX2"
+      },
+      "HistoricoComposicao": null,
+      "Reunioes": null
+    }
+  ],
+  "Plenario": {
+    "DetalheOrgao": {
+      "idOrgao": 8440,
+      "nomeSigla": "Plenário",
+      "numeroOrgao": 0,
+      "siglaLegislatura": "XVII",
+      "siglaOrgao": "PL"
+    },
+    "Composicao": [],
+    "Reunioes": [
+      {
+        "Reuniao": {
+          "legDes": "XVII",
+          "reuActa": null,
+          "reuDataHora": "2026-07-17 10:00",
+          "reuId": 376838,
+          "reuLink": null,
+          "reuLocal": "Plenário",
+          "reuNumero": 111,
+          "reuTirDes": "Ordinária",
+          "selNumero": "1"
+        },
+        "Presencas": {
+          "dtReuniao": "2026-07-17",
+          "tipoReuniao": "Ordinária",
+          "presencas": [
+            {
+              "motivoFalta": null,
+              "nomeDeputado": "Synthetic Member One",
+              "siglaFalta": "PR",
+              "siglaGrupo": "L",
+              "siglaQualidadePresencaOrgao": null
+            },
+            {
+              "motivoFalta": "Doença",
+              "nomeDeputado": "Synthetic Member Two",
+              "siglaFalta": "FJ",
+              "siglaGrupo": "PSD",
+              "siglaQualidadePresencaOrgao": null
+            }
+          ]
+        }
+      }
+    ]
+  }
 }
