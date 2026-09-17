@@ -67,6 +67,21 @@ describe("runner schedule and failure handling", () => {
     expect(waitsAfterFailing(minutely, 6)).toEqual([120, 240, 480, 60, 60, 60]);
   });
 
+  it("waits as long as a source asked, up to the same six hours", async () => {
+    const h = await kernelHarness({ policy: policy({ cadenceSeconds: 3600 }) });
+    const askedFor = (seconds: number): number => {
+      const acquisition = h.core.collectNow("scheduled");
+      h.core.markStarted(acquisition.id, `instance-${seconds}`);
+      h.core.fail(acquisition.id, failureFrom(new CollectionFailed("Gatekeeper collection failed: upstream-error", true, seconds)));
+      return (Date.parse(h.core.runtime().nextRunAt!) - h.clock.now) / 1000;
+    };
+    // An hour asked for is an hour waited: talking a rate-limited source down to fifteen minutes is how we get refused.
+    expect(askedFor(3600)).toBe(3600);
+    // Past the ceiling the source is still held to six hours, and a shorter request never shortens the backoff.
+    expect(askedFor(5 * 24 * 3600)).toBe(MAX_FAILURE_WAIT_SECONDS);
+    expect(askedFor(5)).toBe(480);
+  });
+
   it("forgets the failure streak when the Registry sends a changed definition, so the next failure retries fast", async () => {
     const h = await kernelHarness({ policy: policy({ cadenceSeconds: 30 * 24 * 3600 }) });
     expect(waitsAfterFailing(h, 6).at(-1)).toBe(3840);

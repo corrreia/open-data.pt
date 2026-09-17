@@ -850,7 +850,8 @@ export class RunnerCore {
       const exponential = 60 * 2 ** Math.min(failures, 9);
       const backoff =
         failures <= RETRY_LIMIT ? Math.min(MAX_RETRY_BACKOFF_SECONDS, exponential) : Math.min(policy.collection.cadenceSeconds, MAX_FAILURE_WAIT_SECONDS, exponential);
-      const requested = failure.retryAfterSeconds === undefined ? 0 : Math.min(MAX_RETRY_BACKOFF_SECONDS, failure.retryAfterSeconds);
+      // A source that says when to come back is obeyed up to the same six hours, not talked down to fifteen minutes.
+      const requested = failure.retryAfterSeconds === undefined ? 0 : Math.min(MAX_FAILURE_WAIT_SECONDS, failure.retryAfterSeconds);
       next.nextRunAt = new Date(now + Math.max(backoff, requested) * 1000).toISOString();
       this.setRuntime(next);
     });
