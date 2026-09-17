@@ -10,7 +10,7 @@ import { buildGatekeeperRegistry, getFeedGatekeeper } from "./gatekeeper-registr
 import { digest } from "./hash";
 import { PipelinesLake, lakeStreams, type LakeTable } from "./lake";
 import { ObjectStore } from "./object-store";
-import { runLakeQuery } from "./query";
+import { QUERY_DEADLINE_SECONDS, runLakeQuery } from "./query";
 import { SUMMARY_DAYS_PER_WAKE, SUMMARY_DUE_STATE_KEY, summariseSettledDays } from "./summaries";
 import { R2SnapshotStore } from "./r2-snapshot-store";
 import { RegistryStore } from "./registry-store";
@@ -42,6 +42,8 @@ const AUDIT_DUE_KEY = "lake-audit-due";
 const LEFTOVER_HISTORY_AFTER_MS = 10 * 60_000;
 /** An alarm pays Durable Object duration while it waits on Pipelines, so it sends a bounded share; the next wake-up sends the rest. */
 const LEFTOVER_ALARM_BLOBS = 40;
+/** A history slot outlives its query's own deadline by a margin, and is then taken back from a request that cannot still hold it. */
+const HISTORY_SLOT_TTL_MS = (QUERY_DEADLINE_SECONDS + 15) * 1000;
 
 /** One Gatekeeper example, as the Registry turns it into a feed. */
 interface FeedInput {
@@ -99,7 +101,8 @@ function registry(env: Env): DurableObjectStub<Registry> {
  */
 export class Registry extends DurableObject<Env> {
   private readonly store: RegistryStore;
-  private activeHistoryQueries = 0;
+  /** The history queries holding a slot, by the id their request drew, and when each took it. */
+  private readonly activeHistoryQueries = new Map<string, number>();
   private reportsSincePrune = 0;
   /** The sync step in flight: its RPC round trips let other events in, and two steps must never interleave. */
   private syncing: Promise<SyncProgress> | undefined;
@@ -116,14 +119,27 @@ export class Registry extends DurableObject<Env> {
     });
   }
 
-  tryStartHistoryQuery(): boolean {
-    if (this.activeHistoryQueries >= 4) return false;
-    this.activeHistoryQueries += 1;
+  /**
+   * Lend one of the four history slots to the query that names itself. Asking
+   * twice with the same id is the same question asked twice, not a second
+   * query: a reply lost on the way back is retried through a fresh stub, and
+   * counting that retry would strand a slot until this instance is evicted.
+   * A slot older than the query deadline is taken back, because the request
+   * that held it cannot still be running.
+   */
+  tryStartHistoryQuery(queryId: string): boolean {
+    const now = Date.now();
+    for (const [id, taken] of this.activeHistoryQueries) {
+      if (now - taken > HISTORY_SLOT_TTL_MS) this.activeHistoryQueries.delete(id);
+    }
+    if (this.activeHistoryQueries.has(queryId)) return true;
+    if (this.activeHistoryQueries.size >= 4) return false;
+    this.activeHistoryQueries.set(queryId, now);
     return true;
   }
 
-  finishHistoryQuery(): void {
-    this.activeHistoryQueries = Math.max(0, this.activeHistoryQueries - 1);
+  finishHistoryQuery(queryId: string): void {
+    this.activeHistoryQueries.delete(queryId);
   }
 
   override async alarm(): Promise<void> {

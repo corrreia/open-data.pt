@@ -39,16 +39,7 @@ export const DGEG_EXAMPLES: ExampleFeed[] = [
     publisher: "DGEG · Direção-Geral de Energia e Geologia",
     topics: ["energy"],
   },
-  {
-    slug: "dgeg-gasolina-98-lisboa",
-    title: "Gasolina 98 prices in Lisbon district",
-    description: "Current station prices and hourly municipal medians for gasolina 98 in Lisbon district.",
-    config: { source: "dgeg", feed: "fuel-prices", fuelTypeId: "3400", districtId: "11" },
-    policy: HOURLY_PRICES,
-    staleAfterSeconds: 7_200,
-    publisher: "DGEG · Direção-Geral de Energia e Geologia",
-    topics: ["energy"],
-  },
+  // No Lisbon-district feed: its 37 stations are already in dgeg-gasolina-98, which covers the whole mainland.
   {
     slug: "dgeg-gpl-auto",
     title: "GPL Auto prices in mainland Portugal",

@@ -1,8 +1,8 @@
 import {
   GatekeeperError,
   allowedHosts,
+  contentEtag,
   equivalentEtags,
-  hashString,
   invalidResponse,
   isJsonNumber,
   isJsonObject,
@@ -21,8 +21,32 @@ import {
 export const GBFS_MAX_BYTES = 4 * 1024 * 1024;
 const DISCOVERY_MAX_BYTES = 256 * 1024;
 const REQUEST_TIMEOUT_MS = 20_000;
-const CONFIG_KEYS = new Set(["url", "language"]);
+const CONFIG_KEYS = new Set(["url", "language", "feed"]);
 const COLLECTED_FEEDS = ["system_information", "vehicle_types", "station_information", "station_status"] as const;
+
+/**
+ * A GBFS system publishes two kinds of thing under one discovery document: what
+ * a station or a system *is*, which moves about once a year, and what is
+ * available *now*, which moves every minute. Collecting them together re-reads
+ * megabytes of identical station descriptions hundreds of times a day, so each
+ * is its own feed with its own cadence.
+ */
+export const GBFS_PARTS = ["status", "reference"] as const;
+export type GbfsPart = (typeof GBFS_PARTS)[number];
+
+/**
+ * What each part reads. The status part reads `system_information` and
+ * `vehicle_types` too — together under a kilobyte — because they name the
+ * system and label the fleet series; it publishes neither, so no value is
+ * published twice.
+ */
+const PART_RESOURCES = {
+  status: ["system_information", "vehicle_types", "station_status"],
+  reference: ["system_information", "station_information"],
+} as const satisfies Record<GbfsPart, readonly CollectedFeedName[]>;
+
+/** Timestamps a source restamps on every publication, whatever it did or did not change. */
+const VOLATILE_KEYS = new Set(["last_updated", "last_reported", "ttl"]);
 
 type CollectedFeedName = (typeof COLLECTED_FEEDS)[number] | "free_bike_status";
 type Fetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
@@ -38,16 +62,39 @@ interface ParsedResource {
 }
 
 export const GBFS_FEEDS = {
-  system: {
-    kind: "system",
-    title: "GBFS shared-mobility system",
-    description: "A GBFS system snapshot with vehicles, stations, fleet counts, and system reference information.",
+  status: {
+    kind: "status",
+    title: "GBFS shared-mobility availability",
+    description: "What a GBFS system has out right now: vehicle positions, fleet counts, and how many vehicles and docks each station holds.",
     semantics: {
       domainSubject: "observation",
       defaultProductRole: "current-state",
     },
   },
+  reference: {
+    kind: "reference",
+    title: "GBFS shared-mobility system and stations",
+    description: "What a GBFS system and its stations are: operator, licence, and every station's name, position, address, and capacity.",
+    semantics: {
+      domainSubject: "reference",
+      defaultProductRole: "reference",
+    },
+  },
 } as const satisfies Record<string, FeedKindDescription>;
+
+/** Which half of a system a configuration asks for; an unnamed part is the fast one. */
+export function gbfsPart(config: SourceConfig): GbfsPart {
+  const name = config.feed?.trim().toLowerCase();
+  if (name === undefined || name === "") return "status";
+  if (!isGbfsPart(name)) {
+    throw new GatekeeperError(`GBFS feed must be one of ${GBFS_PARTS.join(", ")}`, "invalid-config");
+  }
+  return name;
+}
+
+function isGbfsPart(value: string): value is GbfsPart {
+  return GBFS_PARTS.some((part) => part === value);
+}
 
 export function allowedGbfsHosts(value: string): ReadonlySet<string> {
   const hosts = allowedHosts(value);
@@ -68,7 +115,7 @@ export function validateGbfsFeedConfig(config: SourceConfig, allowedHosts: Reado
     throw new GatekeeperError("GBFS discovery URL has too many query parameters", "invalid-config");
   }
 
-  const normalized: SourceConfig = { url: url.toString() };
+  const normalized: SourceConfig = { url: url.toString(), feed: gbfsPart(config) };
   const language = config.language?.trim();
   if (language !== undefined && language !== "") {
     if (!/^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/iu.test(language)) {
@@ -82,11 +129,12 @@ export function validateGbfsFeedConfig(config: SourceConfig, allowedHosts: Reado
 export async function collectGbfsFeed(config: SourceConfig, checkpoint: SourceValidator | undefined, allowedHostsValue: string, fetcher: Fetcher): Promise<SourceFetch> {
   const allowedHosts = allowedGbfsHosts(allowedHostsValue);
   const validated = validateGbfsFeedConfig(config, allowedHosts);
+  const part = gbfsPart(validated);
   const discoveryUrl = new URL(validated.url!);
-  const discoveryResponse = await upstreamFetch(fetcher, discoveryUrl, conditionalHeaders(checkpoint));
-  if (discoveryResponse.status === 304) {
-    return notModified(discoveryResponse.headers, checkpoint);
-  }
+  // The discovery document is a static index of URLs while the feeds it names
+  // change every minute: a conditional request answered 304 here would freeze
+  // the whole system. Whether anything changed is decided from the content.
+  const discoveryResponse = await upstreamFetch(fetcher, discoveryUrl, new Headers({ Accept: "application/json" }));
   assertSuccessful(discoveryResponse, "GBFS discovery");
   const discovery = await readJsonResource(discoveryResponse, discoveryUrl, DISCOVERY_MAX_BYTES, false);
   if (!discovery) throw tooLarge("GBFS discovery");
@@ -98,7 +146,7 @@ export async function collectGbfsFeed(config: SourceConfig, checkpoint: SourceVa
   let partial = false;
   const collected = new Map<CollectedFeedName, ParsedResource>();
 
-  for (const name of COLLECTED_FEEDS) {
+  for (const name of PART_RESOURCES[part]) {
     const descriptor = descriptors.get(name);
     if (!descriptor) {
       if (name === "system_information") {
@@ -119,7 +167,7 @@ export async function collectGbfsFeed(config: SourceConfig, checkpoint: SourceVa
     collected.set(name, resource);
   }
 
-  const vehicleDescriptor = descriptors.get("vehicle_status") ?? descriptors.get("free_bike_status");
+  const vehicleDescriptor = part === "status" ? (descriptors.get("vehicle_status") ?? descriptors.get("free_bike_status")) : undefined;
   if (vehicleDescriptor) {
     const prefix = ',"free_bike_status":';
     const remaining = GBFS_MAX_BYTES - size - new TextEncoder().encode(prefix).byteLength;
@@ -138,11 +186,14 @@ export async function collectGbfsFeed(config: SourceConfig, checkpoint: SourceVa
   const body = joinBytes(parts);
   if (body.byteLength > GBFS_MAX_BYTES) throw tooLarge("GBFS document");
 
-  const publicationResource = collected.get("free_bike_status") ?? collected.get("station_status") ?? discovery;
+  const publicationResource = collected.get("free_bike_status") ?? collected.get("station_status") ?? collected.get("station_information") ?? discovery;
   const sourcePublishedAt = normalizeLastUpdated(publicationResource.value.last_updated);
-  const etag = sourcePublishedAt ? syntheticEtag(sourcePublishedAt) : (discoveryResponse.headers.get("etag") ?? undefined);
-  if (etag && checkpoint?.etag && equivalentEtags(etag, checkpoint.etag)) {
-    return notModified(discoveryResponse.headers, checkpoint, etag);
+  // Nextbike and Bora restamp `last_updated` every minute and every station's
+  // `last_reported` with it, so the timestamps say nothing about whether the
+  // data moved. The content without them does.
+  const etag = await contentEtag(unchangedSignature(discovery, collected));
+  if (checkpoint?.etag && equivalentEtags(etag, checkpoint.etag)) {
+    return notModified(etag);
   }
 
   const fetched: SourceBody = {
@@ -150,11 +201,29 @@ export async function collectGbfsFeed(config: SourceConfig, checkpoint: SourceVa
     body,
     provenance: { sourceUrl: discoveryUrl.toString() },
     completeness: partial ? "partial" : "complete",
+    validator: { etag },
   };
   if (sourcePublishedAt) fetched.provenance.sourcePublishedAt = sourcePublishedAt;
-  const validator = validatorFrom(etag, discoveryResponse.headers.get("last-modified") ?? undefined);
-  if (validator) fetched.validator = validator;
   return fetched;
+}
+
+/** The collected document reduced to what a consumer would notice: no publication timestamps, keys in one order. */
+function unchangedSignature(discovery: ParsedResource, collected: ReadonlyMap<CollectedFeedName, ParsedResource>): Uint8Array {
+  const document: JsonObject = { discovery: discovery.value };
+  for (const [name, resource] of collected) document[name] = resource.value;
+  return new TextEncoder().encode(JSON.stringify(withoutVolatileTimestamps(document)));
+}
+
+function withoutVolatileTimestamps(value: JsonValue): JsonValue {
+  if (Array.isArray(value)) return value.map(withoutVolatileTimestamps);
+  if (!isJsonObject(value)) return value;
+  const result: JsonObject = {};
+  for (const key of Object.keys(value).sort()) {
+    const entry = value[key];
+    if (VOLATILE_KEYS.has(key) || entry === undefined) continue;
+    result[key] = withoutVolatileTimestamps(entry);
+  }
+  return result;
 }
 
 function parseDiscovery(value: JsonObject, requestedLanguage: string | undefined, allowedHosts: ReadonlySet<string>): Map<string, FeedDescriptor> {
@@ -320,31 +389,9 @@ function validateSourceUrl(value: string | undefined, allowedHosts: ReadonlySet<
   return url;
 }
 
-function conditionalHeaders(checkpoint: SourceValidator | undefined): Headers {
-  const headers = new Headers({ Accept: "application/json" });
-  if (checkpoint?.etag) headers.set("If-None-Match", checkpoint.etag);
-  if (checkpoint?.lastModified) {
-    headers.set("If-Modified-Since", checkpoint.lastModified);
-  }
-  return headers;
-}
-
-/**
- * Unchanged since the checkpoint: either the discovery document answered 304,
- * or the newest feed's `last_updated` (the synthetic etag) did not move.
- */
-function notModified(upstream: Headers, checkpoint: SourceValidator | undefined, synthetic?: string): SourceNotModified {
-  const fetched: SourceNotModified = { kind: "not-modified" };
-  const validator = validatorFrom(synthetic ?? upstream.get("etag") ?? checkpoint?.etag, upstream.get("last-modified") ?? checkpoint?.lastModified);
-  if (validator) fetched.validator = validator;
-  return fetched;
-}
-
-function validatorFrom(etag: string | undefined, lastModified: string | undefined): SourceValidator | undefined {
-  const validator: SourceValidator = {};
-  if (etag) validator.etag = etag;
-  if (lastModified) validator.lastModified = lastModified;
-  return validator.etag || validator.lastModified ? validator : undefined;
+/** Unchanged since the checkpoint: the content, timestamps aside, is the content we already have. */
+function notModified(etag: string): SourceNotModified {
+  return { kind: "not-modified", validator: { etag } };
 }
 
 function normalizeLastUpdated(value: JsonValue | undefined): string | undefined {
@@ -360,10 +407,6 @@ function normalizeDate(value: string | null | undefined): string | undefined {
   if (!value) return undefined;
   const milliseconds = Date.parse(value);
   return Number.isNaN(milliseconds) ? undefined : new Date(milliseconds).toISOString();
-}
-
-function syntheticEtag(sourcePublishedAt: string): string {
-  return `"gbfs-${hashString(sourcePublishedAt)}"`;
 }
 
 function joinBytes(parts: Array<string | Uint8Array>): Uint8Array {

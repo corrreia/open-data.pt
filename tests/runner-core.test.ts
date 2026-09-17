@@ -1,16 +1,29 @@
 import { describe, expect, it } from "vitest";
 import { CollectionFailed, failureFrom } from "../apps/kernel/src/engine";
-import { BACKFILL_RESUME_MS, BACKFILL_START_DELAY_MS, COOLDOWN_BASE_MS } from "../apps/kernel/src/runner-core";
+import { BACKFILL_RESUME_MS, BACKFILL_START_DELAY_MS, COOLDOWN_BASE_MS, MAX_FAILURE_WAIT_SECONDS } from "../apps/kernel/src/runner-core";
 import { kernelHarness, policy, record, type KernelHarness } from "./kernel-harness";
 
 const HOUR = 3_600_000;
 const refused = () => failureFrom(new CollectionFailed("Gatekeeper collection failed: invalid-config", false));
+const unreachable = () => failureFrom(new CollectionFailed("Gatekeeper collection failed: upstream-error", true));
 
 /** Start a live acquisition and fail it permanently; returns its id. */
 function failPermanently(h: KernelHarness, acquisitionId = h.core.collectNow("manual").id): string {
   h.core.markStarted(acquisitionId, `instance-${acquisitionId}`);
   h.core.fail(acquisitionId, refused());
   return acquisitionId;
+}
+
+/** Fail a feed transiently `times` in a row, and answer how many seconds it waited after each one. */
+function waitsAfterFailing(h: KernelHarness, times: number): number[] {
+  const waits: number[] = [];
+  for (let attempt = 0; attempt < times; attempt += 1) {
+    const acquisition = h.core.collectNow("scheduled");
+    h.core.markStarted(acquisition.id, `instance-${attempt}`);
+    h.core.fail(acquisition.id, unreachable());
+    waits.push((Date.parse(h.core.runtime().nextRunAt!) - h.clock.now) / 1000);
+  }
+  return waits;
 }
 
 describe("runner schedule and failure handling", () => {
@@ -39,6 +52,42 @@ describe("runner schedule and failure handling", () => {
     expect(runtime.runningAcquisitionId).toBeUndefined();
     expect(Date.parse(runtime.nextRunAt!) - h.clock.now).toBe(120_000);
     expect(h.core.getAcquisition(acquisition.id)?.status).toBe("failed");
+  });
+
+  it("keeps backing off past the retry limit, but never waits longer than six hours whatever the cadence", async () => {
+    const monthly = await kernelHarness({ policy: policy({ cadenceSeconds: 30 * 24 * 3600 }) });
+    // Quick retries first, then rests that keep doubling up to the ceiling: a transient failure must not
+    // park a monthly feed for a month.
+    expect(waitsAfterFailing(monthly, 10)).toEqual([120, 240, 480, 960, 1920, 3840, 7680, 15360, 21600, 21600]);
+    expect(MAX_FAILURE_WAIT_SECONDS).toBe(21600);
+    const hourly = await kernelHarness({ policy: policy({ cadenceSeconds: 3600 }) });
+    expect(waitsAfterFailing(hourly, 6)).toEqual([120, 240, 480, 960, 1920, 3600]);
+    // A feed collected every minute still rests its own cadence, as it did before: the cap only shortens waits.
+    const minutely = await kernelHarness({ policy: policy({ cadenceSeconds: 60 }) });
+    expect(waitsAfterFailing(minutely, 6)).toEqual([120, 240, 480, 60, 60, 60]);
+  });
+
+  it("waits as long as a source asked, up to the same six hours", async () => {
+    const h = await kernelHarness({ policy: policy({ cadenceSeconds: 3600 }) });
+    const askedFor = (seconds: number): number => {
+      const acquisition = h.core.collectNow("scheduled");
+      h.core.markStarted(acquisition.id, `instance-${seconds}`);
+      h.core.fail(acquisition.id, failureFrom(new CollectionFailed("Gatekeeper collection failed: upstream-error", true, seconds)));
+      return (Date.parse(h.core.runtime().nextRunAt!) - h.clock.now) / 1000;
+    };
+    // An hour asked for is an hour waited: talking a rate-limited source down to fifteen minutes is how we get refused.
+    expect(askedFor(3600)).toBe(3600);
+    // Past the ceiling the source is still held to six hours, and a shorter request never shortens the backoff.
+    expect(askedFor(5 * 24 * 3600)).toBe(MAX_FAILURE_WAIT_SECONDS);
+    expect(askedFor(5)).toBe(480);
+  });
+
+  it("forgets the failure streak when the Registry sends a changed definition, so the next failure retries fast", async () => {
+    const h = await kernelHarness({ policy: policy({ cadenceSeconds: 30 * 24 * 3600 }) });
+    expect(waitsAfterFailing(h, 6).at(-1)).toBe(3840);
+    expect(h.core.configure({ ...h.core.feed()!, title: "Things, renamed" }, h.core.policy()!)).toBe(true);
+    expect(h.core.runtime().consecutiveFailures).toBe(0);
+    expect(waitsAfterFailing(h, 1)).toEqual([120]);
   });
 
   it("cools a permanent failure down for six hours, then retries the same acquisition by itself", async () => {

@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type { TransformContext } from "@open-data-pt/gatekeeper-shared";
+import type { TransformContext, TransformResult } from "@open-data-pt/gatekeeper-shared";
+import { prepareRecord } from "../apps/kernel/src/records";
 import { IpmaTransformer } from "../packages/gatekeeper-shared/src/sources/ipma/transform";
 
 type FeedKind = "station-observations" | "daily-forecast" | "seismic";
@@ -78,14 +79,12 @@ describe("IPMA transformers", () => {
       weatherType: expect.any(String),
       weatherTypeId: expect.any(String),
       forecastDate: "2026-09-07",
-      dataUpdate: "2026-09-07T16:31:03.000Z",
       minimumTemperature: 17,
       maximumTemperature: 25,
       precipitationProbability: 0,
     });
     expect(product?.schema.fields.find((field) => field.id === "weatherType")?.type).toBe("category");
     expect(product?.schema.fields.find((field) => field.id === "forecastDate")?.type).toBe("date");
-    expect(product?.schema.fields.find((field) => field.id === "dataUpdate")?.type).toBe("datetime");
   });
 
   it("creates retained seismic changes with stable fallback identifiers", async () => {
@@ -112,6 +111,20 @@ describe("IPMA transformers", () => {
         region: "E  Odemira",
       },
     });
+  });
+
+  it("gives an unchanged forecast the same semantic hash after IPMA restates the document hour", async () => {
+    const first = await transformer.transform(fixture("daily-forecast"), context("daily-forecast"));
+    // The same forecasts an hour later: IPMA rebuilt the document, so every dataUpdate moved on.
+    const restated = new TextEncoder().encode(
+      new TextDecoder().decode(fixture("daily-forecast")).replaceAll('"dataUpdate": "2026-09-07T16:31:03"', '"dataUpdate": "2026-09-07T17:31:07"'),
+    );
+    const second = await transformer.transform(restated, context("daily-forecast"));
+
+    const hashes = (result: TransformResult): string[] => (result.products[0]?.records ?? []).map((record) => prepareRecord(record).hash);
+    expect(hashes(first)).toHaveLength(6);
+    expect(hashes(second)).toEqual(hashes(first));
+    expect(first.products[0]?.records?.every((record) => record.sourcePublishedAt === undefined)).toBe(true);
   });
 
   it("rejects malformed compound documents", async () => {

@@ -146,6 +146,54 @@ describe("CKAN Gatekeeper", () => {
     expect(collected.fetch.kind === "body" && collected.fetch.provenance).toEqual({ sourceUrl: RESOURCE_URL });
   });
 
+  it("downloads a resource the catalogue placed on a private address from the portal itself", async () => {
+    // Porto's CKAN is configured with site_url http://192.168.221.240:8443, so every
+    // resource URL it returns names an address no client outside its network can reach.
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(packageResponse({ url: `http://192.168.221.240:8443/dataset/5ea79d81/resource/${RESOURCE_ID}/download/data.csv?inline=1` }))
+      .mockResolvedValueOnce(new Response("id,name\n1,Aliados\n"));
+
+    const collected = await source(fetcher).collect(config);
+
+    const expected = `https://opendata.porto.digital/dataset/5ea79d81/resource/${RESOURCE_ID}/download/data.csv?inline=1`;
+    expect(fetcher.mock.calls[1]?.[0].toString()).toBe(expected);
+    expect(collected.fetch.kind === "body" && collected.fetch.provenance.sourceUrl).toBe(expected);
+    expect(await bodyText(collected.fetch)).toBe("id,name\n1,Aliados\n");
+  });
+
+  it("reads the portal over HTTPS when the catalogue declares its own host without TLS", async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(packageResponse({ url: `http://opendata.porto.digital:8443/dataset/x/resource/${RESOURCE_ID}/download/data.csv` }))
+      .mockResolvedValueOnce(new Response("id\n1\n"));
+
+    await source(fetcher).collect(config);
+
+    expect(fetcher.mock.calls[1]?.[0].toString()).toBe(`https://opendata.porto.digital/dataset/x/resource/${RESOURCE_ID}/download/data.csv`);
+  });
+
+  it("repeats an idempotent GET the Cloudflare edge answered with 522", async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response("error code: 522", { status: 522 }))
+      .mockResolvedValueOnce(packageResponse())
+      .mockResolvedValueOnce(new Response("id,name\n1,Aliados\n"));
+
+    const collected = await source(fetcher).collect(config);
+
+    expect(fetcher).toHaveBeenCalledTimes(3);
+    expect(fetcher.mock.calls[0]?.[0].toString()).toBe(fetcher.mock.calls[1]?.[0].toString());
+    expect(await bodyText(collected.fetch)).toBe("id,name\n1,Aliados\n");
+  });
+
+  it("repeats a GET whose connection never reached the origin, and gives up as an upstream error", async () => {
+    const fetcher = vi.fn<typeof fetch>().mockRejectedValue(new TypeError("Network connection lost."));
+
+    await expect(source(fetcher).collect(config)).rejects.toThrow(GatekeeperError);
+    expect(fetcher).toHaveBeenCalledTimes(3);
+  });
+
   it("reports not-modified when package metadata matches the synthetic checkpoint", async () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(packageResponse());
     const collected = await source(fetcher).collect(config, { etag: SYNTHETIC_ETAG });
@@ -317,5 +365,12 @@ describe("CKAN collection through the shared collector", () => {
   it("maps an upstream failure to a retryable failure that keeps Retry-After", async () => {
     const result = await collect(vi.fn<typeof fetch>().mockResolvedValueOnce(new Response("busy", { status: 429, headers: { "Retry-After": "30" } })));
     expect(result).toEqual({ kind: "failure", code: "upstream-error", retryable: true, retryAfterSeconds: 30 });
+  });
+
+  it("still reports a retryable upstream error when every attempt hits an unreachable origin", async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(new Response("error code: 522", { status: 522 }));
+    const result = await collect(fetcher);
+    expect(result).toEqual({ kind: "failure", code: "upstream-error", retryable: true });
+    expect(fetcher).toHaveBeenCalledTimes(3);
   });
 });

@@ -52,6 +52,15 @@ export default class RuntimeTestWorker extends KernelWorker {
       return Response.json({ error: "The sync did not settle" }, { status: 500 });
     }
     if (url.pathname === "/test/feeds") return Response.json({ data: await registry.listFeeds() });
+    // The history slots as the Registry itself counts them: take the named slots, then release them.
+    if (request.method === "POST" && url.pathname === "/test/history-slots") {
+      // SAFETY: this route is only ever called by kernel-runtime.test.ts, which sends both arrays.
+      const { take, release } = (await request.json()) as { take: string[]; release: string[] };
+      const taken: boolean[] = [];
+      for (const id of take) taken.push(await registry.tryStartHistoryQuery(id));
+      for (const id of release) await registry.finishHistoryQuery(id);
+      return Response.json({ taken });
+    }
     const productRoute = /^\/test\/products\/([^/]+)$/.exec(url.pathname);
     if (productRoute?.[1]) return Response.json({ data: (await registry.getProduct(productRoute[1])) ?? null });
     const runnerRoute = /^\/test\/feeds\/([^/]+)(\/acquisitions)?$/.exec(url.pathname);

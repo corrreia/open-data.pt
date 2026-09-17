@@ -54,6 +54,21 @@ export const CKAN_LIMITS = {
 /** Largest single DataStore record; the table itself streams, unbounded by memory. */
 const DATASTORE_RECORD_BYTES = 4 * 1024 * 1024;
 
+/**
+ * Attempts of one idempotent CKAN GET, the first included. Águeda's
+ * self-hosted origin refuses a share of the connections Cloudflare opens to
+ * it, and the edge reports that as a 522 after about nineteen seconds; three
+ * attempts and their short pauses stay inside the ninety second collection
+ * timeout those feeds allow.
+ */
+const FETCH_ATTEMPTS = 3;
+
+/** Pause before the second attempt; the third waits twice as long. Each adds as much again in jitter. */
+const RETRY_BASE_MS = 250;
+
+/** Cloudflare edge statuses that mean the origin never answered: nothing was read, so the GET can be repeated. */
+const ORIGIN_UNREACHABLE = new Set([522, 523, 524]);
+
 const DATASET_PATTERN = /^[a-z0-9_-]+$/;
 const RESOURCE_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SUPPORTED_FORMATS = new Set(["csv", "json", "geojson"]);
@@ -220,7 +235,7 @@ export class CkanSource {
       // download the resource URL already declared by package_show.
     }
 
-    const fileUrl = validateResourceUrl(resource.url, this.allowedHosts);
+    const fileUrl = resolveResourceUrl(resource.url, validated.host!, this.allowedHosts);
     const fileResponse = await this.fetchAllowed(fileUrl, {
       headers: conditionalHeaders(fileCheckpoint, "*/*"),
     });
@@ -238,7 +253,7 @@ export class CkanSource {
     // only way to ask for the file conditionally next time.
     const fileValidator = Object.keys(validator).length > 0 ? validator : (responseValidator(fileResponse.headers) ?? {});
     return {
-      fetch: sourceBody(fileResponse.body, resource.url, publishedAt, "complete", fileValidator),
+      fetch: sourceBody(fileResponse.body, fileUrl.toString(), publishedAt, "complete", fileValidator),
       metadata: {
         package: packageDocument,
         resource: resource.metadata,
@@ -360,29 +375,62 @@ export class CkanSource {
     return { records: stream.elements[Symbol.asyncIterator](), envelope: stream.envelope, count: 0 };
   }
 
+  /**
+   * One allowlisted GET, repeated while the origin never answers. A CKAN
+   * read is idempotent and nothing has been consumed when the connection
+   * fails or the edge gives up on the origin, so the same request can simply
+   * be made again. The last attempt's answer is returned as it stands, which
+   * leaves the caller to report it as a retryable upstream error.
+   */
   private async fetchAllowed(url: URL, init: RequestInit): Promise<Response> {
     validateResourceUrl(url.toString(), this.allowedHosts);
     const headers = new Headers(init.headers);
     headers.set("User-Agent", "open-data.pt/1.0 (+https://open-data.pt)");
-    const response = await this.fetcher(url, { ...init, headers, redirect: "manual" });
-    if (response.status >= 400)
-      console.warn(
-        JSON.stringify({
-          event: "source_http_status",
-          source: "ckan",
-          host: url.hostname,
-          path: url.pathname,
-          status: response.status,
-          server: response.headers.get("server"),
-          mitigation: response.headers.get("cf-mitigated"),
-          contentType: response.headers.get("content-type"),
-        }),
-      );
-    if (response.status >= 300 && response.status < 400 && response.status !== 304) {
-      throw new GatekeeperError(`CKAN redirect from ${url.hostname} was refused`, "source-denied");
+    let unreachable: GatekeeperError | undefined;
+    for (let attempt = 1; attempt <= FETCH_ATTEMPTS; attempt += 1) {
+      if (attempt > 1) await delay(retryDelayMs(attempt));
+      let response: Response;
+      try {
+        response = await this.fetcher(url, { ...init, headers, redirect: "manual" });
+      } catch (error) {
+        // A refused, reset or timed out connection: the origin was never reached.
+        unreachable = new GatekeeperError(`CKAN request to ${url.hostname} failed: ${error instanceof Error ? error.message : "unknown error"}`, "upstream-error");
+        continue;
+      }
+      if (response.status >= 400) logSourceStatus(url, response);
+      if (ORIGIN_UNREACHABLE.has(response.status) && attempt < FETCH_ATTEMPTS) continue;
+      if (response.status >= 300 && response.status < 400 && response.status !== 304) {
+        throw new GatekeeperError(`CKAN redirect from ${url.hostname} was refused`, "source-denied");
+      }
+      return response;
     }
-    return response;
+    throw unreachable ?? new GatekeeperError(`CKAN origin ${url.hostname} did not answer`, "upstream-error");
   }
+}
+
+/** Half the pause is fixed and half is random, so retries from many feeds do not arrive together. */
+function retryDelayMs(attempt: number): number {
+  const base = RETRY_BASE_MS * 2 ** (attempt - 2);
+  return base + Math.random() * base;
+}
+
+function delay(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+function logSourceStatus(url: URL, response: Response): void {
+  console.warn(
+    JSON.stringify({
+      event: "source_http_status",
+      source: "ckan",
+      host: url.hostname,
+      path: url.pathname,
+      status: response.status,
+      server: response.headers.get("server"),
+      mitigation: response.headers.get("cf-mitigated"),
+      contentType: response.headers.get("content-type"),
+    }),
+  );
 }
 
 function actionUrl(origin: string, action: "datastore_search" | "package_show", parameters: Record<string, string>): URL {
@@ -467,6 +515,32 @@ function normalizeFormat(value: JsonValue | undefined): string {
         .toLowerCase()
         .replace(/^application\//, "")
     : "";
+}
+
+/**
+ * Where a resource really is. A CKAN deployment configured with a private
+ * `site_url` answers `package_show` with resource URLs nobody outside its
+ * network can fetch — Porto's name `http://192.168.221.240:8443` — while the
+ * portal we just asked serves the very same path. A URL whose host can only be
+ * that internal address, or is the portal under another scheme or port, is
+ * read from the portal instead. Every other host is left exactly as declared
+ * and refused unless it is allowlisted, so this resolves nothing new.
+ */
+function resolveResourceUrl(value: string, host: string, allowedHosts: ReadonlySet<string>): URL {
+  let declared: URL;
+  try {
+    declared = new URL(value);
+  } catch {
+    throw invalidResponse("Resource URL is invalid");
+  }
+  if (!isPortalAddress(declared, host)) return validateResourceUrl(value, allowedHosts);
+  return validateResourceUrl(`https://${host}${declared.pathname}${declared.search}`, allowedHosts);
+}
+
+/** The portal itself, or an address only it can reach: an IP literal, or a name with no domain at all. */
+function isPortalAddress(declared: URL, host: string): boolean {
+  const hostname = declared.hostname.toLowerCase();
+  return hostname === host || !hostname.includes(".") || /^\d{1,3}(?:\.\d{1,3}){3}$/.test(hostname) || hostname.startsWith("[");
 }
 
 function validateResourceUrl(value: string, allowedHosts: ReadonlySet<string>): URL {

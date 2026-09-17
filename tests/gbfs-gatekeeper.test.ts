@@ -36,12 +36,15 @@ function discovery(feeds: Array<{ name: string; url: string }>) {
   return envelope({ en: { feeds } });
 }
 
-function successfulFetcher(options?: { oversizedVehicles?: boolean }) {
+function successfulFetcher(options?: { oversizedVehicles?: boolean; restamped?: boolean }) {
+  const bump = options?.restamped ? 600 : 0;
   return vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = input.toString();
     if (url === DISCOVERY_URL) {
       const headers = new Headers(init?.headers);
       expect(headers.get("accept")).toBe("application/json");
+      expect(headers.get("if-none-match")).toBeNull();
+      expect(headers.get("if-modified-since")).toBeNull();
       return jsonResponse(
         discovery([
           {
@@ -53,11 +56,49 @@ function successfulFetcher(options?: { oversizedVehicles?: boolean }) {
             url: "https://mds.bird.co/vehicle_types.json",
           },
           {
+            name: "station_information",
+            url: "https://mds.bird.co/station_information.json",
+          },
+          {
+            name: "station_status",
+            url: "https://mds.bird.co/station_status.json",
+          },
+          {
             name: "free_bike_status",
             url: "https://mds.bird.co/free_bike_status.json",
           },
         ]),
         { "Last-Modified": "Mon, 07 Sep 2026 20:56:00 GMT" },
+      );
+    }
+    if (url.endsWith("/station_information.json")) {
+      return jsonResponse(
+        envelope(
+          {
+            stations: [{ station_id: "dock-1", name: "Cais do Sodré", lat: 38.7, lon: -9.14, capacity: 12 }],
+          },
+          1_788_814_600 + bump,
+        ),
+      );
+    }
+    if (url.endsWith("/station_status.json")) {
+      return jsonResponse(
+        envelope(
+          {
+            stations: [
+              {
+                station_id: "dock-1",
+                num_bikes_available: 4,
+                num_docks_available: 8,
+                is_installed: true,
+                is_renting: true,
+                is_returning: true,
+                last_reported: 1_788_814_600 + bump,
+              },
+            ],
+          },
+          1_788_814_600 + bump,
+        ),
       );
     }
     if (url.endsWith("/system_information.json")) {
@@ -102,7 +143,7 @@ function successfulFetcher(options?: { oversizedVehicles?: boolean }) {
               },
             ],
           },
-          1_788_814_620,
+          1_788_814_620 + bump,
         ),
       );
     }
@@ -111,8 +152,47 @@ function successfulFetcher(options?: { oversizedVehicles?: boolean }) {
 }
 
 describe("GBFS Gatekeeper", () => {
-  it("normalizes an allowlisted discovery URL and optional language", () => {
-    expect(validateGbfsFeedConfig({ url: DISCOVERY_URL, language: " EN-gb " }, allowedHosts)).toEqual({ url: DISCOVERY_URL, language: "en-gb" });
+  it("normalizes an allowlisted discovery URL and optional language, defaulting to the status part", () => {
+    expect(validateGbfsFeedConfig({ url: DISCOVERY_URL, language: " EN-gb " }, allowedHosts)).toEqual({ url: DISCOVERY_URL, language: "en-gb", feed: "status" });
+    expect(validateGbfsFeedConfig({ url: DISCOVERY_URL, feed: "reference" }, allowedHosts)).toEqual({ url: DISCOVERY_URL, feed: "reference" });
+    expect(() => validateGbfsFeedConfig({ url: DISCOVERY_URL, feed: "stations" }, allowedHosts)).toThrow("GBFS feed must be one of");
+  });
+
+  it("pairs every system with a daily reference feed that keeps the status slug's history", () => {
+    const status = GBFS_EXAMPLES.filter((example) => example.config.feed === "status");
+    const reference = GBFS_EXAMPLES.filter((example) => example.config.feed === "reference");
+
+    expect(status.map((example) => example.slug).toSorted()).toEqual([
+      "bird-braga",
+      "bird-cascais",
+      "bird-lisbon",
+      "bird-matosinhos",
+      "bird-porto",
+      "bora-viseu",
+      "lime-lisbon",
+      "tubabike-barcelos",
+    ]);
+    expect(reference.map((example) => example.slug).toSorted()).toEqual(status.map((example) => `${example.slug}-reference`).toSorted());
+    expect(reference.every((example) => example.policy.collection.cadenceSeconds === 86_400)).toBe(true);
+    for (const example of reference) {
+      const partner = status.find((candidate) => `${candidate.slug}-reference` === example.slug);
+      expect(example.config.url).toBe(partner?.config.url);
+      expect(example.config.language).toBe(partner?.config.language);
+    }
+  });
+
+  it("polls each system as fast as its data really moves", () => {
+    const cadence = (slug: string) => GBFS_EXAMPLES.find((example) => example.slug === slug)?.policy.collection.cadenceSeconds;
+
+    expect(cadence("bird-lisbon")).toBe(180);
+    expect(cadence("bird-cascais")).toBe(300);
+    expect(cadence("bird-matosinhos")).toBe(300);
+    expect(cadence("bird-porto")).toBe(300);
+    // Lime answers HTTP 429 at five minutes, TubaBike changed once in 459 station revisions, and Braga is empty.
+    expect(cadence("lime-lisbon")).toBe(600);
+    expect(cadence("tubabike-barcelos")).toBe(600);
+    expect(cadence("bora-viseu")).toBe(600);
+    expect(cadence("bird-braga")).toBe(86_400);
   });
 
   it.each(newExamples)("validates the curated $title example", (example) => {
@@ -123,7 +203,7 @@ describe("GBFS Gatekeeper", () => {
   it("ships every working additional Portuguese system", () => {
     expect(newExamples.map((example) => example.slug)).toEqual(["bird-cascais", "bird-matosinhos", "bird-porto", "tubabike-barcelos"]);
     expect(GBFS_EXAMPLES.some((example) => example.slug === "bird-braga")).toBe(true);
-    expect(newExamples.every((example) => example.policy.collection.cadenceSeconds === (example.publisher === "Bird" ? 300 : 180))).toBe(true);
+    expect(newExamples.every((example) => example.policy.collection.cadenceSeconds === (example.publisher === "Bird" ? 300 : 600))).toBe(true);
     expect(
       newExamples
         .filter((example) => example.publisher === "Bird")
@@ -137,7 +217,7 @@ describe("GBFS Gatekeeper", () => {
     expect(() => validateGbfsFeedConfig({ url: DISCOVERY_URL, arbitrary: "value" }, allowedHosts)).toThrow("does not accept arbitrary");
   });
 
-  it("collects a deterministic compound document with typed provenance", async () => {
+  it("collects only the fast half for the status part, with typed provenance", async () => {
     const fetcher = successfulFetcher();
     const fetched = sourceBody(await collectGbfsFeed({ url: DISCOVERY_URL, language: "en" }, undefined, ALLOWED_HOSTS, fetcher));
     const document = jsonAs<JsonObject>(await bodyBytes(fetched));
@@ -147,48 +227,40 @@ describe("GBFS Gatekeeper", () => {
       sourcePublishedAt: "2026-09-07T20:57:00.000Z",
     });
     expect(fetched.completeness).toBe("complete");
-    expect(fetched.validator?.etag).toMatch(/^"gbfs-[0-9a-f]{16}"$/u);
-    expect(fetched.validator?.lastModified).toBe("Mon, 07 Sep 2026 20:56:00 GMT");
-    expect(Object.keys(document)).toEqual(["discovery", "system_information", "vehicle_types", "free_bike_status"]);
-    expect(fetcher).toHaveBeenCalledTimes(4);
+    expect(fetched.validator).toEqual({ etag: expect.stringMatching(/^"sha256-[0-9a-f]{64}"$/u) });
+    expect(Object.keys(document)).toEqual(["discovery", "system_information", "vehicle_types", "station_status", "free_bike_status"]);
+    expect(fetcher).toHaveBeenCalledTimes(5);
   });
 
-  it("forwards a checkpoint and passes through an upstream 304", async () => {
-    const fetcher = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
-      const headers = new Headers(init?.headers);
-      expect(headers.get("if-none-match")).toBe('"previous"');
-      expect(headers.get("if-modified-since")).toBe("Mon, 07 Sep 2026 20:50:00 GMT");
-      return new Response(null, {
-        status: 304,
-        headers: { ETag: '"current"' },
-      });
-    });
+  it("collects only the slow half for the reference part", async () => {
+    const fetcher = successfulFetcher();
+    const fetched = sourceBody(await collectGbfsFeed({ url: DISCOVERY_URL, feed: "reference" }, undefined, ALLOWED_HOSTS, fetcher));
+    const document = jsonAs<JsonObject>(await bodyBytes(fetched));
 
-    const fetched = await collectGbfsFeed(
-      { url: DISCOVERY_URL },
-      {
-        etag: '"previous"',
-        lastModified: "Mon, 07 Sep 2026 20:50:00 GMT",
-      },
-      ALLOWED_HOSTS,
-      fetcher,
-    );
-
-    expect(fetched).toEqual({
-      kind: "not-modified",
-      validator: {
-        etag: '"current"',
-        lastModified: "Mon, 07 Sep 2026 20:50:00 GMT",
-      },
-    });
-    expect(fetcher).toHaveBeenCalledOnce();
+    expect(Object.keys(document)).toEqual(["discovery", "system_information", "station_information"]);
+    expect(fetcher).toHaveBeenCalledTimes(3);
   });
 
-  it("reports unchanged when the newest feed's last_updated did not move", async () => {
+  it("reports unchanged when only the publication timestamps moved", async () => {
     const first = sourceBody(await collectGbfsFeed({ url: DISCOVERY_URL }, undefined, ALLOWED_HOSTS, successfulFetcher()));
-    const again = await collectGbfsFeed({ url: DISCOVERY_URL }, first.validator, ALLOWED_HOSTS, successfulFetcher());
+    const again = await collectGbfsFeed({ url: DISCOVERY_URL }, first.validator, ALLOWED_HOSTS, successfulFetcher({ restamped: true }));
 
     expect(again).toEqual({ kind: "not-modified", validator: first.validator });
+  });
+
+  it("collects again when a station's counts moved under an unchanged timestamp", async () => {
+    const first = sourceBody(await collectGbfsFeed({ url: DISCOVERY_URL }, undefined, ALLOWED_HOSTS, successfulFetcher()));
+    const changed = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const response = await successfulFetcher()(input, init);
+      if (!input.toString().endsWith("/station_status.json")) return response;
+      const text = (await response.text()).replace('"num_bikes_available":4', '"num_bikes_available":5');
+      return new Response(text, { headers: { "Content-Type": "application/json" } });
+    });
+
+    const again = await collectGbfsFeed({ url: DISCOVERY_URL }, first.validator, ALLOWED_HOSTS, changed);
+
+    expect(again.kind).toBe("body");
+    expect(again.validator?.etag).not.toBe(first.validator?.etag);
   });
 
   it("marks a compound document partial when an optional feed exceeds the cap", async () => {

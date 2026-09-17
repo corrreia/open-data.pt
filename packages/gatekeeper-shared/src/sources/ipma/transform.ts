@@ -34,7 +34,6 @@ const FORECAST_SCHEMA: CanonicalSchema = {
     field("latitude", "latitude", false),
     field("longitude", "longitude", false),
     field("forecastDate", "date", false),
-    field("dataUpdate", "datetime", false),
     field("weatherType", "category", false),
     field("weatherTypeId", "identifier", false),
     field("minimumTemperature", "number", true, "°C"),
@@ -308,8 +307,10 @@ function transformDailyForecast(root: JsonObject): Omit<TransformResult, "transf
   for (const forecast of root.forecasts) {
     if (!isJsonObject(forecast) || !Array.isArray(forecast.data)) continue;
     const forecastDate = dateOnly(forecast.forecastDate);
-    const dataUpdate = utcDateTime(forecast.dataUpdate);
-    if (!forecastDate || !dataUpdate) {
+    // `dataUpdate` is when IPMA last rebuilt the document, not part of any forecast: it moves every hour while the
+    // forecasts stand. It stays out of the payload and off the record, so an unchanged forecast is no revision; the
+    // collector already states it once for the whole document, as provenance.
+    if (!forecastDate || !utcDateTime(forecast.dataUpdate)) {
       candidates += forecast.data.length;
       continue;
     }
@@ -325,7 +326,6 @@ function transformDailyForecast(root: JsonObject): Omit<TransformResult, "transf
       records.push({
         entityKey: cityForecastId,
         eventTime: `${forecastDate}T00:00:00.000Z`,
-        sourcePublishedAt: dataUpdate,
         payload: {
           cityForecastId,
           cityId,
@@ -333,7 +333,6 @@ function transformDailyForecast(root: JsonObject): Omit<TransformResult, "transf
           latitude,
           longitude,
           forecastDate,
-          dataUpdate,
           weatherType: weatherTypes.get(weatherTypeId) ?? `Tipo ${weatherTypeId}`,
           weatherTypeId,
           minimumTemperature: measurement(value.tMin),

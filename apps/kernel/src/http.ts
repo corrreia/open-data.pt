@@ -2,12 +2,13 @@ import { asObject, asString, isJsonString, parseJson, type JsonObject, type Json
 
 import { CADENCE_HEADER } from "./cache";
 import { REGISTRY_ROOM, type ProductDetail, type Registry } from "./coordinators";
-import { NotFoundError } from "./errors";
+import { NotFoundError, RequestError, type HeaderMap } from "./errors";
 import type { Acquisition, Feed } from "./feed-model";
 import { ObjectStore } from "./object-store";
 import type { SnapshotStore } from "./ports";
 import { MAX_HISTORY_PAGE, QueryError, runLakeQuery } from "./query";
 import { readSummaryFile, readSummaryRange, type SummaryResolution } from "./summaries";
+import { callRegistry, withHistorySlot } from "./registry-calls";
 import { ALLOWED_METHODS, MAX_FILTERS, requestIdOf } from "./request-guard";
 import {
   InvalidQueryError,
@@ -24,8 +25,6 @@ import {
 
 /** History windows are at most this long; longer spans take one request per window. */
 const MAX_HISTORY_WINDOW_MS = 366 * 86_400_000;
-/** Seconds a client should wait when every history query slot is taken. */
-const HISTORY_BUSY_RETRY_SECONDS = 5;
 
 export interface ApiContext {
   env: Env;
@@ -34,9 +33,6 @@ export interface ApiContext {
 }
 
 type RegistryStub = DurableObjectStub<Registry>;
-
-/** Extra response headers: Retry-After, Allow, a request ID. */
-export type HeaderMap = Record<string, string>;
 
 /**
  * The public API. It is read-only: the platform installs, schedules and
@@ -468,15 +464,7 @@ async function lakeStart(ctx: ApiContext, table: "records" | "points"): Promise<
 }
 
 async function runTypedHistoryQuery(registry: () => RegistryStub, ctx: ApiContext, sql: string, label: string) {
-  const coordinator = registry();
-  if (!(await coordinator.tryStartHistoryQuery())) {
-    throw new RequestError("Every history query slot is busy; retry shortly", 429, { "Retry-After": String(HISTORY_BUSY_RETRY_SECONDS) });
-  }
-  try {
-    return await runLakeQuery(ctx.env, sql, label, ctx.lakeQueryFetch);
-  } finally {
-    await coordinator.finishHistoryQuery();
-  }
+  return await withHistorySlot(registry, () => runLakeQuery(ctx.env, sql, label, ctx.lakeQueryFetch));
 }
 
 /** A history view of a product whose policy does not serve history, or of the wrong role, does not exist. */
@@ -487,7 +475,7 @@ function requireHistory(product: ProductDetail, role?: "event-log" | "time-serie
 /** The feed behind a product's history: its semantics bound the lake scan, its backfill states coverage. */
 async function historicalFeed(registry: () => RegistryStub, product: ProductDetail, role?: "event-log" | "time-series"): Promise<Feed> {
   requireHistory(product, role);
-  const feed = await registry().getFeed(product.feedId);
+  const feed = await callRegistry(registry, (coordinator) => coordinator.getFeed(product.feedId));
   if (!feed) throw new NotFoundError("Historical product was not found");
   return feed;
 }
@@ -706,17 +694,6 @@ function historyFailure(failure: QueryError["failure"]) {
     };
   if (failure === "unreadable") return { status: 502, title: "History query failed", detail: "The history store answered with something open-data.pt could not read." };
   return { status: 502, title: "History query failed", detail: "The history store could not run this query. Try again, or ask for a shorter window." };
-}
-
-export class RequestError extends Error {
-  constructor(
-    message: string,
-    readonly status: number,
-    readonly headers: HeaderMap = {},
-  ) {
-    super(message);
-    this.name = "RequestError";
-  }
 }
 
 /** Quote a value for a single-quoted SQL literal: only what the lake query surface allows. */

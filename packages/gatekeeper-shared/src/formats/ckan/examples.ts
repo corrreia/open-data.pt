@@ -1,8 +1,11 @@
 import type { ExampleFeed, SourceConfig } from "../../index";
 
+/** The Porto portal moved to dadosabertos.cm-porto.pt in September 2026; opendata.porto.digital no longer resolves. */
+const PORTO_HOST = "dadosabertos.cm-porto.pt";
+
 const SERVING = {
   licence: "Creative Commons CCZero",
-  attribution: "Câmara Municipal do Porto via opendata.porto.digital",
+  attribution: `Câmara Municipal do Porto via ${PORTO_HOST}`,
 } as const;
 
 const DAILY_REFERENCE = {
@@ -39,9 +42,9 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     description: "Municipal car parks, capacities, management, and opening hours.",
     config: {
       source: "ckan",
-      host: "opendata.porto.digital",
+      host: PORTO_HOST,
       dataset: "parques-de-estacionamento-municipais",
-      resource: "418c7837-95ee-4943-be22-3d9d09e5b4e9",
+      resource: "e9898000-f437-42d3-8c5b-22c5594052b2",
     },
     policy: DAILY_REFERENCE,
     staleAfterSeconds: 172_800,
@@ -54,9 +57,9 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     description: "Identified municipal trees with species, age range, and source geometry.",
     config: {
       source: "ckan",
-      host: "opendata.porto.digital",
+      host: PORTO_HOST,
       dataset: "identificacao-e-caracterizacao-do-arvoredo-do-municipio-do-porto",
-      resource: "99733a6e-ca5c-4061-82e7-b21741929492",
+      resource: "ed573cc6-3c01-462d-b136-f6a4d059e9a6",
     },
     // About 72,000 trees: the 6.5 MB CSV normalizes to more than the 16 MiB default output cap.
     policy: {
@@ -68,30 +71,19 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     publisher: "Câmara Municipal do Porto",
     topics: ["cities", "environment"],
   },
-  {
-    slug: "porto-museums-feed",
-    title: "Porto museums and thematic centres",
-    description: "Museums and thematic centres with descriptions, addresses, and coordinates.",
-    config: {
-      source: "ckan",
-      host: "opendata.porto.digital",
-      dataset: "cultura-cultura-museus",
-      resource: "08824bb1-b9ed-40ee-9b23-2ccebb962a92",
-    },
-    policy: DAILY_REFERENCE,
-    staleAfterSeconds: 604_800,
-    publisher: "Câmara Municipal do Porto",
-    topics: ["cities", "culture"],
-  },
+  // Porto's museums and thematic centres (cultura-cultura-museus) did not survive the
+  // September 2026 move to dadosabertos.cm-porto.pt: the re-imported catalog of 69
+  // datasets carries no museum inventory under any name. Restore the example when the
+  // municipality publishes one again.
   {
     slug: "porto-cultural-agenda-feed",
     title: "Porto cultural agenda",
     description: "Published cultural events with descriptions, schedules, and locations.",
     config: {
       source: "ckan",
-      host: "opendata.porto.digital",
-      dataset: "pontos-de-interesse-cultura-e-patrimonio-agenda-cultural",
-      resource: "35172eff-c68d-4162-93e5-528b95011584",
+      host: PORTO_HOST,
+      dataset: "apd-pontos-de-interesse-cultura-e-patrimonio-agenda-cultural",
+      resource: "e246f08d-b4d0-4955-ae82-07b516c4c747",
     },
     policy: DAILY_CHANGES,
     staleAfterSeconds: 172_800,
@@ -104,9 +96,9 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     description: "Kerbside loading and unloading bays with their location and rules.",
     config: {
       source: "ckan",
-      host: "opendata.porto.digital",
+      host: PORTO_HOST,
       dataset: "cargas-e-descargas",
-      resource: "66f17a25-f12e-47bb-a5fa-7903206fb3d8",
+      resource: "51dc9778-0735-428e-9b26-d08fc06eb5bf",
     },
     policy: DAILY_REFERENCE,
     staleAfterSeconds: 172_800,

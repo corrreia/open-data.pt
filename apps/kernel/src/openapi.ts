@@ -174,7 +174,7 @@ export function openApiDocument(origin: string) {
           tags: ["Products"],
           summary: "Get every current record of a product in one streamed response",
           description:
-            "The same rows as `/records`, without a cursor, as `{numberMatched, data, numberReturned}`. Filtered exports omit `numberMatched`; `numberReturned` is always at the end. Counts against the stricter rate limit.",
+            "The same rows as `/records`, without a cursor, as `{numberMatched, data, numberReturned}`. Filtered exports omit `numberMatched`; `numberReturned` is always at the end. A `time-series` product serves no records here: read its points with `/series`. Counts against the stricter rate limit.",
           parameters: [pathParameter("slug", "Stable product slug"), whereParameter(), bboxParameter()],
           responses: {
             "200": jsonResponse("Every current record", {
@@ -402,7 +402,7 @@ export function openApiDocument(origin: string) {
             status: { type: "string", enum: ["current", "failed"] },
             currentAcquisitionId: { type: ["string", "null"], description: "The run that built the current version." },
             watermark: { type: ["string", "null"] },
-            rowCount: { type: "integer" },
+            rowCount: { type: "integer", description: "Records for every role but `time-series`, whose count is its points." },
             completeness: { type: "string", enum: ["complete", "partial", "unknown"] },
             stale: { type: "boolean" },
             staleAfterSeconds: { type: ["integer", "null"] },

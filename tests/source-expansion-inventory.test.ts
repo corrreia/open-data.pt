@@ -12,7 +12,11 @@ const baseline = new Set(asStringList(parseJson(readFileSync(new URL("./fixtures
 
 describe("source expansion inventory", () => {
   it("retains every previously installed feed and assigns each slug to exactly one Worker", () => {
-    expect(baseline.size).toBe(170);
+    // Two feeds left the baseline as duplicates of another feed's values: ren-consumption-feed (the Consumption series
+    // of ren-production-breakdown) and dgeg-gasolina-98-lisboa (a district subset of dgeg-gasolina-98). A third,
+    // porto-museums-feed, left because its dataset did not survive Porto's September 2026 move to
+    // dadosabertos.cm-porto.pt: the municipality publishes no museum inventory there under any name.
+    expect(baseline.size).toBe(167);
     const examples = workers.flatMap((worker) => worker.examples);
     const slugs = new Set(examples.map((example) => example.slug));
     expect(slugs.size).toBe(examples.length);
