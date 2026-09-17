@@ -1,4 +1,4 @@
-import { allowedHosts, requireString, resolveFeed, sourceValidator, type FeedKindDescription, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../index";
+import { allowedHosts, requireString, resolveFeed, type FeedKindDescription, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../index";
 import { validateUdataFeedConfig } from "./config";
 import { chooseTransformer } from "./transform";
 import { UdataSource, type DistributionSelector } from "./udata";
@@ -58,7 +58,7 @@ export function udataCollector(options: UdataCollectorOptions): NormalizedCollec
       const selector: DistributionSelector = validated.distributionId
         ? { kind: "id", id: validated.distributionId }
         : { kind: "format", format: requireString(validated, "format") };
-      return upstream.fetchDistribution(validated, selector, sourceValidator(state));
+      return upstream.fetchDistribution(validated, selector, state);
     },
     normalize: { kind: "streaming", transform: (body, context) => selected.transform(body, context) },
   };

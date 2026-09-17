@@ -9,13 +9,13 @@ import {
   requireString,
   responseValidator,
   retryAfterSeconds,
+  sourceValidator,
   type JsonObject,
   type JsonValue,
   type SourceBody,
   type SourceConfig,
   type SourceFetch,
   type SourceNotModified,
-  type SourceValidator,
 } from "../../index";
 
 const MAX_METADATA_BYTES = 2 * 1024 * 1024;
@@ -60,8 +60,12 @@ export class UdataSource {
    * One distribution the bound dataset declares, as a stream: the body is
    * never buffered here, so its size is bounded only by the collection's
    * source budget, which the collector enforces on the wire.
+   *
+   * `previous` is the last collection's state. Its validators are sent only
+   * when they came from the resource selected now: a format selector can move
+   * to a newer release, whose 304 would otherwise pass as "unchanged".
    */
-  async fetchDistribution(config: SourceConfig, selector: DistributionSelector, checkpoint?: SourceValidator): Promise<SourceFetch> {
+  async fetchDistribution(config: SourceConfig, selector: DistributionSelector, previous?: JsonObject): Promise<SourceFetch> {
     if (selector.kind === "id" && !/^[A-Za-z0-9_-]{1,200}$/.test(selector.id)) {
       throw new GatekeeperError("distributionId has an invalid format", "invalid-config");
     }
@@ -87,6 +91,7 @@ export class UdataSource {
     // uData's resource endpoint proxies the publisher URL. Keeping the request
     // on the configured uData host prevents publisher metadata becoming an SSRF URL.
     const endpoint = new URL(`/api/1/datasets/r/${encodeURIComponent(resource.id)}`, baseUrl);
+    const checkpoint = previous?.resource === resource.id ? sourceValidator(previous) : undefined;
     const requestHeaders = new Headers({ Accept: "*/*" });
     if (checkpoint?.etag) requestHeaders.set("If-None-Match", checkpoint.etag);
     if (checkpoint?.lastModified) {
@@ -104,17 +109,19 @@ export class UdataSource {
       throw new GatekeeperError("uData distribution returned an empty body", "invalid-response");
     }
 
+    const state: JsonObject = { resource: resource.id };
+    if (validator) state.validators = { default: { ...validator } };
     const fetched: SourceBody = {
       kind: "body",
       body: response.body,
       provenance: { sourceUrl: resource.url },
       completeness: "complete",
+      state,
     };
     const published = resource.lastModified ?? response.headers.get("last-modified") ?? undefined;
     if (published !== undefined && !Number.isNaN(Date.parse(published))) {
       fetched.provenance.sourcePublishedAt = new Date(published).toISOString();
     }
-    if (validator) fetched.validator = validator;
     return fetched;
   }
 }

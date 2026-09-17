@@ -90,7 +90,7 @@ describe("UdataSource", () => {
       kind: "body",
       provenance: { sourceUrl: "https://publisher.example/data.csv", sourcePublishedAt: "2026-08-24T20:14:58.444Z" },
       completeness: "complete",
-      validator: { etag: '"v1"' },
+      state: { resource: "resource-1", validators: { default: { etag: '"v1"' } } },
     });
     if (fetched.kind !== "body") return;
     expect(fetched.body).toBeInstanceOf(ReadableStream);
@@ -108,10 +108,7 @@ describe("UdataSource", () => {
     const fetched = await source.fetchDistribution(
       { baseUrl: "https://dados.gov.pt", dataset: "population" },
       { kind: "id", id: "resource-1" },
-      {
-        etag: '"v1"',
-        lastModified: "Sat, 01 Aug 2026 12:00:00 GMT",
-      },
+      { resource: "resource-1", validators: { default: { etag: '"v1"', lastModified: "Sat, 01 Aug 2026 12:00:00 GMT" } } },
     );
 
     expect(fetched).toEqual({ kind: "not-modified", validator: { etag: '"v1"' } });
@@ -146,6 +143,16 @@ describe("UdataSource", () => {
     const fetched = await source.fetchDistribution({ baseUrl: "https://dados.gov.pt", dataset: "startups" }, { kind: "format", format: "json" });
     expect(fetched).toMatchObject({ kind: "body", provenance: { sourceUrl: "https://publisher.example/2026-09.json", sourcePublishedAt: "2026-09-17T11:00:15.323Z" } });
     expect(fetcher.mock.calls[1]?.[0].toString()).toBe("https://dados.gov.pt/api/1/datasets/r/release-09");
+
+    // Validators from the release collected last time are not sent to a newer one: its 304 would mean nothing.
+    const moved = vi.fn().mockResolvedValueOnce(Response.json(rotating)).mockResolvedValueOnce(Response.json([]));
+    const next = await new UdataSource(new Set(["dados.gov.pt"]), moved).fetchDistribution(
+      { baseUrl: "https://dados.gov.pt", dataset: "startups" },
+      { kind: "format", format: "json" },
+      { resource: "release-08", validators: { default: { etag: '"august"' } } },
+    );
+    expect(next).toMatchObject({ kind: "body", state: { resource: "release-09" } });
+    expect(new Headers(moved.mock.calls[1]?.[1]?.headers).has("if-none-match")).toBe(false);
 
     const empty = new UdataSource(new Set(["dados.gov.pt"]), async () => Response.json(payload));
     await expect(empty.fetchDistribution({ baseUrl: "https://dados.gov.pt", dataset: "population" }, { kind: "format", format: "json" })).rejects.toMatchObject({
@@ -218,7 +225,7 @@ describe("uData collection", () => {
       protocol: NORMALIZED_PROTOCOL,
       normalizer: { id: "tabular-v2", version: "5" },
       provenance: { sourceUrl: "https://publisher.example/data.csv", sourcePublishedAt: "2026-08-24T20:14:58.444Z" },
-      checkpoint: { state: { validators: { default: { etag: '"v2"' } } } },
+      checkpoint: { state: { resource: "resource-1", validators: { default: { etag: '"v2"' } } } },
       products: [{ productKey: "records", suggestedSlug: "population", completeness: "complete" }],
     });
     expect(rest.filter((frame) => frame.type === "record").map((frame) => frame.value)).toEqual([
@@ -250,10 +257,10 @@ describe("uData collection", () => {
         configHash: base.resolved.configHash,
         feedEpoch: base.feedEpoch,
         normalizer: { id: selected.id, version: selected.version },
-        state: { validators: { default: { etag: '"v1"' } } },
+        state: { resource: "resource-1", validators: { default: { etag: '"v1"' } } },
       },
     });
-    expect(result).toMatchObject({ kind: "unchanged", checkpoint: { state: { validators: { default: { etag: '"v1"' } } } } });
+    expect(result).toMatchObject({ kind: "unchanged", checkpoint: { state: { resource: "resource-1", validators: { default: { etag: '"v1"' } } } } });
     expect(new Headers(fetcher.mock.calls[1]?.[1]?.headers).get("if-none-match")).toBe('"v1"');
   });
 
