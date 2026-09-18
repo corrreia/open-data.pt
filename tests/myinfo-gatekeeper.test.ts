@@ -256,10 +256,18 @@ describe("MYINFO Gatekeeper", () => {
       }
     });
 
-    it("keeps one stop when the portal lists the same one twice", () => {
-      const twice = fixture("network").replace("%22StopId%22%3a52612%2c", "%22StopId%22%3a52582%2c");
-      const { stops } = parseNetwork(twice);
+    it("keeps one stop when the portal lists the same one twice, and publishes no line only the copy called at", () => {
+      // The second entry is discarded whole: a line the line table publishes is
+      // one some stop it kept calls at, never one left with nothing pointing at it.
+      // The copy here is the only entry calling at line 59999, so it is not published.
+      const twice = fixture("network")
+        .replace("%22StopId%22%3a52612%2c", "%22StopId%22%3a52582%2c")
+        .replace("%22Id%22%3a55629%2c%22Key%22%3a%2255629%7cGOING%22", "%22Id%22%3a59999%2c%22Key%22%3a%2259999%7cGOING%22");
+      const { stops, lines } = parseNetwork(twice);
       expect(stops.map((stop) => stop.stopId)).toEqual(["52582", "52613", "99999"]);
+      expect(lines.map((line) => line.key)).not.toContain("59999|GOING");
+      const kept = new Set(stops.flatMap((stop) => stop.lineKeys));
+      expect(lines.filter((line) => !kept.has(line.key))).toEqual([]);
     });
   });
 
