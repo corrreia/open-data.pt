@@ -56,15 +56,15 @@ One Worker per Gatekeeper library, each separately deployable and reached only t
 | `ren`          | REN electricity grid         | 9     |
 | `udata`        | uData portals (dados.gov.pt) | 13    |
 
-A library under a publication hold (RIPEstat, PeeringDB) has no Worker until the hold is lifted; adding a library and running `pnpm packages:sync` is all a new Worker takes. Topics are catalog tags: a feed carries as many as it likes, from the vocabulary in `packages/gatekeeper-shared/src/topics.ts`, and none of them decides where it runs.
+A library under a publication hold (RIPEstat, PeeringDB, MYINFO) has no Worker until the hold is lifted; adding a library and running `pnpm packages:sync` is all a new Worker takes. Topics are catalog tags: a feed carries as many as it likes, from the vocabulary in `packages/gatekeeper-shared/src/topics.ts`, and none of them decides where it runs.
 
-A Worker holds no parsing. It wires one shared library — a format library for anything with a standard (ArcGIS, CKAN, Opendatasoft, GTFS, GBFS, uData, OGC API Features) or a source library per bespoke API (Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, RIPEstat, PeeringDB) — hands it the vars and secrets it declares, and lists the example feeds it owns. Every feed's configuration names its library in `source`, and that key is what routes it.
+A Worker holds no parsing. It wires one shared library — a format library for anything with a standard (ArcGIS, CKAN, Opendatasoft, GTFS, GBFS, uData, OGC API Features) or a source library per bespoke API (Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, MYINFO, RIPEstat, PeeringDB) — hands it the vars and secrets it declares, and lists the example feeds it owns. Every feed's configuration names its library in `source`, and that key is what routes it.
 
 The RPC has five operations: `describe`, `listFeedKinds`, `resolveFeed`, `collect`, and `exampleFeeds`. `collect` returns a typed unchanged, batch, exhausted, or failure result. A batch is one `open-data-normalized/4` NDJSON stream: a header, product-keyed record and point frames, and a mandatory completion frame that may finalize values only known at the end (inferred schema, watermark, a product found absent). Adapters hand the shared collector a typed source fetch; formats that can be read row by row (CSV, NDJSON, JSON arrays, GeoJSON features, GTFS ZIP entries) stream, and everything else is buffered under a 16 MiB cap. Source bodies never leave the Gatekeeper.
 
 ### Source publication review
 
-Source access, validation and permission to republish are separate checks. The RIPEstat and PeeringDB libraries are written and tested, but they get no Worker and their examples are installed nowhere until the explicit holds in [`packages/gatekeeper-shared/src/publication-holds.json`](packages/gatekeeper-shared/src/publication-holds.json) are resolved. The consistency tests require every cleared library to have a Worker, every example tag to be a known catalog topic, and no held example to be auto-published.
+Source access, validation and permission to republish are separate checks. The RIPEstat, PeeringDB and MYINFO libraries are written and tested, but they get no Worker and their examples are installed nowhere until the explicit holds in [`packages/gatekeeper-shared/src/publication-holds.json`](packages/gatekeeper-shared/src/publication-holds.json) are resolved. The consistency tests require every cleared library to have a Worker, every example tag to be a known catalog topic, and no held example to be auto-published.
 
 A successful source request is not proof of a reuse licence, and a successful dry-run is not a deployment.
 

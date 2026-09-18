@@ -10,5 +10,11 @@
     "reason": "PeeringDB's acceptable-use policy requires permission for reproduction and bulk sharing outside its approved operational uses. A public general-purpose data API is not assumed to qualify for an exemption.",
     "requiredAction": "Establish permission for the intended public republication, then clear the hold, which gives the library its own Worker on the next `pnpm packages:sync`.",
     "references": ["https://www.peeringdb.com/aup"]
+  },
+  {
+    "source": "myinfo",
+    "reason": "Card4B's MYINFO portals are the operators' own passenger information sites. Neither Card4B nor any operator on the platform publishes reuse terms, and the pages carry no licence, so keyless access establishes no permission to republish their stops, lines or timetables.",
+    "requiredAction": "Ask each operator whose portal a feed names for permission to republish, then clear the hold, which gives the library its own Worker on the next `pnpm packages:sync`.",
+    "references": ["https://www.card4b.pt/projects/myinfo.html", "https://myinfo.4cloud.pt/IP/MotorBusca/BarraqueiroOeste/"]
   }
 ]
