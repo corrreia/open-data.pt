@@ -1,0 +1,113 @@
+{
+  "pages": [
+    {
+      "count": 3,
+      "next": null,
+      "previous": null,
+      "results": [
+        {
+          "id": 2940,
+          "type": "Anchor",
+          "hostname": "pt-bro-as211772",
+          "fqdn": "pt-bro-as211772.anchors.atlas.ripe.net",
+          "probe": 7051,
+          "is_ipv4_only": false,
+          "ip_v4": "192.0.2.100",
+          "as_v4": 211772,
+          "ip_v4_gateway": null,
+          "ip_v4_netmask": null,
+          "ip_v6": "2001:db8::100",
+          "as_v6": 211772,
+          "ip_v6_gateway": null,
+          "ip_v6_prefix": null,
+          "city": "Barreiro",
+          "country": "PT",
+          "company": "Synthetic Anchor Host 1, Lda",
+          "nic_handle": "SYN1-RIPE",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -9.1,
+              38.7
+            ]
+          },
+          "tlsa_record": "",
+          "is_disabled": true,
+          "is_replacement": false,
+          "replaces_anchor": null,
+          "date_live": "2021-12-23T12:20:00.409528",
+          "date_decommissioned": "2026-05-18T10:29:35.957797",
+          "hardware_version": 99
+        },
+        {
+          "id": 953,
+          "type": "Anchor",
+          "hostname": "pt-lis-as199993",
+          "fqdn": "pt-lis-as199993.anchors.atlas.ripe.net",
+          "probe": 6260,
+          "is_ipv4_only": false,
+          "ip_v4": "192.0.2.101",
+          "as_v4": 199993,
+          "ip_v4_gateway": "192.0.2.254",
+          "ip_v4_netmask": "255.255.255.192",
+          "ip_v6": "2001:db8::101",
+          "as_v6": 199993,
+          "ip_v6_gateway": "2001:db8::ffff",
+          "ip_v6_prefix": 64,
+          "city": "Lisboa",
+          "country": "PT",
+          "company": "Synthetic Anchor Host 2, Lda",
+          "nic_handle": "SYN2-RIPE",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -9.0,
+              38.800000000000004
+            ]
+          },
+          "tlsa_record": "",
+          "is_disabled": true,
+          "is_replacement": false,
+          "replaces_anchor": null,
+          "date_live": "2017-02-27T08:44:50",
+          "date_decommissioned": "2025-01-10T09:19:54.290335",
+          "hardware_version": 1
+        },
+        {
+          "id": 4515,
+          "type": "Anchor",
+          "hostname": "pt-lis-as212073",
+          "fqdn": "pt-lis-as212073.anchors.atlas.ripe.net",
+          "probe": 7647,
+          "is_ipv4_only": false,
+          "ip_v4": "192.0.2.102",
+          "as_v4": 212073,
+          "ip_v4_gateway": "192.0.2.254",
+          "ip_v4_netmask": "255.255.255.0",
+          "ip_v6": "2001:db8::102",
+          "as_v6": 212073,
+          "ip_v6_gateway": "2001:db8::ffff",
+          "ip_v6_prefix": 64,
+          "city": "Lisbon",
+          "country": "PT",
+          "company": "Synthetic Anchor Host 3, Lda",
+          "nic_handle": "SYN3-RIPE",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -8.9,
+              38.900000000000006
+            ]
+          },
+          "tlsa_record": "",
+          "is_disabled": false,
+          "is_replacement": false,
+          "replaces_anchor": null,
+          "date_live": "2025-11-10T18:20:00.470916",
+          "date_decommissioned": null,
+          "hardware_version": 99
+        }
+      ]
+    }
+  ]
+}

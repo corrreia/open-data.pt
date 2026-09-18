@@ -2,20 +2,24 @@ import { describe, expect, it } from "vitest";
 import { collectNormalized, libraryConfig, type ExampleFeed, type NormalizedCollector } from "../packages/gatekeeper-shared/src/index";
 import { RIPESTAT_EXAMPLES, ripestatCollector } from "../packages/gatekeeper-shared/src/sources/ripestat";
 import { PEERINGDB_EXAMPLES, peeringdbCollector } from "../packages/gatekeeper-shared/src/sources/peeringdb";
+import { IODA_EXAMPLES, IODA_HOST, iodaCollector } from "../packages/gatekeeper-shared/src/sources/ioda";
+import { RIPEATLAS_EXAMPLES, ripeatlasCollector } from "../packages/gatekeeper-shared/src/sources/ripeatlas";
 import { networkFrames, networkRequest } from "./networks-support";
 
-// Research-only opt-in: both publishers restrict republication. These checks do not deploy or store source data.
+// Research-only opt-in: each of these publishers restricts republication. These checks do not deploy or store source data.
 const selected = (process.env.LIVE_NETWORKS ?? "").split(",");
 
 function collector(example: ExampleFeed, fetcher: typeof fetch): NormalizedCollector {
   const config = libraryConfig(example.config);
+  if (example.config.source === "ioda") return iodaCollector({ config, hosts: IODA_HOST, fetcher });
+  if (example.config.source === "ripeatlas") return ripeatlasCollector({ config, apiOrigin: "https://atlas.ripe.net", fetcher });
   return example.config.source === "ripestat"
     ? ripestatCollector({ config, apiOrigin: "https://stat.ripe.net", fetcher })
     : peeringdbCollector({ config, apiOrigin: "https://www.peeringdb.com", fetcher });
 }
 
 describe("internet infrastructure live research", () => {
-  for (const example of [...RIPESTAT_EXAMPLES, ...PEERINGDB_EXAMPLES]) {
+  for (const example of [...RIPESTAT_EXAMPLES, ...PEERINGDB_EXAMPLES, ...IODA_EXAMPLES, ...RIPEATLAS_EXAMPLES]) {
     it.skipIf(!selected.includes(example.slug) && !selected.includes(example.config.source ?? ""))(
       example.slug,
       async () => {
@@ -44,7 +48,7 @@ describe("internet infrastructure live research", () => {
         expect(complete.quality.rejectedRecords).toBe(0);
         expect(complete.counts.records + complete.counts.points).toBeGreaterThan(0);
         expect(frames.filter((frame) => frame.type === "header")).toHaveLength(1);
-        expect(requests).toBeLessThanOrEqual(example.config.source === "ripestat" ? 1 : 11);
+        expect(requests).toBeLessThanOrEqual(example.config.source === "peeringdb" ? 11 : example.config.source === "ripeatlas" ? 4 : 1);
         console.log(
           JSON.stringify({
             slug: example.slug,

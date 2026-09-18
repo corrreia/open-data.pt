@@ -1,0 +1,734 @@
+{
+  "type": "signals",
+  "metadata": {
+    "requestTime": "2026-09-18T00:51:03+00:00",
+    "responseTime": "2026-09-18T00:51:04+00:00"
+  },
+  "requestParameters": {
+    "from": 1789682461,
+    "until": 1789693261,
+    "datasource": null,
+    "sourceParams": null,
+    "maxPoints": null
+  },
+  "error": null,
+  "perf": [
+    {
+      "datasource": "gtr",
+      "backend": "influxv2",
+      "timeUsed": 0.0018460750579833984
+    },
+    {
+      "datasource": "gtr-sarima",
+      "backend": "influxv2",
+      "timeUsed": 0.0004830360412597656
+    },
+    {
+      "datasource": "gtr-norm",
+      "backend": "influxv2",
+      "timeUsed": 0.00047588348388671875
+    },
+    {
+      "datasource": "merit-nt",
+      "backend": "influxv2",
+      "timeUsed": 0.1358962059020996
+    },
+    {
+      "datasource": "bgp",
+      "backend": "influxv2",
+      "timeUsed": 0.12555599212646484
+    },
+    {
+      "datasource": "ping-slash24",
+      "backend": "influxv2",
+      "timeUsed": 0.11372089385986328
+    },
+    {
+      "datasource": "ping-slash24-loss",
+      "backend": "influxv2",
+      "timeUsed": 0.11862397193908691
+    },
+    {
+      "datasource": "ping-slash24-latency",
+      "backend": "influxv2",
+      "timeUsed": 0.1335768699645996
+    },
+    {
+      "datasource": "upstream-delay-penult-asns",
+      "backend": "influxv2",
+      "timeUsed": 0.12709498405456543
+    },
+    {
+      "datasource": "upstream-delay-penult-e2e-latency",
+      "backend": "influxv2",
+      "timeUsed": 0.1270618438720703
+    },
+    {
+      "datasource": "mozilla",
+      "backend": "influxv2",
+      "timeUsed": 0.0011420249938964844
+    }
+  ],
+  "data": [
+    [
+      {
+        "entityType": "asn",
+        "entityCode": "3243",
+        "entityName": "AS3243 (MEO-RESIDENCIAL)",
+        "entityFqid": "asn.3243",
+        "datasource": "merit-nt",
+        "subtype": "",
+        "from": 1789682400,
+        "until": 1789693500,
+        "step": 300,
+        "nativeStep": 300,
+        "values": [
+          36.4,
+          37.6,
+          37.4,
+          38,
+          35.4,
+          36.4,
+          34.8,
+          35.4,
+          34.4,
+          34.2,
+          33.4,
+          35.2,
+          36.4,
+          35.4,
+          36.6,
+          34.4,
+          37.6,
+          35.4,
+          37,
+          36.8,
+          35.2,
+          34,
+          34,
+          34.6,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "entityType": "asn",
+        "entityCode": "3243",
+        "entityName": "AS3243 (MEO-RESIDENCIAL)",
+        "entityFqid": "asn.3243",
+        "datasource": "bgp",
+        "subtype": "",
+        "from": 1789682400,
+        "until": 1789693500,
+        "step": 300,
+        "nativeStep": 300,
+        "values": [
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          7204,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "entityType": "asn",
+        "entityCode": "3243",
+        "entityName": "AS3243 (MEO-RESIDENCIAL)",
+        "entityFqid": "asn.3243",
+        "datasource": "ping-slash24",
+        "subtype": "",
+        "from": 1789682400,
+        "until": 1789693800,
+        "step": 600,
+        "nativeStep": 600,
+        "values": [
+          5949,
+          5945,
+          5950,
+          5946,
+          5951,
+          5949,
+          5948,
+          5948,
+          5951,
+          5939,
+          5947,
+          5951,
+          5951,
+          5950,
+          5947,
+          5939,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "entityType": "asn",
+        "entityCode": "3243",
+        "entityName": "AS3243 (MEO-RESIDENCIAL)",
+        "entityFqid": "asn.3243",
+        "datasource": "ping-slash24-loss",
+        "subtype": "",
+        "from": 1789682400,
+        "until": 1789693800,
+        "step": 600,
+        "nativeStep": 600,
+        "values": [
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 9.25,
+                "probe_count": 6546
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 9.3,
+                "probe_count": 6548
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 9.31,
+                "probe_count": 6548
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 9.31,
+                "probe_count": 6547
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 9.24,
+                "probe_count": 6546
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 9.29,
+                "probe_count": 6552
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 9.33,
+                "probe_count": 6548
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 9.28,
+                "probe_count": 6548
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 9.32,
+                "probe_count": 6549
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 9.4,
+                "probe_count": 6548
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 9.28,
+                "probe_count": 6551
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 9.32,
+                "probe_count": 6545
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 9.28,
+                "probe_count": 6547
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 9.2,
+                "probe_count": 6548
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 9.3,
+                "probe_count": 6548
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 9.37,
+                "probe_count": 6550
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": null,
+                "probe_count": null
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": null,
+                "probe_count": null
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": null,
+                "probe_count": null
+              }
+            }
+          ]
+        ]
+      },
+      {
+        "entityType": "asn",
+        "entityCode": "3243",
+        "entityName": "AS3243 (MEO-RESIDENCIAL)",
+        "entityFqid": "asn.3243",
+        "datasource": "ping-slash24-latency",
+        "subtype": "",
+        "from": 1789682400,
+        "until": 1789693800,
+        "step": 600,
+        "nativeStep": 600,
+        "values": [
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 224,
+                "mean_latency": 117.369,
+                "median_latency": 116,
+                "min_latency": 16,
+                "p10_latency": 112,
+                "p90_latency": 125
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 198,
+                "mean_latency": 117.506,
+                "median_latency": 116,
+                "min_latency": 59,
+                "p10_latency": 112,
+                "p90_latency": 125
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 199,
+                "mean_latency": 117.673,
+                "median_latency": 116,
+                "min_latency": 99,
+                "p10_latency": 112,
+                "p90_latency": 125
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 221,
+                "mean_latency": 117.381,
+                "median_latency": 116,
+                "min_latency": 98,
+                "p10_latency": 112,
+                "p90_latency": 125
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 202,
+                "mean_latency": 117.574,
+                "median_latency": 116,
+                "min_latency": 98,
+                "p10_latency": 112,
+                "p90_latency": 125
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 255,
+                "mean_latency": 117.365,
+                "median_latency": 116,
+                "min_latency": 22,
+                "p10_latency": 112,
+                "p90_latency": 125
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 205,
+                "mean_latency": 117.416,
+                "median_latency": 116,
+                "min_latency": 99,
+                "p10_latency": 112,
+                "p90_latency": 125
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 175,
+                "mean_latency": 117.283,
+                "median_latency": 116,
+                "min_latency": 98,
+                "p10_latency": 112,
+                "p90_latency": 125
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 212,
+                "mean_latency": 117.352,
+                "median_latency": 116,
+                "min_latency": 44,
+                "p10_latency": 112,
+                "p90_latency": 125
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 202,
+                "mean_latency": 117.433,
+                "median_latency": 116,
+                "min_latency": 35,
+                "p10_latency": 112,
+                "p90_latency": 125
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 223,
+                "mean_latency": 117.589,
+                "median_latency": 116,
+                "min_latency": 99,
+                "p10_latency": 112,
+                "p90_latency": 125
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 199,
+                "mean_latency": 117.623,
+                "median_latency": 116,
+                "min_latency": 4,
+                "p10_latency": 112,
+                "p90_latency": 125
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 200,
+                "mean_latency": 117.488,
+                "median_latency": 116,
+                "min_latency": 29,
+                "p10_latency": 112,
+                "p90_latency": 125
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 234,
+                "mean_latency": 117.304,
+                "median_latency": 116,
+                "min_latency": 99,
+                "p10_latency": 112,
+                "p90_latency": 125
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 201,
+                "mean_latency": 117.396,
+                "median_latency": 116,
+                "min_latency": 98,
+                "p10_latency": 112,
+                "p90_latency": 125
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 244,
+                "mean_latency": 117.498,
+                "median_latency": 116,
+                "min_latency": 99,
+                "p10_latency": 112,
+                "p90_latency": 125
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": null,
+                "mean_latency": null,
+                "median_latency": null,
+                "min_latency": null,
+                "p10_latency": null,
+                "p90_latency": null
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": null,
+                "mean_latency": null,
+                "median_latency": null,
+                "min_latency": null,
+                "p10_latency": null,
+                "p90_latency": null
+              }
+            }
+          ],
+          [
+            {
+              "asn": "3243",
+              "asn_label": "MEO-RESIDENCIAL, PT",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": null,
+                "mean_latency": null,
+                "median_latency": null,
+                "min_latency": null,
+                "p10_latency": null,
+                "p90_latency": null
+              }
+            }
+          ]
+        ]
+      }
+    ]
+  ],
+  "copyright": "This data is Copyright (c) 2021-2025 Georgia Tech Research Corporation. All Rights Reserved."
+}

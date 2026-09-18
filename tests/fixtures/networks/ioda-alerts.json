@@ -1,0 +1,96 @@
+{
+  "type": "outages.alerts",
+  "metadata": {
+    "requestTime": "2026-09-18T00:51:02+00:00",
+    "responseTime": "2026-09-18T00:51:02+00:00"
+  },
+  "requestParameters": {
+    "from": "1789084800",
+    "until": "1789689600",
+    "datasource": null,
+    "limit": 500,
+    "page": null,
+    "relatedTo": null,
+    "entityType": "country",
+    "entityCode": "PT",
+    "ignoreMethods": null,
+    "extendWindow": 0
+  },
+  "error": null,
+  "perf": null,
+  "data": [
+    {
+      "datasource": "ping-slash24",
+      "entity": {
+        "code": "PT",
+        "name": "Portugal",
+        "subnames": [],
+        "type": "country",
+        "attrs": {
+          "fqid": "geo.netacuity.EU.PT"
+        }
+      },
+      "time": 1789342800,
+      "level": "critical",
+      "condition": "< 0.8",
+      "value": 7560,
+      "historyValue": 10156,
+      "method": "median"
+    },
+    {
+      "datasource": "ping-slash24",
+      "entity": {
+        "code": "PT",
+        "name": "Portugal",
+        "subnames": [],
+        "type": "country",
+        "attrs": {
+          "fqid": "geo.netacuity.EU.PT"
+        }
+      },
+      "time": 1789350600,
+      "level": "normal",
+      "condition": "normal",
+      "value": 9392,
+      "historyValue": 10156,
+      "method": "median"
+    },
+    {
+      "datasource": "ping-slash24",
+      "entity": {
+        "code": "PT",
+        "name": "Portugal",
+        "subnames": [],
+        "type": "country",
+        "attrs": {
+          "fqid": "geo.netacuity.EU.PT"
+        }
+      },
+      "time": 1789403400,
+      "level": "critical",
+      "condition": "< 0.8",
+      "value": 6787,
+      "historyValue": 10156,
+      "method": "median"
+    },
+    {
+      "datasource": "ping-slash24",
+      "entity": {
+        "code": "PT",
+        "name": "Portugal",
+        "subnames": [],
+        "type": "country",
+        "attrs": {
+          "fqid": "geo.netacuity.EU.PT"
+        }
+      },
+      "time": 1789407600,
+      "level": "normal",
+      "condition": "normal",
+      "value": 9408,
+      "historyValue": 10156,
+      "method": "median"
+    }
+  ],
+  "copyright": "This data is Copyright (c) 2021-2025 Georgia Tech Research Corporation. All Rights Reserved."
+}

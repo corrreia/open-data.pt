@@ -12,7 +12,7 @@
  * Measured: every Cloudflare number. FeedRunner objects are named after their feed id
  * (`getServerByName(env.FeedRunner, feed.id)`), and the DO analytics `name` dimension carries it, so
  * per-feed attribution is exact. Collection counts come from each runner's last 200 acquisitions
- * (`/api/feeds/<id>/acquisitions`, one small request per runner); spans that list does not reach
+ * (`/api/acquisitions?feedId=<id>`, one small request per runner); spans that list does not reach
  * are filled from policy cadence and labelled as estimates.
  */
 import { readFileSync } from "node:fs";
@@ -563,11 +563,11 @@ async function getPublic(path: string): Promise<Json> {
 }
 
 async function loadFeeds(): Promise<FeedInfo[]> {
-  const [feeds, policies] = await Promise.all([getPublic("/feeds"), getPublic("/policies")]);
-  const cadenceByPolicy = new Map(listAt(policies, "data").map((policy) => [textAt(policy, "id"), numberAt(field(policy, "collection"), "cadenceSeconds")]));
+  // Public feeds carry their cadence directly (ADR 0017); policies are internal.
+  const feeds = await getPublic("/feeds");
   return listAt(feeds, "data").map((feed) => {
-    const cadence = cadenceByPolicy.get(textAt(feed, "policyId"));
-    const cadenceSeconds = cadence === undefined || cadence <= 0 ? null : cadence;
+    const cadence = numberAt(feed, "cadenceSeconds");
+    const cadenceSeconds = cadence <= 0 ? null : cadence;
     const enabled = field(feed, "enabled");
     return {
       id: textAt(feed, "id"),
@@ -590,7 +590,7 @@ interface AcquisitionHistory {
 
 async function loadAcquisitionHistory(feed: FeedInfo): Promise<AcquisitionHistory> {
   try {
-    const body = await getPublic(`/feeds/${encodeURIComponent(feed.id)}/acquisitions?limit=${ACQUISITION_LIMIT}`);
+    const body = await getPublic(`/acquisitions?feedId=${encodeURIComponent(feed.id)}&limit=${ACQUISITION_LIMIT}`);
     const times = listAt(body, "data")
       .map((acquisition) => Date.parse(textAt(acquisition, "startedAt") || textAt(acquisition, "requestedAt")))
       .filter((time) => !Number.isNaN(time));
@@ -1550,6 +1550,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((cause) => {
-  process.stderr.write(`usage-report: ${cause instanceof Error ? cause.message : String(cause)}\n`);
+  process.stderr.write(`usage-report: ${cause instanceof Error ? `${cause.message}${cause.cause instanceof Error ? ` (${cause.cause.message})` : ""}` : String(cause)}\n`);
   process.exitCode = 1;
 });

@@ -1,0 +1,54 @@
+{
+  "type": "outages.events",
+  "metadata": {
+    "requestTime": "2026-09-18T00:52:16+00:00",
+    "responseTime": "2026-09-18T00:52:16+00:00"
+  },
+  "requestParameters": {
+    "from": "1787097600",
+    "until": "1789689600",
+    "datasource": null,
+    "includeAlerts": false,
+    "format": "codf",
+    "limit": 500,
+    "page": null,
+    "relatedTo": null,
+    "entityType": "country",
+    "entityCode": "PT",
+    "orderBy": null,
+    "overall": false,
+    "ignoreMethods": null,
+    "extendWindow": 0
+  },
+  "error": null,
+  "perf": null,
+  "data": [
+    {
+      "location": "country/PT",
+      "start": 1789342800,
+      "duration": 7800,
+      "uncertainty": null,
+      "method": "median",
+      "datasource": "ping-slash24",
+      "status": 0,
+      "fraction": null,
+      "score": 3322.96179598267,
+      "location_name": "Portugal",
+      "overlaps_window": false
+    },
+    {
+      "location": "country/PT",
+      "start": 1789403400,
+      "duration": 4200,
+      "uncertainty": null,
+      "method": "median",
+      "datasource": "ping-slash24",
+      "status": 0,
+      "fraction": null,
+      "score": 2322.0756203229616,
+      "location_name": "Portugal",
+      "overlaps_window": false
+    }
+  ],
+  "copyright": "This data is Copyright (c) 2021-2025 Georgia Tech Research Corporation. All Rights Reserved."
+}
