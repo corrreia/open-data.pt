@@ -158,11 +158,22 @@ describe("MYINFO Gatekeeper", () => {
     }
   });
 
-  it("treats a page with no network as an empty one, not a failure", async () => {
+  it("refuses a page that carries no network rather than collecting an empty one", async () => {
+    // The stop table is an authoritative snapshot, so an empty collection would
+    // retract every stop the feed serves. A maintenance page must fail instead.
     const empty = () => new Response("<html><body>Manutenção</body></html>", { headers: { "Content-Type": "text/html" } });
-    const fetched = await collectMyInfoFeed(NETWORK, undefined, MYINFO_ORIGIN, OPERATORS, portal(empty).fetcher);
-    if (fetched.kind !== "body") throw new Error("Expected a body");
-    expect(jsonAs<{ stops: unknown[]; lines: unknown[] }>(fetched.body)).toMatchObject({ stops: [], lines: [] });
+    await expect(collectMyInfoFeed(NETWORK, undefined, MYINFO_ORIGIN, OPERATORS, portal(empty).fetcher)).rejects.toMatchObject({
+      code: "invalid-response",
+      message: expect.stringContaining("no stop network"),
+    });
+  });
+
+  it("refuses a search on a page that offers nowhere to travel between", async () => {
+    const empty = () => new Response("<html><body>Manutenção</body></html>", { headers: { "Content-Type": "text/html" } });
+    await expect(collectMyInfoFeed(TIMETABLE, undefined, MYINFO_ORIGIN, OPERATORS, portal(empty).fetcher)).rejects.toMatchObject({
+      code: "invalid-response",
+      message: expect.stringContaining("offers no places"),
+    });
   });
 
   it("fails a search when the page offers the places but carries no form to post back", async () => {
@@ -215,6 +226,40 @@ describe("MYINFO Gatekeeper", () => {
 
     it("finds no journeys on a page that answered with none", () => {
       expect(parseTrips(fixture("network"))).toEqual([]);
+    });
+
+    it("refuses a stop that is missing what a stop is made of, naming the entry", () => {
+      const cases: Array<[string, string, RegExp]> = [
+        ["%22StopId%22%3a52612%2c", "%22StopId%22%3anull%2c", /stop 1 states no StopId/u],
+        ["%22ZoneId%22%3a4410%2c", "%22ZoneId%22%3anull%2c", /stop 1 states no ZoneId/u],
+        ["%22StopNane%22%3a%22Aboboreira%2c+Lrg.", "%22StopNane%22%3a%22%22%2c%22x%22%3a%22", /stop 1 states no StopNane/u],
+        ["%22StopLines%22%3a%5b%5d%7d%5d", "%22StopLines%22%3anull%7d%5d", /stop 3 does not list the lines/u],
+      ];
+      for (const [from, to, message] of cases) {
+        const page = fixture("network").replace(from, to);
+        expect(page).not.toBe(fixture("network"));
+        expect(() => parseNetwork(page)).toThrow(message);
+      }
+    });
+
+    it("refuses a line a stop points at but the line list cannot name", () => {
+      const cases: Array<[string, string, RegExp]> = [
+        // A key the line list cannot key on would leave the stop referencing nothing.
+        ["%22Key%22%3a%2255417%7cGOING%22", "%22Key%22%3a%2255417%22", /line 0 has an unreadable key: 55417/u],
+        ["%22Id%22%3a55417%2c%22Key%22%3a%2255417%7cGOING%22", "%22Id%22%3a55418%2c%22Key%22%3a%2255417%7cGOING%22", /names line 55418 under the key of line 55417/u],
+        ["%22Code%22%3a%22720%22", "%22Code%22%3a%22+%22", /states no StopLines\[0\].Code/u],
+      ];
+      for (const [from, to, message] of cases) {
+        const page = fixture("network").replace(from, to);
+        expect(page).not.toBe(fixture("network"));
+        expect(() => parseNetwork(page)).toThrow(message);
+      }
+    });
+
+    it("keeps one stop when the portal lists the same one twice", () => {
+      const twice = fixture("network").replace("%22StopId%22%3a52612%2c", "%22StopId%22%3a52582%2c");
+      const { stops } = parseNetwork(twice);
+      expect(stops.map((stop) => stop.stopId)).toEqual(["52582", "52613", "99999"]);
     });
   });
 

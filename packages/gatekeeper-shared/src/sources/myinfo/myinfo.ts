@@ -157,6 +157,9 @@ export async function collectMyInfoFeed(
     // The search is a WebForms postback: the page's own hidden fields, its session
     // cookie, and the two places. Without the cookie the application answers 500.
     const zones = parseZones(page);
+    // A portal that offers nowhere is a page that answered but is not the one this
+    // reads; a portal that offers places but not these two is a feed configured wrong.
+    if (zones.length === 0) throw invalidResponse(`MYINFO page ${portal} offers no places to travel between`);
     const origins = new Map(zones.map((zone) => [zone.id, zone]));
     const from = origins.get(valid.origin!);
     const to = origins.get(valid.destination!);
@@ -260,10 +263,15 @@ export interface MyInfoNetwork {
   lines: MyInfoLine[];
 }
 
-/** The stop network and its lines, from the one URL-encoded JSON array the page hands its map. */
+/**
+ * The stop network and its lines, from the one URL-encoded JSON array the page
+ * hands its map. The stop table is an authoritative snapshot, so what this
+ * leaves out a collection deletes: a page without its network, or an entry
+ * missing what a stop is made of, is a failure rather than a smaller network.
+ */
 export function parseNetwork(page: string): MyInfoNetwork {
-  const found = /'(%5[bB]%7[bB]%22StopId%22[^']*)'/u.exec(page);
-  if (!found) return { stops: [], lines: [] };
+  const found = NETWORK_PAYLOAD.exec(page);
+  if (!found) throw invalidResponse("MYINFO page carried no stop network");
   let decoded: JsonValue;
   try {
     decoded = parseJson(decodeURIComponent(found[1]!.replace(/\+/gu, " ")));
@@ -274,48 +282,74 @@ export function parseNetwork(page: string): MyInfoNetwork {
   const stops: MyInfoStop[] = [];
   const seen = new Set<string>();
   const lines = new Map<string, MyInfoLine>();
-  for (const entry of decoded) {
-    if (!isJsonObject(entry)) continue;
-    const stopId = identifier(entry.StopId);
-    const zoneId = identifier(entry.ZoneId);
+  for (const [index, entry] of decoded.entries()) {
+    if (!isJsonObject(entry)) throw invalidResponse(`MYINFO stop ${index} is not an object`);
+    const stopId = requiredIdentifier(entry.StopId, index, "StopId");
     // The portal spells the stop's name `StopNane`; that typo is its field name.
-    const name = text(entry.StopNane);
-    if (stopId === undefined || zoneId === undefined || name === undefined || seen.has(stopId)) continue;
-    seen.add(stopId);
-    stops.push({
+    const stop: MyInfoStop = {
       stopId,
       stopCode: text(entry.StopCode) ?? null,
-      zoneId,
-      name,
+      zoneId: requiredIdentifier(entry.ZoneId, index, "ZoneId"),
+      name: requiredText(entry.StopNane, index, "StopNane"),
       longitude: coordinate(entry.CoordX, 180),
       latitude: coordinate(entry.CoordY, 90),
-      lineKeys: collectLines(entry.StopLines, lines),
-    });
+      lineKeys: collectLines(entry.StopLines, lines, index),
+    };
+    // One stop listed twice is one stop, not two: the second copy says nothing new.
+    if (seen.has(stopId)) continue;
+    seen.add(stopId);
+    stops.push(stop);
   }
   return { stops, lines: [...lines.values()] };
 }
+
+/** The whole network, URL-encoded, in the argument the page hands its map. */
+const NETWORK_PAYLOAD = /'(%5[bB]%7[bB]%22StopId%22[^']*)'/u;
+/** A line key names its line and which way it runs; a stop references a line by it. */
+const LINE_KEY = /^(\d{1,12})\|(GOING|RETURN)$/u;
 
 /**
  * The lines calling at one stop, by key, while naming each line once in
  * `lines`. The stop data repeats a line's number and name at every stop it
  * serves; the line list is where they are published, and a stop keeps the keys.
+ * A key a line list cannot name would leave the stop pointing at nothing, so an
+ * entry is either complete or the collection fails.
  */
-function collectLines(value: JsonValue | undefined, lines: Map<string, MyInfoLine>): string[] {
-  if (!isJsonArray(value)) return [];
+function collectLines(value: JsonValue | undefined, lines: Map<string, MyInfoLine>, stop: number): string[] {
+  if (!isJsonArray(value)) throw invalidResponse(`MYINFO stop ${stop} does not list the lines calling there`);
   const keys: string[] = [];
-  for (const line of value) {
-    if (!isJsonObject(line)) continue;
-    const key = text(line.Key);
-    if (key === undefined) continue;
+  for (const [index, line] of value.entries()) {
+    const at = `MYINFO stop ${stop} line ${index}`;
+    if (!isJsonObject(line)) throw invalidResponse(`${at} is not an object`);
+    const key = requiredText(line.Key, stop, `StopLines[${index}].Key`);
+    const parsed = LINE_KEY.exec(key);
+    if (!parsed) throw invalidResponse(`${at} has an unreadable key: ${key}`);
     if (!keys.includes(key)) keys.push(key);
     if (lines.has(key)) continue;
-    const code = text(line.Code);
-    const name = text(line.Name);
-    const lineId = identifier(line.Id);
-    if (code === undefined || name === undefined || lineId === undefined) continue;
-    lines.set(key, { key, lineId, code, name, direction: key.split("|")[1] ?? "" });
+    const lineId = requiredIdentifier(line.Id, stop, `StopLines[${index}].Id`);
+    if (lineId !== parsed[1]) throw invalidResponse(`${at} names line ${lineId} under the key of line ${parsed[1]!}`);
+    lines.set(key, {
+      key,
+      lineId,
+      code: requiredText(line.Code, stop, `StopLines[${index}].Code`),
+      name: requiredText(line.Name, stop, `StopLines[${index}].Name`),
+      direction: parsed[2]!,
+    });
   }
   return keys;
+}
+
+/** A value a stop is made of: the portal states it, or the page is not one this reads. */
+function requiredText(value: JsonValue | undefined, index: number, field: string): string {
+  const found = text(value);
+  if (found === undefined) throw invalidResponse(`MYINFO stop ${index} states no ${field}`);
+  return found;
+}
+
+function requiredIdentifier(value: JsonValue | undefined, index: number, field: string): string {
+  const found = identifier(value);
+  if (found === undefined) throw invalidResponse(`MYINFO stop ${index} states no ${field}`);
+  return found;
 }
 
 /** The places a search may name: the origin list, which is the destination list too. */
