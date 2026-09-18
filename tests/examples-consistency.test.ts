@@ -106,6 +106,7 @@ describe("libraries and the Workers that carry them", () => {
       "ioda",
       "ipma",
       "metrolisboa",
+      "myinfo",
       "ogc",
       "omie",
       "opendatasoft",

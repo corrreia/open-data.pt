@@ -7,7 +7,7 @@ Read `.agents/skills/write-gatekeeper/SKILL.md` before touching a Gatekeeper, an
 ```
 packages/gatekeeper-shared/src/           the contract, the shared collector, HTTP/stream/schema helpers
 packages/gatekeeper-shared/src/formats/   arcgis  ckan  opendatasoft  gtfs  gbfs  udata  ogc
-packages/gatekeeper-shared/src/sources/   carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat  parliament  ioda  ripestat  peeringdb
+packages/gatekeeper-shared/src/sources/   carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat  parliament  myinfo  ioda  ripeatlas  ripestat  peeringdb
 packages/gatekeeper-<library>/            generated: one Worker per library (arcgis  bpstat  carris  ckan  dgeg  eurostat  gbfs  gtfs  ine  ipma  metrolisboa  ogc  omie  opendatasoft  parliament  ren  udata)
 apps/kernel/                              storage, history, the API and the site
 tests/                                    every test, with fixtures under tests/fixtures/

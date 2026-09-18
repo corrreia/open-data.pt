@@ -86,6 +86,7 @@
     { "binding": "GATEKEEPER_INE", "service": "open-data-pt-gatekeeper-ine" },
     { "binding": "GATEKEEPER_IPMA", "service": "open-data-pt-gatekeeper-ipma" },
     { "binding": "GATEKEEPER_METROLISBOA", "service": "open-data-pt-gatekeeper-metrolisboa" },
+    { "binding": "GATEKEEPER_MYINFO", "service": "open-data-pt-gatekeeper-myinfo" },
     { "binding": "GATEKEEPER_OGC", "service": "open-data-pt-gatekeeper-ogc" },
     { "binding": "GATEKEEPER_OMIE", "service": "open-data-pt-gatekeeper-omie" },
     { "binding": "GATEKEEPER_OPENDATASOFT", "service": "open-data-pt-gatekeeper-opendatasoft" },
