@@ -1,0 +1,27 @@
+{
+  "type": "outages.events",
+  "metadata": {
+    "requestTime": "2026-09-18T00:51:02+00:00",
+    "responseTime": "2026-09-18T00:51:02+00:00"
+  },
+  "requestParameters": {
+    "from": "1735689600",
+    "until": "1735776000",
+    "datasource": null,
+    "includeAlerts": false,
+    "format": "codf",
+    "limit": 500,
+    "page": null,
+    "relatedTo": null,
+    "entityType": "country",
+    "entityCode": "PT",
+    "orderBy": null,
+    "overall": false,
+    "ignoreMethods": null,
+    "extendWindow": 0
+  },
+  "error": null,
+  "perf": null,
+  "data": [],
+  "copyright": "This data is Copyright (c) 2021-2025 Georgia Tech Research Corporation. All Rights Reserved."
+}

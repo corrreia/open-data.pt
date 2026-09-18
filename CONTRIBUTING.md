@@ -7,7 +7,7 @@ open-data.pt collects Portuguese public data and publishes it as cacheable JSON.
 ```
 packages/gatekeeper-shared/src/
   formats/<format>/     arcgis  ckan  opendatasoft  gtfs  gbfs  udata  ogc
-  sources/<name>/       carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat  parliament  ripestat  peeringdb
+  sources/<name>/       carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat  parliament  ioda  ripestat  peeringdb
 packages/gatekeeper-<library>/  generated, one per library:
                         arcgis  bpstat  carris  ckan  dgeg  eurostat  gbfs  gtfs  ine  ipma
                         metrolisboa  ogc  omie  opendatasoft  parliament  ren  udata
@@ -15,7 +15,7 @@ apps/kernel/            storage, history, the API and the site
 ```
 
 1. **A library per format.** Anything with a standard — GTFS, GBFS, ArcGIS, CKAN, Opendatasoft, uData, OGC API Features — is parsed once, under `formats/`. A Worker never contains parsing.
-2. **A library per bespoke source,** under `sources/`: Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, RIPEstat, PeeringDB.
+2. **A library per bespoke source,** under `sources/`: Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, IODA, RIPEstat, PeeringDB.
 3. **One Worker per library, generated.** A Worker is how the data is read, never what it is about or who publishes it: topics overlap — a city Wi-Fi map is `cities` and `telecom` — so they cannot place a Worker, and there is no per-publisher Worker either. Each library's `worker.ts` declares its name, vars, secrets, buckets and CPU limit, and `pnpm packages:sync` writes `packages/gatekeeper-<library>/` for every library with examples and no publication hold. Nobody edits a Worker package. Topics (`TOPICS` in `packages/gatekeeper-shared/src/topics.ts`) and the publisher are labels on a feed, shown on the site; neither is a code boundary.
 4. **Feed slugs never change.** A feed's ID derives from its slug, so a feed keeps its history wherever it runs. Renaming a slug throws that history away.
 

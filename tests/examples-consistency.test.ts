@@ -103,6 +103,7 @@ describe("libraries and the Workers that carry them", () => {
       "gbfs",
       "gtfs",
       "ine",
+      "ioda",
       "ipma",
       "metrolisboa",
       "ogc",
@@ -111,6 +112,7 @@ describe("libraries and the Workers that carry them", () => {
       "parliament",
       "peeringdb",
       "ren",
+      "ripeatlas",
       "ripestat",
       "udata",
     ]);

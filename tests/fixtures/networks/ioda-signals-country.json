@@ -1,0 +1,923 @@
+{
+  "type": "signals",
+  "metadata": {
+    "requestTime": "2026-09-18T00:51:04+00:00",
+    "responseTime": "2026-09-18T00:51:06+00:00"
+  },
+  "requestParameters": {
+    "from": 1789682461,
+    "until": 1789693261,
+    "datasource": null,
+    "sourceParams": null,
+    "maxPoints": null
+  },
+  "error": null,
+  "perf": [
+    {
+      "datasource": "gtr",
+      "backend": "influxv2",
+      "timeUsed": 0.1347799301147461
+    },
+    {
+      "datasource": "gtr-sarima",
+      "backend": "influxv2",
+      "timeUsed": 0.12407803535461426
+    },
+    {
+      "datasource": "gtr-norm",
+      "backend": "influxv2",
+      "timeUsed": 0.13670110702514648
+    },
+    {
+      "datasource": "merit-nt",
+      "backend": "influxv2",
+      "timeUsed": 0.12689495086669922
+    },
+    {
+      "datasource": "bgp",
+      "backend": "influxv2",
+      "timeUsed": 0.1188499927520752
+    },
+    {
+      "datasource": "ping-slash24",
+      "backend": "influxv2",
+      "timeUsed": 0.11529302597045898
+    },
+    {
+      "datasource": "ping-slash24-loss",
+      "backend": "influxv2",
+      "timeUsed": 0.14590120315551758
+    },
+    {
+      "datasource": "ping-slash24-latency",
+      "backend": "influxv2",
+      "timeUsed": 0.11089491844177246
+    },
+    {
+      "datasource": "upstream-delay-penult-asns",
+      "backend": "influxv2",
+      "timeUsed": 0.001435995101928711
+    },
+    {
+      "datasource": "upstream-delay-penult-e2e-latency",
+      "backend": "influxv2",
+      "timeUsed": 0.00080108642578125
+    },
+    {
+      "datasource": "mozilla",
+      "backend": "influxv2",
+      "timeUsed": 0.12949109077453613
+    }
+  ],
+  "data": [
+    [
+      {
+        "entityType": "country",
+        "entityCode": "PT",
+        "entityName": "Portugal",
+        "entityFqid": "geo.provider.EU.PT",
+        "datasource": "gtr",
+        "subtype": "WEB_SEARCH",
+        "from": 1789682400,
+        "until": 1789695000,
+        "step": 1800,
+        "nativeStep": 1800,
+        "values": [
+          2519709270,
+          2379368333,
+          2094196458,
+          1757620833,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "entityType": "country",
+        "entityCode": "PT",
+        "entityName": "Portugal",
+        "entityFqid": "geo.provider.EU.PT",
+        "datasource": "gtr-sarima",
+        "subtype": "WEB_SEARCH",
+        "from": 1789682400,
+        "until": 1789695000,
+        "step": 1800,
+        "nativeStep": 1800,
+        "values": [
+          [
+            {
+              "continent_code": "EU",
+              "continent_label": "Europe",
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "product": "WEB_SEARCH",
+              "agg_values": {
+                "observed": 2519709270,
+                "predicted": 2607832951,
+                "threshold": 2464374711
+              }
+            }
+          ],
+          [
+            {
+              "continent_code": "EU",
+              "continent_label": "Europe",
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "product": "WEB_SEARCH",
+              "agg_values": {
+                "observed": 2379368333,
+                "predicted": 2453137152,
+                "threshold": 2285410302
+              }
+            }
+          ],
+          [
+            {
+              "continent_code": "EU",
+              "continent_label": "Europe",
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "product": "WEB_SEARCH",
+              "agg_values": {
+                "observed": 2094196458,
+                "predicted": 2226118113,
+                "threshold": 2017274053
+              }
+            }
+          ],
+          [
+            {
+              "continent_code": "EU",
+              "continent_label": "Europe",
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "product": "WEB_SEARCH",
+              "agg_values": {
+                "observed": 1757620833,
+                "predicted": 1930378433,
+                "threshold": 1697120433
+              }
+            }
+          ],
+          [
+            {
+              "continent_code": "EU",
+              "continent_label": "Europe",
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "product": "WEB_SEARCH",
+              "agg_values": {
+                "observed": null,
+                "predicted": null,
+                "threshold": null
+              }
+            }
+          ],
+          [
+            {
+              "continent_code": "EU",
+              "continent_label": "Europe",
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "product": "WEB_SEARCH",
+              "agg_values": {
+                "observed": null,
+                "predicted": null,
+                "threshold": null
+              }
+            }
+          ],
+          [
+            {
+              "continent_code": "EU",
+              "continent_label": "Europe",
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "product": "WEB_SEARCH",
+              "agg_values": {
+                "observed": null,
+                "predicted": null,
+                "threshold": null
+              }
+            }
+          ]
+        ]
+      },
+      {
+        "entityType": "country",
+        "entityCode": "PT",
+        "entityName": "Portugal",
+        "entityFqid": "geo.provider.EU.PT",
+        "datasource": "gtr-norm",
+        "subtype": "BLENDED",
+        "from": 1789682400,
+        "until": 1789689600,
+        "step": 1800,
+        "nativeStep": 1800,
+        "values": [
+          0.9732690464305103,
+          0.9405714534727695,
+          0.8617749068534272,
+          0.23251635336484675
+        ]
+      },
+      {
+        "entityType": "country",
+        "entityCode": "PT",
+        "entityName": "Portugal",
+        "entityFqid": "geo.provider.EU.PT",
+        "datasource": "merit-nt",
+        "subtype": "",
+        "from": 1789682400,
+        "until": 1789693500,
+        "step": 300,
+        "nativeStep": 300,
+        "values": [
+          70,
+          74.4,
+          68.4,
+          77.8,
+          74,
+          66,
+          72.6,
+          69.4,
+          71.2,
+          67,
+          69.8,
+          65,
+          70.6,
+          73.8,
+          69.6,
+          64.8,
+          70.6,
+          73.6,
+          67.4,
+          65.4,
+          69.2,
+          66.2,
+          61.8,
+          58.6,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "entityType": "country",
+        "entityCode": "PT",
+        "entityName": "Portugal",
+        "entityFqid": "geo.provider.EU.PT",
+        "datasource": "bgp",
+        "subtype": "",
+        "from": 1789682400,
+        "until": 1789693500,
+        "step": 300,
+        "nativeStep": 300,
+        "values": [
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27142,
+          27141,
+          27142,
+          27142,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "entityType": "country",
+        "entityCode": "PT",
+        "entityName": "Portugal",
+        "entityFqid": "geo.provider.EU.PT",
+        "datasource": "ping-slash24",
+        "subtype": "",
+        "from": 1789682400,
+        "until": 1789693800,
+        "step": 600,
+        "nativeStep": 600,
+        "values": [
+          10133,
+          10111,
+          10075,
+          10137,
+          10128,
+          10144,
+          10096,
+          10114,
+          10114,
+          10104,
+          10130,
+          10100,
+          10083,
+          10129,
+          10138,
+          10093,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "entityType": "country",
+        "entityCode": "PT",
+        "entityName": "Portugal",
+        "entityFqid": "geo.provider.EU.PT",
+        "datasource": "ping-slash24-loss",
+        "subtype": "",
+        "from": 1789682400,
+        "until": 1789693800,
+        "step": 600,
+        "nativeStep": 600,
+        "values": [
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 49.84,
+                "probe_count": 19541
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 50.04,
+                "probe_count": 19516
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 49.43,
+                "probe_count": 19518
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 50,
+                "probe_count": 19543
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 49.7,
+                "probe_count": 19536
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 49.75,
+                "probe_count": 19554
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 49.87,
+                "probe_count": 19556
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 50.21,
+                "probe_count": 19529
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 49.95,
+                "probe_count": 19522
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 49.99,
+                "probe_count": 19529
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 49.76,
+                "probe_count": 19537
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 49.95,
+                "probe_count": 19537
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 50.12,
+                "probe_count": 19537
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 50.04,
+                "probe_count": 19547
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 49.79,
+                "probe_count": 19541
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": 50.02,
+                "probe_count": 19585
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": null,
+                "probe_count": null
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": null,
+                "probe_count": null
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "loss_pct": null,
+                "probe_count": null
+              }
+            }
+          ]
+        ]
+      },
+      {
+        "entityType": "country",
+        "entityCode": "PT",
+        "entityName": "Portugal",
+        "entityFqid": "geo.provider.EU.PT",
+        "datasource": "ping-slash24-latency",
+        "subtype": "",
+        "from": 1789682400,
+        "until": 1789693800,
+        "step": 600,
+        "nativeStep": 600,
+        "values": [
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 273,
+                "mean_latency": 128.732,
+                "median_latency": 117,
+                "min_latency": 1,
+                "p10_latency": 108,
+                "p90_latency": 140
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 265,
+                "mean_latency": 128.447,
+                "median_latency": 117,
+                "min_latency": 1,
+                "p10_latency": 108,
+                "p90_latency": 139
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 289,
+                "mean_latency": 129.185,
+                "median_latency": 117,
+                "min_latency": 1,
+                "p10_latency": 109,
+                "p90_latency": 140
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 258,
+                "mean_latency": 129.115,
+                "median_latency": 117,
+                "min_latency": 1,
+                "p10_latency": 108,
+                "p90_latency": 139
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 268,
+                "mean_latency": 128.278,
+                "median_latency": 117,
+                "min_latency": 1,
+                "p10_latency": 108,
+                "p90_latency": 139
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 270,
+                "mean_latency": 128.959,
+                "median_latency": 117,
+                "min_latency": 1,
+                "p10_latency": 109,
+                "p90_latency": 139
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 276,
+                "mean_latency": 127.898,
+                "median_latency": 117,
+                "min_latency": 1,
+                "p10_latency": 109,
+                "p90_latency": 139
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 264,
+                "mean_latency": 128.929,
+                "median_latency": 117,
+                "min_latency": 1,
+                "p10_latency": 108,
+                "p90_latency": 139
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 270,
+                "mean_latency": 128.084,
+                "median_latency": 117,
+                "min_latency": 1,
+                "p10_latency": 109,
+                "p90_latency": 139
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 270,
+                "mean_latency": 128.257,
+                "median_latency": 117,
+                "min_latency": 1,
+                "p10_latency": 108,
+                "p90_latency": 138
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 267,
+                "mean_latency": 128.596,
+                "median_latency": 117,
+                "min_latency": 1,
+                "p10_latency": 108,
+                "p90_latency": 139
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 266,
+                "mean_latency": 128.096,
+                "median_latency": 117,
+                "min_latency": 1,
+                "p10_latency": 108,
+                "p90_latency": 139
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 269,
+                "mean_latency": 128.128,
+                "median_latency": 117,
+                "min_latency": 1,
+                "p10_latency": 108,
+                "p90_latency": 139
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 265,
+                "mean_latency": 128.907,
+                "median_latency": 117,
+                "min_latency": 1,
+                "p10_latency": 108,
+                "p90_latency": 139
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 264,
+                "mean_latency": 128.465,
+                "median_latency": 117,
+                "min_latency": 1,
+                "p10_latency": 108,
+                "p90_latency": 139
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": 275,
+                "mean_latency": 128.085,
+                "median_latency": 117,
+                "min_latency": 1,
+                "p10_latency": 108,
+                "p90_latency": 139
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": null,
+                "mean_latency": null,
+                "median_latency": null,
+                "min_latency": null,
+                "p10_latency": null,
+                "p90_latency": null
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": null,
+                "mean_latency": null,
+                "median_latency": null,
+                "min_latency": null,
+                "p10_latency": null,
+                "p90_latency": null
+              }
+            }
+          ],
+          [
+            {
+              "country_code": "PT",
+              "country_label": "Portugal",
+              "geo_db": "ipinfo",
+              "team": "team-2",
+              "agg_values": {
+                "max_latency": null,
+                "mean_latency": null,
+                "median_latency": null,
+                "min_latency": null,
+                "p10_latency": null,
+                "p90_latency": null
+              }
+            }
+          ]
+        ]
+      }
+    ]
+  ],
+  "copyright": "This data is Copyright (c) 2021-2025 Georgia Tech Research Corporation. All Rights Reserved."
+}

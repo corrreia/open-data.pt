@@ -7,7 +7,7 @@ Read `.agents/skills/write-gatekeeper/SKILL.md` before touching a Gatekeeper, an
 ```
 packages/gatekeeper-shared/src/           the contract, the shared collector, HTTP/stream/schema helpers
 packages/gatekeeper-shared/src/formats/   arcgis  ckan  opendatasoft  gtfs  gbfs  udata  ogc
-packages/gatekeeper-shared/src/sources/   carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat  parliament  ripestat  peeringdb
+packages/gatekeeper-shared/src/sources/   carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat  parliament  ioda  ripestat  peeringdb
 packages/gatekeeper-<library>/            generated: one Worker per library (arcgis  bpstat  carris  ckan  dgeg  eurostat  gbfs  gtfs  ine  ipma  metrolisboa  ogc  omie  opendatasoft  parliament  ren  udata)
 apps/kernel/                              storage, history, the API and the site
 tests/                                    every test, with fixtures under tests/fixtures/
@@ -19,7 +19,7 @@ tools/                                    packages.ts (generates the Workers and
 Where code lives
 
 1. A library per format: anything with a standard (GTFS, GBFS, ArcGIS, CKAN, Opendatasoft, uData) is parsed once, under `formats/`. A Worker never contains parsing.
-2. A library per bespoke source, under `sources/`: Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, RIPEstat, PeeringDB.
+2. A library per bespoke source, under `sources/`: Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, IODA, RIPEstat, PeeringDB.
 3. One Worker per library, named for **how** the data is read, never for what it is about or who publishes it. Topics overlap, so they cannot place a Worker: they are catalog tags only, from the vocabulary `TOPICS` in `packages/gatekeeper-shared/src/topics.ts`, in any number and any order. The Workers are generated: `pnpm packages:sync` writes `packages/gatekeeper-<library>/` for every library that has examples and no publication hold. Never edit a Worker package by hand.
 4. A library's `worker.ts` declares its human name and what its Worker needs (vars with their values, secrets, R2 buckets, CPU limit) and builds the library from that Worker's environment. A held source (`packages/gatekeeper-shared/src/publication-holds.json`) gets no Worker and installs no examples until the hold is lifted.
 5. Feed slugs never change: a feed's ID derives from its slug, so moving a feed between Workers keeps its history.
