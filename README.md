@@ -36,7 +36,7 @@ flowchart LR
 
 ### The Gatekeeper
 
-One Worker, reached only through a private service binding, carrying every **library**. A library is how data is read — a format or a bespoke source API — never what the data is about or who publishes it: topics overlap (a city Wi-Fi map is `cities` and `telecom`), and a publisher may be read two ways (Carris Metropolitana through its own API and through GTFS). Each library declares in `worker.ts` its name, its vars with their values, and any secrets, buckets and CPU limit; `packages/gatekeeper-shared/src/libraries.ts` lists the ones the Worker carries. Today, 18 libraries over 266 feeds:
+One Worker, reached only through a private service binding, carrying every **library**. A library is how data is read — a format or a bespoke source API — never what the data is about or who publishes it: topics overlap (a city Wi-Fi map is `cities` and `telecom`), and a publisher may be read two ways (Carris Metropolitana through its own API and through GTFS). Each library declares in `deployment.ts` its name, its vars with their values, and any secrets, buckets and CPU limit; `packages/gatekeeper-shared/src/libraries.ts` lists the ones the Worker carries. Today, 18 libraries over 266 feeds:
 
 | Library        | Reads                          | Feeds |
 | -------------- | ------------------------------ | ----- |

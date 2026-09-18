@@ -12,7 +12,7 @@ export interface OgcCollectorOptions {
 
 export function resolveOgcFeed(config: SourceConfig, hosts: ReadonlySet<string>): Promise<ResolvedFeed> {
   return resolveFeed(config, {
-    gatekeeperKind: "ogc",
+    library: "ogc",
     kinds: OGC_FEEDS,
     validate: (value) => validateOgcFeedConfig(value, hosts),
     // Page size and page cap change how much of a collection is read, not which

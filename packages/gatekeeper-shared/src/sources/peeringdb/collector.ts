@@ -13,7 +13,7 @@ export function peeringdbCollector(options: PeeringdbCollectorOptions): Normaliz
   const transformer = new PeeringdbTransformer();
   return {
     normalizer: { id: transformer.id, version: transformer.version },
-    resolve: (config) => resolveFeed(config, { gatekeeperKind: "peeringdb", kinds: PEERINGDB_FEEDS, validate: validatePeeringdbFeedConfig }),
+    resolve: (config) => resolveFeed(config, { library: "peeringdb", kinds: PEERINGDB_FEEDS, validate: validatePeeringdbFeedConfig }),
     source: (_state, mode, signal) => {
       if (mode.kind === "history") throw new Error("PeeringDB directory history is not supported");
       return collectPeeringdbFeed(options.config, options.apiOrigin, (input, init) =>

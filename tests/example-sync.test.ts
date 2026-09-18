@@ -43,6 +43,7 @@ function kind(name: string, title = name): FeedKindDescription {
 
 interface InstalledFeed extends SyncFeed {
   title: string;
+  library: string;
 }
 
 /** A Registry in memory: what the sync installs, updates and retires, and its stored sync state. */
@@ -63,11 +64,11 @@ class FakeRegistry implements SyncPorts {
     return [...this.installed.values()];
   }
 
-  async apply(gatekeeperKind: string, feed: ExampleFeed): Promise<void> {
+  async apply(library: string, feed: ExampleFeed): Promise<void> {
     if (this.failing.has(feed.slug)) throw new Error("resolution failed");
     this.applied.push(feed.slug);
     const id = this.installed.get(feed.slug)?.id ?? `feed_${this.nextId++}`;
-    this.installed.set(feed.slug, { id, slug: feed.slug, gatekeeperKind, title: feed.title });
+    this.installed.set(feed.slug, { id, slug: feed.slug, library, title: feed.title });
   }
 
   async retire(feedId: string): Promise<void> {
@@ -104,8 +105,8 @@ class FakeRegistry implements SyncPorts {
 function registry(): FakeRegistry {
   const fake = new FakeRegistry();
   fake.catalog = [
-    { kind: "alpha", kinds: [kind("alpha-things")], examples: ["a1", "a2", "a3", "a4", "a5", "a6"].map((slug) => example(slug)) },
-    { kind: "beta", kinds: [kind("beta-things")], examples: ["b1", "b2", "b3"].map((slug) => example(slug)) },
+    { library: "alpha", kinds: [kind("alpha-things")], examples: ["a1", "a2", "a3", "a4", "a5", "a6"].map((slug) => example(slug)) },
+    { library: "beta", kinds: [kind("beta-things")], examples: ["b1", "b2", "b3"].map((slug) => example(slug)) },
   ];
   return fake;
 }

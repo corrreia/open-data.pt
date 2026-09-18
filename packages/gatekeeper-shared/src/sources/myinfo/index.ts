@@ -21,4 +21,4 @@ export {
   type MyInfoZone,
 } from "./myinfo";
 export { MyInfoTransformer } from "./transform";
-export { MYINFO_DEPLOYMENT } from "./worker";
+export { MYINFO_DEPLOYMENT } from "./deployment";

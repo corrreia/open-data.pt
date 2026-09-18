@@ -139,7 +139,7 @@ describe("a kernel nobody operates", () => {
     const listed = await jsonBody<{ data: Array<{ slug: string; format: string; cadenceSeconds: number | null }> }>(await server.fetch("/api/feeds"));
     const fixtureFeed = listed.data.find((feed) => feed.slug === "fixture-things");
     expect(fixtureFeed).toMatchObject({ cadenceSeconds: 3600 });
-    for (const internal of ["policyId", "gatekeeperKind", "config", "semantics", "lastError", "cooldownUntil"]) expect(fixtureFeed).not.toHaveProperty(internal);
+    for (const internal of ["policyId", "library", "config", "semantics", "lastError", "cooldownUntil"]) expect(fixtureFeed).not.toHaveProperty(internal);
     const today = new Date().toISOString().slice(0, 10);
     const day = await jsonBody<{ day: string; data: Array<{ feedId: string }> }>(await server.fetch(`/api/acquisitions?day=${today}&feedId=${feedId}`));
     expect(day.day).toBe(today);

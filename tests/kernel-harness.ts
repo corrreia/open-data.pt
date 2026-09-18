@@ -73,7 +73,7 @@ const KIND: FeedKindDescription = {
 };
 
 export async function fixtureResolved(): Promise<ResolvedFeed> {
-  return resolveFeed({ feed: "things" }, { gatekeeperKind: "fixture", kinds: [KIND], validate: (config) => config });
+  return resolveFeed({ feed: "things" }, { library: "fixture", kinds: [KIND], validate: (config) => config });
 }
 
 export function policy(overrides: Partial<FeedPolicy["collection"]> = {}): FeedPolicy {
@@ -170,7 +170,7 @@ export async function kernelHarness(options: HarnessOptions = {}): Promise<Kerne
     slug: "things",
     title: "Things",
     description: "Fixture",
-    gatekeeperKind: "fixture",
+    library: "fixture",
     config: resolved.config,
     semantics: resolved.semantics,
     resolved,

@@ -275,7 +275,7 @@ describe("MYINFO Gatekeeper", () => {
     const { fetcher } = portal(page);
     const transformer = new MyInfoTransformer();
     const resolve = (config: Record<string, string>) =>
-      resolveFeed(config, { gatekeeperKind: "myinfo", kinds: Object.values(MYINFO_FEEDS), validate: (value) => validateMyInfoFeedConfig(value, OPERATORS) });
+      resolveFeed(config, { library: "myinfo", kinds: Object.values(MYINFO_FEEDS), validate: (value) => validateMyInfoFeedConfig(value, OPERATORS) });
     const resolved = await resolve(NETWORK);
     const request: CollectionRequest = {
       protocol: NORMALIZED_PROTOCOL,

@@ -7,7 +7,7 @@
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": false,
   "preview_urls": false,
-  // A library's vars are declared with their values in its `worker.ts`; only what varies by deployment is bound here.
+  // A library's vars are declared with their values in its `deployment.ts`; only what varies by deployment is bound here.
   // Secrets (wrangler secret put): ML_CONSUMER_KEY, ML_CONSUMER_SECRET (Metro Lisboa).
   // Parliament stages its 93 MB initiatives file to answer not-modified without parsing it.
   "r2_buckets": [{ "binding": "PARLIAMENT_STAGING", "bucket_name": "open-data-pt-gatekeeper-staging" }],

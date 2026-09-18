@@ -136,7 +136,7 @@ describe("Metro Lisboa Gatekeeper", () => {
     const answers = { "tempoEspera/Estacao/todos": ok(fixture("waiting-times")), "infoDestinos/todos": ok(fixture("destinations")) };
     const { fetcher } = metro(answers);
     const transformer = new MetroLisboaTransformer();
-    const resolve = (config: Record<string, string>) => resolveFeed(config, { gatekeeperKind: "metrolisboa", kinds: METRO_FEEDS, validate: validateMetroFeedConfig });
+    const resolve = (config: Record<string, string>) => resolveFeed(config, { library: "metrolisboa", kinds: METRO_FEEDS, validate: validateMetroFeedConfig });
     const resolved = await resolve({ feed: "waiting-times" });
     const request: CollectionRequest = {
       protocol: NORMALIZED_PROTOCOL,

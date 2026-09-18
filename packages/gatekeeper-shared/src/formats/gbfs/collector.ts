@@ -13,7 +13,7 @@ export interface GbfsCollectorOptions {
 const transformer = new GbfsTransformer();
 
 export function resolveGbfsFeed(config: SourceConfig, hosts: string): Promise<ResolvedFeed> {
-  return resolveFeed(config, { gatekeeperKind: "gbfs", kinds: GBFS_FEEDS, validate: (value) => validateGbfsFeedConfig(value, allowedGbfsHosts(hosts)) });
+  return resolveFeed(config, { library: "gbfs", kinds: GBFS_FEEDS, validate: (value) => validateGbfsFeedConfig(value, allowedGbfsHosts(hosts)) });
 }
 
 /** One discovery document and the station files it names, buffered whole and translated together. */

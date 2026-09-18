@@ -517,7 +517,7 @@ const STANDARD_FORMATS = new Set(["arcgis", "ckan", "gbfs", "gtfs", "opendatasof
 
 /**
  * A feed as the API shows it: where the data comes from, how often it is read, and how its
- * collection is going. The runner's scope and checkpoint, the policy, the collector, the lake
+ * collection is going. The runner's scope and checkpoint, the policy, the library, the lake
  * backlog and raw errors stay inside the platform; /api/outages says when a source failed.
  */
 function publicFeed(feed: Feed, cadenceSeconds: number | undefined) {
@@ -526,7 +526,7 @@ function publicFeed(feed: Feed, cadenceSeconds: number | undefined) {
     resolved: _resolved,
     checkpoint: _checkpoint,
     policyId: _policy,
-    gatekeeperKind: _collector,
+    library: _library,
     semantics: _semantics,
     config,
     cooldownUntil: _cooldown,

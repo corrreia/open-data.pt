@@ -3,4 +3,4 @@ export { CARRIS_FEEDS, collectCarrisFeed, validateCarrisFeedConfig } from "./car
 export { carrisCollector, resolveCarrisFeed, type CarrisCollectorOptions } from "./collector";
 export { CARRIS_EXAMPLES } from "./examples";
 export { CarrisTransformer } from "./transform";
-export { CARRIS_DEPLOYMENT } from "./worker";
+export { CARRIS_DEPLOYMENT } from "./deployment";

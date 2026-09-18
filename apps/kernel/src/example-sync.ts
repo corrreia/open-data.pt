@@ -21,8 +21,8 @@ export const SYNC_BATCH = 4;
 
 /** One library's part of the Gatekeeper's answer: its examples and the feed kinds it resolves them with. */
 export interface CatalogEntry {
-  /** The library's name, which is the `source` key its examples carry and the feeds' `gatekeeperKind`. */
-  kind: string;
+  /** The library's name, which is the `source` key its examples and installed feeds carry. */
+  library: string;
   examples: ExampleFeed[];
   kinds: FeedKindDescription[];
 }
@@ -34,13 +34,13 @@ export interface SyncFeed {
 }
 
 /** Install or update one example, or retire a feed whose example is gone. */
-export type SyncOp = { op: "apply"; kind: string; example: ExampleFeed; hash: string } | { op: "retire"; feedId: string; slug: string };
+export type SyncOp = { op: "apply"; library: string; example: ExampleFeed; hash: string } | { op: "retire"; feedId: string; slug: string };
 
 export interface SyncState {
   nextCheckAt: number;
   nextResolveAllAt: number;
   queue: SyncOp[];
-  /** Per example slug, the hash of the example and its Gatekeeper's feed kinds last applied successfully. */
+  /** Per example slug, the hash of the example and its library's feed kinds last applied successfully. */
   hashes: Record<string, string>;
   lastCheckedAt?: string;
   lastError?: string;
@@ -59,7 +59,7 @@ export interface SyncPorts {
   /** The Gatekeeper's examples and kinds, by library; `undefined` when it did not answer, or answered with nothing. */
   readCatalog(): Promise<CatalogEntry[] | undefined>;
   feeds(): SyncFeed[];
-  apply(kind: string, example: ExampleFeed): Promise<void>;
+  apply(library: string, example: ExampleFeed): Promise<void>;
   retire(feedId: string): Promise<void>;
   load(): SyncState | undefined;
   save(state: SyncState): void;
@@ -98,7 +98,7 @@ export async function syncStep(ports: SyncPorts, options: { check?: boolean } = 
   for (const op of state.queue.splice(0, SYNC_BATCH)) {
     try {
       if (op.op === "apply") {
-        await ports.apply(op.kind, op.example);
+        await ports.apply(op.library, op.example);
         state.hashes[op.example.slug] = op.hash;
         progress.applied += 1;
       } else {
@@ -132,7 +132,7 @@ export function planSync(catalog: CatalogEntry[], feeds: SyncFeed[], hashes: Rec
     for (const example of entry.examples) {
       listed.add(example.slug);
       const hash = digest(`${kindsHash}|${JSON.stringify(example)}`);
-      if (resolveAll || !installed.has(example.slug) || hashes[example.slug] !== hash) ops.push({ op: "apply", kind: entry.kind, example, hash });
+      if (resolveAll || !installed.has(example.slug) || hashes[example.slug] !== hash) ops.push({ op: "apply", library: entry.library, example, hash });
     }
   }
   for (const feed of feeds) if (!listed.has(feed.slug)) ops.push({ op: "retire", feedId: feed.id, slug: feed.slug });

@@ -28,7 +28,7 @@ const PRESENTATION_KEYS = new Set(["productSlug", "productTitle", "productDescri
 
 export function resolveUdataFeed(config: SourceConfig, hosts: ReadonlySet<string>): Promise<ResolvedFeed> {
   return resolveFeed(config, {
-    gatekeeperKind: "udata",
+    library: "udata",
     kinds: UDATA_FEEDS,
     validate: (value) => {
       const validated = validateUdataFeedConfig(value, hosts);

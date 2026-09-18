@@ -15,7 +15,7 @@ export function ripestatCollector(options: RipestatCollectorOptions): Normalized
   const transformer = new RipestatTransformer();
   return {
     normalizer: { id: transformer.id, version: transformer.version },
-    resolve: (config) => resolveFeed(config, { gatekeeperKind: "ripestat", kinds: RIPESTAT_FEEDS, validate: validateRipestatFeedConfig }),
+    resolve: (config) => resolveFeed(config, { library: "ripestat", kinds: RIPESTAT_FEEDS, validate: validateRipestatFeedConfig }),
     source: (state, mode, signal) =>
       collectRipestatFeed(
         options.config,

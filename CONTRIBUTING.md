@@ -16,10 +16,10 @@ apps/kernel/            storage, history, the API and the site
 
 1. **A library per format.** Anything with a standard — GTFS, GBFS, ArcGIS, CKAN, Opendatasoft, uData, OGC API Features — is parsed once, under `formats/`. A Worker never contains parsing.
 2. **A library per bespoke source,** under `sources/`: Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, MYINFO, IODA, RIPE Atlas, RIPEstat, PeeringDB.
-3. **One Worker, every library.** A library is how the data is read, never what it is about or who publishes it: topics overlap — a city Wi-Fi map is `cities` and `telecom` — and a publisher may be read two ways, so neither is a code boundary. Each library's `worker.ts` declares its name, its vars with their values, and any secrets, buckets and CPU limit; `libraries.ts` lists the libraries the Worker carries, and a library under a publication hold is not listed. Topics (`TOPICS` in `packages/gatekeeper-shared/src/topics.ts`) and the publisher are labels on a feed, shown on the site.
+3. **One Worker, every library.** A library is how the data is read, never what it is about or who publishes it: topics overlap — a city Wi-Fi map is `cities` and `telecom` — and a publisher may be read two ways, so neither is a code boundary. Each library's `deployment.ts` declares its name, its vars with their values, and any secrets, buckets and CPU limit; `libraries.ts` lists the libraries the Worker carries, and a library under a publication hold is not listed. Topics (`TOPICS` in `packages/gatekeeper-shared/src/topics.ts`) and the publisher are labels on a feed, shown on the site.
 4. **Feed slugs never change.** A feed's ID derives from its slug, so a feed keeps its history wherever it runs. Renaming a slug throws that history away.
 
-A library exports its feed-kind table, `validate<Name>FeedConfig`, `collect<Name>Feed`, its transformer, its examples array, `<name>Collector(options)`, and `<NAME>_DEPLOYMENT` from `worker.ts` — what the Worker needs to carry it. Every example configuration carries `source: "<library>"`, which is what routes it inside the Worker; the library never sees that key.
+A library exports its feed-kind table, `validate<Name>FeedConfig`, `collect<Name>Feed`, its transformer, its examples array, `<name>Collector(options)`, and `<NAME>_DEPLOYMENT` from `deployment.ts` — what the Worker needs to carry it. Every example configuration carries `source: "<library>"`, which is what routes it inside the Worker; the library never sees that key.
 
 ## The four kinds of contribution
 
@@ -44,11 +44,11 @@ One entry in that library's `examples.ts`. Nothing else.
 
 ### A new source on a format we already read
 
-The example above, plus its hostname in the library's allowlist var (`CKAN_ALLOWED_HOSTS`, `ARCGIS_ALLOWED_HOSTS`, …) in that library's `worker.ts`.
+The example above, plus its hostname in the library's allowlist var (`CKAN_ALLOWED_HOSTS`, `ARCGIS_ALLOWED_HOSTS`, …) in that library's `deployment.ts`.
 
 ### A new bespoke source
 
-A directory under `packages/gatekeeper-shared/src/sources/<name>/`: `<name>.ts` (feed kinds, validation, fetching), `transform.ts` (bytes to products), `examples.ts`, `collector.ts` (the factory), `worker.ts` (its `<NAME>_API_ORIGIN` var and anything else the Worker must give it), `index.ts` (the barrel), and one line in `libraries.ts`. Fixture tests under `tests/` with saved source responses — no network in unit tests, and no module mocking.
+A directory under `packages/gatekeeper-shared/src/sources/<name>/`: `<name>.ts` (feed kinds, validation, fetching), `transform.ts` (bytes to products), `examples.ts`, `collector.ts` (the factory), `deployment.ts` (its `<NAME>_API_ORIGIN` var and anything else the Worker must give it), `index.ts` (the barrel), and one line in `libraries.ts`. Fixture tests under `tests/` with saved source responses — no network in unit tests, and no module mocking.
 
 ### A new format
 

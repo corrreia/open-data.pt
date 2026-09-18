@@ -26,7 +26,7 @@ export function myInfoOperators(value: string): ReadonlySet<string> {
 
 export function resolveMyInfoFeed(config: SourceConfig, operators: ReadonlySet<string>): Promise<ResolvedFeed> {
   return resolveFeed(config, {
-    gatekeeperKind: "myinfo",
+    library: "myinfo",
     kinds: Object.values(MYINFO_FEEDS),
     validate: (value) => validateMyInfoFeedConfig(value, operators),
   });

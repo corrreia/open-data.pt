@@ -83,7 +83,7 @@ export function validateRenPeriodicConfig(config: SourceConfig): SourceConfig {
 export function renPeriodicCollector(options: RenPeriodicOptions): NormalizedCollector {
   return {
     normalizer: { id: "ren-periodic-data", version: "1" },
-    resolve: (config) => resolveFeed(config, { gatekeeperKind: "ren", kinds: REN_PERIODIC_FEEDS, validate: validateRenPeriodicConfig }),
+    resolve: (config) => resolveFeed(config, { library: "ren", kinds: REN_PERIODIC_FEEDS, validate: validateRenPeriodicConfig }),
     source: (state, mode, signal) => {
       if (mode.kind !== "live") throw new GatekeeperError("REN periodic arbitrary history is not declared", "invalid-config");
       return collectRenPeriodic(options, sourceValidator(state), signal);

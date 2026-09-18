@@ -4,4 +4,4 @@ export { validateUdataFeedConfig } from "./config";
 export { UDATA_EXAMPLES } from "./examples";
 export { chooseTransformer, listTransformers, transformUdata } from "./transform";
 export { UdataSource, type DistributionSelector, validateUdataSourceConfig, type Fetcher } from "./udata";
-export { UDATA_DEPLOYMENT } from "./worker";
+export { UDATA_DEPLOYMENT } from "./deployment";

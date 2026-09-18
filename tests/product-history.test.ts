@@ -53,7 +53,7 @@ beforeAll(async () => {
       slug: feedId,
       title: feedId,
       description: "",
-      gatekeeperKind: "fixture",
+      library: "fixture",
       config: {},
       semantics,
       resolved: { ...resolved, semantics },

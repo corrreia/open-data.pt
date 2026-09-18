@@ -15,7 +15,7 @@ export interface MetrolisboaCollectorOptions {
 const transformer = new MetroLisboaTransformer();
 
 export function resolveMetrolisboaFeed(config: SourceConfig): Promise<ResolvedFeed> {
-  return resolveFeed(config, { gatekeeperKind: "metrolisboa", kinds: METRO_FEEDS, validate: validateMetroFeedConfig });
+  return resolveFeed(config, { library: "metrolisboa", kinds: METRO_FEEDS, validate: validateMetroFeedConfig });
 }
 
 export function metrolisboaCollector(options: MetrolisboaCollectorOptions): NormalizedCollector {

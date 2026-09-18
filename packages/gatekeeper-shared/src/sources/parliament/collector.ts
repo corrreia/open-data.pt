@@ -10,7 +10,7 @@ export interface ParliamentCollectorOptions {
 }
 
 export function resolveParliamentFeed(config: SourceConfig): Promise<ResolvedFeed> {
-  return resolveFeed(config, { gatekeeperKind: "parliament", kinds: PARLIAMENT_FEEDS, validate: validateParliamentFeedConfig });
+  return resolveFeed(config, { library: "parliament", kinds: PARLIAMENT_FEEDS, validate: validateParliamentFeedConfig });
 }
 
 export function parliamentCollector(options: ParliamentCollectorOptions): NormalizedCollector {

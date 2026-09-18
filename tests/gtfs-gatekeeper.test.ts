@@ -128,7 +128,7 @@ describe("GTFS Gatekeeper", () => {
     );
     const resolved = await resolveFeed(
       { url: metro.source, files: "agency,stops,routes,calendar,calendar_dates,trips,shapes,feed_info" },
-      { gatekeeperKind: "gtfs", kinds: GTFS_FEEDS, validate: (value) => validateGtfsFeedConfig(value, ALLOWED_HOSTS) },
+      { library: "gtfs", kinds: GTFS_FEEDS, validate: (value) => validateGtfsFeedConfig(value, ALLOWED_HOSTS) },
     );
     const request: CollectionRequest = {
       protocol: NORMALIZED_PROTOCOL,

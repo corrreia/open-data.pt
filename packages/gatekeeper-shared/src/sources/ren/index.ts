@@ -18,4 +18,4 @@ export {
   type RenServiceName,
 } from "./ren";
 export { RenTransformer } from "./transform";
-export { REN_DEPLOYMENT } from "./worker";
+export { REN_DEPLOYMENT } from "./deployment";

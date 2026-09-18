@@ -260,13 +260,16 @@ export class RunnerCore {
 
   /* ---------- Schema ---------- */
 
-  /** No migrations: a different schema version resets this runner; the Registry re-configures it. */
+  /** A different schema version resets this runner; the one terminology cleanup below preserves its current feed in place. */
   migrate(): void {
     const current = this.tableExists("meta") ? this.rows<{ value: string }>(`SELECT value FROM meta WHERE key = 'schema_version'`)[0]?.value : undefined;
     if (current !== undefined && current !== String(RUNNER_SCHEMA_VERSION)) this.reset();
     if (current === undefined && userTables(this.sql).length > 0) this.reset();
     this.exec(`CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)`);
     this.exec(`CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value_json TEXT NOT NULL)`);
+    // One-time terminology cleanup: an existing runner's feed called its library `gatekeeperKind`. Rewrite it before the first alarm reads it.
+    this.exec(`UPDATE state SET value_json = json_remove(json_set(value_json, '$.library', json_extract(value_json, '$.gatekeeperKind')), '$.gatekeeperKind')
+      WHERE key = 'feed' AND json_type(value_json, '$.library') IS NULL AND json_type(value_json, '$.gatekeeperKind') = 'text'`);
     this.exec(`CREATE TABLE IF NOT EXISTS acquisitions (
       id TEXT PRIMARY KEY, trigger TEXT NOT NULL, status TEXT NOT NULL, requested_at TEXT NOT NULL, started_at TEXT, completed_at TEXT,
       observed_at TEXT, event_time TEXT, source_published_at TEXT, completeness TEXT, normalizer_json TEXT, quality_json TEXT,
@@ -465,7 +468,7 @@ export class RunnerCore {
     return new Date(this.deps.now() + (this.requirePolicy().collection.timeoutSeconds + WATCHDOG_MARGIN_SECONDS) * 1000).toISOString();
   }
 
-  /** How many feeds of the same Gatekeeper kind are walking history; paces this runner's slices. */
+  /** How many feeds of the same library are walking history; paces this runner's slices. */
   backfillPeers = 1;
 
   /** Every serving object this runner still references, for cleanup when its feed is gone. */

@@ -3,4 +3,4 @@ export { CKAN_FEEDS, CKAN_LIMITS, CkanSource, validateCkanFeedConfig, type CkanC
 export { ckanCollector, resolveCkanFeed, type CkanCollectorOptions } from "./collector";
 export { CKAN_EXAMPLES } from "./examples";
 export { CKAN_NORMALIZER, CKAN_SAMPLE_ROWS, epsg3763ToWgs84, parsePythonLiteral, transformCkan } from "./transform";
-export { CKAN_DEPLOYMENT } from "./worker";
+export { CKAN_DEPLOYMENT } from "./deployment";

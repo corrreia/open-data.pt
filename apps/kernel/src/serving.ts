@@ -268,7 +268,7 @@ export class Serving {
           "dct:license": policy ? dcatLicence(policy.serving.licence) : undefined,
           "dct:publisher": feed ? dcatPublisher(feed.publisher) : undefined,
           "dcat:keyword": feed?.topics?.length ? feed.topics : undefined,
-          "dct:provenance": feed ? `Generated from ${feed.title} through the ${feed.gatekeeperKind} library` : undefined,
+          "dct:provenance": feed ? `Generated from ${feed.title} through the ${feed.library} library` : undefined,
           "dcat:distribution": [
             { "@type": "dcat:Distribution", "dct:format": "application/json", "dcat:accessURL": `${origin}/api/products/${encodeURIComponent(product.slug)}/${endpoint}` },
           ],

@@ -18,4 +18,4 @@ export {
   type MetroLine,
 } from "./metrolisboa";
 export { MetroLisboaTransformer, bracketList, intervalSeconds, metroTimestamp } from "./transform";
-export { METROLISBOA_DEPLOYMENT } from "./worker";
+export { METROLISBOA_DEPLOYMENT } from "./deployment";

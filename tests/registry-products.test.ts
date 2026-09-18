@@ -51,7 +51,7 @@ async function registry() {
     slug: "things",
     title: "Things",
     description: "",
-    gatekeeperKind: "fixture",
+    library: "fixture",
     config: resolved.config,
     semantics: resolved.semantics,
     resolved,
