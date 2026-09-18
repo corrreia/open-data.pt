@@ -167,7 +167,9 @@ function coordinate(value: JsonValue | undefined, minimum: number, maximum: numb
 }
 
 function milliseconds(value: JsonValue | undefined): string | undefined {
-  return isJsonNumber(value) && Number.isSafeInteger(value) && value > 0 ? new Date(value).toISOString() : undefined;
+  if (!isJsonNumber(value) || !Number.isSafeInteger(value) || value <= 0) return undefined;
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date.toISOString() : undefined;
 }
 
 function isString(value: string | undefined): value is string {

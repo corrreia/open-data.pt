@@ -123,7 +123,9 @@ function featureRecord(value: JsonValue | undefined, config: SourceConfig, profi
 function canonical(value: JsonValue | undefined, type: FieldType): JsonValue {
   if (value === undefined || value === null) return null;
   if (type === "number" && isJsonString(value)) {
-    const number = Number(value);
+    const text = value.trim();
+    if (text === "") return null;
+    const number = Number(text);
     return Number.isFinite(number) ? number : null;
   }
   if (type === "datetime" && isJsonString(value)) return sourceDate(value) ?? value;
@@ -131,10 +133,28 @@ function canonical(value: JsonValue | undefined, type: FieldType): JsonValue {
 }
 
 function sourceDate(value: JsonValue | undefined): string | undefined {
-  if (!isJsonString(value) || value.trim() === "") return undefined;
-  const normalized = /^\d{4}-\d{2}-\d{2} /u.test(value) ? `${value.replace(" ", "T")}Z` : value;
-  const parsed = Date.parse(normalized);
-  return Number.isNaN(parsed) ? undefined : new Date(parsed).toISOString();
+  if (!isJsonString(value)) return undefined;
+  const match = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})(?:\.\d{1,9})?Z?$/u.exec(value.trim());
+  if (!match) return undefined;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  const second = Number(match[6]);
+  const parsed = Date.parse(`${value.trim().replace(" ", "T").replace(/Z?$/u, "Z")}`);
+  if (Number.isNaN(parsed)) return undefined;
+  const date = new Date(parsed);
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() + 1 !== month ||
+    date.getUTCDate() !== day ||
+    date.getUTCHours() !== hour ||
+    date.getUTCMinutes() !== minute ||
+    date.getUTCSeconds() !== second
+  )
+    return undefined;
+  return date.toISOString();
 }
 
 function geometryCentre(geometry: JsonObject | null): [number, number] | undefined {

@@ -11,6 +11,10 @@ function fixture(path: string): Uint8Array {
   return readFileSync(new URL(`./fixtures/${path}`, import.meta.url));
 }
 
+function replacedFixture(path: string, from: string, to: string): Uint8Array {
+  return new TextEncoder().encode(new TextDecoder().decode(fixture(path)).replaceAll(from, to));
+}
+
 function context(slug: string, config: Record<string, string>, domainSubject: "event" | "observation", defaultProductRole: "event-log" | "time-series"): TransformContext {
   return {
     feed: { slug, title: `${slug} title`, description: `${slug} description`, config, semantics: { domainSubject, defaultProductRole } },
@@ -104,7 +108,9 @@ describe("global hazard normalizers", () => {
   });
 
   it("infers typed EFFIS attributes while retaining source geometry and clocks", () => {
-    const result = new WfsTransformer().transform(fixture("wfs/effis-burnt-areas.json"), context("effis-portugal-recent-burnt-areas-feed", wfsConfig, "event", "event-log"));
+    const transformer = new WfsTransformer();
+    const transformContext = context("effis-portugal-recent-burnt-areas-feed", wfsConfig, "event", "event-log");
+    const result = transformer.transform(fixture("wfs/effis-burnt-areas.json"), transformContext);
     const product = result.products[0];
     expect(product).toMatchObject({ role: "event-log", updateMode: "source-window", watermark: "2026-08-18T11:57:54.973Z" });
     expect(product?.schema.fields).toContainEqual(expect.objectContaining({ id: "AREA_HA", type: "number" }));
@@ -115,5 +121,43 @@ describe("global hazard normalizers", () => {
       sourcePublishedAt: "2026-08-18T11:57:54.973Z",
       payload: { COUNTRY: "PT", AREA_HA: 26593, latitude: 40.85, longitude: -8.05 },
     });
+
+    const blank = transformer.transform(replacedFixture("wfs/effis-burnt-areas.json", '"AREA_HA": "26593"', '"AREA_HA": "   "'), transformContext);
+    expect(blank.products[0]?.records?.[0]?.payload.AREA_HA).toBeNull();
+  });
+
+  it("rejects out-of-range epochs and impossible source calendar dates", async () => {
+    const anepc = new AnepcTransformer().transform(
+      replacedFixture("anepc/active-occurrences.json", "1789751220000", "9007199254740991"),
+      context("anepc-active-occurrences-feed", { feed: "active-occurrences" }, "event", "event-log"),
+    );
+    expect(anepc.quality).toEqual({ acceptedRecords: 1, rejectedRecords: 1 });
+
+    const usgs = new UsgsTransformer().transform(
+      replacedFixture("usgs/earthquakes.json", "1739798644559", "9007199254740991"),
+      context("usgs-mainland-portugal-earthquakes-feed", { feed: "earthquakes", region: "mainland", days: "30", minMagnitude: "1" }, "event", "event-log"),
+    );
+    expect(usgs.quality).toEqual({ acceptedRecords: 0, rejectedRecords: 1 });
+
+    const firms = await new FirmsTransformer().transform(
+      new Response(replacedFixture("firms/hotspots.csv", "2026-09-18", "2026-02-30")).body!,
+      context("nasa-firms-mainland-thermal-anomalies-feed", { feed: "hotspots", region: "mainland", product: "VIIRS_SNPP_NRT" }, "event", "event-log"),
+    );
+    const firmsRows: NormalizedRow[] = [];
+    for await (const row of firms.rows) firmsRows.push(row);
+    expect(firmsRows).toEqual([]);
+    expect(firms.finish().quality).toEqual({ acceptedRecords: 0, rejectedRecords: 2 });
+
+    const power = new NasaPowerTransformer().transform(
+      replacedFixture("nasapower/daily-region.json", "20260914", "20260230"),
+      context("nasa-power-mainland-solar-resource-feed", { feed: "daily-region", region: "mainland", parameter: "ALLSKY_SFC_SW_DWN", days: "30" }, "observation", "time-series"),
+    );
+    expect(power.products[0]?.points).toHaveLength(3);
+
+    const wfs = new WfsTransformer().transform(
+      replacedFixture("wfs/effis-burnt-areas.json", "2026-08-08 00:00:00", "2026-02-30 00:00:00"),
+      context("effis-portugal-recent-burnt-areas-feed", wfsConfig, "event", "event-log"),
+    );
+    expect(wfs.quality).toEqual({ acceptedRecords: 0, rejectedRecords: 1 });
   });
 });

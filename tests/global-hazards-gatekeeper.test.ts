@@ -56,6 +56,9 @@ describe("global hazard source boundaries", () => {
     expect(() => validateWfsFeedConfig({ ...wfsConfig, host: "evil.example" }, new Set(["maps.effis.emergency.copernicus.eu"]))).toThrow(
       expect.objectContaining({ code: "source-denied" }),
     );
+    expect(() => validateWfsFeedConfig({ ...wfsConfig, path: "//evil.example/effis" }, new Set(["maps.effis.emergency.copernicus.eu"]))).toThrow(
+      expect.objectContaining({ code: "invalid-config" }),
+    );
   });
 
   it("collects the ANEPC authoritative snapshot without treating its wrapper clock as a record change", async () => {

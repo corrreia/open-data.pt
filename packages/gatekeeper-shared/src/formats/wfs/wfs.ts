@@ -66,7 +66,7 @@ export function validateWfsFeedConfig(config: SourceConfig, hosts: ReadonlySet<s
   const host = config.host?.trim().toLowerCase();
   if (!host || !hosts.has(host)) throw new GatekeeperError("The WFS host is not allowed", "source-denied");
   const path = config.path?.trim();
-  if (!path || !/^\/[A-Za-z0-9._~!$&'()*+,;=:@%/-]{1,500}$/u.test(path) || path.includes("..")) throw new GatekeeperError("WFS path is invalid", "invalid-config");
+  if (!path || !/^\/(?!\/)[A-Za-z0-9._~!$&'()*+,;=:@%/-]{1,500}$/u.test(path) || path.includes("..")) throw new GatekeeperError("WFS path is invalid", "invalid-config");
   const typeName = token(config.typeName, "typeName", /^[A-Za-z0-9_.:-]+$/u);
   const idField = token(config.idField, "idField", /^[A-Za-z_][A-Za-z0-9_]*$/u);
   const eventTimeField = token(config.eventTimeField, "eventTimeField", /^[A-Za-z_][A-Za-z0-9_]*$/u);

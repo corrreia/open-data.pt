@@ -133,8 +133,21 @@ function first(left: string | undefined, right: string | undefined): string | un
 function acquisitionTime(date: string | undefined, time: string | undefined): string | undefined {
   if (!date || !/^\d{4}-\d{2}-\d{2}$/u.test(date) || !time || !/^\d{1,4}$/u.test(time)) return undefined;
   const padded = time.padStart(4, "0");
-  const value = Date.parse(`${date}T${padded.slice(0, 2)}:${padded.slice(2)}:00Z`);
-  return Number.isNaN(value) ? undefined : new Date(value).toISOString();
+  const year = Number(date.slice(0, 4));
+  const month = Number(date.slice(5, 7));
+  const day = Number(date.slice(8, 10));
+  const hour = Number(padded.slice(0, 2));
+  const minute = Number(padded.slice(2));
+  const acquiredAt = new Date(Date.UTC(year, month - 1, day, hour, minute));
+  if (
+    acquiredAt.getUTCFullYear() !== year ||
+    acquiredAt.getUTCMonth() + 1 !== month ||
+    acquiredAt.getUTCDate() !== day ||
+    acquiredAt.getUTCHours() !== hour ||
+    acquiredAt.getUTCMinutes() !== minute
+  )
+    return undefined;
+  return acquiredAt.toISOString();
 }
 
 function finite(value: string | undefined): number | undefined {

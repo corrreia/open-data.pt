@@ -91,8 +91,12 @@ function gridPoints(value: JsonValue | undefined, parameter: string, unit: strin
 }
 
 function compactDate(value: string): string | undefined {
-  const parsed = Date.parse(`${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}T00:00:00Z`);
-  return Number.isNaN(parsed) ? undefined : new Date(parsed).toISOString();
+  const year = Number(value.slice(0, 4));
+  const month = Number(value.slice(4, 6));
+  const day = Number(value.slice(6, 8));
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() + 1 !== month || date.getUTCDate() !== day) return undefined;
+  return date.toISOString();
 }
 
 function finite(value: JsonValue | undefined): number | undefined {
