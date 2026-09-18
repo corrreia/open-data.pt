@@ -36,7 +36,7 @@ flowchart LR
 
 ### The Gatekeeper
 
-One Worker, reached only through a private service binding, carrying every **library**. A library is how data is read — a format or a bespoke source API — never what the data is about or who publishes it: topics overlap (a city Wi-Fi map is `cities` and `telecom`), and a publisher may be read two ways (Carris Metropolitana through its own API and through GTFS). Each library declares in `deployment.ts` its name, its vars with their values, and any secrets, buckets and CPU limit; `packages/gatekeeper-shared/src/libraries.ts` lists the ones the Worker carries. Today, 18 libraries over 266 feeds:
+One Worker, reached only through a private service binding, carrying every **library**. A library is how data is read — a format or a bespoke source API — never what the data is about or who publishes it: topics overlap (a city Wi-Fi map is `cities` and `telecom`), and a publisher may be read two ways (Carris Metropolitana through its own API and through GTFS). Each library declares in `deployment.ts` its name, its vars with their values, and any secrets, buckets and CPU limit; `packages/gatekeeper-shared/src/libraries.ts` lists the ones the Worker carries. Today, 22 libraries over 276 feeds:
 
 | Library        | Reads                          | Feeds |
 | -------------- | ------------------------------ | ----- |
@@ -58,18 +58,22 @@ One Worker, reached only through a private service binding, carrying every **lib
 | `parliament`   | Assembleia da República        | 7     |
 | `ren`          | REN electricity grid           | 8     |
 | `udata`        | uData portals (dados.gov.pt)   | 13    |
+| `wfs`          | OGC Web Feature Services       | 1     |
+| `firms`        | NASA FIRMS thermal anomalies   | 3     |
+| `nasapower`    | NASA POWER daily analysis      | 3     |
+| `usgs`         | USGS earthquake catalog        | 3     |
 
-A library under a publication hold (IODA, RIPE Atlas, RIPEstat, PeeringDB) is not listed, so its code does not ship and its examples are not installed until the hold is lifted; a new library is its directory and one line in the list.
+A library under a publication hold (ANEPC, IODA, RIPE Atlas, RIPEstat, PeeringDB) is not listed, so its code does not ship and its examples are not installed until the hold is lifted; a new library is its directory and one line in the list.
 
 What the catalog groups and filters by is three vocabularies next to the libraries, each a keyed list a test holds every example to: `topics.ts` (a feed carries as many tags as it likes), `publishers.ts` (who made the data — never the portal it was read from: dados.gov.pt carries ten publishers and is none of them) and `licences.ts` (the terms a product is served under, as its publisher states them; `source-terms` when it states none). A feed names its publisher and its policy names its licence by key; the API serves each expanded as `{ id, name, url?, description? }`, so a licence spelled three ways is one licence, and a publisher read through two libraries is one publisher, with a page each.
 
-The Worker holds no parsing. It builds each library from its declared vars and the Worker's bindings — a format library for anything with a standard (ArcGIS, CKAN, Opendatasoft, GTFS, GBFS, uData, OGC API Features) or a source library per bespoke API (Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, MYINFO, IODA, RIPE Atlas, RIPEstat, PeeringDB) — and lists every library's example feeds. Every feed's configuration names its library in `source`, and that key is what routes it.
+The Worker holds no parsing. It builds each library from its declared vars and the Worker's bindings — a format library for anything with a standard (ArcGIS, CKAN, Opendatasoft, GTFS, GBFS, uData, OGC API Features, OGC WFS) or a source library per bespoke API (Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, MYINFO, NASA FIRMS, NASA POWER, USGS, ANEPC, IODA, RIPE Atlas, RIPEstat, PeeringDB) — and lists every library's example feeds. Every feed's configuration names its library in `source`, and that key is what routes it.
 
 The RPC has five operations: `describe`, `listFeedKinds`, `resolveFeed`, `collect`, and `exampleFeeds`. `collect` returns a typed unchanged, batch, exhausted, or failure result. A batch is one `open-data-normalized/4` NDJSON stream: a header, product-keyed record and point frames, and a mandatory completion frame that may finalize values only known at the end (inferred schema, watermark, a product found absent). Adapters hand the shared collector a typed source fetch; formats that can be read row by row (CSV, NDJSON, JSON arrays, GeoJSON features, GTFS ZIP entries) stream, and everything else is buffered under a 16 MiB cap. Source bodies never leave the Gatekeeper.
 
 ### Source publication review
 
-Source access, validation and permission to republish are separate checks. The RIPEstat, PeeringDB and MYINFO libraries are written and tested, but they get no Worker and their examples are installed nowhere until the explicit holds in [`packages/gatekeeper-shared/src/publication-holds.json`](packages/gatekeeper-shared/src/publication-holds.json) are resolved. The consistency tests require every cleared library to have a Worker, every example tag to be a known catalog topic, and no held example to be auto-published.
+Source access, validation and permission to republish are separate checks. The ANEPC, RIPEstat, PeeringDB and IODA libraries are written and tested, but they get no Worker and their examples are installed nowhere until the explicit holds in [`packages/gatekeeper-shared/src/publication-holds.json`](packages/gatekeeper-shared/src/publication-holds.json) are resolved. The consistency tests require every cleared library to have a Worker, every example tag to be a known catalog topic, and no held example to be auto-published.
 
 A successful source request is not proof of a reuse licence, and a successful dry-run is not a deployment.
 

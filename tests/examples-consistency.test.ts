@@ -95,12 +95,14 @@ describe("example feed policies", () => {
 describe("libraries and the Worker that carries them", () => {
   it("finds a format library per standard and a source library per bespoke API", () => {
     expect(Object.keys(LIBRARIES).map(libraryName).toSorted()).toEqual([
+      "anepc",
       "arcgis",
       "bpstat",
       "carris",
       "ckan",
       "dgeg",
       "eurostat",
+      "firms",
       "gbfs",
       "gtfs",
       "ine",
@@ -108,6 +110,7 @@ describe("libraries and the Worker that carries them", () => {
       "ipma",
       "metrolisboa",
       "myinfo",
+      "nasapower",
       "ogc",
       "omie",
       "opendatasoft",
@@ -117,6 +120,8 @@ describe("libraries and the Worker that carries them", () => {
       "ripeatlas",
       "ripestat",
       "udata",
+      "usgs",
+      "wfs",
     ]);
   });
 

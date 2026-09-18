@@ -15,6 +15,7 @@ export interface PublisherDescription {
 }
 
 export const PUBLISHERS = {
+  "anepc": { name: "ANEPC · Autoridade Nacional de Emergência e Proteção Civil", url: "https://prociv.gov.pt/" },
   "apa": { name: "APA · Agência Portuguesa do Ambiente", url: "https://apambiente.pt/" },
   "arquivo-pt": { name: "Arquivo.pt", url: "https://arquivo.pt/" },
   "arte": { name: "ARTE · Agência para a Reforma Tecnológica do Estado" },
@@ -40,6 +41,7 @@ export const PUBLISHERS = {
   "dgs": { name: "DGS · Direção-Geral da Saúde", url: "https://www.dgs.pt/" },
   "dgt": { name: "DGT · Direção-Geral do Território", url: "https://www.dgterritorio.gov.pt/" },
   "e-redes": { name: "E-REDES", url: "https://www.e-redes.pt/" },
+  "effis-jrc": { name: "EFFIS · European Forest Fire Information System, European Commission JRC", url: "https://forest-fire.emergency.copernicus.eu/" },
   "eurostat": { name: "Eurostat", url: "https://ec.europa.eu/eurostat" },
   "fertagus": { name: "Fertagus", url: "https://www.fertagus.pt/" },
   "horarios-do-funchal": { name: "Horários do Funchal", url: "https://www.horariosdofunchal.pt/" },
@@ -51,6 +53,8 @@ export const PUBLISHERS = {
   "mare": { name: "Maré" },
   "metro-do-porto": { name: "Metro do Porto", url: "https://www.metrodoporto.pt/" },
   "metropolitano-de-lisboa": { name: "Metropolitano de Lisboa", url: "https://www.metrolisboa.pt/" },
+  "nasa-firms": { name: "NASA FIRMS · Fire Information for Resource Management System", url: "https://firms.modaps.eosdis.nasa.gov/" },
+  "nasa-power": { name: "NASA POWER · Prediction Of Worldwide Energy Resources", url: "https://power.larc.nasa.gov/" },
   "omie": { name: "OMIE · Iberian electricity market", url: "https://www.omie.es/" },
   "peeringdb": { name: "PeeringDB", url: "https://www.peeringdb.com/" },
   "ren": { name: "REN · Redes Energéticas Nacionais", url: "https://www.ren.pt/" },
@@ -61,6 +65,7 @@ export const PUBLISHERS = {
   "tcb": { name: "Transportes Colectivos do Barreiro", url: "https://www.tcbarreiro.pt/" },
   "tub-braga": { name: "TUB Braga", url: "https://www.tub.pt/" },
   "tubabike": { name: "TubaBike" },
+  "usgs": { name: "USGS · U.S. Geological Survey", url: "https://www.usgs.gov/" },
 } as const satisfies Record<string, PublisherDescription>;
 
 export type Publisher = keyof typeof PUBLISHERS;

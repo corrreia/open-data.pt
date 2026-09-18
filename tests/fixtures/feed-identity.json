@@ -439,6 +439,10 @@
     "resourceKey": "opendatasoft:opendatasoft:dataset:aec38e12c6f0b70e3a4bc26dd336e6dae86c46ecff53f13f0855a67a138fb03e",
     "kind": "opendatasoft:dataset"
   },
+  "effis-portugal-recent-burnt-areas-feed": {
+    "resourceKey": "wfs:wfs:events:86e500f5fdd850e3a253a475b7f33302d4c22f09266851120f40ceceb9978e1f",
+    "kind": "wfs:events"
+  },
   "eurostat-portugal-economic-sentiment": {
     "resourceKey": "eurostat:eurostat:dataset:6043fff7c00362162d097fd5c8a075084b9ffd5e42d766b6a93f1dc7104eb9ef",
     "kind": "eurostat:dataset"
@@ -791,6 +795,30 @@
     "resourceKey": "udata:udata:distribution:9d01c28d3875393fc266b2ecbb93c195d8e012ab5a266b0a7d780f75fd7f9c90",
     "kind": "udata:distribution"
   },
+  "nasa-firms-azores-thermal-anomalies-feed": {
+    "resourceKey": "firms:firms:hotspots:54607249ed29e63b907be98c7e1714e6d244adde5c4c018e00d38d325d50e951",
+    "kind": "firms:hotspots"
+  },
+  "nasa-firms-madeira-thermal-anomalies-feed": {
+    "resourceKey": "firms:firms:hotspots:bc69d77c1b52630cf3841301527fb9a2da6e716a890338c94e2c57374fe7623a",
+    "kind": "firms:hotspots"
+  },
+  "nasa-firms-mainland-thermal-anomalies-feed": {
+    "resourceKey": "firms:firms:hotspots:3d9f6bd20e6543f0886187aaba688201c79d47bc0ed19be57694268b6d7e9d9c",
+    "kind": "firms:hotspots"
+  },
+  "nasa-power-azores-solar-resource-feed": {
+    "resourceKey": "nasapower:nasapower:daily-region:1b2cbe0dfd2bf8fe93b398da4d0e92f8eef8f02559acc8df5c5e9d49e14f1e42",
+    "kind": "nasapower:daily-region"
+  },
+  "nasa-power-madeira-solar-resource-feed": {
+    "resourceKey": "nasapower:nasapower:daily-region:6e9e539a6eb2335f48d5bfb1372ad125f2ab3f94b7a2e2545e3b23a668caa478",
+    "kind": "nasapower:daily-region"
+  },
+  "nasa-power-mainland-solar-resource-feed": {
+    "resourceKey": "nasapower:nasapower:daily-region:900af3f382fa7491c0e3b28f0ea9cc9659bfed12438faf88c30b5cd6d343b097",
+    "kind": "nasapower:daily-region"
+  },
   "oeiras-hourly-environment-feed": {
     "resourceKey": "ckan:ckan:observations:9da1f2287f317aa4b0f677f6ed6d74c8365c68865f7c4c7d11bc8224887c06d1",
     "kind": "ckan:observations"
@@ -1062,5 +1090,17 @@
   "tubabike-barcelos-reference": {
     "resourceKey": "gbfs:gbfs:reference:33904af4c25fa7403f37b298ee4e968765f968b8d3c1f7ac29ba63d8b8be5a0e",
     "kind": "gbfs:reference"
+  },
+  "usgs-azores-earthquakes-feed": {
+    "resourceKey": "usgs:usgs:earthquakes:e01c503e1b2834d19aeea17b83bcd121164e044486288a8b843bacff60e8502f",
+    "kind": "usgs:earthquakes"
+  },
+  "usgs-madeira-earthquakes-feed": {
+    "resourceKey": "usgs:usgs:earthquakes:edb27620cd224cf85230b2a0c1fa7e88fc09412f7039514a967a1447078f9bb1",
+    "kind": "usgs:earthquakes"
+  },
+  "usgs-mainland-portugal-earthquakes-feed": {
+    "resourceKey": "usgs:usgs:earthquakes:c2d45fba150623d8acf5807a1042992dabe587f9957dab29ef00a29b75caf0d2",
+    "kind": "usgs:earthquakes"
   }
 }

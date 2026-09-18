@@ -1,0 +1,69 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": 48990421,
+      "geometry": { "type": "Point", "coordinates": [-8.577281, 41.761526] },
+      "properties": {
+        "ID_oc": 48990421,
+        "Numero": "20261330257",
+        "EstadoOcorrencia": "Chegada ao TO",
+        "EstadoAgrupado": "Em Despacho",
+        "DataOcorrencia": 1789751220000,
+        "FaseIncendio": "---",
+        "CodNatureza": 2401,
+        "Natureza": "2401 - Atropelamento rodoviário",
+        "Regiao": "Norte",
+        "SubRegiao": "Alto Minho",
+        "Concelho": "Ponte de Lima",
+        "Freguesia": "Arca e Ponte de Lima",
+        "Localidade": "Praça da Republica",
+        "Endereco": "Praça da Republica",
+        "OperacionaisTerrestres": 2,
+        "OPAereos": 0,
+        "Operacionais": 2,
+        "MeiosTerrestres": 1,
+        "MeiosAereos": 0,
+        "QuantEntidades": 1,
+        "Latitude": 41.761526,
+        "Longitude": -8.577281,
+        "DataDosDados": 1789755840000,
+        "RASI": "Acidentes",
+        "ID": "27852370"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 48990422,
+      "geometry": { "type": "Point", "coordinates": [-8.458859, 38.65192] },
+      "properties": {
+        "ID_oc": 48990422,
+        "Numero": "20261330262",
+        "EstadoOcorrencia": "Chegada ao TO",
+        "EstadoAgrupado": "Em Despacho",
+        "DataOcorrencia": 1789751520000,
+        "FaseIncendio": "ATI",
+        "CodNatureza": 3103,
+        "Natureza": "3103 - Mato",
+        "Regiao": "Alentejo",
+        "SubRegiao": "Alentejo Central",
+        "Concelho": "Vendas Novas",
+        "Freguesia": "Vendas Novas",
+        "Localidade": "Vendas Novas",
+        "Endereco": "Estrada de Cabrela",
+        "OperacionaisTerrestres": 12,
+        "OPAereos": 0,
+        "Operacionais": 12,
+        "MeiosTerrestres": 3,
+        "MeiosAereos": 0,
+        "QuantEntidades": 2,
+        "Latitude": 38.65192,
+        "Longitude": -8.458859,
+        "DataDosDados": 1789755840000,
+        "RASI": "Incêndios Rurais DECIR",
+        "ID": "27852375"
+      }
+    }
+  ]
+}

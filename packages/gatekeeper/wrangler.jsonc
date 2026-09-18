@@ -8,7 +8,7 @@
   "workers_dev": false,
   "preview_urls": false,
   // A library's vars are declared with their values in its `deployment.ts`; only what varies by deployment is bound here.
-  // Secrets (wrangler secret put): ML_CONSUMER_KEY, ML_CONSUMER_SECRET (Metro Lisboa).
+  // Secrets (wrangler secret put): ML_CONSUMER_KEY, ML_CONSUMER_SECRET (Metro Lisboa), NASA_FIRMS_MAP_KEY (NASA FIRMS).
   // Parliament stages its 93 MB initiatives file to answer not-modified without parsing it.
   "r2_buckets": [{ "binding": "PARLIAMENT_STAGING", "bucket_name": "open-data-pt-gatekeeper-staging" }],
   // GTFS archives and Parliament's file need two minutes of CPU; a limit is a ceiling, not a cost.
