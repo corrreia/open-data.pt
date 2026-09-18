@@ -113,6 +113,11 @@ interface AiCatalog {
 }
 
 describe("agent discovery", () => {
+  it("runs the Worker before static assets on every page, so metadata and Markdown negotiation are applied", () => {
+    const config = readFileSync("apps/kernel/wrangler.jsonc", "utf8");
+    for (const page of ["catalog", "publisher", "licence", "product", "start", "status", "operations", "contribute"]) expect(config).toContain(`"/${page}/*"`);
+  });
+
   it("lists every page, publisher and product in a sitemap that robots.txt names", async () => {
     const response = await get("/sitemap.xml");
     expect(response.status).toBe(200);
