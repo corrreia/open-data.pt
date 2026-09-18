@@ -15,7 +15,7 @@ const transformer = new IpmaTransformer();
 const datasets = new IpmaDatasetTransformer();
 
 export function resolveIpmaFeed(config: SourceConfig): Promise<ResolvedFeed> {
-  return resolveFeed(config, { gatekeeperKind: "ipma", kinds: IPMA_FEEDS, validate: validateIpmaFeedConfig });
+  return resolveFeed(config, { library: "ipma", kinds: IPMA_FEEDS, validate: validateIpmaFeedConfig });
 }
 
 export function ipmaCollector(options: IpmaCollectorOptions): NormalizedCollector {

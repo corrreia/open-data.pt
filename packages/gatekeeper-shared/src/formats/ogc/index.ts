@@ -13,4 +13,4 @@ export {
   type OgcProperty,
 } from "./ogc";
 export { MAX_FEATURE_BYTES, MAX_RECORD_BYTES, OgcTransformer } from "./transform";
-export { OGC_DEPLOYMENT } from "./worker";
+export { OGC_DEPLOYMENT } from "./deployment";

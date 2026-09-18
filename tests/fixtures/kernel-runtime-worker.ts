@@ -94,7 +94,7 @@ export class FixtureGatekeeper extends WorkerEntrypoint<Env> implements FeedGate
   }
 
   async resolveFeed(config: SourceConfig): Promise<ResolvedFeed> {
-    return resolveFeed(config, { gatekeeperKind: "fixture", kinds: [KIND], validate: (value) => value });
+    return resolveFeed(config, { library: "fixture", kinds: [KIND], validate: (value) => value });
   }
 
   async collect(request: CollectionRequest): Promise<CollectionResult> {

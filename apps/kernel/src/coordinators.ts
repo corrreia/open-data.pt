@@ -60,7 +60,7 @@ interface FeedInput {
   slug: string;
   title: string;
   description: string;
-  gatekeeperKind: string;
+  library: string;
   config: SourceConfig;
   policyId: string;
   staleAfterSeconds: number;
@@ -245,7 +245,7 @@ export class Registry extends DurableObject<Env> {
     return {
       readCatalog: () => this.readCatalog(),
       feeds: () => this.store.listFeeds().map((feed) => ({ id: feed.id, slug: feed.slug })),
-      apply: (kind, example) => this.applyExample(kind, example),
+      apply: (library, example) => this.applyExample(library, example),
       retire: (feedId) => this.retireFeed(feedId),
       load: () => this.store.getState<SyncState>(SYNC_STATE_KEY),
       save: (state) => this.store.setState(SYNC_STATE_KEY, state),
@@ -267,7 +267,7 @@ export class Registry extends DurableObject<Env> {
       for (const example of examples) {
         const library = example.config.source;
         if (!library) throw new Error(`${example.slug} names no library in its configuration`);
-        const entry = catalog.get(library) ?? { kind: library, examples: [], kinds: kinds.filter((kind) => kind.kind.startsWith(`${library}:`)) };
+        const entry = catalog.get(library) ?? { library, examples: [], kinds: kinds.filter((kind) => kind.kind.startsWith(`${library}:`)) };
         entry.examples.push(example);
         catalog.set(library, entry);
       }
@@ -278,21 +278,21 @@ export class Registry extends DurableObject<Env> {
     }
   }
 
-  private async applyExample(kind: string, example: ExampleFeed): Promise<void> {
+  private async applyExample(library: string, example: ExampleFeed): Promise<void> {
     // The Gatekeeper's word crosses RPC as plain strings; a key outside the vocabulary is a mistake, never a new entry.
     if (!isPublisher(example.publisher)) throw new NormalizedInputError(`${example.slug} names an unknown publisher: ${example.publisher}`);
     if (!isLicence(example.policy.serving.licence)) throw new NormalizedInputError(`${example.slug} names an unknown licence: ${example.policy.serving.licence}`);
     // A policy is its name and version; the id is only the row's handle. One installed under an earlier Worker's
     // name keeps its id, so moving a feed between Workers never collides with the row it already uses.
     const current = this.store.getPolicyByName(example.policy.name, example.policy.version);
-    const policyId = current?.id ?? `policy_${kind}_${slugify(example.policy.name)}_v${example.policy.version}`;
+    const policyId = current?.id ?? `policy_${library}_${slugify(example.policy.name)}_v${example.policy.version}`;
     const policy: FeedPolicy = { id: policyId, ...example.policy, createdAt: current?.createdAt ?? new Date().toISOString() };
     if (!current || policyFingerprint(current) !== policyFingerprint(policy)) this.store.upsertPolicy(policy);
     const input: FeedInput = {
       slug: example.slug,
       title: example.title,
       description: example.description,
-      gatekeeperKind: kind,
+      library,
       config: example.config,
       policyId,
       staleAfterSeconds: example.staleAfterSeconds,
@@ -735,7 +735,7 @@ export class FeedRunner extends DurableObject<Env> {
   }
 
   private reportFor(feed: Feed): RunnerReport {
-    return { feedId: feed.id, gatekeeperKind: feed.gatekeeperKind, status: this.core.status(), acquisitions: this.core.listAcquisitions(10) };
+    return { feedId: feed.id, library: feed.library, status: this.core.status(), acquisitions: this.core.listAcquisitions(10) };
   }
 
   /** Select the feed's products and report this runner's state in one Registry call. */

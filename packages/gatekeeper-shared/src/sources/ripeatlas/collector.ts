@@ -13,7 +13,7 @@ export function ripeatlasCollector(options: RipeatlasCollectorOptions): Normaliz
   const transformer = new RipeatlasTransformer();
   return {
     normalizer: { id: transformer.id, version: transformer.version },
-    resolve: (config) => resolveFeed(config, { gatekeeperKind: "ripeatlas", kinds: RIPEATLAS_FEEDS, validate: validateRipeatlasFeedConfig }),
+    resolve: (config) => resolveFeed(config, { library: "ripeatlas", kinds: RIPEATLAS_FEEDS, validate: validateRipeatlasFeedConfig }),
     source: (_state, mode, signal) =>
       collectRipeatlasFeed(
         options.config,

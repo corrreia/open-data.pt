@@ -11,7 +11,7 @@ export interface ArcgisCollectorOptions {
 }
 
 export function resolveArcgisFeed(config: SourceConfig, hosts: ReadonlySet<string>): Promise<ResolvedFeed> {
-  return resolveFeed(config, { gatekeeperKind: "arcgis", kinds: ARCGIS_FEEDS, validate: (value) => validateArcgisFeedConfig(value, hosts) });
+  return resolveFeed(config, { library: "arcgis", kinds: ARCGIS_FEEDS, validate: (value) => validateArcgisFeedConfig(value, hosts) });
 }
 
 const transformer = new ArcgisTransformer();

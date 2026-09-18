@@ -14,7 +14,7 @@ const transformer = new DgegTransformer();
 
 /** DGEG names its fuels by numeric id, so resolution asks the source for the current list. */
 export function resolveDgegFeed(config: SourceConfig, apiOrigin: string, fetcher: typeof fetch): Promise<ResolvedFeed> {
-  return resolveFeed(config, { gatekeeperKind: "dgeg", kinds: DGEG_FEEDS, validate: (value) => validateDgegFeedConfig(value, apiOrigin, fetcher) });
+  return resolveFeed(config, { library: "dgeg", kinds: DGEG_FEEDS, validate: (value) => validateDgegFeedConfig(value, apiOrigin, fetcher) });
 }
 
 export function dgegCollector(options: DgegCollectorOptions): NormalizedCollector {

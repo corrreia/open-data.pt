@@ -2,4 +2,4 @@ export { RIPEATLAS_FEEDS, validateRipeatlasFeedConfig, collectRipeatlasFeed } fr
 export { RipeatlasTransformer } from "./transform";
 export { RIPEATLAS_EXAMPLES } from "./examples";
 export { ripeatlasCollector, type RipeatlasCollectorOptions } from "./collector";
-export { RIPEATLAS_DEPLOYMENT } from "./worker";
+export { RIPEATLAS_DEPLOYMENT } from "./deployment";

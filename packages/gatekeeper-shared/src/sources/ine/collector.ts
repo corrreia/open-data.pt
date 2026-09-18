@@ -13,7 +13,7 @@ export interface IneCollectorOptions {
 export const INE_NORMALIZER = { id: "ine-indicator", version: "3" } as const;
 
 export function resolveIneFeed(config: SourceConfig): Promise<ResolvedFeed> {
-  return resolveFeed(config, { gatekeeperKind: "ine", kinds: INE_FEEDS, validate: validateIneFeedConfig });
+  return resolveFeed(config, { library: "ine", kinds: INE_FEEDS, validate: validateIneFeedConfig });
 }
 
 export function ineCollector(options: IneCollectorOptions): NormalizedCollector {

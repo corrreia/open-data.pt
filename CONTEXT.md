@@ -8,7 +8,7 @@ The Worker is wiring: every listed library, built from the vars each declares an
 
 ## Library
 
-The code that reads one thing, under `packages/gatekeeper-shared/src`. A format library under `formats/` parses anything with a standard (ArcGIS, CKAN, Opendatasoft, GTFS, GBFS, uData, OGC API Features); a source library under `sources/` reads one bespoke API (Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, MYINFO, IODA, RIPE Atlas, RIPEstat, PeeringDB). Each exports its feed-kind table, its validator, its collect function, its transformer, its examples array, a collector factory, and a deployment declaration (`worker.ts`) saying what the Worker must give it. `libraries.ts` lists the ones the Worker carries; a library under a publication hold is not listed. A feed's configuration names its library in `source`; that key routes the feed inside the Worker, and the library never sees it.
+The code that reads one thing, under `packages/gatekeeper-shared/src`. A format library under `formats/` parses anything with a standard (ArcGIS, CKAN, Opendatasoft, GTFS, GBFS, uData, OGC API Features); a source library under `sources/` reads one bespoke API (Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, MYINFO, IODA, RIPE Atlas, RIPEstat, PeeringDB). Each exports its feed-kind table, its validator, its collect function, its transformer, its examples array, a collector factory, and a deployment declaration (`deployment.ts`) saying what the Worker must give it. `libraries.ts` lists the ones the Worker carries; a library under a publication hold is not listed. A feed's configuration names its library in `source`; that key routes the feed inside the Worker, and the library never sees it.
 
 ## Source
 
@@ -24,7 +24,7 @@ One capability a library declares: what its facts are about, what role its produ
 
 ## Feed
 
-One repeatable collection definition: Gatekeeper, canonical resolved source configuration/resource identity, feed semantics, policy, and semantic feed epoch. Administrative edits do not rotate the epoch.
+One repeatable collection definition: library, canonical resolved source configuration/resource identity, feed semantics, policy, and semantic feed epoch. Administrative edits do not rotate the epoch.
 
 ## Publisher
 

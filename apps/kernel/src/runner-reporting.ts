@@ -8,7 +8,7 @@ import type { Outage, OutageCause, RegistryStore } from "./registry-store";
  */
 export interface RunnerReport {
   feedId: string;
-  gatekeeperKind: string;
+  library: string;
   status: FeedStatus;
   acquisitions: Acquisition[];
 }
@@ -35,10 +35,10 @@ export function ingestRunnerReport(store: RegistryStore, report: RunnerReport, a
   for (const acquisition of report.acquisitions.slice(0, MAX_ACQUISITIONS)) {
     store.upsertActivity(acquisition.id, report.feedId, acquisition.completedAt ?? acquisition.requestedAt, { ...acquisition, feedId: report.feedId });
   }
-  if (report.status.backfill) store.setBackfill(report.feedId, report.gatekeeperKind, report.status.backfill.status, report.status.backfill.updatedAt);
+  if (report.status.backfill) store.setBackfill(report.feedId, report.library, report.status.backfill.status, report.status.backfill.updatedAt);
   // Peers only pace a walk in progress; a runner without one needs no count.
   const walking = report.status.backfill?.status === "running";
-  return { known: true, backfillPeers: walking ? store.countRunningBackfills(report.gatekeeperKind, since) : 1 };
+  return { known: true, backfillPeers: walking ? store.countRunningBackfills(report.library, since) : 1 };
 }
 
 /* ---------- Outages ---------- */

@@ -30,7 +30,7 @@ describe("the Gatekeeper entrypoint exposes the normalized five-operation contra
     expect(readFileSync("packages/gatekeeper/src/index.ts", "utf8")).toContain("gatekeeper<Env>(LIBRARIES)");
   });
 
-  it.each(readdirSync("packages/gatekeeper-shared/src", { recursive: true, encoding: "utf8" }).filter((path) => path.endsWith("worker.ts")))(
+  it.each(readdirSync("packages/gatekeeper-shared/src", { recursive: true, encoding: "utf8" }).filter((path) => path.endsWith("deployment.ts")))(
     "%s calls the platform fetch rather than handing it over",
     (path) => {
       // The platform's fetch must be called as a function, never handed over as a bare reference: in workerd a detached

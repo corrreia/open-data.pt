@@ -13,7 +13,7 @@ export interface CarrisCollectorOptions {
 const transformer = new CarrisTransformer();
 
 export function resolveCarrisFeed(config: SourceConfig): Promise<ResolvedFeed> {
-  return resolveFeed(config, { gatekeeperKind: "carris", kinds: CARRIS_FEEDS, validate: validateCarrisFeedConfig });
+  return resolveFeed(config, { library: "carris", kinds: CARRIS_FEEDS, validate: validateCarrisFeedConfig });
 }
 
 export function carrisCollector(options: CarrisCollectorOptions): NormalizedCollector {

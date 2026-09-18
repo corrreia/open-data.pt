@@ -15,7 +15,7 @@ export interface IodaCollectorOptions {
 const transformer = new IodaTransformer();
 
 export function resolveIodaFeed(config: SourceConfig): Promise<ResolvedFeed> {
-  return resolveFeed(config, { gatekeeperKind: "ioda", kinds: IODA_FEEDS, validate: validateIodaFeedConfig });
+  return resolveFeed(config, { library: "ioda", kinds: IODA_FEEDS, validate: validateIodaFeedConfig });
 }
 
 export function iodaCollector(options: IodaCollectorOptions): NormalizedCollector {

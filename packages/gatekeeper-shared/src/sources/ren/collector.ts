@@ -16,7 +16,7 @@ export interface RenCollectorOptions {
 const transformer = new RenTransformer();
 
 export function resolveRenFeed(config: SourceConfig): Promise<ResolvedFeed> {
-  return resolveFeed(config, { gatekeeperKind: "ren", kinds: REN_FEEDS, validate: validateRenFeedConfig });
+  return resolveFeed(config, { library: "ren", kinds: REN_FEEDS, validate: validateRenFeedConfig });
 }
 
 export function renCollector(options: RenCollectorOptions): NormalizedCollector {

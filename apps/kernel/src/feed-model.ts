@@ -68,7 +68,7 @@ export interface Feed extends FeedStatus {
   title: string;
   description: string;
   /** The library that reads the feed: the `source` key of its configuration. */
-  gatekeeperKind: string;
+  library: string;
   config: SourceConfig;
   semantics: FeedSemantics;
   /** Semantic collection generation, independent of administrative edits. */

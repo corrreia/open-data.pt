@@ -47,7 +47,7 @@ export interface NormalizedCollector {
 }
 
 interface ResolveFeedOptions {
-  gatekeeperKind: string;
+  library: string;
   kinds: Readonly<Record<string, FeedKindDescription>> | readonly FeedKindDescription[];
   validate: (config: SourceConfig) => SourceConfig | Promise<SourceConfig>;
   resourceConfig?: (config: SourceConfig, kind: FeedKindDescription) => SourceConfig;
@@ -62,7 +62,7 @@ export async function resolveFeed(config: SourceConfig, options: ResolveFeedOpti
   if (!kind) throw new GatekeeperError(`Unsupported feed kind: ${kindName ?? "(unspecified)"}`, "invalid-config");
   const identity = options.resourceConfig?.(canonical, kind) ?? canonical;
   const [configHash, identityHash] = await Promise.all([hashSourceConfig(canonical), hashSourceConfig(identity)]);
-  const resourceKey = `${options.gatekeeperKind}:${kind.kind}:${identityHash}`;
+  const resourceKey = `${options.library}:${kind.kind}:${identityHash}`;
   const resolved: ResolvedFeed = { config: canonical, configHash, resourceKey, kind: kind.kind, semantics: kind.semantics };
   if (kind.history) resolved.history = kind.history;
   return resolved;

@@ -13,7 +13,7 @@ export interface OmieCollectorOptions {
 const transformer = new OmieTransformer();
 
 export function resolveOmieFeed(config: SourceConfig): Promise<ResolvedFeed> {
-  return resolveFeed(config, { gatekeeperKind: "omie", kinds: OMIE_FEEDS, validate: validateOmieFeedConfig });
+  return resolveFeed(config, { library: "omie", kinds: OMIE_FEEDS, validate: validateOmieFeedConfig });
 }
 
 export function omieCollector(options: OmieCollectorOptions): NormalizedCollector {

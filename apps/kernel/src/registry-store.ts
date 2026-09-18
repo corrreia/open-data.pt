@@ -15,7 +15,7 @@ const ACTIVITY_KEEP = 5_000;
 export class RegistryStore {
   constructor(private readonly sql: SqlStorage) {}
 
-  /** No migrations: a different schema version resets the Registry, and its example sync installs the feeds again. */
+  /** A different schema version resets the Registry; the one terminology cleanup below preserves the current schema's data in place. */
   migrate(): void {
     const tables = userTables(this.sql);
     const current = tables.includes("meta") ? this.rows<{ value: string }>(`SELECT value FROM meta WHERE key = 'schema_version'`)[0]?.value : undefined;
@@ -25,10 +25,16 @@ export class RegistryStore {
     }
     this.exec(`CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)`);
     this.exec(`CREATE TABLE IF NOT EXISTS registry_state (key TEXT PRIMARY KEY, value_json TEXT NOT NULL)`);
+    // A sync queue is ephemeral: if it still has the old `kind` field, discard its at-most-four pending operations and rebuild it immediately with `library`.
+    this.exec(`UPDATE registry_state SET value_json = json_set(value_json, '$.queue', json('[]'), '$.nextCheckAt', 0)
+      WHERE key = 'example-sync' AND EXISTS (SELECT 1 FROM json_each(value_json, '$.queue') WHERE json_type(value, '$.kind') = 'text')`);
     this.exec(`CREATE TABLE IF NOT EXISTS policies (
       id TEXT PRIMARY KEY, name TEXT NOT NULL, version INTEGER NOT NULL, collection_json TEXT NOT NULL, serving_json TEXT NOT NULL, created_at TEXT NOT NULL, UNIQUE(name, version))`);
     this.exec(`CREATE TABLE IF NOT EXISTS feeds (
       id TEXT PRIMARY KEY, slug TEXT NOT NULL UNIQUE, definition_json TEXT NOT NULL, policy_id TEXT NOT NULL REFERENCES policies(id), enabled INTEGER NOT NULL, title TEXT NOT NULL)`);
+    // One-time terminology cleanup: old definitions called their library `gatekeeperKind`. Rewrite the JSON in place before any feed is read.
+    this.exec(`UPDATE feeds SET definition_json = json_remove(json_set(definition_json, '$.library', json_extract(definition_json, '$.gatekeeperKind')), '$.gatekeeperKind')
+      WHERE json_type(definition_json, '$.library') IS NULL AND json_type(definition_json, '$.gatekeeperKind') = 'text'`);
     this.exec(`CREATE TABLE IF NOT EXISTS feed_status (feed_id TEXT PRIMARY KEY, status_json TEXT NOT NULL, updated_at TEXT NOT NULL)`);
     this.exec(`CREATE TABLE IF NOT EXISTS claims (slug TEXT PRIMARY KEY, feed_id TEXT NOT NULL)`);
     // The chunk list is its own column, last, so product lists never read it.
@@ -36,7 +42,9 @@ export class RegistryStore {
       slug TEXT PRIMARY KEY, feed_id TEXT NOT NULL, product_key TEXT NOT NULL, title TEXT NOT NULL, entry_json TEXT NOT NULL, chunks_json TEXT, UNIQUE(feed_id, product_key))`);
     this.exec(`CREATE TABLE IF NOT EXISTS activity (id TEXT PRIMARY KEY, feed_id TEXT NOT NULL, at TEXT NOT NULL, item_json TEXT NOT NULL)`);
     this.exec(`CREATE INDEX IF NOT EXISTS activity_at ON activity (at DESC)`);
-    this.exec(`CREATE TABLE IF NOT EXISTS backfills (feed_id TEXT PRIMARY KEY, gatekeeper_kind TEXT NOT NULL, status TEXT NOT NULL, updated_at TEXT NOT NULL)`);
+    this.exec(`CREATE TABLE IF NOT EXISTS backfills (feed_id TEXT PRIMARY KEY, library TEXT NOT NULL, status TEXT NOT NULL, updated_at TEXT NOT NULL)`);
+    const backfillColumns = this.rows<{ name: string }>(`SELECT name FROM pragma_table_info('backfills')`).map((row) => row.name);
+    if (backfillColumns.includes("gatekeeper_kind")) this.exec(`ALTER TABLE backfills RENAME COLUMN gatekeeper_kind TO library`);
     // One row per stretch of time a feed's live collection kept failing, or (feed_id '') the platform stopped collecting.
     // A table added here needs no version change: CREATE IF NOT EXISTS adds it to a live Registry on its next start.
     this.exec(`CREATE TABLE IF NOT EXISTS outages (
@@ -281,22 +289,20 @@ export class RegistryStore {
 
   /* ---------- Backfill peers ---------- */
 
-  setBackfill(feedId: string, gatekeeperKind: string, status: string, updatedAt: string): void {
+  setBackfill(feedId: string, library: string, status: string, updatedAt: string): void {
     this.exec(
-      `INSERT INTO backfills (feed_id, gatekeeper_kind, status, updated_at) VALUES (?, ?, ?, ?)
-       ON CONFLICT(feed_id) DO UPDATE SET gatekeeper_kind = excluded.gatekeeper_kind, status = excluded.status, updated_at = excluded.updated_at
+      `INSERT INTO backfills (feed_id, library, status, updated_at) VALUES (?, ?, ?, ?)
+       ON CONFLICT(feed_id) DO UPDATE SET library = excluded.library, status = excluded.status, updated_at = excluded.updated_at
        WHERE backfills.status != excluded.status OR backfills.updated_at != excluded.updated_at`,
       feedId,
-      gatekeeperKind,
+      library,
       status,
       updatedAt,
     );
   }
 
-  countRunningBackfills(gatekeeperKind: string, since: string): number {
-    return Number(
-      this.rows<{ n: number }>(`SELECT COUNT(*) AS n FROM backfills WHERE gatekeeper_kind = ? AND status = 'running' AND updated_at >= ?`, gatekeeperKind, since)[0]?.n ?? 0,
-    );
+  countRunningBackfills(library: string, since: string): number {
+    return Number(this.rows<{ n: number }>(`SELECT COUNT(*) AS n FROM backfills WHERE library = ? AND status = 'running' AND updated_at >= ?`, library, since)[0]?.n ?? 0);
   }
 
   /* ---------- Helpers ---------- */

@@ -3,4 +3,4 @@ export { dgegCollector, resolveDgegFeed, type DgegCollectorOptions } from "./col
 export { DGEG_API_ORIGIN, DGEG_FEEDS, FUEL_PRICES_MAX_BYTES, FUEL_TYPES_MAX_BYTES, collectDgegFeed, dgegDateTime, validateDgegFeedConfig } from "./dgeg";
 export { DGEG_EXAMPLES } from "./examples";
 export { DgegTransformer } from "./transform";
-export { DGEG_DEPLOYMENT } from "./worker";
+export { DGEG_DEPLOYMENT } from "./deployment";

@@ -13,7 +13,7 @@ export interface BpstatCollectorOptions {
 export const BPSTAT_NORMALIZER = { id: "bpstat-jsonstat-dataset", version: "4" } as const;
 
 export function resolveBpstatFeed(config: SourceConfig): Promise<ResolvedFeed> {
-  return resolveFeed(config, { gatekeeperKind: "bpstat", kinds: BPSTAT_FEEDS, validate: validateBpstatFeedConfig });
+  return resolveFeed(config, { library: "bpstat", kinds: BPSTAT_FEEDS, validate: validateBpstatFeedConfig });
 }
 
 export function bpstatCollector(options: BpstatCollectorOptions): NormalizedCollector {

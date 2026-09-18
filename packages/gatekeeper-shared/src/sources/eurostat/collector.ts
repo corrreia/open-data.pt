@@ -13,7 +13,7 @@ export interface EurostatCollectorOptions {
 export const EUROSTAT_NORMALIZER = { id: "eurostat-jsonstat-dataset", version: "3" } as const;
 
 export function resolveEurostatFeed(config: SourceConfig): Promise<ResolvedFeed> {
-  return resolveFeed(config, { gatekeeperKind: "eurostat", kinds: EUROSTAT_FEEDS, validate: validateEurostatFeedConfig });
+  return resolveFeed(config, { library: "eurostat", kinds: EUROSTAT_FEEDS, validate: validateEurostatFeedConfig });
 }
 
 export function eurostatCollector(options: EurostatCollectorOptions): NormalizedCollector {

@@ -11,7 +11,7 @@ export interface GtfsCollectorOptions {
 }
 
 export function resolveGtfsFeed(config: SourceConfig, hosts: string): Promise<ResolvedFeed> {
-  return resolveFeed(config, { gatekeeperKind: "gtfs", kinds: GTFS_FEEDS, validate: (value) => validateGtfsFeedConfig(value, hosts) });
+  return resolveFeed(config, { library: "gtfs", kinds: GTFS_FEEDS, validate: (value) => validateGtfsFeedConfig(value, hosts) });
 }
 
 /** One archive downloaded conditionally, then read entry by entry as the kernel pulls rows. */

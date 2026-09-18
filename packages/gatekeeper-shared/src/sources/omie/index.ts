@@ -14,4 +14,4 @@ export {
   type OmieSeries,
 } from "./omie";
 export { OmieTransformer } from "./transform";
-export { OMIE_DEPLOYMENT } from "./worker";
+export { OMIE_DEPLOYMENT } from "./deployment";
