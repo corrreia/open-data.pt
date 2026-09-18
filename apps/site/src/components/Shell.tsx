@@ -5,11 +5,12 @@ import { REPOSITORY } from "../lib/project";
 import { Mark } from "./Mark";
 import { SearchPalette } from "./SearchPalette";
 
-export type Section = "home" | "catalog" | "publishers" | "status" | "start" | "operations" | "product" | "contribute";
+export type Section = "home" | "catalog" | "publishers" | "licences" | "status" | "start" | "operations" | "product" | "contribute";
 
 const NAV: { section: Section | "api"; href: string; label: string }[] = [
   { section: "catalog", href: "/catalog/", label: "Catalog" },
   { section: "publishers", href: "/publisher/", label: "Publishers" },
+  { section: "licences", href: "/licence/", label: "Licences" },
   { section: "status", href: "/status/", label: "Status" },
   { section: "start", href: "/start/", label: "Start here" },
   { section: "api", href: "/docs", label: "API" },

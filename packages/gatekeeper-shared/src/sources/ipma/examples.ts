@@ -1,7 +1,7 @@
 import type { ExampleFeed } from "../../index";
 
 const SERVING = {
-  licence: "Source terms apply",
+  licence: "source-terms",
   attribution: "Instituto Português do Mar e da Atmosfera (IPMA)",
 } as const;
 
@@ -25,7 +25,7 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
       serving: SERVING,
     },
     staleAfterSeconds: 7_200,
-    publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
+    publisher: "ipma",
     topics: ["environment", "weather"],
   },
   {
@@ -45,7 +45,7 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
       serving: SERVING,
     },
     staleAfterSeconds: 3_600,
-    publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
+    publisher: "ipma",
     topics: ["environment", "weather"],
   },
   {
@@ -65,7 +65,7 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
       serving: SERVING,
     },
     staleAfterSeconds: 7_200,
-    publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
+    publisher: "ipma",
     topics: ["environment"],
   },
   {
@@ -85,7 +85,7 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
       serving: SERVING,
     },
     staleAfterSeconds: 3_600,
-    publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
+    publisher: "ipma",
     topics: ["environment", "weather"],
   },
   {
@@ -105,7 +105,7 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
       serving: SERVING,
     },
     staleAfterSeconds: 28_800,
-    publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
+    publisher: "ipma",
     topics: ["environment", "weather"],
   },
   {
@@ -125,7 +125,7 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
       serving: SERVING,
     },
     staleAfterSeconds: 28_800,
-    publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
+    publisher: "ipma",
     topics: ["environment"],
   },
   {
@@ -145,7 +145,7 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
       serving: SERVING,
     },
     staleAfterSeconds: 7_200,
-    publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
+    publisher: "ipma",
     topics: ["environment", "weather"],
   },
   {
@@ -161,7 +161,7 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
       serving: SERVING,
     },
     staleAfterSeconds: 3 * 86_400,
-    publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
+    publisher: "ipma",
     topics: ["environment", "weather"],
   },
   {
@@ -177,7 +177,7 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
       serving: SERVING,
     },
     staleAfterSeconds: 3 * 86_400,
-    publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
+    publisher: "ipma",
     topics: ["environment", "weather"],
   },
   {
@@ -193,7 +193,7 @@ export const IPMA_EXAMPLES: ExampleFeed[] = [
       serving: SERVING,
     },
     staleAfterSeconds: 86_400,
-    publisher: "IPMA · Instituto Português do Mar e da Atmosfera",
+    publisher: "ipma",
     topics: ["environment", "health"],
   },
 ];

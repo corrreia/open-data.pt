@@ -1,4 +1,4 @@
-/** Card4B's MYINFO portals, one deployment shared by many bus operators, read once for every Worker that needs them. */
+/** Card4B's MYINFO portals, one deployment shared by many bus operators, read once for every feed that needs them. */
 export { myInfoCollector, myInfoOperators, resolveMyInfoFeed, type MyInfoCollectorOptions } from "./collector";
 export { MYINFO_EXAMPLES } from "./examples";
 export {

@@ -8,7 +8,7 @@ import type { CollectionPolicyDefinition, ExampleFeed, ServingPolicyDefinition }
  * the portal it was read from, never this platform: the data is theirs.
  */
 function serving(operator: string): ServingPolicyDefinition {
-  return { licence: "Source terms apply", attribution: `${operator} via myinfo.4cloud.pt` };
+  return { licence: "source-terms", attribution: `${operator} via myinfo.4cloud.pt` };
 }
 
 /** A stop network changes when a stop moves or a line is redrawn: daily is often enough, and every change is worth keeping. */
@@ -37,7 +37,7 @@ export const MYINFO_EXAMPLES: ExampleFeed[] = [
     config: { source: "myinfo", feed: "network", operator: "BarraqueiroOeste" },
     policy: { name: "MYINFO network", version: 1, collection: NETWORK, serving: serving("Barraqueiro Oeste") },
     staleAfterSeconds: 172_800,
-    publisher: "Barraqueiro Oeste",
+    publisher: "barraqueiro-oeste",
     topics: TOPICS,
   },
   {
@@ -47,7 +47,7 @@ export const MYINFO_EXAMPLES: ExampleFeed[] = [
     config: { source: "myinfo", feed: "network", operator: "BoaViagem" },
     policy: { name: "MYINFO network", version: 1, collection: NETWORK, serving: serving("Boa Viagem") },
     staleAfterSeconds: 172_800,
-    publisher: "Boa Viagem",
+    publisher: "boa-viagem",
     topics: TOPICS,
   },
   {
@@ -57,7 +57,7 @@ export const MYINFO_EXAMPLES: ExampleFeed[] = [
     config: { source: "myinfo", feed: "network", operator: "Ribatejana" },
     policy: { name: "MYINFO network", version: 1, collection: NETWORK, serving: serving("Ribatejana") },
     staleAfterSeconds: 172_800,
-    publisher: "Ribatejana",
+    publisher: "ribatejana",
     topics: TOPICS,
   },
   {
@@ -67,7 +67,7 @@ export const MYINFO_EXAMPLES: ExampleFeed[] = [
     config: { source: "myinfo", feed: "network", operator: "mare" },
     policy: { name: "MYINFO network", version: 1, collection: NETWORK, serving: serving("Maré") },
     staleAfterSeconds: 172_800,
-    publisher: "Maré",
+    publisher: "mare",
     topics: TOPICS,
   },
   {
@@ -77,7 +77,7 @@ export const MYINFO_EXAMPLES: ExampleFeed[] = [
     config: { source: "myinfo", feed: "timetable", operator: "BarraqueiroOeste", origin: "4384", destination: "4325" },
     policy: { name: "MYINFO timetable", version: 1, collection: TIMETABLE, serving: serving("Barraqueiro Oeste") },
     staleAfterSeconds: 172_800,
-    publisher: "Barraqueiro Oeste",
+    publisher: "barraqueiro-oeste",
     topics: TOPICS,
   },
   {
@@ -87,7 +87,7 @@ export const MYINFO_EXAMPLES: ExampleFeed[] = [
     config: { source: "myinfo", feed: "timetable", operator: "BarraqueiroOeste", origin: "4325", destination: "4384" },
     policy: { name: "MYINFO timetable", version: 1, collection: TIMETABLE, serving: serving("Barraqueiro Oeste") },
     staleAfterSeconds: 172_800,
-    publisher: "Barraqueiro Oeste",
+    publisher: "barraqueiro-oeste",
     topics: TOPICS,
   },
   {
@@ -97,7 +97,7 @@ export const MYINFO_EXAMPLES: ExampleFeed[] = [
     config: { source: "myinfo", feed: "timetable", operator: "BarraqueiroOeste", origin: "4384", destination: "16692" },
     policy: { name: "MYINFO timetable", version: 1, collection: TIMETABLE, serving: serving("Barraqueiro Oeste") },
     staleAfterSeconds: 172_800,
-    publisher: "Barraqueiro Oeste",
+    publisher: "barraqueiro-oeste",
     topics: TOPICS,
   },
   {
@@ -107,7 +107,7 @@ export const MYINFO_EXAMPLES: ExampleFeed[] = [
     config: { source: "myinfo", feed: "timetable", operator: "Ribatejana", origin: "670", destination: "677" },
     policy: { name: "MYINFO timetable", version: 1, collection: TIMETABLE, serving: serving("Ribatejana") },
     staleAfterSeconds: 172_800,
-    publisher: "Ribatejana",
+    publisher: "ribatejana",
     topics: TOPICS,
   },
 ];

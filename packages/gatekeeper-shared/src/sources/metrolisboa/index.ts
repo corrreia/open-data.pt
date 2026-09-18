@@ -1,4 +1,4 @@
-/** Metro Lisboa's EstadoServicoML gateway, read once for every Worker that needs it. */
+/** Metro Lisboa's EstadoServicoML gateway, read once for every feed that needs it. */
 export { metrolisboaCollector, resolveMetrolisboaFeed, type MetrolisboaCollectorOptions } from "./collector";
 export { METRO_LISBOA_EXAMPLES } from "./examples";
 export {

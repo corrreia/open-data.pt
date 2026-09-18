@@ -9,9 +9,9 @@ import { IODA_MAX_BYTES, IODA_PAGE_LIMIT, IODA_PORTUGUESE_ASNS } from "./ioda";
  * granted; republication needs Georgia Tech's agreement first, the same
  * position `ripestat/examples.ts` and `peeringdb/examples.ts` record.
  */
-const LICENCE = "This data is Copyright (c) 2021-2025 Georgia Tech Research Corporation. All Rights Reserved.";
+const LICENCE = "ioda-all-rights-reserved";
 const ATTRIBUTION = "IODA, Internet Intelligence Lab, Georgia Institute of Technology";
-const PUBLISHER = "Georgia Tech IODA";
+const PUBLISHER = "ioda";
 
 /**
  * IODA detects an outage in ten-minute bins, so a quarter of an hour keeps the

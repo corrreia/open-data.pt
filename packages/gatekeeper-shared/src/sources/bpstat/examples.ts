@@ -16,7 +16,7 @@ const DAILY_STATISTICS = {
     historyMode: "changes",
   },
   serving: {
-    licence: "Banco de Portugal information reuse conditions",
+    licence: "bportugal-reuse",
     attribution: "Banco de Portugal, BPstat",
   },
 } as const;
@@ -39,7 +39,7 @@ export const BPSTAT_EXAMPLES: ExampleFeed[] = [
       collection: { ...DAILY_STATISTICS.collection, maxOutputBytes: 64 * MEBIBYTE },
     },
     staleAfterSeconds: 7 * 86_400,
-    publisher: "Banco de Portugal",
+    publisher: "banco-de-portugal",
     topics: ["economy"],
   },
   {
@@ -54,7 +54,7 @@ export const BPSTAT_EXAMPLES: ExampleFeed[] = [
     },
     policy: DAILY_STATISTICS,
     staleAfterSeconds: 7 * 86_400,
-    publisher: "Banco de Portugal",
+    publisher: "banco-de-portugal",
     topics: ["economy"],
   },
   {
@@ -69,7 +69,7 @@ export const BPSTAT_EXAMPLES: ExampleFeed[] = [
     },
     policy: DAILY_STATISTICS,
     staleAfterSeconds: 7 * 86_400,
-    publisher: "Banco de Portugal",
+    publisher: "banco-de-portugal",
     topics: ["economy"],
   },
   {
@@ -84,7 +84,7 @@ export const BPSTAT_EXAMPLES: ExampleFeed[] = [
     },
     policy: DAILY_STATISTICS,
     staleAfterSeconds: 7 * 86_400,
-    publisher: "Banco de Portugal",
+    publisher: "banco-de-portugal",
     topics: ["economy"],
   },
   ...CATALOG_EXAMPLES,

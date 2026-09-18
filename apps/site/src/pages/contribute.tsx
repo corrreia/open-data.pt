@@ -101,7 +101,7 @@ function Contribute() {
             <a className={LINK} href={CONTRIBUTING}>
               CONTRIBUTING.md
             </a>
-            : where code lives, and what a Worker may send.
+            : where code lives, and what a library may send.
           </li>
           <li>Run a new example against the real source, as CONTRIBUTING.md shows, so the pull request is known to collect.</li>
           <li>Run the checks: lint, types and tests. Unit tests use saved responses, never the network.</li>
@@ -112,7 +112,7 @@ function Contribute() {
       <section aria-labelledby="code-title">
         <SectionHead eyebrow="The code" title="One repository" id="code-title" />
         <p className="max-w-3xl text-sm leading-relaxed text-kumo-default">
-          The topic Workers that collect, the kernel that stores and serves, and this site all live in{" "}
+          The Gatekeeper that collects, the kernel that stores and serves, and this site all live in{" "}
           <a className={LINK} href={REPOSITORY}>
             github.com/corrreia/open-data.pt
           </a>

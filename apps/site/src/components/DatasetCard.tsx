@@ -36,8 +36,8 @@ export function DatasetCard({ dataset, showPublisher = true }: { dataset: Datase
       <LayerCard.Secondary className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs">
         <span className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1">
           {showPublisher ? (
-            <a href={publisherHref(dataset.publisher)} className="truncate font-medium text-kumo-default hover:underline">
-              {dataset.publisher}
+            <a href={publisherHref(dataset.publisher.id)} className="truncate font-medium text-kumo-default hover:underline">
+              {dataset.publisher.name}
             </a>
           ) : null}
           <Badge variant="outline">{dataset.format}</Badge>

@@ -2,7 +2,7 @@ import type { ExampleFeed } from "../../index";
 import type { RenServiceName } from "./ren";
 
 const SERVING = {
-  licence: "REN Data Hub terms of use",
+  licence: "ren-datahub",
   attribution: "REN — Redes Energéticas Nacionais",
 } as const;
 
@@ -40,7 +40,7 @@ function example(service: RenServiceName, policy: ExampleFeed["policy"], title: 
     config: { source: "ren", service },
     policy,
     staleAfterSeconds: 3600,
-    publisher: "REN · Redes Energéticas Nacionais",
+    publisher: "ren",
     topics: ["energy"],
   };
 }
@@ -80,7 +80,7 @@ export const REN_EXAMPLES: ExampleFeed[] = [
       serving: SERVING,
     },
     staleAfterSeconds: 1_209_600,
-    publisher: "REN · Redes Energéticas Nacionais",
+    publisher: "ren",
     topics: ["energy"],
   },
   {
@@ -96,7 +96,7 @@ export const REN_EXAMPLES: ExampleFeed[] = [
       serving: SERVING,
     },
     staleAfterSeconds: 3 * 86_400,
-    publisher: "REN · Redes Energéticas Nacionais",
+    publisher: "ren",
     topics: ["energy"],
   },
   {
@@ -112,7 +112,7 @@ export const REN_EXAMPLES: ExampleFeed[] = [
       serving: SERVING,
     },
     staleAfterSeconds: 3 * 86_400,
-    publisher: "REN · Redes Energéticas Nacionais",
+    publisher: "ren",
     topics: ["energy"],
   },
 ];

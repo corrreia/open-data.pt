@@ -91,7 +91,7 @@ export function policy(overrides: Partial<FeedPolicy["collection"]> = {}): FeedP
       maxOutputBytes: 2 * 1024 * 1024 * 1024,
       ...overrides,
     },
-    serving: {},
+    serving: { licence: "source-terms" },
   };
 }
 

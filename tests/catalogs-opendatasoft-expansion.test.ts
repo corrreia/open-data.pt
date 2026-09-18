@@ -73,7 +73,7 @@ async function body(fetched: SourceFetch): Promise<JsonValue> {
 describe("Opendatasoft catalog expansion", () => {
   it("adds all eleven E-REDES and seventeen SNS candidates without duplicate feeds", () => {
     expect(CATALOG_EXAMPLES).toHaveLength(28);
-    expect(CATALOG_EXAMPLES.filter((example) => example.publisher === "E-REDES")).toHaveLength(11);
+    expect(CATALOG_EXAMPLES.filter((example) => example.publisher === "e-redes")).toHaveLength(11);
     expect(OPENDATASOFT_EXAMPLES).toHaveLength(57);
     expect(new Set(OPENDATASOFT_EXAMPLES.map((example) => example.slug)).size).toBe(57);
     expect(new Set(OPENDATASOFT_EXAMPLES.map((example) => `${example.config.host}/${example.config.dataset}`)).size).toBe(57);

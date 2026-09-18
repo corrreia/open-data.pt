@@ -2,25 +2,25 @@
   {
     "source": "ripestat",
     "reason": "RIPEstat Service Terms Article 3.3 restrict repackaging, compilation and redistribution of RIPEstat data. Keyless API access does not establish permission for this public republication service.",
-    "requiredAction": "Establish appropriate republication permission or use a differently licensed underlying source, then clear the hold, which gives the library its own Worker on the next `pnpm packages:sync`.",
+    "requiredAction": "Establish appropriate republication permission or use a differently licensed underlying source, then clear the hold and list the library in `libraries.ts`.",
     "references": ["https://www.ripe.net/about-us/legal/ripestat-service-terms-and-conditions"]
   },
   {
     "source": "peeringdb",
     "reason": "PeeringDB's acceptable-use policy requires permission for reproduction and bulk sharing outside its approved operational uses. A public general-purpose data API is not assumed to qualify for an exemption.",
-    "requiredAction": "Establish permission for the intended public republication, then clear the hold, which gives the library its own Worker on the next `pnpm packages:sync`.",
+    "requiredAction": "Establish permission for the intended public republication, then clear the hold and list the library in `libraries.ts`.",
     "references": ["https://www.peeringdb.com/aup"]
   },
   {
     "source": "ripeatlas",
     "reason": "RIPE Atlas is a Publicly Available RIPE NCC Service, so the Terms of Service Article 3.5 bar on re-packaging and re-distributing its data applies, as it does to RIPEstat. The Atlas Service Terms add that any commercial use needs prior permission, and that RIPE NCC databases may be made available to third parties only upon prior written authorisation. Atlas is widely described as open data; no Creative Commons grant exists in any binding document.",
-    "requiredAction": "Ask the RIPE NCC for permission to republish Atlas probe and anchor records, then clear the hold, which gives the library its own Worker on the next `pnpm packages:sync`.",
+    "requiredAction": "Ask the RIPE NCC for permission to republish Atlas probe and anchor records, then clear the hold and list the library in `libraries.ts`.",
     "references": ["https://www.ripe.net/about-us/legal/terms-of-service/", "https://www.ripe.net/about-us/legal/ripe-atlas-service-terms-and-conditions/"]
   },
   {
     "source": "ioda",
     "reason": "Georgia Tech publishes no terms for IODA: every API response asserts only 'This data is Copyright (c) 2021-2025 Georgia Tech Research Corporation. All Rights Reserved.', which reserves rights rather than granting them, and the same organisation does grant rights explicitly in its software licence. Several signals IODA blends carry their own bars on redistribution: the Merit network telescope requires written authorisation, Google's Transparency Report is unlicensed and Google's terms forbid copying, and the RIPE RIS half of the BGP signal is the same Article 3.5 restriction held above. Only IODA's own active probing, RouteViews (CC BY 4.0) and Mozilla (CC0) are clear.",
-    "requiredAction": "Ask ioda-info@cc.gatech.edu for permission to republish, covering the upstream signals as well, then clear the hold. A narrower alternative is to publish only the signals IODA measures itself and the events derived from them, dropping merit-nt and gtr-norm.",
+    "requiredAction": "Ask ioda-info@cc.gatech.edu for permission to republish, covering the upstream signals as well, then clear the hold and list the library in `libraries.ts`. A narrower alternative is to publish only the signals IODA measures itself and the events derived from them, dropping merit-nt and gtr-norm.",
     "references": [
       "https://api.ioda.inetintel.cc.gatech.edu/v2/datasources/",
       "https://github.com/InetIntel/ioda-api/blob/HEAD/LICENSE",

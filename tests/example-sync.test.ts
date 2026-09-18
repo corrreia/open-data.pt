@@ -17,9 +17,10 @@ function example(slug: string, title = slug): ExampleFeed {
     slug,
     title,
     description: "Fixture",
-    config: { feed: slug },
+    config: { source: slug[0] === "a" ? "alpha" : "beta", feed: slug },
     staleAfterSeconds: 3600,
-    policy: { name: "Fixture", version: 1, collection: { cadenceSeconds: 3600, timeoutSeconds: 30, maxBytes: 1024, historyMode: "changes" }, serving: {} },
+    publisher: "ine",
+    policy: { name: "Fixture", version: 1, collection: { cadenceSeconds: 3600, timeoutSeconds: 30, maxBytes: 1024, historyMode: "changes" }, serving: { licence: "source-terms" } },
   };
 }
 
@@ -46,8 +47,7 @@ interface InstalledFeed extends SyncFeed {
 
 /** A Registry in memory: what the sync installs, updates and retires, and its stored sync state. */
 class FakeRegistry implements SyncPorts {
-  catalog: CatalogEntry[] = [];
-  bound: string[] = [];
+  catalog: CatalogEntry[] | undefined = [];
   readonly installed = new Map<string, InstalledFeed>();
   readonly applied: string[] = [];
   readonly retired: string[] = [];
@@ -56,10 +56,7 @@ class FakeRegistry implements SyncPorts {
   clock = 1_000_000;
   private nextId = 1;
 
-  boundKinds(): string[] {
-    return this.bound;
-  }
-  async readCatalog(): Promise<CatalogEntry[]> {
+  async readCatalog(): Promise<CatalogEntry[] | undefined> {
     return structuredClone(this.catalog);
   }
   feeds(): SyncFeed[] {
@@ -106,7 +103,6 @@ class FakeRegistry implements SyncPorts {
 
 function registry(): FakeRegistry {
   const fake = new FakeRegistry();
-  fake.bound = ["alpha", "beta"];
   fake.catalog = [
     { kind: "alpha", kinds: [kind("alpha-things")], examples: ["a1", "a2", "a3", "a4", "a5", "a6"].map((slug) => example(slug)) },
     { kind: "beta", kinds: [kind("beta-things")], examples: ["b1", "b2", "b3"].map((slug) => example(slug)) },
@@ -134,7 +130,7 @@ describe("example sync", () => {
     expect((await syncStep(fake)).checked).toBe(true);
   });
 
-  it("updates a changed example under the same feed ID, and every example of a Gatekeeper whose feed kinds changed", async () => {
+  it("updates a changed example under the same feed ID, and every example of a library whose feed kinds changed", async () => {
     const fake = registry();
     await fake.drain();
     const id = fake.installed.get("a1")!.id;
@@ -150,29 +146,39 @@ describe("example sync", () => {
     expect(fake.applied).toEqual(["b1", "b2", "b3"]);
   });
 
-  it("retires a feed whose example disappeared, but never the feeds of a Gatekeeper that did not answer", async () => {
+  it("retires a feed whose example disappeared, and every feed of a library no longer carried", async () => {
     const fake = registry();
     await fake.drain();
     const a2 = fake.installed.get("a2")!.id;
     const beta = ["b1", "b2", "b3"].map((slug) => fake.installed.get(slug)!.id);
 
-    fake.catalog[0]!.examples.splice(1, 1);
-    fake.catalog.splice(1, 1);
+    fake.catalog![0]!.examples.splice(1, 1);
     await fake.nextCheck();
     expect(fake.retired).toEqual([a2]);
-    expect(fake.installed.has("b1")).toBe(true);
 
-    // Answering with no examples at all is a broken Gatekeeper, not an emptied one.
-    fake.catalog.push({ kind: "beta", kinds: [kind("beta-things")], examples: [] });
-    await fake.nextCheck();
-    expect(fake.retired).toEqual([]);
-
-    // Unbound from the kernel: its feeds go.
-    fake.bound = ["alpha"];
-    fake.catalog.splice(1, 1);
+    // Held or deleted, the library lists nothing: its feeds go.
+    fake.catalog!.splice(1, 1);
     await fake.nextCheck();
     expect(fake.retired).toEqual(beta);
     expect(fake.state!.hashes.b1).toBeUndefined();
+  });
+
+  it("never retires anything when the Gatekeeper did not answer, and asks again at the next check", async () => {
+    const fake = registry();
+    await fake.drain();
+    const answered = fake.catalog;
+
+    fake.catalog = undefined;
+    const steps = await fake.nextCheck();
+    expect(steps).toEqual([{ checked: false, applied: 0, retired: 0, failed: 0, pending: 0 }]);
+    expect(fake.retired).toEqual([]);
+    expect(fake.installed.size).toBe(9);
+    expect(fake.state!.lastError).toMatch(/did not answer/);
+
+    fake.catalog = answered;
+    await fake.nextCheck();
+    expect(fake.retired).toEqual([]);
+    expect(fake.state!.lastError).toBeUndefined();
   });
 
   it("applies every example again once a day, so each feed is resolved and handed to its runner daily", async () => {

@@ -203,10 +203,10 @@ describe("GBFS Gatekeeper", () => {
   it("ships every working additional Portuguese system", () => {
     expect(newExamples.map((example) => example.slug)).toEqual(["bird-cascais", "bird-matosinhos", "bird-porto", "tubabike-barcelos"]);
     expect(GBFS_EXAMPLES.some((example) => example.slug === "bird-braga")).toBe(true);
-    expect(newExamples.every((example) => example.policy.collection.cadenceSeconds === (example.publisher === "Bird" ? 300 : 600))).toBe(true);
+    expect(newExamples.every((example) => example.policy.collection.cadenceSeconds === (example.publisher === "bird" ? 300 : 600))).toBe(true);
     expect(
       newExamples
-        .filter((example) => example.publisher === "Bird")
+        .filter((example) => example.publisher === "bird")
         .every((example) => example.policy.collection.withoutHistory?.includes("vehicles") && example.policy.collection.withoutHistory.includes("stations")),
     ).toBe(true);
   });

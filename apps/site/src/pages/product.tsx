@@ -20,7 +20,7 @@ import { RecordsView } from "../components/product/RecordsView";
 import { ChunkBoundary } from "../components/ChunkBoundary";
 import { Shell } from "../components/Shell";
 import { apiGet, productPath } from "../lib/api";
-import { ROLE, freshness, openableUrl, publisherHref, throughOf } from "../lib/catalog";
+import { ROLE, freshness, licenceHref, openableUrl, publisherHref, throughOf } from "../lib/catalog";
 import { fmt } from "../lib/format";
 import { newIssue } from "../lib/project";
 import { invalidate, useQuery } from "../lib/query";
@@ -178,7 +178,7 @@ function ProductPage() {
           <Breadcrumbs.Separator />
           {feed.data ? (
             <>
-              <Breadcrumbs.Link href={publisherHref(feed.data.publisher)}>{feed.data.publisher}</Breadcrumbs.Link>
+              <Breadcrumbs.Link href={publisherHref(feed.data.publisher.id)}>{feed.data.publisher.name}</Breadcrumbs.Link>
               <Breadcrumbs.Separator />
             </>
           ) : null}
@@ -210,8 +210,11 @@ function ProductPage() {
           <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm text-kumo-subtle">
             <span>
               Published by{" "}
-              <a href={publisherHref(feed.data.publisher)} className="font-medium text-kumo-strong underline decoration-kumo-line underline-offset-4 hover:decoration-kumo-strong">
-                {feed.data.publisher}
+              <a
+                href={publisherHref(feed.data.publisher.id)}
+                className="font-medium text-kumo-strong underline decoration-kumo-line underline-offset-4 hover:decoration-kumo-strong"
+              >
+                {feed.data.publisher.name}
               </a>
             </span>
             {source ? (
@@ -225,7 +228,9 @@ function ProductPage() {
             {data.licence ? (
               <>
                 <span aria-hidden="true">·</span>
-                <span>{data.licence}</span>
+                <a href={licenceHref(data.licence.id)} className="hover:underline">
+                  {data.licence.name}
+                </a>
               </>
             ) : null}
             <span aria-hidden="true">·</span>
@@ -273,8 +278,8 @@ function ProductPage() {
                     ? {
                         term: "Publisher",
                         value: (
-                          <a href={publisherHref(feed.data.publisher)} className="text-kumo-link hover:underline">
-                            {feed.data.publisher}
+                          <a href={publisherHref(feed.data.publisher.id)} className="text-kumo-link hover:underline">
+                            {feed.data.publisher.name}
                           </a>
                         ),
                       }
@@ -290,7 +295,23 @@ function ProductPage() {
                       }
                     : null,
                   feed.data ? { term: "Shared", value: throughOf(feed.data) } : null,
-                  { term: "Licence", value: data.licence ?? "As stated by the publisher" },
+                  {
+                    term: "Licence",
+                    value: data.licence ? (
+                      <span className="flex flex-wrap items-baseline gap-x-2">
+                        <a href={licenceHref(data.licence.id)} className="text-kumo-link hover:underline">
+                          {data.licence.name}
+                        </a>
+                        {data.licence.url ? (
+                          <Link href={data.licence.url} target="_blank" rel="noopener noreferrer">
+                            Text <Link.ExternalIcon />
+                          </Link>
+                        ) : null}
+                      </span>
+                    ) : (
+                      "As stated by the publisher"
+                    ),
+                  },
                   data.attribution ? { term: "Attribution", value: data.attribution } : null,
                 ]}
               />
@@ -356,8 +377,8 @@ function ProductPage() {
           <Step n={1} label="Source" last={false}>
             {feed.data ? (
               <>
-                <a href={publisherHref(feed.data.publisher)} className="font-display text-lg text-kumo-strong hover:underline">
-                  {feed.data.publisher}
+                <a href={publisherHref(feed.data.publisher.id)} className="font-display text-lg text-kumo-strong hover:underline">
+                  {feed.data.publisher.name}
                 </a>
                 <span>Shared {throughOf(feed.data)}</span>
                 {source ? (

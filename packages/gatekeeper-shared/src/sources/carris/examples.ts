@@ -1,7 +1,7 @@
 import type { ExampleFeed } from "../../index";
 
 const SERVING = {
-  licence: "Source terms apply",
+  licence: "source-terms",
   attribution: "Carris Metropolitana",
 } as const;
 
@@ -25,7 +25,7 @@ export const CARRIS_EXAMPLES: ExampleFeed[] = [
     config: { source: "carris", feed: "lines" },
     policy: REFERENCE,
     staleAfterSeconds: 172_800,
-    publisher: "Carris Metropolitana",
+    publisher: "carris-metropolitana",
     topics: ["mobility"],
   },
   {
@@ -35,7 +35,7 @@ export const CARRIS_EXAMPLES: ExampleFeed[] = [
     config: { source: "carris", feed: "routes" },
     policy: REFERENCE,
     staleAfterSeconds: 172_800,
-    publisher: "Carris Metropolitana",
+    publisher: "carris-metropolitana",
     topics: ["mobility"],
   },
   {
@@ -49,7 +49,7 @@ export const CARRIS_EXAMPLES: ExampleFeed[] = [
       collection: { ...REFERENCE.collection, maxOutputBytes: 64 * 1024 * 1024 },
     },
     staleAfterSeconds: 172_800,
-    publisher: "Carris Metropolitana",
+    publisher: "carris-metropolitana",
     topics: ["mobility"],
   },
   {
@@ -72,7 +72,7 @@ export const CARRIS_EXAMPLES: ExampleFeed[] = [
       serving: SERVING,
     },
     staleAfterSeconds: 180,
-    publisher: "Carris Metropolitana",
+    publisher: "carris-metropolitana",
     topics: ["mobility"],
   },
   {
@@ -93,7 +93,7 @@ export const CARRIS_EXAMPLES: ExampleFeed[] = [
       serving: SERVING,
     },
     staleAfterSeconds: 900,
-    publisher: "Carris Metropolitana",
+    publisher: "carris-metropolitana",
     topics: ["mobility"],
   },
 ];

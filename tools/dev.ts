@@ -1,24 +1,23 @@
 /**
- * Run the kernel locally with only the Gatekeepers you are working on.
+ * Run the kernel and the Gatekeeper locally, carrying only the libraries you
+ * are working on.
  *
- *   pnpm dev                      the kernel and every Gatekeeper Worker
- *   pnpm dev -- ckan              the kernel and the CKAN Worker
- *   pnpm dev -- ckan gtfs         the kernel and those two
+ *   pnpm dev                      every library
+ *   pnpm dev -- ckan              the CKAN library alone
+ *   pnpm dev -- ckan gtfs         those two
  *
- * A Gatekeeper the kernel is bound to but that is not running is not an error:
- * the Registry's example sync logs `gatekeeper_unavailable` for it and carries
- * on with the ones that answered, and it keeps the feeds of the missing one
- * rather than retiring them. So a single-Worker session installs that Worker's
- * example feeds and leaves every other feed alone.
+ * The selection is written to `packages/gatekeeper/.dev.vars` as
+ * GATEKEEPER_LIBRARIES, which the Worker reads; the Registry installs the
+ * examples of the carried libraries and retires the rest of a local state.
  */
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { workerConfig, workerPackages } from "./packages.ts";
-
-const KERNEL_CONFIG = "apps/kernel/wrangler.jsonc";
 const ROOT = new URL("..", import.meta.url).pathname;
+const KERNEL_CONFIG = "apps/kernel/wrangler.jsonc";
+const GATEKEEPER_CONFIG = "packages/gatekeeper/wrangler.jsonc";
+const DEV_VARS = join(ROOT, "packages/gatekeeper/.dev.vars");
 
 /** The workspace's own Wrangler, so `node tools/dev.ts` works outside `pnpm run`. */
 function wranglerBinary(): string {
@@ -26,23 +25,27 @@ function wranglerBinary(): string {
   return existsSync(local) ? local : "wrangler";
 }
 
+/** Every library directory, held or not; the Worker carries only the listed ones, so a held name selects nothing. */
+function libraries(): string[] {
+  const shared = join(ROOT, "packages/gatekeeper-shared/src");
+  return ["formats", "sources"].flatMap((group) => readdirSync(join(shared, group))).toSorted();
+}
+
 function selected(names: string[]): string[] {
-  const workers = workerPackages();
-  if (names.length === 0) return workers;
-  const unknown = names.filter((name) => !workers.includes(name));
+  const known = libraries();
+  const unknown = names.filter((name) => !known.includes(name));
   if (unknown.length > 0) {
-    process.stderr.write(`Unknown Gatekeeper: ${unknown.join(", ")}. Known: ${workers.join(", ")}\n`);
+    process.stderr.write(`Unknown library: ${unknown.join(", ")}. Known: ${known.join(", ")}\n`);
     process.exit(1);
   }
   return [...new Set(names)];
 }
 
 function main(): void {
-  const workers = selected(process.argv.slice(2));
-  const args = ["dev", "--config", KERNEL_CONFIG];
-  for (const worker of workers) args.push("--config", workerConfig(worker));
-  process.stdout.write(`wrangler dev: kernel + ${workers.join(", ")}\n`);
-  const child = spawn(wranglerBinary(), args, { stdio: "inherit", shell: false, cwd: ROOT });
+  const only = selected(process.argv.slice(2));
+  writeFileSync(DEV_VARS, `GATEKEEPER_LIBRARIES=${only.join(",")}\n`);
+  process.stdout.write(`wrangler dev: kernel + gatekeeper carrying ${only.length === 0 ? "every library" : only.join(", ")}\n`);
+  const child = spawn(wranglerBinary(), ["dev", "--config", KERNEL_CONFIG, "--config", GATEKEEPER_CONFIG], { stdio: "inherit", shell: false, cwd: ROOT });
   child.on("exit", (code, signal) => process.exit(signal ? 1 : (code ?? 0)));
   child.on("error", (error) => {
     process.stderr.write(`could not start wrangler: ${error.message}\n`);

@@ -3,12 +3,12 @@ import type { ExampleFeed, FeedKindDescription } from "@open-data-pt/gatekeeper-
 import { digest } from "./hash";
 
 /**
- * Keeping the Registry's feeds in step with the Gatekeepers, with no operator:
- * every example a Gatekeeper lists is a feed. The Registry alarm runs one step
+ * Keeping the Registry's feeds in step with the Gatekeeper, with no operator:
+ * every example it lists is a feed. The Registry alarm runs one step
  * at a time; this module is the decision logic, free of Durable Object APIs.
  */
 
-/** How often every Gatekeeper's examples and feed kinds are compared with the feeds. */
+/** How often the Gatekeeper's examples and feed kinds are compared with the feeds. */
 export const SYNC_CHECK_MS = 15 * 60_000;
 /** How often every feed is resolved and handed to its runner again, even when nothing it came from changed. */
 export const SYNC_RESOLVE_ALL_MS = 24 * 60 * 60_000;
@@ -19,8 +19,9 @@ export const SYNC_RESOLVE_ALL_MS = 24 * 60 * 60_000;
  */
 export const SYNC_BATCH = 4;
 
-/** One Gatekeeper's answer: its examples and the feed kinds it resolves them with. */
+/** One library's part of the Gatekeeper's answer: its examples and the feed kinds it resolves them with. */
 export interface CatalogEntry {
+  /** The library's name, which is the `source` key its examples carry and the feeds' `gatekeeperKind`. */
   kind: string;
   examples: ExampleFeed[];
   kinds: FeedKindDescription[];
@@ -30,7 +31,6 @@ export interface CatalogEntry {
 export interface SyncFeed {
   id: string;
   slug: string;
-  gatekeeperKind: string;
 }
 
 /** Install or update one example, or retire a feed whose example is gone. */
@@ -56,10 +56,8 @@ export interface SyncProgress {
 }
 
 export interface SyncPorts {
-  /** Every Gatekeeper kind bound to the kernel, answering or not. */
-  boundKinds(): string[];
-  /** The Gatekeepers that answered; one that failed is simply missing. */
-  readCatalog(): Promise<CatalogEntry[]>;
+  /** The Gatekeeper's examples and kinds, by library; `undefined` when it did not answer, or answered with nothing. */
+  readCatalog(): Promise<CatalogEntry[] | undefined>;
   feeds(): SyncFeed[];
   apply(kind: string, example: ExampleFeed): Promise<void>;
   retire(feedId: string): Promise<void>;
@@ -72,15 +70,23 @@ export interface SyncPorts {
  * One step: when the queue is empty and a check is due (or asked for), read
  * the catalog and queue what changed; then run at most SYNC_BATCH operations.
  * A failed operation keeps its old hash, so the next check queues it again.
+ * A Gatekeeper that did not answer is broken rather than emptied: nothing is
+ * retired, and the next check asks again.
  */
 export async function syncStep(ports: SyncPorts, options: { check?: boolean } = {}): Promise<SyncProgress> {
   const now = ports.now();
   const state = ports.load() ?? { nextCheckAt: 0, nextResolveAllAt: 0, queue: [], hashes: {} };
   const progress: SyncProgress = { checked: false, applied: 0, retired: 0, failed: 0, pending: 0 };
   if (state.queue.length === 0 && (options.check === true || now >= state.nextCheckAt)) {
-    const resolveAll = now >= state.nextResolveAllAt;
-    state.queue = planSync(await ports.readCatalog(), ports.feeds(), ports.boundKinds(), state.hashes, resolveAll);
+    const catalog = await ports.readCatalog();
     state.nextCheckAt = now + SYNC_CHECK_MS;
+    if (catalog === undefined) {
+      state.lastError = "The Gatekeeper did not answer; its feeds are kept as they are";
+      ports.save(state);
+      return progress;
+    }
+    const resolveAll = now >= state.nextResolveAllAt;
+    state.queue = planSync(catalog, ports.feeds(), state.hashes, resolveAll);
     if (resolveAll) state.nextResolveAllAt = now + SYNC_RESOLVE_ALL_MS;
     state.lastCheckedAt = new Date(now).toISOString();
     // A check that finds nothing left to do ends the last failure's story; a failed operation is queued again by the
@@ -112,8 +118,12 @@ export async function syncStep(ports: SyncPorts, options: { check?: boolean } = 
   return progress;
 }
 
-/** What one check queues: new and changed examples (every example on a re-resolve day), then feeds whose example is gone. */
-export function planSync(catalog: CatalogEntry[], feeds: SyncFeed[], boundKinds: string[], hashes: Record<string, string>, resolveAll: boolean): SyncOp[] {
+/**
+ * What one check queues: new and changed examples (every example on a
+ * re-resolve day), then feeds whose example is gone. A library the Gatekeeper
+ * no longer carries (held, or deleted) lists nothing, so its feeds go.
+ */
+export function planSync(catalog: CatalogEntry[], feeds: SyncFeed[], hashes: Record<string, string>, resolveAll: boolean): SyncOp[] {
   const ops: SyncOp[] = [];
   const installed = new Set(feeds.map((feed) => feed.slug));
   const listed = new Set<string>();
@@ -125,13 +135,6 @@ export function planSync(catalog: CatalogEntry[], feeds: SyncFeed[], boundKinds:
       if (resolveAll || !installed.has(example.slug) || hashes[example.slug] !== hash) ops.push({ op: "apply", kind: entry.kind, example, hash });
     }
   }
-  const bound = new Set(boundKinds);
-  // A bound Gatekeeper that did not answer, or answered with no examples at all, is broken rather than emptied: its feeds stay.
-  const answered = new Set(catalog.filter((entry) => entry.examples.length > 0).map((entry) => entry.kind));
-  for (const feed of feeds) {
-    if (listed.has(feed.slug)) continue;
-    if (bound.has(feed.gatekeeperKind) && !answered.has(feed.gatekeeperKind)) continue;
-    ops.push({ op: "retire", feedId: feed.id, slug: feed.slug });
-  }
+  for (const feed of feeds) if (!listed.has(feed.slug)) ops.push({ op: "retire", feedId: feed.id, slug: feed.slug });
   return ops;
 }

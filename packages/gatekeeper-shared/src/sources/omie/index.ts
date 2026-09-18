@@ -1,4 +1,4 @@
-/** OMIE's day-ahead market files, read once for every Worker that needs them. */
+/** OMIE's day-ahead market files, read once for every feed that needs them. */
 export { omieCollector, resolveOmieFeed, type OmieCollectorOptions } from "./collector";
 export { OMIE_EXAMPLES } from "./examples";
 export { OMIE_HISTORY_EARLIEST_MARKET_DATE, OMIE_QUARTER_HOURLY_START, marketDateBefore, marketPeriodStart, parseMarketDate, shiftMarketDate } from "./market-time";

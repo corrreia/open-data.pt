@@ -105,13 +105,13 @@ const FEED_COLUMNS: Column<FeedRow>[] = [
     key: "feed",
     header: "Feed",
     sort: (row) => row.feed.title,
-    text: (row) => `${row.feed.title} ${row.feed.publisher} ${row.source}`,
+    text: (row) => `${row.feed.title} ${row.feed.publisher.name} ${row.source}`,
     className: "min-w-[16rem] whitespace-normal",
     cell: (row) => (
       <span className="grid gap-0.5">
         <span className="font-medium text-kumo-strong">{row.feed.title}</span>
         <span className="text-xs text-kumo-subtle">
-          {row.feed.publisher} · {row.source}
+          {row.feed.publisher.name} · {row.source}
         </span>
       </span>
     ),
@@ -200,7 +200,7 @@ function FeedsSection({ feeds, productsByFeed, loading }: { feeds: Feed[]; produ
               id: row.feed.id,
               slug: row.feed.slug,
               title: row.feed.title,
-              publisher: row.feed.publisher,
+              publisher: row.feed.publisher.name,
               source: row.source,
               cadenceSeconds: row.cadence ?? null,
               lastSuccessAt: row.feed.lastSuccessAt ?? null,

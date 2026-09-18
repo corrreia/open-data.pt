@@ -78,7 +78,7 @@ function example(
     title,
     description,
     config,
-    publisher: "Assembleia da República",
+    publisher: "assembleia-da-republica",
     topics: ["government"],
     policy: {
       name: `Parliament ${feed}: ${cadenceSeconds === 604_800 ? "weekly professional reference" : "daily public record updates"}`,
@@ -86,8 +86,7 @@ function example(
       collection: { cadenceSeconds, ...limits, maxBytes: document.sourceBytes, maxRecords: PARLIAMENT_MAX_RECORDS, historyMode: "changes" },
       serving: {
         // https://www.parlamento.pt/Cidadania/Paginas/DadosAbertos.aspx
-        licence:
-          "Os dados podem ser livremente reutilizados por qualquer instituição ou pessoa para a criação de novos conteúdos, devendo apenas ser mencionada a fonte (Assembleia da República).",
+        licence: "parlamento-dados-abertos",
         attribution: "Assembleia da República — Dados Abertos",
       },
     },

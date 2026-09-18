@@ -9,7 +9,7 @@ const WEEK = 604_800;
 const DGT_SERVING: ServingPolicyDefinition = {
   // DGT publishes no reuse licence with these collections: the service links
   // only its SNIG catalogue record. Nothing here may be invented.
-  licence: "Source terms apply",
+  licence: "source-terms",
   attribution: "Direção-Geral do Território — Carta Administrativa Oficial de Portugal (CAOP) 2025",
 };
 
@@ -57,7 +57,7 @@ export const OGC_EXAMPLES: ExampleFeed[] = [
     },
     policy: attributePolicy("OGC weekly attribute table", DGT_SERVING, 4 * MEBIBYTE),
     staleAfterSeconds: 1_209_600,
-    publisher: "DGT · Direção-Geral do Território",
+    publisher: "dgt",
     topics: ["society"],
   },
   {
@@ -75,7 +75,7 @@ export const OGC_EXAMPLES: ExampleFeed[] = [
     },
     policy: attributePolicy("OGC weekly attribute table", DGT_SERVING, 4 * MEBIBYTE),
     staleAfterSeconds: 1_209_600,
-    publisher: "DGT · Direção-Geral do Território",
+    publisher: "dgt",
     topics: ["society"],
   },
   {
@@ -93,7 +93,7 @@ export const OGC_EXAMPLES: ExampleFeed[] = [
     },
     policy: attributePolicy("OGC weekly attribute table", DGT_SERVING, 8 * MEBIBYTE),
     staleAfterSeconds: 1_209_600,
-    publisher: "DGT · Direção-Geral do Território",
+    publisher: "dgt",
     topics: ["society"],
   },
 

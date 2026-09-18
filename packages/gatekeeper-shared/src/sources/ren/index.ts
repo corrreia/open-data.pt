@@ -1,4 +1,4 @@
-/** REN's Data Hub, read once for every Worker that needs it. */
+/** REN's Data Hub, read once for every feed that needs it. */
 export { renCollector, resolveRenFeed, type RenCollectorOptions } from "./collector";
 export { REN_EXAMPLES } from "./examples";
 export {

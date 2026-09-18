@@ -1263,7 +1263,7 @@ export class RunnerCore {
       records: backfill.records + history.records,
       failures: 0,
       updatedAt: new Date(now).toISOString(),
-      // Pace per source: several feeds of one Gatekeeper share one polite rate.
+      // Pace per library: several feeds read the same way share one polite rate.
       nextAt: new Date(now + Math.max(20_000, 6_000 * this.backfillPeers)).toISOString(),
     };
     delete next.lastError;

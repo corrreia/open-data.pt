@@ -67,6 +67,7 @@ export interface Feed extends FeedStatus {
   slug: string;
   title: string;
   description: string;
+  /** The library that reads the feed: the `source` key of its configuration. */
   gatekeeperKind: string;
   config: SourceConfig;
   semantics: FeedSemantics;
@@ -76,8 +77,8 @@ export interface Feed extends FeedStatus {
   policyId: string;
   enabled: boolean;
   staleAfterSeconds: number;
-  /** Who publishes the source; the catalog groups by it. Falls back to the policy attribution. */
-  publisher?: string;
+  /** Who made the data, a key of `PUBLISHERS`; the API serves it expanded. */
+  publisher: string;
   /** Topics the catalog filters by, supplied by the Gatekeeper, never by the kernel. */
   topics: string[];
   createdAt: string;

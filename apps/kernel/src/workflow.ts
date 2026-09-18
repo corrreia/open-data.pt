@@ -2,7 +2,7 @@ import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloud
 
 import type { FeedRunner } from "./coordinators";
 import { collectionStep, DELIVERY_STEP_BLOBS, drainOutbox, failureFrom, type EngineOutcome, type EnginePorts, type RunnerPort } from "./engine";
-import { buildGatekeeperRegistry, getFeedGatekeeper } from "./gatekeeper-registry";
+import { gatekeeperOf } from "./gatekeeper";
 import { PipelinesLake, lakeStreams } from "./lake";
 import { ObjectStore } from "./object-store";
 import { R2SnapshotStore } from "./r2-snapshot-store";
@@ -10,7 +10,6 @@ import { R2SnapshotStore } from "./r2-snapshot-store";
 export interface CollectionParams {
   feedId: string;
   acquisitionId: string;
-  gatekeeperKind: string;
   timeoutSeconds: number;
 }
 
@@ -23,17 +22,15 @@ export interface CollectionParams {
  */
 export class CollectionWorkflow extends WorkflowEntrypoint<Env, CollectionParams> {
   override async run(event: Readonly<WorkflowEvent<CollectionParams>>, step: WorkflowStep): Promise<void> {
-    const { feedId, acquisitionId, gatekeeperKind, timeoutSeconds } = event.payload;
+    const { feedId, acquisitionId, timeoutSeconds } = event.payload;
     const runner = runnerPort(this.env.FeedRunner.getByName(feedId));
     const streams = lakeStreams(this.env);
     const lake = PipelinesLake.available(streams) ? new PipelinesLake(streams) : undefined;
     let outcome: EngineOutcome;
     try {
-      // A feed still naming a Gatekeeper this kernel no longer binds (its Worker was regrouped) is a passing failure:
-      // the Registry re-configures it within minutes, so it is reported and retried, never left to the watchdog.
       const ports: EnginePorts = {
         runner,
-        gatekeeper: getFeedGatekeeper(buildGatekeeperRegistry(this.env), gatekeeperKind),
+        gatekeeper: gatekeeperOf(this.env),
         objects: new ObjectStore(new R2SnapshotStore(this.env.DATA_OBJECTS)),
       };
       // The collection delivers what it committed itself; a second step runs only for what it could not send.

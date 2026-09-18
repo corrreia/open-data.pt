@@ -44,7 +44,7 @@ function example(slug: string, title: string, description: string, config: Sourc
     title,
     description,
     config: { source: "ripeatlas", ...config },
-    publisher: "RIPE NCC",
+    publisher: "ripe-ncc",
     topics: ["telecom"],
     staleAfterSeconds: cadenceSeconds * 3,
     policy: {
@@ -60,7 +60,7 @@ function example(slug: string, title: string, description: string, config: Sourc
         historyMode: "changes",
       },
       serving: {
-        licence: "RIPE Atlas Service Terms and Conditions; RIPE NCC Terms of Service Article 3.5 forbids re-packaging and redistribution without permission",
+        licence: "ripe-atlas-terms",
         attribution: "RIPE NCC, RIPE Atlas and its probe hosts",
       },
     },

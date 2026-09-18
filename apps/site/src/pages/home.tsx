@@ -66,7 +66,7 @@ function Home() {
       for (const topic of dataset.topics) {
         const entry = counts.get(topic) ?? { datasets: 0, publishers: new Map<string, number>() };
         entry.datasets += 1;
-        entry.publishers.set(dataset.publisher, (entry.publishers.get(dataset.publisher) ?? 0) + 1);
+        entry.publishers.set(dataset.publisher.name, (entry.publishers.get(dataset.publisher.name) ?? 0) + 1);
         counts.set(topic, entry);
       }
     }
@@ -141,7 +141,7 @@ function Home() {
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-medium text-kumo-strong">{dataset.title}</span>
                         <span className="block truncate text-xs text-kumo-subtle">
-                          {dataset.publisher} · {fmt.every(dataset.cadence)}
+                          {dataset.publisher.name} · {fmt.every(dataset.cadence)}
                         </span>
                       </span>
                       <RelativeTime value={dataset.updatedAt} className="shrink-0 font-mono text-[0.7rem] text-kumo-subtle" />
@@ -227,9 +227,9 @@ function Home() {
         </SectionHead>
         <ul className="flex flex-wrap gap-2">
           {publishers.map((publisher) => (
-            <li key={publisher.slug}>
+            <li key={publisher.id}>
               <a
-                href={publisherHref(publisher.name)}
+                href={publisherHref(publisher.id)}
                 className="inline-flex items-center gap-2 rounded-full bg-kumo-base px-3 py-1.5 text-sm text-kumo-default no-underline ring-1 ring-kumo-line hover:bg-kumo-tint"
               >
                 {publisher.name}

@@ -7,6 +7,8 @@ The API is intentionally unversioned while the platform is in development. Break
 ## Application
 
 - Catalog: <https://open-data.pt>
+- Publishers: <https://open-data.pt/publisher/>
+- Licences: <https://open-data.pt/licence/>
 - Product pages: <https://open-data.pt/product/?slug=carris-vehicles-current>
 - Status: <https://open-data.pt/status/>
 - API reference: <https://open-data.pt/docs>
@@ -19,7 +21,7 @@ The pages come from `apps/site`, a Vite and React build on Cloudflare's Kumo com
 
 ```mermaid
 flowchart LR
-    Source[Public source] -->|streamed body| Gatekeeper[Source-specific Gatekeeper]
+    Source[Public source] -->|streamed body| Gatekeeper[Gatekeeper: one library per format or source API]
     Gatekeeper -->|normalized NDJSON frames over RPC| Workflow[Collection Workflow]
     Runner[FeedRunner Durable Object] -->|starts one per acquisition| Workflow
     Workflow -->|short calls: declare, stage, commit| Runner
@@ -29,36 +31,39 @@ flowchart LR
     Registry --> API[Typed cached API]
     Chunks --> API
     Lake -->|internal R2 SQL| API
-    API --> Pages[Static home, catalog, publisher, product and status pages]
+    API --> Pages[Static home, catalog, publisher, licence, product and status pages]
 ```
 
-### Gatekeepers
+### The Gatekeeper
 
-One Worker per Gatekeeper library, each separately deployable and reached only through a private service binding. A Worker is **how** the data is read — a format or a bespoke source API — never what the data is about or who publishes it: topics overlap (a city Wi-Fi map is `cities` and `telecom`) and a Worker cannot be in two places. The Workers are generated: every library declares in `worker.ts` its name, vars, secrets, buckets and CPU limit, and `pnpm packages:sync` writes `packages/gatekeeper-<library>/` for every library with examples. Today, 17 Workers over 261 feeds:
+One Worker, reached only through a private service binding, carrying every **library**. A library is how data is read — a format or a bespoke source API — never what the data is about or who publishes it: topics overlap (a city Wi-Fi map is `cities` and `telecom`), and a publisher may be read two ways (Carris Metropolitana through its own API and through GTFS). Each library declares in `worker.ts` its name, its vars with their values, and any secrets, buckets and CPU limit; `packages/gatekeeper-shared/src/libraries.ts` lists the ones the Worker carries. Today, 18 libraries over 266 feeds:
 
-| Worker         | Reads                        | Feeds |
-| -------------- | ---------------------------- | ----- |
-| `arcgis`       | ArcGIS feature services      | 38    |
-| `bpstat`       | BPstat, Banco de Portugal    | 14    |
-| `carris`       | Carris Metropolitana         | 5     |
-| `ckan`         | CKAN portals                 | 31    |
-| `dgeg`         | DGEG fuel prices             | 7     |
-| `eurostat`     | Eurostat                     | 10    |
-| `gbfs`         | GBFS bike-share feeds        | 8     |
-| `gtfs`         | GTFS transit feeds           | 9     |
-| `ine`          | INE, Statistics Portugal     | 26    |
-| `ipma`         | IPMA weather and sea         | 10    |
-| `metrolisboa`  | Metro Lisboa                 | 4     |
-| `ogc`          | OGC API Features services    | 11    |
-| `omie`         | OMIE electricity market      | 2     |
-| `opendatasoft` | Opendatasoft portals         | 57    |
-| `parliament`   | Assembleia da República      | 7     |
-| `ren`          | REN electricity grid         | 9     |
-| `udata`        | uData portals (dados.gov.pt) | 13    |
+| Library        | Reads                          | Feeds |
+| -------------- | ------------------------------ | ----- |
+| `arcgis`       | ArcGIS feature services        | 38    |
+| `bpstat`       | BPstat, Banco de Portugal      | 14    |
+| `carris`       | Carris Metropolitana           | 5     |
+| `ckan`         | CKAN portals                   | 30    |
+| `dgeg`         | DGEG fuel prices               | 6     |
+| `eurostat`     | Eurostat                       | 10    |
+| `gbfs`         | GBFS bike-share feeds          | 16    |
+| `gtfs`         | GTFS transit feeds             | 9     |
+| `ine`          | INE, Statistics Portugal       | 26    |
+| `ipma`         | IPMA weather and sea           | 10    |
+| `metrolisboa`  | Metro Lisboa                   | 4     |
+| `myinfo`       | Card4B MYINFO operator portals | 8     |
+| `ogc`          | OGC API Features services      | 3     |
+| `omie`         | OMIE electricity market        | 2     |
+| `opendatasoft` | Opendatasoft portals           | 57    |
+| `parliament`   | Assembleia da República        | 7     |
+| `ren`          | REN electricity grid           | 8     |
+| `udata`        | uData portals (dados.gov.pt)   | 13    |
 
-A library under a publication hold (RIPEstat, PeeringDB, MYINFO) has no Worker until the hold is lifted; adding a library and running `pnpm packages:sync` is all a new Worker takes. Topics are catalog tags: a feed carries as many as it likes, from the vocabulary in `packages/gatekeeper-shared/src/topics.ts`, and none of them decides where it runs.
+A library under a publication hold (IODA, RIPE Atlas, RIPEstat, PeeringDB) is not listed, so its code does not ship and its examples are not installed until the hold is lifted; a new library is its directory and one line in the list.
 
-A Worker holds no parsing. It wires one shared library — a format library for anything with a standard (ArcGIS, CKAN, Opendatasoft, GTFS, GBFS, uData, OGC API Features) or a source library per bespoke API (Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, MYINFO, IODA, RIPE Atlas, RIPEstat, PeeringDB) — hands it the vars and secrets it declares, and lists the example feeds it owns. Every feed's configuration names its library in `source`, and that key is what routes it.
+What the catalog groups and filters by is three vocabularies next to the libraries, each a keyed list a test holds every example to: `topics.ts` (a feed carries as many tags as it likes), `publishers.ts` (who made the data — never the portal it was read from: dados.gov.pt carries ten publishers and is none of them) and `licences.ts` (the terms a product is served under, as its publisher states them; `source-terms` when it states none). A feed names its publisher and its policy names its licence by key; the API serves each expanded as `{ id, name, url?, description? }`, so a licence spelled three ways is one licence, and a publisher read through two libraries is one publisher, with a page each.
+
+The Worker holds no parsing. It builds each library from its declared vars and the Worker's bindings — a format library for anything with a standard (ArcGIS, CKAN, Opendatasoft, GTFS, GBFS, uData, OGC API Features) or a source library per bespoke API (Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, MYINFO, IODA, RIPE Atlas, RIPEstat, PeeringDB) — and lists every library's example feeds. Every feed's configuration names its library in `source`, and that key is what routes it.
 
 The RPC has five operations: `describe`, `listFeedKinds`, `resolveFeed`, `collect`, and `exampleFeeds`. `collect` returns a typed unchanged, batch, exhausted, or failure result. A batch is one `open-data-normalized/4` NDJSON stream: a header, product-keyed record and point frames, and a mandatory completion frame that may finalize values only known at the end (inferred schema, watermark, a product found absent). Adapters hand the shared collector a typed source fetch; formats that can be read row by row (CSV, NDJSON, JSON arrays, GeoJSON features, GTFS ZIP entries) stream, and everything else is buffered under a 16 MiB cap. Source bodies never leave the Gatekeeper.
 
@@ -91,7 +96,7 @@ There is no raw source archive, no pending-batch store, no acquisitions history 
 
 ### History and backfill
 
-Gatekeepers with a source-supported history capability use the same `collect` operation with a history cursor. Backfill slices go to the lake only, are paced per source, persist their cursor, keep knowledge time distinct from event time, and never change current serving.
+A library with a source-supported history capability uses the same `collect` operation with a history cursor. Backfill slices go to the lake only, are paced per source, persist their cursor, keep knowledge time distinct from event time, and never change current serving.
 
 Public history is typed and requires bounded UTC intervals (at most 366 days):
 
@@ -132,11 +137,11 @@ The API is read-only: every other method answers `405`. `/records` accepts `wher
 ```bash
 pnpm install
 pnpm types
-pnpm dev                 # the kernel and every Gatekeeper
-pnpm dev -- ckan         # the kernel and one of them
+pnpm dev                 # the kernel and the Gatekeeper, carrying every library
+pnpm dev -- ckan         # carrying CKAN alone, so only its feeds are installed and polled
 ```
 
-Nothing has to be installed by hand: the Registry installs every Gatekeeper's examples on its first alarm and keeps them in sync, a few feeds per alarm, re-checking every 15 minutes. A Gatekeeper the kernel is bound to but that is not running logs `gatekeeper_unavailable` and is skipped, so a single-Worker session installs that Worker's feeds and leaves the rest alone.
+Nothing has to be installed by hand: the Registry installs every example the Gatekeeper lists on its first alarm and keeps them in sync, a few feeds per alarm, re-checking every 15 minutes. A session carrying one library installs that library's feeds and retires the rest of the local state; a Gatekeeper that does not answer at all logs `gatekeeper_unavailable` and retires nothing.
 
 `CONTRIBUTING.md` is the guide to adding a dataset, a source or a format; `AGENTS.md` is the same for coding agents.
 
@@ -146,7 +151,7 @@ Nothing has to be installed by hand: the Registry installs every Gatekeeper's ex
 pnpm check
 ```
 
-This runs Oxlint, generated-binding checks, strict TypeScript, unit and Worker-runtime tests (including a real Workflow collection), and dry-run bundles for the kernel and every Gatekeeper. On a small machine run the steps one at a time instead (`pnpm lint`, `pnpm types:check`, `pnpm typecheck`, `pnpm exec vitest run --maxWorkers=2`, `pnpm deploy:dry-run`). `pnpm packages:sync` regenerates the library Workers, the root scripts and the kernel's service bindings from the libraries and their examples; a test fails when they drift. A scale benchmark runs on demand:
+This runs Oxlint, generated-binding checks, strict TypeScript, unit and Worker-runtime tests (including a real Workflow collection), and dry-run bundles for the kernel and the Gatekeeper. On a small machine run the steps one at a time instead (`pnpm lint`, `pnpm types:check`, `pnpm typecheck`, `pnpm exec vitest run --maxWorkers=2`, `pnpm deploy:dry-run`). A scale benchmark runs on demand:
 
 ```bash
 SCALE_ROWS=1000000 npx vitest run tests/scale.test.ts

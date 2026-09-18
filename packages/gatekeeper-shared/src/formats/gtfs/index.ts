@@ -1,4 +1,4 @@
-/** GTFS Schedule archives, parsed once for every Worker that reads one. */
+/** GTFS Schedule archives, parsed once for every feed that reads one. */
 export { GtfsCsvReader, MAX_ROW_CHARACTERS, type GtfsRow } from "./csv";
 export { gtfsCollector, resolveGtfsFeed, type GtfsCollectorOptions } from "./collector";
 export { GTFS_EXAMPLES } from "./examples";

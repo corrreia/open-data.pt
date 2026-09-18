@@ -1,4 +1,4 @@
-import type { ExampleFeed } from "../../index";
+import { PUBLISHERS, type ExampleFeed, type Licence, type Publisher } from "../../index";
 
 const MIB = 1024 * 1024;
 
@@ -13,7 +13,7 @@ function annualPolicy(name: string, attribution: string, maxBytes: number): Exam
       historyMode: "changes",
     },
     serving: {
-      licence: "CC BY 4.0",
+      licence: "cc-by-4.0",
       attribution,
     },
   };
@@ -32,8 +32,8 @@ interface GovernmentDistribution {
   /** Omitted for a publisher that uploads each release as a new resource: the newest in `format` is read. */
   distributionId?: string;
   format: "csv" | "json";
-  publisher: string;
-  licence: string;
+  publisher: Publisher;
+  licence: Licence;
   cadenceSeconds: number;
   maxBytes: number;
   maxOutputBytes: number;
@@ -64,7 +64,7 @@ function governmentExample(source: GovernmentDistribution): ExampleFeed {
       name: source.title,
       version: 1,
       collection: { cadenceSeconds: source.cadenceSeconds, timeoutSeconds: 240, maxBytes: source.maxBytes, maxOutputBytes: source.maxOutputBytes, historyMode: "changes" },
-      serving: { licence: source.licence, attribution: source.publisher },
+      serving: { licence: source.licence, attribution: PUBLISHERS[source.publisher].name },
     },
     staleAfterSeconds: source.cadenceSeconds * 3,
     publisher: source.publisher,
@@ -91,7 +91,7 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
     },
     policy: annualPolicy("Municipal accessibility annual snapshot", "DEMARCA Design", 2 * MIB),
     staleAfterSeconds: 30 * 86_400,
-    publisher: "DEMARCA Design",
+    publisher: "demarca-design",
     topics: ["cities"],
   },
   {
@@ -113,7 +113,7 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
     },
     policy: annualPolicy("Justice facilities annual snapshot", "Direção-Geral da Política de Justiça", 1 * MIB),
     staleAfterSeconds: 30 * 86_400,
-    publisher: "DGPJ · Direção-Geral da Política de Justiça",
+    publisher: "dgpj",
     topics: ["society"],
   },
   {
@@ -135,7 +135,7 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
     },
     policy: annualPolicy("Portuguese museums annual snapshot", "Arquivo.pt", 1 * MIB),
     staleAfterSeconds: 30 * 86_400,
-    publisher: "Arquivo.pt",
+    publisher: "arquivo-pt",
     topics: ["society", "culture"],
   },
   {
@@ -157,7 +157,7 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
     },
     policy: annualPolicy("Portuguese parishes annual snapshot", "Arquivo.pt", 2 * MIB),
     staleAfterSeconds: 30 * 86_400,
-    publisher: "Arquivo.pt",
+    publisher: "arquivo-pt",
     topics: ["cities"],
   },
   {
@@ -179,7 +179,7 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
     },
     policy: annualPolicy("Public libraries annual snapshot", "Direção-Geral do Livro, dos Arquivos e das Bibliotecas", 1 * MIB),
     staleAfterSeconds: 30 * 86_400,
-    publisher: "DGLAB · Direção-Geral do Livro, dos Arquivos e das Bibliotecas",
+    publisher: "dglab",
     topics: ["society", "culture"],
   },
   {
@@ -201,7 +201,7 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
     },
     policy: annualPolicy("Municipal EV charging annual snapshot", "Agência para a Reforma Tecnológica do Estado", 1 * MIB),
     staleAfterSeconds: 30 * 86_400,
-    publisher: "Agência para a Reforma Tecnológica do Estado",
+    publisher: "arte",
     topics: ["cities", "energy"],
   },
   {
@@ -221,7 +221,7 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
     },
     policy: annualPolicy("Cadaval waste annual snapshot", "Município do Cadaval", 256 * 1024),
     staleAfterSeconds: 30 * 86_400,
-    publisher: "Município do Cadaval",
+    publisher: "cm-cadaval",
     topics: ["cities", "environment"],
   },
   {
@@ -245,7 +245,7 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
     // About 45,000 rows: the 5.7 MB CSV can normalize to more than the 16 MiB default output cap.
     policy: withOutputCap(annualPolicy("Primary-care oral-health monthly series", "Direção-Geral da Saúde", 8 * MIB), 64 * MIB),
     staleAfterSeconds: 7 * 86_400,
-    publisher: "DGS · Direção-Geral da Saúde",
+    publisher: "dgs",
     topics: ["health"],
   },
   governmentExample({
@@ -257,8 +257,8 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
     format: "csv",
     keyField: "N.º Parecer",
     eventTimeField: "Data Parecer",
-    publisher: "CADA · Comissão de Acesso aos Documentos Administrativos",
-    licence: "CC BY 4.0",
+    publisher: "cada",
+    licence: "cc-by-4.0",
     cadenceSeconds: 30 * 86_400,
     maxBytes: 2 * MIB,
     maxOutputBytes: 8 * MIB,
@@ -273,8 +273,8 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
     format: "json",
     keyField: "titularNipc",
     eventTimeField: "fileDate",
-    publisher: "ARTE · Agência para a Reforma Tecnológica do Estado",
-    licence: "Source terms not stated in the dataset metadata",
+    publisher: "arte",
+    licence: "source-terms",
     cadenceSeconds: 604_800,
     maxBytes: 2 * MIB,
     maxOutputBytes: 8 * MIB,
@@ -289,8 +289,8 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
     format: "json",
     keyField: "idcontrato",
     eventTimeField: "modifDataPublicacao",
-    publisher: "IMPIC · Instituto dos Mercados Públicos, do Imobiliário e da Construção",
-    licence: "Public domain (other-pd in dados.gov.pt); IMPIC source conditions apply",
+    publisher: "impic",
+    licence: "other-pd",
     cadenceSeconds: 604_800,
     maxBytes: 8 * MIB,
     maxOutputBytes: 32 * MIB,
@@ -305,8 +305,8 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
     format: "json",
     keyField: "nAnuncio",
     eventTimeField: "dataPublicacao",
-    publisher: "IMPIC · Instituto dos Mercados Públicos, do Imobiliário e da Construção",
-    licence: "Public domain (other-pd in dados.gov.pt); IMPIC source conditions apply",
+    publisher: "impic",
+    licence: "other-pd",
     cadenceSeconds: 604_800,
     maxBytes: 48 * MIB,
     maxOutputBytes: 96 * MIB,
@@ -320,8 +320,8 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
     distributionId: "d85c49f0-b6ab-4cb7-afbe-4e103016b9a0",
     format: "json",
     keyField: "nifEntidade",
-    publisher: "IMPIC · Instituto dos Mercados Públicos, do Imobiliário e da Construção",
-    licence: "Public domain (other-pd in dados.gov.pt); IMPIC source conditions apply",
+    publisher: "impic",
+    licence: "other-pd",
     cadenceSeconds: 30 * 86_400,
     maxBytes: 80 * MIB,
     maxOutputBytes: 160 * MIB,

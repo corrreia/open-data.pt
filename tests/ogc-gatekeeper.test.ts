@@ -947,7 +947,7 @@ describe("OGC API Features examples", () => {
   // tests above still cover the basePath and outline paths those feeds exercised.
   it("claims no licence DGT does not state", () => {
     for (const example of OGC_EXAMPLES) {
-      expect(example.policy.serving.licence).toBe("Source terms apply");
+      expect(example.policy.serving.licence).toBe("source-terms");
       expect(example.policy.serving.attribution ?? "").not.toBe("");
     }
   });

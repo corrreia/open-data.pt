@@ -2,7 +2,6 @@ import { readFileSync, readdirSync } from "node:fs";
 import SwaggerParser from "@apidevtools/swagger-parser";
 import { describe, expect, it } from "vitest";
 import { openApiDocument, scalarReferenceHtml } from "../apps/kernel/src/openapi";
-import { workerPackages } from "../tools/packages";
 
 describe("public API contract", () => {
   it("is a valid OpenAPI document", async () => {
@@ -66,11 +65,9 @@ describe("public API contract", () => {
   });
 
   it("exposes no legacy transform or history RPC on Gatekeeper entrypoints", () => {
-    const workers = workerPackages();
-    expect(workers.length).toBeGreaterThan(0);
-    // Every library Worker is generated to call the one factory, so the factory is the entrypoint to check.
-    for (const worker of workers) expect(readFileSync(`packages/gatekeeper-${worker}/src/index.ts`, "utf8")).toContain("libraryGatekeeper<Env>(");
-    const factory = readFileSync("packages/gatekeeper-shared/src/library-worker.ts", "utf8");
+    // The Worker calls the one factory, so the factory is the entrypoint to check.
+    expect(readFileSync("packages/gatekeeper/src/index.ts", "utf8")).toContain("gatekeeper<Env>(LIBRARIES)");
+    const factory = readFileSync("packages/gatekeeper-shared/src/gatekeeper.ts", "utf8");
     expect(factory).not.toMatch(/async\s+transform\s*\(/);
     expect(factory).not.toMatch(/async\s+collectHistory\s*\(/);
     expect(factory).toContain("collectNormalized");

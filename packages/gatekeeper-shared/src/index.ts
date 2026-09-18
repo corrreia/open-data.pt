@@ -3,6 +3,8 @@ import type { WorkerEntrypoint } from "cloudflare:workers";
 import { asNonEmptyString } from "./json";
 
 import type { JsonObject } from "./json";
+import type { Licence } from "./licences";
+import type { Publisher } from "./publishers";
 
 /*
  * The package surface, named one export at a time: everything a Gatekeeper or
@@ -32,18 +34,21 @@ export {
 } from "./json";
 export {
   SOURCE_KEY,
+  buildLibrary,
+  libraryCollector,
   libraryConfig,
-  resolveTopicFeed,
-  topicCollector,
-  topicFeedKinds,
+  libraryFeedKinds,
+  resolveLibraryFeed,
   type GatekeeperLibraries,
   type GatekeeperLibrary,
+  type Library,
   type LibraryDeployment,
   type R2BucketDeployment,
-  type TopicOptions,
 } from "./library";
 export { lisbonDay, lisbonInstants, lisbonOffsetMinutes, lisbonToUtc } from "./lisbon-time";
 export { r2Staging, type SourceStaging } from "./staging";
+export { LICENCES, UNSTATED_LICENCE, isLicence, type Licence, type LicenceDescription } from "./licences";
+export { PUBLISHERS, isPublisher, type Publisher, type PublisherDescription } from "./publishers";
 export { TOPICS, isTopic, type Topic } from "./topics";
 export {
   BUFFERED_SOURCE_MAX_BYTES,
@@ -358,7 +363,8 @@ export interface CollectionPolicyDefinition {
 
 /** The catalog is public by construction; a policy only says under what terms. */
 export interface ServingPolicyDefinition {
-  licence?: string;
+  /** The terms the products are served under, a key of `LICENCES`. */
+  licence: Licence;
   attribution?: string;
 }
 
@@ -370,8 +376,8 @@ export interface ExampleFeed {
   config: SourceConfig;
   policy: { name: string; version: number; collection: CollectionPolicyDefinition; serving: ServingPolicyDefinition };
   staleAfterSeconds: number;
-  /** The institution or operator that publishes the source, short enough for a heading. */
-  publisher?: string;
+  /** Who made the data, a key of `PUBLISHERS`: never the portal it was read from. */
+  publisher: Publisher;
   /** Free-form topics the catalog groups and filters by, most specific first (for example "energy"). */
   topics?: string[];
 }

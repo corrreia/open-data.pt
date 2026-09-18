@@ -21,7 +21,7 @@ const server = createTestHarness({
           ],
         },
         workflows: [{ name: "open-data-pt-collections", binding: "COLLECTIONS", class_name: "CollectionWorkflow" }],
-        services: [{ binding: "GATEKEEPER_FIXTURE", service: "kernel-runtime-test", entrypoint: "FixtureGatekeeper" }],
+        services: [{ binding: "GATEKEEPER", service: "kernel-runtime-test", entrypoint: "FixtureGatekeeper" }],
         migrations: [{ tag: "test-only", new_sqlite_classes: ["Registry", "FeedRunner"] }],
       },
     },

@@ -17,7 +17,7 @@ export interface RunnerReportReceipt {
   known: boolean;
   backfillPeers: number;
   /**
-   * The feed is unknown and the Registry has applied every Gatekeeper example,
+   * The feed is unknown and the Registry has applied every example the Gatekeeper lists,
    * so no install is on its way: the runner is a ghost and retires itself.
    */
   retire?: boolean;

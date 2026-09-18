@@ -1,10 +1,10 @@
-import type { ExampleFeed, SourceConfig } from "../../index";
+import type { ExampleFeed, Licence, SourceConfig } from "../../index";
 
 /** The Porto portal moved to dadosabertos.cm-porto.pt in September 2026; opendata.porto.digital no longer resolves. */
 const PORTO_HOST = "dadosabertos.cm-porto.pt";
 
 const SERVING = {
-  licence: "Creative Commons CCZero",
+  licence: "cc0-1.0",
   attribution: `Câmara Municipal do Porto via ${PORTO_HOST}`,
 } as const;
 
@@ -25,7 +25,7 @@ const CASCAIS_DAILY_REFERENCE = {
   name: "Cascais CKAN daily reference snapshot",
   serving: {
     ...SERVING,
-    licence: "Creative Commons Attribution (CC BY)",
+    licence: "cc-by",
     attribution: "Câmara Municipal de Cascais via dadosabertos.cascais.pt",
   },
 } as const;
@@ -48,7 +48,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     },
     policy: DAILY_REFERENCE,
     staleAfterSeconds: 172_800,
-    publisher: "Câmara Municipal do Porto",
+    publisher: "cm-porto",
     topics: ["cities", "mobility"],
   },
   {
@@ -68,7 +68,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
       collection: { ...DAILY_REFERENCE.collection, timeoutSeconds: 180, maxOutputBytes: 64 * 1024 * 1024 },
     },
     staleAfterSeconds: 604_800,
-    publisher: "Câmara Municipal do Porto",
+    publisher: "cm-porto",
     topics: ["cities", "environment"],
   },
   // Porto's museums and thematic centres (cultura-cultura-museus) did not survive the
@@ -87,7 +87,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     },
     policy: DAILY_CHANGES,
     staleAfterSeconds: 172_800,
-    publisher: "Câmara Municipal do Porto",
+    publisher: "cm-porto",
     topics: ["cities", "culture"],
   },
   {
@@ -102,7 +102,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     },
     policy: DAILY_REFERENCE,
     staleAfterSeconds: 172_800,
-    publisher: "Câmara Municipal do Porto",
+    publisher: "cm-porto",
     topics: ["cities", "mobility"],
   },
   cascaisExample(
@@ -244,7 +244,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "51ebb54b-0249-46b6-8aa9-edf5365a9976",
     { idField: "gid", crs: "EPSG:3763" },
     ["cities", "environment"],
-    "Creative Commons Attribution (CC BY)",
+    "cc-by",
   ),
   aguedaExample(
     "waste-bins",
@@ -263,7 +263,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "df073fc9-441e-4385-b50e-0290881a5729",
     { idField: "id", crs: "EPSG:3763" },
     ["cities", "environment"],
-    "Creative Commons Attribution (CC BY)",
+    "cc-by",
   ),
   aguedaExample(
     "electronics-bins",
@@ -273,7 +273,7 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "a7963739-44fd-47ec-b9bf-481141cfcda5",
     { idField: "id", crs: "EPSG:3763" },
     ["cities", "environment"],
-    "Creative Commons Attribution (CC BY)",
+    "cc-by",
   ),
   aguedaExample(
     "waste-operators",
@@ -341,10 +341,10 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
       name: "Oeiras monthly observations checked weekly",
       version: 1,
       collection: { cadenceSeconds: 604_800, timeoutSeconds: 90, maxBytes: 2 * 1024 * 1024, maxOutputBytes: 8 * 1024 * 1024, historyMode: "changes" },
-      serving: { licence: "Creative Commons Attribution (CC BY)", attribution: "Câmara Municipal de Oeiras via oeirasinterativa.oeiras.pt" },
+      serving: { licence: "cc-by", attribution: "Câmara Municipal de Oeiras via oeirasinterativa.oeiras.pt" },
     },
     staleAfterSeconds: 45 * 86_400,
-    publisher: "Câmara Municipal de Oeiras",
+    publisher: "cm-oeiras",
     topics: ["cities", "environment"],
   },
 ];
@@ -358,7 +358,7 @@ function aguedaExample(
   resource: string,
   options: SourceConfig,
   topics: string[],
-  licence = "Creative Commons CCZero",
+  licence: Licence = "cc0-1.0",
 ): ExampleFeed {
   return {
     slug: `agueda-${slug}-feed`,
@@ -373,7 +373,7 @@ function aguedaExample(
       serving: { licence, attribution: "Câmara Municipal de Águeda via dadosabertos.cm-agueda.pt" },
     },
     staleAfterSeconds: 90 * 86_400,
-    publisher: "Câmara Municipal de Águeda",
+    publisher: "cm-agueda",
     topics,
   };
 }
@@ -387,7 +387,7 @@ function cascaisExample(slug: string, title: string, description: string, datase
     config: { source: "ckan", host: "dadosabertos.cascais.pt", dataset, resource },
     policy: CASCAIS_DAILY_REFERENCE,
     staleAfterSeconds: 172_800,
-    publisher: "Câmara Municipal de Cascais",
+    publisher: "cm-cascais",
     topics,
   };
 }

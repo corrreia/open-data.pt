@@ -5,20 +5,19 @@ import { describe, expect, it } from "vitest";
 import {
   NORMALIZED_PROTOCOL,
   collectNormalized,
-  resolveTopicFeed,
-  topicCollector,
+  libraryCollector,
+  resolveLibraryFeed,
   type CollectionRequest,
   type ExampleFeed,
   type GatekeeperLibraries,
   type JsonObject,
   type ResolvedFeed,
-  type TopicOptions,
 } from "@open-data-pt/gatekeeper-shared";
 import { isNormalizedFrame } from "../packages/gatekeeper-shared/src/normalized-validation";
 import { readFrames } from "../apps/kernel/src/frames";
 import { MAX_RECORD_BYTES } from "../apps/kernel/src/blob-budget";
 import { jsonAs } from "./support";
-import { PLANS, workerExamples, workerLibraries } from "./catalog";
+import { CARRIED, carriedLibraries } from "./catalog";
 
 /**
  * Collects curated examples from their real sources, the way the kernel
@@ -32,11 +31,10 @@ const SELECTED =
     .filter(Boolean) ?? [];
 const MIB = 1024 * 1024;
 
-/** The wiring the library Workers deploy, from the same generated plans and vars, with the real fetch. */
-const WORKERS: Array<{ kind: string; libraries: GatekeeperLibraries; examples: readonly ExampleFeed[] }> = PLANS.map((plan) => ({
-  kind: plan.name,
-  libraries: workerLibraries(plan.name, { ML_CONSUMER_KEY: process.env.ML_CONSUMER_KEY, ML_CONSUMER_SECRET: process.env.ML_CONSUMER_SECRET }),
-  examples: workerExamples(plan.name),
+/** The wiring the Worker deploys, from the same declarations and vars, with the real fetch. */
+const LIBRARIES: Array<{ libraries: GatekeeperLibraries; examples: readonly ExampleFeed[] }> = CARRIED.map((library) => ({
+  libraries: carriedLibraries(library.deployment.source, { ML_CONSUMER_KEY: process.env.ML_CONSUMER_KEY, ML_CONSUMER_SECRET: process.env.ML_CONSUMER_SECRET }),
+  examples: library.examples,
 }));
 
 /** The request the kernel builds for a live collection under this example's policy. */
@@ -64,19 +62,19 @@ function liveRequest(example: ExampleFeed, resolved: ResolvedFeed): CollectionRe
   };
 }
 
-const cases = WORKERS.flatMap((worker) =>
-  worker.examples
+const cases = LIBRARIES.flatMap((library) =>
+  library.examples
     .filter((example) => SELECTED.includes("all") || SELECTED.includes(example.slug))
-    .map((example) => ({ slug: example.slug, example, options: { gatekeeperKind: worker.kind, libraries: worker.libraries } satisfies TopicOptions })),
+    .map((example) => ({ slug: example.slug, example, libraries: library.libraries })),
 );
 
 describe.skipIf(cases.length === 0)("live examples", () => {
   it.each(cases)(
     "collects $slug",
-    async ({ example, options }) => {
-      const resolved = await resolveTopicFeed(example.config, options);
+    async ({ example, libraries }) => {
+      const resolved = await resolveLibraryFeed(example.config, libraries);
       const request = liveRequest(example, resolved);
-      const result = await collectNormalized(request, topicCollector(resolved.config, options));
+      const result = await collectNormalized(request, libraryCollector(resolved.config, libraries));
       if (result.kind !== "batch") throw new Error(`${example.slug} returned ${JSON.stringify(result)}`);
       const counts = new Map<string, number>();
       const scope = {
@@ -101,7 +99,8 @@ describe.skipIf(cases.length === 0)("live examples", () => {
       console.info(`${example.slug}: ${JSON.stringify(Object.fromEntries(counts))}`);
       expect(counts.get("header")).toBe(1);
       expect(counts.get("complete")).toBe(1);
-      expect((counts.get("record") ?? 0) + (counts.get("point") ?? 0)).toBeGreaterThan(0);
+      // An active event log is honestly empty when nothing is happening; every other curated example should carry data.
+      if (resolved.semantics.defaultProductRole !== "event-log") expect((counts.get("record") ?? 0) + (counts.get("point") ?? 0)).toBeGreaterThan(0);
     },
     300_000,
   );

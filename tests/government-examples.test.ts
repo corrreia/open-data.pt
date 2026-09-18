@@ -48,7 +48,7 @@ describe("government distribution examples", () => {
       expect(example.policy.collection.cadenceSeconds).toBeGreaterThanOrEqual(604_800);
     }
     expect(government.find((example) => example.slug === "base-procurement-entities-feed")?.policy.collection.cadenceSeconds).toBe(30 * 86_400);
-    expect(government.find((example) => example.slug === "recognised-startups-feed")?.policy.serving.licence).toContain("not stated");
+    expect(government.find((example) => example.slug === "recognised-startups-feed")?.policy.serving.licence).toBe("source-terms");
   });
 
   it.each(government)("normalizes $slug as one table without acquisition-time churn", async (example) => {
@@ -68,7 +68,7 @@ describe("government distribution examples", () => {
     expect(TELECOM_EXAMPLES.map((example) => example.slug).toSorted()).toEqual(telecom.map((example) => example.slug).toSorted());
     for (const example of telecom) {
       expect(example.policy.collection.cadenceSeconds).toBe(30 * 86_400);
-      expect(example.policy.serving.licence).toContain("CC BY");
+      expect(example.policy.serving.licence).toBe("cc-by-4.0");
       expect(example.config.indicator).not.toBe("0006853");
     }
   });

@@ -409,11 +409,22 @@ export function openApiDocument(origin: string) {
             cadenceSeconds: { type: ["integer", "null"], description: "How often its feed is collected." },
             historyMode: { type: "string", enum: ["changes", "latest"] },
             exposeHistory: { type: "boolean", description: "Whether the history endpoints serve it." },
-            licence: { type: "string" },
+            licence: { ...schemaRef("Term"), description: "The terms the product is served under." },
             attribution: { type: "string", description: "Credit the publisher with this, not open-data.pt." },
             hasChanges: { type: "boolean", description: "Whether `/changes` has recent changes." },
             hasSeries: { type: "boolean", description: "Whether `/series` has points." },
             updatedAt: time(),
+          },
+        },
+        Term: {
+          type: "object",
+          required: ["id", "name"],
+          description: "One entry of a catalog vocabulary (a publisher, a licence): a stable key to filter by, a name to show, and its page when it has one.",
+          properties: {
+            id: { type: "string", description: "Stable; `/publisher/?id=` and `/licence/?id=` use it." },
+            name: { type: "string" },
+            url: { type: "string", format: "uri" },
+            description: { type: "string", description: "What a licence permits or which publisher terms govern it." },
           },
         },
         Field: {
@@ -598,13 +609,13 @@ export function openApiDocument(origin: string) {
         },
         Feed: {
           type: "object",
-          required: ["id", "slug", "title", "description", "topics", "format", "cadenceSeconds", "enabled"],
+          required: ["id", "slug", "title", "description", "publisher", "topics", "format", "cadenceSeconds", "enabled"],
           properties: {
             id: { type: "string" },
             slug: { type: "string" },
             title: { type: "string" },
             description: { type: "string" },
-            publisher: { type: "string", description: "The institution that publishes the source." },
+            publisher: { ...schemaRef("Term"), description: "The institution or company that made the data: never the portal it was read from." },
             topics: { type: "array", items: { type: "string" } },
             format: {
               type: "string",

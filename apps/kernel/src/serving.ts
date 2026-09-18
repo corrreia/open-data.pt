@@ -15,6 +15,7 @@ import type { ProductDetail, ProductView } from "./coordinators";
 import { NotFoundError } from "./errors";
 import type { Feed, FeedPolicy } from "./feed-model";
 import type { ChangesWindow, ObjectStore, SeriesChangesWindow, SeriesWindow } from "./object-store";
+import { licenceRef, publisherRef } from "./vocabulary";
 
 /** One equality filter on a string, category or identifier field. */
 export interface FieldFilter {
@@ -238,6 +239,15 @@ export class Serving {
   }
 
   async dcatCatalog(origin: string, feeds: Feed[], policies: FeedPolicy[]) {
+    // DCAT wants a licence as a URI when it has one; a publisher's own terms, or none stated, are named instead.
+    const dcatLicence = (key: string) => {
+      const licence = licenceRef(key);
+      return licence.url ?? licence.name;
+    };
+    const dcatPublisher = (key: string) => {
+      const publisher = publisherRef(key);
+      return { "@type": "foaf:Agent", "foaf:name": publisher.name, "foaf:homepage": publisher.url };
+    };
     const products = await this.listProducts();
     const policiesById = new Map(policies.map((policy) => [policy.id, policy]));
     return {
@@ -255,10 +265,10 @@ export class Serving {
           "dct:title": product.title,
           "dct:description": product.description,
           "dct:modified": product.updatedAt,
-          "dct:license": policy?.serving.licence,
-          "dct:publisher": feed?.publisher ? { "@type": "foaf:Agent", "foaf:name": feed.publisher } : undefined,
+          "dct:license": policy ? dcatLicence(policy.serving.licence) : undefined,
+          "dct:publisher": feed ? dcatPublisher(feed.publisher) : undefined,
           "dcat:keyword": feed?.topics?.length ? feed.topics : undefined,
-          "dct:provenance": feed ? `Generated from ${feed.title} through the ${feed.gatekeeperKind} gatekeeper` : undefined,
+          "dct:provenance": feed ? `Generated from ${feed.title} through the ${feed.gatekeeperKind} library` : undefined,
           "dcat:distribution": [
             { "@type": "dcat:Distribution", "dct:format": "application/json", "dcat:accessURL": `${origin}/api/products/${encodeURIComponent(product.slug)}/${endpoint}` },
           ],

@@ -10,7 +10,7 @@ import { fmt, plural } from "../lib/format";
 import { useQuery } from "../lib/query";
 import type { Role } from "../lib/types";
 
-type FacetId = "topic" | "publisher" | "kind" | "updates" | "format";
+type FacetId = "topic" | "publisher" | "licence" | "kind" | "updates" | "format";
 type SortOrder = "publisher" | "recent" | "name";
 
 interface Facet {
@@ -27,7 +27,8 @@ const isRole = (value: string): value is Role => ROLE_IDS.has(value);
 
 const FACETS: Facet[] = [
   { id: "topic", label: "Topic", values: (dataset) => dataset.topics },
-  { id: "publisher", label: "Publisher", values: (dataset) => [dataset.publisherSlug], collapsed: 8 },
+  { id: "publisher", label: "Publisher", values: (dataset) => [dataset.publisher.id], collapsed: 8 },
+  { id: "licence", label: "Licence", values: (dataset) => (dataset.licence ? [dataset.licence.id] : []), collapsed: 6 },
   { id: "kind", label: "Kind of data", values: (dataset) => dataset.roles },
   { id: "updates", label: "Updates", values: (dataset) => [dataset.updates], order: UPDATES.map((bucket) => bucket.id) },
   { id: "format", label: "How it is published", values: (dataset) => [dataset.format] },
@@ -57,11 +58,13 @@ function Catalog() {
   const [filtersOpen, setFiltersOpen] = useState(() => window.matchMedia("(min-width: 64rem)").matches);
 
   const datasets = useMemo(() => (products.data && feeds.data ? buildDatasets(products.data, feeds.data) : []), [products.data, feeds.data]);
-  const publisherNames = useMemo(() => new Map(buildPublishers(datasets).map((publisher) => [publisher.slug, publisher.name])), [datasets]);
+  const publisherNames = useMemo(() => new Map(buildPublishers(datasets).map((publisher) => [publisher.id, publisher.name])), [datasets]);
+  const licenceNames = useMemo(() => new Map(datasets.flatMap((dataset) => (dataset.licence ? [[dataset.licence.id, dataset.licence.name] as const] : []))), [datasets]);
 
   const nameOf = (facet: FacetId, value: string) => {
     if (facet === "topic") return topicLabel(value);
     if (facet === "publisher") return publisherNames.get(value) ?? value;
+    if (facet === "licence") return licenceNames.get(value) ?? value;
     if (facet === "kind") return isRole(value) ? ROLE[value].label : value;
     if (facet === "updates") return UPDATES.find((bucket) => bucket.id === value)?.label ?? value;
     return value;
@@ -83,7 +86,7 @@ function Catalog() {
     const haystack = [
       dataset.title,
       dataset.feed.description,
-      dataset.publisher,
+      dataset.publisher.name,
       dataset.format,
       ...dataset.topics,
       ...dataset.products.flatMap(({ product, label }) => [product.title, product.slug, label]),
@@ -114,10 +117,10 @@ function Catalog() {
       ? (b.updatedAt ?? "").localeCompare(a.updatedAt ?? "")
       : sort === "name"
         ? a.title.localeCompare(b.title)
-        : a.publisher.localeCompare(b.publisher) || a.title.localeCompare(b.title);
+        : a.publisher.name.localeCompare(b.publisher.name) || a.title.localeCompare(b.title);
   const ordered = [...visible].sort((a, b) => emptyLast(a, b) || byOrder(a, b));
   const groups = new Map<string, Dataset[]>();
-  if (sort === "publisher") for (const dataset of ordered) groups.set(dataset.publisher, [...(groups.get(dataset.publisher) ?? []), dataset]);
+  if (sort === "publisher") for (const dataset of ordered) groups.set(dataset.publisher.id, [...(groups.get(dataset.publisher.id) ?? []), dataset]);
 
   const facetPanel = (
     <div className="grid gap-6">
@@ -247,12 +250,12 @@ function Catalog() {
           ) : null}
 
           {sort === "publisher"
-            ? [...groups.entries()].map(([name, group]) => (
-                <div key={name} className="grid gap-3">
+            ? [...groups.entries()].map(([id, group]) => (
+                <div key={id} className="grid gap-3">
                   <div className="mt-4 flex items-baseline justify-between gap-4 border-b border-kumo-line pb-2 first:mt-0">
                     <h2 className="font-display text-xl text-kumo-strong">
-                      <a href={publisherHref(name)} className="no-underline hover:underline">
-                        {name}
+                      <a href={publisherHref(id)} className="no-underline hover:underline">
+                        {group[0]?.publisher.name ?? id}
                       </a>
                     </h2>
                     <Badge variant="secondary">{plural(group.length, "dataset")}</Badge>
