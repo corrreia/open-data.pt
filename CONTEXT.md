@@ -8,7 +8,7 @@ A Worker is wiring, and generated: one library, the vars, secrets and buckets th
 
 ## Library
 
-The code that reads one thing, under `packages/gatekeeper-shared/src`. A format library under `formats/` parses anything with a standard (ArcGIS, CKAN, Opendatasoft, GTFS, GBFS, uData, OGC API Features); a source library under `sources/` reads one bespoke API (Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, RIPEstat, PeeringDB). Each exports its feed-kind table, its validator, its collect function, its transformer, its examples array, a collector factory, and a deployment declaration (`worker.ts`) saying what a Worker must give it. A feed's configuration names its library in `source`; that key routes the feed inside its Worker, and the library never sees it.
+The code that reads one thing, under `packages/gatekeeper-shared/src`. A format library under `formats/` parses anything with a standard (ArcGIS, CKAN, Opendatasoft, GTFS, GBFS, uData, OGC API Features); a source library under `sources/` reads one bespoke API (Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, MYINFO, RIPEstat, PeeringDB). Each exports its feed-kind table, its validator, its collect function, its transformer, its examples array, a collector factory, and a deployment declaration (`worker.ts`) saying what a Worker must give it. A feed's configuration names its library in `source`; that key routes the feed inside its Worker, and the library never sees it.
 
 ## Source
 
