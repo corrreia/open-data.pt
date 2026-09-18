@@ -99,7 +99,8 @@ describe.skipIf(cases.length === 0)("live examples", () => {
       console.info(`${example.slug}: ${JSON.stringify(Object.fromEntries(counts))}`);
       expect(counts.get("header")).toBe(1);
       expect(counts.get("complete")).toBe(1);
-      expect((counts.get("record") ?? 0) + (counts.get("point") ?? 0)).toBeGreaterThan(0);
+      // An active event log is honestly empty when nothing is happening; every other curated example should carry data.
+      if (resolved.semantics.defaultProductRole !== "event-log") expect((counts.get("record") ?? 0) + (counts.get("point") ?? 0)).toBeGreaterThan(0);
     },
     300_000,
   );
