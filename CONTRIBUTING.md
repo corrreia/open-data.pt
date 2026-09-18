@@ -6,16 +6,16 @@ open-data.pt collects Portuguese public data and publishes it as cacheable JSON.
 
 ```
 packages/gatekeeper-shared/src/
-  formats/<format>/     arcgis  ckan  opendatasoft  gtfs  gbfs  udata  ogc
-  sources/<name>/       carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat  parliament  myinfo  ioda
-                        ripeatlas  ripestat  peeringdb
+  formats/<format>/     arcgis  ckan  opendatasoft  gtfs  gbfs  udata  ogc  wfs
+  sources/<name>/       carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat  parliament  myinfo  firms
+                        nasapower  usgs  anepc  ioda  ripeatlas  ripestat  peeringdb
   libraries.ts          the libraries the Gatekeeper Worker carries
 packages/gatekeeper/    the Gatekeeper Worker: every listed library behind one private RPC binding
 apps/kernel/            storage, history, the API and the site
 ```
 
-1. **A library per format.** Anything with a standard — GTFS, GBFS, ArcGIS, CKAN, Opendatasoft, uData, OGC API Features — is parsed once, under `formats/`. A Worker never contains parsing.
-2. **A library per bespoke source,** under `sources/`: Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, MYINFO, IODA, RIPE Atlas, RIPEstat, PeeringDB.
+1. **A library per format.** Anything with a standard — GTFS, GBFS, ArcGIS, CKAN, Opendatasoft, uData, OGC API Features, WFS — is parsed once, under `formats/`. A Worker never contains parsing.
+2. **A library per bespoke source,** under `sources/`: Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, MYINFO, NASA FIRMS, NASA POWER, USGS, ANEPC, IODA, RIPE Atlas, RIPEstat, PeeringDB.
 3. **One Worker, every library.** A library is how the data is read, never what it is about or who publishes it: topics overlap — a city Wi-Fi map is `cities` and `telecom` — and a publisher may be read two ways, so neither is a code boundary. Each library's `deployment.ts` declares its name, its vars with their values, and any secrets, buckets and CPU limit; `libraries.ts` lists the libraries the Worker carries, and a library under a publication hold is not listed. Topics (`TOPICS` in `packages/gatekeeper-shared/src/topics.ts`) and the publisher are labels on a feed, shown on the site.
 4. **Feed slugs never change.** A feed's ID derives from its slug, so a feed keeps its history wherever it runs. Renaming a slug throws that history away.
 

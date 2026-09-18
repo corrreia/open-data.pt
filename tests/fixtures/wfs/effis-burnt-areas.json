@@ -1,0 +1,27 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "888",
+        "FIREDATE": "2026-08-08 00:00:00",
+        "FINALDATE": "2026-08-15 00:00:00",
+        "LASTUPDATE": "2026-08-18 11:57:54.973474",
+        "COUNTRY": "PT",
+        "PROVINCE": "Área Metropolitana do Porto",
+        "COMMUNE": "Covelo de Paivó e Janarde",
+        "AREA_HA": "26593",
+        "BROADLEA": "0.6020922706404734",
+        "CONIFER": "0.2558892150222012",
+        "MIXED": "0.2220215247986746",
+        "PERCNA2K": "9.843358251326316",
+        "CLASS": "FireSeason"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[-8.1, 40.8], [-8, 40.8], [-8, 40.9], [-8.1, 40.9], [-8.1, 40.8]]]
+      }
+    }
+  ]
+}

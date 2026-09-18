@@ -5,13 +5,13 @@ description: Create, modify, or review open-data.pt Gatekeeper libraries and the
 
 # Writing an open-data.pt Gatekeeper
 
-The Gatekeeper is one Cloudflare Worker, `packages/gatekeeper/`, reached through private RPC, carrying every **library** — `arcgis`, `bpstat`, `carris`, `ckan`, `dgeg`, `eurostat`, `gbfs`, `gtfs`, `ine`, `ipma`, `metrolisboa`, `myinfo`, `ogc`, `omie`, `opendatasoft`, `parliament`, `ren`, `udata`. It owns upstream access, parsing, validation, normalization, source clocks, validators, coverage, and source-supported history. It never returns original source bytes to the kernel and owns no canonical storage.
+The Gatekeeper is one Cloudflare Worker, `packages/gatekeeper/`, reached through private RPC, carrying every **library** — `arcgis`, `bpstat`, `carris`, `ckan`, `dgeg`, `eurostat`, `firms`, `gbfs`, `gtfs`, `ine`, `ipma`, `metrolisboa`, `myinfo`, `nasapower`, `ogc`, `omie`, `opendatasoft`, `parliament`, `ren`, `udata`, `usgs`, `wfs`. It owns upstream access, parsing, validation, normalization, source clocks, validators, coverage, and source-supported history. It never returns original source bytes to the kernel and owns no canonical storage.
 
 The code that does the reading is a library, not the Worker:
 
 ```
-packages/gatekeeper-shared/src/formats/<format>/   arcgis  ckan  opendatasoft  gtfs  gbfs  udata  ogc
-packages/gatekeeper-shared/src/sources/<name>/     carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat  parliament  myinfo  ioda  ripeatlas  ripestat  peeringdb
+packages/gatekeeper-shared/src/formats/<format>/   arcgis  ckan  opendatasoft  gtfs  gbfs  udata  ogc  wfs
+packages/gatekeeper-shared/src/sources/<name>/     carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat  parliament  myinfo  firms  nasapower  usgs  anepc  ioda  ripeatlas  ripestat  peeringdb
 packages/gatekeeper-shared/src/libraries.ts        the libraries the Worker carries
 packages/gatekeeper/                               the Worker: `gatekeeper<Env>(LIBRARIES)` and its Wrangler config; it never changes for a new library
 ```
@@ -27,7 +27,7 @@ A library is **how** the data is read, never what it is about or who publishes i
 - The catalog groups by three keyed vocabularies in `packages/gatekeeper-shared/src/`: `TOPICS` (tags: any number, any order), `PUBLISHERS` (who made the data — never the portal it was read from; `cm-porto`, not "dados.gov.pt") and `LICENCES` (the terms the publisher states — `cc-by-4.0`, `bportugal-reuse` — or `source-terms` when it states none; never a licence it does not state). An example names `publisher` and `policy.serving.licence` by key; the kernel refuses an unknown key at the RPC boundary, and `tests/examples-consistency.test.ts` rejects one in the repository and an entry no example uses. A new publisher or licence is one entry: its name and, when there is one, its site or licence text. Vocabulary names are shown, never repeated: a title or policy name that needs the publisher's name reads it from `PUBLISHERS[key].name`.
 - A library's `deployment.ts` declares its name, its vars with their values, and any secrets, R2 buckets and CPU limit. Vars reach the library through `buildLibrary`, which lays the Worker's environment over them; a secret or bucket is bound in `packages/gatekeeper/wrangler.jsonc` under the declared name (Metro Lisboa's `ML_CONSUMER_KEY`/`ML_CONSUMER_SECRET`, Parliament's `PARLIAMENT_STAGING`). The Worker's CPU limit is the largest any library declares.
 - A new library is its directory plus `deployment.ts` and one example, and one line in `libraries.ts`. Nothing else changes: no package, no binding, no script.
-- A source under a publication hold (`packages/gatekeeper-shared/src/publication-holds.json`: IODA, RIPE Atlas, RIPEstat, PeeringDB) is **not** listed in `libraries.ts`, so its code does not ship and its examples are not installed; `tests/examples-consistency.test.ts` holds every library directory to being listed or held, never both. Lifting a hold is deleting its entry and adding the library's line.
+- A source under a publication hold (`packages/gatekeeper-shared/src/publication-holds.json`: ANEPC, IODA, RIPE Atlas, RIPEstat, PeeringDB) is **not** listed in `libraries.ts`, so its code does not ship and its examples are not installed; `tests/examples-consistency.test.ts` holds every library directory to being listed or held, never both. Lifting a hold is deleting its entry and adding the library's line.
 - `GATEKEEPER_LIBRARIES` in `packages/gatekeeper/.dev.vars` (written by `pnpm dev -- <library>…`) restricts a local session to those libraries; production sets nothing.
 
 Feed slugs never change: a feed's ID derives from its slug, and its resource key from its library, so nothing about the Worker is part of its identity.

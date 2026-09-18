@@ -62,6 +62,21 @@ export const LICENCES = {
     name: "Metropolitano de Lisboa API terms of use",
     summary: "Metropolitano de Lisboa serves its API under its own terms of use, which govern reuse of what it returns.",
   },
+  "nasa-earthdata": {
+    name: "NASA Earth Science full and open data policy",
+    url: "https://www.earthdata.nasa.gov/engage/open-data-services-software-policies/data-information-guidance",
+    summary: "NASA commits to full, open and non-discriminatory sharing of its Earth science data; source acknowledgement remains requested.",
+  },
+  "sgifr-terms": {
+    name: "SGIFR terms of use",
+    url: "https://www.sgifr.gov.pt/termos-e-condicoes",
+    summary: "SGIFR requires source attribution and excludes commercial reuse without prior permission, which is why ANEPC publication is held.",
+  },
+  "usgs-public-domain": {
+    name: "USGS public domain",
+    url: "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+    summary: "USGS-authored data are generally in the U.S. public domain; USGS asks users to give proper source credit.",
+  },
   "ioda-all-rights-reserved": {
     name: "IODA, all rights reserved",
     url: "https://api.ioda.inetintel.cc.gatech.edu/v2/datasources/",

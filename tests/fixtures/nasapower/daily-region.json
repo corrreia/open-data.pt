@@ -1,0 +1,17 @@
+{
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-9.375, 37, 1.46] },
+      "properties": { "parameter": { "ALLSKY_SFC_SW_DWN": { "20260914": 5.12, "20260915": 5.44, "20260916": -999 } } }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-8.75, 37, 18.81] },
+      "properties": { "parameter": { "ALLSKY_SFC_SW_DWN": { "20260914": 5.31, "20260915": 5.62, "20260916": 5.7 } } }
+    }
+  ],
+  "header": { "title": "NASA/POWER Source Native Resolution Daily Data", "sources": ["MERRA2"], "time_standard": "UTC" },
+  "parameters": { "ALLSKY_SFC_SW_DWN": { "units": "kW-hr/m^2/day", "longname": "All Sky Surface Shortwave Downward Irradiance" } },
+  "type": "FeatureCollection"
+}

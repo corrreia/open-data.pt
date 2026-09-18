@@ -1,0 +1,27 @@
+{
+  "type": "FeatureCollection",
+  "metadata": { "generated": 1789752463000, "count": 1 },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "mag": 4.8,
+        "place": "1 km NE of Charneca de Caparica, Portugal",
+        "time": 1739798644559,
+        "updated": 1746203180040,
+        "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us7000pe8k",
+        "felt": 554,
+        "cdi": 5.8,
+        "mmi": null,
+        "alert": null,
+        "status": "reviewed",
+        "tsunami": 0,
+        "sig": 676,
+        "net": "us",
+        "type": "earthquake"
+      },
+      "geometry": { "type": "Point", "coordinates": [-9.1842, 38.6301, 10] },
+      "id": "us7000pe8k"
+    }
+  ]
+}
