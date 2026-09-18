@@ -130,7 +130,7 @@ export class FixtureGatekeeper extends WorkerEntrypoint<Env> implements FeedGate
     const stored = await this.env.DATA_OBJECTS.get(EXAMPLE_KEY);
     const title = asString(asObject(parseJson(stored ? await stored.text() : "{}"))?.title) ?? "Fixture things";
     return [{
-      slug: "fixture-things", title, description: "Runtime fixture", config: { feed: "things" }, staleAfterSeconds: 3600,
+      slug: "fixture-things", title, description: "Runtime fixture", config: { source: "fixture", feed: "things" }, staleAfterSeconds: 3600,
       policy: { name: "Fixture", version: 1, collection: { cadenceSeconds: 3600, timeoutSeconds: 30, maxBytes: 1024 * 1024, historyMode: "changes" }, serving: {} },
     }];
   }

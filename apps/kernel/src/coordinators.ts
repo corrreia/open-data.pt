@@ -6,7 +6,7 @@ import { NotFoundError } from "./errors";
 import { syncStep, type CatalogEntry, type SyncPorts, type SyncProgress, type SyncState } from "./example-sync";
 import type { ManifestChunk } from "./chunks";
 import { definitionFingerprint, keepsHistory, policyFingerprint, type Acquisition, type Feed, type FeedPolicy, type ProductIndexEntry, type ProductSummary } from "./feed-model";
-import { buildGatekeeperRegistry, getFeedGatekeeper } from "./gatekeeper-registry";
+import { gatekeeperOf } from "./gatekeeper";
 import { digest } from "./hash";
 import { PipelinesLake, lakeStreams, type LakeTable } from "./lake";
 import { ObjectStore } from "./object-store";
@@ -45,7 +45,7 @@ const LEFTOVER_ALARM_BLOBS = 40;
 /** A history slot outlives its query's own deadline by a margin, and is then taken back from a request that cannot still hold it. */
 const HISTORY_SLOT_TTL_MS = (QUERY_DEADLINE_SECONDS + 15) * 1000;
 
-/** One Gatekeeper example, as the Registry turns it into a feed. */
+/** One example the Gatekeeper lists, as the Registry turns it into a feed. */
 interface FeedInput {
   slug: string;
   title: string;
@@ -95,7 +95,7 @@ function registry(env: Env): DurableObjectStub<Registry> {
  * The Registry: feed definitions and policies, a mirror of runner status and
  * recent acquisitions, slug ownership, and the product index the public API
  * reads. Nobody administers it. Its alarm keeps the feeds equal to the
- * examples every Gatekeeper lists (installing, updating and retiring them,
+ * examples the Gatekeeper lists (installing, updating and retiring them,
  * see example-sync.ts) and runs the daily lake delivery audit. Product
  * staleness is computed when products are read.
  */
@@ -212,7 +212,7 @@ export class Registry extends DurableObject<Env> {
     }
   }
 
-  /* ---------- Keeping feeds equal to the Gatekeepers' examples ---------- */
+  /* ---------- Keeping feeds equal to the Gatekeeper's examples ---------- */
 
   /**
    * One sync step; the alarm calls it and runs another at once while work is
@@ -233,9 +233,8 @@ export class Registry extends DurableObject<Env> {
 
   private syncPorts(): SyncPorts {
     return {
-      boundKinds: () => [...buildGatekeeperRegistry(this.env).keys()],
       readCatalog: () => this.readCatalog(),
-      feeds: () => this.store.listFeeds().map((feed) => ({ id: feed.id, slug: feed.slug, gatekeeperKind: feed.gatekeeperKind })),
+      feeds: () => this.store.listFeeds().map((feed) => ({ id: feed.id, slug: feed.slug })),
       apply: (kind, example) => this.applyExample(kind, example),
       retire: (feedId) => this.retireFeed(feedId),
       load: () => this.store.getState<SyncState>(SYNC_STATE_KEY),
@@ -244,17 +243,29 @@ export class Registry extends DurableObject<Env> {
     };
   }
 
-  private async readCatalog(): Promise<CatalogEntry[]> {
-    const catalog: CatalogEntry[] = [];
-    for (const [kind, gatekeeper] of buildGatekeeperRegistry(this.env)) {
-      try {
-        const [examples, kinds] = await Promise.all([gatekeeper.exampleFeeds(), gatekeeper.listFeedKinds()]);
-        catalog.push({ kind, examples, kinds });
-      } catch (error) {
-        console.warn(JSON.stringify({ event: "gatekeeper_unavailable", kind, error: String(error) }));
+  /**
+   * The Gatekeeper's examples and feed kinds, grouped by the library each
+   * example names in `source`, so a change to one library's kinds re-resolves
+   * that library's feeds and no other's. A Gatekeeper that does not answer, or
+   * lists nothing, is broken rather than emptied.
+   */
+  private async readCatalog(): Promise<CatalogEntry[] | undefined> {
+    try {
+      const [examples, kinds] = await Promise.all([gatekeeperOf(this.env).exampleFeeds(), gatekeeperOf(this.env).listFeedKinds()]);
+      if (examples.length === 0) throw new Error("The Gatekeeper listed no examples");
+      const catalog = new Map<string, CatalogEntry>();
+      for (const example of examples) {
+        const library = example.config.source;
+        if (!library) throw new Error(`${example.slug} names no library in its configuration`);
+        const entry = catalog.get(library) ?? { kind: library, examples: [], kinds: kinds.filter((kind) => kind.kind.startsWith(`${library}:`)) };
+        entry.examples.push(example);
+        catalog.set(library, entry);
       }
+      return [...catalog.values()];
+    } catch (error) {
+      console.warn(JSON.stringify({ event: "gatekeeper_unavailable", error: String(error) }));
+      return undefined;
     }
-    return catalog;
   }
 
   private async applyExample(kind: string, example: ExampleFeed): Promise<void> {
@@ -285,8 +296,7 @@ export class Registry extends DurableObject<Env> {
    * reset Registry installs it under the same ID again.
    */
   private async installFeed(input: FeedInput): Promise<string> {
-    const gatekeeper = getFeedGatekeeper(buildGatekeeperRegistry(this.env), input.gatekeeperKind);
-    const resolved = await gatekeeper.resolveFeed(input.config);
+    const resolved = await gatekeeperOf(this.env).resolveFeed(input.config);
     assertResolvedFeed(resolved);
     if (resolved.configHash !== (await hashSourceConfig(resolved.config))) throw new NormalizedInputError("Resolved feed configuration digest did not match");
     const policy = this.store.getPolicy(input.policyId);
@@ -658,7 +668,7 @@ export class FeedRunner extends DurableObject<Env> {
     try {
       await this.env.COLLECTIONS.create({
         id: instanceId,
-        params: { feedId: feed.id, acquisitionId: acquisition.id, gatekeeperKind: feed.gatekeeperKind, timeoutSeconds: policy.collection.timeoutSeconds },
+        params: { feedId: feed.id, acquisitionId: acquisition.id, timeoutSeconds: policy.collection.timeoutSeconds },
       });
       return true;
     } catch (error) {

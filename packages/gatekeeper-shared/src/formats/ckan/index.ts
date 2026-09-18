@@ -1,4 +1,4 @@
-/** CKAN datasets and their DataStore tables, parsed once for every Worker that reads one. */
+/** CKAN datasets and their DataStore tables, parsed once for every feed that reads one. */
 export { CKAN_FEEDS, CKAN_LIMITS, CkanSource, validateCkanFeedConfig, type CkanCollected, type CkanResourceMetadata, type CkanRowSource, type Fetcher } from "./ckan";
 export { ckanCollector, resolveCkanFeed, type CkanCollectorOptions } from "./collector";
 export { CKAN_EXAMPLES } from "./examples";

@@ -1,0 +1,21 @@
+// The one Gatekeeper Worker: every library in `packages/gatekeeper-shared/src/libraries.ts`, behind private RPC.
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "open-data-pt-gatekeeper",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-09",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  // A library's vars are declared with their values in its `worker.ts`; only what varies by deployment is bound here.
+  // Secrets (wrangler secret put): ML_CONSUMER_KEY, ML_CONSUMER_SECRET (Metro Lisboa).
+  // Parliament stages its 93 MB initiatives file to answer not-modified without parsing it.
+  "r2_buckets": [{ "binding": "PARLIAMENT_STAGING", "bucket_name": "open-data-pt-gatekeeper-staging" }],
+  // GTFS archives and Parliament's file need two minutes of CPU; a limit is a ceiling, not a cost.
+  "limits": { "cpu_ms": 120000 },
+  "observability": {
+    "enabled": true,
+    // The kernel records every acquisition's outcome; a tenth of invocations is enough to debug.
+    "head_sampling_rate": 0.1,
+  },
+}

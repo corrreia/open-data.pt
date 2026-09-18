@@ -32,15 +32,16 @@ export {
 } from "./json";
 export {
   SOURCE_KEY,
+  buildLibrary,
+  libraryCollector,
   libraryConfig,
-  resolveTopicFeed,
-  topicCollector,
-  topicFeedKinds,
+  libraryFeedKinds,
+  resolveLibraryFeed,
   type GatekeeperLibraries,
   type GatekeeperLibrary,
+  type Library,
   type LibraryDeployment,
   type R2BucketDeployment,
-  type TopicOptions,
 } from "./library";
 export { lisbonDay, lisbonInstants, lisbonOffsetMinutes, lisbonToUtc } from "./lisbon-time";
 export { r2Staging, type SourceStaging } from "./staging";

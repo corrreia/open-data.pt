@@ -1,37 +1,21 @@
-import { readFileSync } from "node:fs";
-import type { ExampleFeed, GatekeeperLibraries, LibraryDeployment } from "@open-data-pt/gatekeeper-shared";
-import { loadLibraries, planWorkers, type WorkerPlan } from "../tools/packages";
+import { buildLibrary, type ExampleFeed, type GatekeeperLibraries, type Library } from "@open-data-pt/gatekeeper-shared";
+import { LIBRARIES, library } from "@open-data-pt/gatekeeper-shared/libraries";
 
-/** Every Gatekeeper Worker as `pnpm packages:sync` generates it: one library each. */
-export const PLANS: WorkerPlan[] = await planWorkers(await loadLibraries());
+/** Every library the Gatekeeper Worker carries, as `libraries.ts` lists them. */
+export const CARRIED: readonly Library[] = LIBRARIES;
 
-function plan(library: string): WorkerPlan {
-  const found = PLANS.find((candidate) => candidate.name === library);
-  if (!found) throw new Error(`No Worker for ${library}`);
-  return found;
+/** The names of the carried libraries, in the order the Worker carries them. */
+export const CARRIED_NAMES: string[] = CARRIED.map((candidate) => candidate.deployment.source);
+
+/** What one library installs: every example it lists, since a held library is not carried. */
+export function libraryExamples(name: string): ExampleFeed[] {
+  return [...library(name).examples];
 }
 
-/** What a library's Worker installs: every example of that library, since a held library has no Worker. */
-export function workerExamples(library: string): ExampleFeed[] {
-  return [...plan(library).library.examples];
-}
+/** Every example the Registry installs, across every carried library. */
+export const INSTALLED: ExampleFeed[] = CARRIED.flatMap((candidate) => [...candidate.examples]);
 
-/** Every example the Registry installs, across all Workers. */
-export const INSTALLED: ExampleFeed[] = PLANS.flatMap((candidate) => workerExamples(candidate.name));
-
-/** A Worker's deployed vars, read from its generated Wrangler config so a test never invents one. */
-export function workerVars(library: string): Record<string, string> {
-  const text = readFileSync(new URL(`../packages/gatekeeper-${library}/wrangler.jsonc`, import.meta.url), "utf8")
-    .replace(/^\s*\/\/.*$/gm, "")
-    .replace(/,(\s*[}\]])/g, "$1");
-  const config: { vars: Record<string, string> } = JSON.parse(text);
-  return config.vars;
-}
-
-/** A Worker's library built the way it builds it, from its vars plus whatever else the caller hands over (secrets). */
-export function workerLibraries(library: string, extra: Record<string, string | undefined> = {}): GatekeeperLibraries {
-  const env = { ...workerVars(library), ...extra };
-  // SAFETY: `env` holds the Worker's generated vars, which include every var this library declares.
-  const deployment = plan(library).library.deployment as LibraryDeployment<Record<string, string | undefined>>;
-  return new Map([[library, deployment.library(env)]]);
+/** One library built the way the Worker builds it, from its declared vars plus whatever else the caller hands over (secrets). */
+export function carriedLibraries(name: string, extra: Record<string, string | undefined> = {}): GatekeeperLibraries {
+  return new Map([[name, buildLibrary(library(name).deployment, extra)]]);
 }

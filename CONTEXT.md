@@ -2,13 +2,13 @@
 
 ## Gatekeeper
 
-One trusted Worker per library — `arcgis`, `ckan`, `gtfs`, `ine`, `parliament`, … — named for how the data is read, never for what it is about or who publishes it. It validates configuration, accesses allowlisted upstream resources, parses and normalizes source data, and returns a bounded versioned normalized stream over private RPC. It owns source identity, clocks, validators, pagination, coverage, and source-supported history. It owns no canonical storage or publication state.
+The one trusted Worker that carries every library — `arcgis`, `ckan`, `gtfs`, `ine`, `parliament`, … — reached over private RPC. It validates configuration, accesses allowlisted upstream resources, parses and normalizes source data, and returns a bounded versioned normalized stream. It owns source identity, clocks, validators, pagination, coverage, and source-supported history. It owns no canonical storage or publication state.
 
-A Worker is wiring, and generated: one library, the vars, secrets and buckets that library declares, and its example feeds. Format and source code are shared libraries; the Worker is only their deployment unit. Topics and the publisher are labels on a feed, not code boundaries: topics overlap, so a Worker cannot follow them.
+The Worker is wiring: every listed library, built from the vars each declares and the secrets and buckets the Worker binds, and every library's example feeds. Format and source code are libraries; the Worker is only their deployment unit. A feed's `source` key names its library, and that is what routes it. Topics and the publisher are labels on a feed, not code boundaries: topics overlap, and a publisher may be read through more than one library.
 
 ## Library
 
-The code that reads one thing, under `packages/gatekeeper-shared/src`. A format library under `formats/` parses anything with a standard (ArcGIS, CKAN, Opendatasoft, GTFS, GBFS, uData, OGC API Features); a source library under `sources/` reads one bespoke API (Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, MYINFO, IODA, RIPE Atlas, RIPEstat, PeeringDB). Each exports its feed-kind table, its validator, its collect function, its transformer, its examples array, a collector factory, and a deployment declaration (`worker.ts`) saying what a Worker must give it. A feed's configuration names its library in `source`; that key routes the feed inside its Worker, and the library never sees it.
+The code that reads one thing, under `packages/gatekeeper-shared/src`. A format library under `formats/` parses anything with a standard (ArcGIS, CKAN, Opendatasoft, GTFS, GBFS, uData, OGC API Features); a source library under `sources/` reads one bespoke API (Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, MYINFO, IODA, RIPE Atlas, RIPEstat, PeeringDB). Each exports its feed-kind table, its validator, its collect function, its transformer, its examples array, a collector factory, and a deployment declaration (`worker.ts`) saying what the Worker must give it. `libraries.ts` lists the ones the Worker carries; a library under a publication hold is not listed. A feed's configuration names its library in `source`; that key routes the feed inside the Worker, and the library never sees it.
 
 ## Source
 
@@ -20,7 +20,7 @@ What an adapter hands the shared collector: a typed body with provenance, comple
 
 ## Feed kind
 
-One capability a Gatekeeper declares: what its facts are about, what role its products play by default, and how far back its history reaches. How often it is collected, and under what licence it is served, are its policy's business.
+One capability a library declares: what its facts are about, what role its products play by default, and how far back its history reaches. How often it is collected, and under what licence it is served, are its policy's business.
 
 ## Feed
 

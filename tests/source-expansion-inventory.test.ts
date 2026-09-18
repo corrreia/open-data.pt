@@ -1,23 +1,23 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { asStringList, parseJson, type ExampleFeed } from "@open-data-pt/gatekeeper-shared";
-import { PLANS, workerExamples } from "./catalog";
+import { CARRIED } from "./catalog";
 
-interface WorkerExamples {
+interface LibraryExamples {
   library: string;
   examples: ExampleFeed[];
 }
-const workers: WorkerExamples[] = PLANS.map((plan) => ({ library: plan.name, examples: workerExamples(plan.name) }));
+const libraries: LibraryExamples[] = CARRIED.map((library) => ({ library: library.deployment.source, examples: [...library.examples] }));
 const baseline = new Set(asStringList(parseJson(readFileSync(new URL("./fixtures/source-expansion-baseline-slugs.json", import.meta.url), "utf8"))));
 
 describe("source expansion inventory", () => {
-  it("retains every previously installed feed and assigns each slug to exactly one Worker", () => {
+  it("retains every previously installed feed and assigns each slug to exactly one library", () => {
     // Two feeds left the baseline as duplicates of another feed's values: ren-consumption-feed (the Consumption series
     // of ren-production-breakdown) and dgeg-gasolina-98-lisboa (a district subset of dgeg-gasolina-98). A third,
     // porto-museums-feed, left because its dataset did not survive Porto's September 2026 move to
     // dadosabertos.cm-porto.pt: the municipality publishes no museum inventory there under any name.
     expect(baseline.size).toBe(167);
-    const examples = workers.flatMap((worker) => worker.examples);
+    const examples = libraries.flatMap((library) => library.examples);
     const slugs = new Set(examples.map((example) => example.slug));
     expect(slugs.size).toBe(examples.length);
     for (const slug of baseline) expect(slugs.has(slug), `Removing ${slug} would retire production state`).toBe(true);
@@ -25,7 +25,7 @@ describe("source expansion inventory", () => {
   });
 
   it("gives every added feed an explicit source, positive bounded policy and attribution", () => {
-    const additions = workers.flatMap(({ library, examples }) => examples.filter((example) => !baseline.has(example.slug)).map((example) => ({ library, ...example })));
+    const additions = libraries.flatMap(({ library, examples }) => examples.filter((example) => !baseline.has(example.slug)).map((example) => ({ library, ...example })));
     for (const example of additions) {
       expect(example.config.source).toBeTruthy();
       expect(example.publisher).toBeTruthy();

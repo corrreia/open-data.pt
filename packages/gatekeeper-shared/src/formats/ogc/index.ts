@@ -1,4 +1,4 @@
-/** OGC API — Features collections, parsed once for every Worker that reads one. */
+/** OGC API — Features collections, parsed once for every feed that reads one. */
 export { ogcCollector, resolveOgcFeed, type OgcCollectorOptions } from "./collector";
 export { OGC_EXAMPLES } from "./examples";
 export {

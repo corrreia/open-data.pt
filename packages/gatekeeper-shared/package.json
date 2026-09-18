@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./library-worker": "./src/library-worker.ts",
+    "./gatekeeper": "./src/gatekeeper.ts",
+    "./libraries": "./src/libraries.ts",
     "./formats/*": "./src/formats/*/index.ts",
     "./sources/*": "./src/sources/*/index.ts"
   }

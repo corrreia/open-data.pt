@@ -1,9 +1,0 @@
-{
-  "name": "@open-data-pt/gatekeeper-eurostat",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "dependencies": {
-    "@open-data-pt/gatekeeper-shared": "workspace:*"
-  }
-}

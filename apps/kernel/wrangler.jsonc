@@ -73,27 +73,8 @@
       ],
     },
   ],
-  // One Worker per Gatekeeper library; the kernel discovers them by binding prefix.
-  "services": [
-    { "binding": "GATEKEEPER_ARCGIS", "service": "open-data-pt-gatekeeper-arcgis" },
-    { "binding": "GATEKEEPER_BPSTAT", "service": "open-data-pt-gatekeeper-bpstat" },
-    { "binding": "GATEKEEPER_CARRIS", "service": "open-data-pt-gatekeeper-carris" },
-    { "binding": "GATEKEEPER_CKAN", "service": "open-data-pt-gatekeeper-ckan" },
-    { "binding": "GATEKEEPER_DGEG", "service": "open-data-pt-gatekeeper-dgeg" },
-    { "binding": "GATEKEEPER_EUROSTAT", "service": "open-data-pt-gatekeeper-eurostat" },
-    { "binding": "GATEKEEPER_GBFS", "service": "open-data-pt-gatekeeper-gbfs" },
-    { "binding": "GATEKEEPER_GTFS", "service": "open-data-pt-gatekeeper-gtfs" },
-    { "binding": "GATEKEEPER_INE", "service": "open-data-pt-gatekeeper-ine" },
-    { "binding": "GATEKEEPER_IPMA", "service": "open-data-pt-gatekeeper-ipma" },
-    { "binding": "GATEKEEPER_METROLISBOA", "service": "open-data-pt-gatekeeper-metrolisboa" },
-    { "binding": "GATEKEEPER_MYINFO", "service": "open-data-pt-gatekeeper-myinfo" },
-    { "binding": "GATEKEEPER_OGC", "service": "open-data-pt-gatekeeper-ogc" },
-    { "binding": "GATEKEEPER_OMIE", "service": "open-data-pt-gatekeeper-omie" },
-    { "binding": "GATEKEEPER_OPENDATASOFT", "service": "open-data-pt-gatekeeper-opendatasoft" },
-    { "binding": "GATEKEEPER_PARLIAMENT", "service": "open-data-pt-gatekeeper-parliament" },
-    { "binding": "GATEKEEPER_REN", "service": "open-data-pt-gatekeeper-ren" },
-    { "binding": "GATEKEEPER_UDATA", "service": "open-data-pt-gatekeeper-udata" },
-  ],
+  // The Gatekeeper Worker: every library, reached over private RPC.
+  "services": [{ "binding": "GATEKEEPER", "service": "open-data-pt-gatekeeper" }],
   // Per-client limits on uncached API reads, keyed by cf-connecting-ip; cache hits
   // never count. History windows and GeoJSON exports scan the lake or every
   // chunk, so they have their own tighter limit on top of the general one.

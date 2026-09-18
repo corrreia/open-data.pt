@@ -2,38 +2,32 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createTestHarness } from "wrangler";
 import { readdirSync, readFileSync } from "node:fs";
 import { hashSourceConfig } from "@open-data-pt/gatekeeper-shared";
-import { workerPackages } from "../tools/packages";
-import { workerVars } from "./catalog";
+import { CARRIED_NAMES } from "./catalog";
 
-const gatekeepers = workerPackages();
-const entrypoint = (name: string) => name[0]!.toUpperCase() + name.slice(1);
-const runtimeVars = Object.fromEntries(gatekeepers.map((name) => [name, workerVars(name)]));
-const services = gatekeepers.map((name) => ({ binding: `GK_${name.toUpperCase()}`, service: `conformance-${name}`, entrypoint: entrypoint(name) }));
-function workerConfig(name: string, vars: Record<string, string> = {}, bindings = false) {
+function workerConfig(name: string, bindings = false) {
   const config = {
     name,
     main: "tests/fixtures/gatekeeper-conformance-worker.ts",
     compatibility_date: "2026-09-09",
     compatibility_flags: ["nodejs_compat"],
-    vars,
-    services: bindings ? services : [],
+    services: bindings ? [{ binding: "GK", service: "conformance-gatekeeper", entrypoint: "Gatekeeper" }] : [],
   };
   return { config };
 }
 const server = createTestHarness({
-  workers: [workerConfig("gatekeeper-conformance", {}, true), ...gatekeepers.map((name) => workerConfig(`conformance-${name}`, runtimeVars[name]))],
+  workers: [workerConfig("gatekeeper-conformance", true), workerConfig("conformance-gatekeeper")],
 });
 
 beforeAll(async () => server.listen(), 60_000);
 afterAll(async () => server.close(), 30_000);
 
-describe("all Gatekeeper entrypoints expose the normalized five-operation contract", () => {
-  it("gives every generated Worker the five operations and no legacy RPC", () => {
-    const factory = readFileSync("packages/gatekeeper-shared/src/library-worker.ts", "utf8");
+describe("the Gatekeeper entrypoint exposes the normalized five-operation contract", () => {
+  it("gives the Worker the five operations and no legacy RPC", () => {
+    const factory = readFileSync("packages/gatekeeper-shared/src/gatekeeper.ts", "utf8");
     for (const method of ["describe", "listFeedKinds", "resolveFeed", "collect", "exampleFeeds"]) expect(factory).toContain(`async ${method}(`);
     expect(factory).not.toContain("async validateFeedConfig(");
     expect(factory).not.toContain("async collectHistory(");
-    for (const name of gatekeepers) expect(readFileSync(`packages/gatekeeper-${name}/src/index.ts`, "utf8")).toContain(`libraryGatekeeper<Env>(`);
+    expect(readFileSync("packages/gatekeeper/src/index.ts", "utf8")).toContain("gatekeeper<Env>(LIBRARIES)");
   });
 
   it.each(readdirSync("packages/gatekeeper-shared/src", { recursive: true, encoding: "utf8" }).filter((path) => path.endsWith("worker.ts")))(
@@ -45,27 +39,27 @@ describe("all Gatekeeper entrypoints expose the normalized five-operation contra
     },
   );
 
-  it("resolves a canonical example through every real entrypoint over private Worker RPC", async () => {
+  it("resolves a canonical example of every library through the real entrypoint over private Worker RPC", async () => {
     const response = await server.fetch("/conformance");
     expect(response.status, await response.clone().text()).toBe(200);
     const rows = await response.json<
       Array<{
-        binding: string;
+        library: string;
         description: { kind: string; name: string };
         kindCount: number;
         resolved: { config: Record<string, string>; configHash: string; resourceKey: string; kind: string };
       }>
     >();
-    expect(rows).toHaveLength(gatekeepers.length);
+    expect(rows.map((row) => row.library)).toEqual([...CARRIED_NAMES].toSorted());
     for (const row of rows) {
       expect(row.description.kind).toBeTruthy();
       expect(row.description.name).toBeTruthy();
       expect(row.kindCount).toBeGreaterThan(0);
       expect(row.resolved.configHash).toBe(await hashSourceConfig(row.resolved.config));
-      // `<library>:<library>:<kind>:<digest>`, the Worker's own kind before the library's resource key.
-      expect(row.resolved.resourceKey).toMatch(/^[a-z0-9-]+:[a-z0-9-]+:[a-z0-9-]+:/);
-      expect(row.resolved.kind).toMatch(/^[a-z0-9-]+:[a-z0-9-]+$/);
-      expect(row.resolved.config.source).toBeTruthy();
+      // `<library>:<library>:<kind>:<digest>`: the library's name twice, once where the Worker's name used to be.
+      expect(row.resolved.resourceKey).toMatch(new RegExp(`^${row.library}:${row.library}:[a-z0-9-]+:`));
+      expect(row.resolved.kind).toMatch(new RegExp(`^${row.library}:[a-z0-9-]+$`));
+      expect(row.resolved.config.source).toBe(row.library);
     }
   }, 30_000);
 });

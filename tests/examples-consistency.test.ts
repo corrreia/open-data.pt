@@ -1,8 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { isJsonObject, isJsonString, isTopic, parseJson, type ExampleFeed } from "@open-data-pt/gatekeeper-shared";
-import { workerPackages } from "../tools/packages";
-import { INSTALLED, PLANS } from "./catalog";
+import { CARRIED_NAMES, INSTALLED } from "./catalog";
 
 /** One library's module namespace, as this test reads it: exported values, one of which is its examples. */
 interface LibraryModule {
@@ -29,6 +28,8 @@ function libraryName(path: string): string {
   return path.split("/").at(-2)!;
 }
 
+const LIBRARIES_BY_NAME = Object.fromEntries(Object.keys(LIBRARIES).map((path) => [libraryName(path), path]));
+
 function isExampleFeed(value: ExampleFeed | undefined): boolean {
   return value !== undefined && value.slug !== undefined && value.config !== undefined && value.policy !== undefined;
 }
@@ -49,7 +50,7 @@ async function libraryExamples(): Promise<Map<string, readonly ExampleFeed[]>> {
   return found;
 }
 
-/** Explicit review holds are not runtime feature flags: their examples must stay out of Worker install lists. */
+/** Explicit review holds are not runtime feature flags: their examples must stay out of what the Worker installs. */
 function publicationHolds(): Map<string, string> {
   const rows = parseJson(readFileSync(new URL("../packages/gatekeeper-shared/src/publication-holds.json", import.meta.url), "utf8"));
   if (!Array.isArray(rows)) throw new Error("Publication holds must be an array");
@@ -66,7 +67,7 @@ function publicationHolds(): Map<string, string> {
 
 const PUBLICATION_HOLDS = publicationHolds();
 
-/** What the library Workers install, which is what the Registry turns into feeds. */
+/** What the Gatekeeper Worker installs, which is what the Registry turns into feeds. */
 const DEPLOYED: ExampleFeed[] = INSTALLED;
 
 describe("example feed policies", () => {
@@ -91,7 +92,7 @@ describe("example feed policies", () => {
   });
 });
 
-describe("libraries and the Workers that carry them", () => {
+describe("libraries and the Worker that carries them", () => {
   it("finds a format library per standard and a source library per bespoke API", () => {
     expect(Object.keys(LIBRARIES).map(libraryName).toSorted()).toEqual([
       "arcgis",
@@ -119,10 +120,6 @@ describe("libraries and the Workers that carry them", () => {
     ]);
   });
 
-  it("has a Worker package for every generated Worker", () => {
-    expect(PLANS.map((plan) => plan.name)).toEqual(workerPackages());
-  });
-
   it("tags every example, held or not, with catalog topics and nothing else", async () => {
     const libraries = await libraryExamples();
     const strays = [...libraries.values()]
@@ -132,16 +129,27 @@ describe("libraries and the Workers that carry them", () => {
     expect(strays).toEqual([]);
   });
 
-  it("gives every cleared library its own Worker, and a held one none", () => {
-    const planned = new Set(PLANS.map((plan) => plan.name));
+  it("carries every cleared library, and no held one", () => {
+    const carried = new Set(CARRIED_NAMES);
+    expect(CARRIED_NAMES.length, "libraries.ts lists a library twice").toBe(carried.size);
     const cleared = Object.keys(LIBRARIES)
       .map(libraryName)
       .filter((name) => !PUBLICATION_HOLDS.has(name));
-    expect(cleared.filter((name) => !planned.has(name))).toEqual([]);
-    expect([...PUBLICATION_HOLDS.keys()].filter((name) => planned.has(name))).toEqual([]);
+    expect(
+      cleared.filter((name) => !carried.has(name)),
+      "cleared but not listed in libraries.ts",
+    ).toEqual([]);
+    expect(
+      [...PUBLICATION_HOLDS.keys()].filter((name) => carried.has(name)),
+      "held but listed in libraries.ts",
+    ).toEqual([]);
+    expect(
+      CARRIED_NAMES.filter((name) => !(name in LIBRARIES_BY_NAME)),
+      "listed in libraries.ts but no such directory",
+    ).toEqual([]);
   });
 
-  it("gives every cleared library example to exactly one Worker", async () => {
+  it("installs every cleared library's examples, each once", async () => {
     const libraries = await libraryExamples();
     const offered = [...libraries]
       .filter(([name]) => !PUBLICATION_HOLDS.has(name))
