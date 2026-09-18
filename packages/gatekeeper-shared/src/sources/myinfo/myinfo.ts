@@ -285,6 +285,9 @@ export function parseNetwork(page: string): MyInfoNetwork {
   for (const [index, entry] of decoded.entries()) {
     if (!isJsonObject(entry)) throw invalidResponse(`MYINFO stop ${index} is not an object`);
     const stopId = requiredIdentifier(entry.StopId, index, "StopId");
+    // A copy this entry turns out to be is discarded whole, so the lines it names
+    // wait here: a line the line table publishes is one some kept stop calls at.
+    const named = new Map<string, MyInfoLine>();
     // The portal spells the stop's name `StopNane`; that typo is its field name.
     const stop: MyInfoStop = {
       stopId,
@@ -293,12 +296,14 @@ export function parseNetwork(page: string): MyInfoNetwork {
       name: requiredText(entry.StopNane, index, "StopNane"),
       longitude: coordinate(entry.CoordX, 180),
       latitude: coordinate(entry.CoordY, 90),
-      lineKeys: collectLines(entry.StopLines, lines, index),
+      lineKeys: collectLines(entry.StopLines, lines, named, index),
     };
-    // One stop listed twice is one stop, not two: the second copy says nothing new.
+    // One stop listed twice is one stop, not two: the first entry is the stop, and
+    // the copy is still read in full, because an unreadable copy is an unreadable page.
     if (seen.has(stopId)) continue;
     seen.add(stopId);
     stops.push(stop);
+    for (const [key, line] of named) lines.set(key, line);
   }
   return { stops, lines: [...lines.values()] };
 }
@@ -309,13 +314,13 @@ const NETWORK_PAYLOAD = /'(%5[bB]%7[bB]%22StopId%22[^']*)'/u;
 const LINE_KEY = /^(\d{1,12})\|(GOING|RETURN)$/u;
 
 /**
- * The lines calling at one stop, by key, while naming each line once in
- * `lines`. The stop data repeats a line's number and name at every stop it
+ * The lines calling at one stop, by key, while naming the ones not named yet in
+ * `named`. The stop data repeats a line's number and name at every stop it
  * serves; the line list is where they are published, and a stop keeps the keys.
  * A key a line list cannot name would leave the stop pointing at nothing, so an
  * entry is either complete or the collection fails.
  */
-function collectLines(value: JsonValue | undefined, lines: Map<string, MyInfoLine>, stop: number): string[] {
+function collectLines(value: JsonValue | undefined, lines: ReadonlyMap<string, MyInfoLine>, named: Map<string, MyInfoLine>, stop: number): string[] {
   if (!isJsonArray(value)) throw invalidResponse(`MYINFO stop ${stop} does not list the lines calling there`);
   const keys: string[] = [];
   for (const [index, line] of value.entries()) {
@@ -325,10 +330,10 @@ function collectLines(value: JsonValue | undefined, lines: Map<string, MyInfoLin
     const parsed = LINE_KEY.exec(key);
     if (!parsed) throw invalidResponse(`${at} has an unreadable key: ${key}`);
     if (!keys.includes(key)) keys.push(key);
-    if (lines.has(key)) continue;
+    if (lines.has(key) || named.has(key)) continue;
     const lineId = requiredIdentifier(line.Id, stop, `StopLines[${index}].Id`);
     if (lineId !== parsed[1]) throw invalidResponse(`${at} names line ${lineId} under the key of line ${parsed[1]!}`);
-    lines.set(key, {
+    named.set(key, {
       key,
       lineId,
       code: requiredText(line.Code, stop, `StopLines[${index}].Code`),
