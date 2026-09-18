@@ -10,6 +10,7 @@ export { default as Gtfs } from "../../packages/gatekeeper-gtfs/src/index";
 export { default as Ine } from "../../packages/gatekeeper-ine/src/index";
 export { default as Ipma } from "../../packages/gatekeeper-ipma/src/index";
 export { default as Metrolisboa } from "../../packages/gatekeeper-metrolisboa/src/index";
+export { default as Myinfo } from "../../packages/gatekeeper-myinfo/src/index";
 export { default as Ogc } from "../../packages/gatekeeper-ogc/src/index";
 export { default as Omie } from "../../packages/gatekeeper-omie/src/index";
 export { default as Opendatasoft } from "../../packages/gatekeeper-opendatasoft/src/index";
