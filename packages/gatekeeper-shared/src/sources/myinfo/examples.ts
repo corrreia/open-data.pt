@@ -1,12 +1,14 @@
 import type { CollectionPolicyDefinition, ExampleFeed, ServingPolicyDefinition } from "../../index";
 
 /**
- * No operator on this platform publishes reuse terms, so every example says so
- * rather than inventing a licence. The library is under a publication hold
- * until the operators answer; see `publication-holds.json`.
+ * No operator on this platform publishes reuse terms, and their pages carry no
+ * licence, so the catalog says what it can stand behind: whatever terms the
+ * operator holds its own data under are the terms it is served under. Carris
+ * says the same, for the same reason. The attribution names the operator and
+ * the portal it was read from, never this platform: the data is theirs.
  */
 function serving(operator: string): ServingPolicyDefinition {
-  return { licence: "No reuse terms published", attribution: `${operator} via myinfo.4cloud.pt` };
+  return { licence: "Source terms apply", attribution: `${operator} via myinfo.4cloud.pt` };
 }
 
 /** A stop network changes when a stop moves or a line is redrawn: daily is often enough, and every change is worth keeping. */

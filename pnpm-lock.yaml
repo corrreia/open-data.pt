@@ -166,6 +166,12 @@ importers:
         specifier: workspace:*
         version: link:../gatekeeper-shared
 
+  packages/gatekeeper-myinfo:
+    dependencies:
+      '@open-data-pt/gatekeeper-shared':
+        specifier: workspace:*
+        version: link:../gatekeeper-shared
+
   packages/gatekeeper-ogc:
     dependencies:
       '@open-data-pt/gatekeeper-shared':
