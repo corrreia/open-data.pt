@@ -201,9 +201,9 @@ describe("IODA examples", () => {
     expect(IODA_EXAMPLES.map((example) => example.config.entityCode)).toEqual(["PT", "PT", "3243", "2860", "12353", "20879", "15457", "PT"]);
     for (const example of IODA_EXAMPLES) {
       expect(() => validateIodaFeedConfig(libraryConfig(example.config))).not.toThrow();
-      expect(example.publisher).toBe("Georgia Tech IODA");
+      expect(example.publisher).toBe("ioda");
       expect(example.topics).toEqual(["telecom"]);
-      expect(example.policy.serving.licence).toBe("This data is Copyright (c) 2021-2025 Georgia Tech Research Corporation. All Rights Reserved.");
+      expect(example.policy.serving.licence).toBe("ioda-all-rights-reserved");
       expect(example.policy.collection.cadenceSeconds).toBe(example.config.feed === "signals" ? 3600 : 900);
       expect(example.staleAfterSeconds).toBe(example.policy.collection.cadenceSeconds * 3);
     }

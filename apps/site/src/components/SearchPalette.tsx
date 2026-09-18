@@ -1,5 +1,5 @@
 import { CommandPalette } from "@cloudflare/kumo";
-import { BookOpenIcon, BuildingsIcon, ChartLineIcon, CompassIcon, DatabaseIcon, HandHeartIcon, HeartbeatIcon, MapPinIcon, TableIcon } from "@phosphor-icons/react";
+import { BookOpenIcon, BuildingsIcon, ChartLineIcon, CompassIcon, DatabaseIcon, HandHeartIcon, HeartbeatIcon, MapPinIcon, TableIcon, ScalesIcon } from "@phosphor-icons/react";
 import { useMemo, useState, type ReactNode } from "react";
 import { productHref } from "../lib/api";
 import { buildDatasets, buildPublishers, fetchFeeds, fetchProducts, publisherHref } from "../lib/catalog";
@@ -23,6 +23,7 @@ interface SearchGroup {
 const PAGES: SearchItem[] = [
   { id: "page-catalog", title: "Catalog", detail: "Every dataset, with filters", href: "/catalog/", icon: <CompassIcon />, haystack: "catalog datasets browse" },
   { id: "page-publishers", title: "Publishers", detail: "Who publishes the data", href: "/publisher/", icon: <BuildingsIcon />, haystack: "publishers institutions" },
+  { id: "page-licences", title: "Licences", detail: "The terms the data is served under", href: "/licence/", icon: <ScalesIcon />, haystack: "licences licenses terms reuse" },
   { id: "page-status", title: "Status", detail: "Is everything being collected", href: "/status/", icon: <HeartbeatIcon />, haystack: "status uptime downtime incidents" },
   { id: "page-start", title: "Start here", detail: "Use the API in three requests", href: "/start/", icon: <BookOpenIcon />, haystack: "start api docs curl" },
   {
@@ -58,7 +59,7 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
       dataset.products.map(({ product, label }) => ({
         id: product.slug,
         title: dataset.products.length > 1 ? `${dataset.title} · ${label}` : dataset.title,
-        detail: dataset.publisher,
+        detail: dataset.publisher.name,
         href: productHref(product.slug),
         icon:
           product.role === "time-series" ? (
@@ -68,14 +69,15 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
           ) : (
             <TableIcon />
           ),
-        haystack: `${dataset.title} ${label} ${product.title} ${product.slug} ${dataset.publisher} ${dataset.topics.join(" ")} ${dataset.feed.description}`.toLocaleLowerCase(),
+        haystack:
+          `${dataset.title} ${label} ${product.title} ${product.slug} ${dataset.publisher.name} ${dataset.topics.join(" ")} ${dataset.feed.description}`.toLocaleLowerCase(),
       })),
     );
     const publisherItems: SearchItem[] = buildPublishers(datasets).map((publisher) => ({
-      id: `publisher-${publisher.slug}`,
+      id: `publisher-${publisher.id}`,
       title: publisher.name,
       detail: `${publisher.datasets.length} ${publisher.datasets.length === 1 ? "dataset" : "datasets"}`,
-      href: publisherHref(publisher.name),
+      href: publisherHref(publisher.id),
       icon: <BuildingsIcon />,
       haystack: publisher.name.toLocaleLowerCase(),
     }));

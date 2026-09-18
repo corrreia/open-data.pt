@@ -110,7 +110,7 @@ function dataset(slug: string, title: string, description: string, domain: strin
     title,
     description,
     config: { source: "bpstat", domain, dataset: datasetId, lang: "EN", seriesIds: seriesIds.join(","), lastN: String(lastN) },
-    publisher: "Banco de Portugal",
+    publisher: "banco-de-portugal",
     topics: ["economy"],
     staleAfterSeconds: cadenceSeconds * 2,
     policy: {
@@ -125,7 +125,7 @@ function dataset(slug: string, title: string, description: string, domain: strin
         maxRecords: 10_000,
         historyMode: "changes",
       },
-      serving: { licence: "Banco de Portugal information reuse conditions", attribution: "Banco de Portugal, BPstat" },
+      serving: { licence: "bportugal-reuse", attribution: "Banco de Portugal, BPstat" },
     },
   };
 }

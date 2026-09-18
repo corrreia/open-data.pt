@@ -7,6 +7,8 @@ The API is intentionally unversioned while the platform is in development. Break
 ## Application
 
 - Catalog: <https://open-data.pt>
+- Publishers: <https://open-data.pt/publisher/>
+- Licences: <https://open-data.pt/licence/>
 - Product pages: <https://open-data.pt/product/?slug=carris-vehicles-current>
 - Status: <https://open-data.pt/status/>
 - API reference: <https://open-data.pt/docs>
@@ -29,7 +31,7 @@ flowchart LR
     Registry --> API[Typed cached API]
     Chunks --> API
     Lake -->|internal R2 SQL| API
-    API --> Pages[Static home, catalog, publisher, product and status pages]
+    API --> Pages[Static home, catalog, publisher, licence, product and status pages]
 ```
 
 ### The Gatekeeper
@@ -57,7 +59,9 @@ One Worker, reached only through a private service binding, carrying every **lib
 | `ren`          | REN electricity grid           | 8     |
 | `udata`        | uData portals (dados.gov.pt)   | 13    |
 
-A library under a publication hold (IODA, RIPE Atlas, RIPEstat, PeeringDB) is not listed, so its code does not ship and its examples are not installed until the hold is lifted; a new library is its directory and one line in the list. Topics are catalog tags: a feed carries as many as it likes, from the vocabulary in `packages/gatekeeper-shared/src/topics.ts`.
+A library under a publication hold (IODA, RIPE Atlas, RIPEstat, PeeringDB) is not listed, so its code does not ship and its examples are not installed until the hold is lifted; a new library is its directory and one line in the list.
+
+What the catalog groups and filters by is three vocabularies next to the libraries, each a keyed list a test holds every example to: `topics.ts` (a feed carries as many tags as it likes), `publishers.ts` (who made the data — never the portal it was read from: dados.gov.pt carries ten publishers and is none of them) and `licences.ts` (the terms a product is served under, as its publisher states them; `source-terms` when it states none). A feed names its publisher and its policy names its licence by key; the API serves each expanded as `{ id, name, url?, description? }`, so a licence spelled three ways is one licence, and a publisher read through two libraries is one publisher, with a page each.
 
 The Worker holds no parsing. It builds each library from its declared vars and the Worker's bindings — a format library for anything with a standard (ArcGIS, CKAN, Opendatasoft, GTFS, GBFS, uData, OGC API Features) or a source library per bespoke API (Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, MYINFO, IODA, RIPE Atlas, RIPEstat, PeeringDB) — and lists every library's example feeds. Every feed's configuration names its library in `source`, and that key is what routes it.
 

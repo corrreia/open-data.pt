@@ -13,7 +13,7 @@ const DAILY_STATISTICS = {
     historyMode: "changes",
   },
   serving: {
-    licence: "Eurostat copyright and licence policy",
+    licence: "eurostat",
     attribution: "Eurostat",
   },
 } as const;
@@ -32,7 +32,7 @@ export const EUROSTAT_EXAMPLES: ExampleFeed[] = [
     },
     policy: DAILY_STATISTICS,
     staleAfterSeconds: 7 * DAY,
-    publisher: "Eurostat",
+    publisher: "eurostat",
     topics: ["economy"],
   },
   {
@@ -48,7 +48,7 @@ export const EUROSTAT_EXAMPLES: ExampleFeed[] = [
     },
     policy: DAILY_STATISTICS,
     staleAfterSeconds: 7 * DAY,
-    publisher: "Eurostat",
+    publisher: "eurostat",
     topics: ["economy"],
   },
   {
@@ -64,7 +64,7 @@ export const EUROSTAT_EXAMPLES: ExampleFeed[] = [
     },
     policy: DAILY_STATISTICS,
     staleAfterSeconds: 7 * DAY,
-    publisher: "Eurostat",
+    publisher: "eurostat",
     topics: ["economy"],
   },
   {
@@ -80,7 +80,7 @@ export const EUROSTAT_EXAMPLES: ExampleFeed[] = [
     },
     policy: DAILY_STATISTICS,
     staleAfterSeconds: 7 * DAY,
-    publisher: "Eurostat",
+    publisher: "eurostat",
     topics: ["economy"],
   },
   {
@@ -96,7 +96,7 @@ export const EUROSTAT_EXAMPLES: ExampleFeed[] = [
     },
     policy: DAILY_STATISTICS,
     staleAfterSeconds: 7 * DAY,
-    publisher: "Eurostat",
+    publisher: "eurostat",
     topics: ["economy"],
   },
   portugalMonthly(
@@ -155,7 +155,7 @@ function portugalMonthly(slug: string, title: string, description: string, datas
     config,
     policy: DAILY_STATISTICS,
     staleAfterSeconds: 7 * DAY,
-    publisher: "Eurostat",
+    publisher: "eurostat",
     topics,
   };
 }

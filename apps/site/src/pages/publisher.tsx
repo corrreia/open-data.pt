@@ -5,11 +5,11 @@ import { DatasetCard } from "../components/DatasetCard";
 import { ErrorNote, Kv, PageHead, StatTile } from "../components/common";
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
-import { buildDatasets, buildPublishers, fetchFeeds, fetchProducts, productCount, publisherHref, topicsOf, type Publisher, emptyLast } from "../lib/catalog";
+import { buildDatasets, buildPublishers, fetchFeeds, fetchProducts, licenceHref, productCount, publisherHref, topicsOf, type Publisher, emptyLast } from "../lib/catalog";
 import { fmt, plural } from "../lib/format";
 import { useQuery } from "../lib/query";
 
-const wanted = new URLSearchParams(window.location.search).get("name");
+const wanted = new URLSearchParams(window.location.search).get("id");
 
 function PublisherIndex({ publishers }: { publishers: Publisher[] }) {
   const datasets = publishers.reduce((sum, publisher) => sum + publisher.datasets.length, 0);
@@ -21,7 +21,7 @@ function PublisherIndex({ publishers }: { publishers: Publisher[] }) {
       </PageHead>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(min(19rem,100%),1fr))] gap-3">
         {publishers.map((publisher) => (
-          <a key={publisher.slug} href={publisherHref(publisher.name)} className="group no-underline">
+          <a key={publisher.id} href={publisherHref(publisher.id)} className="group no-underline">
             <LayerCard className="flex h-full flex-col transition-shadow group-hover:shadow-[0_0_0_2px_var(--color-kumo-focus)]">
               <LayerCard.Secondary className="flex items-center justify-between text-xs">
                 <span>
@@ -84,6 +84,16 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
                     </span>
                   ),
                 },
+                publisher.url
+                  ? {
+                      term: "Site",
+                      value: (
+                        <Link href={publisher.url} target="_blank" rel="noopener noreferrer">
+                          {new URL(publisher.url).hostname} <Link.ExternalIcon />
+                        </Link>
+                      ),
+                    }
+                  : null,
                 publisher.hosts.size
                   ? {
                       term: "Published at",
@@ -98,7 +108,18 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
                       ),
                     }
                   : null,
-                { term: "Licences", value: [...publisher.licences].join(" · ") || "As stated by the publisher" },
+                {
+                  term: "Licences",
+                  value: (
+                    <span className="flex flex-wrap gap-x-3 gap-y-1">
+                      {[...publisher.licences.values()].map((licence) => (
+                        <a key={licence.id} href={licenceHref(licence.id)} className="text-kumo-link hover:underline">
+                          {licence.name}
+                        </a>
+                      ))}
+                    </span>
+                  ),
+                },
                 { term: "Updates", value: live ? `${plural(live, "dataset")} ${live === 1 ? "changes" : "change"} several times an hour` : "Hourly or less often" },
               ]}
             />
@@ -113,7 +134,7 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
             note={late === 0 ? "every dataset within its update window" : "past their expected update"}
           />
           <div className="col-span-2">
-            <Button variant="secondary" icon={<HeartbeatIcon />} className="w-full" onClick={() => window.location.assign(`/status/#pub-${publisher.slug}`)}>
+            <Button variant="secondary" icon={<HeartbeatIcon />} className="w-full" onClick={() => window.location.assign(`/status/#pub-${publisher.id}`)}>
               Collection status, day by day
             </Button>
           </div>
@@ -138,7 +159,7 @@ function Publishers() {
   const products = useQuery("products", fetchProducts);
   const feeds = useQuery("feeds", fetchFeeds);
   const publishers = useMemo(() => (products.data && feeds.data ? buildPublishers(buildDatasets(products.data, feeds.data)) : undefined), [products.data, feeds.data]);
-  const publisher = wanted ? publishers?.find((candidate) => candidate.slug === wanted) : undefined;
+  const publisher = wanted ? publishers?.find((candidate) => candidate.id === wanted) : undefined;
 
   if (publisher) document.title = `${publisher.name} · open-data.pt`;
 

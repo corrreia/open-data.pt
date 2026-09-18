@@ -18,7 +18,7 @@ export const MCP_SERVER_VERSION = "0.1.0";
 export const SKILL_PATH = "/.well-known/agent-skills/open-data-pt/SKILL.md";
 
 /** Pages every visitor can reach without a query; products and publishers follow from the API. */
-const SITEMAP_PAGES = ["/", "/catalog/", "/publisher/", "/start/", "/status/", "/operations/", "/contribute/", "/docs"];
+const SITEMAP_PAGES = ["/", "/catalog/", "/publisher/", "/licence/", "/start/", "/status/", "/operations/", "/contribute/", "/docs"];
 
 /** Words every AI Catalog entry shares, for registries that filter by tag. */
 const TAGS = ["portugal", "open data", "public data", "energy", "mobility", "weather", "health", "economy", "telecom"];
@@ -129,7 +129,7 @@ async function sitemap(origin: string, host: SiteHost): Promise<Document> {
   const publishers = new Map<string, string>();
   for (const { feed, products } of datasets) {
     for (const item of products) {
-      const page = publisherPage(feed.publisher);
+      const page = publisherPage(feed.publisher.id);
       if ((publishers.get(page) ?? "") < item.updatedAt) publishers.set(page, item.updatedAt);
     }
   }

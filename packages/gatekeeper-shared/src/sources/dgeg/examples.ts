@@ -2,7 +2,7 @@ import type { ExampleFeed } from "../../index";
 import { FUEL_PRICES_MAX_BYTES, FUEL_TYPES_MAX_BYTES } from "./dgeg";
 
 const SERVING = {
-  licence: "Source terms apply",
+  licence: "source-terms",
   attribution: "Direção-Geral de Energia e Geologia",
 } as const;
 
@@ -26,7 +26,7 @@ export const DGEG_EXAMPLES: ExampleFeed[] = [
     config: { source: "dgeg", feed: "fuel-prices", fuelTypeId: "3201" },
     policy: HOURLY_PRICES,
     staleAfterSeconds: 7_200,
-    publisher: "DGEG · Direção-Geral de Energia e Geologia",
+    publisher: "dgeg",
     topics: ["energy"],
   },
   {
@@ -36,7 +36,7 @@ export const DGEG_EXAMPLES: ExampleFeed[] = [
     config: { source: "dgeg", feed: "fuel-prices", fuelTypeId: "2101" },
     policy: HOURLY_PRICES,
     staleAfterSeconds: 7_200,
-    publisher: "DGEG · Direção-Geral de Energia e Geologia",
+    publisher: "dgeg",
     topics: ["energy"],
   },
   // No Lisbon-district feed: its 37 stations are already in dgeg-gasolina-98, which covers the whole mainland.
@@ -47,7 +47,7 @@ export const DGEG_EXAMPLES: ExampleFeed[] = [
     config: { source: "dgeg", feed: "fuel-prices", fuelTypeId: "1120" },
     policy: HOURLY_PRICES,
     staleAfterSeconds: 7_200,
-    publisher: "DGEG · Direção-Geral de Energia e Geologia",
+    publisher: "dgeg",
     topics: ["energy"],
   },
   {
@@ -57,7 +57,7 @@ export const DGEG_EXAMPLES: ExampleFeed[] = [
     config: { source: "dgeg", feed: "fuel-prices", fuelTypeId: "2105" },
     policy: HOURLY_PRICES,
     staleAfterSeconds: 7_200,
-    publisher: "DGEG · Direção-Geral de Energia e Geologia",
+    publisher: "dgeg",
     topics: ["energy"],
   },
   {
@@ -67,7 +67,7 @@ export const DGEG_EXAMPLES: ExampleFeed[] = [
     config: { source: "dgeg", feed: "fuel-prices", fuelTypeId: "3400" },
     policy: HOURLY_PRICES,
     staleAfterSeconds: 7_200,
-    publisher: "DGEG · Direção-Geral de Energia e Geologia",
+    publisher: "dgeg",
     topics: ["energy"],
   },
   {
@@ -87,7 +87,7 @@ export const DGEG_EXAMPLES: ExampleFeed[] = [
       serving: SERVING,
     },
     staleAfterSeconds: 172_800,
-    publisher: "DGEG · Direção-Geral de Energia e Geologia",
+    publisher: "dgeg",
     topics: ["energy"],
   },
 ];

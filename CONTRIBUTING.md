@@ -33,14 +33,14 @@ One entry in that library's `examples.ts`. Nothing else.
   title: "Porto bicycle racks",
   description: "Public bicycle parking published by Câmara Municipal do Porto.",
   config: { source: "ckan", host: "opendata.porto.digital", dataset: "estacionamento-bicicletas" },
-  policy: { name: "…", version: 1, collection: { …cadence, timeout, maxBytes, historyMode }, serving: { licence, attribution } },
+  policy: { name: "…", version: 1, collection: { …cadence, timeout, maxBytes, historyMode }, serving: { licence: "cc0-1.0", attribution: "Câmara Municipal do Porto via dadosabertos.cm-porto.pt" } },
   staleAfterSeconds: 172_800,
-  publisher: "Câmara Municipal do Porto",
+  publisher: "cm-porto",
   topics: ["cities", "mobility"],
 }
 ```
 
-`source` decides which library reads it; `topics` are browsing tags, any number of them, each a key of `TOPICS`.
+`source` decides which library reads it. The rest are keys of the three catalog vocabularies in `packages/gatekeeper-shared/src/`: `topics` are browsing tags, any number of them, each a key of `TOPICS`; `publisher` is a key of `PUBLISHERS`, who made the data, never the portal it was read from; `licence` is a key of `LICENCES`, the terms the publisher states, or `source-terms` when it states none. A publisher or licence the vocabulary lacks is one new entry there — name, and its site or licence text when there is one — and a test rejects a key outside the list and an entry no example uses.
 
 ### A new source on a format we already read
 

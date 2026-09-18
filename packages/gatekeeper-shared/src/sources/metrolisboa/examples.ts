@@ -1,11 +1,11 @@
 import type { ExampleFeed } from "../../index";
 
 const SERVING = {
-  licence: "Metropolitano de Lisboa API terms of use",
+  licence: "metrolisboa-api",
   attribution: "Metropolitano de Lisboa",
 } as const;
 
-const PUBLISHER = "Metropolitano de Lisboa";
+const PUBLISHER = "metropolitano-de-lisboa";
 const TOPICS = ["mobility"];
 
 export const METRO_LISBOA_EXAMPLES: ExampleFeed[] = [

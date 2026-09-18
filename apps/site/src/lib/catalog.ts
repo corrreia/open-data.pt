@@ -1,7 +1,7 @@
 // Datasets built from the product and feed lists, the facets they filter by, and the words the catalog uses.
 
 import { apiGet } from "./api";
-import type { Feed, Product, Role } from "./types";
+import type { Feed, Product, Role, Term } from "./types";
 
 export interface RoleMeta {
   label: string;
@@ -63,7 +63,8 @@ export function slugify(name: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 }
-export const publisherHref = (name: string) => `/publisher/?name=${encodeURIComponent(slugify(name))}`;
+export const publisherHref = (id: string) => `/publisher/?id=${encodeURIComponent(id)}`;
+export const licenceHref = (id: string) => `/licence/?id=${encodeURIComponent(id)}`;
 
 /** A web address a person can open, or nothing: the page never links another scheme. */
 export function openableUrl(value: string | undefined) {
@@ -98,14 +99,13 @@ export interface LabelledProduct {
 export interface Dataset {
   feed: Feed;
   title: string;
-  publisher: string;
-  publisherSlug: string;
+  publisher: Term;
   topics: string[];
   format: string;
   cadence: number;
   updates: UpdatesBucket;
   roles: Role[];
-  licence: string | undefined;
+  licence: Term | undefined;
   updatedAt: string | undefined;
   rows: number;
   tone: Tone;
@@ -114,13 +114,18 @@ export interface Dataset {
   products: LabelledProduct[];
 }
 
-export interface Publisher {
-  name: string;
-  slug: string;
+export interface Publisher extends Term {
   datasets: Dataset[];
   topics: Map<string, number>;
   hosts: Map<string, string>;
-  licences: Set<string>;
+  licences: Map<string, Term>;
+}
+
+/** One licence and everything served under it. */
+export interface Licence extends Term {
+  datasets: Dataset[];
+  publishers: Map<string, Term>;
+  topics: Map<string, number>;
 }
 
 /** One dataset per feed that serves at least one product. */
@@ -137,13 +142,12 @@ export function buildDatasets(products: Product[], feeds: Feed[]): Dataset[] {
       feed,
       title: feed.title,
       publisher: feed.publisher,
-      publisherSlug: slugify(feed.publisher),
       topics: feed.topics ?? [],
       format: formatOf(feed),
       cadence,
       updates: updatesOf(cadence),
       roles: [...new Set(items.map((product) => product.role))],
-      licence: items.find((product) => product.licence)?.licence,
+      licence: items.find((product) => product.licence)?.licence ?? undefined,
       updatedAt: items
         .map((product) => product.updatedAt)
         .filter(Boolean)
@@ -165,26 +169,32 @@ export const emptyLast = (a: Dataset, b: Dataset) => Number(a.empty) - Number(b.
 export function buildPublishers(datasets: Dataset[]): Publisher[] {
   const publishers = new Map<string, Publisher>();
   for (const dataset of datasets) {
-    const publisher: Publisher = publishers.get(dataset.publisherSlug) ?? {
-      name: dataset.publisher,
-      slug: dataset.publisherSlug,
-      datasets: [],
-      topics: new Map(),
-      hosts: new Map(),
-      licences: new Set(),
-    };
+    const publisher: Publisher = publishers.get(dataset.publisher.id) ?? { ...dataset.publisher, datasets: [], topics: new Map(), hosts: new Map(), licences: new Map() };
     publisher.datasets.push(dataset);
     for (const topic of dataset.topics) publisher.topics.set(topic, (publisher.topics.get(topic) ?? 0) + 1);
-    if (dataset.licence) publisher.licences.add(dataset.licence);
+    if (dataset.licence) publisher.licences.set(dataset.licence.id, dataset.licence);
     const source = openableUrl(dataset.feed.sourceUrl);
     if (source && !publisher.hosts.has(source.hostname)) publisher.hosts.set(source.hostname, source.href);
-    publishers.set(dataset.publisherSlug, publisher);
+    publishers.set(publisher.id, publisher);
   }
   return [...publishers.values()].sort((a, b) => b.datasets.length - a.datasets.length || a.name.localeCompare(b.name));
 }
 
+export function buildLicences(datasets: Dataset[]): Licence[] {
+  const licences = new Map<string, Licence>();
+  for (const dataset of datasets) {
+    if (!dataset.licence) continue;
+    const licence: Licence = licences.get(dataset.licence.id) ?? { ...dataset.licence, datasets: [], publishers: new Map(), topics: new Map() };
+    licence.datasets.push(dataset);
+    licence.publishers.set(dataset.publisher.id, dataset.publisher);
+    for (const topic of dataset.topics) licence.topics.set(topic, (licence.topics.get(topic) ?? 0) + 1);
+    licences.set(licence.id, licence);
+  }
+  return [...licences.values()].sort((a, b) => b.datasets.length - a.datasets.length || a.name.localeCompare(b.name));
+}
+
 export const productCount = (datasets: Dataset[]) => datasets.reduce((sum, dataset) => sum + dataset.products.length, 0);
-export const topicsOf = (publisher: Publisher) => [...publisher.topics.entries()].sort((a, b) => b[1] - a[1]).map(([topic]) => topicLabel(topic));
+export const topicsOf = (group: { topics: Map<string, number> }) => [...group.topics.entries()].sort((a, b) => b[1] - a[1]).map(([topic]) => topicLabel(topic));
 
 /* ---------- Product labels inside a dataset ---------- */
 

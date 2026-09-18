@@ -65,7 +65,7 @@ describe("RIPE Atlas source boundaries", () => {
       expect(validateRipeatlasFeedConfig(libraryConfig(example.config)).country).toBe("PT");
       expect(example.topics).toEqual(["telecom"]);
       expect(example.policy.collection.cadenceSeconds).toBeGreaterThanOrEqual(86_400);
-      expect(example.policy.serving.licence).toContain("permission");
+      expect(example.policy.serving.licence).toBe("ripe-atlas-terms");
     }
   });
 

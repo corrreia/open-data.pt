@@ -31,7 +31,7 @@ export const ARCGIS_EXAMPLES: ExampleFeed[] = [
     },
     policy: LISBON_POLICY,
     staleAfterSeconds: 172_800,
-    publisher: "Câmara Municipal de Lisboa",
+    publisher: "cm-lisboa",
     topics: ["cities"],
   },
   {
@@ -46,7 +46,7 @@ export const ARCGIS_EXAMPLES: ExampleFeed[] = [
     },
     policy: LISBON_POLICY,
     staleAfterSeconds: 172_800,
-    publisher: "Câmara Municipal de Lisboa",
+    publisher: "cm-lisboa",
     topics: ["cities"],
   },
   {
@@ -61,7 +61,7 @@ export const ARCGIS_EXAMPLES: ExampleFeed[] = [
     },
     policy: LISBON_POLICY,
     staleAfterSeconds: 172_800,
-    publisher: "Câmara Municipal de Lisboa",
+    publisher: "cm-lisboa",
     topics: ["cities"],
   },
   {
@@ -76,7 +76,7 @@ export const ARCGIS_EXAMPLES: ExampleFeed[] = [
     },
     policy: LISBON_POLICY,
     staleAfterSeconds: 172_800,
-    publisher: "Câmara Municipal de Lisboa",
+    publisher: "cm-lisboa",
     topics: ["cities"],
   },
   lisbonExample("lisbon-health-centres-feed", "Lisbon health centres", "Locations and contact details for public health centres in Lisbon.", "POISaude", "0"),
@@ -220,7 +220,7 @@ function lisbonExample(slug: string, title: string, description: string, service
     },
     policy: LISBON_POLICY,
     staleAfterSeconds: 172_800,
-    publisher: "Câmara Municipal de Lisboa",
+    publisher: "cm-lisboa",
     topics: ["cities"],
   };
 }
@@ -238,12 +238,12 @@ function apaExample(slug: string, title: string, description: string, service: s
     },
     policy: APA_POLICY,
     staleAfterSeconds: 172_800,
-    publisher: "APA · Agência Portuguesa do Ambiente",
+    publisher: "apa",
     topics: ["environment"],
   };
 }
 
-function referencePolicy(name: string, attribution: string) {
+function referencePolicy(name: string, attribution: string): ExampleFeed["policy"] {
   return {
     name,
     version: 1,
@@ -254,7 +254,7 @@ function referencePolicy(name: string, attribution: string) {
       historyMode: "changes" as const,
     },
     serving: {
-      licence: "Source terms apply",
+      licence: "source-terms",
       attribution,
     },
   };

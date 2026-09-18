@@ -2,12 +2,12 @@ import type { ExampleFeed } from "../../index";
 import { CATALOG_EXAMPLES } from "./catalog-examples";
 
 const E_REDES_SERVING = {
-  licence: "CC BY 4.0",
+  licence: "cc-by-4.0",
   attribution: "E-REDES",
 } as const;
 
 const SNS_SERVING = {
-  licence: "Source terms not stated in the dataset metadata",
+  licence: "source-terms",
   attribution: "SNS Transparência and the publisher named in the dataset metadata",
 } as const;
 
@@ -88,7 +88,7 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
       serving: E_REDES_SERVING,
     },
     staleAfterSeconds: 172_800,
-    publisher: "E-REDES",
+    publisher: "e-redes",
     topics: ["energy"],
   },
   {
@@ -115,7 +115,7 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
       serving: E_REDES_SERVING,
     },
     staleAfterSeconds: 172_800,
-    publisher: "E-REDES",
+    publisher: "e-redes",
     topics: ["energy"],
   },
   {
@@ -141,7 +141,7 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
       serving: SNS_SERVING,
     },
     staleAfterSeconds: 1_209_600,
-    publisher: "SNS Transparência",
+    publisher: "sns-transparencia",
     topics: ["health"],
   },
   {
@@ -167,7 +167,7 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
       serving: SNS_SERVING,
     },
     staleAfterSeconds: 2_592_000,
-    publisher: "SNS Transparência",
+    publisher: "sns-transparencia",
     topics: ["health"],
   },
   {
@@ -183,7 +183,7 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
     },
     policy: SNS_MONTHLY_SERIES,
     staleAfterSeconds: 1_209_600,
-    publisher: "SNS Transparência",
+    publisher: "sns-transparencia",
     topics: ["health"],
   },
   {
@@ -199,7 +199,7 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
     },
     policy: SNS_MONTHLY_SERIES,
     staleAfterSeconds: 1_209_600,
-    publisher: "SNS Transparência",
+    publisher: "sns-transparencia",
     topics: ["health"],
   },
   {
@@ -215,7 +215,7 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
     },
     policy: SNS_MONTHLY_SERIES,
     staleAfterSeconds: 1_209_600,
-    publisher: "SNS Transparência",
+    publisher: "sns-transparencia",
     topics: ["health"],
   },
   {
@@ -238,7 +238,7 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
       },
     },
     staleAfterSeconds: 5_184_000,
-    publisher: "SNS Transparência",
+    publisher: "sns-transparencia",
     topics: ["health"],
   },
   {
@@ -254,7 +254,7 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
     },
     policy: SNS_MONTHLY_SERIES,
     staleAfterSeconds: 1_209_600,
-    publisher: "SNS Transparência",
+    publisher: "sns-transparencia",
     topics: ["health"],
   },
   {
@@ -270,7 +270,7 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
     },
     policy: E_REDES_PERIODIC_SERIES,
     staleAfterSeconds: 1_209_600,
-    publisher: "E-REDES",
+    publisher: "e-redes",
     topics: ["energy"],
   },
   {
@@ -296,7 +296,7 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
       serving: E_REDES_SERVING,
     },
     staleAfterSeconds: 43_200,
-    publisher: "E-REDES",
+    publisher: "e-redes",
     topics: ["energy"],
   },
   {
@@ -312,7 +312,7 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
     },
     policy: E_REDES_PERIODIC_SERIES,
     staleAfterSeconds: 1_209_600,
-    publisher: "E-REDES",
+    publisher: "e-redes",
     topics: ["energy"],
   },
   snsDaily(
@@ -493,7 +493,7 @@ function snsDaily(slug: string, title: string, description: string, dataset: str
     config,
     policy: SNS_DAILY_SERIES,
     staleAfterSeconds: 172_800,
-    publisher: "SNS Transparência",
+    publisher: "sns-transparencia",
     topics: ["health"],
   };
 }
@@ -507,7 +507,7 @@ function snsMonthly(slug: string, title: string, description: string, dataset: s
     config: { source: "opendatasoft", host: "transparencia.sns.gov.pt", dataset, orderBy: "tempo DESC,instituicao", limit },
     policy: SNS_MONTHLY_SERIES,
     staleAfterSeconds: 1_209_600,
-    publisher: "SNS Transparência",
+    publisher: "sns-transparencia",
     topics: ["health"],
   };
 }
@@ -530,7 +530,7 @@ function eRedes(slug: string, title: string, description: string, query: ERedesQ
     config: { source: "opendatasoft", host: "e-redes.opendatasoft.com", ...query },
     policy,
     staleAfterSeconds,
-    publisher: "E-REDES",
+    publisher: "e-redes",
     topics: ["energy"],
   };
 }

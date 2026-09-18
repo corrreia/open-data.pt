@@ -12,7 +12,7 @@ const POLICY = {
     historyMode: "changes",
   },
   serving: {
-    licence: "Source terms apply",
+    licence: "source-terms",
     attribution: "OMI, Polo Español S.A. (OMIE)",
   },
 } as const;
@@ -26,7 +26,7 @@ export const OMIE_EXAMPLES: ExampleFeed[] = [
     config: { source: "omie", series: "marginalpdbcpt", days: "2" },
     policy: POLICY,
     staleAfterSeconds: 172_800,
-    publisher: "OMIE · Iberian electricity market",
+    publisher: "omie",
     topics: ["energy"],
   },
   {
@@ -36,7 +36,7 @@ export const OMIE_EXAMPLES: ExampleFeed[] = [
     config: { source: "omie", series: "marginalpdbc", days: "7" },
     policy: POLICY,
     staleAfterSeconds: 172_800,
-    publisher: "OMIE · Iberian electricity market",
+    publisher: "omie",
     topics: ["energy"],
   },
 ];

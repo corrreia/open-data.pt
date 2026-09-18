@@ -26,6 +26,14 @@ One capability a library declares: what its facts are about, what role its produ
 
 One repeatable collection definition: Gatekeeper, canonical resolved source configuration/resource identity, feed semantics, policy, and semantic feed epoch. Administrative edits do not rotate the epoch.
 
+## Publisher
+
+Who made the data, one key of `PUBLISHERS` per institution or operator: never the portal it was read from. dados.gov.pt carries ten publishers and is none of them; Carris Metropolitana is one publisher read through two libraries. A feed names its publisher by key, and the API serves it expanded (`id`, `name`, `url`).
+
+## Licence
+
+The terms a product is served under, one key of `LICENCES` per set of terms, as the publisher states them: a licence with a canonical text carries its URL, a publisher's own terms carry their name, and `source-terms` says the publisher states none. A policy names its licence by key; the API serves it expanded (`id`, `name`, optional canonical `url`, and a description), and the site groups every dataset under it.
+
 ## Policy
 
 Versioned limits and rules for collection, history mode (`changes` or `latest`) and the products it leaves out, licence, and attribution. A product keeps history when its policy keeps changes and does not name it in `withoutHistory`; nothing else decides it. Retry counts and the history backlog budget are the kernel's, the same for every feed.

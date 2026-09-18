@@ -43,7 +43,7 @@ async function registry() {
     version: 1,
     createdAt: "2026-09-10T00:00:00.000Z",
     collection: { cadenceSeconds: 60, timeoutSeconds: 30, maxBytes: 1024, historyMode: "changes" },
-    serving: {},
+    serving: { licence: "source-terms" },
   });
   const resolved = await fixtureResolved();
   store.upsertFeed({

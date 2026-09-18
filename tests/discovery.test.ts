@@ -3,8 +3,7 @@ import { readFileSync } from "node:fs";
 import type { JsonObject, JsonValue } from "@open-data-pt/gatekeeper-shared";
 import { describe, expect, it } from "vitest";
 import { SKILL_PATH, handleSite, type SiteHost } from "../apps/kernel/src/discovery";
-import { prefersMarkdown, publisherSlug } from "../apps/kernel/src/markdown";
-import { slugify } from "../apps/site/src/lib/catalog";
+import { prefersMarkdown } from "../apps/kernel/src/markdown";
 import { jsonBody } from "./support";
 
 const ORIGIN = "https://open-data.pt";
@@ -15,7 +14,7 @@ const FUEL_FEED: JsonObject = {
   slug: "fuel",
   title: "Fuel prices",
   description: "Prices at every station.",
-  publisher: "Direção-Geral de Energia e Geologia",
+  publisher: { id: "dgeg", name: "Direção-Geral de Energia e Geologia", url: "https://www.dgeg.gov.pt/" },
   topics: ["energy"],
   format: "own-api",
   cadenceSeconds: 900,
@@ -28,7 +27,7 @@ const POWER_FEED: JsonObject = {
   slug: "power",
   title: "Electricity consumption",
   description: "National consumption.",
-  publisher: "REN",
+  publisher: { id: "ren", name: "REN" },
   topics: ["energy"],
   format: "own-api",
   cadenceSeconds: 3600,
@@ -49,7 +48,7 @@ const FUEL: JsonObject = {
   rowCount: 2,
   updatedAt: "2026-09-15T10:00:00.000Z",
   cadenceSeconds: 900,
-  licence: "CC-BY-4.0",
+  licence: { id: "cc-by-4.0", name: "CC BY 4.0", url: "https://creativecommons.org/licenses/by/4.0/" },
   attribution: "DGEG",
 };
 const POWER: JsonObject = {
@@ -120,17 +119,13 @@ describe("agent discovery", () => {
     expect(response.headers.get("Content-Type")).toBe("application/xml; charset=utf-8");
     const sitemap = await response.text();
     expect(sitemap).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
-    for (const page of ["/", "/catalog/", "/publisher/", "/start/", "/status/", "/contribute/", "/docs"]) expect(sitemap).toContain(`<loc>${ORIGIN}${page}</loc>`);
+    for (const page of ["/", "/catalog/", "/publisher/", "/licence/", "/start/", "/status/", "/contribute/", "/docs"]) expect(sitemap).toContain(`<loc>${ORIGIN}${page}</loc>`);
     expect(sitemap).toContain(`<loc>${ORIGIN}/product/?slug=fuel-stations</loc><lastmod>2026-09-15T10:00:00.000Z</lastmod>`);
-    expect(sitemap).toContain(`<loc>${ORIGIN}/publisher/?name=direcao-geral-de-energia-e-geologia</loc><lastmod>2026-09-15T10:00:00.000Z</lastmod>`);
+    expect(sitemap).toContain(`<loc>${ORIGIN}/publisher/?id=dgeg</loc><lastmod>2026-09-15T10:00:00.000Z</lastmod>`);
 
     const robots = readFileSync("apps/site/public/robots.txt", "utf8");
     expect(robots).toContain(`Sitemap: ${ORIGIN}/sitemap.xml`);
     expect(robots).toContain(`Agentmap: ${ORIGIN}/.well-known/ai-catalog.json`);
-  });
-
-  it("links publishers the way the site does", () => {
-    for (const name of ["Direção-Geral de Energia e Geologia", "SNS Transparência", "Câmara Municipal de Cascais", "REN"]) expect(publisherSlug(name)).toBe(slugify(name));
   });
 
   it("publishes an RFC 9727 API catalog and names it on a HEAD request", async () => {
@@ -243,8 +238,8 @@ describe("agent discovery", () => {
   it("describes a product with its fields, first rows and API links, and says when there is none", async () => {
     const { text } = await markdown("/product/?slug=fuel-stations");
     expect(text).toContain("# Station prices\n");
-    expect(text).toContain(`- **Publisher:** [Direção-Geral de Energia e Geologia](${ORIGIN}/publisher/?name=direcao-geral-de-energia-e-geologia)`);
-    expect(text).toContain("- **Licence:** CC-BY-4.0");
+    expect(text).toContain(`- **Publisher:** [Direção-Geral de Energia e Geologia](${ORIGIN}/publisher/?id=dgeg)`);
+    expect(text).toContain(`- **Licence:** [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) — ${ORIGIN}/licence/?id=cc-by-4.0`);
     expect(text).toContain("| `price` | Price | number | EUR/l |");
     expect(text).toContain("| Galp \\| Lisboa | 1.789 |");
     expect(text).toContain(`- Rows: ${ORIGIN}/api/products/fuel-stations/records?limit=500`);
@@ -267,8 +262,11 @@ describe("agent discovery", () => {
 
   it("gives the other pages in Markdown too", async () => {
     expect((await markdown("/catalog/?topic=energy")).text).toContain("# Energy\n\n2 datasets about energy");
-    expect((await markdown("/publisher/?name=ren")).text).toContain("# REN\n");
-    expect((await markdown("/publisher/?name=nobody")).status).toBe(404);
+    expect((await markdown("/publisher/?id=ren")).text).toContain("# REN\n");
+    expect((await markdown("/publisher/?id=nobody")).status).toBe(404);
+    expect((await markdown("/licence/")).text).toContain(`- [CC BY 4.0](${ORIGIN}/licence/?id=cc-by-4.0): 1 dataset from 1 publisher`);
+    expect((await markdown("/licence/?id=cc-by-4.0")).text).toContain("# CC BY 4.0\n");
+    expect((await markdown("/licence/?id=nobody")).status).toBe(404);
     expect((await markdown("/status/")).text).toContain("- **Electricity consumption**: not collected since 2026-09-15T08:00:00.000Z, 3 failed attempts (cause: source)");
     expect((await markdown("/operations/")).text).toContain("| Fuel prices | Direção-Geral de Energia e Geologia | every 15 minutes |");
     expect((await markdown("/start/")).text).toContain("# open-data.pt\n\n> Free, keyless JSON API");

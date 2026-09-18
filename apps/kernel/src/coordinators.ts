@@ -1,5 +1,14 @@
 import { DurableObject } from "cloudflare:workers";
-import { NormalizedInputError, assertResolvedFeed, hashSourceConfig, type ExampleFeed, type SourceCheckpoint, type SourceConfig } from "@open-data-pt/gatekeeper-shared";
+import {
+  NormalizedInputError,
+  assertResolvedFeed,
+  hashSourceConfig,
+  isLicence,
+  isPublisher,
+  type ExampleFeed,
+  type SourceCheckpoint,
+  type SourceConfig,
+} from "@open-data-pt/gatekeeper-shared";
 
 import { drainOutbox } from "./engine";
 import { NotFoundError } from "./errors";
@@ -7,6 +16,7 @@ import { syncStep, type CatalogEntry, type SyncPorts, type SyncProgress, type Sy
 import type { ManifestChunk } from "./chunks";
 import { definitionFingerprint, keepsHistory, policyFingerprint, type Acquisition, type Feed, type FeedPolicy, type ProductIndexEntry, type ProductSummary } from "./feed-model";
 import { gatekeeperOf } from "./gatekeeper";
+import { licenceRef, type VocabularyRef } from "./vocabulary";
 import { digest } from "./hash";
 import { PipelinesLake, lakeStreams, type LakeTable } from "./lake";
 import { ObjectStore } from "./object-store";
@@ -54,7 +64,7 @@ interface FeedInput {
   config: SourceConfig;
   policyId: string;
   staleAfterSeconds: number;
-  publisher?: string;
+  publisher: string;
   topics: string[];
 }
 
@@ -68,7 +78,7 @@ export interface ProductView extends ProductSummary {
   exposeHistory: boolean;
   /** `changes` when this product keeps history, `latest` when it serves current state only. */
   historyMode: "changes" | "latest";
-  licence: string | null;
+  licence: VocabularyRef | null;
   attribution: string | null;
   staleAfterSeconds: number;
   cadenceSeconds: number;
@@ -269,6 +279,9 @@ export class Registry extends DurableObject<Env> {
   }
 
   private async applyExample(kind: string, example: ExampleFeed): Promise<void> {
+    // The Gatekeeper's word crosses RPC as plain strings; a key outside the vocabulary is a mistake, never a new entry.
+    if (!isPublisher(example.publisher)) throw new NormalizedInputError(`${example.slug} names an unknown publisher: ${example.publisher}`);
+    if (!isLicence(example.policy.serving.licence)) throw new NormalizedInputError(`${example.slug} names an unknown licence: ${example.policy.serving.licence}`);
     // A policy is its name and version; the id is only the row's handle. One installed under an earlier Worker's
     // name keeps its id, so moving a feed between Workers never collides with the row it already uses.
     const current = this.store.getPolicyByName(example.policy.name, example.policy.version);
@@ -283,9 +296,9 @@ export class Registry extends DurableObject<Env> {
       config: example.config,
       policyId,
       staleAfterSeconds: example.staleAfterSeconds,
+      publisher: example.publisher,
       topics: example.topics ?? [],
     };
-    if (example.publisher) input.publisher = example.publisher;
     await this.installFeed(input);
   }
 
@@ -478,7 +491,7 @@ function productView(entry: ProductSummary, feed: Feed | undefined, policy: Feed
     stale: lastSuccess + staleAfterSeconds * 1000 < Date.now(),
     exposeHistory: history,
     historyMode: history ? "changes" : "latest",
-    licence: policy?.serving.licence ?? null,
+    licence: policy ? licenceRef(policy.serving.licence) : null,
     attribution: policy?.serving.attribution ?? null,
     staleAfterSeconds,
     cadenceSeconds: policy?.collection.cadenceSeconds ?? 86_400,

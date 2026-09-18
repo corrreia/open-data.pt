@@ -1,4 +1,4 @@
-import type { ExampleFeed, SourceConfig } from "../../index";
+import { PUBLISHERS, type ExampleFeed, type Publisher, type SourceConfig } from "../../index";
 
 const MEBIBYTE = 1024 * 1024;
 const WEEK = 604_800;
@@ -453,14 +453,15 @@ export const CATALOG_EXAMPLES: ExampleFeed[] = [
 ];
 
 function energy(slug: string, title: string, description: string, query: SourceConfig, cadenceSeconds = WEEK): ExampleFeed {
-  return example(slug, title, description, query, "e-redes.opendatasoft.com", "E-REDES", "energy", cadenceSeconds);
+  return example(slug, title, description, query, "e-redes.opendatasoft.com", "e-redes", "energy", cadenceSeconds);
 }
 
 function health(slug: string, title: string, description: string, query: SourceConfig, cadenceSeconds = WEEK): ExampleFeed {
-  return example(slug, title, description, query, "transparencia.sns.gov.pt", "SNS Transparência", "health", cadenceSeconds);
+  return example(slug, title, description, query, "transparencia.sns.gov.pt", "sns-transparencia", "health", cadenceSeconds);
 }
 
-function example(slug: string, title: string, description: string, query: SourceConfig, host: string, publisher: string, topic: string, cadenceSeconds: number): ExampleFeed {
+function example(slug: string, title: string, description: string, query: SourceConfig, host: string, publisher: Publisher, topic: string, cadenceSeconds: number): ExampleFeed {
+  const name = PUBLISHERS[publisher].name;
   return {
     slug,
     title,
@@ -469,7 +470,7 @@ function example(slug: string, title: string, description: string, query: Source
     topics: [topic],
     config: { source: "opendatasoft", host, limit: "10000", ...query },
     policy: {
-      name: `${publisher} bounded reporting-period collection`,
+      name: `${name} bounded reporting-period collection`,
       version: 1,
       collection: {
         cadenceSeconds,
@@ -481,8 +482,8 @@ function example(slug: string, title: string, description: string, query: Source
         historyMode: "changes",
       },
       serving: {
-        licence: publisher === "E-REDES" ? "CC BY 4.0" : "Source terms not stated in the dataset metadata",
-        attribution: publisher,
+        licence: publisher === "e-redes" ? "cc-by-4.0" : "source-terms",
+        attribution: name,
       },
     },
     staleAfterSeconds: cadenceSeconds * 2,

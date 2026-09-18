@@ -36,7 +36,7 @@ describe("PeeringDB source boundaries", () => {
     const example = PEERINGDB_EXAMPLES[0]!;
     expect(validatePeeringdbFeedConfig(libraryConfig(example.config))).toEqual(CONFIG);
     expect(example.policy.collection.cadenceSeconds).toBe(604_800);
-    expect(example.policy.serving.licence).toContain("permission");
+    expect(example.policy.serving.licence).toBe("peeringdb-aup");
   });
 
   it("requests only non-contact fields and drains short pages until an explicit empty page", async () => {

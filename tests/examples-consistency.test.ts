@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { isJsonObject, isJsonString, isTopic, parseJson, type ExampleFeed } from "@open-data-pt/gatekeeper-shared";
+import { LICENCES, PUBLISHERS, isJsonObject, isJsonString, isLicence, isPublisher, isTopic, parseJson, type ExampleFeed } from "@open-data-pt/gatekeeper-shared";
 import { CARRIED_NAMES, INSTALLED } from "./catalog";
 
 /** One library's module namespace, as this test reads it: exported values, one of which is its examples. */
@@ -127,6 +127,24 @@ describe("libraries and the Worker that carries them", () => {
       .filter((example) => (example.topics ?? []).length === 0 || (example.topics ?? []).some((topic) => !isTopic(topic)))
       .map((example) => `${example.slug} (${(example.topics ?? []).join(", ")})`);
     expect(strays).toEqual([]);
+  });
+
+  it("names every example's publisher and licence from the vocabularies, and leaves no entry unused", async () => {
+    const examples = [...(await libraryExamples()).values()].flat();
+    const strays = examples
+      .filter((example) => !isPublisher(example.publisher) || !isLicence(example.policy.serving.licence))
+      .map((example) => `${example.slug} (${example.publisher}, ${example.policy.serving.licence})`);
+    expect(strays).toEqual([]);
+    const publishers = new Set(examples.map((example) => example.publisher));
+    const licences = new Set(examples.map((example) => example.policy.serving.licence));
+    expect(
+      Object.keys(PUBLISHERS).filter((key) => !publishers.has(key)),
+      "publishers no example names",
+    ).toEqual([]);
+    expect(
+      Object.keys(LICENCES).filter((key) => !licences.has(key)),
+      "licences no example names",
+    ).toEqual([]);
   });
 
   it("carries every cleared library, and no held one", () => {

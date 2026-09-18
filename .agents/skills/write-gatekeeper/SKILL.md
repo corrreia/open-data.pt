@@ -24,7 +24,7 @@ The Worker contains no parsing: `gatekeeper(libraries)` from `@open-data-pt/gate
 
 A library is **how** the data is read, never what it is about or who publishes it. Topics overlap — a municipal Wi-Fi map is `cities` and `telecom` — and a publisher may be read two ways (Carris Metropolitana through `carris` and `gtfs`; ten publishers through `udata` on dados.gov.pt), so neither is a code boundary; the library is, because a feed is read exactly one way.
 
-- Topics are catalog tags: any number, any order, each a key of `TOPICS` (`packages/gatekeeper-shared/src/topics.ts`). A test rejects a tag outside that vocabulary, and a new tag is one key in `TOPICS`.
+- The catalog groups by three keyed vocabularies in `packages/gatekeeper-shared/src/`: `TOPICS` (tags: any number, any order), `PUBLISHERS` (who made the data — never the portal it was read from; `cm-porto`, not "dados.gov.pt") and `LICENCES` (the terms the publisher states — `cc-by-4.0`, `bportugal-reuse` — or `source-terms` when it states none; never a licence it does not state). An example names `publisher` and `policy.serving.licence` by key; the kernel refuses an unknown key at the RPC boundary, and `tests/examples-consistency.test.ts` rejects one in the repository and an entry no example uses. A new publisher or licence is one entry: its name and, when there is one, its site or licence text. Vocabulary names are shown, never repeated: a title or policy name that needs the publisher's name reads it from `PUBLISHERS[key].name`.
 - A library's `worker.ts` declares its name, its vars with their values, and any secrets, R2 buckets and CPU limit. Vars reach the library through `buildLibrary`, which lays the Worker's environment over them; a secret or bucket is bound in `packages/gatekeeper/wrangler.jsonc` under the declared name (Metro Lisboa's `ML_CONSUMER_KEY`/`ML_CONSUMER_SECRET`, Parliament's `PARLIAMENT_STAGING`). The Worker's CPU limit is the largest any library declares.
 - A new library is its directory plus `worker.ts` and one example, and one line in `libraries.ts`. Nothing else changes: no package, no binding, no script.
 - A source under a publication hold (`packages/gatekeeper-shared/src/publication-holds.json`: IODA, RIPE Atlas, RIPEstat, PeeringDB) is **not** listed in `libraries.ts`, so its code does not ship and its examples are not installed; `tests/examples-consistency.test.ts` holds every library directory to being listed or held, never both. Lifting a hold is deleting its entry and adding the library's line.
@@ -82,7 +82,7 @@ Archive-only document/media/coverage feeds are unsupported unless explicitly app
 
 All work is a library, never the Worker. Add a directory under `formats/` or `sources/`, export the surface above, declare in `worker.ts` the library's human `name`, one namespaced var (`<LIBRARY>_ALLOWED_HOSTS` for an allowlist, `<LIBRARY>_API_ORIGIN` for a fixed origin) plus any secrets, R2 buckets and CPU limit, and how the library is built from that environment, then list it in `libraries.ts`.
 
-A new dataset from a source already read is one entry in that library's `examples.ts`. Its `topics` are only catalog tags.
+A new dataset from a source already read is one entry in that library's `examples.ts`, naming its publisher, licence and topics by key.
 
 ## The Worker
 

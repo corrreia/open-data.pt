@@ -5,7 +5,7 @@ import { ErrorNote, PageHead, SectionHead } from "../components/common";
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { apiGet, productHref } from "../lib/api";
-import { fetchFeeds, fetchProducts, publisherHref, slugify } from "../lib/catalog";
+import { fetchFeeds, fetchProducts, publisherHref } from "../lib/catalog";
 import { fmt, plural } from "../lib/format";
 import { useQuery } from "../lib/query";
 import {
@@ -257,11 +257,11 @@ function StatusPage() {
     }
     const openOf = (feed: Feed) => (byFeed.get(feed.id) ?? []).find((outage) => !outage.endedAt);
     const publishers = new Map<string, Feed[]>();
-    for (const feed of enabled) publishers.set(feed.publisher, [...(publishers.get(feed.publisher) ?? []), feed]);
+    for (const feed of enabled) publishers.set(feed.publisher.id, [...(publishers.get(feed.publisher.id) ?? []), feed]);
     const rows = [...publishers.entries()]
-      .map(([name, members]) => ({
-        name,
-        slug: slugify(name),
+      .map(([slug, members]) => ({
+        name: members[0]?.publisher.name ?? slug,
+        slug,
         members,
         failing: members.filter(openOf),
         measured: measure(
@@ -373,7 +373,7 @@ function StatusPage() {
                             <CaretRightIcon size={14} className={`shrink-0 text-kumo-subtle transition-transform ${expanded ? "rotate-90" : ""}`} />
                             <span className="truncate">{row.name}</span>
                           </button>
-                          <a href={publisherHref(row.name)} aria-label={`${row.name}'s datasets`} className="text-kumo-subtle hover:text-kumo-strong">
+                          <a href={publisherHref(row.slug)} aria-label={`${row.name}'s datasets`} className="text-kumo-subtle hover:text-kumo-strong">
                             <ArrowSquareOutIcon size={14} />
                           </a>
                           <span className="ml-auto flex items-center gap-3">
@@ -441,7 +441,7 @@ function StatusPage() {
                                     label={feed.title}
                                     height="h-5"
                                     onTip={setTip}
-                                    describe={(incident) => `${fmt.duration(incident.ms)}, ${CAUSE_TEXT[incident.outage.cause](feed.publisher).toLowerCase()}`}
+                                    describe={(incident) => `${fmt.duration(incident.ms)}, ${CAUSE_TEXT[incident.outage.cause](feed.publisher.name).toLowerCase()}`}
                                   />
                                 </li>
                               );
@@ -500,7 +500,7 @@ function StateBanner({ model, now }: { model: Model; now: number }) {
     );
   }
   if (failing.length > 0) {
-    const publishers = [...new Set(failing.map((feed) => feed.publisher))];
+    const publishers = [...new Set(failing.map((feed) => feed.publisher.name))];
     return (
       <Banner
         variant="alert"
@@ -596,8 +596,8 @@ function Incidents({
                   <p className="font-medium text-kumo-strong">
                     {feed ? (
                       <>
-                        <a href={publisherHref(feed.publisher)} className="hover:underline">
-                          {feed.publisher}
+                        <a href={publisherHref(feed.publisher.id)} className="hover:underline">
+                          {feed.publisher.name}
                         </a>
                         <span className="text-kumo-subtle"> · </span>
                         {product ? (
@@ -613,7 +613,7 @@ function Incidents({
                     )}
                   </p>
                   <p className="text-sm text-kumo-subtle">
-                    {CAUSE_TEXT[outage.cause](feed?.publisher)}
+                    {CAUSE_TEXT[outage.cause](feed?.publisher.name)}
                     {outage.failures > 1 ? ` (${plural(outage.failures, "attempt")})` : ""}.
                   </p>
                   {outage.lastError ? (

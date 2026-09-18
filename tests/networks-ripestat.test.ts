@@ -52,8 +52,8 @@ describe("RIPEstat capabilities and boundaries", () => {
     expect(asns).not.toContain("12542"); // This is NOS, not the research brief's proposed NOWO.
     for (const example of RIPESTAT_EXAMPLES) {
       expect(() => validateRipestatFeedConfig(libraryConfig(example.config))).not.toThrow();
-      expect(example.policy.serving.licence).toContain("permission");
-      expect(example.publisher).toBe("RIPE NCC");
+      expect(example.policy.serving.licence).toBe("ripe-ncc-terms");
+      expect(example.publisher).toBe("ripe-ncc");
       expect(example.policy.collection.cadenceSeconds).toBe(example.config.asn ? 28_800 : 86_400);
     }
   });

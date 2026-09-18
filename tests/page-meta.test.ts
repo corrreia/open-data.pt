@@ -11,7 +11,7 @@ const FEED: JsonObject = {
   id: "feed_fuel",
   title: "Fuel prices",
   description: "Prices at every station.",
-  publisher: "Direção-Geral de Energia e Geologia",
+  publisher: { id: "dgeg", name: "Direção-Geral de Energia e Geologia", url: "https://www.dgeg.gov.pt/" },
   topics: ["energy"],
   format: "own-api",
   cadenceSeconds: 3600,
@@ -33,7 +33,7 @@ const PRODUCT: JsonObject = {
   rowCount: 2,
   updatedAt: "2026-09-15T10:00:00.000Z",
   cadenceSeconds: 3600,
-  licence: "CC BY 4.0",
+  licence: { id: "cc-by-4.0", name: "CC BY 4.0", url: "https://creativecommons.org/licenses/by/4.0/" },
 };
 /** A time series whose description is too short for Google and whose licence is only a placeholder. */
 const AVERAGE: JsonObject = {
@@ -45,7 +45,7 @@ const AVERAGE: JsonObject = {
   schema: { fields: [{ id: "value", name: "Value", type: "number", unit: "EUR/l" }] },
   rowCount: 30,
   updatedAt: "2026-09-15T09:00:00.000Z",
-  licence: "Source terms apply",
+  licence: { id: "source-terms", name: "Source terms apply" },
 };
 
 const API = new Map<string, JsonValue>([
@@ -53,6 +53,7 @@ const API = new Map<string, JsonValue>([
   ["/api/products/fuel-average", AVERAGE],
   ["/api/feeds/feed_fuel", { data: FEED }],
   ["/api/feeds", { data: [FEED] }],
+  ["/api/products", { data: [PRODUCT, AVERAGE] }],
 ]);
 
 /** The API as fixtures, and every page as its real HTML file from the site's source. */
@@ -112,7 +113,9 @@ describe("link previews", () => {
   });
 
   it("names publishers and topics, and falls back to the page's own words for a name that does not exist", async () => {
-    expect((await page("/publisher/?name=direcao-geral-de-energia-e-geologia")).meta("og:title")).toBe("Direção-Geral de Energia e Geologia");
+    expect((await page("/publisher/?id=dgeg")).meta("og:title")).toBe("Direção-Geral de Energia e Geologia");
+    expect((await page("/licence/?id=cc-by-4.0")).meta("og:title")).toBe("CC BY 4.0");
+    expect((await page("/licence/?id=nothing")).meta("og:title")).toBe("Licences");
     const topic = await page("/catalog/?topic=energy&q=diesel");
     expect(topic.meta("og:title")).toBe("Energy datasets");
     expect(topic.canonical).toBe(`${ORIGIN}/catalog/?topic=energy`);
@@ -150,7 +153,7 @@ describe("link previews", () => {
         { "@type": "PropertyValue", name: "Price", unitText: "EUR/l" },
         { "@type": "PropertyValue", name: "Latitude" },
       ],
-      creator: { "@type": "Organization", name: "Direção-Geral de Energia e Geologia" },
+      creator: { "@type": "Organization", name: "Direção-Geral de Energia e Geologia", url: "https://www.dgeg.gov.pt/" },
       keywords: ["Energy"],
       isBasedOn: "https://precoscombustiveis.dgeg.gov.pt/",
       license: "https://creativecommons.org/licenses/by/4.0/",

@@ -21,7 +21,7 @@ Where code lives
 
 1. A library per format: anything with a standard (GTFS, GBFS, ArcGIS, CKAN, Opendatasoft, uData) is parsed once, under `formats/`. A Worker never contains parsing.
 2. A library per bespoke source, under `sources/`: Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, IODA, RIPEstat, PeeringDB.
-3. One Worker carries every library. A library is named for **how** the data is read, never for what it is about or who publishes it. Topics overlap and a publisher may be read two ways, so neither is a code boundary: topics are catalog tags only, from the vocabulary `TOPICS` in `packages/gatekeeper-shared/src/topics.ts`, in any number and any order. `libraries.ts` lists the libraries the Worker carries; a test holds every library directory to being listed or held.
+3. One Worker carries every library. A library is named for **how** the data is read, never for what it is about or who publishes it. Topics overlap and a publisher may be read two ways, so neither is a code boundary. What the catalog groups by is three keyed vocabularies in `packages/gatekeeper-shared/src/`: `TOPICS` (tags, any number and order), `PUBLISHERS` (who made the data, never the portal it was read from) and `LICENCES` (the terms stated, or `source-terms`); every example names a key of each, and the API serves them expanded as `{ id, name, url?, description? }`. `libraries.ts` lists the libraries the Worker carries; a test holds every library directory to being listed or held.
 4. A library's `worker.ts` declares its human name and what it needs (vars with their values, secrets, R2 buckets, CPU limit) and builds the library from the Worker's environment. A held source (`packages/gatekeeper-shared/src/publication-holds.json`) is not listed: its code does not ship and its examples are not installed until the hold is lifted.
 5. Feed slugs never change: a feed's ID derives from its slug, and its resource key from its library, so nothing about the Worker is in its identity.
 
@@ -34,7 +34,7 @@ What a Worker sends
 
 How to contribute
 
-10. New dataset from a known source: one example entry. New source on a known format: one example plus its host in the library's `worker.ts`. New bespoke source: a library under `sources/` with its `worker.ts` and fixture tests, listed in `libraries.ts`. New format: a library under `formats/`, listed the same way. New catalog tag: a key in `TOPICS`.
+10. New dataset from a known source: one example entry. New source on a known format: one example plus its host in the library's `worker.ts`. New bespoke source: a library under `sources/` with its `worker.ts` and fixture tests, listed in `libraries.ts`. New format: a library under `formats/`, listed the same way. New topic, publisher or licence: a key in `TOPICS`, `PUBLISHERS` or `LICENCES`; a test rejects an unknown key and an unused entry.
 11. Test against the real source with `LIVE_EXAMPLES=<slug>` before a pull request. Deploys and secrets are the owner's.
 
 Every example configuration carries `source: "<library>"`; that key routes the feed inside the Worker and the library never sees it. No backwards compatibility: delete what should not exist.

@@ -1,4 +1,4 @@
-import type { ExampleFeed } from "../../index";
+import { PUBLISHERS, type ExampleFeed, type Publisher } from "../../index";
 
 const DAY_SECONDS = 86_400;
 
@@ -15,7 +15,7 @@ const REALTIME_POLICY = {
     withoutHistory: ["vehicles", "stations"],
   },
   serving: {
-    licence: "Source terms apply",
+    licence: "source-terms",
     attribution: "The GBFS system operator",
   },
 } as const;
@@ -62,7 +62,7 @@ const REFERENCE_POLICY = {
     historyMode: "changes",
   },
   serving: {
-    licence: "Source terms apply",
+    licence: "source-terms",
     attribution: "The GBFS system operator",
   },
 } as const;
@@ -80,7 +80,7 @@ export const GBFS_EXAMPLES: ExampleFeed[] = [
     },
     policy: LIME_POLICY,
     staleAfterSeconds: 1800,
-    publisher: "Lime",
+    publisher: "lime",
     topics: ["mobility"],
   },
   {
@@ -95,7 +95,7 @@ export const GBFS_EXAMPLES: ExampleFeed[] = [
     },
     policy: REALTIME_POLICY,
     staleAfterSeconds: 600,
-    publisher: "Bird",
+    publisher: "bird",
     topics: ["mobility"],
   },
   // Keep the pre-existing Braga definition: removing it would retire published state.
@@ -120,7 +120,7 @@ export const GBFS_EXAMPLES: ExampleFeed[] = [
     },
     policy: DOCKED_POLICY,
     staleAfterSeconds: 1800,
-    publisher: "Bora",
+    publisher: "bora",
     topics: ["mobility"],
   },
   {
@@ -135,17 +135,17 @@ export const GBFS_EXAMPLES: ExampleFeed[] = [
     },
     policy: DOCKED_POLICY,
     staleAfterSeconds: 1800,
-    publisher: "TubaBike",
+    publisher: "tubabike",
     topics: ["mobility"],
   },
-  referenceExample("lime-lisbon", "Lime", "Lisbon", "https://data.lime.bike/api/partners/v1/gbfs/lisbon/gbfs.json", "en"),
-  referenceExample("bird-lisbon", "Bird", "Lisbon", "https://mds.bird.co/gbfs/v2/public/lisbon/gbfs.json", "en"),
-  referenceExample("bird-braga", "Bird", "Braga", "https://mds.bird.co/gbfs/v2/public/braga/gbfs.json", "en"),
-  referenceExample("bird-cascais", "Bird", "Cascais", "https://mds.bird.co/gbfs/v2/public/cascais/gbfs.json", "en"),
-  referenceExample("bird-matosinhos", "Bird", "Matosinhos", "https://mds.bird.co/gbfs/v2/public/matosinhos/gbfs.json", "en"),
-  referenceExample("bird-porto", "Bird", "Porto", "https://mds.bird.co/gbfs/v2/public/porto/gbfs.json", "en"),
-  referenceExample("bora-viseu", "Bora", "Viseu Dão Lafões", "https://gbfs.primelayer.pt/gbfs-smartmobility/gbfs/v3/gbfs.json", "pt"),
-  referenceExample("tubabike-barcelos", "TubaBike", "Barcelos", "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_bx/gbfs.json", "pt"),
+  referenceExample("lime-lisbon", "lime", "Lisbon", "https://data.lime.bike/api/partners/v1/gbfs/lisbon/gbfs.json", "en"),
+  referenceExample("bird-lisbon", "bird", "Lisbon", "https://mds.bird.co/gbfs/v2/public/lisbon/gbfs.json", "en"),
+  referenceExample("bird-braga", "bird", "Braga", "https://mds.bird.co/gbfs/v2/public/braga/gbfs.json", "en"),
+  referenceExample("bird-cascais", "bird", "Cascais", "https://mds.bird.co/gbfs/v2/public/cascais/gbfs.json", "en"),
+  referenceExample("bird-matosinhos", "bird", "Matosinhos", "https://mds.bird.co/gbfs/v2/public/matosinhos/gbfs.json", "en"),
+  referenceExample("bird-porto", "bird", "Porto", "https://mds.bird.co/gbfs/v2/public/porto/gbfs.json", "en"),
+  referenceExample("bora-viseu", "bora", "Viseu Dão Lafões", "https://gbfs.primelayer.pt/gbfs-smartmobility/gbfs/v3/gbfs.json", "pt"),
+  referenceExample("tubabike-barcelos", "tubabike", "Barcelos", "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_bx/gbfs.json", "pt"),
 ];
 
 function birdExample(slug: string, city: string): ExampleFeed {
@@ -161,7 +161,7 @@ function birdExample(slug: string, city: string): ExampleFeed {
     },
     policy: BIRD_POLICY,
     staleAfterSeconds: 900,
-    publisher: "Bird",
+    publisher: "bird",
     topics: ["mobility"],
   };
 }
@@ -171,11 +171,12 @@ function birdExample(slug: string, city: string): ExampleFeed {
  * slug keeps its history, and this one carries what the status feed used to
  * re-download on every collection.
  */
-function referenceExample(statusSlug: string, publisher: string, place: string, url: string, language: string): ExampleFeed {
+function referenceExample(statusSlug: string, publisher: Publisher, place: string, url: string, language: string): ExampleFeed {
+  const operator = PUBLISHERS[publisher].name;
   return {
     slug: `${statusSlug}-reference`,
-    title: `${publisher} stations and system information in ${place}`,
-    description: `Where every ${publisher} station in ${place} is, what it is called, how much it holds, and who operates the system.`,
+    title: `${operator} stations and system information in ${place}`,
+    description: `Where every ${operator} station in ${place} is, what it is called, how much it holds, and who operates the system.`,
     config: { source: "gbfs", url, language, feed: "reference" },
     policy: REFERENCE_POLICY,
     staleAfterSeconds: 2 * DAY_SECONDS,

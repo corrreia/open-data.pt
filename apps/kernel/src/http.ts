@@ -2,6 +2,7 @@ import { asObject, asString, isJsonString, parseJson, type JsonObject, type Json
 
 import { CADENCE_HEADER } from "./cache";
 import { REGISTRY_ROOM, type ProductDetail, type Registry } from "./coordinators";
+import { publisherRef } from "./vocabulary";
 import { NotFoundError, RequestError, type HeaderMap } from "./errors";
 import type { Acquisition, Feed } from "./feed-model";
 import { ObjectStore } from "./object-store";
@@ -532,10 +533,11 @@ function publicFeed(feed: Feed, cadenceSeconds: number | undefined) {
     lastError: _error,
     historyBacklog: _backlog,
     backfill: _backfill,
+    publisher,
     ...publicValue
   } = feed;
   const source = config.source ?? "";
-  return { ...publicValue, format: STANDARD_FORMATS.has(source) ? source : "own-api", cadenceSeconds: cadenceSeconds ?? null };
+  return { ...publicValue, publisher: publisherRef(publisher), format: STANDARD_FORMATS.has(source) ? source : "own-api", cadenceSeconds: cadenceSeconds ?? null };
 }
 
 /* ---------- Record filters ---------- */

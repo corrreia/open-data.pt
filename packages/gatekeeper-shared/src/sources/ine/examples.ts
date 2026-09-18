@@ -12,7 +12,7 @@ const DAILY_STATISTICS = {
     historyMode: "changes",
   },
   serving: {
-    licence: "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+    licence: "cc-by-4.0",
     attribution: "Instituto Nacional de Estatística (INE)",
   },
 } as const;
@@ -43,7 +43,7 @@ export const INE_EXAMPLES: ExampleFeed[] = [
     config: { source: "ine", indicator: "0004167", lang: "PT" },
     policy: DAILY_STATISTICS,
     staleAfterSeconds: 7 * 86_400,
-    publisher: "INE · Instituto Nacional de Estatística",
+    publisher: "ine",
     topics: ["society"],
   },
   {
@@ -53,7 +53,7 @@ export const INE_EXAMPLES: ExampleFeed[] = [
     config: { source: "ine", indicator: "0007976", lang: "PT" },
     policy: DAILY_STATISTICS,
     staleAfterSeconds: 7 * 86_400,
-    publisher: "INE · Instituto Nacional de Estatística",
+    publisher: "ine",
     topics: ["economy"],
   },
   {
@@ -63,7 +63,7 @@ export const INE_EXAMPLES: ExampleFeed[] = [
     config: { source: "ine", indicator: "0012092", lang: "PT" },
     policy: DAILY_STATISTICS,
     staleAfterSeconds: 7 * 86_400,
-    publisher: "INE · Instituto Nacional de Estatística",
+    publisher: "ine",
     topics: ["economy"],
   },
   {
@@ -73,7 +73,7 @@ export const INE_EXAMPLES: ExampleFeed[] = [
     config: { source: "ine", indicator: "0014640", lang: "PT" },
     policy: DAILY_STATISTICS,
     staleAfterSeconds: 7 * 86_400,
-    publisher: "INE · Instituto Nacional de Estatística",
+    publisher: "ine",
     topics: ["economy"],
   },
   {
@@ -88,7 +88,7 @@ export const INE_EXAMPLES: ExampleFeed[] = [
     },
     policy: ANNUAL_SERIES,
     staleAfterSeconds: 5_184_000,
-    publisher: "INE · Instituto Nacional de Estatística",
+    publisher: "ine",
     topics: ["society"],
   },
   {
@@ -103,7 +103,7 @@ export const INE_EXAMPLES: ExampleFeed[] = [
     },
     policy: ANNUAL_SERIES,
     staleAfterSeconds: 5_184_000,
-    publisher: "INE · Instituto Nacional de Estatística",
+    publisher: "ine",
     topics: ["economy"],
   },
   {
@@ -118,7 +118,7 @@ export const INE_EXAMPLES: ExampleFeed[] = [
     },
     policy: MONTHLY_SERIES,
     staleAfterSeconds: 1_209_600,
-    publisher: "INE · Instituto Nacional de Estatística",
+    publisher: "ine",
     topics: ["society"],
   },
   {
@@ -133,7 +133,7 @@ export const INE_EXAMPLES: ExampleFeed[] = [
     },
     policy: MONTHLY_SERIES,
     staleAfterSeconds: 1_209_600,
-    publisher: "INE · Instituto Nacional de Estatística",
+    publisher: "ine",
     topics: ["economy"],
   },
   {
@@ -148,7 +148,7 @@ export const INE_EXAMPLES: ExampleFeed[] = [
     },
     policy: ANNUAL_SERIES,
     staleAfterSeconds: 5_184_000,
-    publisher: "INE · Instituto Nacional de Estatística",
+    publisher: "ine",
     topics: ["economy"],
   },
   latestPeriod(
@@ -262,7 +262,7 @@ function annualLatest(slug: string, title: string, description: string, indicato
     config: { source: "ine", indicator, lang: "PT" },
     policy,
     staleAfterSeconds: 5_184_000,
-    publisher: "INE · Instituto Nacional de Estatística",
+    publisher: "ine",
     topics,
   };
 }
@@ -280,7 +280,7 @@ function latestPeriod(slug: string, title: string, description: string, indicato
     config: { source: "ine", indicator, lang: "PT" },
     policy: DAILY_STATISTICS,
     staleAfterSeconds: 7 * 86_400,
-    publisher: "INE · Instituto Nacional de Estatística",
+    publisher: "ine",
     topics,
   };
 }

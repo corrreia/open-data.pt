@@ -8,7 +8,7 @@ export const PEERINGDB_EXAMPLES: ExampleFeed[] = [
     description:
       "Public non-contact PeeringDB directory metadata for Internet exchanges located in Portugal. Includes names, city, websites and protocol support; no contact emails, phone numbers, street addresses, traffic volumes, speed or outage claims. Record clocks are publisher updates, not API generation times.",
     config: { source: "peeringdb", feed: "exchanges", country: "PT" },
-    publisher: "PeeringDB",
+    publisher: "peeringdb",
     topics: ["telecom"],
     staleAfterSeconds: 1_209_600,
     policy: {
@@ -23,7 +23,7 @@ export const PEERINGDB_EXAMPLES: ExampleFeed[] = [
         maxRecords: 1000,
         historyMode: "changes",
       },
-      serving: { licence: "PeeringDB Acceptable Use Policy; prior permission required for republication", attribution: "PeeringDB and its contributors" },
+      serving: { licence: "peeringdb-aup", attribution: "PeeringDB and its contributors" },
     },
   },
 ];

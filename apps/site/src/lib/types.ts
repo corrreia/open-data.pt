@@ -34,7 +34,7 @@ export interface Product {
   stale?: boolean;
   staleAfterSeconds: number;
   cadenceSeconds: number;
-  licence?: string;
+  licence?: Term | null;
   attribution?: string;
   historyMode: string;
   exposeHistory: boolean;
@@ -44,12 +44,20 @@ export interface Product {
   currentAcquisitionId?: string;
 }
 
+/** One entry of a catalog vocabulary as the API serves it: a stable key, a name to show, and its page when it has one. */
+export interface Term {
+  id: string;
+  name: string;
+  url?: string;
+  description?: string;
+}
+
 export interface Feed {
   id: string;
   slug: string;
   title: string;
   description: string;
-  publisher: string;
+  publisher: Term;
   topics?: string[];
   /** The standard the publisher shares it through (arcgis, ckan, opendatasoft, gtfs, gbfs, udata), or own-api. */
   format: string;

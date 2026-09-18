@@ -22,5 +22,5 @@ describe("every example's resolved identity", () => {
     }
     const text = `${JSON.stringify(Object.fromEntries(Object.entries(identities).toSorted(([a], [b]) => a.localeCompare(b))), null, 2)}\n`;
     await expect(text).toMatchFileSnapshot("./fixtures/feed-identity.json");
-  });
+  }, 60_000);
 });

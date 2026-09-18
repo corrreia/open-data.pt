@@ -39,7 +39,7 @@ function example(slug: string, title: string, description: string, config: Sourc
     title,
     description,
     config: { source: "ripestat", ...config },
-    publisher: "RIPE NCC",
+    publisher: "ripe-ncc",
     topics: ["telecom"],
     staleAfterSeconds: cadenceSeconds * 3,
     policy: {
@@ -54,7 +54,7 @@ function example(slug: string, title: string, description: string, config: Sourc
         maxRecords: 5000,
         historyMode: "changes",
       },
-      serving: { licence: "RIPEstat Service Terms and Conditions; redistribution is restricted and requires permission", attribution: "RIPE NCC, RIPE RIS and RIR statistics" },
+      serving: { licence: "ripe-ncc-terms", attribution: "RIPE NCC, RIPE RIS and RIR statistics" },
     },
   };
 }
