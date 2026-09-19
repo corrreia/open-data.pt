@@ -5,7 +5,7 @@ import { REPOSITORY } from "../lib/project";
 import { Mark } from "./Mark";
 import { SearchPalette } from "./SearchPalette";
 
-export type Section = "home" | "catalog" | "publishers" | "licences" | "status" | "start" | "operations" | "product" | "contribute";
+export type Section = "home" | "catalog" | "publishers" | "licences" | "status" | "analytics" | "start" | "operations" | "product" | "contribute";
 
 const NAV: { section: Section | "api"; href: string; label: string }[] = [
   { section: "catalog", href: "/catalog/", label: "Catalog" },
@@ -100,6 +100,9 @@ export function Shell({ section, children }: { section: Section; children: React
             </a>
             <a className="text-kumo-subtle hover:text-kumo-strong" href="/operations/">
               Operations
+            </a>
+            <a className="text-kumo-subtle hover:text-kumo-strong" href="/analytics/">
+              Analytics
             </a>
             <a className="text-kumo-subtle hover:text-kumo-strong" href="/docs">
               API reference

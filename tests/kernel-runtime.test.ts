@@ -23,6 +23,7 @@ const server = createTestHarness({
         workflows: [{ name: "open-data-pt-collections", binding: "COLLECTIONS", class_name: "CollectionWorkflow" }],
         services: [{ binding: "GATEKEEPER", service: "kernel-runtime-test", entrypoint: "FixtureGatekeeper" }],
         migrations: [{ tag: "test-only", new_sqlite_classes: ["Registry", "FeedRunner"] }],
+        analytics_engine_datasets: [{ binding: "USAGE", dataset: "test_usage" }],
       },
     },
   ],
@@ -192,4 +193,22 @@ describe("the Registry lends each history query one slot", () => {
     expect(await slots([], ["q1", "q1", "q2", "q3", "q4"])).toEqual([]);
     expect(await slots(["q5", "q6", "q7", "q8"], ["q5", "q6", "q7", "q8"])).toEqual([true, true, true, true]);
   }, 60_000);
+});
+
+describe("usage analytics", () => {
+  it("counts requests without getting in their way, and says when the report is not enabled", async () => {
+    // Every request below writes a data point to the bound dataset; none of them may fail for it.
+    expect((await server.fetch("/api/health", { headers: { "User-Agent": "curl/8.14.1" } })).status).toBe(200);
+    expect((await server.fetch("/api/nothing-here")).status).toBe(404);
+    expect(
+      (await server.fetch("/mcp", { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json, text/event-stream" }, body: "{}" })).status,
+    ).toBeLessThan(500);
+
+    const refused = await server.fetch("/api/analytics?days=5");
+    expect(refused.status).toBe(400);
+    // No ANALYTICS_TOKEN on this deployment: a 503 that says so, not a failure.
+    const disabled = await server.fetch("/api/analytics?days=7");
+    expect(disabled.status).toBe(503);
+    expect(await jsonBody<{ title: string }>(disabled)).toMatchObject({ title: "Analytics unavailable" });
+  });
 });

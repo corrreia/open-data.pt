@@ -195,3 +195,20 @@ export interface AcquisitionDay {
   complete: boolean;
   data: Acquisition[];
 }
+
+/** GET /api/analytics: request counts from Analytics Engine over one window. */
+export interface AnalyticsReport {
+  days: number;
+  resolution: "hour" | "day";
+  from: string;
+  to: string;
+  retentionDays: number;
+  timeline: Array<{ time: string; surface: string; kind: string; requests: number }>;
+  clients: Array<{ surface: string; kind: string; name: string; requests: number }>;
+  routes: Array<{ surface: string; route: string; requests: number; meanMs: number }>;
+  subjects: Array<{ surface: string; route: string; subject: string; requests: number }>;
+  countries: Array<{ surface: string; country: string; requests: number }>;
+  referrers: Array<{ surface: string; referrer: string; requests: number }>;
+  outcomes: Array<{ surface: string; status: string; cache: string; format: string; requests: number }>;
+  mcp: Array<{ call: string; client: string; requests: number }>;
+}

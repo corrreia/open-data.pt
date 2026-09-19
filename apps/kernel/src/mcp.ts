@@ -14,6 +14,7 @@ import { openApiMcpServer, type RequestOptions } from "@cloudflare/codemode/mcp"
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { asObject, asString, parseJson, type JsonValue } from "@open-data-pt/gatekeeper-shared";
 
+import { mcpCallOf, type McpCall } from "./analytics";
 import { MCP_SERVER_NAME, MCP_SERVER_VERSION } from "./discovery";
 import { openApiDocument } from "./openapi";
 
@@ -64,6 +65,8 @@ export interface McpHost {
   read: (request: Request) => Promise<Response>;
   /** Who the rate limits count this caller as; see mcpClientKey. */
   clientKey: string;
+  /** Told what each POST asks for, so the kernel can count it. */
+  onCall?: (call: McpCall) => void;
 }
 
 export async function handleMcp(request: Request, host: McpHost): Promise<Response> {
@@ -81,7 +84,9 @@ export async function handleMcp(request: Request, host: McpHost): Promise<Respon
     );
   }
 
-  const initializing = await isInitialize(request);
+  const call = await readMcpCall(request);
+  if (call) host.onCall?.(call);
+  const initializing = call?.method === "initialize";
   const server = openApiMcpServer({
     name: MCP_SERVER_NAME,
     version: MCP_SERVER_VERSION,
@@ -222,13 +227,12 @@ function parseIpv6(text: string): bigint | undefined {
   return value;
 }
 
-/** Whether a POST opens an MCP session: an `initialize` request, alone or in a batch. */
-async function isInitialize(request: Request): Promise<boolean> {
+/** What a POST asks for: its first message's method and tool; `initialize` when any message in a batch opens a session. */
+async function readMcpCall(request: Request): Promise<McpCall | undefined> {
   try {
-    const body = parseJson(await request.clone().text());
-    return (Array.isArray(body) ? body : [body]).some((message) => asObject(message)?.method === "initialize");
+    return mcpCallOf(parseJson(await request.clone().text()));
   } catch {
-    return false;
+    return undefined;
   }
 }
 
