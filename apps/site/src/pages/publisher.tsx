@@ -2,7 +2,7 @@ import { Badge, Breadcrumbs, Button, Empty, LayerCard, Link, Loader } from "@clo
 import { ArrowRightIcon, BuildingsIcon, HeartbeatIcon } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { DatasetCard } from "../components/DatasetCard";
-import { ErrorNote, Kv, PageHead, StatTile } from "../components/common";
+import { ErrorNote, Kv, PageHead, StatTile, bodyRows, cardRows } from "../components/common";
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { buildDatasets, buildPublishers, fetchFeeds, fetchProducts, licenceHref, productCount, publisherHref, topicsOf, type Publisher, emptyLast } from "../lib/catalog";
@@ -21,15 +21,15 @@ function PublisherIndex({ publishers }: { publishers: Publisher[] }) {
       </PageHead>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(min(19rem,100%),1fr))] gap-3">
         {publishers.map((publisher) => (
-          <a key={publisher.id} href={publisherHref(publisher.id)} className="group no-underline">
-            <LayerCard className="flex h-full flex-col transition-shadow group-hover:shadow-[0_0_0_2px_var(--color-kumo-focus)]">
+          <a key={publisher.id} href={publisherHref(publisher.id)} className={`group rounded-lg no-underline ${cardRows(4)}`}>
+            <LayerCard className={`transition-[box-shadow] group-hover:ring-kumo-focus/40 ${cardRows(4)}`}>
               <LayerCard.Secondary className="flex items-center justify-between text-xs">
                 <span>
                   {plural(publisher.datasets.length, "dataset")} · {fmt.int(productCount(publisher.datasets))} tables and series
                 </span>
                 <ArrowRightIcon size={14} className="text-kumo-subtle transition-transform group-hover:translate-x-0.5" />
               </LayerCard.Secondary>
-              <LayerCard.Primary className="grid flex-1 content-start gap-2.5">
+              <LayerCard.Primary className={`gap-2.5 ${bodyRows(3)}`}>
                 <h2 className="font-display text-xl leading-snug text-kumo-strong">{publisher.name}</h2>
                 <div className="flex flex-wrap gap-1.5">
                   {topicsOf(publisher).map((topic) => (
@@ -38,7 +38,7 @@ function PublisherIndex({ publishers }: { publishers: Publisher[] }) {
                     </Badge>
                   ))}
                 </div>
-                {publisher.hosts.size ? <p className="break-all font-mono text-[0.7rem] text-kumo-subtle">{[...publisher.hosts.keys()].join(" · ")}</p> : null}
+                <p className="wrap-anywhere font-mono text-xs text-kumo-subtle">{[...publisher.hosts.keys()].join(" · ")}</p>
               </LayerCard.Primary>
             </LayerCard>
           </a>
@@ -111,13 +111,15 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
                 {
                   term: "Licences",
                   value: (
-                    <span className="flex flex-wrap gap-x-3 gap-y-1">
+                    <ul className="grid gap-1.5">
                       {[...publisher.licences.values()].map((licence) => (
-                        <a key={licence.id} href={licenceHref(licence.id)} className="text-kumo-link hover:underline">
-                          {licence.name}
-                        </a>
+                        <li key={licence.id}>
+                          <a href={licenceHref(licence.id)} className="inline-flex min-h-6 items-center text-kumo-link hover:underline">
+                            {licence.name}
+                          </a>
+                        </li>
                       ))}
-                    </span>
+                    </ul>
                   ),
                 },
                 { term: "Updates", value: live ? `${plural(live, "dataset")} ${live === 1 ? "changes" : "change"} several times an hour` : "Hourly or less often" },
@@ -125,7 +127,7 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
             />
           </LayerCard.Primary>
         </LayerCard>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 content-start gap-3">
           <StatTile label="Datasets" value={fmt.int(publisher.datasets.length)} note={`${fmt.int(productCount(publisher.datasets))} tables and series`} />
           <StatTile
             label="Freshness"
@@ -135,7 +137,7 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
           />
           <div className="col-span-2">
             <Button variant="secondary" icon={<HeartbeatIcon />} className="w-full" onClick={() => window.location.assign(`/status/#pub-${publisher.id}`)}>
-              Collection status, day by day
+              See collection status by hour
             </Button>
           </div>
         </div>
@@ -165,12 +167,19 @@ function Publishers() {
 
   return (
     <Shell section="publishers">
-      <ErrorNote error={products.error ?? feeds.error} />
-      {!publishers ? (
+      <ErrorNote
+        error={products.error ?? feeds.error}
+        what="the publishers"
+        onRetry={() => {
+          void products.refetch();
+          void feeds.refetch();
+        }}
+      />
+      {!publishers && !(products.error ?? feeds.error) ? (
         <div className="flex items-center gap-2 py-16 text-sm text-kumo-subtle">
           <Loader size="sm" /> Loading publishers…
         </div>
-      ) : wanted && !publisher ? (
+      ) : !publishers ? null : wanted && !publisher ? (
         <Empty
           icon={<BuildingsIcon size={40} className="text-kumo-inactive" />}
           title="Publisher not found"

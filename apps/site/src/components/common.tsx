@@ -105,11 +105,15 @@ export function SectionHead({ eyebrow, title, id, children }: { eyebrow: string;
 }
 
 /**
- * Cards set side by side in a grid share its rows: with `cardRows(n)` on each card, a header
- * that wraps to two lines moves every card's body in that row down together, instead of only
- * its own. The grid's rows must be auto (the default); outside a grid it lays out as before.
+ * Cards set side by side in a grid share its rows: with `cardRows(n)` on each card (n rows: its
+ * header, then each line of its body), a header or title that wraps to two lines moves the matching
+ * part of every card in that row down together, instead of only its own. A card's body spans the
+ * rows after its header with `bodyRows(n - 1)`. The grid's rows must be auto (the default); outside
+ * a grid it lays out as before.
  */
-export const cardRows = (rows: 2 | 3) => (rows === 2 ? "row-span-2 grid grid-rows-subgrid gap-y-0" : "row-span-3 grid grid-rows-subgrid gap-y-0");
+const ROW_SPAN = { 2: "row-span-2", 3: "row-span-3", 4: "row-span-4" } as const;
+export const cardRows = (rows: keyof typeof ROW_SPAN) => `${ROW_SPAN[rows]} grid grid-rows-subgrid gap-y-0`;
+export const bodyRows = (rows: keyof typeof ROW_SPAN) => `${ROW_SPAN[rows]} grid grid-rows-subgrid content-start`;
 
 export function StatTile({ label, value, note, tone }: { label: string; value: ReactNode; note?: ReactNode; tone?: Tone }) {
   const color = tone === "bad" ? "text-kumo-danger" : tone === "warn" ? "text-kumo-warning" : tone === "ok" ? "text-kumo-success" : "text-kumo-strong";

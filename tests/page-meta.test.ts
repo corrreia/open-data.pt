@@ -45,7 +45,7 @@ const AVERAGE: JsonObject = {
   schema: { fields: [{ id: "value", name: "Value", type: "number", unit: "EUR/l" }] },
   rowCount: 30,
   updatedAt: "2026-09-15T09:00:00.000Z",
-  licence: { id: "source-terms", name: "Source terms apply" },
+  licence: { id: "source-terms", name: "No licence stated" },
 };
 
 const API = new Map<string, JsonValue>([
@@ -123,7 +123,7 @@ describe("link previews", () => {
     expect(unknownTopic.meta("og:title")).toBe("Catalog");
     expect(unknownTopic.canonical).toBe(`${ORIGIN}/catalog/`);
     const unknownProduct = await page("/product/?slug=nothing");
-    expect(unknownProduct.title).toBe("Product · open-data.pt");
+    expect(unknownProduct.title).toBe("Dataset · open-data.pt");
     expect(unknownProduct.canonical).toBe(`${ORIGIN}/product/`);
   });
 

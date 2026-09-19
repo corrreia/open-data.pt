@@ -2,7 +2,7 @@ import { Badge, Breadcrumbs, Button, Empty, LayerCard, Link, Loader } from "@clo
 import { ArrowRightIcon, ScalesIcon } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { DatasetCard } from "../components/DatasetCard";
-import { ErrorNote, Kv, PageHead, StatTile } from "../components/common";
+import { ErrorNote, Kv, PageHead, StatTile, bodyRows, cardRows } from "../components/common";
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { buildDatasets, buildLicences, fetchFeeds, fetchProducts, licenceHref, productCount, publisherHref, topicsOf, type Licence, emptyLast } from "../lib/catalog";
@@ -16,20 +16,20 @@ function LicenceIndex({ licences }: { licences: Licence[] }) {
   return (
     <>
       <PageHead eyebrow="Licences" title="The terms the data is served under">
-        {fmt.int(licences.length)} sets of terms over {fmt.int(datasets)} datasets, each as its publisher states it. Where a publisher states none, its own terms apply. Cite the
-        publisher, not open-data.pt.
+        {fmt.int(licences.length)} sets of terms over {fmt.int(datasets)} datasets, each as its publisher states it. Where a publisher states no licence, the dataset is listed
+        under “No licence stated”: check the publisher’s site before you reuse it. Cite the publisher, not open-data.pt.
       </PageHead>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(min(19rem,100%),1fr))] gap-3">
         {licences.map((licence) => (
-          <a key={licence.id} href={licenceHref(licence.id)} className="group no-underline">
-            <LayerCard className="flex h-full flex-col transition-shadow group-hover:shadow-[0_0_0_2px_var(--color-kumo-focus)]">
+          <a key={licence.id} href={licenceHref(licence.id)} className={`group rounded-lg no-underline ${cardRows(4)}`}>
+            <LayerCard className={`transition-[box-shadow] group-hover:ring-kumo-focus/40 ${cardRows(4)}`}>
               <LayerCard.Secondary className="flex items-center justify-between text-xs">
                 <span>
                   {plural(licence.datasets.length, "dataset")} · {plural(licence.publishers.size, "publisher")}
                 </span>
                 <ArrowRightIcon size={14} className="text-kumo-subtle transition-transform group-hover:translate-x-0.5" />
               </LayerCard.Secondary>
-              <LayerCard.Primary className="grid flex-1 content-start gap-2.5">
+              <LayerCard.Primary className={`gap-2.5 ${bodyRows(3)}`}>
                 <h2 className="font-display text-xl leading-snug text-kumo-strong">{licence.name}</h2>
                 <div className="flex flex-wrap gap-1.5">
                   {topicsOf(licence).map((topic) => (
@@ -38,12 +38,12 @@ function LicenceIndex({ licences }: { licences: Licence[] }) {
                     </Badge>
                   ))}
                 </div>
-                <p className="truncate text-xs text-kumo-subtle">
+                <p className="line-clamp-2 text-xs text-kumo-subtle" title={[...licence.publishers.values()].map((publisher) => publisher.name).join(" · ")}>
                   {[...licence.publishers.values()]
                     .map((publisher) => publisher.name)
                     .slice(0, 3)
                     .join(" · ")}
-                  {licence.publishers.size > 3 ? ` · +${licence.publishers.size - 3}` : ""}
+                  {licence.publishers.size > 3 ? ` · +${licence.publishers.size - 3} more` : ""}
                 </p>
               </LayerCard.Primary>
             </LayerCard>
@@ -86,17 +86,19 @@ function LicencePage({ licence }: { licence: Licence }) {
                         </Link>
                       ),
                     }
-                  : { term: "Text", value: "Not published as a single document; the publisher's own terms apply." },
+                  : { term: "Text", value: "The publisher names no licence. Check its site for reuse terms." },
                 {
                   term: "Publishers",
                   value: (
-                    <span className="flex flex-wrap gap-x-3 gap-y-1">
+                    <ul className="grid gap-1.5">
                       {[...licence.publishers.values()].map((publisher) => (
-                        <a key={publisher.id} href={publisherHref(publisher.id)} className="text-kumo-link hover:underline">
-                          {publisher.name}
-                        </a>
+                        <li key={publisher.id}>
+                          <a href={publisherHref(publisher.id)} className="inline-flex min-h-6 items-center text-kumo-link hover:underline">
+                            {publisher.name}
+                          </a>
+                        </li>
                       ))}
-                    </span>
+                    </ul>
                   ),
                 },
                 {
@@ -115,7 +117,7 @@ function LicencePage({ licence }: { licence: Licence }) {
             />
           </LayerCard.Primary>
         </LayerCard>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 content-start gap-3">
           <StatTile label="Datasets" value={fmt.int(licence.datasets.length)} note={`${fmt.int(productCount(licence.datasets))} tables and series`} />
           <StatTile label="Publishers" value={fmt.int(licence.publishers.size)} note="serving data under these terms" />
         </div>
@@ -145,12 +147,19 @@ function Licences() {
 
   return (
     <Shell section="licences">
-      <ErrorNote error={products.error ?? feeds.error} />
-      {!licences ? (
+      <ErrorNote
+        error={products.error ?? feeds.error}
+        what="the licences"
+        onRetry={() => {
+          void products.refetch();
+          void feeds.refetch();
+        }}
+      />
+      {!licences && !(products.error ?? feeds.error) ? (
         <div className="flex items-center gap-2 py-16 text-sm text-kumo-subtle">
           <Loader size="sm" /> Loading licences…
         </div>
-      ) : wanted && !licence ? (
+      ) : !licences ? null : wanted && !licence ? (
         <Empty
           icon={<ScalesIcon size={40} className="text-kumo-inactive" />}
           title="Licence not found"

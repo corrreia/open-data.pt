@@ -17,11 +17,12 @@ function ProductLink({ item }: { item: LabelledProduct }) {
       <a
         href={productHref(product.slug)}
         title={product.title}
-        className="group flex min-w-0 items-center gap-2 rounded-lg bg-kumo-base px-2 py-1.5 text-sm text-kumo-default no-underline ring-1 ring-kumo-line transition-colors hover:bg-kumo-tint hover:ring-kumo-focus/40"
+        className="group flex min-w-0 items-center gap-2 rounded-2xl bg-kumo-base px-2 py-1.5 text-sm text-kumo-default no-underline ring-1 ring-kumo-line transition-colors hover:bg-kumo-tint hover:ring-kumo-focus/40"
       >
         <RoleBadge role={product.role} />
-        <span className="min-w-0 flex-1 truncate">{label}</span>
-        <span className="shrink-0 font-mono text-[0.7rem] text-kumo-subtle">{count}</span>
+        {/* The label is what tells sibling tables apart, so it wraps rather than being cut. */}
+        <span className="min-w-0 flex-1 text-pretty">{label}</span>
+        <span className="shrink-0 font-mono text-xs text-kumo-subtle">{count}</span>
         <ArrowUpRightIcon className="shrink-0 text-kumo-subtle opacity-0 transition-opacity group-hover:opacity-100" size={14} aria-hidden="true" />
       </a>
     </li>
@@ -36,7 +37,7 @@ export function DatasetCard({ dataset, showPublisher = true }: { dataset: Datase
       <LayerCard.Secondary className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs">
         <span className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1">
           {showPublisher ? (
-            <a href={publisherHref(dataset.publisher.id)} className="truncate font-medium text-kumo-default hover:underline">
+            <a href={publisherHref(dataset.publisher.id)} className="inline-flex min-h-6 min-w-0 items-center font-medium text-kumo-default hover:underline">
               {dataset.publisher.name}
             </a>
           ) : null}
@@ -46,12 +47,12 @@ export function DatasetCard({ dataset, showPublisher = true }: { dataset: Datase
         <span className="flex items-center gap-2 text-kumo-subtle">
           {dataset.empty ? <Badge variant="outline">Empty at the source</Badge> : null}
           <ToneBadge tone={dataset.tone}>{TONE_WORD[dataset.tone]}</ToneBadge>
-          {dataset.updatedAt ? <RelativeTime value={dataset.updatedAt} className="font-mono text-[0.7rem]" /> : null}
+          {dataset.updatedAt ? <RelativeTime value={dataset.updatedAt} className="font-mono text-xs" /> : null}
         </span>
       </LayerCard.Secondary>
-      <LayerCard.Primary className="grid gap-x-6 gap-y-3 md:grid-cols-[minmax(0,1fr)_minmax(0,21rem)]">
+      <LayerCard.Primary className="grid gap-x-6 gap-y-3 md:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
         <div className="grid min-w-0 content-start gap-1">
-          <h3 className="text-[0.98rem] font-semibold leading-snug text-kumo-strong">
+          <h3 className="text-base font-semibold leading-snug text-kumo-strong">
             {only ? (
               <a href={productHref(only.slug)} className="text-kumo-strong no-underline hover:underline">
                 {dataset.title}
@@ -60,7 +61,11 @@ export function DatasetCard({ dataset, showPublisher = true }: { dataset: Datase
               dataset.title
             )}
           </h3>
-          {dataset.feed.description ? <p className="line-clamp-2 max-w-[68ch] text-sm text-kumo-subtle">{dataset.feed.description}</p> : null}
+          {dataset.feed.description ? (
+            <p className="line-clamp-2 max-w-[36rem] text-sm text-kumo-subtle" title={dataset.feed.description}>
+              {dataset.feed.description}
+            </p>
+          ) : null}
         </div>
         <ul className="grid min-w-0 content-start gap-1.5" aria-label={`Tables and series of ${dataset.title}`}>
           {dataset.products.map((item) => (

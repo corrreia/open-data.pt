@@ -98,8 +98,8 @@ export const LICENCES = {
     summary: "PeeringDB requires permission for reproduction and bulk sharing outside its approved uses, which is why the source is held.",
   },
   [UNSTATED_LICENCE]: {
-    name: "Source terms apply",
-    summary: "The publisher states no reuse licence: whatever terms it holds its own data under are the terms it is served under here.",
+    name: "No licence stated",
+    summary: "The publisher states no reuse licence. Check its site before you reuse the data: it is served here under whatever terms the publisher holds it.",
   },
 } as const satisfies Record<string, LicenceDescription>;
 

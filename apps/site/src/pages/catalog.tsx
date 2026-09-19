@@ -34,7 +34,7 @@ const FACETS: Facet[] = [
   { id: "format", label: "How it is published", values: (dataset) => [dataset.format] },
 ];
 
-const SORTS = { publisher: "Publisher", recent: "Recently updated", name: "Name" };
+const SORTS = { publisher: "Grouped by publisher", recent: "Recently updated first", name: "By name" };
 const isSort = (value: string | null): value is SortOrder => value === "publisher" || value === "recent" || value === "name";
 
 function readUrl() {
@@ -139,7 +139,7 @@ function Catalog() {
         if (hidden > 0) options = options.filter(([value], index) => index < (facet.collapsed ?? 0) || chosen.includes(value));
         return (
           <fieldset key={facet.id} className="grid min-w-0 gap-1.5">
-            <legend className="mb-2 font-mono text-[0.7rem] uppercase tracking-[0.08em] text-kumo-subtle">{facet.label}</legend>
+            <legend className="mb-2 font-mono text-xs uppercase tracking-[0.08em] text-kumo-subtle">{facet.label}</legend>
             {options.map(([value, count]) => (
               <Checkbox
                 key={value}
@@ -150,7 +150,7 @@ function Catalog() {
                   <span className="flex min-w-0 flex-1 items-baseline justify-between gap-3">
                     {/* Long publisher names wrap onto a second line instead of pushing the sidebar sideways. */}
                     <span className="min-w-0 [overflow-wrap:anywhere]">{nameOf(facet.id, value)}</span>
-                    <span className="shrink-0 font-mono text-[0.7rem] text-kumo-subtle">{count}</span>
+                    <span className="shrink-0 font-mono text-xs text-kumo-subtle">{count}</span>
                   </span>
                 }
               />
@@ -197,13 +197,24 @@ function Catalog() {
                 autoFocus={Boolean(initial.q)}
               />
             </InputGroup>
-            <Select aria-label="Sort by" className="w-48" value={sort} onValueChange={(value: string | null) => setSort(isSort(value) ? value : "publisher")} items={SORTS} />
+            <span className="flex items-center gap-2 text-sm text-kumo-subtle">
+              <span id="sort-label">Order</span>
+              <Select
+                aria-labelledby="sort-label"
+                className="w-56"
+                value={sort}
+                onValueChange={(value: string | null) => setSort(isSort(value) ? value : "publisher")}
+                items={SORTS}
+              />
+            </span>
           </div>
 
           <div className="flex min-h-8 flex-wrap items-center gap-2">
             <p className="text-sm text-kumo-subtle" role="status" aria-live="polite">
               {datasets.length === 0
-                ? "Loading the catalog…"
+                ? products.error || feeds.error
+                  ? ""
+                  : "Loading the catalog…"
                 : `${plural(visible.length, "dataset")} · ${fmt.int(productCount(visible))} tables and series${visible.length !== datasets.length ? `, of ${fmt.int(datasets.length)}` : ""}`}
             </p>
             {active.map((item) => (
@@ -230,8 +241,15 @@ function Catalog() {
             ) : null}
           </div>
 
-          <ErrorNote error={products.error ?? feeds.error} />
-          {datasets.length === 0 && !products.error ? (
+          <ErrorNote
+            error={products.error ?? feeds.error}
+            what="the catalog"
+            onRetry={() => {
+              void products.refetch();
+              void feeds.refetch();
+            }}
+          />
+          {datasets.length === 0 && !products.error && !feeds.error ? (
             <div className="flex items-center gap-2 py-10 text-sm text-kumo-subtle">
               <Loader size="sm" /> Loading datasets…
             </div>
@@ -249,10 +267,12 @@ function Catalog() {
             />
           ) : null}
 
-          {sort === "publisher"
-            ? [...groups.entries()].map(([id, group]) => (
+          {/* Publisher groups sit well apart: the gap between groups is several times the gap inside one. */}
+          {sort === "publisher" ? (
+            <div className="grid gap-10">
+              {[...groups.entries()].map(([id, group]) => (
                 <div key={id} className="grid gap-3">
-                  <div className="mt-4 flex items-baseline justify-between gap-4 border-b border-kumo-line pb-2 first:mt-0">
+                  <div className="flex items-baseline justify-between gap-4 border-b border-kumo-line pb-2">
                     <h2 className="font-display text-xl text-kumo-strong">
                       <a href={publisherHref(id)} className="no-underline hover:underline">
                         {group[0]?.publisher.name ?? id}
@@ -264,8 +284,11 @@ function Catalog() {
                     <DatasetCard key={dataset.feed.id} dataset={dataset} showPublisher={false} />
                   ))}
                 </div>
-              ))
-            : ordered.map((dataset) => <DatasetCard key={dataset.feed.id} dataset={dataset} />)}
+              ))}
+            </div>
+          ) : (
+            ordered.map((dataset) => <DatasetCard key={dataset.feed.id} dataset={dataset} />)
+          )}
         </section>
       </div>
     </Shell>
