@@ -51,8 +51,13 @@ function colourFields(fields: Field[], features: Feature[]) {
   });
 }
 
-/** The legend's name for a feature with no value in the colouring field. */
-const NO_VALUE = "No value";
+/**
+ * A feature with no value in the colouring field. The sentinel cannot collide with a real
+ * category, which "No value" itself could; that string is only its label.
+ */
+const NO_VALUE = "\u0000no-value";
+const NO_VALUE_LABEL = "No value";
+const categoryLabel = (category: string) => (category === NO_VALUE ? NO_VALUE_LABEL : category);
 
 const GEOMETRY_TYPES = new Set(["Point", "MultiPoint", "LineString", "MultiLineString", "Polygon", "MultiPolygon"]);
 
@@ -493,7 +498,7 @@ export default function MapView({ product, refreshKey }: { product: Product; ref
                 className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs ring-1 ring-kumo-line ${on ? "bg-kumo-base text-kumo-default" : "bg-kumo-recessed text-kumo-subtle line-through"}`}
               >
                 <span className={`size-2.5 rounded-full ${on ? "" : "opacity-40"}`} style={{ background: colorOf(category) }} aria-hidden="true" />
-                {category}
+                {categoryLabel(category)}
               </button>
             );
           })}

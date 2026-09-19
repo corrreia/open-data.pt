@@ -115,6 +115,12 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
     >
       <CommandPalette.Input aria-label="Search datasets, publishers and pages" placeholder="Search datasets, publishers and pages…" />
       <CommandPalette.List>
+        {/* Page results can match while the catalog is still failing, and Empty never renders then. */}
+        {failed ? (
+          <p role="alert" className="px-3 py-2 text-sm text-kumo-danger">
+            Could not load the catalog ({failed.message}). Datasets and publishers are missing from these results; close the search and open it again to retry.
+          </p>
+        ) : null}
         <CommandPalette.Results>
           {(group: SearchGroup) => (
             <CommandPalette.Group key={group.id} items={group.items}>
@@ -140,7 +146,7 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
         </CommandPalette.Results>
         <CommandPalette.Empty>
           {failed
-            ? `Could not load the catalog (${failed.message}). Close the search and open it again to retry.`
+            ? "No page matches that search either."
             : products.loading || feeds.loading
               ? "Loading the catalog…"
               : `No dataset, publisher or page matches “${search.trim()}”.`}

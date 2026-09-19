@@ -242,16 +242,13 @@ function Home() {
   );
 }
 
-/** The three publishers with the most datasets in a topic: up to two lines, and the whole list on hover. */
+/** The three publishers with the most datasets in a topic, with every publisher of the topic on hover. */
 function TopicPublishers({ publishers }: { publishers: Map<string, number> }) {
-  const names = [...publishers.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
-    .map(([name]) => name)
-    .join(" · ");
+  const ranked = [...publishers.entries()].sort((a, b) => b[1] - a[1]).map(([name]) => name);
   return (
-    <span className="line-clamp-2 text-xs text-kumo-subtle" title={names}>
-      {names}
+    <span className="line-clamp-2 text-xs text-kumo-subtle" title={ranked.join(" · ")}>
+      {ranked.slice(0, 3).join(" · ")}
+      {ranked.length > 3 ? ` · +${ranked.length - 3} more` : ""}
     </span>
   );
 }

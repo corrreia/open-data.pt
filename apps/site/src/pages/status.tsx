@@ -307,7 +307,8 @@ function StatusPage() {
     return map;
   }, [products.data]);
   // The catalog counts a dataset once it serves a table or series; a feed with none yet is collected but not counted.
-  const datasetCount = model ? (products.data ? model.enabled.filter((feed) => firstProduct.has(feed.id)).length : model.enabled.length) : 0;
+  // The banner counts the failing ones from this same set, so its two numbers always belong together.
+  const counted = model ? (products.data ? model.enabled.filter((feed) => firstProduct.has(feed.id)) : model.enabled) : [];
 
   const toggle = (id: string) =>
     setOpen((current) => {
@@ -331,7 +332,7 @@ function StatusPage() {
           }}
         />
         {model ? (
-          <StateBanner model={model} now={now} datasets={datasetCount} />
+          <StateBanner model={model} now={now} counted={counted} />
         ) : outages.error || feeds.error ? null : (
           <div className="flex items-center gap-2 text-sm text-kumo-subtle">
             <Loader size="sm" /> Checking collection…
@@ -511,9 +512,9 @@ interface Model {
   lastAttempt: string | undefined;
 }
 
-/** `datasets` counts what the catalog counts, so the two pages agree. */
-function StateBanner({ model, now, datasets }: { model: Model; now: number; datasets: number }) {
-  const failing = model.enabled.filter(model.openOf);
+/** `counted` are the feeds the catalog counts as datasets, so both of the banner's numbers come from one set. */
+function StateBanner({ model, now, counted }: { model: Model; now: number; counted: Feed[] }) {
+  const failing = counted.filter(model.openOf);
   if (model.lastAttempt && now - Date.parse(model.lastAttempt) > STALL_MS) {
     return (
       <Banner
@@ -530,7 +531,7 @@ function StateBanner({ model, now, datasets }: { model: Model; now: number; data
       <Banner
         variant="alert"
         icon={<WarningIcon weight="fill" />}
-        title={`${fmt.int(failing.length)} of ${fmt.int(datasets)} datasets ${failing.length === 1 ? "is" : "are"} not being collected right now.`}
+        title={`${fmt.int(failing.length)} of ${fmt.int(counted.length)} datasets ${failing.length === 1 ? "is" : "are"} not being collected right now.`}
         description={`Affected: ${publishers.join(", ")}. Their last published data stays available and collection retries by itself.`}
       />
     );
@@ -539,7 +540,7 @@ function StateBanner({ model, now, datasets }: { model: Model; now: number; data
     <div className="flex items-start gap-3 rounded-xl bg-kumo-success-tint px-4 py-3.5 ring-1 ring-kumo-success/25">
       <CheckCircleIcon weight="fill" size={22} className="mt-0.5 shrink-0 text-kumo-success" />
       <div className="grid gap-0.5">
-        <p className="font-display text-xl text-kumo-success">All {fmt.int(datasets)} datasets are being collected.</p>
+        <p className="font-display text-xl text-kumo-success">All {fmt.int(counted.length)} datasets are being collected.</p>
         <p className="text-sm text-kumo-subtle">Every source answered its last collection.</p>
       </div>
     </div>
