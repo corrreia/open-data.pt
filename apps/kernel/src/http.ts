@@ -114,7 +114,7 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
       const day = optionalQuery(url, "day");
       const reg = registry();
       if (day !== undefined) {
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || Number.isNaN(Date.parse(`${day}T00:00:00Z`))) throw new RequestError("day must be a calendar date (YYYY-MM-DD)", 400);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !isCalendarTime(day)) throw new RequestError("day must be a calendar date (YYYY-MM-DD)", 400);
         const limit = parseInteger(url, "limit", 500, 1, 1000);
         const start = `${day}T00:00:00.000Z`;
         const end = new Date(Date.parse(start) + 86_400_000).toISOString();
@@ -583,9 +583,19 @@ function publicAcquisition(acquisition: Acquisition) {
 
 /* ---------- Parameters ---------- */
 
+/** Whether a time reads as a date the calendar has: Date.parse rolls 30 February over into March. */
+function isCalendarTime(value: string): boolean {
+  if (Number.isNaN(Date.parse(value))) return false;
+  const date = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (!date) return true;
+  const [year, month, day] = [Number(date[1]), Number(date[2]), Number(date[3])];
+  const check = new Date(Date.UTC(year, month - 1, day));
+  return check.getUTCFullYear() === year && check.getUTCMonth() === month - 1 && check.getUTCDate() === day;
+}
+
 function requiredDate(url: URL, name: string): string {
   const value = optionalQuery(url, name);
-  if (!value || Number.isNaN(Date.parse(value))) throw new RequestError(`${name} must be an ISO 8601 date-time`, 400);
+  if (!value || !isCalendarTime(value)) throw new RequestError(`${name} must be an ISO 8601 date-time`, 400);
   return new Date(value).toISOString();
 }
 
@@ -593,7 +603,7 @@ function requiredDate(url: URL, name: string): string {
 function optionalTime(url: URL, name: string): string | undefined {
   const value = optionalQuery(url, name);
   if (value === undefined) return undefined;
-  if (Number.isNaN(Date.parse(value))) throw new RequestError(`${name} must be an ISO 8601 date-time`, 400);
+  if (!isCalendarTime(value)) throw new RequestError(`${name} must be an ISO 8601 date-time`, 400);
   return new Date(value).toISOString();
 }
 
