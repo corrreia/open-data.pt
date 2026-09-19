@@ -158,6 +158,24 @@ describe("typed product history owner isolation", () => {
     expect((await server.fetch(`/api/products/shared-events/events?${bounds}&limit=2`)).status).toBe(400);
   });
 
+  /**
+   * Day-ahead prices and load forecasts are ingested before the hours they are
+   * about, so the floor opens ten days before the window rather than at it. The
+   * window here starts well after the lake's first day, which would otherwise
+   * be the later bound and hide the subtraction.
+   */
+  it.each([
+    ["shared-events", "events"],
+    ["shared-series", "series/range"],
+  ])("lets %s/%s read what a source published up to ten days before the window", async (slug, endpoint) => {
+    const response = await server.fetch(`/api/products/${slug}/${endpoint}?from=2026-09-20T00:00:00Z&to=2026-09-25T00:00:00Z&limit=1`);
+    expect(response.status, await response.clone().text()).toBe(200);
+    const query = (await historyQueries()).at(-1) ?? "";
+    expect(query).toContain("__ingest_ts >= TIMESTAMP '2026-09-10T00:00:00.000Z'");
+    // Only the ingest floor moves: the window itself still holds the event times asked for.
+    expect(query).toContain("event_time >= TIMESTAMP '2026-09-20T00:00:00.000Z' AND event_time < TIMESTAMP '2026-09-25T00:00:00.000Z'");
+  });
+
   it("keeps history authorization and missing-product checks ahead of the query", async () => {
     const before = await historyQueries();
     expect((await server.fetch(`/api/products/private-events/events?${bounds}`)).status).toBe(404);

@@ -9,7 +9,7 @@ import type { Acquisition, Feed } from "./feed-model";
 import { ObjectStore } from "./object-store";
 import type { SnapshotStore } from "./ports";
 import { MAX_HISTORY_PAGE, QueryError, runLakeQuery } from "./query";
-import { readSummaryFile, readSummaryRange, type SummaryResolution } from "./summaries";
+import { PUBLISHED_AHEAD_MS, readSummaryFile, readSummaryRange, type SummaryResolution } from "./summaries";
 import { callRegistry, withHistorySlot } from "./registry-calls";
 import { ALLOWED_METHODS, MAX_FILTERS, requestIdOf } from "./request-guard";
 import {
@@ -442,13 +442,15 @@ function historyWindow(url: URL): HistoryWindow {
 
 /**
  * For feeds whose facts are observed after they happen (events, observations),
- * a revision about an event in [from, to) cannot have been ingested before
- * `from`. No revision at all was ingested before the lake began. Either bound
- * lets the day-partitioned lake skip older files.
+ * a revision about an event in [from, to) cannot have been ingested long before
+ * `from`: only as far ahead as a source publishes, since day-ahead prices and
+ * forecasts arrive before the hours they are about. No revision at all was
+ * ingested before the lake began. Either bound lets the day-partitioned lake
+ * skip older files.
  */
 function ingestFloor(feed: Feed, from: string, start: string | undefined): string {
   const eventLike = feed.semantics.domainSubject === "event" || feed.semantics.domainSubject === "observation";
-  const bound = eventLike ? latest(from, start) : start;
+  const bound = eventLike ? latest(new Date(Date.parse(from) - PUBLISHED_AHEAD_MS).toISOString(), start) : start;
   return bound ? ` AND __ingest_ts >= TIMESTAMP '${bound}'` : "";
 }
 

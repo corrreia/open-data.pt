@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ObjectStore } from "../apps/kernel/src/object-store";
 import {
   MAX_SUMMARY_BUCKETS,
+  PUBLISHED_AHEAD_MS,
   isClosedMonth,
   lisbonDay,
   lisbonDayBounds,
@@ -142,7 +143,9 @@ describe("the fresh pass", () => {
     expect(run.summarised).toEqual(["2026-09-09", "2026-09-10"]);
     const fresh = lake.queries.filter((query) => query.includes("ROW_NUMBER"));
     expect(fresh).toHaveLength(2);
-    expect(fresh[0]).toContain("__ingest_ts >= TIMESTAMP '2026-09-08T23:00:00.000Z' AND __ingest_ts < TIMESTAMP '2026-09-10T23:00:00.000Z'");
+    // A day's points are read from the ingest days it may have been published in: ten days before it begins, until a day after it ends.
+    expect(fresh[0]).toContain("__ingest_ts >= TIMESTAMP '2026-08-29T23:00:00.000Z' AND __ingest_ts < TIMESTAMP '2026-09-10T23:00:00.000Z'");
+    expect(fresh[0]).toContain("event_time >= TIMESTAMP '2026-09-08T23:00:00.000Z' AND event_time < TIMESTAMP '2026-09-09T23:00:00.000Z'");
     // A point is one point per product, series and time, whichever feed ID wrote it.
     expect(fresh[0]).toContain("PARTITION BY product_slug, series_key, event_time ORDER BY");
 
@@ -171,6 +174,17 @@ describe("the fresh pass", () => {
     await summariseDay(deps, "2026-09-09", NOW);
     await summariseDay(deps, "2026-09-09", NOW);
     expect((await readSummaryFile(objects, "power-series", "2026-09"))?.buckets).toHaveLength(3);
+  });
+
+  it("counts a day's points however far ahead they were published, and only that day's", async () => {
+    const { lake, deps } = setup();
+    await summariseDay(deps, "2026-09-09", NOW);
+    const fresh = lake.queries.find((query) => query.includes("ROW_NUMBER")) ?? "";
+    const ingestFrom = /__ingest_ts >= TIMESTAMP '([^']+)'/.exec(fresh)?.[1] ?? "";
+    const eventFrom = /event_time >= TIMESTAMP '([^']+)'/.exec(fresh)?.[1] ?? "";
+    // Day-ahead prices and load forecasts arrive before the hours they are about, so the ingest window opens well before the event window.
+    expect(Date.parse(eventFrom) - Date.parse(ingestFrom)).toBe(PUBLISHED_AHEAD_MS);
+    expect(fresh).toContain("event_time < TIMESTAMP '2026-09-09T23:00:00.000Z'");
   });
 
   it("keeps a product-month too large for hours by Lisbon day, reading the lake page by page", async () => {
@@ -327,6 +341,22 @@ describe("reading summaries", () => {
     ]);
     const monthly = await readSummaryRange(objects, "power-series", { ...range, from: "2026-08-01T00:00:00Z", resolution: "month" });
     expect(monthly.series[0]?.buckets).toEqual([{ start: "2026-08-31T23:00:00.000Z", count: 24, mean: 101, min: 90, max: 112 }]);
+  });
+
+  it("leaves out a day the window opens in the middle of, rather than naming a part of it after the whole", async () => {
+    const objects = await summarised();
+    // Half past midnight UTC is the middle of Lisbon 9 September, which runs from 23:00 on the 8th.
+    const midday = { from: "2026-09-09T00:30:00Z", to: "2026-09-11T00:00:00Z", seriesKeys: [] };
+    const daily = await readSummaryRange(objects, "power-series", { ...midday, resolution: "day" });
+    expect(daily.series[0]?.buckets).toEqual([{ start: "2026-09-09T23:00:00.000Z", count: 12, mean: 101, min: 90, max: 112 }]);
+    // By the hour every bucket is whole already, so the window keeps the hours that start in it.
+    const hourly = await readSummaryRange(objects, "power-series", { ...midday, resolution: "hour" });
+    expect(hourly.series[0]?.buckets.map((bucket) => bucket.start)).toEqual([
+      "2026-09-09T01:00:00.000Z",
+      "2026-09-09T23:00:00.000Z",
+      "2026-09-10T00:00:00.000Z",
+      "2026-09-10T01:00:00.000Z",
+    ]);
   });
 
   it("reaches back into backfilled history by month, reading only the years that hold it", async () => {

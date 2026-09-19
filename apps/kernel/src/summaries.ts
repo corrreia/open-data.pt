@@ -9,8 +9,8 @@
  * only, so a query costs the same whether it reads one product or all of them.
  *
  * - The fresh pass summarises each Lisbon day by UTC hour, a day after it
- *   ends, from the latest revision of the points ingested during it and the
- *   day after.
+ *   ends, from the latest revision of the points ingested during it, the day
+ *   after, and the days before it that a source may have published it in.
  * - The late pass takes each ingest day's points about older days: backfilled
  *   history, late publications, corrections. Days before the lake's first
  *   month are bucketed by Lisbon day (ten years by the hour would be millions
@@ -21,8 +21,8 @@
  *   a wake's budget of R2 calls is spent; the next wake resumes after the last
  *   product it finished.
  *
- * A point ingested before its day, a forecast never revised later, reaches
- * neither pass.
+ * A point published further ahead than `PUBLISHED_AHEAD_MS`, and never
+ * republished within that window, reaches neither pass.
  */
 import { asNumber, asString, isJsonObject, parseJson, type JsonObject, type JsonValue } from "@open-data-pt/gatekeeper-shared";
 import type { ObjectStore } from "./object-store";
@@ -32,6 +32,14 @@ import { InvalidQueryError } from "./serving";
 export const SUMMARY_TIME_ZONE = "Europe/Lisbon";
 /** How long after a Lisbon day ends its points may still arrive; the day is summarised once this has passed. */
 const INGEST_GRACE_MS = 24 * 3_600_000;
+/**
+ * How long before a point's own time it may have been published. Day-ahead
+ * prices and load forecasts are ingested days before the hours they are about,
+ * so a day's points are read from the ingest days around it, not only its own.
+ * A source publishing further ahead than this keeps only what it republished
+ * within the window.
+ */
+export const PUBLISHED_AHEAD_MS = 10 * 86_400_000;
 /** Hourly buckets one product-month may hold; past this the month is kept by Lisbon day. */
 const MAX_HOURLY_BUCKETS = 60_000;
 /** Rows per page of the fresh pass. */
@@ -399,8 +407,8 @@ async function lakePage(deps: SummaryDeps, label: string, page: number, column: 
 const DIMENSIONS_SQL = "MAX(CASE WHEN dimensions IS NOT NULL AND dimensions != '' AND dimensions != '{}' THEN dimensions END)";
 
 /** The latest revision of each point with an event time in the day, by series and UTC hour, whichever feed ID wrote it: a feed reinstalled under a new ID writes its points again. */
-function freshSql(day: DayBounds, ingestTo: string, last: LakeBucket | undefined): string {
-  return `WITH ranked AS (SELECT product_slug, series_key, event_time, value, unit, dimensions, ROW_NUMBER() OVER (PARTITION BY product_slug, series_key, event_time ORDER BY observed_at DESC, revision_id DESC) AS rn FROM open_data.points WHERE __ingest_ts >= TIMESTAMP '${day.from}' AND __ingest_ts < TIMESTAMP '${ingestTo}' AND event_time >= TIMESTAMP '${day.from}' AND event_time < TIMESTAMP '${day.to}'), buckets AS (SELECT product_slug, series_key, date_trunc('hour', event_time) AS hour, COUNT(*) AS n, AVG(value) AS mean, MIN(value) AS low, MAX(value) AS high, MAX(unit) AS unit, ${DIMENSIONS_SQL} AS dimensions FROM ranked WHERE rn = 1 GROUP BY product_slug, series_key, date_trunc('hour', event_time)) SELECT product_slug, series_key, hour, n, mean, low, high, unit, dimensions FROM buckets${keyset("hour", last)} ORDER BY product_slug, series_key, hour LIMIT ${FRESH_PAGE + 1}`;
+function freshSql(day: DayBounds, ingestFrom: string, ingestTo: string, last: LakeBucket | undefined): string {
+  return `WITH ranked AS (SELECT product_slug, series_key, event_time, value, unit, dimensions, ROW_NUMBER() OVER (PARTITION BY product_slug, series_key, event_time ORDER BY observed_at DESC, revision_id DESC) AS rn FROM open_data.points WHERE __ingest_ts >= TIMESTAMP '${ingestFrom}' AND __ingest_ts < TIMESTAMP '${ingestTo}' AND event_time >= TIMESTAMP '${day.from}' AND event_time < TIMESTAMP '${day.to}'), buckets AS (SELECT product_slug, series_key, date_trunc('hour', event_time) AS hour, COUNT(*) AS n, AVG(value) AS mean, MIN(value) AS low, MAX(value) AS high, MAX(unit) AS unit, ${DIMENSIONS_SQL} AS dimensions FROM ranked WHERE rn = 1 GROUP BY product_slug, series_key, date_trunc('hour', event_time)) SELECT product_slug, series_key, hour, n, mean, low, high, unit, dimensions FROM buckets${keyset("hour", last)} ORDER BY product_slug, series_key, hour LIMIT ${FRESH_PAGE + 1}`;
 }
 
 const afterProduct = (slug: string | undefined) => (slug ? ` AND product_slug > '${quote(slug)}'` : "");
@@ -430,11 +438,13 @@ export interface FreshOutcome {
 export async function summariseDay(deps: SummaryDeps, day: string, now: number): Promise<FreshOutcome> {
   const bounds = lisbonDayBounds(day);
   const ingestTo = new Date(Date.parse(bounds.to) + INGEST_GRACE_MS).toISOString();
+  // A day's points arrive from the day before it is published ahead until the grace after it ends.
+  const ingestFrom = new Date(Date.parse(bounds.from) - PUBLISHED_AHEAD_MS).toISOString();
   const found = new Map<string, DayFound>();
   let bytesScanned = 0;
   let last: LakeBucket | undefined;
   for (let more = true; more;) {
-    const page = await lakePage(deps, `summary:${day}`, FRESH_PAGE, "hour", freshSql(bounds, ingestTo, last));
+    const page = await lakePage(deps, `summary:${day}`, FRESH_PAGE, "hour", freshSql(bounds, ingestFrom, ingestTo, last));
     bytesScanned += page.bytesScanned;
     for (const row of page.rows) {
       if (!deps.products.has(row.product)) continue;
@@ -525,7 +535,7 @@ export async function summariseLateDay(
   now: number,
 ): Promise<LateOutcome> {
   const ingest = lisbonDayBounds(ingestDay);
-  // The fresh pass covers each day from the lake's first on, from its own ingest and the next day's; older days are the late pass's.
+  // The fresh pass covers each day from the lake's first on, from the ingest days it may have been published in; older days are the late pass's.
   const before = lisbonDayBounds(ingestDay === firstDay ? firstDay : addDays(ingestDay, -1)).from;
   const firstMonth = lisbonDayBounds(`${firstDay.slice(0, 7)}-01`).from;
   const dailyBefore = firstMonth < before ? firstMonth : before;
@@ -714,13 +724,22 @@ export async function readSummaryRange(objects: ObjectStore, slug: string, query
   const readTo = index ? Math.min(to, Date.parse(lisbonDayBounds(index.through).to)) : from;
 
   const wanted = new Set(query.seriesKeys);
-  const inRange = (blobs: Array<SummaryMonth | SummaryYear>) =>
+  /**
+   * The buckets of a window at one resolution. A bucket belongs to the period
+   * it starts in, and a period to the window when the period itself starts in
+   * it, so a day rolled up from hours holds the whole day rather than the part
+   * of it after `from`: a bucket is never a slice of the period it is named
+   * for. The last period may therefore reach past `to`.
+   */
+  const inRange = (blobs: Array<SummaryMonth | SummaryYear>, period: (start: string) => string) =>
     blobs
       .flatMap((blob) => blob.buckets)
       .filter((bucket) => {
-        const start = Date.parse(bucket[1]);
+        const start = Date.parse(period(bucket[1]));
         return start >= from && start < to && (wanted.size === 0 || wanted.has(bucket[0]));
       });
+  /** A bucket already at the resolution asked for: a stored hour read by the hour, a year blob's month by the month. */
+  const ownStart = (start: string) => start;
 
   let resolution = query.resolution ?? autoResolution(to - from);
   let blobs: Array<SummaryMonth | SummaryYear> = [];
@@ -732,7 +751,7 @@ export async function readSummaryRange(objects: ObjectStore, slug: string, query
     if (years.length > MAX_SUMMARY_YEARS)
       throw new InvalidQueryError(`A summary range by month spans at most ${MAX_SUMMARY_YEARS} years of data; read a longer span one window at a time`);
     blobs = (await mapLimited(years, (year) => objects.read<SummaryYear>(summaryKey(slug, year)))).flatMap((blob) => blob ?? []);
-    const first = earliestStart(inRange(blobs));
+    const first = earliestStart(inRange(blobs, ownStart));
     if (query.resolution === undefined && first < to && autoResolution(to - first) !== "month") {
       fitted = true;
       resolution = autoResolution(to - first);
@@ -747,13 +766,13 @@ export async function readSummaryRange(objects: ObjectStore, slug: string, query
       );
     const monthBlobs = (await mapLimited(months, (month) => objects.read<SummaryMonth>(summaryKey(slug, month)))).flatMap((blob) => blob ?? []);
     // A year knows only the month its history begins in; the months know the hour.
-    const firstHour = fitted ? earliestStart(inRange(monthBlobs)) : Infinity;
+    const firstHour = fitted ? earliestStart(inRange(monthBlobs, ownStart)) : Infinity;
     if (firstHour < to) resolution = autoResolution(to - firstHour);
     if (resolution === "hour" && monthBlobs.some((blob) => blob.resolution === "day")) resolution = "day";
     blobs = monthBlobs;
   }
 
-  const found = inRange(blobs);
+  const found = inRange(blobs, resolution === "day" ? dayStart : ownStart);
   const buckets = resolution === "day" ? rollUp(found, dayStart) : found;
   if (buckets.length > MAX_SUMMARY_BUCKETS)
     throw new InvalidQueryError(`That is ${buckets.length} buckets, more than ${MAX_SUMMARY_BUCKETS}: name fewer series with seriesKey, or ask for a coarser resolution`);
