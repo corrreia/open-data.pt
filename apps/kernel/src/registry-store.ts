@@ -213,7 +213,8 @@ export class RegistryStore {
   }
 
   pruneActivity(): void {
-    this.exec(`DELETE FROM activity WHERE at < COALESCE((SELECT at FROM activity ORDER BY at DESC LIMIT 1 OFFSET ?), '')`, ACTIVITY_KEEP);
+    // Keep every run at or after the 5,000th newest: OFFSET counts from zero. Runs completing in the same millisecond may keep a few more.
+    this.exec(`DELETE FROM activity WHERE at < COALESCE((SELECT at FROM activity ORDER BY at DESC LIMIT 1 OFFSET ?), '')`, ACTIVITY_KEEP - 1);
   }
 
   listActivity(limit: number, feedId?: string): Acquisition[] {

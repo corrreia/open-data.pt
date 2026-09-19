@@ -112,6 +112,20 @@ describe("outages", () => {
     expect(whole.more).toBe(false);
   });
 
+  it("keeps the 5,000 most recent runs, no more", () => {
+    const store = new RegistryStore(sqliteStorage(new DatabaseSync(":memory:")));
+    store.migrate();
+    const base = Date.parse("2026-09-18T00:00:00.000Z");
+    for (let index = 0; index < 5_002; index += 1) {
+      const at = new Date(base + index * 1000).toISOString();
+      store.upsertActivity(`acq_${index}`, "feed_1", at, acquisition(`acq_${index}`, at));
+    }
+    store.pruneActivity();
+    const kept = store.listActivity(10_000);
+    expect(kept).toHaveLength(5_000);
+    expect(kept.at(-1)?.id).toBe("acq_2");
+  });
+
   it("opens when live collection starts failing, counts the failures, and closes at the first success", async () => {
     const store = await registryWithFeed();
     const upstream = "Gatekeeper collection failed: upstream-error";
