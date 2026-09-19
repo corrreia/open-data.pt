@@ -95,6 +95,7 @@
   },
   // Secret (wrangler secret put): CATALOG_TOKEN, for R2 SQL. The API is
   // read-only; nothing takes an operator credential.
+  "secrets": { "required": ["CATALOG_TOKEN"] },
   // A first baseline of a large product applies its whole index in one runner
   // transaction; Workflow steps also run under this CPU limit.
   "limits": { "cpu_ms": 120000 },
