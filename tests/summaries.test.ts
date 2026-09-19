@@ -143,6 +143,8 @@ describe("the fresh pass", () => {
     const fresh = lake.queries.filter((query) => query.includes("ROW_NUMBER"));
     expect(fresh).toHaveLength(2);
     expect(fresh[0]).toContain("__ingest_ts >= TIMESTAMP '2026-09-08T23:00:00.000Z' AND __ingest_ts < TIMESTAMP '2026-09-10T23:00:00.000Z'");
+    // A point is one point per product, series and time, whichever feed ID wrote it.
+    expect(fresh[0]).toContain("PARTITION BY product_slug, series_key, event_time ORDER BY");
 
     const month = await readSummaryFile(objects, "power-series", "2026-09");
     expect(month).toMatchObject({ version: 1, product: "power-series", month: "2026-09", timeZone: "Europe/Lisbon", resolution: "hour", days: ["2026-09-09", "2026-09-10"] });
@@ -187,7 +189,17 @@ describe("the late pass", () => {
   /** A backfill landing on 9 September (two days of 2018, and an hour of 3 September) and walked again on the 10th. */
   const backfill: Rows = (kind, day) => {
     const history = (rows: Array<[string, number, number]>) =>
-      rows.map(([date, n, mean]) => ({ product_slug: "power-series", series_key: "consumption", day: lakeDay(date), n, mean, low: mean - 100, high: mean + 100, unit: "MW" }));
+      rows.map(([date, n, mean]) => ({
+        product_slug: "power-series",
+        series_key: "consumption",
+        day: lakeDay(date),
+        n,
+        mean,
+        low: mean - 100,
+        high: mean + 100,
+        unit: "MW",
+        dimensions: '{"source":"Consumption"}',
+      }));
     if (kind === "fresh") return powerRows(day);
     if (kind === "late-day" && day === "2026-09-09")
       return history([
@@ -201,7 +213,19 @@ describe("the late pass", () => {
         ["2018-07-15", 50, 1],
       ]);
     if (kind === "late-hour" && day === "2026-09-09")
-      return [{ product_slug: "power-series", series_key: "consumption", hour: "2026-09-03T10:00:00.000000Z", n: 4, mean: 200, low: 190, high: 210, unit: "MW" }];
+      return [
+        {
+          product_slug: "power-series",
+          series_key: "consumption",
+          hour: "2026-09-03T10:00:00.000000Z",
+          n: 4,
+          mean: 200,
+          low: 190,
+          high: 210,
+          unit: "MW",
+          dimensions: '{"source":"Consumption"}',
+        },
+      ];
     return [];
   };
 
@@ -229,6 +253,13 @@ describe("the late pass", () => {
       days: ["2018-01-15"],
       buckets: [["consumption", "2018-01-15T00:00:00.000Z", 96, 5100, 5000, 5200]],
     });
+    // Backfilled history keeps its series' dimensions, as the fresh pass does, never an empty `{}` over a filled one:
+    // MAX alone compares the JSON as text, where `{}` sorts last.
+    const anyFilled = "MAX(CASE WHEN dimensions IS NOT NULL AND dimensions != '' AND dimensions != '{}' THEN dimensions END) AS dimensions";
+    expect(daily).toContain(anyFilled);
+    expect(hourly).toContain(anyFilled);
+    expect(lake.queries.find((query) => query.includes("ROW_NUMBER"))).toContain(anyFilled);
+    expect((await readSummaryFile(objects, "power-series", "2018-01"))?.series).toEqual([{ key: "consumption", unit: "MW", dimensions: { source: "Consumption" } }]);
     expect((await readSummaryFile(objects, "power-series", "2018-07"))?.buckets).toEqual([["consumption", "2018-07-14T23:00:00.000Z", 96, 5000, 4900, 5100]]);
     const september = await readSummaryFile(objects, "power-series", "2026-09");
     expect(september?.resolution).toBe("hour");
