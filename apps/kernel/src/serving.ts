@@ -219,21 +219,22 @@ export class Serving {
           controller.enqueue(encoder.encode(head));
           return;
         }
-        if (index >= chunks.length) {
-          controller.enqueue(encoder.encode(tail(returned)));
-          controller.close();
+        // A pull that enqueues nothing is not called again, so read on past chunks with no match.
+        while (index < chunks.length) {
+          const rows = await this.chunkRows(chunks[index]!.key);
+          index += 1;
+          const parts: string[] = [];
+          for (const row of rows) {
+            const text = serialize(row);
+            if (text !== undefined) parts.push(text);
+          }
+          if (parts.length === 0) continue;
+          controller.enqueue(encoder.encode(`${returned > 0 ? "," : ""}${parts.join(",")}`));
+          returned += parts.length;
           return;
         }
-        const rows = await this.chunkRows(chunks[index]!.key);
-        index += 1;
-        const parts: string[] = [];
-        for (const row of rows) {
-          const text = serialize(row);
-          if (text !== undefined) parts.push(text);
-        }
-        if (parts.length === 0) return;
-        controller.enqueue(encoder.encode(`${returned > 0 ? "," : ""}${parts.join(",")}`));
-        returned += parts.length;
+        controller.enqueue(encoder.encode(tail(returned)));
+        controller.close();
       },
     });
   }

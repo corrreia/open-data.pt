@@ -244,6 +244,36 @@ describe("every current record in one streamed response", () => {
     expect(body.numberMatched).toBeUndefined();
     expect(body.data.every((row) => row.kind === "bus")).toBe(true);
   });
+
+  it("keeps streaming past chunks where nothing matches, to a whole document", async () => {
+    // Only the last ten rows match, so every chunk before the last yields nothing.
+    const records = Array.from({ length: 9_000 }, (_, index) => ({
+      id: `r${String(index).padStart(5, "0")}`,
+      kind: index >= 8_990 ? "bus" : "tram",
+      lat: index >= 8_990 ? 39 : 38,
+      lon: -9,
+    }));
+    const {
+      serving: service,
+      product,
+      chunks,
+    } = await serving(
+      [
+        { name: "kind", type: "category" },
+        { name: "lat", type: "latitude" },
+        { name: "lon", type: "longitude" },
+      ],
+      records,
+    );
+    expect(chunks.length).toBeGreaterThan(2);
+    const body = await allRecords(service, product, { where: [{ field: "kind", value: "bus" }] });
+    expect(body.numberReturned).toBe(10);
+    expect(body.data.map((row) => row.id)).toEqual(records.slice(8_990).map((record) => record.id));
+    const inBox = await geojson(service, product, { bbox: { west: -9.1, south: 38.9, east: -8.9, north: 39.1 } });
+    expect(inBox.numberReturned).toBe(10);
+    const none = await allRecords(service, product, { where: [{ field: "kind", value: "boat" }] });
+    expect(none).toEqual({ data: [], numberReturned: 0 });
+  });
 });
 
 describe("a time-series product counts points, and serves none of them as records", () => {
