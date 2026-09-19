@@ -253,9 +253,12 @@ describe("the late pass", () => {
       days: ["2018-01-15"],
       buckets: [["consumption", "2018-01-15T00:00:00.000Z", 96, 5100, 5000, 5200]],
     });
-    // Backfilled history keeps its series' dimensions, as the fresh pass does.
-    expect(daily).toContain("MAX(dimensions) AS dimensions");
-    expect(hourly).toContain("MAX(dimensions) AS dimensions");
+    // Backfilled history keeps its series' dimensions, as the fresh pass does, never an empty `{}` over a filled one:
+    // MAX alone compares the JSON as text, where `{}` sorts last.
+    const anyFilled = "MAX(CASE WHEN dimensions IS NOT NULL AND dimensions != '' AND dimensions != '{}' THEN dimensions END) AS dimensions";
+    expect(daily).toContain(anyFilled);
+    expect(hourly).toContain(anyFilled);
+    expect(lake.queries.find((query) => query.includes("ROW_NUMBER"))).toContain(anyFilled);
     expect((await readSummaryFile(objects, "power-series", "2018-01"))?.series).toEqual([{ key: "consumption", unit: "MW", dimensions: { source: "Consumption" } }]);
     expect((await readSummaryFile(objects, "power-series", "2018-07"))?.buckets).toEqual([["consumption", "2018-07-14T23:00:00.000Z", 96, 5000, 4900, 5100]]);
     const september = await readSummaryFile(objects, "power-series", "2026-09");
