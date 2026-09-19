@@ -226,12 +226,13 @@ export class RegistryStore {
 
   /** Acquisitions that completed within [from, to), newest first; bounded by what the mirror still holds. */
   listActivityBetween(from: string, to: string, limit: number, feedId?: string): ActivityWindow {
+    // One row past the limit says whether the limit cut the window short.
     const rows = feedId
-      ? this.rows<{ item_json: string }>(`SELECT item_json FROM activity WHERE at >= ? AND at < ? AND feed_id = ? ORDER BY at DESC LIMIT ?`, from, to, feedId, limit)
-      : this.rows<{ item_json: string }>(`SELECT item_json FROM activity WHERE at >= ? AND at < ? ORDER BY at DESC LIMIT ?`, from, to, limit);
+      ? this.rows<{ item_json: string }>(`SELECT item_json FROM activity WHERE at >= ? AND at < ? AND feed_id = ? ORDER BY at DESC LIMIT ?`, from, to, feedId, limit + 1)
+      : this.rows<{ item_json: string }>(`SELECT item_json FROM activity WHERE at >= ? AND at < ? ORDER BY at DESC LIMIT ?`, from, to, limit + 1);
     const oldest = this.rows<{ at: string | null }>(`SELECT MIN(at) AS at FROM activity`)[0]?.at ?? null;
     // SAFETY: item_json holds Acquisition values mirrored by ingestRunnerReport.
-    return { items: rows.map((row) => JSON.parse(row.item_json) as Acquisition), oldest };
+    return { items: rows.slice(0, limit).map((row) => JSON.parse(row.item_json) as Acquisition), oldest, more: rows.length > limit };
   }
 
   /* ---------- Outages ---------- */
@@ -320,6 +321,8 @@ export class RegistryStore {
 export interface ActivityWindow {
   items: Acquisition[];
   oldest: string | null;
+  /** The window holds more runs than the limit let through. */
+  more: boolean;
 }
 
 /**

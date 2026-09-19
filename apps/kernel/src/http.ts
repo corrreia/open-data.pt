@@ -122,7 +122,8 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
         const open = new Set(feeds.map((feed) => feed.id));
         return json({
           day,
-          complete: activity.oldest !== null && activity.oldest <= start,
+          // Every run of the day: the mirror still reaches back to its start, and the limit cut nothing off.
+          complete: activity.oldest !== null && activity.oldest <= start && !activity.more,
           data: activity.items.filter((acquisition) => open.has(acquisition.feedId)).map(publicAcquisition),
         });
       }
