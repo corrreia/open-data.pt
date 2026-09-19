@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ObjectStore } from "../apps/kernel/src/object-store";
 import {
   MAX_SUMMARY_BUCKETS,
+  PUBLISHED_AHEAD_MS,
   isClosedMonth,
   lisbonDay,
   lisbonDayBounds,
@@ -142,7 +143,9 @@ describe("the fresh pass", () => {
     expect(run.summarised).toEqual(["2026-09-09", "2026-09-10"]);
     const fresh = lake.queries.filter((query) => query.includes("ROW_NUMBER"));
     expect(fresh).toHaveLength(2);
-    expect(fresh[0]).toContain("__ingest_ts >= TIMESTAMP '2026-09-08T23:00:00.000Z' AND __ingest_ts < TIMESTAMP '2026-09-10T23:00:00.000Z'");
+    // A day's points are read from the ingest days it may have been published in: ten days before it begins, until a day after it ends.
+    expect(fresh[0]).toContain("__ingest_ts >= TIMESTAMP '2026-08-29T23:00:00.000Z' AND __ingest_ts < TIMESTAMP '2026-09-10T23:00:00.000Z'");
+    expect(fresh[0]).toContain("event_time >= TIMESTAMP '2026-09-08T23:00:00.000Z' AND event_time < TIMESTAMP '2026-09-09T23:00:00.000Z'");
     // A point is one point per product, series and time, whichever feed ID wrote it.
     expect(fresh[0]).toContain("PARTITION BY product_slug, series_key, event_time ORDER BY");
 
@@ -171,6 +174,17 @@ describe("the fresh pass", () => {
     await summariseDay(deps, "2026-09-09", NOW);
     await summariseDay(deps, "2026-09-09", NOW);
     expect((await readSummaryFile(objects, "power-series", "2026-09"))?.buckets).toHaveLength(3);
+  });
+
+  it("counts a day's points however far ahead they were published, and only that day's", async () => {
+    const { lake, deps } = setup();
+    await summariseDay(deps, "2026-09-09", NOW);
+    const fresh = lake.queries.find((query) => query.includes("ROW_NUMBER")) ?? "";
+    const ingestFrom = /__ingest_ts >= TIMESTAMP '([^']+)'/.exec(fresh)?.[1] ?? "";
+    const eventFrom = /event_time >= TIMESTAMP '([^']+)'/.exec(fresh)?.[1] ?? "";
+    // Day-ahead prices and load forecasts arrive before the hours they are about, so the ingest window opens well before the event window.
+    expect(Date.parse(eventFrom) - Date.parse(ingestFrom)).toBe(PUBLISHED_AHEAD_MS);
+    expect(fresh).toContain("event_time < TIMESTAMP '2026-09-09T23:00:00.000Z'");
   });
 
   it("keeps a product-month too large for hours by Lisbon day, reading the lake page by page", async () => {
