@@ -7,30 +7,34 @@ export interface RoleMeta {
   label: string;
   short: string;
   description: string;
-  badge: "green" | "blue" | "orange" | "purple" | "teal";
 }
 
 export const ROLE = {
   reference: {
     label: "Reference",
     short: "Reference",
-    badge: "green",
-    description: "A complete, slow-changing catalog. Every collection replaces the whole set and keeps the previous version.",
+    description: "A complete set that changes slowly, such as stops or stations. Each collection replaces the whole set.",
   },
   "current-state": {
     label: "Current state",
     short: "Current",
-    badge: "blue",
-    description: "The latest known state of each entity. Replaced on every collection; old versions expire quickly.",
+    description: "The latest known state of each thing, such as where a vehicle is now. Each collection replaces it.",
   },
-  "event-log": { label: "Events", short: "Events", badge: "orange", description: "Things that happened, with corrections and retractions retained by knowledge time." },
+  "event-log": {
+    label: "Events",
+    short: "Events",
+    description: "Things that happened, such as service alerts. When the publisher corrects or withdraws one, the change is kept beside the original.",
+  },
   "time-series": {
     label: "Time series",
     short: "Series",
-    badge: "purple",
-    description: "Numeric measurements keyed by series and event time. Points can be corrected later; corrections are logged.",
+    description: "Numbers measured over time, one series per thing measured. When the publisher corrects a point, the correction is logged.",
   },
-  summary: { label: "Summary", short: "Summary", badge: "teal", description: "A derived aggregate rebuilt from the same acquisition as its source product." },
+  summary: {
+    label: "Summary",
+    short: "Summary",
+    description: "Totals worked out from another table in the same dataset, updated whenever that table is.",
+  },
 } satisfies { [role in Role]: RoleMeta };
 
 export const topicLabel = (topic: string) => topic.charAt(0).toLocaleUpperCase() + topic.slice(1).replaceAll("-", " ");

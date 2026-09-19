@@ -51,6 +51,7 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
   const [search, setSearch] = useState("");
   const products = useQuery(open ? "products" : null, fetchProducts);
   const feeds = useQuery(open ? "feeds" : null, fetchFeeds);
+  const failed = products.error ?? feeds.error;
 
   const index = useMemo(() => {
     if (!products.data || !feeds.data) return { datasets: [], publishers: [] };
@@ -112,7 +113,7 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
       onSelect={(item: SearchItem, details: { newTab: boolean }) => go(item.href, details.newTab)}
       getSelectableItems={(all: SearchGroup[]) => all.flatMap((group) => group.items)}
     >
-      <CommandPalette.Input placeholder="Search datasets, publishers and pages…" />
+      <CommandPalette.Input aria-label="Search datasets, publishers and pages" placeholder="Search datasets, publishers and pages…" />
       <CommandPalette.List>
         <CommandPalette.Results>
           {(group: SearchGroup) => (
@@ -121,10 +122,15 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
               <CommandPalette.Items>
                 {(item: SearchItem) => (
                   <CommandPalette.Item key={item.id} value={item} onClick={() => go(item.href)}>
-                    <span className="flex min-w-0 items-center gap-3">
-                      <span className="text-kumo-subtle">{item.icon}</span>
-                      <span className="min-w-0 truncate">{item.title}</span>
-                      <span className="ml-auto shrink-0 truncate pl-3 text-xs text-kumo-subtle">{item.detail}</span>
+                    {/* The title is what you choose by: it takes the room, and the detail gives way first. */}
+                    <span className="flex w-full min-w-0 items-center gap-3">
+                      <span className="shrink-0 text-kumo-subtle">{item.icon}</span>
+                      <span className="min-w-0 flex-1 truncate" title={item.title}>
+                        {item.title}
+                      </span>
+                      <span className="hidden min-w-0 max-w-[40%] truncate pl-3 text-xs text-kumo-subtle sm:inline" title={item.detail}>
+                        {item.detail}
+                      </span>
                     </span>
                   </CommandPalette.Item>
                 )}
@@ -132,13 +138,19 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
             </CommandPalette.Group>
           )}
         </CommandPalette.Results>
-        <CommandPalette.Empty>{products.loading ? "Loading the catalog…" : "Nothing matches that search."}</CommandPalette.Empty>
+        <CommandPalette.Empty>
+          {failed
+            ? `Could not load the catalog (${failed.message}). Close the search and open it again to retry.`
+            : products.loading || feeds.loading
+              ? "Loading the catalog…"
+              : `No dataset, publisher or page matches “${search.trim()}”.`}
+        </CommandPalette.Empty>
       </CommandPalette.List>
       <CommandPalette.Footer>
         <span className="flex items-center gap-2 text-xs">
-          <kbd className="rounded border border-kumo-hairline bg-kumo-base px-1.5 py-0.5 text-[10px]">↑↓</kbd> Move
-          <kbd className="ml-2 rounded border border-kumo-hairline bg-kumo-base px-1.5 py-0.5 text-[10px]">↵</kbd> Open
-          <kbd className="ml-2 rounded border border-kumo-hairline bg-kumo-base px-1.5 py-0.5 text-[10px]">esc</kbd> Close
+          <kbd className="rounded border border-kumo-hairline bg-kumo-base px-1.5 py-0.5 text-xs">↑↓</kbd> Move
+          <kbd className="ml-2 rounded border border-kumo-hairline bg-kumo-base px-1.5 py-0.5 text-xs">↵</kbd> Open
+          <kbd className="ml-2 rounded border border-kumo-hairline bg-kumo-base px-1.5 py-0.5 text-xs">esc</kbd> Close
         </span>
       </CommandPalette.Footer>
     </CommandPalette.Root>

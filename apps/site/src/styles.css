@@ -16,7 +16,7 @@
   --text-color-kumo-default: light-dark(oklch(0.22 0.02 160), oklch(0.94 0.008 150));
   --text-color-kumo-strong: light-dark(oklch(0.16 0.02 160), oklch(0.985 0.005 150));
   --text-color-kumo-subtle: light-dark(oklch(0.44 0.02 160), oklch(0.74 0.012 150));
-  --text-color-kumo-placeholder: light-dark(oklch(0.58 0.014 160), oklch(0.6 0.012 150));
+  --text-color-kumo-placeholder: light-dark(oklch(0.54 0.014 160), oklch(0.66 0.012 150));
   --text-color-kumo-inactive: light-dark(oklch(0.7 0.014 150), oklch(0.5 0.012 160));
   --text-color-kumo-brand: light-dark(oklch(0.44 0.11 158), oklch(0.78 0.13 158));
   --text-color-kumo-link: light-dark(oklch(0.4 0.1 158), oklch(0.8 0.12 158));
@@ -30,6 +30,9 @@
   --color-kumo-elevated: light-dark(oklch(0.975 0.005 150), oklch(0.215 0.01 160));
   --color-kumo-recessed: light-dark(oklch(0.945 0.008 150), oklch(0.205 0.01 160));
   --color-kumo-control: light-dark(oklch(0.995 0.002 150), oklch(0.25 0.011 160));
+  /* Popovers, dialogs and menus, and the row a pointer or arrow key is on, on the same green-tinted scale. */
+  --color-kumo-overlay: light-dark(oklch(0.992 0.003 150), oklch(0.26 0.011 160));
+  --color-kumo-interact: light-dark(oklch(0.87 0.012 150), oklch(0.37 0.012 160));
   --color-kumo-tint: light-dark(oklch(0.935 0.02 158), oklch(0.3 0.03 158));
   --color-kumo-fill: light-dark(oklch(0.92 0.01 150), oklch(0.31 0.012 160));
   --color-kumo-fill-hover: light-dark(oklch(0.88 0.012 150), oklch(0.36 0.013 160));
@@ -48,12 +51,15 @@
   --color-kumo-info: light-dark(#2f66c4, #7fa6f0);
   --color-kumo-info-tint: light-dark(oklch(0.94 0.04 262), oklch(0.3 0.05 262));
 
-  /* Categorical order for charts and map legends: green, blue, orange, violet, teal. */
+  /* Categorical order for charts and map legends: green, blue, orange, violet, teal (the first five of lib/palette.ts). */
   --color-series-1: light-dark(#1b7a4f, #33a86c);
   --color-series-2: light-dark(#2f66c4, #6690e6);
-  --color-series-3: light-dark(#c46a1b, #e08a3c);
-  --color-series-4: light-dark(#7a4fd1, #a88af0);
-  --color-series-5: light-dark(#1391a6, #3fb6c9);
+  --color-series-3: light-dark(#c46a1b, #cf7c2b);
+  --color-series-4: light-dark(#7a4fd1, #9d7be8);
+  --color-series-5: light-dark(#1391a6, #2aa3b6);
+
+  /* Kumo sets 13px text at 1.18; anything that wraps needs room between its lines. */
+  --text-sm--line-height: calc(20 / 13);
 }
 
 :root {
@@ -70,12 +76,30 @@ html {
   background: var(--color-kumo-canvas);
   -webkit-text-size-adjust: 100%;
 }
+/* The header is sticky from md up: anchors and focused controls stop below it, not under it. */
+@media (min-width: 48rem) {
+  html {
+    scroll-padding-top: 5rem;
+  }
+}
 body {
   min-height: 100vh;
   font-family: var(--font-sans);
   background: var(--color-kumo-canvas);
   color: var(--text-color-kumo-default);
   text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/*
+ * One focus indicator for everything a keyboard reaches. Kumo's own is a ring in the button's
+ * fill colour, and none in forced colours; this rule is outside Tailwind's layers, so it wins
+ * over their outline-none, and an outline survives forced-colours mode.
+ */
+:focus-visible {
+  outline: 2px solid var(--color-kumo-focus);
+  outline-offset: 2px;
 }
 
 /* The display face carries headings; everything else stays in Plex. */
@@ -103,21 +127,34 @@ h2 {
   top: 0.75rem;
 }
 
-/* A day bar on the status page, and its legend keys. */
+/*
+ * An hour bar on the status page, and its legend keys. Levels differ in lightness, not only hue:
+ * a quiet light "ok", darker as the trouble grows. Bars with a problem are also drawn taller
+ * (status.tsx), so a level never rests on colour alone.
+ */
 .uptime-bar[data-level="ok"] {
-  background: var(--color-kumo-success);
+  background: color-mix(in oklab, var(--color-kumo-success) 78%, var(--color-kumo-base));
 }
 .uptime-bar[data-level="minor"] {
-  background: color-mix(in srgb, var(--color-kumo-warning) 50%, var(--color-kumo-base));
+  background: color-mix(in oklab, var(--color-kumo-warning) 78%, var(--color-kumo-base));
 }
 .uptime-bar[data-level="major"] {
   background: var(--color-kumo-warning);
 }
 .uptime-bar[data-level="severe"] {
-  background: var(--color-kumo-danger);
+  background: oklch(0.4 0.15 27);
 }
 .uptime-bar[data-level="none"] {
   background: var(--color-kumo-line);
+}
+:root[data-mode="dark"] .uptime-bar[data-level="ok"] {
+  background: color-mix(in oklab, var(--color-kumo-success) 55%, var(--color-kumo-base));
+}
+:root[data-mode="dark"] .uptime-bar[data-level="minor"] {
+  background: color-mix(in oklab, var(--color-kumo-warning) 60%, var(--color-kumo-base));
+}
+:root[data-mode="dark"] .uptime-bar[data-level="severe"] {
+  background: var(--color-kumo-danger);
 }
 
 /*
@@ -125,7 +162,7 @@ h2 {
  * z-index 200 to 1000; `isolation` keeps them inside the map's own stacking context, so dropdowns,
  * tooltips and the sticky header always paint above the map.
  */
-.leaflet-container {
+div.leaflet-container {
   isolation: isolate;
   z-index: 0;
   font-family: var(--font-sans);
@@ -142,19 +179,23 @@ h2 {
 :root[data-mode="dark"] .leaflet-tile-container img.leaflet-tile {
   filter: invert(1) hue-rotate(180deg) saturate(0.35) brightness(0.9) contrast(0.9);
 }
-.leaflet-bar a,
-.leaflet-bar a:hover {
+/* leaflet.css loads after this file, so every override below is one class more specific than its rule. */
+.leaflet-container .leaflet-bar a,
+.leaflet-container .leaflet-bar a:hover {
   background: var(--color-kumo-base);
   color: var(--text-color-kumo-default);
   border-color: var(--color-kumo-line);
 }
-.leaflet-popup-content-wrapper,
-.leaflet-popup-tip {
+.leaflet-container .leaflet-popup-content-wrapper,
+.leaflet-container .leaflet-popup-tip {
   background: var(--color-kumo-base);
   color: var(--text-color-kumo-default);
-  box-shadow: 0 8px 24px -12px oklch(0.2 0.02 160 / 0.35);
+  box-shadow:
+    0 4px 6px -1px oklch(0.2 0.02 160 / 0.1),
+    0 2px 4px -2px oklch(0.2 0.02 160 / 0.1);
+  outline: 1px solid var(--color-kumo-line);
 }
-.leaflet-popup-content {
+.leaflet-container .leaflet-popup-content {
   margin: 0.75rem 0.9rem;
   font-size: 0.8rem;
   line-height: 1.45;
@@ -173,14 +214,14 @@ h2 {
   margin: 0;
   overflow-wrap: anywhere;
 }
-.leaflet-control-attribution {
+.leaflet-container .leaflet-control-attribution {
   background: color-mix(in srgb, var(--color-kumo-base) 85%, transparent) !important;
   color: var(--text-color-kumo-subtle);
 }
-.leaflet-control-attribution a {
+.leaflet-container .leaflet-control-attribution a {
   color: var(--text-color-kumo-link);
 }
-.leaflet-control-scale-line {
+.leaflet-container .leaflet-control-scale-line {
   background: color-mix(in srgb, var(--color-kumo-base) 80%, transparent);
   border-color: var(--text-color-kumo-subtle);
   color: var(--text-color-kumo-default);
@@ -194,11 +235,26 @@ h2 {
   }
 }
 
+/*
+ * Reduced motion: animations run once and end at once, instead of looping at a tiny duration,
+ * which samples an arbitrary frame each repaint and flickers. Charts and the map read the same
+ * preference in script (lib/echarts.ts, MapView.tsx).
+ */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
+}
+
+/* Set on the root for one frame while the colour mode flips, so hundreds of colour transitions do not play at once. */
+.mode-switching,
+.mode-switching *,
+.mode-switching *::before,
+.mode-switching *::after {
+  transition: none !important;
 }

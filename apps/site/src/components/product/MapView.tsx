@@ -1,11 +1,11 @@
-import { Button, Empty, Loader, Select } from "@cloudflare/kumo";
-import { CrosshairIcon, MapTrifoldIcon } from "@phosphor-icons/react";
+import { Button, Loader, Select } from "@cloudflare/kumo";
+import { CrosshairIcon } from "@phosphor-icons/react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { RelativeTime, useDarkMode } from "../common";
+import { ErrorNote, RelativeTime, useDarkMode } from "../common";
 import { apiGet, productPath } from "../../lib/api";
-import { SERIES_COLORS } from "../../lib/palette";
+import { NO_VALUE_COLORS, SERIES_COLORS } from "../../lib/palette";
 import { fmt, humanize, isRecord } from "../../lib/format";
 import { useQuery } from "../../lib/query";
 import type { Feature, FeatureCollection, Field, Geometry, JsonRecord, Product } from "../../lib/types";
@@ -42,14 +42,17 @@ function popupHtml(properties: JsonRecord) {
   return `<strong>${escapeHtml(isText(title) || Number.isFinite(title) ? String(title) : "")}</strong>${isText(when) ? `<div style="opacity:.7">${escapeHtml(fmt.dateTime(when))}</div>` : ""}<dl>${rows}</dl>`;
 }
 
-/** Fields worth colouring by: a category a reader can work through, two to twelve values. */
+/** Fields worth colouring by: a category with two values up to one per palette colour, so no two share a colour. */
 function colourFields(fields: Field[], features: Feature[]) {
   return fields.filter((field) => {
     if (field.type !== "category") return false;
     const values = new Set(features.map((feature) => feature.properties[field.name]).filter((value) => value !== null && value !== undefined && value !== ""));
-    return values.size >= 2 && values.size <= 12;
+    return values.size >= 2 && values.size <= SERIES_COLORS.light.length;
   });
 }
+
+/** The legend's name for a feature with no value in the colouring field. */
+const NO_VALUE = "No value";
 
 const GEOMETRY_TYPES = new Set(["Point", "MultiPoint", "LineString", "MultiLineString", "Polygon", "MultiPolygon"]);
 
@@ -272,10 +275,22 @@ export default function MapView({ product, refreshKey }: { product: Product; ref
   const features = geojson.data?.features ?? [];
   const choices = useMemo(() => colourFields(product.schema.fields, features), [product.schema.fields, features]);
   const field = colourBy === null ? (choices[0]?.name ?? "") : colourBy;
-  const categoryOf = (feature: Feature) => (field ? String(feature.properties[field] ?? "unknown") : "all");
-  const categories = useMemo(() => (field ? [...new Set(features.map(categoryOf))].sort() : []), [features, field]);
+  // A missing value is not a category: it is drawn grey and listed last, as "No value".
+  const categoryOf = (feature: Feature) => {
+    if (!field) return "all";
+    const value = feature.properties[field];
+    return value === null || value === undefined || value === "" ? NO_VALUE : String(value);
+  };
+  const categories = useMemo(() => {
+    if (!field) return [];
+    const found = [...new Set(features.map(categoryOf))];
+    return [...found.filter((category) => category !== NO_VALUE).sort(), ...found.filter((category) => category === NO_VALUE)];
+  }, [features, field]);
   const palette = dark ? SERIES_COLORS.dark : SERIES_COLORS.light;
-  const colorOf = (category: string) => (field ? (palette[categories.indexOf(category) % palette.length] ?? palette[0]) : palette[0]) ?? "#1b7a4f";
+  const colorOf = (category: string) => {
+    if (category === NO_VALUE) return dark ? NO_VALUE_COLORS.dark : NO_VALUE_COLORS.light;
+    return (field ? palette[categories.indexOf(category)] : palette[0]) ?? palette[0] ?? "#1b7a4f";
+  };
 
   useEffect(() => {
     if (refreshKey > 0) void geojson.refetch();
@@ -289,7 +304,12 @@ export default function MapView({ product, refreshKey }: { product: Product; ref
   useEffect(() => {
     const element = container.current;
     if (!element) return undefined;
-    const map = L.map(element, { preferCanvas: true, zoomControl: true }).setView([39.5, -8.0], 6);
+    // With reduced motion asked for, zooming and panning jump instead of gliding.
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const map = L.map(element, { preferCanvas: true, zoomControl: true, zoomAnimation: !still, fadeAnimation: !still, markerZoomAnimation: !still, inertia: !still }).setView(
+      [39.5, -8.0],
+      6,
+    );
     L.control.scale({ imperial: false }).addTo(map);
     L.tileLayer(OSM, { maxZoom: 19, attribution: ATTRIBUTION, referrerPolicy: "strict-origin-when-cross-origin", crossOrigin: true }).addTo(map);
     const points = new PointLayer().addTo(map);
@@ -391,7 +411,7 @@ export default function MapView({ product, refreshKey }: { product: Product; ref
     if (!bounds?.isValid()) return;
     boundsRef.current = bounds;
     if (!fittedRef.current) {
-      map.fitBounds(bounds, { padding: [24, 24], maxZoom: 17 });
+      map.fitBounds(bounds, { padding: [24, 24], maxZoom: 17, animate: !window.matchMedia("(prefers-reduced-motion: reduce)").matches });
       fittedRef.current = true;
     }
   }, [features, field, dark, hidden]);
@@ -427,7 +447,7 @@ export default function MapView({ product, refreshKey }: { product: Product; ref
         <div className="flex flex-wrap items-center gap-2">
           {choices.length ? (
             <Select
-              aria-label="Colour the map by"
+              aria-label="Colour by"
               className="w-52"
               value={field}
               onValueChange={(value: string | null) => {
@@ -443,7 +463,10 @@ export default function MapView({ product, refreshKey }: { product: Product; ref
           <Button
             variant="secondary"
             icon={<CrosshairIcon />}
-            onClick={() => boundsRef.current?.isValid() && mapRef.current?.fitBounds(boundsRef.current, { padding: [24, 24], maxZoom: 17 })}
+            onClick={() =>
+              boundsRef.current?.isValid() &&
+              mapRef.current?.fitBounds(boundsRef.current, { padding: [24, 24], maxZoom: 17, animate: !window.matchMedia("(prefers-reduced-motion: reduce)").matches })
+            }
           >
             Fit to data
           </Button>
@@ -467,9 +490,9 @@ export default function MapView({ product, refreshKey }: { product: Product; ref
                     return next;
                   })
                 }
-                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs ring-1 ring-kumo-line transition-opacity ${on ? "bg-kumo-base text-kumo-default" : "bg-kumo-recessed text-kumo-subtle opacity-60 line-through"}`}
+                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs ring-1 ring-kumo-line ${on ? "bg-kumo-base text-kumo-default" : "bg-kumo-recessed text-kumo-subtle line-through"}`}
               >
-                <span className="size-2.5 rounded-full" style={{ background: colorOf(category) }} aria-hidden="true" />
+                <span className={`size-2.5 rounded-full ${on ? "" : "opacity-40"}`} style={{ background: colorOf(category) }} aria-hidden="true" />
                 {category}
               </button>
             );
@@ -477,7 +500,7 @@ export default function MapView({ product, refreshKey }: { product: Product; ref
         </div>
       ) : null}
 
-      {geojson.error ? <Empty icon={<MapTrifoldIcon size={40} className="text-kumo-inactive" />} title="Could not load the map" description={geojson.error.message} /> : null}
+      <ErrorNote error={geojson.error} what="the map" onRetry={() => void geojson.refetch()} />
       <div
         ref={container}
         role="region"

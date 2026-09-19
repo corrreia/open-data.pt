@@ -8,9 +8,13 @@ import "../styles.css";
 registerSiteTools();
 
 // Kumo's tokens follow data-mode; the head script sets it once, and this keeps it in step when the system theme changes.
+// Transitions are off for the frame the mode flips in, so the page changes colour at once instead of fading hundreds of elements.
 const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
 darkQuery.addEventListener("change", () => {
-  document.documentElement.dataset.mode = darkQuery.matches ? "dark" : "light";
+  const root = document.documentElement;
+  root.classList.add("mode-switching");
+  root.dataset.mode = darkQuery.matches ? "dark" : "light";
+  requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove("mode-switching")));
 });
 
 // A deploy replaces the on-demand view files; a page opened before it cannot fetch the old ones.
