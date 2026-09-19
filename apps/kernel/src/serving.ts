@@ -144,7 +144,7 @@ export class Serving {
     const window = await this.objects.read<ChangesWindow>(product.changesKey);
     let changes = window?.changes ?? [];
     const knownAt = input.knownAt;
-    if (knownAt) changes = changes.filter((change) => change.observedAt <= knownAt);
+    if (knownAt) changes = changes.filter((change) => instant(change.observedAt) <= instant(knownAt));
     return changes.slice(0, input.limit);
   }
 
@@ -345,11 +345,15 @@ function fieldValue(record: JsonObject, field: CanonicalField): JsonValue | unde
   return record[field.name] ?? record[field.id];
 }
 
+/** A stored or asked-for time as an instant: sources write `…:00Z` and `…:00.000Z` alike, so their text does not sort as time. */
+const instant = (time: string) => Date.parse(time);
+
 function validAt(record: JsonObject, at: string): boolean {
   const time = asObject(record._time);
   const validFrom = asString(time?.validFrom);
   const validTo = asString(time?.validTo);
-  return (validFrom === undefined || validFrom <= at) && (validTo === undefined || validTo >= at);
+  const moment = instant(at);
+  return (validFrom === undefined || instant(validFrom) <= moment) && (validTo === undefined || instant(validTo) >= moment);
 }
 
 function toFeature(row: JsonObject, geometryField: string | undefined, latitudeField: string | undefined, longitudeField: string | undefined): JsonObject | undefined {
@@ -369,9 +373,13 @@ function toFeature(row: JsonObject, geometryField: string | undefined, latitudeF
 }
 
 function filterPoints<T extends { seriesKey: string; eventTime: string }>(points: T[], input: { seriesKey?: string; from?: string; to?: string }): T[] {
-  return points.filter(
-    (point) => (!input.seriesKey || point.seriesKey === input.seriesKey) && (!input.from || point.eventTime >= input.from) && (!input.to || point.eventTime <= input.to),
-  );
+  const from = input.from ? instant(input.from) : -Infinity;
+  const to = input.to ? instant(input.to) : Infinity;
+  return points.filter((point) => {
+    if (input.seriesKey && point.seriesKey !== input.seriesKey) return false;
+    const at = instant(point.eventTime);
+    return at >= from && at <= to;
+  });
 }
 
 /** GeoJSON geometry types this platform will serve, straight from the source. */

@@ -177,7 +177,7 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
       if (!view) return withCadence(json(publicProduct(product)), product);
       if (view === "records") {
         const cursor = optionalQuery(url, "cursor");
-        const validAt = optionalQuery(url, "validAt");
+        const validAt = optionalTime(url, "validAt");
         const filters = rowFilters(url);
         const query: RecordQuery = { limit: parseInteger(url, "limit", 50, 1, 500) };
         if (cursor) query.cursor = decodeCursor(cursor);
@@ -197,8 +197,8 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
       }
       if (view === "series/changes") requireHistory(product, "time-series");
       const seriesKey = optionalQuery(url, "seriesKey");
-      const from = optionalQuery(url, "from");
-      const to = optionalQuery(url, "to");
+      const from = optionalTime(url, "from");
+      const to = optionalTime(url, "to");
       const input: SeriesQuery = { limit: parseInteger(url, "limit", 100, 1, 1000) };
       if (seriesKey) input.seriesKey = seriesKey;
       if (from) input.from = from;
