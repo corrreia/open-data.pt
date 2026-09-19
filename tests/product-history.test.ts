@@ -232,6 +232,11 @@ describe("series summaries", () => {
     expect((await server.fetch(`/api/products/private-events/series/summary?${window}`)).status).toBe(404);
     expect((await server.fetch(`/api/products/revised-series/series/summary?${window}&resolution=week`)).status).toBe(400);
     expect((await server.fetch(`/api/products/revised-series/series/summary?${window}&limit=5`)).status).toBe(400);
+    // A day no calendar has is refused, not rolled over into March.
+    expect((await server.fetch("/api/products/revised-series/series/summary?from=2026-02-30T00:00:00Z&to=2026-03-05T00:00:00Z")).status).toBe(400);
+    expect((await server.fetch("/api/products/revised-series/series?from=2026-02-30T00:00:00Z")).status).toBe(400);
+    expect((await server.fetch("/api/acquisitions?day=2026-02-30")).status).toBe(400);
+    expect((await server.fetch("/api/products/revised-series/series?from=2026-02-28T23:00:00-01:00")).status).toBe(200);
   });
 });
 

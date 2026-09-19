@@ -99,6 +99,33 @@ function run(id: string, at: string, status: Acquisition["status"], error?: stri
 const WINDOW = ["2026-09-01T00:00:00.000Z", "2026-10-01T00:00:00.000Z"] as const;
 
 describe("outages", () => {
+  it("says when a day holds more runs than the limit let through", () => {
+    const store = new RegistryStore(sqliteStorage(new DatabaseSync(":memory:")));
+    store.migrate();
+    for (const minute of ["01", "02", "03"])
+      store.upsertActivity(`acq_${minute}`, "feed_1", `2026-09-18T00:${minute}:00.000Z`, acquisition(`acq_${minute}`, `2026-09-18T00:${minute}:00.000Z`));
+    const cut = store.listActivityBetween("2026-09-18T00:00:00.000Z", "2026-09-19T00:00:00.000Z", 2);
+    expect(cut.items.map((item) => item.id)).toEqual(["acq_03", "acq_02"]);
+    expect(cut.more).toBe(true);
+    const whole = store.listActivityBetween("2026-09-18T00:00:00.000Z", "2026-09-19T00:00:00.000Z", 3);
+    expect(whole.items).toHaveLength(3);
+    expect(whole.more).toBe(false);
+  });
+
+  it("keeps the 5,000 most recent runs, no more", () => {
+    const store = new RegistryStore(sqliteStorage(new DatabaseSync(":memory:")));
+    store.migrate();
+    const base = Date.parse("2026-09-18T00:00:00.000Z");
+    for (let index = 0; index < 5_002; index += 1) {
+      const at = new Date(base + index * 1000).toISOString();
+      store.upsertActivity(`acq_${index}`, "feed_1", at, acquisition(`acq_${index}`, at));
+    }
+    store.pruneActivity();
+    const kept = store.listActivity(10_000);
+    expect(kept).toHaveLength(5_000);
+    expect(kept.at(-1)?.id).toBe("acq_2");
+  });
+
   it("opens when live collection starts failing, counts the failures, and closes at the first success", async () => {
     const store = await registryWithFeed();
     const upstream = "Gatekeeper collection failed: upstream-error";

@@ -2,7 +2,7 @@ import type { FieldType, JsonObject } from "@open-data-pt/gatekeeper-shared";
 import { describe, expect, it } from "vitest";
 import { buildChunks, compareKeys } from "../apps/kernel/src/chunks";
 import type { ProductDetail } from "../apps/kernel/src/coordinators";
-import { ObjectStore, keys } from "../apps/kernel/src/object-store";
+import { ObjectStore, keys, type SeriesWindow } from "../apps/kernel/src/object-store";
 import { InvalidQueryError, Serving, type RowFilters } from "../apps/kernel/src/serving";
 import { MemorySnapshots } from "./kernel-harness";
 import { jsonAs } from "./support";
@@ -53,7 +53,7 @@ async function serving(schemaFields: Array<{ name: string; type: FieldType }>, r
     cadenceSeconds: 3600,
   };
   const service = new Serving({ listProducts: async () => [product], getProduct: async (slug) => (slug === "places" ? product : undefined) }, objects);
-  return { serving: service, product, chunks };
+  return { serving: service, product, chunks, objects };
 }
 
 async function geojson(service: Serving, product: ProductDetail, filters?: RowFilters) {
@@ -244,6 +244,36 @@ describe("every current record in one streamed response", () => {
     expect(body.numberMatched).toBeUndefined();
     expect(body.data.every((row) => row.kind === "bus")).toBe(true);
   });
+
+  it("keeps streaming past chunks where nothing matches, to a whole document", async () => {
+    // Only the last ten rows match, so every chunk before the last yields nothing.
+    const records = Array.from({ length: 9_000 }, (_, index) => ({
+      id: `r${String(index).padStart(5, "0")}`,
+      kind: index >= 8_990 ? "bus" : "tram",
+      lat: index >= 8_990 ? 39 : 38,
+      lon: -9,
+    }));
+    const {
+      serving: service,
+      product,
+      chunks,
+    } = await serving(
+      [
+        { name: "kind", type: "category" },
+        { name: "lat", type: "latitude" },
+        { name: "lon", type: "longitude" },
+      ],
+      records,
+    );
+    expect(chunks.length).toBeGreaterThan(2);
+    const body = await allRecords(service, product, { where: [{ field: "kind", value: "bus" }] });
+    expect(body.numberReturned).toBe(10);
+    expect(body.data.map((row) => row.id)).toEqual(records.slice(8_990).map((record) => record.id));
+    const inBox = await geojson(service, product, { bbox: { west: -9.1, south: 38.9, east: -8.9, north: 39.1 } });
+    expect(inBox.numberReturned).toBe(10);
+    const none = await allRecords(service, product, { where: [{ field: "kind", value: "boat" }] });
+    expect(none).toEqual({ data: [], numberReturned: 0 });
+  });
 });
 
 describe("a time-series product counts points, and serves none of them as records", () => {
@@ -271,5 +301,30 @@ describe("a time-series product counts points, and serves none of them as record
     expect(body.numberMatched).toBe(0);
     expect(body.numberReturned).toBe(0);
     expect(body.features).toEqual([]);
+  });
+});
+
+describe("time windows compare instants, however a time is written", () => {
+  const point = (eventTime: string) => ({ seriesKey: "solar", eventTime, value: 1, unit: "MW", dimensions: {}, observedAt: eventTime });
+
+  it("keeps a point on either edge of the window, with or without milliseconds on either side", async () => {
+    const built = await serving([{ name: "n", type: "number" }], [{ id: "a", n: 1 }]);
+    const product: ProductDetail = { ...built.product, role: "time-series", kind: "series", seriesKey: "series/solar" };
+    // One source writes milliseconds and another does not.
+    await built.objects.write<SeriesWindow>("series/solar", {
+      slug: "places",
+      updatedAt: "2026-09-18T12:00:00.000Z",
+      points: [point("2026-09-18T09:45:00.000Z"), point("2026-09-18T10:00:00.000Z"), point("2026-08-31T00:00:00Z"), point("2026-09-18T10:15:00.000Z")],
+    });
+    const times = async (from: string, to: string) => (await built.serving.series(product, { limit: 100, from, to })).map((each) => each.eventTime);
+    expect(await times("2026-09-18T10:00:00Z", "2026-09-18T10:00:00Z")).toEqual(["2026-09-18T10:00:00.000Z"]);
+    expect(await times("2026-09-18T10:00:00.000Z", "2026-09-18T10:00:00.000Z")).toEqual(["2026-09-18T10:00:00.000Z"]);
+    expect(await times("2026-08-31T00:00:00.000Z", "2026-08-31T00:00:00.000Z")).toEqual(["2026-08-31T00:00:00Z"]);
+    expect(await times("2026-08-31T00:00:00Z", "2026-08-31T00:00:00Z")).toEqual(["2026-08-31T00:00:00Z"]);
+  });
+
+  it("reads a record valid at an instant written without milliseconds", async () => {
+    const { serving: service, product } = await serving([{ name: "n", type: "number" }], [{ id: "a", n: 1, validFrom: "2026-01-01T00:00:00Z" }]);
+    expect((await service.records(product, { limit: 5, validAt: "2026-01-01T00:00:00.000Z" })).data).toHaveLength(1);
   });
 });

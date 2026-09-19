@@ -114,7 +114,7 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
       const day = optionalQuery(url, "day");
       const reg = registry();
       if (day !== undefined) {
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || Number.isNaN(Date.parse(`${day}T00:00:00Z`))) throw new RequestError("day must be a calendar date (YYYY-MM-DD)", 400);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !isCalendarTime(day)) throw new RequestError("day must be a calendar date (YYYY-MM-DD)", 400);
         const limit = parseInteger(url, "limit", 500, 1, 1000);
         const start = `${day}T00:00:00.000Z`;
         const end = new Date(Date.parse(start) + 86_400_000).toISOString();
@@ -122,7 +122,8 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
         const open = new Set(feeds.map((feed) => feed.id));
         return json({
           day,
-          complete: activity.oldest !== null && activity.oldest <= start,
+          // Every run of the day: the mirror still reaches back to its start, and the limit cut nothing off.
+          complete: activity.oldest !== null && activity.oldest <= start && !activity.more,
           data: activity.items.filter((acquisition) => open.has(acquisition.feedId)).map(publicAcquisition),
         });
       }
@@ -177,7 +178,7 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
       if (!view) return withCadence(json(publicProduct(product)), product);
       if (view === "records") {
         const cursor = optionalQuery(url, "cursor");
-        const validAt = optionalQuery(url, "validAt");
+        const validAt = optionalTime(url, "validAt");
         const filters = rowFilters(url);
         const query: RecordQuery = { limit: parseInteger(url, "limit", 50, 1, 500) };
         if (cursor) query.cursor = decodeCursor(cursor);
@@ -197,8 +198,8 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
       }
       if (view === "series/changes") requireHistory(product, "time-series");
       const seriesKey = optionalQuery(url, "seriesKey");
-      const from = optionalQuery(url, "from");
-      const to = optionalQuery(url, "to");
+      const from = optionalTime(url, "from");
+      const to = optionalTime(url, "to");
       const input: SeriesQuery = { limit: parseInteger(url, "limit", 100, 1, 1000) };
       if (seriesKey) input.seriesKey = seriesKey;
       if (from) input.from = from;
@@ -582,9 +583,19 @@ function publicAcquisition(acquisition: Acquisition) {
 
 /* ---------- Parameters ---------- */
 
+/** Whether a time reads as a date the calendar has: Date.parse rolls 30 February over into March. */
+function isCalendarTime(value: string): boolean {
+  if (Number.isNaN(Date.parse(value))) return false;
+  const date = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (!date) return true;
+  const [year, month, day] = [Number(date[1]), Number(date[2]), Number(date[3])];
+  const check = new Date(Date.UTC(year, month - 1, day));
+  return check.getUTCFullYear() === year && check.getUTCMonth() === month - 1 && check.getUTCDate() === day;
+}
+
 function requiredDate(url: URL, name: string): string {
   const value = optionalQuery(url, name);
-  if (!value || Number.isNaN(Date.parse(value))) throw new RequestError(`${name} must be an ISO 8601 date-time`, 400);
+  if (!value || !isCalendarTime(value)) throw new RequestError(`${name} must be an ISO 8601 date-time`, 400);
   return new Date(value).toISOString();
 }
 
@@ -592,7 +603,7 @@ function requiredDate(url: URL, name: string): string {
 function optionalTime(url: URL, name: string): string | undefined {
   const value = optionalQuery(url, name);
   if (value === undefined) return undefined;
-  if (Number.isNaN(Date.parse(value))) throw new RequestError(`${name} must be an ISO 8601 date-time`, 400);
+  if (!isCalendarTime(value)) throw new RequestError(`${name} must be an ISO 8601 date-time`, 400);
   return new Date(value).toISOString();
 }
 

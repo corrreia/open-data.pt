@@ -71,7 +71,7 @@ export function openApiDocument(origin: string) {
           tags: ["Feeds"],
           summary: "List collection runs across public feeds or of one feed, newest first; with `day`, every run of that UTC day",
           description:
-            "Read from the Registry's bounded mirror of recent runs. `limit` is at most 200, or 1000 with `day`. With `day` the response also says whether the mirror still reaches back to the start of that day (`complete`).",
+            "Read from the Registry's bounded mirror of the 5,000 most recent runs, each filed under the time it completed. `limit` is at most 200, or 1000 with `day`. With `day` the response also says whether it holds every run of that day (`complete`): false when the mirror no longer reaches back to the start of the day, or when the day has more runs than `limit`.",
           parameters: [queryParameter("feedId", "Optional feed ID."), queryParameter("day", "Optional calendar day, YYYY-MM-DD (UTC)."), integerParameter("limit", 50, 1, 1000)],
           responses: {
             "200": jsonResponse("Runs, newest first", {
@@ -79,7 +79,11 @@ export function openApiDocument(origin: string) {
               required: ["data"],
               properties: {
                 day: { type: "string", format: "date", description: "With `day` only." },
-                complete: { type: "boolean", description: "With `day` only: whether the mirror reaches back to the start of that day." },
+                complete: {
+                  type: "boolean",
+                  description:
+                    "With `day` only: whether `data` holds every run of that day; false when the mirror no longer reaches back to its start or `limit` cut the list short.",
+                },
                 data: { type: "array", items: schemaRef("Acquisition") },
               },
             }),
