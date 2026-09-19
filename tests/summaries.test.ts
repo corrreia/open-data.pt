@@ -343,6 +343,22 @@ describe("reading summaries", () => {
     expect(monthly.series[0]?.buckets).toEqual([{ start: "2026-08-31T23:00:00.000Z", count: 24, mean: 101, min: 90, max: 112 }]);
   });
 
+  it("leaves out a day the window opens in the middle of, rather than naming a part of it after the whole", async () => {
+    const objects = await summarised();
+    // Half past midnight UTC is the middle of Lisbon 9 September, which runs from 23:00 on the 8th.
+    const midday = { from: "2026-09-09T00:30:00Z", to: "2026-09-11T00:00:00Z", seriesKeys: [] };
+    const daily = await readSummaryRange(objects, "power-series", { ...midday, resolution: "day" });
+    expect(daily.series[0]?.buckets).toEqual([{ start: "2026-09-09T23:00:00.000Z", count: 12, mean: 101, min: 90, max: 112 }]);
+    // By the hour every bucket is whole already, so the window keeps the hours that start in it.
+    const hourly = await readSummaryRange(objects, "power-series", { ...midday, resolution: "hour" });
+    expect(hourly.series[0]?.buckets.map((bucket) => bucket.start)).toEqual([
+      "2026-09-09T01:00:00.000Z",
+      "2026-09-09T23:00:00.000Z",
+      "2026-09-10T00:00:00.000Z",
+      "2026-09-10T01:00:00.000Z",
+    ]);
+  });
+
   it("reaches back into backfilled history by month, reading only the years that hold it", async () => {
     const objects = await summarised((kind, day) =>
       kind === "fresh"
