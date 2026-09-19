@@ -3,7 +3,7 @@ import { CalendarBlankIcon, ChartLineIcon } from "@phosphor-icons/react";
 import type { EChartsOption } from "echarts";
 import { useEffect, useMemo, useState } from "react";
 import { DataTable, type Column } from "../DataTable";
-import { RelativeTime, useDarkMode } from "../common";
+import { ErrorNote, RelativeTime, useDarkMode } from "../common";
 import { apiGet, productPath } from "../../lib/api";
 import { echarts } from "../../lib/echarts";
 import { SERIES_COLORS } from "../../lib/palette";
@@ -291,8 +291,7 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
       </div>
     );
   }
-  if (current.error && points.length === 0)
-    return <Empty icon={<ChartLineIcon size={40} className="text-kumo-inactive" />} title="Could not load the series" description={current.error.message} />;
+  if (current.error && points.length === 0) return <ErrorNote error={current.error} what="the series" onRetry={() => void current.refetch()} />;
   if (points.length === 0)
     return (
       <Empty icon={<ChartLineIcon size={40} className="text-kumo-inactive" />} title="No points yet" description="Series points appear after the first successful collection." />

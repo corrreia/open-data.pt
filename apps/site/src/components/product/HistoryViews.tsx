@@ -1,8 +1,7 @@
-import { Badge, Button, Empty, Loader } from "@cloudflare/kumo";
-import { ClockCounterClockwiseIcon } from "@phosphor-icons/react";
+import { Badge, Button, Loader } from "@cloudflare/kumo";
 import { useEffect, useMemo, useState } from "react";
 import { DataTable, type Column } from "../DataTable";
-import { RelativeTime } from "../common";
+import { ErrorNote, RelativeTime } from "../common";
 import { apiGet, productPath } from "../../lib/api";
 import { fmt, humanize } from "../../lib/format";
 import { useQuery } from "../../lib/query";
@@ -46,7 +45,7 @@ export function ChangesView({ product, refreshKey }: { product: Product; refresh
   );
 
   if (changes.loading) return <Loading what="changes" />;
-  if (changes.error) return <Empty title="Could not load changes" description={changes.error.message} />;
+  if (changes.error) return <ErrorNote error={changes.error} what="the changes" onRetry={() => void changes.refetch()} />;
   return (
     <>
       <DataTable
@@ -95,7 +94,7 @@ export function CorrectionsView({ product, refreshKey }: { product: Product; ref
     [],
   );
   if (corrections.loading) return <Loading what="corrections" />;
-  if (corrections.error) return <Empty title="Could not load corrections" description={corrections.error.message} />;
+  if (corrections.error) return <ErrorNote error={corrections.error} what="the corrections" onRetry={() => void corrections.refetch()} />;
   return (
     <DataTable
       label={`${product.title} corrections`}
@@ -165,7 +164,16 @@ export function EventHistoryView({ product }: { product: Product }) {
 
   if (loading && rows.length === 0) return <Loading what="the last 30 days" />;
   if (error && rows.length === 0)
-    return <Empty icon={<ClockCounterClockwiseIcon size={40} className="text-kumo-inactive" />} title="Could not load the event history" description={error.message} />;
+    return (
+      <ErrorNote
+        error={error}
+        what="the event history"
+        onRetry={() => {
+          setError(undefined);
+          void load();
+        }}
+      />
+    );
   return (
     <>
       <DataTable

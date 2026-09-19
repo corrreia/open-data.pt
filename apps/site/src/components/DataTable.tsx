@@ -205,7 +205,7 @@ export function DataTable<Row>(props: DataTableProps<Row>) {
                   {columns.map((column) => (
                     <Table.Cell
                       key={column.key}
-                      className={`max-w-[28rem] ${column.mono ? "font-mono text-[0.8rem]" : ""} ${column.align === "end" ? "text-right tabular-nums" : ""} ${column.className ?? ""}`}
+                      className={`max-w-[28rem] ${column.mono ? "font-mono text-sm" : ""} ${column.align === "end" ? "text-right tabular-nums" : ""} ${column.className ?? ""}`}
                     >
                       {column.cell(row)}
                     </Table.Cell>

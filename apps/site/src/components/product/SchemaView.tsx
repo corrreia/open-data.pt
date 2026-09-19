@@ -24,7 +24,7 @@ export function SchemaView({ product }: { product: Product }) {
               {product.schema.fields.map((field) => (
                 <Table.Row key={field.name}>
                   <Table.Cell>
-                    <code className="font-mono text-[0.8rem]">{field.name}</code>
+                    <code className="font-mono text-sm">{field.name}</code>
                   </Table.Cell>
                   <Table.Cell>
                     <Badge variant="outline">{field.type}</Badge>

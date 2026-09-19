@@ -112,6 +112,12 @@ export function useQuery<T>(key: string | null, fetcher: () => Promise<T>, optio
 }
 
 /** Refetch every watched query whose key starts with `prefix`. */
+/** Start loading `key` before anything shows it, so a view that opens later finds its data ready. */
+export function prefetch<T>(key: string, fetcher: () => Promise<T>, staleMs = 15_000) {
+  const entry = entryFor(key, fetcher, staleMs);
+  if (entry.isStale()) void entry.refetch();
+}
+
 export function invalidate(prefix: string) {
   for (const [key, entry] of entries) {
     if (key.startsWith(prefix) && entry.listeners.size > 0) void entry.refetch();

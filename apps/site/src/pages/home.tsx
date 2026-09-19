@@ -17,7 +17,7 @@ import {
 } from "@phosphor-icons/react";
 import { useMemo, type ReactNode } from "react";
 import { DatasetCard } from "../components/DatasetCard";
-import { RelativeTime, SectionHead, StatTile, ToneBadge } from "../components/common";
+import { Eyebrow, RelativeTime, SectionHead, StatTile } from "../components/common";
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { apiGet, productHref } from "../lib/api";
@@ -77,11 +77,11 @@ function Home() {
     <Shell section="home">
       <section aria-labelledby="hero-title" className="grid items-center gap-10 pt-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:pt-14">
         <div className="grid gap-6">
-          <p className="font-mono text-[0.7rem] font-medium uppercase tracking-[0.12em] text-kumo-brand">Portuguese public data</p>
+          <Eyebrow>Portuguese public data</Eyebrow>
           <h1 id="hero-title" className="font-display text-5xl leading-[1.02] text-kumo-strong sm:text-6xl">
             Public data from Portugal, <em className="text-kumo-brand">in one place</em>.
           </h1>
-          <p className="max-w-[58ch] text-lg leading-relaxed text-kumo-subtle">
+          <p className="max-w-[36rem] text-lg leading-relaxed text-kumo-subtle">
             Datasets published by Portuguese institutions and operators, collected from where they publish them and served in one consistent format. Free to use, with no key and no
             account. Every dataset names its publisher and links back to the source.
           </p>
@@ -119,13 +119,13 @@ function Home() {
           <LayerCard.Secondary className="flex items-center justify-between">
             <span className="flex items-center gap-2">
               <span className="relative flex size-2">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-kumo-success opacity-60" />
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-kumo-success opacity-60 motion-reduce:hidden" />
                 <span className="relative inline-flex size-2 rounded-full bg-kumo-success" />
               </span>
               Right now
             </span>
             <a href="/status/" className="text-xs text-kumo-subtle hover:text-kumo-strong">
-              {failing === undefined ? "Checking collection…" : failing === 0 ? "Every source answering" : `${plural(failing, "dataset")} not answering`}
+              {failing === undefined ? "Checking collection…" : failing === 0 ? "Every dataset collecting" : `${plural(failing, "dataset")} not collecting`}
             </a>
           </LayerCard.Secondary>
           <LayerCard.Primary className="p-0">
@@ -139,12 +139,12 @@ function Home() {
                   <li key={dataset.feed.id}>
                     <a href={productHref(dataset.products[0]?.product.slug ?? "")} className="flex items-center gap-3 px-4 py-2.5 text-sm no-underline hover:bg-kumo-tint">
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium text-kumo-strong">{dataset.title}</span>
-                        <span className="block truncate text-xs text-kumo-subtle">
+                        <span className="block text-pretty font-medium text-kumo-strong">{dataset.title}</span>
+                        <span className="block text-xs text-kumo-subtle">
                           {dataset.publisher.name} · {fmt.every(dataset.cadence)}
                         </span>
                       </span>
-                      <RelativeTime value={dataset.updatedAt} className="shrink-0 font-mono text-[0.7rem] text-kumo-subtle" />
+                      <RelativeTime value={dataset.updatedAt} className="shrink-0 font-mono text-xs text-kumo-subtle" />
                     </a>
                   </li>
                 ))}
@@ -163,7 +163,7 @@ function Home() {
           tone={failing === undefined ? undefined : failing === 0 ? "ok" : "warn"}
           value={
             <a href="/status/" className="no-underline">
-              {failing === undefined ? "—" : failing === 0 ? "all running" : `${failing} failing`}
+              {failing === undefined ? "—" : failing === 0 ? "All collecting" : `${fmt.int(failing)} not collecting`}
             </a>
           }
           note={failing === 0 ? "every dataset is being collected" : "see the status page"}
@@ -174,8 +174,8 @@ function Home() {
         <SectionHead eyebrow="Topics" title="Browse by topic" id="topics-title" />
         <div className="grid grid-cols-[repeat(auto-fill,minmax(min(15rem,100%),1fr))] gap-3">
           {topics.map(([topic, entry]) => (
-            <a key={topic} href={`/catalog/?topic=${encodeURIComponent(topic)}`} className="group no-underline">
-              <LayerCard className="flex h-full flex-col transition-shadow group-hover:shadow-[0_0_0_2px_var(--color-kumo-focus)]">
+            <a key={topic} href={`/catalog/?topic=${encodeURIComponent(topic)}`} className="group rounded-lg no-underline">
+              <LayerCard className="flex h-full flex-col transition-[box-shadow] group-hover:ring-kumo-focus/40">
                 <LayerCard.Primary className="grid flex-1 content-start gap-2">
                   <span className="flex items-center justify-between text-kumo-brand">
                     {TOPIC_ICON.get(topic) ?? <DatabaseIcon size={22} />}
@@ -183,13 +183,7 @@ function Home() {
                   </span>
                   <span className="font-display text-xl text-kumo-strong">{topicLabel(topic)}</span>
                   <span className="font-mono text-xs text-kumo-subtle">{plural(entry.datasets, "dataset")}</span>
-                  <span className="truncate text-xs text-kumo-subtle">
-                    {[...entry.publishers.entries()]
-                      .sort((a, b) => b[1] - a[1])
-                      .slice(0, 3)
-                      .map(([name]) => name)
-                      .join(" · ")}
-                  </span>
+                  <TopicPublishers publishers={entry.publishers} />
                 </LayerCard.Primary>
               </LayerCard>
             </a>
@@ -238,9 +232,24 @@ function Home() {
             </li>
           ))}
         </ul>
-        {publishers.length === 0 && !products.error ? <ToneBadge tone="ok">Loading</ToneBadge> : null}
+        {publishers.length === 0 && !products.error ? (
+          <Badge variant="neutral" appearance="dot">
+            Loading
+          </Badge>
+        ) : null}
       </section>
     </Shell>
+  );
+}
+
+/** The three publishers with the most datasets in a topic, with every publisher of the topic on hover. */
+function TopicPublishers({ publishers }: { publishers: Map<string, number> }) {
+  const ranked = [...publishers.entries()].sort((a, b) => b[1] - a[1]).map(([name]) => name);
+  return (
+    <span className="line-clamp-2 text-xs text-kumo-subtle" title={ranked.join(" · ")}>
+      {ranked.slice(0, 3).join(" · ")}
+      {ranked.length > 3 ? ` · +${ranked.length - 3} more` : ""}
+    </span>
   );
 }
 

@@ -1,25 +1,14 @@
-import { Badge, Breadcrumbs, Button, Empty, LayerCard, Link, Loader, Tabs, Tooltip } from "@cloudflare/kumo";
-import {
-  ArrowClockwiseIcon,
-  ArrowRightIcon,
-  CheckCircleIcon,
-  CircleNotchIcon,
-  ClockIcon,
-  CompassIcon,
-  DatabaseIcon,
-  MinusCircleIcon,
-  XCircleIcon,
-  type Icon,
-} from "@phosphor-icons/react";
+import { Badge, Breadcrumbs, Button, LayerCard, Link, Loader, Tabs, Tooltip } from "@cloudflare/kumo";
+import { ArrowClockwiseIcon, ArrowRightIcon, CheckCircleIcon, CircleNotchIcon, ClockIcon, CompassIcon, MinusCircleIcon, XCircleIcon, type Icon } from "@phosphor-icons/react";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Countdown, Kv, RelativeTime, RoleBadge, ToneBadge } from "../components/common";
+import { Countdown, ErrorNote, Eyebrow, Kv, PageHead, RelativeTime, RoleBadge, ToneBadge, bodyRows, cardRows } from "../components/common";
 import { mountPage } from "../components/mount";
 import { ChangesView, CorrectionsView, EventHistoryView } from "../components/product/HistoryViews";
 import { SchemaView } from "../components/product/SchemaView";
 import { RecordsView } from "../components/product/RecordsView";
 import { ChunkBoundary } from "../components/ChunkBoundary";
 import { Shell } from "../components/Shell";
-import { apiGet, productPath } from "../lib/api";
+import { ApiError, apiGet, productPath } from "../lib/api";
 import { ROLE, freshness, licenceHref, openableUrl, publisherHref, throughOf } from "../lib/catalog";
 import { fmt } from "../lib/format";
 import { newIssue } from "../lib/project";
@@ -48,6 +37,12 @@ const RUN_LOOK = {
 } satisfies { [status in AcquisitionStatus]: RunLook };
 const RUN_LABEL = { succeeded: "Published", unchanged: "Unchanged", failed: "Failed", running: "Running", queued: "Queued" } satisfies { [status in AcquisitionStatus]: string };
 
+/** What a run's completeness means to a reader. */
+const COMPLETENESS = new Map([
+  ["partial", "the source returned only part of its data"],
+  ["complete", "the whole source"],
+]);
+
 interface TabDef {
   value: string;
   label: string;
@@ -68,9 +63,9 @@ function Description({ text }: { text: string }) {
   const long = text.length > 320;
   return (
     <div className="grid max-w-3xl gap-1">
-      <p className={`text-base leading-relaxed text-kumo-subtle sm:text-lg ${long && !open ? "line-clamp-3" : ""}`}>{text}</p>
+      <p className={`max-w-[38rem] text-base leading-relaxed text-kumo-subtle sm:text-lg ${long && !open ? "line-clamp-3" : ""}`}>{text}</p>
       {long ? (
-        <Button size="sm" variant="ghost" className="justify-self-start" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+        <Button size="sm" variant="ghost" className="-ml-2 justify-self-start" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
           {open ? "Show less" : "Show more"}
         </Button>
       ) : null}
@@ -139,19 +134,33 @@ function ProductPage() {
     return list;
   }, [data, refreshKey]);
 
-  if (!slug || product.error) {
+  // A dataset that does not exist and one that failed to load are different problems, with different ways out.
+  const missing = !slug || (product.error instanceof ApiError && product.error.status === 404);
+  if (missing) {
+    document.title = "Dataset not found · open-data.pt";
     return (
       <Shell section="product">
-        <Empty
-          icon={<DatabaseIcon size={40} className="text-kumo-inactive" />}
-          title={slug ? "Product not found" : "No product selected"}
-          description={product.error?.message ?? "Choose a product from the catalog."}
-          contents={
-            <Button variant="primary" icon={<CompassIcon />} onClick={() => window.location.assign("/catalog/")}>
-              Open the catalog
-            </Button>
-          }
-        />
+        <PageHead eyebrow="Dataset" title={slug ? "No dataset at this address" : "No dataset chosen"}>
+          {slug ? (
+            <>Nothing on open-data.pt has the name “{slug}”. The link may be mistyped or out of date: find the dataset in the catalog.</>
+          ) : (
+            "This page shows one dataset. Choose one from the catalog."
+          )}
+        </PageHead>
+        <div>
+          <Button variant="primary" icon={<CompassIcon />} onClick={() => window.location.assign("/catalog/")}>
+            Open the catalog
+          </Button>
+        </div>
+      </Shell>
+    );
+  }
+  if (product.error) {
+    document.title = "Dataset unavailable · open-data.pt";
+    return (
+      <Shell section="product">
+        <PageHead eyebrow="Dataset" title="This dataset could not be loaded" />
+        <ErrorNote error={product.error} what="the dataset" onRetry={() => void product.refetch()} />
       </Shell>
     );
   }
@@ -201,13 +210,14 @@ function ProductPage() {
               setRefreshKey((key) => key + 1);
             }}
           >
-            Refresh
+            Check for updates
           </Button>
         </div>
         <h1 className={`font-display leading-[1.08] text-kumo-strong ${data.title.length > 60 ? "max-w-[46ch] text-3xl" : "max-w-[24ch] text-4xl sm:text-5xl"}`}>{data.title}</h1>
         {data.description ? <Description text={data.description} /> : null}
         {feed.data ? (
-          <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm text-kumo-subtle">
+          // Spacing separates the facts: dot separators ended up alone at the end of a wrapped line.
+          <p className="flex flex-wrap items-baseline gap-x-5 gap-y-1 text-sm text-kumo-subtle">
             <span>
               Published by{" "}
               <a
@@ -218,35 +228,26 @@ function ProductPage() {
               </a>
             </span>
             {source ? (
-              <>
-                <span aria-hidden="true">·</span>
-                <Link href={source.href} target="_blank" rel="noopener noreferrer">
-                  Original source <Link.ExternalIcon />
-                </Link>
-              </>
+              <Link href={source.href} target="_blank" rel="noopener noreferrer">
+                Original source <Link.ExternalIcon />
+              </Link>
             ) : null}
             {data.licence ? (
-              <>
-                <span aria-hidden="true">·</span>
-                <a href={licenceHref(data.licence.id)} className="hover:underline">
-                  {data.licence.name}
-                </a>
-              </>
+              <a href={licenceHref(data.licence.id)} className="hover:underline">
+                {data.licence.name}
+              </a>
             ) : null}
-            <span aria-hidden="true">·</span>
             <span>
               Updated <RelativeTime value={data.updatedAt} />
             </span>
-            <span aria-hidden="true">·</span>
-            <span>{fmt.every(data.cadenceSeconds)}</span>
-            <span aria-hidden="true">·</span>
+            <span>Collected {fmt.every(data.cadenceSeconds)}</span>
             <Link href={newIssue("broken-source", { title: `Broken: ${data.title}`, page: window.location.href })}>Report a problem</Link>
           </p>
         ) : null}
       </header>
 
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_19rem]">
-        <section aria-label="Product views" className="grid min-w-0 gap-5">
+        <section aria-label="Views of this dataset" className="grid min-w-0 gap-5">
           <Tabs
             variant="underline"
             value={active?.value}
@@ -256,19 +257,20 @@ function ProductPage() {
               label: (
                 <span className="inline-flex items-center gap-1.5">
                   {each.label}
-                  {each.count !== undefined ? <span className="font-mono text-[0.7rem] text-kumo-subtle">{fmt.compact(each.count)}</span> : null}
+                  {each.count !== undefined ? <span className="font-mono text-xs text-kumo-subtle">{fmt.compact(each.count)}</span> : null}
                 </span>
               ),
             }))}
           />
-          <ChunkBoundary key={active?.value}>
-            <Suspense fallback={<Pending />}>
-              <div>{active?.render()}</div>
-            </Suspense>
-          </ChunkBoundary>
+          {/* Kumo's Tabs render only the tab list; the panel it controls is named here. */}
+          <div role="tabpanel" aria-label={active?.label} tabIndex={0} className="min-w-0 rounded-lg">
+            <ChunkBoundary key={active?.value}>
+              <Suspense fallback={<Pending />}>{active?.render()}</Suspense>
+            </ChunkBoundary>
+          </div>
         </section>
 
-        <aside aria-label="About this product" className="grid gap-3 lg:sticky lg:top-20">
+        <aside aria-label="About this dataset" className="grid gap-3 lg:sticky lg:top-20">
           <LayerCard>
             <LayerCard.Secondary>Where it comes from</LayerCard.Secondary>
             <LayerCard.Primary>
@@ -278,7 +280,7 @@ function ProductPage() {
                     ? {
                         term: "Publisher",
                         value: (
-                          <a href={publisherHref(feed.data.publisher.id)} className="text-kumo-link hover:underline">
+                          <a href={publisherHref(feed.data.publisher.id)} className="inline-flex min-h-6 items-center text-kumo-link hover:underline">
                             {feed.data.publisher.name}
                           </a>
                         ),
@@ -345,14 +347,14 @@ function ProductPage() {
                                 const label = `${RUN_LABEL[run.status]} · ${fmt.dateTime(run.completedAt ?? run.requestedAt)}${run.error ? ` · ${run.error}` : ""}`;
                                 return (
                                   <Tooltip key={run.id} content={label}>
-                                    <span tabIndex={0} role="img" aria-label={label} className={`inline-flex size-6 items-center justify-center rounded-full ${look.className}`}>
+                                    <span role="img" aria-label={label} className={`inline-flex size-6 items-center justify-center rounded-full ${look.className}`}>
                                       <RunIcon size={14} weight="fill" aria-hidden="true" />
                                     </span>
                                   </Tooltip>
                                 );
                               })}
                             </span>
-                            <span className="text-xs text-kumo-subtle">Newest first. Hover or focus one for its time.</span>
+                            <span className="text-xs text-kumo-subtle">Newest first. Tap, point at or focus one for its time.</span>
                           </span>
                         ),
                       }
@@ -367,72 +369,80 @@ function ProductPage() {
 
       <section aria-labelledby="lineage-title" className="grid gap-4">
         <div className="grid gap-1.5">
-          <p className="font-mono text-[0.7rem] font-medium uppercase tracking-[0.12em] text-kumo-brand">Lineage</p>
+          <Eyebrow>Lineage</Eyebrow>
           <h2 id="lineage-title" className="font-display text-2xl text-kumo-strong sm:text-3xl">
             How the current version was built
           </h2>
-          <p className="max-w-2xl text-sm text-kumo-subtle">From the publisher's source to what this page serves: when it was read, checked and published.</p>
+          <p className="max-w-[42rem] text-sm text-kumo-subtle">From the publisher’s source to what this page serves: when it was read, checked and published.</p>
         </div>
-        <ol className="grid gap-3 md:grid-cols-4">
-          <Step n={1} label="Source" last={false}>
-            {feed.data ? (
-              <>
-                <a href={publisherHref(feed.data.publisher.id)} className="font-display text-lg text-kumo-strong hover:underline">
+        {/* Two columns before four: four only once each card is wide enough for a publisher's full name. */}
+        <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Step
+            n={1}
+            label="Source"
+            title={
+              feed.data ? (
+                <a href={publisherHref(feed.data.publisher.id)} className="hover:underline">
                   {feed.data.publisher.name}
                 </a>
+              ) : (
+                <Loader size="sm" />
+              )
+            }
+          >
+            {feed.data ? (
+              <>
                 <span>Shared {throughOf(feed.data)}</span>
                 {source ? (
-                  <Link href={source.href} target="_blank" rel="noopener noreferrer">
+                  <Link href={source.href} target="_blank" rel="noopener noreferrer" className="wrap-anywhere">
                     {source.hostname} <Link.ExternalIcon />
                   </Link>
                 ) : null}
                 {current?.sourcePublishedAt ? <span>Source published {fmt.dateTime(current.sourcePublishedAt)}</span> : null}
               </>
-            ) : (
-              <Loader size="sm" />
-            )}
+            ) : null}
           </Step>
-          <Step n={2} label="Read" last={false}>
+          <Step
+            n={2}
+            label="Read"
+            title={current ? <RelativeTime value={current.observedAt} /> : acquisitions.loading ? <Loader size="sm" /> : data.version > 0 ? "Earlier" : "Not yet"}
+          >
             {current ? (
               <>
-                <span className="font-display text-lg text-kumo-strong">
-                  <RelativeTime value={current.observedAt} />
-                </span>
                 <span>
                   {fmt.dateTime(current.observedAt)}
-                  {current.completeness ? ` · ${current.completeness}` : ""}
+                  {current.completeness ? `, ${COMPLETENESS.get(current.completeness) ?? current.completeness}` : ""}
                 </span>
                 {current.revisions !== undefined ? (
                   <span>
-                    {fmt.int(current.rows ?? 0)} rows · {fmt.int(current.revisions)} changes
+                    {fmt.int(current.rows ?? 0)} rows read · {fmt.int(current.revisions)} changes logged
                   </span>
                 ) : null}
               </>
-            ) : (
-              <span>{acquisitions.loading ? "Loading the latest run…" : "No successful collection yet."}</span>
+            ) : acquisitions.loading ? null : (
+              <span>
+                {data.version > 0 ? "This version came from an earlier run, no longer in the recent list; newer runs found nothing new." : "No successful collection yet."}
+              </span>
             )}
           </Step>
-          <Step n={3} label="Checked" last={false}>
+          <Step n={3} label="Checked" title={current?.normalizer ? `Checked by ${current.normalizer.id}` : data.version > 0 ? "Earlier" : "Not yet"}>
             {current?.normalizer ? (
               <>
-                <span className="font-display text-lg text-kumo-strong">{current.normalizer.id}</span>
-                <span className="flex items-center gap-2">
-                  code version {current.normalizer.version} <Badge variant={current.status === "failed" ? "error" : "success"}>{current.status}</Badge>
+                <span className="flex flex-wrap items-center gap-2">
+                  code version {current.normalizer.version} <Badge variant={current.status === "failed" ? "error" : "success"}>{RUN_LABEL[current.status]}</Badge>
                 </span>
                 {current.quality ? (
                   <span>
-                    {fmt.int(current.quality.acceptedRecords)} accepted, {fmt.int(current.quality.rejectedRecords)} rejected
+                    {fmt.int(current.quality.acceptedRecords)} kept
+                    {current.quality.rejectedRecords ? ` · ${fmt.int(current.quality.rejectedRecords)} source rows left out, because they did not pass the checks` : ""}
                   </span>
                 ) : null}
               </>
             ) : (
-              <span>Waiting for the first accepted batch.</span>
+              <span>{data.version > 0 ? "Checked by the same earlier run." : "Nothing has been checked yet."}</span>
             )}
           </Step>
-          <Step n={4} label="Published" last>
-            <span className="font-display text-lg text-kumo-strong">
-              <RelativeTime value={data.updatedAt} />
-            </span>
+          <Step n={4} label="Published" title={<RelativeTime value={data.updatedAt} />} last>
             <span>
               version {fmt.int(data.version)} · {fmt.int(data.rowCount)} {data.role === "time-series" ? "points" : "records"}
             </span>
@@ -445,18 +455,25 @@ function ProductPage() {
   );
 }
 
-function Step({ n, label, last, children }: { n: number; label: string; last: boolean; children: ReactNode }) {
+/**
+ * One step of the lineage. Steps share three rows (label, title, details), so a publisher name
+ * that wraps moves every step's details down together.
+ */
+function Step({ n, label, title, last = false, children }: { n: number; label: string; title: ReactNode; last?: boolean; children: ReactNode }) {
   return (
-    <li className="relative">
-      <LayerCard className="flex h-full flex-col">
-        <LayerCard.Secondary className="flex items-center gap-2 font-mono text-[0.7rem] uppercase tracking-[0.08em]">
-          <span className="grid size-5 place-items-center rounded-full bg-kumo-brand text-[0.65rem] font-semibold text-kumo-inverse">{n}</span>
+    <li className={`relative ${cardRows(3)}`}>
+      <LayerCard className={cardRows(3)}>
+        <LayerCard.Secondary className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.08em]">
+          <span className="grid size-5 place-items-center rounded-full bg-kumo-brand text-xs font-semibold text-kumo-inverse">{n}</span>
           {label}
         </LayerCard.Secondary>
-        <LayerCard.Primary className="grid flex-1 content-start gap-1 text-xs text-kumo-subtle">{children}</LayerCard.Primary>
+        <LayerCard.Primary className={`gap-1 text-xs text-kumo-subtle ${bodyRows(2)}`}>
+          <span className="font-display text-lg text-kumo-strong">{title}</span>
+          <span className="grid content-start gap-1">{children}</span>
+        </LayerCard.Primary>
       </LayerCard>
       {last ? null : (
-        <ArrowRightIcon aria-hidden="true" size={16} className="absolute -right-3 top-1/2 z-10 hidden -translate-y-1/2 rounded-full bg-kumo-canvas text-kumo-subtle md:block" />
+        <ArrowRightIcon aria-hidden="true" size={16} className="absolute -right-3 top-1/2 z-10 hidden -translate-y-1/2 rounded-full bg-kumo-canvas text-kumo-subtle lg:block" />
       )}
     </li>
   );

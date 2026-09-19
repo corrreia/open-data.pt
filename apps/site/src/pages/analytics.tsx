@@ -1,4 +1,4 @@
-import { Badge, Empty, LayerCard, Loader, Tabs, TimeseriesChart } from "@cloudflare/kumo";
+import { Badge, Button, Empty, LayerCard, Loader, Tabs, TimeseriesChart } from "@cloudflare/kumo";
 import { ChartBarIcon, GlobeIcon, LinkSimpleIcon, PlugsConnectedIcon, QuestionIcon, RobotIcon, SparkleIcon, TerminalWindowIcon, type Icon } from "@phosphor-icons/react";
 import { useMemo, useState, type ReactNode } from "react";
 import { ErrorNote, PageHead, SectionHead, StatTile, useDarkMode } from "../components/common";
@@ -38,8 +38,19 @@ interface Line {
   takes: (row: { surface: string; kind: string }) => boolean;
 }
 
+/** MCP's JSON-RPC methods in words; the method stays beside it for anyone who knows the protocol. */
+const CALL_LABEL = new Map([
+  ["initialize", "Connected"],
+  ["notifications/initialized", "Connection confirmed"],
+  ["tools/list", "Listed the tools"],
+  ["tools/call execute", "Ran code against the API"],
+  ["tools/call search", "Searched the API description"],
+  ["ping", "Checked the server is up"],
+]);
+const callLabel = (call: string) => (call ? `${CALL_LABEL.get(call) ?? "Other request"} (${call})` : "Other request");
+
 const SURFACE_LINES: Line[] = [
-  { id: "web", label: "Website pages", slot: 0, takes: (row) => row.surface === "web" || row.surface === "docs" },
+  { id: "web", label: "Page views", slot: 0, takes: (row) => row.surface === "web" || row.surface === "docs" },
   { id: "api", label: "API requests", slot: 1, takes: (row) => row.surface === "api" },
   { id: "mcp", label: "MCP messages", slot: 2, takes: (row) => row.surface === "mcp" },
 ];
@@ -147,19 +158,28 @@ function AnalyticsPage() {
 
       <section aria-label="What to show" className="flex flex-wrap items-end justify-between gap-4">
         <Tabs variant="underline" value={view} onValueChange={(value) => setView(VIEWS.find((each) => each.value === value)?.value ?? "all")} tabs={VIEWS} />
-        <Tabs variant="segmented" value={days} onValueChange={(value) => setDays(String(value))} tabs={WINDOWS} />
+        {/* A choice of window, not a place to go: buttons that say which one is pressed, as the series view's time span does. */}
+        <div role="group" aria-label="Time window" className="flex flex-wrap gap-2">
+          {WINDOWS.map((each) => (
+            <Button key={each.value} size="sm" variant={days === each.value ? "primary" : "secondary"} aria-pressed={days === each.value} onClick={() => setDays(each.value)}>
+              {each.label}
+            </Button>
+          ))}
+        </div>
       </section>
 
       {disabled ? (
         <Empty icon={<ChartBarIcon size={32} />} title="Analytics are not switched on yet" description="This deployment does not count its requests yet. Check back later." />
       ) : report.error ? (
-        <ErrorNote error={report.error} />
+        <ErrorNote error={report.error} what="the usage numbers" onRetry={() => void report.refetch()} />
       ) : !report.data ? (
         <div className="grid place-items-center py-16">
           <Loader size="lg" />
         </div>
       ) : (
-        <Report report={report.data} view={view} titles={titles} />
+        <div role="tabpanel" aria-label={VIEWS.find((each) => each.value === view)?.label} className="grid gap-14">
+          <Report report={report.data} view={view} titles={titles} />
+        </div>
       )}
     </Shell>
   );
@@ -200,19 +220,15 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
 
   return (
     <>
-      <section aria-label="Totals" className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-3">
+      <section aria-label="Totals" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {view === "all" ? (
           <>
-            <StatTile
-              label="Website pages"
-              value={fmt.int(sum(report.timeline.filter((row) => row.surface === "web" || row.surface === "docs")))}
-              note={`over the last ${window}`}
-            />
+            <StatTile label="Page views" value={fmt.int(sum(report.timeline.filter((row) => row.surface === "web" || row.surface === "docs")))} note={`over the last ${window}`} />
             <StatTile label="API requests" value={fmt.int(sum(report.timeline.filter((row) => row.surface === "api")))} note="from outside this website" />
             <StatTile
               label="MCP messages"
               value={fmt.int(sum(report.timeline.filter((row) => row.surface === "mcp")))}
-              note={`${fmt.int(sum(report.timeline.filter((row) => row.surface === "mcp-read")))} API reads by code runs`}
+              note={`and ${fmt.int(sum(report.timeline.filter((row) => row.surface === "mcp-read")))} API reads from MCP code runs`}
             />
             <StatTile
               label="People and machines"
@@ -233,7 +249,7 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
             ) : view === "web" ? (
               <StatTile label="Read as Markdown" value={fmt.int(markdown)} note="pages fetched by agents asking for text/markdown" />
             ) : (
-              <StatTile label="API reads by code runs" value={fmt.int(sum(report.timeline.filter((row) => row.surface === "mcp-read")))} note="each execute run can read several" />
+              <StatTile label="API reads from code runs" value={fmt.int(sum(report.timeline.filter((row) => row.surface === "mcp-read")))} note="each code run can read several" />
             )}
             <StatTile
               label="Server errors"
@@ -249,7 +265,7 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
 
       <section aria-labelledby="who-title">
         <SectionHead eyebrow="Who" title="Clients" id="who-title">
-          Named from each request's User-Agent. Scripts are HTTP libraries and command-line tools; AI agents fetch for an assistant or train one.
+          Named from each request’s User-Agent. Scripts are HTTP libraries and command-line tools; AI agents fetch for an assistant or train one.
         </SectionHead>
         <div className="grid gap-4 lg:grid-cols-2">
           <Ranked
@@ -277,7 +293,7 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
                   const [call = "", client = ""] = key.split("|");
                   return {
                     key,
-                    label: client ? `${call} · ${client}` : call || "(other)",
+                    label: client ? `${callLabel(call)} · ${client}` : callLabel(call),
                     icon: <Logo file={client ? mcpClientIcon(client, dark) : undefined} fallback={PlugsConnectedIcon} />,
                     requests,
                   };
@@ -363,7 +379,7 @@ function Timeline({ report, lines, view, counts }: { report: AnalyticsReport; li
   return (
     <section aria-labelledby="when-title">
       <SectionHead eyebrow="When" title={`Requests per ${per}`} id="when-title">
-        {view === "all" ? "Website pages, API requests and MCP messages." : "By kind of client."}
+        {view === "all" ? "Page views, API requests and MCP messages." : "By kind of client."}
         {report.resolution === "day" ? " Days are UTC days." : " Hours in your local time."}
       </SectionHead>
       <LayerCard>
@@ -448,7 +464,7 @@ function Ranked({ title, rows, note, empty = "Nothing counted in this window." }
     <LayerCard className="min-w-0">
       <LayerCard.Secondary className="flex items-baseline justify-between gap-3">
         <span>{title}</span>
-        <span className="font-mono text-[0.7rem] text-kumo-subtle">{fmt.int(rows.length)}</span>
+        <span className="font-mono text-xs text-kumo-subtle">{fmt.int(rows.length)}</span>
       </LayerCard.Secondary>
       <LayerCard.Primary className="grid gap-2.5">
         {note ? <p className="text-xs text-kumo-subtle">{note}</p> : null}
@@ -460,7 +476,7 @@ function Ranked({ title, rows, note, empty = "Nothing counted in this window." }
               <li key={row.key} className="grid gap-1">
                 <div className="flex min-w-0 items-center gap-2 text-sm">
                   {row.icon}
-                  <span className={`min-w-0 truncate text-kumo-default ${row.mono ? "font-mono text-xs" : ""}`} title={row.label}>
+                  <span className={`min-w-0 wrap-anywhere text-kumo-default ${row.mono ? "font-mono text-xs" : ""}`}>
                     {row.href ? (
                       <a href={row.href} className="hover:underline">
                         {row.label}

@@ -19,4 +19,11 @@ echarts.use([
   CanvasRenderer,
 ]);
 
+// Every chart on the site goes through this instance, Kumo's included: with reduced motion asked for,
+// no chart draws itself in, and none replays that entrance when its data or theme changes.
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+echarts.registerPreprocessor((option) => {
+  if (reducedMotion.matches) option.animation = false;
+});
+
 export { echarts };
