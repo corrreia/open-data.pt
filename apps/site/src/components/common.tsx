@@ -59,7 +59,11 @@ export function Countdown({ value }: { value: string | undefined }) {
   );
 }
 
-// A kind of data is a category, not a state: an icon names it, so no hue competes with the status colours beside it.
+/**
+ * A kind of data is a category, not a state. Each kind keeps its own colour, on an icon rather
+ * than a dot: a dot beside a status badge's dot read as another status, while a table, pulse,
+ * bell, chart or sigma says which kind it is even where the hue is close to a status colour.
+ */
 export const ROLE_ICON = {
   reference: TableIcon,
   "current-state": PulseIcon,
@@ -68,10 +72,18 @@ export const ROLE_ICON = {
   summary: SigmaIcon,
 } satisfies { [role in Role]: Icon };
 
+const ROLE_COLOR = {
+  reference: "var(--color-series-1)",
+  "current-state": "var(--color-series-2)",
+  "event-log": "var(--color-series-3)",
+  "time-series": "var(--color-series-4)",
+  summary: "var(--color-series-5)",
+} satisfies { [role in Role]: string };
+
 export function RoleBadge({ role }: { role: Role }) {
   const RoleIcon = ROLE_ICON[role];
   return (
-    <Badge variant="outline" icon={<RoleIcon aria-hidden="true" size={12} weight="bold" className="shrink-0 text-kumo-subtle" />}>
+    <Badge variant="outline" icon={<RoleIcon aria-hidden="true" size={12} weight="fill" className="shrink-0" style={{ color: ROLE_COLOR[role] }} />}>
       {ROLE[role].label}
     </Badge>
   );
