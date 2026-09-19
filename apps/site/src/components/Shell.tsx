@@ -92,7 +92,7 @@ export function Shell({ section, children }: { section: Section; children: React
        * portals to the end of <body>, always paint above it. While the palette is open the page
        * behind it is inert: Tab stays in the palette and screen readers read only the palette.
        */}
-      <div className="isolate flex min-h-screen flex-col" inert={searching}>
+      <div className="isolate flex min-h-screen w-full flex-col" inert={searching}>
         <a className="skip-link" href="#content">
           Skip to content
         </a>
