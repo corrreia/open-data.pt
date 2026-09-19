@@ -1,8 +1,8 @@
-import { Badge, Button, Checkbox, Collapsible, Empty, InputGroup, Loader, Select } from "@cloudflare/kumo";
+import { Badge, Button, Checkbox, Collapsible, Empty, InputGroup, Select } from "@cloudflare/kumo";
 import { FunnelSimpleIcon, MagnifyingGlassIcon, XIcon } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState } from "react";
 import { DatasetCard } from "../components/DatasetCard";
-import { ErrorNote, PageHead } from "../components/common";
+import { ErrorNote, PageHead, Placeholder } from "../components/common";
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { ROLE, UPDATES, buildDatasets, buildPublishers, fetchFeeds, fetchProducts, productCount, publisherHref, topicLabel, type Dataset, emptyLast } from "../lib/catalog";
@@ -185,18 +185,20 @@ function Catalog() {
 
         <section aria-label="Datasets" className="grid min-w-0 gap-4">
           <div className="flex flex-wrap items-center gap-3">
-            <InputGroup className="min-w-0 flex-1 basis-72">
-              <InputGroup.Addon>
-                <MagnifyingGlassIcon />
-              </InputGroup.Addon>
-              <InputGroup.Input
-                value={q}
-                onChange={(event) => setQ(event.target.value)}
-                placeholder="Search datasets, publishers, tables…"
-                aria-label="Search datasets"
-                autoFocus={Boolean(initial.q)}
-              />
-            </InputGroup>
+            <div className="min-w-0 flex-1 basis-72">
+              <InputGroup>
+                <InputGroup.Addon>
+                  <MagnifyingGlassIcon />
+                </InputGroup.Addon>
+                <InputGroup.Input
+                  value={q}
+                  onChange={(event) => setQ(event.target.value)}
+                  placeholder="Search datasets, publishers, tables…"
+                  aria-label="Search datasets"
+                  autoFocus={Boolean(initial.q)}
+                />
+              </InputGroup>
+            </div>
             <span className="flex items-center gap-2 text-sm text-kumo-subtle">
               <span id="sort-label">Order</span>
               <Select
@@ -249,11 +251,7 @@ function Catalog() {
               void feeds.refetch();
             }}
           />
-          {datasets.length === 0 && !products.error && !feeds.error ? (
-            <div className="flex items-center gap-2 py-10 text-sm text-kumo-subtle">
-              <Loader size="sm" /> Loading datasets…
-            </div>
-          ) : null}
+          {datasets.length === 0 && !products.error && !feeds.error ? <Placeholder rows={4} label="Loading the catalog" /> : null}
           {datasets.length > 0 && visible.length === 0 ? (
             <Empty
               icon={<MagnifyingGlassIcon size={40} className="text-kumo-inactive" />}

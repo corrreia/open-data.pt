@@ -1,8 +1,8 @@
-import { Badge, Breadcrumbs, Button, Empty, LayerCard, Link, Loader } from "@cloudflare/kumo";
+import { Badge, Breadcrumbs, Button, Empty, LayerCard, Link } from "@cloudflare/kumo";
 import { ArrowRightIcon, ScalesIcon } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { DatasetCard } from "../components/DatasetCard";
-import { ErrorNote, Kv, PageHead, StatTile, bodyRows, cardRows } from "../components/common";
+import { ErrorNote, Kv, PageHead, Placeholder, StatTile, bodyRows, cardRows } from "../components/common";
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { buildDatasets, buildLicences, fetchFeeds, fetchProducts, licenceHref, productCount, publisherHref, topicsOf, type Licence, emptyLast } from "../lib/catalog";
@@ -156,9 +156,7 @@ function Licences() {
         }}
       />
       {!licences && !(products.error ?? feeds.error) ? (
-        <div className="flex items-center gap-2 py-16 text-sm text-kumo-subtle">
-          <Loader size="sm" /> Loading licences…
-        </div>
+        <Placeholder rows={3} label="Loading the licences" />
       ) : !licences ? null : wanted && !licence ? (
         <Empty
           icon={<ScalesIcon size={40} className="text-kumo-inactive" />}

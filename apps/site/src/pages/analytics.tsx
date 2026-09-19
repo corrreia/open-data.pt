@@ -1,6 +1,6 @@
-import { Badge, Button, Empty, LayerCard, Loader, Tabs, TimeseriesChart } from "@cloudflare/kumo";
+import { Badge, Button, ChartLegend, ChoroplethMap, Empty, LayerCard, Loader, Tabs, TimeseriesChart, type MapGeoJson } from "@cloudflare/kumo";
 import { ChartBarIcon, GlobeIcon, LinkSimpleIcon, PlugsConnectedIcon, QuestionIcon, RobotIcon, SparkleIcon, TerminalWindowIcon, type Icon } from "@phosphor-icons/react";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ErrorNote, PageHead, SectionHead, StatTile, useDarkMode } from "../components/common";
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
@@ -344,7 +344,10 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
           Countries as Cloudflare locates each client. Referrers are the sites visitors followed a link from, with AI assistants named.
         </SectionHead>
         <div className="grid gap-4 lg:grid-cols-2">
-          <Ranked title="Countries" rows={countries.map(({ key, requests }) => ({ key, label: countryName(key), requests }))} />
+          <div className="grid content-start gap-4">
+            <WorldMap countries={countries} />
+            <Ranked title="Countries" rows={countries.map(({ key, requests }) => ({ key, label: countryName(key), requests }))} />
+          </div>
           <Ranked
             title="Referrers"
             rows={referrers.map(({ key, requests }) => ({ key, label: key, icon: <Logo file={referrerIcon(key, dark)} fallback={LinkSimpleIcon} />, requests }))}
@@ -353,6 +356,61 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
         </div>
       </section>
     </>
+  );
+}
+
+/** Country outlines for the map, fetched once the map is on screen: 170 KB the other pages never load. */
+function useWorldGeoJson(wanted: boolean) {
+  const [world, setWorld] = useState<MapGeoJson>();
+  useEffect(() => {
+    if (!wanted || world) return undefined;
+    let current = true;
+    void fetch("/world-countries.geojson")
+      .then((response) => (response.ok ? response.json() : undefined))
+      // SAFETY: the file is this site's own trimmed copy of Natural Earth, written as a FeatureCollection.
+      .then((data: MapGeoJson | undefined) => current && data && setWorld(data))
+      .catch(() => undefined);
+    return () => {
+      current = false;
+    };
+  }, [wanted, world]);
+  return world;
+}
+
+/** Where the requests came from, shaded light to dark. The list beside it carries the same numbers as text. */
+function WorldMap({ countries }: { countries: { key: string; requests: number }[] }) {
+  const dark = useDarkMode();
+  const rows = countries.filter((row) => /^[A-Z]{2}$/.test(row.key));
+  const world = useWorldGeoJson(rows.length > 0);
+  if (rows.length === 0) return null;
+  return (
+    <LayerCard>
+      <LayerCard.Secondary className="flex items-baseline justify-between gap-3">
+        <span>Where the requests came from</span>
+        <span className="font-mono text-xs text-kumo-subtle">{fmt.int(rows.length)}</span>
+      </LayerCard.Secondary>
+      <LayerCard.Primary>
+        {world ? (
+          <ChoroplethMap
+            echarts={echarts}
+            geoJson={world}
+            mapName="world-countries"
+            data={rows}
+            name={(row) => row.key}
+            value={(row) => row.requests}
+            nameProperty="iso_a2"
+            colorRange={dark ? ["#1f3a2c", "#276b48", "#2f9463", "#42b97e", "#7fd9a9"] : ["#d9efe3", "#9ad3b6", "#5fb68a", "#2f9463", "#1b7a4f"]}
+            height={260}
+            valueFormat={(value) => `${fmt.int(value)} requests`}
+            tooltipFormatter={(row) => `${countryName(row.key)}: ${fmt.int(row.requests)} requests`}
+          />
+        ) : (
+          <div className="grid h-[260px] place-items-center text-sm text-kumo-subtle">
+            <Loader size="sm" />
+          </div>
+        )}
+      </LayerCard.Primary>
+    </LayerCard>
   );
 }
 
@@ -384,12 +442,10 @@ function Timeline({ report, lines, view, counts }: { report: AnalyticsReport; li
       </SectionHead>
       <LayerCard>
         <LayerCard.Primary className="grid gap-3">
-          <ul className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm" aria-label="Legend">
+          <ul className="flex flex-wrap gap-x-6 gap-y-1.5" aria-label="Legend">
             {series.map(({ line, points }) => (
-              <li key={line.id} className="flex items-center gap-2 text-kumo-default">
-                <span aria-hidden="true" className="inline-block h-0.5 w-4 rounded-full" style={{ backgroundColor: palette[line.slot] }} />
-                {line.label}
-                <span className="font-mono text-xs text-kumo-subtle">{fmt.int(points.reduce((total, [, value]) => total + value, 0))}</span>
+              <li key={line.id}>
+                <ChartLegend.SmallItem name={line.label} color={palette[line.slot] ?? "#1b7a4f"} value={fmt.int(points.reduce((total, [, value]) => total + value, 0))} />
               </li>
             ))}
           </ul>

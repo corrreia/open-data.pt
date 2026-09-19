@@ -1,8 +1,8 @@
-import { Badge, Breadcrumbs, Button, Empty, LayerCard, Link, Loader } from "@cloudflare/kumo";
+import { Badge, Breadcrumbs, Button, Empty, LayerCard, Link } from "@cloudflare/kumo";
 import { ArrowRightIcon, BuildingsIcon, HeartbeatIcon } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { DatasetCard } from "../components/DatasetCard";
-import { ErrorNote, Kv, PageHead, StatTile, bodyRows, cardRows } from "../components/common";
+import { ErrorNote, Kv, PageHead, Placeholder, StatTile, bodyRows, cardRows } from "../components/common";
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { buildDatasets, buildPublishers, fetchFeeds, fetchProducts, licenceHref, productCount, publisherHref, topicsOf, type Publisher, emptyLast } from "../lib/catalog";
@@ -176,9 +176,7 @@ function Publishers() {
         }}
       />
       {!publishers && !(products.error ?? feeds.error) ? (
-        <div className="flex items-center gap-2 py-16 text-sm text-kumo-subtle">
-          <Loader size="sm" /> Loading publishers…
-        </div>
+        <Placeholder rows={4} label="Loading the publishers" />
       ) : !publishers ? null : wanted && !publisher ? (
         <Empty
           icon={<BuildingsIcon size={40} className="text-kumo-inactive" />}
