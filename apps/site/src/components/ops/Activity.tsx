@@ -1,7 +1,7 @@
 // Every run as it happens: the newest acquisitions, refreshed on a short clock, and any past UTC day on request.
 
-import { Button, DatePicker, LayerCard, Loader, Popover } from "@cloudflare/kumo";
-import { ArrowClockwiseIcon, CalendarDotsIcon, XIcon } from "@phosphor-icons/react";
+import { Button, DatePicker, LayerCard, Loader, Popover, RefreshButton } from "@cloudflare/kumo";
+import { CalendarDotsIcon, XIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import { productHref } from "../../lib/api";
 import { fmt, plural } from "../../lib/format";
@@ -228,9 +228,7 @@ export function Activity({ lookup }: { lookup: FeedLookup }) {
                     updated <RelativeTime value={new Date(live.updatedAt).toISOString()} />
                   </span>
                 ) : null}
-                <Button variant="ghost" size="sm" icon={<ArrowClockwiseIcon />} loading={live.fetching} onClick={() => void live.refetch()}>
-                  Refresh
-                </Button>
+                <RefreshButton size="sm" variant="ghost" loading={live.fetching} aria-label="Refresh the latest runs" onClick={() => void live.refetch()} />
               </span>
             </LayerCard.Secondary>
             <LayerCard.Primary className="p-0">

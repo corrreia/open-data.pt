@@ -1,4 +1,4 @@
-import { Badge, Button, LayerCard } from "@cloudflare/kumo";
+import { Badge, Button, LayerCard, SkeletonLine } from "@cloudflare/kumo";
 import { ArrowClockwiseIcon, BellIcon, ChartLineIcon, PulseIcon, SigmaIcon, TableIcon, WarningCircleIcon, type Icon } from "@phosphor-icons/react";
 import { useSyncExternalStore, type ReactNode } from "react";
 import { ROLE, type Tone } from "../lib/catalog";
@@ -164,6 +164,23 @@ export function PageHead({ eyebrow, title, children }: { eyebrow: string; title:
  * A failed read: what could not load, why in the server's or browser's words, and a way to try
  * again. It is an alert, so a screen reader hears it when it appears.
  */
+/**
+ * What a list or card looks like while it loads: lines the width of the text that will replace
+ * them, instead of a spinner beside the word "Loading".
+ */
+export function Placeholder({ rows = 3, label }: { rows?: number; label: string }) {
+  return (
+    <div role="status" aria-label={label} className="grid gap-3">
+      {Array.from({ length: rows }, (_, row) => (
+        <div key={row} className="grid gap-2 rounded-lg bg-kumo-base p-4 ring-1 ring-kumo-line">
+          <SkeletonLine minWidth={30} maxWidth={60} />
+          <SkeletonLine minWidth={60} maxWidth={90} blockHeight={10} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function ErrorNote({ error, what = "this", onRetry }: { error: Error | undefined; what?: string; onRetry?: () => void }) {
   if (!error) return null;
   return (

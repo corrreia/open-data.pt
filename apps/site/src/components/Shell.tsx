@@ -1,5 +1,17 @@
-import { Button } from "@cloudflare/kumo";
-import { GithubLogoIcon, MagnifyingGlassIcon } from "@phosphor-icons/react";
+import { Button, Sidebar } from "@cloudflare/kumo";
+import {
+  BookOpenIcon,
+  BuildingsIcon,
+  CompassIcon,
+  GithubLogoIcon,
+  HandHeartIcon,
+  HeartbeatIcon,
+  ListIcon,
+  MagnifyingGlassIcon,
+  PlugsConnectedIcon,
+  ScalesIcon,
+  type Icon,
+} from "@phosphor-icons/react";
 import { useEffect, useState, type ReactNode } from "react";
 import { fetchFeeds, fetchProducts } from "../lib/catalog";
 import { REPOSITORY } from "../lib/project";
@@ -9,15 +21,40 @@ import { SearchPalette } from "./SearchPalette";
 
 export type Section = "home" | "catalog" | "publishers" | "licences" | "status" | "analytics" | "start" | "operations" | "product" | "contribute";
 
-const NAV: { section: Section | "api"; href: string; label: string }[] = [
-  { section: "catalog", href: "/catalog/", label: "Catalog" },
-  { section: "publishers", href: "/publisher/", label: "Publishers" },
-  { section: "licences", href: "/licence/", label: "Licences" },
-  { section: "status", href: "/status/", label: "Status" },
-  { section: "start", href: "/start/", label: "Start here" },
-  { section: "api", href: "/docs", label: "API" },
-  { section: "contribute", href: "/contribute/", label: "Contribute" },
+/** The icons are for the phone drawer, where each destination gets a row of its own. */
+const NAV: { section: Section | "api"; href: string; label: string; icon: Icon }[] = [
+  { section: "catalog", href: "/catalog/", label: "Catalog", icon: CompassIcon },
+  { section: "publishers", href: "/publisher/", label: "Publishers", icon: BuildingsIcon },
+  { section: "licences", href: "/licence/", label: "Licences", icon: ScalesIcon },
+  { section: "status", href: "/status/", label: "Status", icon: HeartbeatIcon },
+  { section: "start", href: "/start/", label: "Start here", icon: BookOpenIcon },
+  { section: "api", href: "/docs", label: "API", icon: PlugsConnectedIcon },
+  { section: "contribute", href: "/contribute/", label: "Contribute", icon: HandHeartIcon },
 ];
+
+/** Phones: the same destinations as a drawer, so seven links do not wrap into two ragged rows. */
+function NavDrawer({ current }: { current: Section | "api" }) {
+  return (
+    <div className="md:hidden">
+      <Sidebar fullScreenOnMobile>
+        <Sidebar.Header>
+          <Mark size={24} />
+          <span className="font-display text-base">open-data.pt</span>
+          <Sidebar.Close className="ml-auto" />
+        </Sidebar.Header>
+        <Sidebar.Content>
+          <Sidebar.Menu>
+            {NAV.map((item) => (
+              <Sidebar.MenuButton key={item.href} href={item.href} icon={item.icon} active={item.section === current}>
+                {item.label}
+              </Sidebar.MenuButton>
+            ))}
+          </Sidebar.Menu>
+        </Sidebar.Content>
+      </Sidebar>
+    </div>
+  );
+}
 
 function isTypingIn(target: EventTarget | null) {
   return target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
@@ -49,7 +86,7 @@ export function Shell({ section, children }: { section: Section; children: React
   };
 
   return (
-    <>
+    <Sidebar.Provider collapsible="offcanvas" mobileBreakpoint={768} defaultOpen={false}>
       {/*
        * `isolate` keeps the header's z-index inside the page, so dialogs and the palette, which Kumo
        * portals to the end of <body>, always paint above it. While the palette is open the page
@@ -62,6 +99,9 @@ export function Shell({ section, children }: { section: Section; children: React
         {/* Sticky from md up; on phones the two-row header scrolls away instead of covering a third of the screen. */}
         <header className="relative z-40 border-b md:sticky md:top-0 border-kumo-line bg-[color-mix(in_srgb,var(--color-kumo-canvas)_88%,transparent)] backdrop-blur-md">
           <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 sm:px-6">
+            <Sidebar.Trigger className="md:hidden" aria-label="Open the menu">
+              <ListIcon size={20} aria-hidden="true" />
+            </Sidebar.Trigger>
             <a href="/" className="flex items-center gap-2.5 rounded-lg text-kumo-strong no-underline" aria-label="open-data.pt home">
               <Mark size={32} />
               <span className="font-display text-lg">open-data.pt</span>
@@ -88,7 +128,8 @@ export function Shell({ section, children }: { section: Section; children: React
                 <GithubLogoIcon size={20} aria-hidden="true" />
               </a>
             </div>
-            <nav aria-label="Primary" className="-mx-1 flex basis-full flex-wrap items-center gap-0.5 sm:ml-auto sm:basis-auto">
+            {/* Wide screens carry the destinations in the header; phones open them in the drawer. */}
+            <nav aria-label="Primary" className="-mx-1 hidden basis-full flex-wrap items-center gap-0.5 md:ml-auto md:flex md:basis-auto">
               {NAV.map((item) => (
                 <a
                   key={item.href}
@@ -145,7 +186,8 @@ export function Shell({ section, children }: { section: Section; children: React
           </div>
         </footer>
       </div>
+      <NavDrawer current={current} />
       <SearchPalette open={searching} onOpenChange={setSearching} />
-    </>
+    </Sidebar.Provider>
   );
 }
