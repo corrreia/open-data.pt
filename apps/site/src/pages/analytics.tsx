@@ -1,11 +1,12 @@
 import { Badge, Empty, LayerCard, Loader, Tabs, TimeseriesChart } from "@cloudflare/kumo";
-import { ChartBarIcon } from "@phosphor-icons/react";
+import { ChartBarIcon, GlobeIcon, LinkSimpleIcon, PlugsConnectedIcon, QuestionIcon, RobotIcon, SparkleIcon, TerminalWindowIcon, type Icon } from "@phosphor-icons/react";
 import { useMemo, useState, type ReactNode } from "react";
 import { ErrorNote, PageHead, SectionHead, StatTile, useDarkMode } from "../components/common";
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { ApiError, apiGet, productHref } from "../lib/api";
 import { fetchProducts, licenceHref, publisherHref } from "../lib/catalog";
+import { clientIcon, mcpClientIcon, referrerIcon, type IconFile } from "../lib/client-icons";
 import { echarts } from "../lib/echarts";
 import { fmt } from "../lib/format";
 import { SERIES_COLORS } from "../lib/palette";
@@ -55,6 +56,15 @@ const KIND_LABEL = new Map([
   ["ai-agent", "AI agent"],
   ["crawler", "Crawler"],
   ["unknown", "Unknown"],
+]);
+
+/** Drawn where a client has no logo of its own. */
+const KIND_ICON = new Map<string, Icon>([
+  ["browser", GlobeIcon],
+  ["library", TerminalWindowIcon],
+  ["ai-agent", SparkleIcon],
+  ["crawler", RobotIcon],
+  ["unknown", QuestionIcon],
 ]);
 
 const SURFACE_NAME = new Map([
@@ -145,6 +155,7 @@ function AnalyticsPage() {
 }
 
 function Report({ report, view, titles }: { report: AnalyticsReport; view: View; titles: Map<string, string> }) {
+  const dark = useDarkMode();
   const { counts, reads } = surfacesOf(view);
   const counted = <T extends { surface: string }>(rows: T[]) => rows.filter((row) => counts.includes(row.surface));
   const read = <T extends { surface: string }>(rows: T[]) => rows.filter((row) => reads.includes(row.surface));
@@ -230,16 +241,32 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
             title="Clients"
             rows={tally(clients, (row) => `${row.kind}|${row.name}`).map(({ key, requests }) => {
               const [kind = "", name = ""] = key.split("|");
-              return { key, label: name, tag: KIND_LABEL.get(kind) ?? kind, requests };
+              return { key, label: name, tag: KIND_LABEL.get(kind) ?? kind, icon: <Logo file={clientIcon(name, dark)} fallback={KIND_ICON.get(kind) ?? QuestionIcon} />, requests };
             })}
           />
           <div className="grid content-start gap-4">
-            <Ranked title="Kinds of client" rows={kinds.map(({ key, requests }) => ({ key, label: KIND_LABEL.get(key) ?? key, requests }))} />
+            <Ranked
+              title="Kinds of client"
+              rows={kinds.map(({ key, requests }) => ({
+                key,
+                label: KIND_LABEL.get(key) ?? key,
+                icon: <Logo file={undefined} fallback={KIND_ICON.get(key) ?? QuestionIcon} />,
+                requests,
+              }))}
+            />
             {view === "all" || view === "mcp" ? (
               <Ranked
                 title="MCP calls"
                 note="What assistants asked the MCP server for, and the names clients gave when they connected."
-                rows={tally(report.mcp, (row) => (row.client ? `${row.call} · ${row.client}` : row.call)).map(({ key, requests }) => ({ key, label: key || "(other)", requests }))}
+                rows={tally(report.mcp, (row) => `${row.call}|${row.client}`).map(({ key, requests }) => {
+                  const [call = "", client = ""] = key.split("|");
+                  return {
+                    key,
+                    label: client ? `${call} · ${client}` : call || "(other)",
+                    icon: <Logo file={client ? mcpClientIcon(client, dark) : undefined} fallback={PlugsConnectedIcon} />,
+                    requests,
+                  };
+                })}
               />
             ) : null}
           </div>
@@ -287,7 +314,11 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
         </SectionHead>
         <div className="grid gap-4 lg:grid-cols-2">
           <Ranked title="Countries" rows={countries.map(({ key, requests }) => ({ key, label: countryName(key), requests }))} />
-          <Ranked title="Referrers" rows={referrers.map(({ key, requests }) => ({ key, label: key, requests }))} empty="No request came with a link from another site." />
+          <Ranked
+            title="Referrers"
+            rows={referrers.map(({ key, requests }) => ({ key, label: key, icon: <Logo file={referrerIcon(key, dark)} fallback={LinkSimpleIcon} />, requests }))}
+            empty="No request came with a link from another site."
+          />
         </div>
       </section>
     </>
@@ -381,6 +412,14 @@ interface RankedRow {
   tag?: string | undefined;
   detail?: string;
   mono?: boolean;
+  /** A logo or kind icon before the label. */
+  icon?: ReactNode;
+}
+
+/** A client's logo from /client-icons/, or a plain icon for its kind when it has none. The label beside it names it, so the image is decorative. */
+function Logo({ file, fallback: Fallback }: { file: IconFile | undefined; fallback: Icon }) {
+  if (!file) return <Fallback size={16} aria-hidden="true" className="shrink-0 text-kumo-subtle" />;
+  return <img src={file.src} alt="" width={16} height={16} loading="lazy" decoding="async" className={`size-4 shrink-0 object-contain ${file.invert ? "invert" : ""}`} />;
 }
 
 /** A ranked list: each row's count, with a bar scaled to the largest. */
@@ -402,7 +441,8 @@ function Ranked({ title, rows, note, empty = "Nothing counted in this window." }
           <ol className="grid gap-2">
             {shown.map((row) => (
               <li key={row.key} className="grid gap-1">
-                <div className="flex min-w-0 items-baseline gap-2 text-sm">
+                <div className="flex min-w-0 items-center gap-2 text-sm">
+                  {row.icon}
                   <span className={`min-w-0 truncate text-kumo-default ${row.mono ? "font-mono text-xs" : ""}`} title={row.label}>
                     {row.href ? (
                       <a href={row.href} className="hover:underline">
