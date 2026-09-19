@@ -36,6 +36,7 @@
       "/product/*",
       "/start/*",
       "/status/*",
+      "/analytics/*",
       "/operations/*",
       "/contribute/*",
     ],
@@ -52,6 +53,9 @@
     { "binding": "LAKE_RECORDS", "stream": "c9c95b5a25814d379cc4fbeb7f68f544" },
     { "binding": "LAKE_POINTS", "stream": "8eca86758fe941d28c807a62cb0c1e83" },
   ],
+  // Public usage analytics: one data point per request the kernel answers, read
+  // back for /analytics/ by /api/analytics. Analytics Engine keeps three months.
+  "analytics_engine_datasets": [{ "binding": "USAGE", "dataset": "open_data_pt_usage" }],
   // No cron: every FeedRunner schedules itself with a Durable Object alarm.
   // An explicit empty list keeps old triggers detached.
   "triggers": { "crons": [] },
@@ -93,9 +97,10 @@
     "CLOUDFLARE_ACCOUNT_ID": "cc05ea77c39684419e087c3b78b5177d",
     "LAKE_BUCKET": "open-data-pt-history",
   },
-  // Secret (wrangler secret put): CATALOG_TOKEN, for R2 SQL. The API is
+  // Secrets (wrangler secret put): CATALOG_TOKEN, for R2 SQL, and ANALYTICS_TOKEN
+  // (Account Analytics: Read), for the Analytics Engine SQL API. The API is
   // read-only; nothing takes an operator credential.
-  "secrets": { "required": ["CATALOG_TOKEN"] },
+  "secrets": { "required": ["CATALOG_TOKEN", "ANALYTICS_TOKEN"] },
   // A first baseline of a large product applies its whole index in one runner
   // transaction; Workflow steps also run under this CPU limit.
   "limits": { "cpu_ms": 120000 },

@@ -31,7 +31,7 @@ export const PREVIEW_IMAGE = {
 };
 
 /** The query parameter that names what a page shows; every other parameter stays out of its canonical URL. */
-const NAMING_PARAMETER = new Map([
+export const NAMING_PARAMETER = new Map([
   ["/product/", "slug"],
   ["/publisher/", "id"],
   ["/licence/", "id"],

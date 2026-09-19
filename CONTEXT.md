@@ -89,3 +89,7 @@ The durable append history of meaningful record revisions and series-point revis
 ## Kernel
 
 The Worker, Workflow and Durable Objects that validate normalized streams, detect semantic changes, commit history, select serving versions, schedule work, and expose cacheable typed APIs. It never receives an original source body and contains no source-specific parser.
+
+## Usage
+
+How the site, the API and the MCP server are used: one Workers Analytics Engine data point per request the Kernel answers, with its surface (web, api, mcp, mcp-read, docs, discovery), route template, the product or other subject it names, the kind and name of client its User-Agent gives, country, referrer, status and cache outcome. No IP address, cookie or visitor identifier. Analytics Engine keeps it for three months; `/api/analytics` reads the aggregate for the `/analytics/` page. It is not history and never enters the Lake.

@@ -1,5 +1,6 @@
 import { asObject, asString, isJsonString, parseJson, type JsonObject, type JsonValue } from "@open-data-pt/gatekeeper-shared";
 
+import { ANALYTICS_WINDOWS, AnalyticsError, analyticsReport } from "./analytics";
 import { CADENCE_HEADER } from "./cache";
 import { REGISTRY_ROOM, type ProductDetail, type Registry } from "./coordinators";
 import { publisherRef } from "./vocabulary";
@@ -31,6 +32,7 @@ export interface ApiContext {
   env: Env;
   snapshots: SnapshotStore;
   lakeQueryFetch?: typeof fetch;
+  analyticsFetch?: typeof fetch;
 }
 
 type RegistryStub = DurableObjectStub<Registry>;
@@ -91,6 +93,21 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
       const from = new Date(Date.parse(to) - days * 86_400_000).toISOString();
       const window = await registry().outages(from, to);
       return json({ from, to, trackedSince: window.trackedSince, data: window.items });
+    }
+
+    if (url.pathname === "/api/analytics") {
+      // How the site, the API and the MCP server are used: counts only, from Analytics Engine; the edge keeps each window for half an hour.
+      const days = parseInteger(url, "days", 7, 1, 90);
+      if (!ANALYTICS_WINDOWS.some((window) => window === days)) throw new RequestError(`days must be one of ${ANALYTICS_WINDOWS.join(", ")}`, 400);
+      try {
+        return json(await analyticsReport(ctx.env, days, Date.now(), ctx.analyticsFetch));
+      } catch (error) {
+        if (!(error instanceof AnalyticsError)) throw error;
+        if (error.failure === "disabled") return problem(503, "Analytics unavailable", "Usage analytics are not enabled on this deployment.");
+        const requestId = requestIdOf(request);
+        console.error(JSON.stringify({ event: "analytics_query_failed", requestId, error: error.message }));
+        return problem(502, "Analytics unavailable", `Cloudflare Analytics Engine did not answer. Try again later. Request ${requestId}.`, { "X-Request-Id": requestId });
+      }
     }
 
     /* ---------- Feeds: where each dataset comes from, and how its collection is going ---------- */

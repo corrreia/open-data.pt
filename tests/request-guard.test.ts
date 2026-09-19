@@ -41,6 +41,13 @@ describe("canonical routes", () => {
       expect(canonicalRoute(url), path).toBeDefined();
     }
   });
+
+  it("names every route as the OpenAPI document does, which is how usage analytics count it", () => {
+    for (const path of Object.keys(openApiDocument("https://open-data.pt").paths)) {
+      const url = new URL(`https://open-data.pt${path.replace("{slug}", "stops").replace("{feedId}", "feed_1").replace("{period}", "2026-09")}`);
+      expect(canonicalRoute(url)?.template, path).toBe(path);
+    }
+  });
 });
 
 describe("methods, limits and request IDs", () => {

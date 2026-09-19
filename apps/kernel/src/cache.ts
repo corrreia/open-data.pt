@@ -1,3 +1,5 @@
+import { ANALYTICS_TTL_SECONDS } from "./analytics";
+
 /**
  * Public read endpoints that are safe to cache at the edge. Caching them keeps
  * object reads, Durable Object requests and lake scans flat no matter how many
@@ -11,6 +13,8 @@ const CACHE_TTL_SECONDS: Array<[pattern: RegExp, seconds: number]> = [
   [/^\/api\/(feeds|acquisitions)$/, 10],
   [/^\/api\/feeds\/[^/]+$/, 10],
   [/^\/api\/catalog\.dcat\.json$/, 300],
+  // Each miss runs several Analytics Engine queries; half an hour stale is fine for a usage page.
+  [/^\/api\/analytics$/, ANALYTICS_TTL_SECONDS],
 ];
 
 const HISTORY_PATH = /^\/api\/products\/[^/]+\/(events|changes\/range|series\/range|series\/changes\/range)$/;

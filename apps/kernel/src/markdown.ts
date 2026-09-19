@@ -111,6 +111,7 @@ const RENDERERS = new Map<string, Renderer>([
   ["/product/", product],
   ["/start/", start],
   ["/status/", status],
+  ["/analytics/", analytics],
   ["/operations/", operations],
   ["/contribute/", contribute],
 ]);
@@ -397,6 +398,76 @@ async function status(url: URL, host: SiteHost): Promise<PageText> {
           "| --- | --- | --- | --- | --- |",
           ...ended.map((outage) => `| ${cell(titleOf(outage))} | ${outage.startedAt} | ${outage.endedAt ?? ""} | ${outage.cause} | ${outage.failures} |`),
         ]),
+  ]);
+}
+
+/** What /api/analytics answers, as far as this page reads it. */
+interface UsageReport {
+  from: string;
+  timeline: Array<{ surface: string; kind: string; requests: number }>;
+  clients: Array<{ surface: string; kind: string; name: string; requests: number }>;
+  subjects: Array<{ surface: string; route: string; subject: string; requests: number }>;
+  countries: Array<{ surface: string; country: string; requests: number }>;
+}
+
+const SURFACE_LABEL = new Map([
+  ["web", "Website pages"],
+  ["api", "API requests"],
+  ["mcp", "MCP messages"],
+  ["mcp-read", "API reads by MCP code runs"],
+  ["docs", "API reference"],
+  ["discovery", "Discovery documents"],
+]);
+
+async function analytics(url: URL, host: SiteHost): Promise<PageText> {
+  const days = 7;
+  const response = await host.api(`/api/analytics?days=${days}`);
+  const head = [
+    "# Analytics",
+    "",
+    `How open-data.pt is used: requests to the website, the API and the MCP server, counted by Cloudflare Workers Analytics Engine. No IP address, cookie or visitor identifier is kept. The same as JSON: ${url.origin}/api/analytics?days=${days} (also days=1, 30 or 90).`,
+    "",
+  ];
+  if (response.status === 503) return found([...head, "Usage analytics are not enabled on this deployment."]);
+  if (!response.ok) throw new Error(`GET /api/analytics answered ${response.status}`);
+  // SAFETY: /api/analytics answers the AnalyticsReport its OpenAPI entry declares; this page reads a subset.
+  const report = (await response.json()) as UsageReport;
+  const total = (rows: Array<{ surface: string; requests: number }>, surface: string) => rows.filter((row) => row.surface === surface).reduce((sum, row) => sum + row.requests, 0);
+  const top = <T extends { requests: number }>(rows: T[], count: number) => [...rows].sort((a, b) => b.requests - a.requests).slice(0, count);
+  const sum = new Map<string, number>();
+  for (const row of report.clients.filter((each) => each.surface !== "mcp-read")) sum.set(`${row.kind}|${row.name}`, (sum.get(`${row.kind}|${row.name}`) ?? 0) + row.requests);
+  const countries = new Map<string, number>();
+  for (const row of report.countries.filter((each) => each.surface !== "mcp-read")) countries.set(row.country, (countries.get(row.country) ?? 0) + row.requests);
+  return found([
+    ...head,
+    `## The last ${days} days (since ${report.from})`,
+    "",
+    ...[...SURFACE_LABEL].map(([surface, label]) => `- ${label}: ${total(report.timeline, surface)}`),
+    "",
+    "## Clients",
+    "",
+    "| Client | Kind | Requests |",
+    "| --- | --- | --- |",
+    ...top(
+      [...sum].map(([key, requests]) => ({ key, requests })),
+      20,
+    ).map(({ key, requests }) => {
+      const [kind = "", name = ""] = key.split("|");
+      return `| ${cell(name)} | ${kind} | ${requests} |`;
+    }),
+    "",
+    "## Most read datasets",
+    "",
+    "| Dataset | Where | Requests |",
+    "| --- | --- | --- |",
+    ...top(report.subjects, 20).map((row) => `| ${cell(row.subject)} | ${SURFACE_LABEL.get(row.surface) ?? row.surface}, ${row.route} | ${row.requests} |`),
+    "",
+    "## Countries",
+    "",
+    ...top(
+      [...countries].map(([country, requests]) => ({ country, requests })),
+      15,
+    ).map((row) => `- ${row.country}: ${row.requests}`),
   ]);
 }
 

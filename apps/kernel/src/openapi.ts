@@ -47,6 +47,60 @@ export function openApiDocument(origin: string) {
           responses: { "200": jsonResponse("The API is up", { type: "object", required: ["status"], properties: { status: { type: "string", const: "ok" } } }), ...reads() },
         },
       },
+      "/api/analytics": {
+        get: {
+          operationId: "getAnalytics",
+          tags: ["Platform"],
+          summary: "How open-data.pt is used: requests to the site, the API and the MCP server, by client, route, dataset and country",
+          description:
+            "Counts from Cloudflare Workers Analytics Engine, one data point per request, kept for 90 days. No IP address, cookie or visitor identifier is recorded. `surface` is `web` (pages), `api` (API requests from outside this site), `mcp` (MCP messages), `mcp-read` (API reads made by MCP code runs), `docs` (the API reference and OpenAPI document) or `discovery` (sitemap and .well-known documents). Clients are classified by User-Agent into `browser`, `library`, `ai-agent`, `crawler` and `unknown`. The API reads this site's own pages make are not counted, since the page view already is. Cached for 30 minutes.",
+          parameters: [
+            {
+              name: "days",
+              in: "query",
+              required: false,
+              description: "Window: the last 24 hours (by hour), or the last 7, 30 or 90 UTC days (by day).",
+              schema: { type: "integer", enum: [1, 7, 30, 90], default: 7 },
+            },
+          ],
+          responses: {
+            "200": jsonResponse("Request counts over the window", {
+              type: "object",
+              required: ["days", "resolution", "from", "to", "retentionDays", "timeline", "clients", "routes", "subjects", "countries", "referrers", "outcomes", "mcp"],
+              properties: {
+                days: { type: "integer" },
+                resolution: { type: "string", enum: ["hour", "day"] },
+                from: { type: "string", format: "date-time" },
+                to: { type: "string", format: "date-time" },
+                retentionDays: { type: "integer" },
+                timeline: countsOf({ time: { type: "string", format: "date-time" }, surface: { type: "string" }, kind: { type: "string" } }),
+                clients: countsOf({ surface: { type: "string" }, kind: { type: "string" }, name: { type: "string" } }),
+                routes: countsOf({ surface: { type: "string" }, route: { type: "string" }, meanMs: { type: "number", description: "Mean time to answer, in milliseconds." } }),
+                subjects: countsOf({
+                  surface: { type: "string" },
+                  route: { type: "string" },
+                  subject: { type: "string", description: "The product, feed, publisher, licence or topic asked for." },
+                }),
+                countries: countsOf({ surface: { type: "string" }, country: { type: "string", description: "ISO 3166-1 alpha-2, as Cloudflare locates the client." } }),
+                referrers: countsOf({ surface: { type: "string" }, referrer: { type: "string", description: "The linking site's host, or the AI assistant's name." } }),
+                outcomes: countsOf({
+                  surface: { type: "string" },
+                  status: { type: "string" },
+                  cache: { type: "string", enum: ["hit", "miss", "none"] },
+                  format: { type: "string" },
+                }),
+                mcp: countsOf({
+                  call: { type: "string", description: "JSON-RPC method, with the tool for tools/call." },
+                  client: { type: "string", description: "The MCP client's own name, on initialize." },
+                }),
+              },
+            }),
+            ...reads(),
+            "502": responseRef("AnalyticsUnavailable"),
+            "503": responseRef("AnalyticsUnavailable"),
+          },
+        },
+      },
       "/api/feeds": {
         get: {
           operationId: "listFeeds",
@@ -708,6 +762,7 @@ export function openApiDocument(origin: string) {
           { "X-Request-Id": { description: "Quote it when reporting the failure", schema: { type: "string" } } },
         ),
         HistoryUnavailable: problemResponse("History queries are not enabled on this deployment"),
+        AnalyticsUnavailable: problemResponse("Usage analytics are not enabled on this deployment (503), or Analytics Engine did not answer (502)"),
       },
     },
   } as const;
@@ -814,6 +869,11 @@ function bboxParameter() {
 
 function integerParameter(name: string, defaultValue: number, minimum: number, maximum: number) {
   return { name, in: "query", required: false, schema: { type: "integer", default: defaultValue, minimum, maximum } };
+}
+
+/** A list of request counts, each under the named dimensions. */
+function countsOf(dimensions: { [name: string]: SchemaObject }) {
+  return { type: "array", items: { type: "object", required: [...Object.keys(dimensions), "requests"], properties: { ...dimensions, requests: { type: "number" } } } };
 }
 
 /** `{ data: [...] }` of one component schema. */
