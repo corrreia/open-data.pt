@@ -167,7 +167,7 @@ function FeedsSection({ feeds, productsByFeed, loading }: { feeds: Feed[]; produ
   const counts = useMemo(() => groupBy(rows, (row) => row.health), [rows]);
 
   return (
-    <section id="feeds" aria-labelledby="feeds-title" className="scroll-mt-24">
+    <section id="feeds" aria-labelledby="feeds-title">
       <SectionHead eyebrow="Feeds" title="What is being collected" id="feeds-title">
         Every collection job, the publisher it reads from, how often it runs and how it is doing. Each feed publishes one or more products.
       </SectionHead>
@@ -310,12 +310,12 @@ function AcquisitionsSection({ feeds, feedsById }: { feeds: Feed[]; feedsById: M
   );
 
   return (
-    <section id="acquisitions" aria-labelledby="acquisitions-title" className="scroll-mt-24">
+    <section id="acquisitions" aria-labelledby="acquisitions-title">
       <SectionHead eyebrow="Acquisitions" title="Every attempt, including the failed ones" id="acquisitions-title">
         The newest hundred attempts the runners made, of every feed or of one. Sort by how long one took, or filter for the failures.
       </SectionHead>
       <div className="grid gap-3">
-        <ErrorNote error={acquisitions.error} />
+        <ErrorNote error={acquisitions.error} what="the runs" onRetry={() => void acquisitions.refetch()} />
         <DataTable
           label="Acquisitions"
           rows={rows}
@@ -324,7 +324,7 @@ function AcquisitionsSection({ feeds, feedsById }: { feeds: Feed[]; feedsById: M
           initialSort={{ key: "requested", direction: "desc" }}
           filterPlaceholder="Filter by feed, status, error…"
           downloadName={feedId ? `acquisitions-${feedsById.get(feedId)?.slug ?? feedId}` : "acquisitions"}
-          empty={acquisitions.loading ? "Loading acquisitions…" : "No acquisitions yet. The runners have not woken up."}
+          empty={acquisitions.loading ? "Loading acquisitions…" : "No runs yet. Collection starts within minutes of a deploy."}
           toolbar={
             <>
               <Select
@@ -384,7 +384,7 @@ function Operations() {
           <a href="/status/" className="font-medium text-kumo-link">
             status page
           </a>{" "}
-          shows downtime day by day.
+          shows collection hour by hour over the last three days.
         </PageHead>
         <nav aria-label="On this page" className="flex flex-wrap gap-1.5">
           {SECTIONS.map((section) => (
@@ -397,7 +397,14 @@ function Operations() {
             </a>
           ))}
         </nav>
-        <ErrorNote error={feeds.error ?? products.error} />
+        <ErrorNote
+          error={feeds.error ?? products.error}
+          what="the feeds"
+          onRetry={() => {
+            void feeds.refetch();
+            void products.refetch();
+          }}
+        />
       </div>
 
       <Activity lookup={lookup} />

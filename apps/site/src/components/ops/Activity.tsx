@@ -52,7 +52,7 @@ function LiveLog({ runs, lookup }: { runs: RunRow[]; lookup: FeedLookup }) {
             </span>
             <span className="col-span-2 min-w-0 text-sm sm:col-span-1">
               <FeedName feedId={run.feedId} lookup={lookup} />
-              {trigger !== "schedule" ? <span className="ml-2 font-mono text-[0.7rem] text-kumo-subtle">{trigger}</span> : null}
+              {trigger !== "schedule" ? <span className="ml-2 font-mono text-xs text-kumo-subtle">{trigger}</span> : null}
               {outcome ? (
                 <span title={outcome} className={`block truncate text-xs ${run.error ? "text-kumo-danger" : "text-kumo-subtle"}`}>
                   {outcome}
@@ -172,11 +172,11 @@ export function Activity({ lookup }: { lookup: FeedLookup }) {
     [live.data],
   );
   const newest = runs[0];
-  // Screen readers hear the newest run when it changes, not every refresh.
-  const announcement = newest ? `${lookup.feedsById.get(newest.feedId)?.title ?? newest.feedId}: ${runStatus(newest.status).label}` : "";
+  // Screen readers hear only a new failure: with hundreds of feeds a new run lands every refresh, and reading each one out would never stop.
+  const announcement = newest && newest.status === "failed" ? `${lookup.feedsById.get(newest.feedId)?.title ?? newest.feedId}: collection failed` : "";
 
   return (
-    <section id="activity" aria-labelledby="activity-title" className="scroll-mt-24">
+    <section id="activity" aria-labelledby="activity-title">
       <SectionHead eyebrow="Activity" title="Every run, as it happens" id="activity-title">
         The newest runs across every feed, refreshed every half minute, failures included. Pick a day to see every run from it.
       </SectionHead>
@@ -217,7 +217,7 @@ export function Activity({ lookup }: { lookup: FeedLookup }) {
             <LayerCard.Secondary className="flex flex-wrap items-center justify-between gap-2">
               <span className="flex items-center gap-2">
                 <span className="relative flex size-2">
-                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-kumo-success opacity-60" />
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-kumo-success opacity-60 motion-reduce:hidden" />
                   <span className="relative inline-flex size-2 rounded-full bg-kumo-success" />
                 </span>
                 Latest {LIVE_ROWS} runs
@@ -236,7 +236,7 @@ export function Activity({ lookup }: { lookup: FeedLookup }) {
             <LayerCard.Primary className="p-0">
               {live.error && !live.data ? (
                 <div className="p-4">
-                  <ErrorNote error={live.error} />
+                  <ErrorNote error={live.error} what="the latest runs" onRetry={() => void live.refetch()} />
                 </div>
               ) : live.loading ? (
                 <div className="flex items-center gap-2 px-4 py-6 text-sm text-kumo-subtle">

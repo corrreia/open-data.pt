@@ -49,7 +49,7 @@ const FORMAT_LABEL = new Map([
   ["udata", "dados.gov.pt"],
 ]);
 export const formatOf = (feed: Feed | undefined) => FORMAT_LABEL.get(feed?.format ?? "") ?? "Own API";
-export const throughOf = (feed: Feed | undefined) => (FORMAT_LABEL.has(feed?.format ?? "") ? `through ${formatOf(feed)}` : "through the publisher's own API");
+export const throughOf = (feed: Feed | undefined) => (FORMAT_LABEL.has(feed?.format ?? "") ? `through ${formatOf(feed)}` : "through the publisher’s own API");
 
 export type UpdatesBucket = "live" | "daily" | "slower";
 export const UPDATES: { id: UpdatesBucket; label: string }[] = [

@@ -1,7 +1,7 @@
 import { LayerCard, LinkButton } from "@cloudflare/kumo";
 import { BugIcon, LightbulbIcon, PlusCircleIcon, StackIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
-import { PageHead, SectionHead } from "../components/common";
+import { PageHead, SectionHead, bodyRows, cardRows } from "../components/common";
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { CONTRIBUTING, REPOSITORY, newIssue } from "../lib/project";
@@ -34,7 +34,7 @@ const WAYS: Way[] = [
     icon: <BugIcon size={22} />,
     title: "Report a broken source",
     needs: "No code",
-    body: "A dataset stopped updating, came back empty, or disagrees with what its publisher shows. Every product page links here with its address filled in.",
+    body: "A dataset stopped updating, came back empty, or disagrees with what its publisher shows. Every dataset page links here with its address filled in.",
     action: "Report a broken source",
     href: newIssue("broken-source"),
   },
@@ -61,7 +61,7 @@ const WAYS: Way[] = [
 function Contribute() {
   return (
     <Shell section="contribute">
-      <PageHead eyebrow="Contribute" title="Help collect Portugal's public data">
+      <PageHead eyebrow="Contribute" title="Help collect Portugal’s public data">
         open-data.pt is open source. Anyone can suggest a source or report one that broke, and a new dataset from a source we already read is often a single entry of code.
       </PageHead>
 
@@ -70,7 +70,7 @@ function Contribute() {
         {/* Two by two: four cards never leave one alone on a row. */}
         <div className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-2">
           {WAYS.map((way) => (
-            <LayerCard key={way.id} className="flex h-full flex-col">
+            <LayerCard key={way.id} className={cardRows(3)}>
               <LayerCard.Secondary className="flex flex-wrap items-center justify-between gap-2">
                 <span className="flex items-center gap-2">
                   <span aria-hidden="true" className="text-kumo-brand">
@@ -80,7 +80,7 @@ function Contribute() {
                 </span>
                 <span className="text-xs text-kumo-subtle">{way.needs}</span>
               </LayerCard.Secondary>
-              <LayerCard.Primary className="grid flex-1 content-between gap-4">
+              <LayerCard.Primary className={`gap-4 ${bodyRows(2)}`}>
                 <p className="text-sm leading-relaxed text-kumo-default">{way.body}</p>
                 <div>
                   <LinkButton href={way.href} variant="secondary">
@@ -95,7 +95,7 @@ function Contribute() {
 
       <section aria-labelledby="landing-title">
         <SectionHead eyebrow="Before a pull request" title="How changes land" id="landing-title" />
-        <ol className="grid max-w-3xl list-decimal gap-3 pl-5 text-sm leading-relaxed text-kumo-default marker:text-kumo-subtle">
+        <ol className="grid max-w-[34rem] list-decimal gap-3 pl-5 text-sm leading-relaxed text-kumo-default marker:text-kumo-subtle">
           <li>
             Read{" "}
             <a className={LINK} href={CONTRIBUTING}>
@@ -111,7 +111,7 @@ function Contribute() {
 
       <section aria-labelledby="code-title">
         <SectionHead eyebrow="The code" title="One repository" id="code-title" />
-        <p className="max-w-3xl text-sm leading-relaxed text-kumo-default">
+        <p className="max-w-[34rem] text-sm leading-relaxed text-kumo-default">
           The Gatekeeper that collects, the kernel that stores and serves, and this site all live in{" "}
           <a className={LINK} href={REPOSITORY}>
             github.com/corrreia/open-data.pt

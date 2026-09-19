@@ -258,3 +258,11 @@ div.leaflet-container {
 .mode-switching *::after {
   transition: none !important;
 }
+
+/* Quiet hours are drawn shorter than hours with a problem, so a level reads by its height as well as its colour. */
+[data-status-timeline] > .uptime-bar {
+  height: 100%;
+}
+[data-status-timeline] > .uptime-bar:is([data-level="ok"], [data-level="none"]) {
+  height: 70%;
+}

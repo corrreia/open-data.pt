@@ -68,7 +68,7 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
 
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <LayerCard>
-          <LayerCard.Secondary>About this publisher's data</LayerCard.Secondary>
+          <LayerCard.Secondary>About this publisher’s data</LayerCard.Secondary>
           <LayerCard.Primary>
             <Kv
               items={[

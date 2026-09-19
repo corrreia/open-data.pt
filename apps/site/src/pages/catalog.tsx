@@ -169,7 +169,7 @@ function Catalog() {
   return (
     <Shell section="catalog">
       <PageHead eyebrow="Catalog" title="Every dataset, and who publishes it">
-        Filter by topic, publisher, kind of data, how often it changes, or how the publisher shares it. Each dataset keeps its publisher's licence and links back to their source.
+        Filter by topic, publisher, kind of data, how often it changes, or how the publisher shares it. Each dataset keeps its publisher’s licence and links back to their source.
       </PageHead>
 
       <div className="grid items-start gap-8 lg:grid-cols-[15.5rem_minmax(0,1fr)]">

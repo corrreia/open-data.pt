@@ -1,6 +1,7 @@
 import { Button, Empty, LayerCard, Loader, Meter } from "@cloudflare/kumo";
 import { DownloadSimpleIcon, TableIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ErrorNote } from "../common";
 import { DataTable, type Column } from "../DataTable";
 import { apiGet, productPath } from "../../lib/api";
 import { fmt, humanize } from "../../lib/format";
@@ -61,6 +62,7 @@ export function RecordsView({ product, refreshKey }: { product: Product; refresh
   const [loading, setLoading] = useState(true);
   const [loadingAll, setLoadingAll] = useState(false);
   const [error, setError] = useState<Error>();
+  const [attempt, setAttempt] = useState(0);
   const [selected, setSelected] = useState<JsonRecord | null>(null);
   // Once a reader loads a large dataset whole, a new version reloads it whole too.
   const wantAll = useRef(product.rowCount <= LOAD_ALL_UP_TO);
@@ -86,7 +88,7 @@ export function RecordsView({ product, refreshKey }: { product: Product; refresh
     return () => {
       current = false;
     };
-  }, [fetchAll, fetchPreview, refreshKey, product.rowCount]);
+  }, [fetchAll, fetchPreview, refreshKey, product.rowCount, attempt]);
 
   const loadAll = async () => {
     setLoadingAll(true);
@@ -130,7 +132,17 @@ export function RecordsView({ product, refreshKey }: { product: Product; refresh
     );
   }
   if (error && rows.length === 0)
-    return <Empty icon={<TableIcon size={40} className="text-kumo-inactive" />} title="Could not load records" description={`${error.message}. Refresh the page to try again.`} />;
+    return (
+      <ErrorNote
+        error={error}
+        what="the records"
+        onRetry={() => {
+          setError(undefined);
+          setLoading(true);
+          setAttempt((count) => count + 1);
+        }}
+      />
+    );
   if (rows.length === 0)
     return (
       <Empty
@@ -151,7 +163,11 @@ export function RecordsView({ product, refreshKey }: { product: Product; refresh
               Showing the first {fmt.int(rows.length)} of {fmt.int(product.rowCount)} records
             </p>
             <p className="text-sm text-kumo-subtle">Search, sorting, downloads and the summaries cover only these rows until you load the other {fmt.int(remaining)}.</p>
-            {error ? <p className="text-sm text-kumo-danger">Could not load every record: {error.message}. Try again.</p> : null}
+            {error ? (
+              <p role="alert" className="text-sm text-kumo-danger">
+                Could not load every record ({error.message}). Select Load all records to try again.
+              </p>
+            ) : null}
           </div>
           <Button variant="primary" icon={<DownloadSimpleIcon />} loading={loadingAll} onClick={loadAll}>
             Load all {fmt.int(product.rowCount)} records{loaded.estimatedBytes ? ` (about ${fmt.bytes(loaded.estimatedBytes)})` : ""}
@@ -173,7 +189,7 @@ export function RecordsView({ product, refreshKey }: { product: Product; refresh
                     <dl className="grid grid-cols-3 gap-2 text-center">
                       {(["min", "median", "max"] as const).map((key) => (
                         <div key={key}>
-                          <dt className="text-[0.7rem] text-kumo-subtle">{key}</dt>
+                          <dt className="text-xs text-kumo-subtle">{key}</dt>
                           <dd className="font-mono text-sm text-kumo-strong">{fmt.cell(glance[key], "number")}</dd>
                         </div>
                       ))}

@@ -71,7 +71,7 @@ function endpointsFor(product: Product): Endpoint[] {
       );
     }
   }
-  list.push({ title: "DCAT catalog", path: "/api/catalog.dcat.json", description: "This product's dataset entry in the JSON-LD catalog." });
+  list.push({ title: "DCAT catalog", path: "/api/catalog.dcat.json", description: "This product’s dataset entry in the JSON-LD catalog." });
   return list;
 }
 

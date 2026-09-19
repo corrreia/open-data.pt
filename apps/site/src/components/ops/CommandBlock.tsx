@@ -30,7 +30,7 @@ export function CommandBlock({ command, highlight, label }: { command: string; h
   return (
     <div className="relative min-w-0 rounded-lg bg-kumo-recessed ring-1 ring-kumo-line">
       {/* Long commands wrap, so the whole line is readable on a phone without scrolling. */}
-      <pre className="whitespace-pre-wrap py-3 pl-4 pr-12 font-mono text-[0.8rem] leading-relaxed text-kumo-default [overflow-wrap:anywhere]">
+      <pre className="whitespace-pre-wrap py-3 pl-4 pr-12 font-mono text-sm leading-relaxed text-kumo-default [overflow-wrap:anywhere]">
         <code>
           <span aria-hidden="true" className="select-none text-kumo-subtle">
             ${" "}

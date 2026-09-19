@@ -1,13 +1,13 @@
 import { Button, ClipboardText, LayerCard, LinkButton, TableOfContents, useTableOfContentsActiveId } from "@cloudflare/kumo";
 import { ArrowRightIcon, BracketsCurlyIcon, CheckIcon, CopyIcon, GiftIcon, KeyIcon, SealCheckIcon } from "@phosphor-icons/react";
 import { useMemo, type ReactNode } from "react";
-import { PageHead, RoleBadge, SectionHead } from "../components/common";
+import { PageHead, RoleBadge, SectionHead, bodyRows, cardRows } from "../components/common";
 import { mountPage } from "../components/mount";
 import { CommandBlock, useCopy } from "../components/ops/CommandBlock";
 import { useHashLanding } from "../components/ops/useHashLanding";
 import { Shell } from "../components/Shell";
 import { productHref } from "../lib/api";
-import { fetchProducts } from "../lib/catalog";
+import { ROLE, fetchProducts } from "../lib/catalog";
 import { fmt, plural } from "../lib/format";
 import { useQuery } from "../lib/query";
 import type { Product, Role } from "../lib/types";
@@ -64,7 +64,7 @@ const PLEDGES: Pledge[] = [
       </>
     ),
   },
-  { icon: <SealCheckIcon size={20} />, lead: "Credited.", body: "Each product carries the licence and attribution of its publisher." },
+  { icon: <SealCheckIcon size={20} />, lead: "Credited.", body: "Each dataset carries the licence and attribution of its publisher." },
   {
     icon: <BracketsCurlyIcon size={20} />,
     lead: "Machine first.",
@@ -91,20 +91,17 @@ interface ReadHint {
 
 interface KindGuide {
   role: Role;
-  text: string;
   reads: ReadHint[];
 }
 
 const KINDS: KindGuide[] = [
   {
     role: "reference",
-    text: "A complete, slow-changing set such as stops, stations, or municipalities. Each collection replaces the whole set.",
     reads: [{ what: "Records", path: "/records" }],
   },
-  { role: "current-state", text: "The latest state of each entity: vehicle positions, fuel prices, fire risk.", reads: [{ what: "Records", path: "/records" }] },
+  { role: "current-state", reads: [{ what: "Records", path: "/records" }] },
   {
     role: "event-log",
-    text: "Things that happened, kept with corrections and retractions.",
     reads: [
       { what: "Current records", path: "/records" },
       { what: "Applicable history", path: "/events" },
@@ -113,13 +110,12 @@ const KINDS: KindGuide[] = [
   },
   {
     role: "time-series",
-    text: "Numeric points keyed by series and event time.",
     reads: [
       { what: "The hot window", path: "/series" },
       { what: "Durable ranges", path: "/series/range" },
     ],
   },
-  { role: "summary", text: "A small aggregate derived from a sibling product in the same run, such as a fleet count.", reads: [{ what: "Records", path: "/records" }] },
+  { role: "summary", reads: [{ what: "Records", path: "/records" }] },
 ];
 
 interface HistoryEndpoint {
@@ -141,14 +137,14 @@ interface Manner {
 const MANNERS: Manner[] = [
   { lead: "Use bounded ranges.", body: "Historical endpoints require a UTC interval of at most 366 days and are cached at the edge." },
   {
-    lead: "Poll at the product's cadence.",
+    lead: "Poll at the product’s cadence.",
     body: "Each product page says how often its feed runs. Near-real-time products refresh every one to five minutes, most others hourly or daily.",
   },
   {
     lead: "Page deterministically.",
     body: (
       <>
-        Follow each endpoint's opaque <InlineCode>nextCursor</InlineCode> until it is null; equal timestamps are safe.
+        Follow each endpoint’s opaque <InlineCode>nextCursor</InlineCode> until it is null; equal timestamps are safe.
       </>
     ),
   },
@@ -170,7 +166,7 @@ const MANNERS: Manner[] = [
         <a href="/status/" className={LINK}>
           status page
         </a>{" "}
-        shows downtime day by day, and{" "}
+        shows collection hour by hour over the last three days, and{" "}
         <a href="/operations/#activity" className={LINK}>
           operations
         </a>{" "}
@@ -218,10 +214,8 @@ function Step({ n, title, children }: { n: number; title: string; children: Reac
         {n}
       </span>
       <div className="grid min-w-0 gap-3">
-        <h3 className="pt-1 font-medium text-kumo-strong">
-          <span className="sr-only">{n}. </span>
-          {title}
-        </h3>
+        {/* The list already says which step this is, so the number is only drawn, not read twice. */}
+        <h3 className="pt-1 font-medium text-kumo-strong">{title}</h3>
         {children}
       </div>
     </li>
@@ -248,7 +242,7 @@ function Note({ children }: { children: ReactNode }) {
 
 function Section({ id, eyebrow, title, children }: { id: string; eyebrow: string; title: string; children: ReactNode }) {
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className="scroll-mt-24">
+    <section id={id} aria-labelledby={`${id}-title`}>
       <SectionHead eyebrow={eyebrow} title={title} id={`${id}-title`} />
       <div className="grid gap-5 leading-relaxed text-kumo-default">{children}</div>
     </section>
@@ -290,7 +284,7 @@ function Start() {
         </PageHead>
         <ul aria-label="What you can count on" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {PLEDGES.map((pledge) => (
-            <li key={pledge.lead}>
+            <li key={pledge.lead} className="grid">
               <LayerCard className="flex h-full flex-col">
                 <LayerCard.Primary className="grid flex-1 content-start gap-2">
                   <span className="text-kumo-brand">{pledge.icon}</span>
@@ -307,9 +301,10 @@ function Start() {
       <div className="grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_13rem] xl:gap-16">
         <div className="grid min-w-0 gap-16">
           <Section id="three-requests" eyebrow="Three requests" title="Everything starts from the product list">
-            <p className="max-w-[68ch]">
-              A <strong>product</strong> is one table you can read: current records, a time series, an event log, or a summary. List them, pick one by its{" "}
-              <InlineCode>slug</InlineCode>, then read its rows. Every response is JSON with a <InlineCode>data</InlineCode> array.
+            <p className="max-w-[36rem]">
+              A <strong>product</strong> is one table you can read: current records, a time series, an event log, or a summary. On the site, a dataset holds one or more products:
+              each table or series inside a dataset is a product. List them, pick one by its <InlineCode>slug</InlineCode>, then read its rows. Every response is JSON with a{" "}
+              <InlineCode>data</InlineCode> array.
             </p>
             <ol className="grid gap-8">
               <Step n={1} title="List the products">
@@ -319,8 +314,8 @@ function Start() {
                   seconds at the edge.
                 </Note>
               </Step>
-              <Step n={2} title="Read a product's current records">
-                <CommandBlock command={`curl "${API}/api/products/${recordsSlug}/records?limit=100"`} highlight={recordsSlug} label="Read a product's current records" />
+              <Step n={2} title="Read a product’s current records">
+                <CommandBlock command={`curl "${API}/api/products/${recordsSlug}/records?limit=100"`} highlight={recordsSlug} label="Read a product’s current records" />
                 <Note>
                   Follow <InlineCode>nextCursor</InlineCode> for the next page. Add <InlineCode>validAt=&lt;ISO time&gt;</InlineCode> for what was valid then; earlier versions live
                   in the history endpoints.
@@ -333,7 +328,7 @@ function Start() {
                 </Note>
               </Step>
             </ol>
-            <p className="max-w-[68ch]">
+            <p className="max-w-[36rem]">
               Every product also has a page for humans at <InlineCode>/product/?slug=&lt;slug&gt;</InlineCode> with a chart or table, the schema, the lineage of the run that built
               it, and copyable API links
               {records ? (
@@ -348,9 +343,9 @@ function Start() {
             </p>
           </Section>
 
-          <Section id="mcp" eyebrow="AI assistants" title="Ask the data from an AI assistant">
-            <p className="max-w-[68ch]">
-              The API is also an <strong>MCP server</strong>, built on Cloudflare's{" "}
+          <Section id="mcp" eyebrow="AI assistants" title="Query the data from an AI assistant">
+            <p className="max-w-[36rem]">
+              The API is also an <strong>MCP server</strong>, built on Cloudflare’s{" "}
               <a href="https://blog.cloudflare.com/code-mode/" className={LINK}>
                 Code Mode
               </a>
@@ -363,14 +358,14 @@ function Start() {
           </Section>
 
           <Section id="kinds" eyebrow="Shapes" title="Five kinds of product, one rule each">
-            <p className="max-w-[68ch]">
+            <p className="max-w-[36rem]">
               The <InlineCode>role</InlineCode> field on a product tells you how it changes and what history you get.
             </p>
             <div className="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-3">
               {KINDS.map((kind) => {
                 const count = byRole.get(kind.role);
                 return (
-                  <LayerCard key={kind.role} className="h-full">
+                  <LayerCard key={kind.role} className={cardRows(4)}>
                     <LayerCard.Secondary className="flex items-center justify-between gap-2">
                       <RoleBadge role={kind.role} />
                       {count ? (
@@ -382,10 +377,10 @@ function Start() {
                         </a>
                       ) : null}
                     </LayerCard.Secondary>
-                    <LayerCard.Primary className="grid content-start gap-3">
-                      <p className="font-mono text-[0.7rem] text-kumo-subtle">role: "{kind.role}"</p>
-                      <p className="text-sm leading-relaxed text-kumo-default">{kind.text}</p>
-                      <dl className="grid gap-1.5 border-t border-kumo-hairline pt-3 text-sm">
+                    <LayerCard.Primary className={`gap-3 ${bodyRows(3)}`}>
+                      <p className="font-mono text-xs text-kumo-subtle">role: "{kind.role}"</p>
+                      <p className="text-sm leading-relaxed text-kumo-default">{ROLE[kind.role].description}</p>
+                      <dl className="grid content-start gap-1.5 border-t border-kumo-hairline pt-3 text-sm">
                         {kind.reads.map((read) => (
                           <div key={read.path} className="flex flex-wrap items-baseline justify-between gap-x-3">
                             <dt className="text-kumo-subtle">{read.what}</dt>
@@ -403,7 +398,7 @@ function Start() {
           </Section>
 
           <Section id="history" eyebrow="History" title="Where the past lives">
-            <p className="max-w-[68ch]">
+            <p className="max-w-[36rem]">
               The fast endpoints serve a rolling window: the current version of each product plus a bounded set of recent points and changes. Every meaningful revision is appended
               to a lake of Parquet tables and stays there. Typed, bounded endpoints expose it:
             </p>
@@ -412,7 +407,7 @@ function Start() {
                 <ul className="divide-y divide-kumo-hairline">
                   {HISTORY_ENDPOINTS.map((endpoint) => (
                     <li key={endpoint.path} className="grid gap-1 px-4 py-3">
-                      <code className="break-all font-mono text-[0.8rem] text-kumo-strong">
+                      <code className="wrap-anywhere font-mono text-sm text-kumo-strong">
                         <span className="mr-2 text-kumo-brand">GET</span>
                         {endpoint.path}
                       </code>
@@ -422,7 +417,7 @@ function Start() {
                 </ul>
               </LayerCard.Primary>
             </LayerCard>
-            <p className="max-w-[68ch]">All three use opaque compound cursors and include freshness and coverage.</p>
+            <p className="max-w-[36rem]">All three use opaque compound cursors and include freshness and coverage.</p>
             <CommandBlock
               command={`curl "${API}/api/products/${seriesSlug}/series/range?from=2026-01-01T00%3A00%3A00Z&to=2027-01-01T00%3A00%3A00Z&limit=500"`}
               highlight={seriesSlug}

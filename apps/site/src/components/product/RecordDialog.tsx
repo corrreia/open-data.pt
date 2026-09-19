@@ -45,7 +45,7 @@ export function RecordDialog({ record, fields, title, onClose }: { record: JsonR
             />
             {clocks.length ? (
               <div className="grid gap-2 rounded-lg bg-kumo-recessed p-4">
-                <p className="font-mono text-[0.7rem] uppercase tracking-[0.08em] text-kumo-subtle">Clocks</p>
+                <p className="font-mono text-xs uppercase tracking-[0.08em] text-kumo-subtle">Clocks</p>
                 <Kv items={clocks.map(([key, value]) => ({ term: TIME_LABEL.get(key) ?? humanize(key), value: isText(value) ? fmt.dateTime(value) : plain(value) }))} />
               </div>
             ) : null}
