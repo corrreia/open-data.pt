@@ -39,7 +39,7 @@ interface Line {
 }
 
 const SURFACE_LINES: Line[] = [
-  { id: "web", label: "Website pages", slot: 0, takes: (row) => row.surface === "web" },
+  { id: "web", label: "Website pages", slot: 0, takes: (row) => row.surface === "web" || row.surface === "docs" },
   { id: "api", label: "API requests", slot: 1, takes: (row) => row.surface === "api" },
   { id: "mcp", label: "MCP messages", slot: 2, takes: (row) => row.surface === "mcp" },
 ];
@@ -84,9 +84,14 @@ interface ViewSurfaces {
   reads: string[];
 }
 
-/** MCP's reads are the API calls its code runs made. */
+/**
+ * The API reference is a page of the website. Discovery documents (sitemap,
+ * .well-known) are read almost only by crawlers and are left out of the page;
+ * /api/analytics still has them. MCP's reads are the API calls its code runs made.
+ */
 function surfacesOf(view: View): ViewSurfaces {
-  if (view === "all") return { counts: ["web", "api", "mcp", "docs", "discovery"], reads: ["web", "api", "mcp-read"] };
+  if (view === "all") return { counts: ["web", "docs", "api", "mcp"], reads: ["web", "docs", "api", "mcp-read"] };
+  if (view === "web") return { counts: ["web", "docs"], reads: ["web", "docs"] };
   if (view === "mcp") return { counts: ["mcp"], reads: ["mcp-read"] };
   return { counts: [view], reads: [view] };
 }
@@ -107,6 +112,12 @@ const regionNames = (() => {
     return undefined;
   }
 })();
+
+/** Local midnight on the calendar date a UTC instant falls on. */
+function localMidnight(time: number): number {
+  const date = new Date(time);
+  return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()).getTime();
+}
 
 function countryName(code: string): string {
   if (code === "T1") return "Tor network";
@@ -192,7 +203,11 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
       <section aria-label="Totals" className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-3">
         {view === "all" ? (
           <>
-            <StatTile label="Website pages" value={fmt.int(sum(report.timeline.filter((row) => row.surface === "web")))} note={`over the last ${window}`} />
+            <StatTile
+              label="Website pages"
+              value={fmt.int(sum(report.timeline.filter((row) => row.surface === "web" || row.surface === "docs")))}
+              note={`over the last ${window}`}
+            />
             <StatTile label="API requests" value={fmt.int(sum(report.timeline.filter((row) => row.surface === "api")))} note="from outside this website" />
             <StatTile
               label="MCP messages"
@@ -230,7 +245,7 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
         )}
       </section>
 
-      <Timeline report={report} lines={view === "all" ? SURFACE_LINES : KIND_LINES} view={view} />
+      <Timeline report={report} lines={view === "all" ? SURFACE_LINES : KIND_LINES} view={view} counts={counts} />
 
       <section aria-labelledby="who-title">
         <SectionHead eyebrow="Who" title="Clients" id="who-title">
@@ -326,22 +341,24 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
 }
 
 /** Requests per hour or day, one line each, with every empty bucket drawn as zero. */
-function Timeline({ report, lines, view }: { report: AnalyticsReport; lines: Line[]; view: View }) {
+function Timeline({ report, lines, view, counts }: { report: AnalyticsReport; lines: Line[]; view: View; counts: string[] }) {
   const dark = useDarkMode();
   const palette = dark ? SERIES_COLORS.dark : SERIES_COLORS.light;
   const step = report.resolution === "hour" ? HOUR : DAY;
-  const rows = view === "all" ? report.timeline : report.timeline.filter((row) => row.surface === view);
+  const rows = report.timeline.filter((row) => counts.includes(row.surface));
   const buckets = useMemo(() => {
     const times: number[] = [];
     for (let time = Date.parse(report.from); time <= Date.parse(report.to); time += step) times.push(time);
     return times;
   }, [report.from, report.to, step]);
+  const per = report.resolution === "hour" ? "hour" : "day";
+  // A day bucket starts at UTC midnight; drawn at local midnight of the same date, the chart and table name the day it counts wherever the reader is.
+  const shown = (time: number) => (report.resolution === "hour" ? time : localMidnight(time));
   const series = lines.map((line) => {
     const totals = new Map<number, number>();
     for (const row of rows) if (line.takes(row)) totals.set(Date.parse(row.time), (totals.get(Date.parse(row.time)) ?? 0) + row.requests);
-    return { line, points: buckets.map((time): [number, number] => [time, totals.get(time) ?? 0]) };
+    return { line, points: buckets.map((time): [number, number] => [shown(time), totals.get(time) ?? 0]) };
   });
-  const per = report.resolution === "hour" ? "hour" : "day";
 
   return (
     <section aria-labelledby="when-title">
@@ -386,7 +403,7 @@ function Timeline({ report, lines, view }: { report: AnalyticsReport; lines: Lin
                 <tbody>
                   {buckets.map((time, index) => (
                     <tr key={time} className="border-t border-kumo-hairline">
-                      <td className="py-1 pr-4">{report.resolution === "hour" ? fmt.dateTime(time) : fmt.date(time)}</td>
+                      <td className="py-1 pr-4">{report.resolution === "hour" ? fmt.dateTime(time) : fmt.date(shown(time))}</td>
                       {series.map(({ line, points }) => (
                         <td key={line.id} className="py-1 pr-4 text-right font-mono">
                           {fmt.int(points[index]?.[1] ?? 0)}

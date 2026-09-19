@@ -88,6 +88,8 @@ describe("where and what", () => {
     expect(routeOf("api", site("/api/nothing-here"))).toBe("(unknown)");
     expect(routeOf("web", site("/product/index.html"))).toBe("/product/");
     expect(routeOf("docs", site("/docs/"))).toBe("/docs");
+    // Any made-up /.well-known/ path is discovery; its route is cut to fit a blob.
+    expect(routeOf("discovery", site(`/.well-known/${"x".repeat(5000)}`)).length).toBe(64);
   });
 
   it("keeps the product, feed, publisher or topic a request names", () => {

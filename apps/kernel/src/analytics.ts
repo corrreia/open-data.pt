@@ -85,7 +85,8 @@ export function routeOf(surface: Surface, url: URL): string {
   if (surface === "api" || surface === "mcp-read") return routeTemplate(url.pathname) ?? "(unknown)";
   if (surface === "web") return pagePath(url.pathname);
   if (surface === "docs") return url.pathname === "/docs/" ? "/docs" : url.pathname;
-  return url.pathname;
+  // Any /.well-known/ path counts as discovery, including made-up ones of any length.
+  return clip(url.pathname);
 }
 
 const SUBJECT_IN_PATH = /^\/api\/(?:products|feeds)\/([^/]+?)(?:\.geojson|\/.*)?$/;
