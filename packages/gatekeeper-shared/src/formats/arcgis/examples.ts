@@ -38,6 +38,185 @@ const LISBON_PERMITS_POLICY = {
  */
 const APA_POLICY = referencePolicy("APA daily reference layer", "Agência Portuguesa do Ambiente — SNIAmb", "cc-by-4.0");
 
+/*
+ * Mafra means these to be read: a folder named `Dados_Abertos` on the
+ * municipality's own server, 52 feature services in it, and an open-data
+ * portal at dadosabertos.cm-mafra.pt built on them. What it does not carry is
+ * terms — every service answers with an empty `copyrightText` and no
+ * `licenseInfo`, the portal states only "Copyright 2025. Município de Mafra",
+ * and the municipality publishes nothing on dados.gov.pt to inherit terms
+ * from. So these are served under the terms the source states, which is none.
+ *
+ * Two of the folder's layers are deliberately not read: its copy of the Carris
+ * Metropolitana stops is that operator's data, already collected from the
+ * operator, and its fuel stations are DGEG's.
+ */
+const MAFRA_HOST = "geomafra.cm-mafra.pt";
+const MAFRA_SERVICE_ROOT = "arcgisext/rest/services/Dados_Abertos";
+const MAFRA_POLICY = referencePolicy("Mafra daily reference layer", "Município de Mafra — Dados Abertos", "source-terms");
+
+interface MafraLayer {
+  service: string;
+  layer: string;
+  slug: string;
+  title: string;
+  description: string;
+  topics: ExampleFeed["topics"];
+}
+
+const MAFRA_LAYERS: MafraLayer[] = [
+  {
+    service: "DadosAbertos_Amb_Ecopontos_Contentores",
+    layer: "1",
+    slug: "mafra-ecopontos-contentores",
+    title: "Mafra recycling points",
+    description:
+      "Recycling points in Mafra, each naming the containers standing there for paper, packaging, glass, batteries, refuse, bio-waste, oil and textiles, with its street, locality and parish.",
+    topics: ["environment", "cities"],
+  },
+  // Layer 2 of that same service holds the 8,635 containers themselves, one record each with
+  // capacity and state of conservation, and is the richer half of the pair. It is a table
+  // rather than a feature layer, and this library reads layers: it requires a geometry type
+  // and a table declares none. Read it once tables are supported, not by pretending it has one.
+  {
+    service: "DadosAbertos_Amb_Espacos_Verdes",
+    layer: "3",
+    slug: "mafra-espacos-verdes",
+    title: "Mafra green spaces",
+    description: "Green spaces in Mafra with their code, the place and locality they lie in, the space they belong to, and the parish.",
+    topics: ["environment", "cities"],
+  },
+  {
+    service: "DadosAbertos_Amb_Parques_Caninos",
+    layer: "0",
+    slug: "mafra-parques-caninos",
+    title: "Mafra dog parks",
+    description: "Dog parks in Mafra with their address, the equipment and drinking fountains they hold, the year each was built, who built and maintains it, and its paving.",
+    topics: ["cities", "society"],
+  },
+  {
+    service: "DadosAbertos_Postos_Carregamento_Eletrico",
+    layer: "0",
+    slug: "mafra-postos-carregamento",
+    title: "Mafra electric-vehicle charging points",
+    description:
+      "Charging points in Mafra with their operator, the kind of charge and number of chargers, the form of operation, and the licence and contract periods each runs under.",
+    topics: ["energy", "mobility"],
+  },
+  {
+    service: "DadosAbertos_Transito_Estacionamento_Bicicletas",
+    layer: "0",
+    slug: "mafra-estacionamento-bicicletas",
+    title: "Mafra bicycle parking",
+    description: "Bicycle parking in Mafra with its location, parish and the observations recorded for it.",
+    topics: ["mobility", "cities"],
+  },
+  {
+    service: "DadosAbertos_Transito_Parques_Estacionamento",
+    layer: "0",
+    slug: "mafra-parques-estacionamento",
+    title: "Mafra parking areas",
+    description: "Parking areas in Mafra with their designation, the number of spaces each holds, whether those spaces are charged for, the address and the parish.",
+    topics: ["mobility", "cities"],
+  },
+  {
+    service: "DadosAbertos_Transito_Parcometros",
+    layer: "0",
+    slug: "mafra-parcometros",
+    title: "Mafra parking meters",
+    description: "Parking meters in Mafra with the hours they apply on weekdays, Saturdays and Sundays, the tariff, and the least and greatest amount each takes.",
+    topics: ["mobility", "cities"],
+  },
+  {
+    service: "DadosAbertos_Transito_Lugares_Mobilidade_Reduzida",
+    layer: "0",
+    slug: "mafra-lugares-mobilidade-reduzida",
+    title: "Mafra reduced-mobility parking bays",
+    description: "Parking bays reserved for reduced mobility in Mafra, with the street and traffic codes, the locality and parish, and the date each sign was placed.",
+    topics: ["mobility", "society"],
+  },
+  {
+    service: "DadosAbertos_Desp_Ciclovias",
+    layer: "0",
+    slug: "mafra-ciclovias",
+    title: "Mafra cycle lanes",
+    description: "Cycle lanes in Mafra with their name, typology, and whether each is a principal route.",
+    topics: ["mobility", "cities"],
+  },
+  {
+    service: "DadosAbertos_Desp_CircuitosPedestres_BTT",
+    layer: "0",
+    slug: "mafra-circuitos-pedestres-btt",
+    title: "Mafra walking and mountain-bike trails",
+    description: "Walking and mountain-bike trails in Mafra with their name, description and type.",
+    topics: ["society", "environment"],
+  },
+  {
+    service: "DadosAbertos_Cult_Patrimonio_Inventario_Total",
+    layer: "0",
+    slug: "mafra-patrimonio-inventario",
+    title: "Mafra heritage inventory",
+    description: "The municipal heritage inventory of Mafra: each item's designation, address, period, category and the situation it is in.",
+    topics: ["culture", "cities"],
+  },
+  {
+    service: "DadosAbertos_Educa_Equip_Escolares",
+    layer: "0",
+    slug: "mafra-equipamentos-escolares",
+    title: "Mafra schools",
+    description: "Schools in Mafra with their address, parish, contacts, typology, capacity, opening hours and the grouping each belongs to.",
+    topics: ["society", "cities"],
+  },
+  {
+    service: "DadosAbertos_Equip_Saude",
+    layer: "1",
+    slug: "mafra-centros-saude",
+    title: "Mafra health centres",
+    description: "Health centres in Mafra with their address, parish, contacts, hours of operation and service shifts.",
+    topics: ["health", "cities"],
+  },
+  {
+    service: "DadosAbertos_Equip_Farmacias",
+    layer: "1",
+    slug: "mafra-farmacias",
+    title: "Mafra pharmacies",
+    description: "Pharmacies in Mafra with their address, parish, contacts, hours of operation and duty shifts.",
+    topics: ["health", "cities"],
+  },
+  {
+    service: "DadosAbertos_ASocial_Equipamentos_Sociais",
+    layer: "1",
+    slug: "mafra-equipamentos-sociais",
+    title: "Mafra social facilities",
+    description: "Social facilities in Mafra with their address and parish, their legal nature, the services each offers and the capacity it holds.",
+    topics: ["society", "cities"],
+  },
+  {
+    service: "DadosAbertos_Equip_Esp_Jogo_Recreio",
+    layer: "0",
+    slug: "mafra-espacos-jogo-recreio",
+    title: "Mafra play areas",
+    description: "Play and recreation areas in Mafra with their name, address, locality, parish and type.",
+    topics: ["society", "cities"],
+  },
+  {
+    service: "DadosAbertos_Equipamentos_Coletivos_Cultura",
+    layer: "0",
+    slug: "mafra-equipamentos-cultura",
+    title: "Mafra cultural facilities",
+    description: "Cultural bodies and facilities in Mafra with their typology, category, name and location.",
+    topics: ["culture", "cities"],
+  },
+  {
+    service: "DadosAbertos_Tur_Praias",
+    layer: "0",
+    slug: "mafra-praias",
+    title: "Mafra beaches",
+    description: "Beaches in Mafra and the distinctions each holds: Blue Flag, accessible beach, healthy beach, gold quality, zero pollution and surf reserve.",
+    topics: ["environment", "society"],
+  },
+];
+
 export const ARCGIS_EXAMPLES: ExampleFeed[] = [
   {
     slug: "lisboa-rede-ciclavel-feed",
@@ -250,6 +429,7 @@ export const ARCGIS_EXAMPLES: ExampleFeed[] = [
     "Portuguese installations covered by the EU greenhouse gas emissions trading system.",
     "CELE",
   ),
+  ...MAFRA_LAYERS.map(mafraExample),
 ];
 
 function lisbonExample(slug: string, title: string, description: string, service: string, layer: string, policy: ExampleFeed["policy"] = LISBON_POLICY): ExampleFeed {
@@ -285,6 +465,24 @@ function apaExample(slug: string, title: string, description: string, service: s
     staleAfterSeconds: 172_800,
     publisher: "apa",
     topics: ["environment"],
+  };
+}
+
+function mafraExample(layer: MafraLayer): ExampleFeed {
+  return {
+    slug: `${layer.slug}-feed`,
+    title: layer.title,
+    description: layer.description,
+    config: {
+      source: "arcgis",
+      host: MAFRA_HOST,
+      service: `${MAFRA_SERVICE_ROOT}/${layer.service}/FeatureServer`,
+      layer: layer.layer,
+    },
+    policy: MAFRA_POLICY,
+    staleAfterSeconds: 172_800,
+    publisher: "cm-mafra",
+    topics: layer.topics,
   };
 }
 

@@ -39,6 +39,7 @@ export const PUBLISHERS = {
   "cm-cadaval": { name: "Município do Cadaval", url: "https://www.cm-cadaval.pt/", logo: "svg" },
   "cm-cascais": { name: "Câmara Municipal de Cascais", url: "https://www.cascais.pt/", logo: "png" },
   "cm-lisboa": { name: "Câmara Municipal de Lisboa", url: "https://www.lisboa.pt/", logo: "svg" },
+  "cm-mafra": { name: "Município de Mafra", url: "https://www.cm-mafra.pt/" },
   "cm-oeiras": { name: "Câmara Municipal de Oeiras", url: "https://www.oeiras.pt/", logo: "png" },
   "cm-porto": { name: "Câmara Municipal do Porto", url: "https://www.cm-porto.pt/", logo: "svg" },
   "cp": { name: "CP", url: "https://www.cp.pt/", logo: "svg" },
