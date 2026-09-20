@@ -155,10 +155,13 @@ const OEIRAS_LAYERS: OeirasLayer[] = [
  * Torres Vedras publishes nothing itself: its services portal is behind a
  * login it grants by hand, and its geoportal is a viewer whose every layer is
  * proxied from hosts inside the building, with no WMS, WFS or REST of its own.
- * Its plan is public all the same, because the municipality deposited it with
- * the national planning registry, which serves one WFS per concelho keyed by
- * DICO code — 1113 is Torres Vedras. The plan is the municipality's work; DGT
- * is where it is published, and states CC BY on it.
+ * Its plan reaches the public through DGT, which redraws each municipality's
+ * Planta de Ordenamento into the national 2021 classification and serves one
+ * WFS per concelho keyed by DICO code — 1113 is Torres Vedras.
+ *
+ * So this is DGT's data about Torres Vedras, not Torres Vedras'. The layer says
+ * as much in two columns: `Autor` is DGT and `Fonte` is the municipality's own
+ * vectors. DGT curates it, manages it and states CC BY on it.
  *
  * The service is GeoMedia, and rejects `application/json` outright: the only
  * GeoJSON it answers to is the older `application/vnd.geo+json`.
@@ -212,7 +215,7 @@ function crusTorresVedras(crusClass: CrusClass): ExampleFeed {
       numberFields: "AREA_HA,ID1",
       dateFields: "Data_Pub_Origem",
     },
-    publisher: "cm-torres-vedras",
+    publisher: "dgt",
     topics: ["cities", "government"],
     // A municipal plan is revised over years, not weeks.
     staleAfterSeconds: 2_592_000,
@@ -229,7 +232,7 @@ function crusTorresVedras(crusClass: CrusClass): ExampleFeed {
         maxRecords: 20_000,
         historyMode: "changes",
       },
-      serving: { licence: "cc-by", attribution: "Município de Torres Vedras, published through the Sistema Nacional de Informação Territorial (DGT)" },
+      serving: { licence: "cc-by", attribution: "Direção-Geral do Território — Sistema Nacional de Informação Territorial, from the municipal plan of Torres Vedras" },
     },
   };
 }
