@@ -3,6 +3,9 @@
 export const REPOSITORY = "https://github.com/corrreia/open-data.pt";
 export const CONTRIBUTING = `${REPOSITORY}/blob/main/CONTRIBUTING.md`;
 
+/** Where a publisher, or anyone else, reaches a person: a role address, so it can be pointed elsewhere without reprinting it. */
+export const CONTACT_EMAIL = "contacto@open-data.pt";
+
 /** A new issue from one of the repository's forms (.github/ISSUE_TEMPLATE), with the fields the page already knows filled in. */
 export function newIssue(template: "suggest-source" | "broken-source", fields: { title?: string; page?: string } = {}) {
   const url = new URL(`${REPOSITORY}/issues/new`);

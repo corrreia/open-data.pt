@@ -1,7 +1,17 @@
 import type { ExampleFeed } from "../../index";
 
+/*
+ * IPMA's conditions of use, which `api.ipma.pt` itself links to, allow copying
+ * and use free of charge "para uso pessoal ou público desde que dessa
+ * utilização não decorram finalidades lucrativas ou ofensivas", and ask that
+ * the source always be named. A 2020 IPMA notice about this API says instead
+ * that its open data may be "usados, reutilizados e redistribuídos
+ * livremente"; the narrower of the two is what the catalogue states, so
+ * whoever reuses these products sees the restriction rather than inheriting
+ * silence.
+ */
 const SERVING = {
-  licence: "source-terms",
+  licence: "ipma-terms",
   attribution: "Instituto Português do Mar e da Atmosfera (IPMA)",
 } as const;
 

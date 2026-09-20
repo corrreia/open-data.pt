@@ -15,6 +15,7 @@ import { OGC_DEPLOYMENT, OGC_EXAMPLES } from "./formats/ogc";
 import { OPENDATASOFT_DEPLOYMENT, OPENDATASOFT_EXAMPLES } from "./formats/opendatasoft";
 import { UDATA_DEPLOYMENT, UDATA_EXAMPLES } from "./formats/udata";
 import { WFS_DEPLOYMENT, WFS_EXAMPLES } from "./formats/wfs";
+import { ANEPC_DEPLOYMENT, ANEPC_EXAMPLES } from "./sources/anepc";
 import { BPSTAT_DEPLOYMENT, BPSTAT_EXAMPLES } from "./sources/bpstat";
 import { CARRIS_DEPLOYMENT, CARRIS_EXAMPLES } from "./sources/carris";
 import { DGEG_DEPLOYMENT, DGEG_EXAMPLES } from "./sources/dgeg";
@@ -39,6 +40,7 @@ export const LIBRARIES: readonly Library[] = [
   { deployment: OPENDATASOFT_DEPLOYMENT, examples: OPENDATASOFT_EXAMPLES },
   { deployment: UDATA_DEPLOYMENT, examples: UDATA_EXAMPLES },
   { deployment: WFS_DEPLOYMENT, examples: WFS_EXAMPLES },
+  { deployment: ANEPC_DEPLOYMENT, examples: ANEPC_EXAMPLES },
   { deployment: BPSTAT_DEPLOYMENT, examples: BPSTAT_EXAMPLES },
   { deployment: CARRIS_DEPLOYMENT, examples: CARRIS_EXAMPLES },
   { deployment: DGEG_DEPLOYMENT, examples: DGEG_EXAMPLES },

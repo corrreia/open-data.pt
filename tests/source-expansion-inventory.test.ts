@@ -16,7 +16,10 @@ describe("source expansion inventory", () => {
     // of ren-production-breakdown) and dgeg-gasolina-98-lisboa (a district subset of dgeg-gasolina-98). A third,
     // porto-museums-feed, left because its dataset did not survive Porto's September 2026 move to
     // dadosabertos.cm-porto.pt: the municipality publishes no museum inventory there under any name.
-    expect(baseline.size).toBe(167);
+    // A fourth, lime-lisbon, left in September 2026 because Lime's Public GBFS Terms — the document its
+    // own feed names in `license_url` — forbid redistributing the data, building a dataset from it, and
+    // storing it for more than ten minutes. This service does all three, so the feed cannot be carried.
+    expect(baseline.size).toBe(166);
     const examples = libraries.flatMap((library) => library.examples);
     const slugs = new Set(examples.map((example) => example.slug));
     expect(slugs.size).toBe(examples.length);

@@ -35,6 +35,11 @@ export const LICENCES = {
     url: "https://creativecommons.org/publicdomain/zero/1.0/",
     summary: "Creative Commons Zero: the publisher waives its rights, and the data may be used without attribution.",
   },
+  "odc-pddl": {
+    name: "ODC PDDL 1.0",
+    url: "https://opendatacommons.org/licenses/pddl/1-0/",
+    summary: "Open Data Commons Public Domain Dedication and Licence: the publisher places the data in the public domain, to be used for any purpose without attribution.",
+  },
   "other-pd": {
     name: "Public domain (dados.gov.pt)",
     summary: "Listed on dados.gov.pt as public domain (other-pd); the publisher may state conditions of its own on the dataset page.",
@@ -70,7 +75,18 @@ export const LICENCES = {
   "sgifr-terms": {
     name: "SGIFR terms of use",
     url: "https://www.sgifr.gov.pt/termos-e-condicoes",
-    summary: "SGIFR requires source attribution and excludes commercial reuse without prior permission, which is why ANEPC publication is held.",
+    summary: "SGIFR requires source attribution and excludes commercial reuse without prior permission: credit ANEPC, and ask them before putting this data to commercial use.",
+  },
+  "ipma-terms": {
+    name: "IPMA conditions of use",
+    url: "https://www.ipma.pt/pt/siteinfo/index.html?page=termos.xml",
+    summary:
+      "IPMA allows its information to be copied and used free of charge for personal or public purposes provided no profit-making purpose follows from that use, and asks that the source always be named.",
+  },
+  "dgeg-precos-terms": {
+    name: "DGEG fuel price terms",
+    url: "https://precoscombustiveis.dgeg.gov.pt/apresentacao/",
+    summary: "DGEG offers the fuel prices free and for free use, and prohibits using them for commercial purposes.",
   },
   "usgs-public-domain": {
     name: "USGS public domain",

@@ -21,6 +21,22 @@ const DAILY_STATIC = {
   },
 } as const;
 
+/*
+ * Most operators here publish a schedule and say nothing about reuse: the
+ * archives carry no `feed_license_url`, their sites carry no open-data page,
+ * and the national access point that lists them states no licence of its own.
+ * Two do say something, so they are served under what they say rather than
+ * under the silence of their neighbours.
+ */
+const LICENSED_DAILY_STATIC = {
+  ...DAILY_STATIC,
+  name: "Daily GTFS static snapshot, licensed",
+  serving: {
+    licence: "cc-by-4.0",
+    attribution: "Published by the named transit operator",
+  },
+} as const;
+
 export const GTFS_EXAMPLES: ExampleFeed[] = [
   {
     slug: "carris-metropolitana-gtfs-feed",
@@ -33,7 +49,8 @@ export const GTFS_EXAMPLES: ExampleFeed[] = [
       url: "https://api.carrismetropolitana.pt/v2/gtfs",
       files: "agency,stops,routes,calendar_dates,feed_info",
     },
-    policy: DAILY_STATIC,
+    // The repository that distributes this archive carries a CC BY 4.0 LICENSE.
+    policy: LICENSED_DAILY_STATIC,
     staleAfterSeconds: 259_200,
     publisher: "carris-metropolitana",
     topics: ["mobility"],
@@ -93,7 +110,9 @@ export const GTFS_EXAMPLES: ExampleFeed[] = [
   staticExample("cp", "cp", "https://publico.cp.pt/gtfs/gtfs.zip", "agency,stops,routes,calendar,calendar_dates"),
   staticExample("fertagus", "fertagus", "https://www.fertagus.pt/GTFSTMLzip/Fertagus_GTFS.zip", "agency,stops,routes,calendar,calendar_dates,shapes"),
   staticExample("tub-braga", "tub-braga", "https://www.tub.pt/developer/gtfs/feed/tub.zip", "agency,stops,routes,calendar,calendar_dates,shapes"),
-  staticExample("tcb-barreiro", "tcb", "https://backend.tcbarreiro.pt/download-gtfs", "agency,stops,routes,calendar,calendar_dates,shapes"),
+  // TCB's own open-data page names the licence: "A licença Creative Commons
+  // Attribution 4.0 – CC BY 4.0 estabelece as condições de utilização."
+  staticExample("tcb-barreiro", "tcb", "https://backend.tcbarreiro.pt/download-gtfs", "agency,stops,routes,calendar,calendar_dates,shapes", LICENSED_DAILY_STATIC),
   // HF publishes service days only in calendar_dates.txt, not calendar.txt.
   staticExample("horarios-do-funchal", "horarios-do-funchal", "https://www.horariosdofunchal.pt/googletransit.zip", "agency,stops,routes,calendar_dates,shapes"),
   // SMTUC (Coimbra) withdrew its GTFS archive from dados.gov.pt in September 2026 and now publishes NeTEx only;
@@ -101,14 +120,14 @@ export const GTFS_EXAMPLES: ExampleFeed[] = [
 ];
 
 /** Selected static reference tables, not live vehicle positions or train delays. */
-function staticExample(slug: string, publisher: Publisher, url: string, files: string): ExampleFeed {
+function staticExample(slug: string, publisher: Publisher, url: string, files: string, policy: ExampleFeed["policy"] = DAILY_STATIC): ExampleFeed {
   const operator = PUBLISHERS[publisher].name;
   return {
     slug: `${slug}-gtfs-feed`,
     title: `${operator} GTFS`,
     description: `Stops, routes, agencies and service days${files.includes("shapes") ? ", with route shapes," : ""} from ${operator}'s current static schedule archive. Not live service or delay information.`,
     config: { source: "gtfs", url, files },
-    policy: DAILY_STATIC,
+    policy,
     staleAfterSeconds: 259_200,
     publisher,
     topics: ["mobility"],

@@ -19,7 +19,7 @@ import { prefetch } from "../lib/query";
 import { Mark } from "./Mark";
 import { SearchPalette } from "./SearchPalette";
 
-export type Section = "home" | "catalog" | "publishers" | "licences" | "status" | "analytics" | "start" | "operations" | "product" | "contribute";
+export type Section = "home" | "catalog" | "publishers" | "licences" | "status" | "analytics" | "start" | "operations" | "product" | "contribute" | "aup";
 
 /** The icons are for the phone drawer, where each destination gets a row of its own. */
 const NAV: { section: Section | "api"; href: string; label: string; icon: Icon }[] = [
@@ -154,6 +154,9 @@ export function Shell({ section, children }: { section: Section; children: React
             <span className="flex flex-wrap gap-x-4 gap-y-1 [&>a]:inline-flex [&>a]:min-h-6 [&>a]:items-center">
               <a className="text-kumo-subtle hover:text-kumo-strong" href="/contribute/">
                 Contribute
+              </a>
+              <a className="text-kumo-subtle hover:text-kumo-strong" href="/aup/">
+                Acceptable use
               </a>
               <a className="text-kumo-subtle hover:text-kumo-strong" href={REPOSITORY}>
                 Source code

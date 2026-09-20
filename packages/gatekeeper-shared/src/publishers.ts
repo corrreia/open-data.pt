@@ -49,7 +49,6 @@ export const PUBLISHERS = {
   "ine": { name: "INE · Instituto Nacional de Estatística", url: "https://www.ine.pt/" },
   "ioda": { name: "IODA · Internet Intelligence Lab, Georgia Tech", url: "https://ioda.inetintel.cc.gatech.edu/" },
   "ipma": { name: "IPMA · Instituto Português do Mar e da Atmosfera", url: "https://www.ipma.pt/" },
-  "lime": { name: "Lime", url: "https://www.li.me/" },
   "mare": { name: "Maré" },
   "metro-do-porto": { name: "Metro do Porto", url: "https://www.metrodoporto.pt/" },
   "metropolitano-de-lisboa": { name: "Metropolitano de Lisboa", url: "https://www.metrolisboa.pt/" },
