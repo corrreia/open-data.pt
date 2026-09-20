@@ -287,10 +287,6 @@
     "resourceKey": "ckan:ckan:resource:2c0c3a1d97fc2d58d8a3fe1472bf0a17a0aa2413169bff46b9121dd801634560",
     "kind": "ckan:resource"
   },
-  "cascais-cultural-facilities-feed": {
-    "resourceKey": "ckan:ckan:resource:a349da98b96e188670aa1993254a4cfcfce8fd5e49b5bc4435dbd2375635033f",
-    "kind": "ckan:resource"
-  },
   "cascais-cultural-venues-feed": {
     "resourceKey": "ckan:ckan:resource:a349da98b96e188670aa1993254a4cfcfce8fd5e49b5bc4435dbd2375635033f",
     "kind": "ckan:resource"
@@ -964,35 +960,35 @@
     "kind": "nasapower:daily-region"
   },
   "oeiras-ciclovias-feed": {
-    "resourceKey": "wfs:wfs:reference:7becffa39f78f79aba240d1ff6ceee6fc533580f26aff5331b64ccfb4f7ad912",
+    "resourceKey": "wfs:wfs:reference:a8ade6f9523da229af3313b2044f52810225ee4fe41203a4e2d813ee6c4dc208",
     "kind": "wfs:reference"
   },
   "oeiras-colonias-errantes-feed": {
-    "resourceKey": "wfs:wfs:reference:1b55a9e7b75523daffc72a412bd1aab4ebf01a0f35325ee003792b7dad554757",
+    "resourceKey": "wfs:wfs:reference:3cb0d8a4d6ef8e167c690afcb358297835f3489c0715c2ebf627a6a06abdba0e",
     "kind": "wfs:reference"
   },
   "oeiras-condicionalismos-via-publica-feed": {
-    "resourceKey": "wfs:wfs:reference:6d53737577980637f07c367d6baeb6e38ff43fcfbdaa38586f5cac1c1dda1da4",
+    "resourceKey": "wfs:wfs:reference:e8c33db0355a43e7ab63ee7f594ca8e49107b2f281ce8fe9a926ebc16d0ad7d8",
     "kind": "wfs:reference"
   },
   "oeiras-docas-bicicletas-feed": {
-    "resourceKey": "wfs:wfs:reference:e1c71e423f0c70571f14da0a3fad8bdbec0538c78dd71289e603d9b2e12b0edd",
+    "resourceKey": "wfs:wfs:reference:aa30bf83bed9a6cd6ed6d74a04d093e3cf592d073cfebffe4ffccb1ffc3a766b",
     "kind": "wfs:reference"
   },
   "oeiras-equipamentos-saude-feed": {
-    "resourceKey": "wfs:wfs:reference:77e683bdab0544979220560000023cee634baf1ef2432776ba2671150da029ae",
+    "resourceKey": "wfs:wfs:reference:df2193994786526a68412a52ec1b683c632506e9443685ce9b9f67fe686252ae",
     "kind": "wfs:reference"
   },
   "oeiras-espacos-verdes-feed": {
-    "resourceKey": "wfs:wfs:reference:46eebceb733d384dce977e40df707f64faaf7cca809be7ebeec6d51643db6c1e",
+    "resourceKey": "wfs:wfs:reference:9f324ea7863d6a276a84fab9c60837b6ef7a38cf7624bd4939b62ead8acf0eb3",
     "kind": "wfs:reference"
   },
   "oeiras-estabelecimentos-desocupados-feed": {
-    "resourceKey": "wfs:wfs:reference:692959cfd5aa590e7140db560d3d7d039cf4a53073b05afc6d719c287c68eeac",
+    "resourceKey": "wfs:wfs:reference:c2c2c20781d65440cb74be766c889c709ab1fd390b1ef58283ac28f8cb92e7b8",
     "kind": "wfs:reference"
   },
   "oeiras-hortas-urbanas-feed": {
-    "resourceKey": "wfs:wfs:reference:65af45cb5b099dbeedd248ec7c673efc548c2a1884b4b06ae9ed1a0192459ecd",
+    "resourceKey": "wfs:wfs:reference:8e3635e0453c1cc345b3f68b9f5c04b2ffbeac26523f63fccd7ec336a057c8c2",
     "kind": "wfs:reference"
   },
   "oeiras-hourly-environment-feed": {
@@ -1000,23 +996,23 @@
     "kind": "ckan:observations"
   },
   "oeiras-obras-municipais-feed": {
-    "resourceKey": "wfs:wfs:reference:2869f021d5de0f8f9938e9ae9c044d7c6a0740f2d5df79fc665a8108a0c77b40",
+    "resourceKey": "wfs:wfs:reference:b231e4404b22606a070758f4aeca38ec3553c266ab87b4192b0c39b3aadcfa10",
     "kind": "wfs:reference"
   },
   "oeiras-orcamento-participativo-feed": {
-    "resourceKey": "wfs:wfs:reference:14b7656a73cee89b9b1405680dc427f5933bd21d2cd3097a55af849e72fdc493",
+    "resourceKey": "wfs:wfs:reference:c10229cb33c94d266a1ba08cd506de625b2f954602ecdf7e9059f747ccaa0bb4",
     "kind": "wfs:reference"
   },
   "oeiras-parquimetros-feed": {
-    "resourceKey": "wfs:wfs:reference:c1d1a61d8d06c7d570665371f397d119546de45d0375e7ec8d3b9bbb34d1b840",
+    "resourceKey": "wfs:wfs:reference:5d8f9b68e72ab290210dff78cdb273756708ec9df29a08ea99202118409c2643",
     "kind": "wfs:reference"
   },
   "oeiras-pontos-carregamento-feed": {
-    "resourceKey": "wfs:wfs:reference:38c9decbfb0ec0a9e4a84609d933a6a58939aa5cd01dbae70d2d33ed9c0b5f29",
+    "resourceKey": "wfs:wfs:reference:de0a8b47c99f4a4f48414ed8848ddd2c4669aee398f8cd72d08ac23970b80ce1",
     "kind": "wfs:reference"
   },
   "oeiras-residuos-indiferenciados-feed": {
-    "resourceKey": "wfs:wfs:reference:612a9242b8bb2549a546f58aee8dd88165ec059dfa38c2e51cd27e2849a1fa2f",
+    "resourceKey": "wfs:wfs:reference:e5e8984197831effdb736d489b31577da90734532aaf941cf13443161745f420",
     "kind": "wfs:reference"
   },
   "omie-portuguese-day-ahead-prices-feed": {

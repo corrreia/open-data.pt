@@ -93,6 +93,8 @@ export function ngsiHosts(value: string): ReadonlySet<string> {
 export async function collectNgsiFeed(config: SourceConfig, checkpoint: SourceValidator | undefined, hosts: ReadonlySet<string>, fetcher: typeof fetch): Promise<SourceFetch> {
   const validated = validateNgsiFeedConfig(config, hosts);
   const entities: JsonValue[] = [];
+  const encoder = new TextEncoder();
+  let aggregateBytes = 64;
   let total: number | undefined;
   for (let offset = 0; offset < NGSI_MAX_ENTITIES; offset += NGSI_PAGE_SIZE) {
     const url = entitiesUrl(validated, offset);
@@ -104,13 +106,20 @@ export async function collectNgsiFeed(config: SourceConfig, checkpoint: SourceVa
     }
     const page = parseJsonBytes(await readBoundedResponse(response, NGSI_MAX_BYTES, "NGSI entities"));
     if (!Array.isArray(page)) throw new GatekeeperError("NGSI returned something other than a list of entities", "invalid-response");
-    entities.push(...page);
+    // Bounding each page bounds nothing: twenty pages of eight megabytes is a hundred and
+    // sixty, and the parsed objects outweigh the bytes they came from. The bound is on what
+    // has been gathered so far, so a broker cannot grow a collection past it one page at a time.
+    for (const entity of page) {
+      aggregateBytes += encoder.encode(JSON.stringify(entity)).byteLength + 1;
+      if (aggregateBytes > NGSI_MAX_BYTES) throw new GatekeeperError("NGSI collection exceeded its byte bound", "response-too-large");
+      entities.push(entity);
+    }
     if (page.length < NGSI_PAGE_SIZE) break;
   }
   if (total !== undefined && entities.length !== total) {
     throw new GatekeeperError(`NGSI answered ${entities.length} of the ${total} entities it counted`, "upstream-error");
   }
-  const body = new TextEncoder().encode(JSON.stringify({ entityType: validated.entityType, entities }));
+  const body = encoder.encode(JSON.stringify({ entityType: validated.entityType, entities }));
   const etag = await contentEtag(body);
   if (checkpoint?.etag === etag) return { kind: "not-modified", validator: { etag } };
   return {

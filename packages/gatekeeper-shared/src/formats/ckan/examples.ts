@@ -217,14 +217,6 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     ["cities", "environment", "society"],
   ),
   cascaisExample(
-    "cascais-cultural-facilities-feed",
-    "Cascais cultural facilities",
-    "Cultural facilities in Cascais.",
-    "geocascais-equipamentocultural",
-    "9b899d53-8e7f-4d61-bac1-86449853a87b",
-    ["cities", "culture"],
-  ),
-  cascaisExample(
     "cascais-sports-facilities-feed",
     "Cascais sports facilities",
     "Sports facilities in Cascais.",

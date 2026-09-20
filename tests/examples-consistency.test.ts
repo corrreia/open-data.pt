@@ -90,6 +90,18 @@ describe("example feed policies", () => {
     const slugs = DEPLOYED.map((example) => example.slug);
     expect(slugs.filter((slug, index) => slugs.indexOf(slug) !== index)).toEqual([]);
   });
+
+  it("read each source once, whatever the feed is called", () => {
+    // Unique slugs are not enough: two feeds named differently can still name the same
+    // dataset and the same resource, and then the catalog collects one source twice and
+    // publishes it as two products. Identical configuration is identical data.
+    const bySource = new Map<string, string[]>();
+    for (const example of DEPLOYED) {
+      const source = JSON.stringify(Object.entries(example.config).toSorted(([left], [right]) => left.localeCompare(right)));
+      bySource.set(source, [...(bySource.get(source) ?? []), example.slug]);
+    }
+    expect([...bySource.values()].filter((slugs) => slugs.length > 1)).toEqual([]);
+  });
 });
 
 describe("libraries and the Worker that carries them", () => {

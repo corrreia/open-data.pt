@@ -7,8 +7,8 @@
             "geometry": {
                 "type": "Point",
                 "coordinates": [
-                    -100982.85800813,
-                    -105281.89704659
+                    -9.29416236,
+                    38.71417176
                 ]
             },
             "geometry_name": "the_geom",
@@ -30,8 +30,8 @@
             "geometry": {
                 "type": "Point",
                 "coordinates": [
-                    -103286.09875458,
-                    -109208.20926186
+                    -9.32005409,
+                    38.67854434
                 ]
             },
             "geometry_name": "the_geom",
@@ -53,8 +53,8 @@
             "geometry": {
                 "type": "Point",
                 "coordinates": [
-                    -102686.73244769,
-                    -107923.03116483
+                    -9.31335778,
+                    38.69018877
                 ]
             },
             "geometry_name": "the_geom",

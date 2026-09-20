@@ -106,6 +106,8 @@ export interface WfsReferenceConfig extends WfsCommonConfig {
   outputFormat?: string;
   /** `none` for a service that ignores `startIndex` and must be read whole. */
   paging?: string;
+  /** The coordinate system to ask for, where the layer is not stored in WGS 84. */
+  srsName?: string;
 }
 
 export type WfsConfig = WfsEventsConfig | WfsReferenceConfig;
@@ -180,6 +182,7 @@ function validateReferenceConfig(config: SourceConfig, hosts: ReadonlySet<string
     "dateOnlyFields",
     "outputFormat",
     "paging",
+    "srsName",
   ];
   for (const key of Object.keys(config)) if (!allowed.includes(key)) throw new GatekeeperError(`Unsupported WFS field: ${key}`, key === "url" ? "source-denied" : "invalid-config");
   const host = config.host?.trim().toLowerCase();
@@ -199,6 +202,14 @@ function validateReferenceConfig(config: SourceConfig, hosts: ReadonlySet<string
   // media type, and the GeoMedia services the national planning registry runs take only the
   // older `application/vnd.geo+json`, rejecting `application/json` outright.
   if (config.outputFormat !== undefined) normalized.outputFormat = token(config.outputFormat, "outputFormat", /^[A-Za-z0-9][A-Za-z0-9.+/_-]{0,80}$/u);
+  /*
+   * GeoJSON is longitude and latitude by definition, but a WFS answers in whatever
+   * the layer is stored in unless it is told otherwise, and a municipal layer is
+   * usually stored in a national grid — Oeiras publishes metres on PT-TM06. Asking
+   * for the coordinate system is how a feed gets coordinates it can place; a layer
+   * already stored in WGS 84 need not ask.
+   */
+  if (config.srsName !== undefined) normalized.srsName = token(config.srsName, "srsName", /^[A-Za-z0-9][A-Za-z0-9:._-]{0,60}$/u);
   if (config.paging !== undefined) {
     if (config.paging !== WFS_NO_PAGING) throw new GatekeeperError(`WFS paging is either omitted or "${WFS_NO_PAGING}"`, "invalid-config");
     normalized.paging = WFS_NO_PAGING;
@@ -354,13 +365,14 @@ function asWfsConfig(config: SourceConfig): WfsConfig {
 }
 
 function asWfsReferenceConfig(config: SourceConfig): WfsReferenceConfig {
-  const { host, path, typeName, idField, numberFields, dateFields, dateOnlyFields, propertyNames, filterField, filterValue, outputFormat, paging } = config;
+  const { host, path, typeName, idField, numberFields, dateFields, dateOnlyFields, propertyNames, filterField, filterValue, outputFormat, paging, srsName } = config;
   if (!host || !path || !typeName || !idField) throw new GatekeeperError("WFS configuration is incomplete", "invalid-config");
   const reference: WfsReferenceConfig = { feed: "reference", host, path, typeName, idField, numberFields: numberFields ?? "", dateFields: dateFields ?? "" };
   if (dateOnlyFields) reference.dateOnlyFields = dateOnlyFields;
   if (propertyNames) reference.propertyNames = propertyNames;
   if (outputFormat) reference.outputFormat = outputFormat;
   if (paging) reference.paging = paging;
+  if (srsName) reference.srsName = srsName;
   if (filterField && filterValue) {
     reference.filterField = filterField;
     reference.filterValue = filterValue;
@@ -381,6 +393,7 @@ function requestUrl(config: WfsConfig, filter: string, extra: Record<string, str
     // that wants a different spelling of GeoJSON names it in the feed's own configuration.
     url.searchParams.set("outputFormat", config.outputFormat ?? "application/json");
     if (config.propertyNames) url.searchParams.set("propertyName", config.propertyNames);
+    if (config.srsName) url.searchParams.set("srsName", config.srsName);
   }
   for (const [key, value] of Object.entries(extra)) url.searchParams.set(key, value);
   return url;

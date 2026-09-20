@@ -257,6 +257,9 @@ function oeirasExample(layer: OeirasLayer): ExampleFeed {
     path: OEIRAS_PATH,
     typeName: `dados_abertos:${layer.layer}`,
     idField: layer.idField ?? "@id",
+    // The workspace is stored on PT-TM06, so an unqualified read answers in metres:
+    // geometry nothing can place and a latitude and longitude that come out empty.
+    srsName: "EPSG:4326",
   };
   if (layer.numberFields) config.numberFields = layer.numberFields;
   if (layer.dateFields) config.dateFields = layer.dateFields;
