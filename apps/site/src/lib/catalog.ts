@@ -219,21 +219,46 @@ function fallbackLabel(product: Product) {
 function labelled(feed: Feed, products: Product[]): LabelledProduct[] {
   const titles = products.map((product) => product.title);
   const prefix = sharedPrefix(titles);
+  const head = prefix.replace(SEPARATOR_END, "");
   return products
     .map((product) => {
       let label = product.title;
-      if (prefix && product.title.startsWith(`${prefix} — `)) label = product.title.slice(prefix.length + 3);
-      else if (prefix && product.title === prefix && products.length > 1) label = fallbackLabel(product);
+      if (prefix && product.title.startsWith(prefix) && product.title.length > prefix.length) label = capitalize(product.title.slice(prefix.length));
+      else if (head && product.title === head && products.length > 1) label = fallbackLabel(product);
       else if (product.title === feed.title || product.title.length > 90 || titles.filter((title) => title === product.title).length > 1) label = fallbackLabel(product);
       return { product, label };
     })
     .sort((a, b) => ROLE_ORDER.indexOf(a.product.role) - ROLE_ORDER.indexOf(b.product.role) || a.label.localeCompare(b.label));
 }
 
+/**
+ * The words every product of a dataset repeats, with the punctuation that ends them: "Parliament
+ * XVII: " before committees, sittings and attendance. Dropping it is what keeps a row of products to
+ * one line each without cutting anything off — the card already carries the dataset's own title, and
+ * each row's tooltip carries the product's. Sources separate the prefix in several ways, so each is
+ * tried in turn and the first one every title shares wins.
+ */
+const SEPARATORS = [" — ", " – ", ": ", " · ", " - "] as const;
+const SEPARATOR_END = /(\s[—–·-]\s|:\s)$/u;
+
 function sharedPrefix(titles: string[]) {
-  const heads = titles.filter((title) => title.includes(" — ")).map((title) => title.slice(0, title.indexOf(" — ")));
-  if (heads.length === 0) return "";
-  return heads.every((head) => head === heads[0]) ? (heads[0] ?? "") : "";
+  if (titles.length < 2) return "";
+  for (const separator of SEPARATORS) {
+    // A title without the separator counts as its own head, so a product named after the whole
+    // dataset still shares it and falls back to its role below.
+    const heads = titles.map((title) => (title.includes(separator) ? title.slice(0, title.indexOf(separator)) : title));
+    const head = heads.find((_, index) => titles[index]?.includes(separator));
+    if (head === undefined || head.length < 3) continue;
+    if (!heads.every((each) => each === head)) continue;
+    return `${head}${separator}`;
+  }
+  return "";
+}
+
+/** A label that lost its prefix starts mid-sentence: "committee meetings" reads as a fragment. */
+function capitalize(label: string) {
+  const first = label.slice(0, 1);
+  return first.toLocaleUpperCase("pt-PT") === first ? label : `${first.toLocaleUpperCase("pt-PT")}${label.slice(1)}`;
 }
 
 /* ---------- Shared reads ---------- */

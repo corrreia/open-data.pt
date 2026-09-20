@@ -122,10 +122,34 @@ export function SectionHead({ eyebrow, title, id, children }: { eyebrow: string;
  * part of every card in that row down together, instead of only its own. A card's body spans the
  * rows after its header with `bodyRows(n - 1)`. The grid's rows must be auto (the default); outside
  * a grid it lays out as before.
+ *
+ * `items-start` is what keeps a shared row honest: a row is as tall as the tallest card's content,
+ * and without it every other card's content is stretched to that height — a row of badges beside a
+ * card whose badges wrapped grew into tall ovals.
  */
 const ROW_SPAN = { 2: "row-span-2", 3: "row-span-3", 4: "row-span-4" } as const;
 export const cardRows = (rows: keyof typeof ROW_SPAN) => `${ROW_SPAN[rows]} grid grid-rows-subgrid gap-y-0`;
-export const bodyRows = (rows: keyof typeof ROW_SPAN) => `${ROW_SPAN[rows]} grid grid-rows-subgrid content-start`;
+export const bodyRows = (rows: keyof typeof ROW_SPAN) => `${ROW_SPAN[rows]} grid grid-rows-subgrid content-start items-start`;
+
+/**
+ * Tags on a card, as many as fit on one line and a count of the rest. A card in a grid shares its
+ * rows with its neighbours, so a second line of tags in one card is a second line of space in all of
+ * them; the hidden tags are in the row's tooltip, and the page the card leads to lists them all.
+ */
+export function TagRow({ items, max = 3 }: { items: string[]; max?: number }) {
+  if (items.length === 0) return null;
+  const hidden = items.length - max;
+  return (
+    <div className="flex flex-wrap items-start gap-1.5" title={items.join(" · ")}>
+      {items.slice(0, max).map((item) => (
+        <Badge key={item} variant="outline">
+          {item}
+        </Badge>
+      ))}
+      {hidden > 0 ? <Badge variant="outline">+{hidden}</Badge> : null}
+    </div>
+  );
+}
 
 export function StatTile({ label, value, note, tone }: { label: string; value: ReactNode; note?: ReactNode; tone?: Tone }) {
   const color = tone === "bad" ? "text-kumo-danger" : tone === "warn" ? "text-kumo-warning" : tone === "ok" ? "text-kumo-success" : "text-kumo-strong";

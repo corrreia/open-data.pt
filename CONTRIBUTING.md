@@ -2,6 +2,11 @@
 
 open-data.pt collects Portuguese public data and publishes it as cacheable JSON. Everything it collects is described by an **example feed**: a slug, a title, a source configuration and a policy. Add one and the platform installs it, collects it, keeps its history and gives it a product page. Pull requests welcome; deploys and secrets are the owner's.
 
+The long-form documentation is in [`docs/`](docs/): [Architecture](docs/architecture.md),
+[Libraries](docs/libraries.md), [Public API](docs/api.md), [Running it](docs/development.md), and
+per-source notes under [`docs/publishers/`](docs/publishers/) and [`docs/feeds/`](docs/feeds/).
+[`CONTEXT.md`](CONTEXT.md) defines the words used here.
+
 ## Where code lives
 
 ```
@@ -99,3 +104,11 @@ pnpm deploy:dry-run
 ## What is not yours to do
 
 Deploys, secrets and Cloudflare resources are the owner's. Do not run `pnpm deploy`, `wrangler deploy`, `wrangler secret put`, or `infra/lake/provision.sh`. `pnpm deploy:dry-run` proves the bundle without touching anything.
+
+## Documenting what you added
+
+Code comments carry the reasoning next to the line it explains, and that is usually enough. Write a
+page under [`docs/publishers/`](docs/publishers/) when reading a publisher's data takes knowledge a
+reader of `examples.ts` would not guess — a credential, a proxy, a permission, a habit of the source —
+and one under [`docs/feeds/`](docs/feeds/) when a single feed's configuration needs explaining. Both
+folders have a README saying what a page holds and how to list it.
