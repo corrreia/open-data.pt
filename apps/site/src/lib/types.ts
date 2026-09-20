@@ -50,6 +50,8 @@ export interface Term {
   name: string;
   url?: string;
   description?: string;
+  /** A publisher's mark on this site; absent for one whose initials stand in for it, and never set for a licence. */
+  logo?: string;
 }
 
 export interface Feed {

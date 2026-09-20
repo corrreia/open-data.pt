@@ -7,6 +7,8 @@ export interface VocabularyRef {
   url?: string;
   /** What a licence means; publishers need no description beyond their name. */
   description?: string;
+  /** A publisher's mark, served from this site, to show beside their name. Absent for a publisher whose initials stand in for it. */
+  logo?: string;
 }
 
 /**
@@ -14,10 +16,13 @@ export interface VocabularyRef {
  * knows (a feed installed before a rename, until the next sync) is served as
  * itself rather than refused: the catalog stays up, and the sync corrects it.
  */
-export function publisherRef(id: string): VocabularyRef {
+export function publisherRef(id: string, origin: string): VocabularyRef {
   if (!isPublisher(id)) return { id, name: id };
   const known = PUBLISHERS[id];
-  return "url" in known ? { id, name: known.name, url: known.url } : { id, name: known.name };
+  const ref: VocabularyRef = { id, name: known.name };
+  if ("url" in known) ref.url = known.url;
+  if ("logo" in known) ref.logo = `${origin}/publishers/${id}.${known.logo}`;
+  return ref;
 }
 
 export function licenceRef(id: string): VocabularyRef {

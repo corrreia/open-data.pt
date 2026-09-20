@@ -19,6 +19,7 @@ import { useMemo, type ReactNode } from "react";
 import { DatasetCard } from "../components/DatasetCard";
 import { Eyebrow, RelativeTime, SectionHead, StatTile } from "../components/common";
 import { mountPage } from "../components/mount";
+import { PublisherMark } from "../components/PublisherMark";
 import { Shell } from "../components/Shell";
 import { apiGet, productHref } from "../lib/api";
 import { buildDatasets, buildPublishers, fetchFeeds, fetchProducts, productCount, publisherHref, topicLabel, type Dataset, emptyLast } from "../lib/catalog";
@@ -224,8 +225,9 @@ function Home() {
             <li key={publisher.id}>
               <a
                 href={publisherHref(publisher.id)}
-                className="inline-flex items-center gap-2 rounded-full bg-kumo-base px-3 py-1.5 text-sm text-kumo-default no-underline ring-1 ring-kumo-line hover:bg-kumo-tint"
+                className="inline-flex items-center gap-2 rounded-full bg-kumo-base py-1.5 pl-2 pr-3 text-sm text-kumo-default no-underline ring-1 ring-kumo-line hover:bg-kumo-tint"
               >
+                <PublisherMark publisher={publisher} size={18} className="rounded-md" />
                 {publisher.name}
                 <Badge variant="secondary">{publisher.datasets.length}</Badge>
               </a>

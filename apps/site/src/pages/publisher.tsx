@@ -3,6 +3,7 @@ import { ArrowRightIcon, BuildingsIcon, HeartbeatIcon } from "@phosphor-icons/re
 import { useMemo } from "react";
 import { DatasetCard } from "../components/DatasetCard";
 import { ErrorNote, Kv, PageHead, Placeholder, StatTile, bodyRows, cardRows } from "../components/common";
+import { PublisherMark, PublisherWatermark } from "../components/PublisherMark";
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { buildDatasets, buildPublishers, fetchFeeds, fetchProducts, licenceHref, productCount, publisherHref, topicsOf, type Publisher, emptyLast } from "../lib/catalog";
@@ -29,14 +30,24 @@ function PublisherIndex({ publishers }: { publishers: Publisher[] }) {
                 </span>
                 <ArrowRightIcon size={14} className="text-kumo-subtle transition-transform group-hover:translate-x-0.5" />
               </LayerCard.Secondary>
-              <LayerCard.Primary className={`gap-2.5 ${bodyRows(3)}`}>
+              {/* The mark is the card's background rather than a tile beside the name: publishers
+                  draw their marks in every proportion, and a row of them at one size was a row of
+                  different sizes. */}
+              <LayerCard.Primary className={`relative isolate gap-2.5 overflow-hidden ${bodyRows(3)}`}>
+                <PublisherWatermark publisher={publisher} height={116} />
                 <h2 className="font-display text-xl leading-snug text-kumo-strong">{publisher.name}</h2>
-                <div className="flex flex-wrap gap-1.5">
-                  {topicsOf(publisher).map((topic) => (
-                    <Badge key={topic} variant="outline">
-                      {topic}
-                    </Badge>
-                  ))}
+                {/* Cards in a row share their tracks, so one card whose topics wrapped to a second line
+                    left a line of empty space in every other card. Three topics fit on one line at any
+                    card width, and the rest are counted. */}
+                <div className="flex flex-wrap gap-1.5" title={topicsOf(publisher).join(" · ")}>
+                  {topicsOf(publisher)
+                    .slice(0, 3)
+                    .map((topic) => (
+                      <Badge key={topic} variant="outline">
+                        {topic}
+                      </Badge>
+                    ))}
+                  {topicsOf(publisher).length > 3 ? <Badge variant="outline">+{topicsOf(publisher).length - 3}</Badge> : null}
                 </div>
                 <p className="wrap-anywhere font-mono text-xs text-kumo-subtle">{[...publisher.hosts.keys()].join(" · ")}</p>
               </LayerCard.Primary>
@@ -53,7 +64,8 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
   const late = publisher.datasets.filter((dataset) => dataset.tone !== "ok").length;
   return (
     <>
-      <div className="grid gap-4">
+      <div className="relative isolate grid gap-4 overflow-hidden">
+        <PublisherWatermark publisher={publisher} height={224} />
         <Breadcrumbs>
           <Breadcrumbs.Link href="/publisher/" icon={<BuildingsIcon size={15} />}>
             Publishers
@@ -61,7 +73,15 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
           <Breadcrumbs.Separator />
           <Breadcrumbs.Current>{publisher.name}</Breadcrumbs.Current>
         </Breadcrumbs>
-        <PageHead eyebrow="Publisher" title={publisher.name}>
+        <PageHead
+          eyebrow="Publisher"
+          title={
+            <span className="flex flex-wrap items-center gap-3">
+              <PublisherMark publisher={publisher} size={52} />
+              <span className="min-w-0">{publisher.name}</span>
+            </span>
+          }
+        >
           {plural(publisher.datasets.length, "dataset")} published by {publisher.name}, collected from where they share them.
         </PageHead>
       </div>
