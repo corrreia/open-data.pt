@@ -15,7 +15,12 @@ function replacedFixture(path: string, from: string, to: string): Uint8Array {
   return new TextEncoder().encode(new TextDecoder().decode(fixture(path)).replaceAll(from, to));
 }
 
-function context(slug: string, config: Record<string, string>, domainSubject: "event" | "observation", defaultProductRole: "event-log" | "time-series"): TransformContext {
+function context(
+  slug: string,
+  config: Record<string, string>,
+  domainSubject: "event" | "observation" | "feature",
+  defaultProductRole: "event-log" | "time-series" | "reference",
+): TransformContext {
   return {
     feed: { slug, title: `${slug} title`, description: `${slug} description`, config, semantics: { domainSubject, defaultProductRole } },
     observedAt: "2026-09-18T20:00:00Z",
@@ -124,6 +129,34 @@ describe("global hazard normalizers", () => {
 
     const blank = transformer.transform(replacedFixture("wfs/effis-burnt-areas.json", '"AREA_HA": "26593"', '"AREA_HA": "   "'), transformContext);
     expect(blank.products[0]?.records?.[0]?.payload.AREA_HA).toBeNull();
+  });
+
+  it("keeps a WFS reference layer whole and undated, with no outline to store", () => {
+    const transformer = new WfsTransformer();
+    const config = {
+      feed: "reference",
+      host: "api.sgifr.gov.pt",
+      path: "/v1/wfs/AGIF/apps-subregionais",
+      typeName: "apps:apps_adaptacao_subregional",
+      idField: "id",
+      numberFields: "area_ha,id_apps",
+      dateFields: "data_aprovacao_publicacao",
+    };
+    const result = transformer.transform(fixture("wfs/sgifr-apps-subregionais.json"), context("sgifr-apps-subregionais-feed", config, "feature", "reference"));
+    const product = result.products[0];
+    // A standing inventory: every read replaces the last, and no feature carries an event time.
+    expect(product).toMatchObject({ role: "reference", updateMode: "authoritative-snapshot" });
+    expect(product?.watermark).toBeUndefined();
+    expect(product?.records).toHaveLength(3);
+    expect(product?.schema.fields).toContainEqual(expect.objectContaining({ id: "area_ha", type: "number" }));
+    expect(product?.records?.[0]).toMatchObject({
+      entityKey: "0104_1",
+      // The source's own wording is kept verbatim, including where a column named for
+      // one article carries the text of another: `art_60` here reads "Artigo 61.º".
+      payload: { municipio: "Arouca", art_60: "Aplicam-se condicionamentos do Artigo 61.º", geometry: null },
+    });
+    expect(product?.records?.[0]?.eventTime).toBeUndefined();
+    expect(result.quality).toMatchObject({ acceptedRecords: 3, rejectedRecords: 0 });
   });
 
   it("rejects out-of-range epochs and impossible source calendar dates", async () => {

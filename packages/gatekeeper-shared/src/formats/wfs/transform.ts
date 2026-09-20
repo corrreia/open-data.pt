@@ -36,16 +36,18 @@ export class WfsTransformer {
       records.push(record);
       if (record.sourcePublishedAt && (!watermark || record.sourcePublishedAt > watermark)) watermark = record.sourcePublishedAt;
     }
+    const reference = config.feed === "reference";
     const product: ProductBuild = {
       productKey: "features",
       slug: context.feed.slug.replace(/-feed$/u, ""),
       title: context.feed.title,
       description: context.feed.description,
-      role: "event-log",
+      role: reference ? "reference" : "event-log",
       schema,
       records,
       kind: "record",
-      updateMode: "source-window",
+      // A reference layer is read whole every time, so each collection replaces the last.
+      updateMode: reference ? "authoritative-snapshot" : "source-window",
       completeness: "complete",
     };
     if (watermark) product.watermark = watermark;
@@ -98,8 +100,9 @@ function schemaOf(profiles: Profile[]): CanonicalSchema {
 }
 
 function transformConfig(config: SourceConfig): SourceConfig {
-  for (const field of ["idField", "eventTimeField", "sourcePublishedAtField", "numberFields", "dateFields"])
-    if (!config[field]) throw new GatekeeperError(`WFS normalized configuration omitted ${field}`, "invalid-config");
+  // A reference layer states what each feature is, so it names no event time and no publication stamp.
+  const required = config.feed === "reference" ? ["idField", "numberFields", "dateFields"] : ["idField", "eventTimeField", "sourcePublishedAtField", "numberFields", "dateFields"];
+  for (const field of required) if (!config[field]) throw new GatekeeperError(`WFS normalized configuration omitted ${field}`, "invalid-config");
   return config;
 }
 
@@ -107,9 +110,7 @@ function featureRecord(value: JsonValue | undefined, config: SourceConfig, profi
   if (!isJsonObject(value) || !isJsonObject(value.properties)) return undefined;
   const properties = value.properties;
   const key = properties[config.idField ?? ""];
-  const eventTime = sourceDate(properties[config.eventTimeField ?? ""]);
-  const sourcePublishedAt = sourceDate(properties[config.sourcePublishedAtField ?? ""]);
-  if ((!isJsonString(key) && !isJsonNumber(key)) || String(key) === "" || !eventTime || !sourcePublishedAt) return undefined;
+  if ((!isJsonString(key) && !isJsonNumber(key)) || String(key) === "") return undefined;
   const payload: JsonObject = {};
   for (const item of profiles) payload[item.field] = canonical(properties[item.field], item.type);
   const geometry = isJsonObject(value.geometry) ? value.geometry : null;
@@ -117,6 +118,11 @@ function featureRecord(value: JsonValue | undefined, config: SourceConfig, profi
   payload.geometry = geometry;
   payload.latitude = centre?.[1] ?? null;
   payload.longitude = centre?.[0] ?? null;
+  // A reference feature is identified, not dated: it carries no event time to keep.
+  if (config.feed === "reference") return { entityKey: String(key), payload };
+  const eventTime = sourceDate(properties[config.eventTimeField ?? ""]);
+  const sourcePublishedAt = sourceDate(properties[config.sourcePublishedAtField ?? ""]);
+  if (!eventTime || !sourcePublishedAt) return undefined;
   return { entityKey: String(key), eventTime, sourcePublishedAt, payload };
 }
 

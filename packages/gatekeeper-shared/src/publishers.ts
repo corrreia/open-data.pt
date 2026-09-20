@@ -22,6 +22,7 @@ export interface PublisherDescription {
 }
 
 export const PUBLISHERS = {
+  "agif": { name: "AGIF · Agência para a Gestão Integrada de Fogos Rurais", url: "https://www.agif.pt/" },
   "anepc": { name: "ANEPC · Autoridade Nacional de Emergência e Proteção Civil", url: "https://prociv.gov.pt/", logo: "png" },
   "apa": { name: "APA · Agência Portuguesa do Ambiente", url: "https://apambiente.pt/", logo: "png" },
   "arquivo-pt": { name: "Arquivo.pt", url: "https://arquivo.pt/", logo: "png" },
