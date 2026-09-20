@@ -163,49 +163,79 @@ const OEIRAS_LAYERS: OeirasLayer[] = [
  * The service is GeoMedia, and rejects `application/json` outright: the only
  * GeoJSON it answers to is the older `application/vnd.geo+json`.
  */
-const CRUS_TORRES_VEDRAS: ExampleFeed = {
-  slug: "torres-vedras-regime-uso-do-solo-feed",
-  title: "Torres Vedras land-use regime",
-  description:
-    "Every parcel of the Carta do Regime de Uso do Solo for Torres Vedras: the class and category of soil each holds under the municipal plan, the designation the plan gives it, its area in hectares, the scale it was drawn at, the source it came from and the date its origin was published. Collected without outlines: asked for the parcels whole the service times out, and these attributes are what can be read and compared.",
-  config: {
-    source: "wfs",
-    feed: "reference",
-    host: "servicos.dgterritorio.pt",
-    path: "/SDISNITWFSCRUS_1113_1/WFService.aspx",
-    typeName: "gmgml:CRUS_Torres_Vedras_V",
-    idField: "ID1",
-    outputFormat: "application/vnd.geo+json",
-    // Asked for the whole type with its outlines, the service spends 200 seconds and then
-    // answers 502; asked for these eleven columns it answers all 2,436 parcels in 16, as
-    // one document, because it ignores `startIndex` and cannot be asked for less.
-    paging: "none",
-    propertyNames: "ID1,AREA_HA,Classe_2021,Categoria_2021,Designacao_no_plano,DTCC,Municipio,Autor,Fonte,Escala_origem,Data_Pub_Origem",
-    numberFields: "AREA_HA,ID1",
-    dateFields: "Data_Pub_Origem",
-  },
-  publisher: "cm-torres-vedras",
-  topics: ["cities", "government"],
-  // A municipal plan is revised over years, not weeks.
-  staleAfterSeconds: 2_592_000,
-  policy: {
-    name: "SNIT municipal land-use regime",
-    version: 1,
-    collection: {
-      cadenceSeconds: 604_800,
-      timeoutSeconds: 300,
-      maxBytes: WFS_MAX_BYTES,
-      maxOutputBytes: 48 * 1024 * 1024,
-      maxRecordBytes: 256 * 1024,
-      maxRecords: 20_000,
-      historyMode: "changes",
+interface CrusClass {
+  slug: string;
+  /** The class as the plan words it, for the title and the description. */
+  name: string;
+  /** How the service is asked for it: an equality on a value holding parentheses is refused. */
+  pattern: string;
+  parcels: number;
+}
+
+/*
+ * The three classes the plan sorts its land into, which together are the whole
+ * layer: 982 urban parcels, 958 urban-but-transitional, 496 rural.
+ *
+ * It is read a class at a time because the service will not hand over more.
+ * Asked for all 2,436 parcels with their outlines it spends 200 seconds and
+ * then answers 502; asked for one class it answers in 20 with the outlines
+ * intact. It also ignores `startIndex`, so the pages that would otherwise do
+ * this job all repeat the first — the class is the only seam it offers.
+ */
+const CRUS_CLASSES: CrusClass[] = [
+  { slug: "solo-urbano", name: "Solo Urbano", pattern: "Solo Urbano", parcels: 982 },
+  { slug: "solo-urbanizavel", name: "Solo Urbano (urbanizável – transitório)", pattern: "Solo Urbano (*", parcels: 958 },
+  { slug: "solo-rustico", name: "Solo Rústico", pattern: "Solo R*stico", parcels: 496 },
+];
+
+function crusTorresVedras(crusClass: CrusClass): ExampleFeed {
+  return {
+    slug: `torres-vedras-regime-uso-do-solo-${crusClass.slug}-feed`,
+    title: `Torres Vedras land-use regime: ${crusClass.name}`,
+    description:
+      `Every parcel the Carta do Regime de Uso do Solo for Torres Vedras classes as ${crusClass.name} — ${crusClass.parcels} of them — with its outline, ` +
+      "the category of soil it holds under the municipal plan, the designation the plan gives it, its area in hectares, the scale it was drawn at, the source it came from and the date its origin was published.",
+    config: {
+      source: "wfs",
+      feed: "reference",
+      host: "servicos.dgterritorio.pt",
+      path: "/SDISNITWFSCRUS_1113_1/WFService.aspx",
+      typeName: "gmgml:CRUS_Torres_Vedras_V",
+      idField: "ID1",
+      outputFormat: "application/vnd.geo+json",
+      // Stored on PT-TM06: unasked, the service answers in metres, which is an outline
+      // nothing can place and a latitude and longitude that come out empty.
+      srsName: "EPSG:4326",
+      paging: "none",
+      filterField: "Classe_2021",
+      filterPattern: crusClass.pattern,
+      numberFields: "AREA_HA,ID1",
+      dateFields: "Data_Pub_Origem",
     },
-    serving: { licence: "cc-by", attribution: "Município de Torres Vedras, published through the Sistema Nacional de Informação Territorial (DGT)" },
-  },
-};
+    publisher: "cm-torres-vedras",
+    topics: ["cities", "government"],
+    // A municipal plan is revised over years, not weeks.
+    staleAfterSeconds: 2_592_000,
+    policy: {
+      name: "SNIT municipal land-use regime",
+      version: 1,
+      collection: {
+        cadenceSeconds: 604_800,
+        timeoutSeconds: 300,
+        maxBytes: WFS_MAX_BYTES,
+        maxOutputBytes: 48 * 1024 * 1024,
+        // One parcel is one outline, and a rural parcel can be an elaborate one.
+        maxRecordBytes: 1024 * 1024,
+        maxRecords: 20_000,
+        historyMode: "changes",
+      },
+      serving: { licence: "cc-by", attribution: "Município de Torres Vedras, published through the Sistema Nacional de Informação Territorial (DGT)" },
+    },
+  };
+}
 
 export const WFS_EXAMPLES: ExampleFeed[] = [
-  CRUS_TORRES_VEDRAS,
+  ...CRUS_CLASSES.map(crusTorresVedras),
   {
     slug: "effis-portugal-recent-burnt-areas-feed",
     title: "Recent EFFIS burnt areas in Portugal",
