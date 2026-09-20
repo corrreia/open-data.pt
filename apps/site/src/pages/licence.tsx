@@ -1,8 +1,9 @@
-import { Badge, Breadcrumbs, Button, Empty, LayerCard, Link } from "@cloudflare/kumo";
+import { Breadcrumbs, Button, Empty, LayerCard, Link } from "@cloudflare/kumo";
 import { ArrowRightIcon, ScalesIcon } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { DatasetCard } from "../components/DatasetCard";
-import { ErrorNote, Kv, PageHead, Placeholder, StatTile, bodyRows, cardRows } from "../components/common";
+import { PublisherMark } from "../components/PublisherMark";
+import { ErrorNote, PageHead, Placeholder, StatTile, bodyRows, cardRows } from "../components/common";
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { buildDatasets, buildLicences, fetchFeeds, fetchProducts, licenceHref, productCount, publisherHref, topicsOf, type Licence, emptyLast } from "../lib/catalog";
@@ -10,6 +11,9 @@ import { fmt, plural } from "../lib/format";
 import { useQuery } from "../lib/query";
 
 const wanted = new URLSearchParams(window.location.search).get("id");
+
+/** How many of this licence's datasets one publisher accounts for. */
+const datasetsOf = (licence: Licence, publisherId: string) => licence.datasets.filter((dataset) => dataset.publisher.id === publisherId).length;
 
 /**
  * As many publisher names as the card's two lines hold, then a count of the rest. Counting a fixed
@@ -77,9 +81,8 @@ function LicencePage({ licence }: { licence: Licence }) {
           {licence.description ??
             `${plural(licence.datasets.length, "dataset")} from ${plural(licence.publishers.size, "publisher")}, served under these terms as their publishers state them.`}
         </PageHead>
-        {/* The terms themselves are the point of this page, so the way to read them sits next to the
-            title. Where a licence names no text, the card below links each publisher's own site,
-            which is where their terms are stated. */}
+        {/* The one place the terms are linked. Where a licence names no text, the publishers below
+            are the way to them: each states their own, on their own site, from their page here. */}
         {licence.url ? (
           <p className="text-sm">
             <Link href={licence.url} target="_blank" rel="noopener noreferrer">
@@ -89,64 +92,41 @@ function LicencePage({ licence }: { licence: Licence }) {
         ) : null}
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
-        <LayerCard>
-          <LayerCard.Secondary>About these terms</LayerCard.Secondary>
-          <LayerCard.Primary>
-            <Kv
-              items={[
-                {
-                  term: "Text",
-                  value: licence.url ? (
-                    <Link href={licence.url} target="_blank" rel="noopener noreferrer">
-                      {new URL(licence.url).hostname} <Link.ExternalIcon />
-                    </Link>
-                  ) : (
-                    "Stated by each publisher, on their own site."
-                  ),
-                },
-                {
-                  term: "Publishers",
-                  value: (
-                    // Their page here, and their own site beside it: that site is where a publisher
-                    // that names no licence states what may be done with the data.
-                    <ul className="grid gap-1.5">
-                      {[...licence.publishers.values()].map((publisher) => (
-                        <li key={publisher.id} className="flex flex-wrap items-center gap-x-2">
-                          <a href={publisherHref(publisher.id)} className="inline-flex min-h-6 items-center text-kumo-link hover:underline">
-                            {publisher.name}
-                          </a>
-                          {publisher.url ? (
-                            <Link href={publisher.url} target="_blank" rel="noopener noreferrer" className="text-xs">
-                              {new URL(publisher.url).hostname} <Link.ExternalIcon />
-                            </Link>
-                          ) : null}
-                        </li>
-                      ))}
-                    </ul>
-                  ),
-                },
-                {
-                  term: "Topics",
-                  value: (
-                    <span className="flex flex-wrap gap-1.5">
-                      {topicsOf(licence).map((topic) => (
-                        <Badge key={topic} variant="outline">
-                          {topic}
-                        </Badge>
-                      ))}
-                    </span>
-                  ),
-                },
-              ]}
-            />
-          </LayerCard.Primary>
-        </LayerCard>
-        <div className="grid grid-cols-2 content-start gap-3">
-          <StatTile label="Datasets" value={fmt.int(licence.datasets.length)} note={`${fmt.int(productCount(licence.datasets))} tables and series`} />
-          <StatTile label="Publishers" value={fmt.int(licence.publishers.size)} note="serving data under these terms" />
-        </div>
+      {/* Three tiles across, not a tall list of publishers beside two small ones: the page's facts
+          are short, and the publishers are a section of their own below, where the width is. */}
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(13rem,100%),1fr))] gap-3">
+        <StatTile label="Datasets" value={fmt.int(licence.datasets.length)} note={`${fmt.int(productCount(licence.datasets))} tables and series`} />
+        <StatTile label="Publishers" value={fmt.int(licence.publishers.size)} note="serving data under these terms" />
+        <StatTile label="Topics" value={fmt.int(licence.topics.size)} note={topicsOf(licence).join(" · ")} />
       </div>
+
+      <section aria-labelledby="publishers-title" className="grid gap-3">
+        <h2 id="publishers-title" className="font-display text-2xl text-kumo-strong">
+          Publishers
+        </h2>
+        {/* One link each, to their page here. Their own site is on that page; two links to the same
+            institution from one row only made the reader choose between them. */}
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(20rem,100%),1fr))] gap-3">
+          {[...licence.publishers.values()].map((publisher) => (
+            <a key={publisher.id} href={publisherHref(publisher.id)} className="group h-full rounded-lg no-underline">
+              <LayerCard className="h-full transition-[box-shadow] group-hover:ring-kumo-focus/40">
+                {/* Kumo stacks a card's primary layer, and a card told to fill its row has to fill it
+                    all the way: one row of its own — mark, name, count, arrow — that grows with the card. */}
+                <LayerCard.Primary className="h-full flex-row items-center gap-3">
+                  <PublisherMark publisher={publisher} size={34} />
+                  <span className="min-w-0">
+                    <span className="line-clamp-3 text-sm font-medium text-kumo-strong" title={publisher.name}>
+                      {publisher.name}
+                    </span>
+                    <span className="block text-xs text-kumo-subtle">{plural(datasetsOf(licence, publisher.id), "dataset")}</span>
+                  </span>
+                  <ArrowRightIcon size={14} className="ml-auto shrink-0 text-kumo-subtle transition-transform group-hover:translate-x-0.5" />
+                </LayerCard.Primary>
+              </LayerCard>
+            </a>
+          ))}
+        </div>
+      </section>
 
       <section aria-labelledby="datasets-title" className="grid gap-3">
         <h2 id="datasets-title" className="font-display text-2xl text-kumo-strong">
