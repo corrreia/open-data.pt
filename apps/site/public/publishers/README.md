@@ -23,7 +23,7 @@ around twice the size it is drawn. A mark must
 - be **at most eight times as wide as it is tall**, and ideally nearer square: the tile
   keeps one height and widens only so far, and a long lockup set in small type becomes a
   smudge at 40px. A publisher whose only mark is such a lockup keeps their initials, which
-  read better — ANEPC, DGPJ and SNS Transparência are there for that reason;
+  read better — ANEPC, DGLAB, INE and SNS Transparência are there for that reason;
 - **fetch nothing**: no `href` or `url()` to another host inside an SVG;
 - stay **under 48 KB**.
 
