@@ -54,6 +54,8 @@ function PublisherIndex({ publishers }: { publishers: Publisher[] }) {
 function PublisherPage({ publisher }: { publisher: Publisher }) {
   const live = publisher.datasets.filter((dataset) => dataset.updates === "live").length;
   const late = publisher.datasets.filter((dataset) => dataset.tone !== "ok").length;
+  const own = publisher.url ? new URL(publisher.url).hostname : undefined;
+  const elsewhere = [...publisher.hosts.entries()].filter(([host]) => host !== own);
   return (
     <>
       <div className="relative isolate grid gap-4 overflow-hidden">
@@ -74,7 +76,7 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
             </span>
           }
         >
-          {plural(publisher.datasets.length, "dataset")} published by {publisher.name}, collected from where they share them.
+          Collected from where {publisher.name} shares them, and served under the terms they state.
         </PageHead>
       </div>
 
@@ -106,12 +108,14 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
                       ),
                     }
                   : null,
-                publisher.hosts.size
+                // Only the portals that are not the publisher's own site: a publisher who serves their
+                // own data had the same link twice, once as "Site" and once here.
+                elsewhere.length > 0
                   ? {
                       term: "Published at",
                       value: (
                         <span className="flex flex-wrap gap-x-4 gap-y-1">
-                          {[...publisher.hosts.entries()].map(([host, href]) => (
+                          {elsewhere.map(([host, href]) => (
                             <Link key={host} href={href} target="_blank" rel="noopener noreferrer">
                               {host} <Link.ExternalIcon />
                             </Link>

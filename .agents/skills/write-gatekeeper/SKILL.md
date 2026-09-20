@@ -28,7 +28,7 @@ A library is **how** the data is read, never what it is about or who publishes i
 - A library's `deployment.ts` declares its name, its vars with their values, and any secrets, R2 buckets and CPU limit. Vars reach the library through `buildLibrary`, which lays the Worker's environment over them; a secret or bucket is bound in `packages/gatekeeper/wrangler.jsonc` under the declared name (Metro Lisboa's `ML_CONSUMER_KEY`/`ML_CONSUMER_SECRET`, Parliament's `PARLIAMENT_STAGING`). The Worker's CPU limit is the largest any library declares.
 - A new library is its directory plus `deployment.ts` and one example, and one line in `libraries.ts`. Nothing else changes: no package, no binding, no script.
 - A source under a publication hold (`packages/gatekeeper-shared/src/publication-holds.json`: ANEPC, IODA, RIPE Atlas, RIPEstat, PeeringDB) is **not** listed in `libraries.ts`, so its code does not ship and its examples are not installed; `tests/examples-consistency.test.ts` holds every library directory to being listed or held, never both. Lifting a hold is deleting its entry and adding the library's line.
-- `GATEKEEPER_LIBRARIES` in `packages/gatekeeper/.dev.vars` (written by `pnpm dev -- <library>…`) restricts a local session to those libraries; production sets nothing.
+- `GATEKEEPER_LIBRARIES`, a var of the Gatekeeper's configuration that `pnpm dev <library>…` overrides with `--var`, restricts a local session to those libraries; production leaves it empty. It cannot live in `.dev.vars`: that Worker declares `secrets.required`, and Wrangler loads only those keys from that file.
 
 Feed slugs never change: a feed's ID derives from its slug, and its resource key from its library, so nothing about the Worker is part of its identity.
 
@@ -142,7 +142,7 @@ The shared helper enforces source, output, frame, row, record, and deadline limi
 
 ## Register and test
 
-`pnpm dev -- <library>` (for example `pnpm dev -- ckan`) runs the kernel and the Gatekeeper carrying that library alone, so only its feeds are installed and polled.
+`pnpm dev <library>` (for example `pnpm dev ckan`) runs the kernel and the Gatekeeper carrying that library alone, so only its feeds are installed and polled.
 
 Tests must cover:
 

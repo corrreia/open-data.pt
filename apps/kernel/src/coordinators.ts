@@ -12,7 +12,7 @@ import {
 
 import { drainOutbox } from "./engine";
 import { NotFoundError } from "./errors";
-import { syncStep, type CatalogEntry, type SyncPorts, type SyncProgress, type SyncState } from "./example-sync";
+import { cadenceFloorOf, syncStep, withCadenceFloor, type CatalogEntry, type SyncPorts, type SyncProgress, type SyncState } from "./example-sync";
 import type { ManifestChunk } from "./chunks";
 import { definitionFingerprint, keepsHistory, policyFingerprint, type Acquisition, type Feed, type FeedPolicy, type ProductIndexEntry, type ProductSummary } from "./feed-model";
 import { gatekeeperOf } from "./gatekeeper";
@@ -278,7 +278,9 @@ export class Registry extends DurableObject<Env> {
     }
   }
 
-  private async applyExample(library: string, example: ExampleFeed): Promise<void> {
+  private async applyExample(library: string, raw: ExampleFeed): Promise<void> {
+    // A local session polls politely: `pnpm dev` sets a floor under every cadence, and a deployment sets none.
+    const example = withCadenceFloor(raw, cadenceFloorOf(this.env.DEV_MIN_CADENCE_SECONDS));
     // The Gatekeeper's word crosses RPC as plain strings; a key outside the vocabulary is a mistake, never a new entry.
     if (!isPublisher(example.publisher)) throw new NormalizedInputError(`${example.slug} names an unknown publisher: ${example.publisher}`);
     if (!isLicence(example.policy.serving.licence)) throw new NormalizedInputError(`${example.slug} names an unknown licence: ${example.policy.serving.licence}`);

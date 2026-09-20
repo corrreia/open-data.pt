@@ -45,13 +45,16 @@ every answer at the edge. Source bodies never leave the Gatekeeper, and the API 
 ```bash
 pnpm install
 pnpm types
-pnpm dev                 # the kernel and the Gatekeeper, carrying every library
-pnpm dev -- ckan         # carrying CKAN alone, so only its feeds are installed and polled
+pnpm dev                 # a catalog worth looking at: IPMA, DGEG, OMIE, Carris and USGS
+pnpm dev ckan            # carrying CKAN alone, so only its feeds are installed and polled
+pnpm dev all             # every library, every source
 ```
 
-Nothing has to be installed by hand: the Registry installs every example feed the Gatekeeper lists and
-keeps them in sync. [Running it](docs/development.md) covers the checks, live-source testing and
-deployment.
+The site and the API come up on <http://localhost:8787>, and on this machine's address for the phone
+or the laptop next to it. Nothing has to be installed by hand: the Registry installs every example
+feed the Gatekeeper lists and keeps them in sync. No local feed is collected more often than every
+half hour, whatever its policy says. [Running it](docs/development.md) covers the checks, live-source
+testing and deployment.
 
 ## Contributing
 

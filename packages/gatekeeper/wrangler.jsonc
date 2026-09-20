@@ -11,6 +11,11 @@
   // Secrets (wrangler secret put): ML_CONSUMER_KEY, ML_CONSUMER_SECRET (Metro Lisboa), NASA_FIRMS_MAP_KEY (NASA FIRMS).
   // Declared by name so deploy fails when one is missing and `wrangler types` types them.
   "secrets": { "required": ["ML_CONSUMER_KEY", "ML_CONSUMER_SECRET", "NASA_FIRMS_MAP_KEY"] },
+  // The libraries this Worker carries: empty is every one of them, which is what a deployment wants.
+  // `pnpm dev <library>` overrides it with --var, because a `.dev.vars` key that `secrets.required`
+  // does not list is dropped before the Worker sees it
+  // (https://developers.cloudflare.com/workers/wrangler/configuration/#secrets-configuration-property).
+  "vars": { "GATEKEEPER_LIBRARIES": "" },
   // Parliament stages its 93 MB initiatives file to answer not-modified without parsing it.
   "r2_buckets": [{ "binding": "PARLIAMENT_STAGING", "bucket_name": "open-data-pt-gatekeeper-staging" }],
   // GTFS archives and Parliament's file need two minutes of CPU; a limit is a ceiling, not a cost.

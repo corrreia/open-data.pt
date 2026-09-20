@@ -192,20 +192,11 @@ function Home() {
         </div>
       </section>
 
-      <section aria-labelledby="live-title">
-        <SectionHead eyebrow="Live" title="Changing as you read" id="live-title">
-          Vehicle positions, waiting times and service alerts, collected every few minutes.
-        </SectionHead>
-        <div className="grid gap-3">
-          {live.slice(0, 6).map((dataset) => (
-            <DatasetCard key={dataset.feed.id} dataset={dataset} />
-          ))}
-        </div>
-      </section>
-
       <section aria-labelledby="recent-title">
+        {/* The live datasets are the panel at the top of this page; these are the rest, newest first,
+            so nobody reads the same six datasets twice on one page. */}
         <SectionHead eyebrow="Recently updated" title="New from the publishers" id="recent-title">
-          Datasets whose publisher released new or changed data most recently.
+          Datasets whose publisher released new or changed data most recently. What changes several times an hour is at the top of this page.
         </SectionHead>
         <div className="grid gap-3">
           {recent.map((dataset) => (

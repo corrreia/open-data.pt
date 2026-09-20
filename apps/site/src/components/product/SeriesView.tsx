@@ -10,8 +10,9 @@ import { SERIES_COLORS } from "../../lib/palette";
 import { fmt } from "../../lib/format";
 import { periodStart } from "../../lib/lisbon";
 import { useQuery } from "../../lib/query";
-import type { Page, Product, SeriesPoint, SeriesSummary, SummaryBucket, SummaryResolution } from "../../lib/types";
+import type { JsonRecord, Page, Product, SeriesPoint, SeriesSummary, SummaryBucket, SummaryResolution } from "../../lib/types";
 import { seriesLabel } from "./cells";
+import { RowDialog } from "./RecordDialog";
 
 const CHARTED = 10;
 const BARS = 25;
@@ -100,6 +101,20 @@ function withLive(buckets: SummaryBucket[], points: SeriesPoint[], resolution: S
 /** A chart row: time, mean, lowest, highest and how many points the bucket holds. */
 type ChartRow = [time: number, mean: number, min: number, max: number, count: number];
 
+/** A point as the dialog reads it: what the columns show, and the dimensions and clocks they leave out. */
+export function pointRecord(point: SeriesPoint): JsonRecord {
+  return {
+    series: seriesLabel(point),
+    seriesKey: point.seriesKey,
+    eventTime: point.eventTime,
+    value: point.value,
+    unit: point.unit ?? null,
+    dimensions: point.dimensions ? { ...point.dimensions } : null,
+    observedAt: point.observedAt ?? null,
+    ingestedAt: point.ingestedAt ?? null,
+  };
+}
+
 interface SummaryRow {
   key: string;
   label: string;
@@ -173,6 +188,8 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
   const dark = useDarkMode();
   const current = useQuery(`series:${product.slug}`, () => apiGet<Page<SeriesPoint>>(productPath(product.slug, "/series?limit=1000")).then((page) => page.data));
   const [span, setSpan] = useState<Span>({ kind: "live" });
+  // Any row opens: a point's dimensions and clocks, or a bucket's exact numbers, are not in its columns.
+  const [opened, setOpened] = useState<{ row: JsonRecord; title: string } | null>(null);
   const [picking, setPicking] = useState(false);
   const [picked, setPicked] = useState<DateRange | undefined>();
   const timeWindow = useMemo(() => windowOf(span), [span]);
@@ -453,6 +470,12 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
             count: row.count,
             unit: unit || null,
           })}
+          onRowClick={(row) =>
+            setOpened({
+              title: row.label,
+              row: { series: row.label, seriesKey: row.key, start: row.start, resolution, points: row.count, mean: row.mean, min: row.min, max: row.max, unit: unit || null },
+            })
+          }
           downloadName={`${product.slug}-summary-${resolution}`}
         />
       ) : (
@@ -470,9 +493,11 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
             unit: point.unit ?? null,
             observedAt: point.observedAt ?? null,
           })}
+          onRowClick={(point) => setOpened({ row: pointRecord(point), title: seriesLabel(point) })}
           downloadName={`${product.slug}-series`}
         />
       )}
+      <RowDialog row={opened?.row ?? null} title={opened?.title} onClose={() => setOpened(null)} />
     </div>
   );
 }

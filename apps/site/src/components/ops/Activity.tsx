@@ -6,8 +6,9 @@ import { useMemo, useState } from "react";
 import { productHref } from "../../lib/api";
 import { fmt, plural } from "../../lib/format";
 import { useQuery } from "../../lib/query";
-import type { Feed, Product } from "../../lib/types";
+import type { Feed, JsonRecord, Product } from "../../lib/types";
 import { DataTable, type Column } from "../DataTable";
+import { RowDialog } from "../product/RecordDialog";
 import { ErrorNote, RelativeTime, SectionHead } from "../common";
 import { RunBadge, acquisitionsKey, fetchAcquisitions, fetchDay, runFromAcquisition, runOutcome, runStatus, triggerLabel, type RunRow } from "./runs";
 
@@ -110,6 +111,7 @@ function dayColumns(lookup: FeedLookup): Column<RunRow>[] {
 }
 
 function PastDay({ day, lookup }: { day: string; lookup: FeedLookup }) {
+  const [opened, setOpened] = useState<{ row: JsonRecord; title: string } | null>(null);
   const archive = useQuery(`activity:${day}`, () => fetchDay(day, DAY_LIMIT), { staleMs: 300_000 });
   const rows = useMemo(() => (archive.data?.data ?? []).map(runFromAcquisition), [archive.data]);
   const columns = useMemo(() => dayColumns(lookup), [lookup]);
@@ -151,8 +153,26 @@ function PastDay({ day, lookup }: { day: string; lookup: FeedLookup }) {
             changes: run.revisions ?? null,
             error: run.error ?? null,
           })}
+          onRowClick={(run) =>
+            setOpened({
+              title: lookup.feedsById.get(run.feedId)?.title ?? run.id,
+              row: {
+                id: run.id,
+                feedId: run.feedId,
+                feed: lookup.feedsById.get(run.feedId)?.title ?? null,
+                status: run.status,
+                trigger: run.trigger,
+                requestedAt: run.requestedAt,
+                at: run.at,
+                rows: run.rows ?? null,
+                changes: run.revisions ?? null,
+                error: run.error ?? null,
+              },
+            })
+          }
         />
       ) : null}
+      <RowDialog row={opened?.row ?? null} title={opened?.title} onClose={() => setOpened(null)} />
     </div>
   );
 }

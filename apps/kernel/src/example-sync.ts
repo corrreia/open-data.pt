@@ -33,6 +33,28 @@ export interface SyncFeed {
   slug: string;
 }
 
+/**
+ * A local session's floor under a feed's cadence: a laptop reads a public source once and leaves it
+ * alone, instead of polling positions every minute all evening. The freshness window moves with it,
+ * so a feed slowed to half an hour is not shown as late thirty seconds after it ran. A deployment
+ * sets no floor and every policy's own cadence stands.
+ */
+export function withCadenceFloor(example: ExampleFeed, floorSeconds: number): ExampleFeed {
+  const { cadenceSeconds } = example.policy.collection;
+  if (floorSeconds <= 0 || cadenceSeconds >= floorSeconds) return example;
+  return {
+    ...example,
+    policy: { ...example.policy, collection: { ...example.policy.collection, cadenceSeconds: floorSeconds } },
+    staleAfterSeconds: Math.max(example.staleAfterSeconds, floorSeconds * 3),
+  };
+}
+
+/** The floor a `DEV_MIN_CADENCE_SECONDS` var asks for: a positive whole number of seconds, or none. */
+export function cadenceFloorOf(value: string | undefined): number {
+  const seconds = Number(value ?? "");
+  return Number.isSafeInteger(seconds) && seconds > 0 ? seconds : 0;
+}
+
 /** Install or update one example, or retire a feed whose example is gone. */
 export type SyncOp = { op: "apply"; library: string; example: ExampleFeed; hash: string } | { op: "retire"; feedId: string; slug: string };
 

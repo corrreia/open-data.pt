@@ -9,11 +9,12 @@ import { HealthBadge, HealthWord, feedHealth, healthLabel, type Health } from ".
 import { RunBadge, acquisitionsKey, fetchAcquisitions, runStatus, triggerLabel } from "../components/ops/runs";
 import { useHashLanding } from "../components/ops/useHashLanding";
 import { Shell } from "../components/Shell";
+import { RowDialog } from "../components/product/RecordDialog";
 import { productHref } from "../lib/api";
 import { fetchFeeds, fetchProducts, formatOf } from "../lib/catalog";
 import { fmt, plural } from "../lib/format";
 import { useQuery } from "../lib/query";
-import type { Acquisition, Feed, Product } from "../lib/types";
+import type { Acquisition, Feed, JsonRecord, Product } from "../lib/types";
 
 interface PageSection {
   id: string;
@@ -147,6 +148,7 @@ const FEED_COLUMNS: Column<FeedRow>[] = [
 const HEALTH_ORDER: Health[] = ["Healthy", "Collecting", "Retrying", "Stale", "Never succeeded", "Never run", "Paused"];
 
 function FeedsSection({ feeds, productsByFeed, loading }: { feeds: Feed[]; productsByFeed: Map<string, Product[]>; loading: boolean }) {
+  const [opened, setOpened] = useState<{ row: JsonRecord; title: string } | null>(null);
   const rows = useMemo(() => {
     const now = Date.now();
     return [...feeds]
@@ -208,8 +210,26 @@ function FeedsSection({ feeds, productsByFeed, loading }: { feeds: Feed[]; produ
               status: row.label,
               products: row.products.map((product) => product.slug).join(" "),
             })}
+            // The columns carry a feed's headline; the row itself carries its whole definition.
+            onRowClick={(row) =>
+              setOpened({
+                title: row.feed.title,
+                row: {
+                  id: row.feed.id,
+                  slug: row.feed.slug,
+                  publisher: row.feed.publisher.name,
+                  source: row.source,
+                  status: row.label,
+                  cadenceSeconds: row.cadence ?? null,
+                  lastSuccessAt: row.feed.lastSuccessAt ?? null,
+                  nextRunAt: row.feed.nextRunAt ?? null,
+                  products: row.products.map((product) => product.slug),
+                },
+              })
+            }
           />
         )}
+        <RowDialog row={opened?.row ?? null} title={opened?.title} onClose={() => setOpened(null)} />
       </div>
     </section>
   );
@@ -292,6 +312,7 @@ const ACQUISITION_COLUMNS: Column<AcquisitionRow>[] = [
 const ALL_FEEDS = "all";
 
 function AcquisitionsSection({ feeds, feedsById }: { feeds: Feed[]; feedsById: Map<string, Feed> }) {
+  const [opened, setOpened] = useState<{ row: JsonRecord; title: string } | null>(null);
   const [feedId, setFeedId] = useState("");
   const acquisitions = useQuery(acquisitionsKey(feedId), () => fetchAcquisitions(feedId), { staleMs: 20_000, refreshMs: 60_000 });
   const rows = useMemo(
@@ -355,7 +376,28 @@ function AcquisitionsSection({ feeds, feedsById }: { feeds: Feed[]; feedsById: M
             changes: row.acquisition.revisions ?? null,
             error: row.acquisition.error ?? null,
           })}
+          onRowClick={(row) =>
+            setOpened({
+              title: row.feedTitle,
+              row: {
+                id: row.acquisition.id,
+                feedId: row.acquisition.feedId,
+                status: row.acquisition.status,
+                trigger: row.acquisition.trigger,
+                requestedAt: row.acquisition.requestedAt,
+                startedAt: row.acquisition.startedAt ?? null,
+                completedAt: row.acquisition.completedAt ?? null,
+                observedAt: row.acquisition.observedAt ?? null,
+                tookMs: row.took ?? null,
+                completeness: row.acquisition.completeness ?? null,
+                rows: row.acquisition.rows ?? null,
+                changes: row.acquisition.revisions ?? null,
+                error: row.acquisition.error ?? null,
+              },
+            })
+          }
         />
+        <RowDialog row={opened?.row ?? null} title={opened?.title} onClose={() => setOpened(null)} />
       </div>
     </section>
   );

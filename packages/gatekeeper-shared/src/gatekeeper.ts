@@ -17,9 +17,11 @@ import {
 } from "./index";
 
 /**
- * What a local session's `.dev.vars` may say beyond what the libraries
- * declare: the libraries to carry, comma-separated, so `pnpm dev -- ckan`
- * installs CKAN's examples and polls nobody else. Production sets nothing.
+ * The libraries this Worker carries, comma-separated, so `pnpm dev ckan`
+ * installs CKAN's examples and polls nobody else. It is a var of the Worker's
+ * configuration, empty in a deployment and overridden per local session with
+ * `--var`; `.dev.vars` cannot carry it, because this Worker declares
+ * `secrets.required` and Wrangler then loads only those keys from that file.
  */
 interface DevVars {
   readonly GATEKEEPER_LIBRARIES?: string;
