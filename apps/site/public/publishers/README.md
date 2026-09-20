@@ -36,6 +36,7 @@ A publisher with no usable mark at all is drawn as their initials instead, so an
 
 | Key                       | Publisher                          | Source                                                                                                                                                    |
 | ------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `agif`                    | AGIF                               | https://www.agif.pt/app/themes/agif/dist/images/logo_agif_ef6b4e2d.svg, cropped to the symbol: their wordmark is drawn white and vanishes on the tile     |
 | `anepc`                   | ANEPC                              | supplied by the project owner; the seal alone, trimmed and drawn smaller here                                                                             |
 | `apa`                     | APA                                | https://apambiente.pt/themes/custom/apa_theme/images/logo-apa.png                                                                                         |
 | `arquivo-pt`              | Arquivo.pt                         | supplied by the project owner; trimmed here                                                                                                               |
