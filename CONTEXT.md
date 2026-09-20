@@ -28,7 +28,13 @@ One repeatable collection definition: library, canonical resolved source configu
 
 ## Publisher
 
-Who made the data, one key of `PUBLISHERS` per institution or operator: never the portal it was read from. dados.gov.pt carries ten publishers and is none of them; Carris Metropolitana is one publisher read through two libraries. A feed names its publisher by key, and the API serves it expanded (`id`, `name`, `url`).
+Where the data comes from: the body that stands behind it, one key of `PUBLISHERS` per institution or operator.
+
+A site that only carries what others put on it is a shelf, not a publisher. dados.gov.pt holds ten publishers and is none of them, and the Card4B portal holds a dozen bus operators' timetables without being any of them: name whoever put the data there.
+
+A body that curates what it serves and answers for it is the publisher, even where it did not draw every line itself. The Carta do Regime de Uso do Solo is DGT's, though it is each municipality's plan that DGT redrew into a national classification — the layer names both roles in separate columns, `Autor` and `Fonte`, and the publisher is the author. SNS Transparência is the health service publishing its own data, though ACSS, INEM, INSA and nine more each produced a part of it.
+
+Carris Metropolitana is one publisher read through two libraries. A feed names its publisher by key, and the API serves it expanded (`id`, `name`, `url`).
 
 ## Licence
 

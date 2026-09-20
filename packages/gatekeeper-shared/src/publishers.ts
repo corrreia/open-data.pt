@@ -4,8 +4,12 @@
  * found on two portals is one publisher on the site. A feed names one by key;
  * a key outside this list is a mistake the type system and a test catch.
  *
- * A publisher is who made the data, never where it was read: dados.gov.pt
- * carries ten of these and is none of them.
+ * A publisher is where the data comes from: the body that stands behind it.
+ * A site that only carries what others put on it is a shelf and not one of
+ * these — dados.gov.pt holds ten publishers and is none of them — while a body
+ * that curates what it serves is, even where it did not draw every line
+ * itself, as DGT is of the municipal plans it redraws into a national
+ * classification.
  */
 export interface PublisherDescription {
   /** The name as a heading shows it: an acronym and what it stands for, or the operator's name. */
@@ -42,7 +46,6 @@ export const PUBLISHERS = {
   "cm-mafra": { name: "Município de Mafra", url: "https://www.cm-mafra.pt/" },
   "cm-oeiras": { name: "Câmara Municipal de Oeiras", url: "https://www.oeiras.pt/", logo: "png" },
   "cm-porto": { name: "Câmara Municipal do Porto", url: "https://www.cm-porto.pt/", logo: "svg" },
-  "cm-torres-vedras": { name: "Município de Torres Vedras", url: "https://www.cm-tvedras.pt/" },
   "cp": { name: "CP", url: "https://www.cp.pt/", logo: "svg" },
   "demarca-design": { name: "DEMARCA Design", logo: "png" },
   "dgeg": { name: "DGEG · Direção-Geral de Energia e Geologia", url: "https://www.dgeg.gov.pt/", logo: "png" },
