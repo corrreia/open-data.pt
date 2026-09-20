@@ -114,6 +114,7 @@ const RENDERERS = new Map<string, Renderer>([
   ["/analytics/", analytics],
   ["/operations/", operations],
   ["/contribute/", contribute],
+  ["/aup/", aup],
 ]);
 
 /** "/catalog/index.html" is the same page as "/catalog/". */
@@ -503,6 +504,45 @@ async function contribute(): Promise<PageText> {
     `- **Add a source or a format** (TypeScript, with tests): ${CONTRIBUTING}#a-new-bespoke-source`,
     "",
     `The code is at ${REPOSITORY}, under the MIT licence. The data is not: it belongs to its publishers, under their licences. The maintainer reviews and deploys; a pull request never needs secrets or access to Cloudflare.`,
+  ]);
+}
+
+/** The role address the site prints, as lib/project.ts names it. */
+const CONTACT_EMAIL = "contacto@open-data.pt";
+
+async function aup(): Promise<PageText> {
+  return found([
+    "# Acceptable use",
+    "",
+    "open-data.pt republishes data other people made. It is free to read, needs no key and no account, and it comes with no warranty.",
+    "",
+    "## We do not own this data",
+    "",
+    "Every dataset belongs to the institution or operator that produced it and travels under that publisher's terms, not ours. We cannot grant rights we were never given.",
+    "",
+    "- **Check the licence on the dataset.** Every product names its licence and its attribution. Some are CC BY or CC0. Some are the publisher's own terms. Some say the publisher stated none, which is not the same as there being no limits.",
+    "- **Some datasets are non-commercial.** A few publishers allow reuse only where no commercial purpose follows from it. Those datasets say so in their own words on their own page.",
+    "- **Credit the publisher, not us.** Each dataset carries the attribution its publisher asks for. Use that one.",
+    "- **The data may be wrong, late, or gone.** We copy what a source served when we read it. For anything that matters, go to the publisher; in an emergency, call 112.",
+    "",
+    "## Using the API",
+    "",
+    "There is no key, no quota and no account.",
+    "",
+    "- **Do not hammer it.** Feeds update on their own schedule, most daily. Polling faster than a dataset changes returns the same bytes.",
+    "- **Cache what you fetch.** Responses carry ETags; send them back for a cheap 304.",
+    "- **Go to the source for bulk.** For a whole history, the publisher's own download will serve you better.",
+    "- **No warranty, no uptime promise.** This is a free service run by one person, and it can break or stop.",
+    "",
+    "## Publishers",
+    "",
+    "We read only what a source serves publicly, and we treat a publisher's own words about reuse as the limit.",
+    "",
+    "- **Ask us to stop and we will.** If you publish a dataset here and do not want it republished, we will remove it without asking you to justify it.",
+    "- **Tell us the right licence.** If a dataset shows no licence and you do have terms, or we show the wrong one, tell us and we will correct it.",
+    "- **Tell us we are polling too hard.** If our collection burdens your service, we will slow down or stop.",
+    "",
+    `Contact: ${CONTACT_EMAIL}. For anything public, an issue at ${REPOSITORY} is faster and leaves a trail.`,
   ]);
 }
 

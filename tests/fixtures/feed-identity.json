@@ -27,6 +27,10 @@
     "resourceKey": "ckan:ckan:resource:001a90e1380bd938b8097e20cca0815273329171ec18f3c89e3d46eb8116fb7c",
     "kind": "ckan:resource"
   },
+  "anepc-active-occurrences-feed": {
+    "resourceKey": "anepc:anepc:active-occurrences:25b42e8ed9cbca528e8057ab8717bc9c4d1a068a6919540cf2c471e13ebda7ee",
+    "kind": "anepc:active-occurrences"
+  },
   "apa-air-quality-stations-feed": {
     "resourceKey": "arcgis:arcgis:layer:e6ec31b69a95520eb46a988cc7f738bdcbb63b859e9ce43d34986e7ce52116f5",
     "kind": "arcgis:layer"
@@ -638,14 +642,6 @@
   "justice-facilities-feed": {
     "resourceKey": "udata:udata:distribution:60632c83af1e751f296806cb2955b985458c4688214db7a9c0820b92990f7884",
     "kind": "udata:distribution"
-  },
-  "lime-lisbon": {
-    "resourceKey": "gbfs:gbfs:status:20a4d3ccefead0ad13d144e3be4a7c7fa68b9e85c71032a53843fa543d4cbc47",
-    "kind": "gbfs:status"
-  },
-  "lime-lisbon-reference": {
-    "resourceKey": "gbfs:gbfs:reference:ebc38fa92d35a20b80ecfac3ed5d24bb317f8d8de913ecaadf96746bfe704e2d",
-    "kind": "gbfs:reference"
   },
   "lisboa-ecoilhas-subterraneas-feed": {
     "resourceKey": "arcgis:arcgis:layer:f23d39c136a7bd3caec220c4a4a775f6dc511a4041301e768a35c6c0b6443366",

@@ -945,9 +945,12 @@ describe("OGC API Features examples", () => {
   // The eight Azores collections that used to live here were removed in September 2026:
   // ambiente.azores.gov.pt answers our Workers with a Cloudflare challenge. The library
   // tests above still cover the basePath and outline paths those feeds exercised.
-  it("claims no licence DGT does not state", () => {
+  // DGT states CC BY 4.0 on the service's HTML landing page, which pygeoapi
+  // leaves out of the JSON this library reads; the same licence is on DGT's own
+  // site and on its dados.gov.pt records.
+  it("serves the CAOP under the licence DGT states", () => {
     for (const example of OGC_EXAMPLES) {
-      expect(example.policy.serving.licence).toBe("source-terms");
+      expect(example.policy.serving.licence).toBe("cc-by-4.0");
       expect(example.policy.serving.attribution ?? "").not.toBe("");
     }
   });

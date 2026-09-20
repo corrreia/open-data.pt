@@ -12,7 +12,7 @@ export const ANEPC_EXAMPLES: ExampleFeed[] = [
     topics: ["society", "health", "environment"],
     staleAfterSeconds: 900,
     policy: {
-      name: "ANEPC active occurrences — republication permission required",
+      name: "ANEPC active occurrences",
       version: 1,
       collection: {
         cadenceSeconds: 300,

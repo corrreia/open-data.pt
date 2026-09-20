@@ -6,7 +6,7 @@ import { GBFS_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/gbfs/ex
 import type { JsonObject, JsonValue, SourceBody, SourceFetch } from "@open-data-pt/gatekeeper-shared";
 import { libraryConfig } from "@open-data-pt/gatekeeper-shared";
 const DISCOVERY_URL = "https://mds.bird.co/gbfs/v2/public/lisbon/gbfs.json";
-const ALLOWED_HOSTS = "data.lime.bike,mds.bird.co,gbfs.primelayer.pt,gbfs.nextbike.net";
+const ALLOWED_HOSTS = "mds.bird.co,gbfs.primelayer.pt,gbfs.nextbike.net";
 const allowedHosts = new Set(ALLOWED_HOSTS.split(","));
 const newExampleSlugs = new Set(["bird-cascais", "bird-matosinhos", "bird-porto", "tubabike-barcelos"]);
 const newExamples = GBFS_EXAMPLES.filter((example) => newExampleSlugs.has(example.slug));
@@ -169,7 +169,6 @@ describe("GBFS Gatekeeper", () => {
       "bird-matosinhos",
       "bird-porto",
       "bora-viseu",
-      "lime-lisbon",
       "tubabike-barcelos",
     ]);
     expect(reference.map((example) => example.slug).toSorted()).toEqual(status.map((example) => `${example.slug}-reference`).toSorted());
@@ -188,8 +187,7 @@ describe("GBFS Gatekeeper", () => {
     expect(cadence("bird-cascais")).toBe(300);
     expect(cadence("bird-matosinhos")).toBe(300);
     expect(cadence("bird-porto")).toBe(300);
-    // Lime answers HTTP 429 at five minutes, TubaBike changed once in 459 station revisions, and Braga is empty.
-    expect(cadence("lime-lisbon")).toBe(600);
+    // TubaBike changed once in 459 station revisions, and Braga is empty.
     expect(cadence("tubabike-barcelos")).toBe(600);
     expect(cadence("bora-viseu")).toBe(600);
     expect(cadence("bird-braga")).toBe(86_400);

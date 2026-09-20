@@ -1,11 +1,26 @@
-import type { ExampleFeed } from "../../index";
+import type { ExampleFeed, Licence } from "../../index";
 
 const LISBON_HOST = "services.arcgis.com";
 const LISBON_SERVICE_ROOT = "1dSrzEWVQn5kHHyK/arcgis/rest/services";
 const APA_HOST = "sniambgeoogc.apambiente.pt";
 const APA_SERVICE_ROOT = "getogc/rest/services/SNIAmb";
 
-const LISBON_POLICY = referencePolicy("ArcGIS daily reference layer", "Câmara Municipal de Lisboa — Lisboa Aberta");
+/*
+ * Lisboa states no licence on the ArcGIS services themselves: the service
+ * metadata carries `copyrightText: "CM Lisboa 2026"` and no `licenseInfo` at
+ * all. The terms live one step away, on the dados.gov.pt record for the same
+ * service, and they are not uniform — 232 of the municipality's 316 datasets
+ * are CC0, 83 are CC BY and one is ODC-PDDL. So each feed carries the licence
+ * of the dataset its own service resolves to, and a feed whose service could
+ * not be matched to exactly one record keeps `source-terms` rather than
+ * inheriting a neighbour's terms.
+ */
+const LISBON_ATTRIBUTION = "Câmara Municipal de Lisboa — Lisboa Aberta";
+const LISBON_POLICY = referencePolicy("ArcGIS daily reference layer", LISBON_ATTRIBUTION, "cc0-1.0");
+const LISBON_CC_BY_POLICY = referencePolicy("ArcGIS daily reference layer, attributed", LISBON_ATTRIBUTION, "cc-by-4.0");
+const LISBON_PDDL_POLICY = referencePolicy("ArcGIS daily reference layer, dedicated", LISBON_ATTRIBUTION, "odc-pddl");
+/** Services that resolve to no single dados.gov.pt record, or to records under two different licences. */
+const LISBON_UNSTATED_POLICY = referencePolicy("ArcGIS daily reference layer, terms unstated", LISBON_ATTRIBUTION, "source-terms");
 // The permits layer is about 12,000 parcel outlines, roughly 13 MB of GeoJSON.
 const LISBON_PERMITS_POLICY = {
   ...LISBON_POLICY,
@@ -16,7 +31,12 @@ const LISBON_PERMITS_POLICY = {
     maxBytes: 24 * 1024 * 1024,
   },
 };
-const APA_POLICY = referencePolicy("APA daily reference layer", "Agência Portuguesa do Ambiente — SNIAmb");
+/*
+ * APA states no licence on the SNIAmb services either — `copyrightText` names
+ * the agency and `licenseInfo` is absent — but every one of its 4,066 records
+ * on dados.gov.pt, including all ten read here, is registered CC BY 4.0.
+ */
+const APA_POLICY = referencePolicy("APA daily reference layer", "Agência Portuguesa do Ambiente — SNIAmb", "cc-by-4.0");
 
 export const ARCGIS_EXAMPLES: ExampleFeed[] = [
   {
@@ -29,7 +49,7 @@ export const ARCGIS_EXAMPLES: ExampleFeed[] = [
       service: `${LISBON_SERVICE_ROOT}/Ciclovias/FeatureServer`,
       layer: "0",
     },
-    policy: LISBON_POLICY,
+    policy: LISBON_CC_BY_POLICY,
     staleAfterSeconds: 172_800,
     publisher: "cm-lisboa",
     topics: ["cities"],
@@ -89,6 +109,7 @@ export const ARCGIS_EXAMPLES: ExampleFeed[] = [
     "Areas in Lisbon where authorised micromobility operators may not leave vehicles parked.",
     "MOB_Micromobilidade",
     "0",
+    LISBON_UNSTATED_POLICY,
   ),
   lisbonExample(
     "lisbon-signalised-crossings-feed",
@@ -96,6 +117,7 @@ export const ARCGIS_EXAMPLES: ExampleFeed[] = [
     "Locations and boundaries of road crossings controlled by traffic lights in Lisbon.",
     "CruzamentosSemaforizados",
     "0",
+    LISBON_PDDL_POLICY,
   ),
   lisbonExample("lisbon-lora-network-feed", "Lisbon LoRa network sites", "Locations of municipal LoRa network sites in Lisbon.", "Rede_LoRa", "0"),
   lisbonExample(
@@ -111,8 +133,16 @@ export const ARCGIS_EXAMPLES: ExampleFeed[] = [
     "Locations, contacts, and public information for libraries, archives, and documentation centres in Lisbon.",
     "EquipamentosCulturais",
     "1",
+    LISBON_UNSTATED_POLICY,
   ),
-  lisbonExample("lisbon-recycling-points-feed", "Lisbon recycling points", "Locations and collection details for public recycling points in Lisbon.", "Amb_Reciclagem", "2"),
+  lisbonExample(
+    "lisbon-recycling-points-feed",
+    "Lisbon recycling points",
+    "Locations and collection details for public recycling points in Lisbon.",
+    "Amb_Reciclagem",
+    "2",
+    LISBON_UNSTATED_POLICY,
+  ),
   lisbonExample("lisbon-cleaning-depots-feed", "Lisbon street-cleaning depots", "Locations of municipal street-cleaning depots in Lisbon.", "Amb_Limpeza", "1"),
   lisbonExample(
     "lisbon-tree-incidents-feed",
@@ -121,7 +151,14 @@ export const ARCGIS_EXAMPLES: ExampleFeed[] = [
     "Incidentes_Arv",
     "0",
   ),
-  lisbonExample("lisbon-parishes-feed", "Lisbon parish boundaries", "Boundaries and identifiers for the 24 civil parishes of Lisbon.", "Base_Freguesias", "0"),
+  lisbonExample(
+    "lisbon-parishes-feed",
+    "Lisbon parish boundaries",
+    "Boundaries and identifiers for the 24 civil parishes of Lisbon.",
+    "Base_Freguesias",
+    "0",
+    LISBON_UNSTATED_POLICY,
+  ),
   lisbonExample("lisbon-tuk-tuk-parking-feed", "Lisbon tuk-tuk parking areas", "Designated tuk-tuk parking locations in Lisbon.", "TukTukEstacionamentos", "0"),
   apaExample(
     "apa-bathing-beaches-feed",
@@ -168,6 +205,7 @@ export const ARCGIS_EXAMPLES: ExampleFeed[] = [
     "Licensed events and temporary occupations of public space in Lisbon, with dates and parish.",
     "UCT_OcupacoesTemporariasEspacoPublico",
     "0",
+    LISBON_UNSTATED_POLICY,
   ),
   lisbonExample("lisbon-pharmacies-feed", "Lisbon pharmacies", "Locations and contact details for pharmacies in Lisbon.", "POISaude", "1"),
   lisbonExample("lisbon-public-hospitals-feed", "Lisbon public hospitals", "Locations and contact details for public hospitals in Lisbon.", "POISaude", "4"),
@@ -179,7 +217,14 @@ export const ARCGIS_EXAMPLES: ExampleFeed[] = [
     "POISeguranca",
     "1",
   ),
-  lisbonExample("lisbon-urgent-works-feed", "Lisbon urgent public works", "Locations of urgent public works carried out by Lisbon municipality.", "DCIEP_OBRAS_25_gdb", "1"),
+  lisbonExample(
+    "lisbon-urgent-works-feed",
+    "Lisbon urgent public works",
+    "Locations of urgent public works carried out by Lisbon municipality.",
+    "DCIEP_OBRAS_25_gdb",
+    "1",
+    LISBON_UNSTATED_POLICY,
+  ),
   lisbonExample("lisbon-hotels-feed", "Lisbon hotels", "Locations and classification of hotels in Lisbon.", "Alojamento", "0"),
   {
     ...lisbonExample(
@@ -207,7 +252,7 @@ export const ARCGIS_EXAMPLES: ExampleFeed[] = [
   ),
 ];
 
-function lisbonExample(slug: string, title: string, description: string, service: string, layer: string): ExampleFeed {
+function lisbonExample(slug: string, title: string, description: string, service: string, layer: string, policy: ExampleFeed["policy"] = LISBON_POLICY): ExampleFeed {
   return {
     slug,
     title,
@@ -218,7 +263,7 @@ function lisbonExample(slug: string, title: string, description: string, service
       service: `${LISBON_SERVICE_ROOT}/${service}/FeatureServer`,
       layer,
     },
-    policy: LISBON_POLICY,
+    policy,
     staleAfterSeconds: 172_800,
     publisher: "cm-lisboa",
     topics: ["cities"],
@@ -243,7 +288,7 @@ function apaExample(slug: string, title: string, description: string, service: s
   };
 }
 
-function referencePolicy(name: string, attribution: string): ExampleFeed["policy"] {
+function referencePolicy(name: string, attribution: string, licence: Licence): ExampleFeed["policy"] {
   return {
     name,
     version: 1,
@@ -254,7 +299,7 @@ function referencePolicy(name: string, attribution: string): ExampleFeed["policy
       historyMode: "changes" as const,
     },
     serving: {
-      licence: "source-terms",
+      licence,
       attribution,
     },
   };
