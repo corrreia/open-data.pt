@@ -30,6 +30,19 @@ const wfsConfig = {
   days: "180",
 };
 
+const SGIFR_HOSTS = new Set(["api.sgifr.gov.pt"]);
+
+const wfsReferenceConfig = {
+  feed: "reference",
+  host: "api.sgifr.gov.pt",
+  path: "/v1/wfs/AGIF/apps-subregionais",
+  typeName: "apps:apps_adaptacao_subregional",
+  idField: "id",
+  propertyNames: "id,municipio,area_ha,art_60,data_aprovacao_publicacao",
+  numberFields: "area_ha,id_apps",
+  dateOnlyFields: "data_aprovacao_publicacao",
+};
+
 const now = new Date("2026-09-18T20:00:00Z");
 
 describe("global hazard source boundaries", () => {
@@ -174,5 +187,52 @@ describe("global hazard source boundaries", () => {
     const fetched = await collectWfsFeed(wfsConfig, undefined, new Set(["maps.effis.emergency.copernicus.eu"]), fetcher, now);
     expect(fetched).toMatchObject({ kind: "body", completeness: "complete", validator: { etag: expect.stringMatching(/^"sha256-/u) } });
     expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("normalizes a reference layer and refuses the event window's fields", () => {
+    expect(validateWfsFeedConfig(wfsReferenceConfig, SGIFR_HOSTS)).toEqual({
+      feed: "reference",
+      host: "api.sgifr.gov.pt",
+      path: "/v1/wfs/AGIF/apps-subregionais",
+      typeName: "apps:apps_adaptacao_subregional",
+      idField: "id",
+      propertyNames: "area_ha,art_60,data_aprovacao_publicacao,id,municipio",
+      numberFields: "area_ha,id_apps",
+      dateOnlyFields: "data_aprovacao_publicacao",
+    });
+    // A reference layer has no window to filter, so the event fields are not its to carry.
+    expect(() => validateWfsFeedConfig({ ...wfsReferenceConfig, days: "180" }, SGIFR_HOSTS)).toThrow("Unsupported WFS field: days");
+    expect(() => validateWfsFeedConfig({ ...wfsReferenceConfig, host: "evil.example" }, SGIFR_HOSTS)).toThrow("The WFS host is not allowed");
+    expect(() => validateWfsFeedConfig({ ...wfsReferenceConfig, url: "https://evil.example" }, SGIFR_HOSTS)).toThrow("Unsupported WFS field: url");
+  });
+
+  it("walks a whole reference layer, asking only for the attributes it keeps", async () => {
+    const features = JSON.parse(new TextDecoder().decode(fixture("wfs/sgifr-apps-subregionais.json"))).features;
+    const fetcher = vi.fn(async (input: URL | RequestInfo) => {
+      const url = new URL(input.toString());
+      expect(url.origin).toBe("https://api.sgifr.gov.pt");
+      // Nothing is filtered: the layer is the product.
+      expect(url.searchParams.get("FILTER")).toBeNull();
+      if (url.searchParams.get("resultType") === "hits") return new Response('<wfs:FeatureCollection numberOfFeatures="3"></wfs:FeatureCollection>');
+      // GeoServer answers to the media type, and the outlines are never asked for.
+      expect(url.searchParams.get("outputFormat")).toBe("application/json");
+      expect(url.searchParams.get("propertyName")).toBe("area_ha,art_60,data_aprovacao_publicacao,id,municipio");
+      expect(url.searchParams.get("sortBy")).toBe("id");
+      expect(url.searchParams.get("startIndex")).toBe("0");
+      return new Response(JSON.stringify({ type: "FeatureCollection", features }));
+    });
+    const fetched = await collectWfsFeed(wfsReferenceConfig, undefined, SGIFR_HOSTS, fetcher, now);
+    expect(fetched).toMatchObject({ kind: "body", completeness: "complete", validator: { etag: expect.stringMatching(/^"sha256-/u) } });
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("stops a reference page that comes back short rather than publishing a hole", async () => {
+    const features = JSON.parse(new TextDecoder().decode(fixture("wfs/sgifr-apps-subregionais.json"))).features;
+    const fetcher = vi.fn(async (input: URL | RequestInfo) => {
+      const url = new URL(input.toString());
+      if (url.searchParams.get("resultType") === "hits") return new Response('<wfs:FeatureCollection numberOfFeatures="9"></wfs:FeatureCollection>');
+      return new Response(JSON.stringify({ type: "FeatureCollection", features }));
+    });
+    await expect(collectWfsFeed(wfsReferenceConfig, undefined, SGIFR_HOSTS, fetcher, now)).rejects.toMatchObject({ code: "upstream-error" });
   });
 });

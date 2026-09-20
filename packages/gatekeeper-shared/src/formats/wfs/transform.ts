@@ -36,16 +36,18 @@ export class WfsTransformer {
       records.push(record);
       if (record.sourcePublishedAt && (!watermark || record.sourcePublishedAt > watermark)) watermark = record.sourcePublishedAt;
     }
+    const reference = config.feed === "reference";
     const product: ProductBuild = {
       productKey: "features",
       slug: context.feed.slug.replace(/-feed$/u, ""),
       title: context.feed.title,
       description: context.feed.description,
-      role: "event-log",
+      role: reference ? "reference" : "event-log",
       schema,
       records,
       kind: "record",
-      updateMode: "source-window",
+      // A reference layer is read whole every time, so each collection replaces the last.
+      updateMode: reference ? "authoritative-snapshot" : "source-window",
       completeness: "complete",
     };
     if (watermark) product.watermark = watermark;
@@ -64,6 +66,7 @@ function profile(features: JsonValue[], config: SourceConfig): Profile[] {
   const names = new Set<string>();
   const numberFields = new Set(config.numberFields?.split(",") ?? []);
   const dateFields = new Set(config.dateFields?.split(",") ?? []);
+  const dateOnlyFields = new Set(config.dateOnlyFields?.split(",") ?? []);
   for (const feature of features) if (isJsonObject(feature) && isJsonObject(feature.properties)) for (const name of Object.keys(feature.properties)) names.add(name);
   if (names.size > 100) throw new GatekeeperError("WFS features expose more than 100 attributes", "response-too-large");
   return [...names].sort().map((field): Profile => {
@@ -73,12 +76,13 @@ function profile(features: JsonValue[], config: SourceConfig): Profile[] {
       const value = properties?.[field];
       if (value !== undefined && value !== null) values.push(value);
     }
-    return { field, nullable: true, values, type: inferType(field, values, numberFields, dateFields) };
+    return { field, nullable: true, values, type: inferType(field, values, numberFields, dateFields, dateOnlyFields) };
   });
 }
 
-function inferType(name: string, values: JsonValue[], numberFields: ReadonlySet<string>, dateFields: ReadonlySet<string>): FieldType {
+function inferType(name: string, values: JsonValue[], numberFields: ReadonlySet<string>, dateFields: ReadonlySet<string>, dateOnlyFields: ReadonlySet<string>): FieldType {
   if (numberFields.has(name)) return "number";
+  if (dateOnlyFields.has(name)) return "date";
   if (dateFields.has(name)) return "datetime";
   if (values.length === 0) return "string";
   if (values.every(isJsonBoolean)) return "boolean";
@@ -98,8 +102,10 @@ function schemaOf(profiles: Profile[]): CanonicalSchema {
 }
 
 function transformConfig(config: SourceConfig): SourceConfig {
-  for (const field of ["idField", "eventTimeField", "sourcePublishedAtField", "numberFields", "dateFields"])
-    if (!config[field]) throw new GatekeeperError(`WFS normalized configuration omitted ${field}`, "invalid-config");
+  // A reference layer states what each feature is, so it names no event time and no publication stamp,
+  // and need not hold numbers or dates at all: only its identity is required of it.
+  const required = config.feed === "reference" ? ["idField"] : ["idField", "eventTimeField", "sourcePublishedAtField", "numberFields", "dateFields"];
+  for (const field of required) if (!config[field]) throw new GatekeeperError(`WFS normalized configuration omitted ${field}`, "invalid-config");
   return config;
 }
 
@@ -107,9 +113,7 @@ function featureRecord(value: JsonValue | undefined, config: SourceConfig, profi
   if (!isJsonObject(value) || !isJsonObject(value.properties)) return undefined;
   const properties = value.properties;
   const key = properties[config.idField ?? ""];
-  const eventTime = sourceDate(properties[config.eventTimeField ?? ""]);
-  const sourcePublishedAt = sourceDate(properties[config.sourcePublishedAtField ?? ""]);
-  if ((!isJsonString(key) && !isJsonNumber(key)) || String(key) === "" || !eventTime || !sourcePublishedAt) return undefined;
+  if ((!isJsonString(key) && !isJsonNumber(key)) || String(key) === "") return undefined;
   const payload: JsonObject = {};
   for (const item of profiles) payload[item.field] = canonical(properties[item.field], item.type);
   const geometry = isJsonObject(value.geometry) ? value.geometry : null;
@@ -117,6 +121,11 @@ function featureRecord(value: JsonValue | undefined, config: SourceConfig, profi
   payload.geometry = geometry;
   payload.latitude = centre?.[1] ?? null;
   payload.longitude = centre?.[0] ?? null;
+  // A reference feature is identified, not dated: it carries no event time to keep.
+  if (config.feed === "reference") return { entityKey: String(key), payload };
+  const eventTime = sourceDate(properties[config.eventTimeField ?? ""]);
+  const sourcePublishedAt = sourceDate(properties[config.sourcePublishedAtField ?? ""]);
+  if (!eventTime || !sourcePublishedAt) return undefined;
   return { entityKey: String(key), eventTime, sourcePublishedAt, payload };
 }
 
@@ -129,7 +138,24 @@ function canonical(value: JsonValue | undefined, type: FieldType): JsonValue {
     return Number.isFinite(number) ? number : null;
   }
   if (type === "datetime" && isJsonString(value)) return sourceDate(value) ?? value;
+  if (type === "date" && isJsonString(value)) return sourceDay(value) ?? null;
   return value;
+}
+
+/**
+ * The calendar day a date-only attribute states, as `YYYY-MM-DD`. GeoServer
+ * writes these with a trailing `Z` it does not mean — "2024-04-22Z" is a day,
+ * not an instant — so the day is kept and the false zone dropped. Anything that
+ * is not a real day is refused rather than passed through under a date type.
+ */
+function sourceDay(value: JsonValue | undefined): string | undefined {
+  if (!isJsonString(value)) return undefined;
+  const match = /^(\d{4})-(\d{2})-(\d{2})Z?$/u.exec(value.trim());
+  if (!match) return undefined;
+  const day = `${match[1]}-${match[2]}-${match[3]}`;
+  const parsed = new Date(`${day}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== day) return undefined;
+  return day;
 }
 
 function sourceDate(value: JsonValue | undefined): string | undefined {

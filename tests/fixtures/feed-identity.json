@@ -931,6 +931,38 @@
     "resourceKey": "myinfo:myinfo:network:448dbda499e57e33f2a1c92dc04327070e56bcc7ac1cca14d19a189979cfd1a8",
     "kind": "myinfo:network"
   },
+  "sgifr-apps-aveiro-feed": {
+    "resourceKey": "wfs:wfs:reference:6be9b97bcaa2cfe0f29645c8ed868d557767839351cf0699b06c22ad6002ced3",
+    "kind": "wfs:reference"
+  },
+  "sgifr-apps-beja-feed": {
+    "resourceKey": "wfs:wfs:reference:c8c0376cc9f2b22c3d88c5fbc8fc645357535f27e8d7ede2571dd5956e7237da",
+    "kind": "wfs:reference"
+  },
+  "sgifr-apps-braga-feed": {
+    "resourceKey": "wfs:wfs:reference:4380f7df831b5d0429125df9de2f04cf100983be7a2102996d9e29b651017703",
+    "kind": "wfs:reference"
+  },
+  "sgifr-apps-leiria-feed": {
+    "resourceKey": "wfs:wfs:reference:ed059d0da4ab27fe11130f5160b6932750f3ed4c77bb8b6bf5d744ab8265808b",
+    "kind": "wfs:reference"
+  },
+  "sgifr-apps-lisboa-feed": {
+    "resourceKey": "wfs:wfs:reference:7216876c47f533b9d9e6c583c003ac658e3fe7e77e8bd3cfdc03bacd90f23403",
+    "kind": "wfs:reference"
+  },
+  "sgifr-apps-porto-feed": {
+    "resourceKey": "wfs:wfs:reference:a97976b144e9eb7961bc211586eed67e8ed3732222ab09487ec3f4ae0baf258f",
+    "kind": "wfs:reference"
+  },
+  "sgifr-apps-setubal-feed": {
+    "resourceKey": "wfs:wfs:reference:4593d795a29e2140fddd79d7d791eec143c35fe7ab036a227811a009b6b66ca5",
+    "kind": "wfs:reference"
+  },
+  "sgifr-apps-viseu-feed": {
+    "resourceKey": "wfs:wfs:reference:004b9844ab0057ec31c70da732cdd15d4bf690c776c7e83ff2a0a3b231bdd0a8",
+    "kind": "wfs:reference"
+  },
   "sns-births-and-caesareans-feed": {
     "resourceKey": "opendatasoft:opendatasoft:dataset:23f30e129b608a7a2e93b9aa8571d3b87883f2beab1977327dae800ddd2b865a",
     "kind": "opendatasoft:dataset"
