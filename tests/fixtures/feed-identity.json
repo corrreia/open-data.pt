@@ -75,9 +75,25 @@
     "resourceKey": "myinfo:myinfo:timetable:54fb485fbc564d05fd33ef1a26010db74be4b361112cc0644192c97735ba415e",
     "kind": "myinfo:timetable"
   },
+  "barraqueiro-oeste-lourinha-torres-vedras-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:f4b3fb4949f388fdc0116cc26519234a44a5c2229227c7d5edd57d9daccc1a8b",
+    "kind": "myinfo:timetable"
+  },
   "barraqueiro-oeste-network-feed": {
     "resourceKey": "myinfo:myinfo:network:4a9af14b672fe80cc9c908d737a3a262e2bb89c19abbd951c7c6c31dc9459bbc",
     "kind": "myinfo:network"
+  },
+  "barraqueiro-oeste-praia-de-santa-cruz-torres-vedras-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:a393794830095cfc353911b8d1e8f58e68e115d48b90d0dfbed6d7b9352c7dc7",
+    "kind": "myinfo:timetable"
+  },
+  "barraqueiro-oeste-torres-vedras-a-dos-cunhados-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:7c09d8637abc05b4bcddf747640b0e5f5af324a01f41e6947afea134a7f154ca",
+    "kind": "myinfo:timetable"
+  },
+  "barraqueiro-oeste-torres-vedras-campelos-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:8e4bbd75e5e6eb1719c3ce83e3a628fc97724e5b7f8e05ff1a17728146d2bd87",
+    "kind": "myinfo:timetable"
   },
   "barraqueiro-oeste-torres-vedras-ericeira-feed": {
     "resourceKey": "myinfo:myinfo:timetable:ba07591308e46b00c86a6cff600522b001f1f3d037c34e42399c64d010ca8d87",
@@ -85,6 +101,22 @@
   },
   "barraqueiro-oeste-torres-vedras-lisboa-feed": {
     "resourceKey": "myinfo:myinfo:timetable:78cd174712fad27e54f790ee014e1e42ad44f29e88f641248498193149751132",
+    "kind": "myinfo:timetable"
+  },
+  "barraqueiro-oeste-torres-vedras-lourinha-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:8be3a86766f3fd226446075eb2c1afc4316e4433765d66d654120280d9436e03",
+    "kind": "myinfo:timetable"
+  },
+  "barraqueiro-oeste-torres-vedras-praia-de-santa-cruz-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:a25beb92f2362a6e22fdd56891431471d8a75cfd6f6559a1f37a9f62445909a4",
+    "kind": "myinfo:timetable"
+  },
+  "barraqueiro-oeste-torres-vedras-silveira-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:636af3a96277481a9a67fffe4a135a734026774f68b786782d648a4cc248c28a",
+    "kind": "myinfo:timetable"
+  },
+  "barraqueiro-oeste-torres-vedras-turcifal-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:190f38d259aa6616e13938341764632324fba3f1a5d9e652393756d4651aa165",
     "kind": "myinfo:timetable"
   },
   "base-contract-modifications-2026-feed": {
@@ -239,12 +271,20 @@
     "resourceKey": "carris:carris:vehicles:fb0545b8aae9c8d7d340949a1613656531ae0e0944c43eec7cd78312525c8de6",
     "kind": "carris:vehicles"
   },
+  "cascais-allotments-feed": {
+    "resourceKey": "ckan:ckan:resource:f0af25a1a834b286e4884688e3bf727bf3bfacca1b6935d8f2fef0b021f10bf5",
+    "kind": "ckan:resource"
+  },
   "cascais-beaches-feed": {
     "resourceKey": "ckan:ckan:resource:68592b1077374fe7860ee23d981f65dec13b608f81dcbd96a94e0b5f07cef99b",
     "kind": "ckan:resource"
   },
   "cascais-bus-stops-feed": {
     "resourceKey": "ckan:ckan:resource:fed16186131ae45da6f74f355d6e2c699001a25a3ce288be22dc6404c61c1647",
+    "kind": "ckan:resource"
+  },
+  "cascais-commerce-services-feed": {
+    "resourceKey": "ckan:ckan:resource:2c0c3a1d97fc2d58d8a3fe1472bf0a17a0aa2413169bff46b9121dd801634560",
     "kind": "ckan:resource"
   },
   "cascais-cultural-venues-feed": {
@@ -263,12 +303,20 @@
     "resourceKey": "ckan:ckan:resource:c69bd423cc4a9bd553bb7d8dcfe050d8a68385e62eaea2d45d0b29b0b03508f6",
     "kind": "ckan:resource"
   },
+  "cascais-fire-infrastructure-feed": {
+    "resourceKey": "ckan:ckan:resource:982f6ee5058df605dfed1cdd4c4c5a23ffd9486d7e9ece501c5d53fc13fbbd5b",
+    "kind": "ckan:resource"
+  },
   "cascais-fire-stations-feed": {
     "resourceKey": "ckan:ckan:resource:d00b4eaa6bffe6ea971fc384bac448721c30e75faf8b832920f4d4efc9a8ef9b",
     "kind": "ckan:resource"
   },
   "cascais-forest-fires-feed": {
     "resourceKey": "ckan:ckan:resource:f5c3823dfa6865fa3b218584ed44dd2ea7df84b70711fa986e3d338140e196a8",
+    "kind": "ckan:resource"
+  },
+  "cascais-green-spaces-feed": {
+    "resourceKey": "ckan:ckan:resource:e72d961d0cd5fbf86e63e9acf7f2406880cda8b8cca671b1346a7be23f64c335",
     "kind": "ckan:resource"
   },
   "cascais-health-facilities-feed": {
@@ -283,6 +331,14 @@
     "resourceKey": "ckan:ckan:resource:63687570e245feecc2237e72befc9a890e3a99b56075198f7d56223c03140ad9",
     "kind": "ckan:resource"
   },
+  "cascais-municipal-housing-feed": {
+    "resourceKey": "ckan:ckan:resource:21f4dc4060828efc7d4aade899ba1057a2719584355e9c4c957d46f05a774ff0",
+    "kind": "ckan:resource"
+  },
+  "cascais-parking-feed": {
+    "resourceKey": "ckan:ckan:resource:9ff90c608aefade0f030584fb0973c9f62c6708a0eda767ac91c5d5a901dcee9",
+    "kind": "ckan:resource"
+  },
   "cascais-pharmacies-feed": {
     "resourceKey": "ckan:ckan:resource:fd85b694f9055fdd374664bf173cee8beaff02c354c9d083cedae824ff889b8a",
     "kind": "ckan:resource"
@@ -295,8 +351,24 @@
     "resourceKey": "ckan:ckan:resource:2c31570895084cf89290ccd6279228409524d3697fc062b7e38b9c7eaffa9b1a",
     "kind": "ckan:resource"
   },
+  "cascais-rental-kiosks-feed": {
+    "resourceKey": "ckan:ckan:resource:3bbd25205d5fad749c566f828d17f4e9b0f517de2d186166e19de039789cc0b9",
+    "kind": "ckan:resource"
+  },
   "cascais-shared-mobility-stations-feed": {
     "resourceKey": "ckan:ckan:resource:36841e4f2bedc0aa4116e00df7eeff8a98bb2b98b381f82991d379a685455102",
+    "kind": "ckan:resource"
+  },
+  "cascais-social-charter-feed": {
+    "resourceKey": "ckan:ckan:resource:5e274f05411b64ebd6cea82a684a6ac064fd895eaa11e4c3ea9479bd6da6c776",
+    "kind": "ckan:resource"
+  },
+  "cascais-sports-facilities-feed": {
+    "resourceKey": "ckan:ckan:resource:0787f675aeab0fa031f1d3d2664a087d18dbf72f0ffd48268691516f3f53447d",
+    "kind": "ckan:resource"
+  },
+  "cascais-street-trees-feed": {
+    "resourceKey": "ckan:ckan:resource:5e3427d8cdd3a1df9bb623c3b19dfb625092490022296b11a82d9ff78a96d933",
     "kind": "ckan:resource"
   },
   "cascais-taxi-ranks-feed": {
@@ -755,6 +827,78 @@
     "resourceKey": "arcgis:arcgis:layer:2b300781baa689bdf8415db288f33c8011ba4fad3e23c8c541751aa300ec9f83",
     "kind": "arcgis:layer"
   },
+  "mafra-centros-saude-feed": {
+    "resourceKey": "arcgis:arcgis:layer:61d592dd1cffab01afa4dfc14e79df655f7b03afd4497084c2a2d07df8547420",
+    "kind": "arcgis:layer"
+  },
+  "mafra-ciclovias-feed": {
+    "resourceKey": "arcgis:arcgis:layer:01571c6f9ba3dd57e4bfb8b07df702ad3b55e1e9b66602c6c1699be263d3925e",
+    "kind": "arcgis:layer"
+  },
+  "mafra-circuitos-pedestres-btt-feed": {
+    "resourceKey": "arcgis:arcgis:layer:427cfddd3070d5c75deca7ef181937f4fd41bf4340cb0e19f39ced5431a167e1",
+    "kind": "arcgis:layer"
+  },
+  "mafra-ecopontos-contentores-feed": {
+    "resourceKey": "arcgis:arcgis:layer:ffbfdea1a30d080b2029f4082f7238e52a8e7303288fcb27c1b75e3b201f01bd",
+    "kind": "arcgis:layer"
+  },
+  "mafra-equipamentos-cultura-feed": {
+    "resourceKey": "arcgis:arcgis:layer:e6a105d769dcfcb37023522c7ac71552dadcf66d7d86206a5cf6d30e4f09bb46",
+    "kind": "arcgis:layer"
+  },
+  "mafra-equipamentos-escolares-feed": {
+    "resourceKey": "arcgis:arcgis:layer:915c0350b75cd858ab1553e2a7e6b8fbf0a240ffca71ba9bdcfaaf4c3f00e476",
+    "kind": "arcgis:layer"
+  },
+  "mafra-equipamentos-sociais-feed": {
+    "resourceKey": "arcgis:arcgis:layer:957dfef7ff42d58013c3e032638c3609e0fcf5103cdc3743dea206309121ebe8",
+    "kind": "arcgis:layer"
+  },
+  "mafra-espacos-jogo-recreio-feed": {
+    "resourceKey": "arcgis:arcgis:layer:1690123e31254a0e185d0c2fb63f5c1594bd5c21cfa5644a4852dc16e385b75b",
+    "kind": "arcgis:layer"
+  },
+  "mafra-espacos-verdes-feed": {
+    "resourceKey": "arcgis:arcgis:layer:e68c2609dc1de3422b517b129e4f516aed59186fc801f10bde6526382a813b1a",
+    "kind": "arcgis:layer"
+  },
+  "mafra-estacionamento-bicicletas-feed": {
+    "resourceKey": "arcgis:arcgis:layer:ba0896ecbe555479517842d498b012dd421d0c049087df9fd5ab3a99bec51e18",
+    "kind": "arcgis:layer"
+  },
+  "mafra-farmacias-feed": {
+    "resourceKey": "arcgis:arcgis:layer:0698bcdb27c2848b7de0bdebccd87c1e05e7799239120e4c139a91972459afac",
+    "kind": "arcgis:layer"
+  },
+  "mafra-lugares-mobilidade-reduzida-feed": {
+    "resourceKey": "arcgis:arcgis:layer:332079d29416bf7288fe532b2193dec7cf89649aaddc03ea32caa3263815e84b",
+    "kind": "arcgis:layer"
+  },
+  "mafra-parcometros-feed": {
+    "resourceKey": "arcgis:arcgis:layer:8af31089f85dcb69faf9b51cba18f3a5e91202d7ab4cc258be85648a915ed506",
+    "kind": "arcgis:layer"
+  },
+  "mafra-parques-caninos-feed": {
+    "resourceKey": "arcgis:arcgis:layer:44d7206ade402bec9410a401722345f14ed31476b7344563cecae62722a05fe9",
+    "kind": "arcgis:layer"
+  },
+  "mafra-parques-estacionamento-feed": {
+    "resourceKey": "arcgis:arcgis:layer:136c756d301000317c2c11a3024d959be8725aa8f1c511ee829f924c64426972",
+    "kind": "arcgis:layer"
+  },
+  "mafra-patrimonio-inventario-feed": {
+    "resourceKey": "arcgis:arcgis:layer:634d4c247ca07c741de7c7609b59c955464a0979006468382075253c4c659b50",
+    "kind": "arcgis:layer"
+  },
+  "mafra-postos-carregamento-feed": {
+    "resourceKey": "arcgis:arcgis:layer:d59cd4661eca18d1645df5b5147193e42df62e927c3103f776fd72c759d2bd06",
+    "kind": "arcgis:layer"
+  },
+  "mafra-praias-feed": {
+    "resourceKey": "arcgis:arcgis:layer:983eff71b20d4268fb352d713bfd3fcfbcbe721a246784b5082dcac390a7ecfe",
+    "kind": "arcgis:layer"
+  },
   "mare-network-feed": {
     "resourceKey": "myinfo:myinfo:network:0cfe119233f489b6058aa04bdee626471eaadc0e1bbd11670f02e2016a6412eb",
     "kind": "myinfo:network"
@@ -815,9 +959,61 @@
     "resourceKey": "nasapower:nasapower:daily-region:900af3f382fa7491c0e3b28f0ea9cc9659bfed12438faf88c30b5cd6d343b097",
     "kind": "nasapower:daily-region"
   },
+  "oeiras-ciclovias-feed": {
+    "resourceKey": "wfs:wfs:reference:a8ade6f9523da229af3313b2044f52810225ee4fe41203a4e2d813ee6c4dc208",
+    "kind": "wfs:reference"
+  },
+  "oeiras-colonias-errantes-feed": {
+    "resourceKey": "wfs:wfs:reference:3cb0d8a4d6ef8e167c690afcb358297835f3489c0715c2ebf627a6a06abdba0e",
+    "kind": "wfs:reference"
+  },
+  "oeiras-condicionalismos-via-publica-feed": {
+    "resourceKey": "wfs:wfs:reference:e8c33db0355a43e7ab63ee7f594ca8e49107b2f281ce8fe9a926ebc16d0ad7d8",
+    "kind": "wfs:reference"
+  },
+  "oeiras-docas-bicicletas-feed": {
+    "resourceKey": "wfs:wfs:reference:aa30bf83bed9a6cd6ed6d74a04d093e3cf592d073cfebffe4ffccb1ffc3a766b",
+    "kind": "wfs:reference"
+  },
+  "oeiras-equipamentos-saude-feed": {
+    "resourceKey": "wfs:wfs:reference:df2193994786526a68412a52ec1b683c632506e9443685ce9b9f67fe686252ae",
+    "kind": "wfs:reference"
+  },
+  "oeiras-espacos-verdes-feed": {
+    "resourceKey": "wfs:wfs:reference:9f324ea7863d6a276a84fab9c60837b6ef7a38cf7624bd4939b62ead8acf0eb3",
+    "kind": "wfs:reference"
+  },
+  "oeiras-estabelecimentos-desocupados-feed": {
+    "resourceKey": "wfs:wfs:reference:c2c2c20781d65440cb74be766c889c709ab1fd390b1ef58283ac28f8cb92e7b8",
+    "kind": "wfs:reference"
+  },
+  "oeiras-hortas-urbanas-feed": {
+    "resourceKey": "wfs:wfs:reference:8e3635e0453c1cc345b3f68b9f5c04b2ffbeac26523f63fccd7ec336a057c8c2",
+    "kind": "wfs:reference"
+  },
   "oeiras-hourly-environment-feed": {
     "resourceKey": "ckan:ckan:observations:9da1f2287f317aa4b0f677f6ed6d74c8365c68865f7c4c7d11bc8224887c06d1",
     "kind": "ckan:observations"
+  },
+  "oeiras-obras-municipais-feed": {
+    "resourceKey": "wfs:wfs:reference:b231e4404b22606a070758f4aeca38ec3553c266ab87b4192b0c39b3aadcfa10",
+    "kind": "wfs:reference"
+  },
+  "oeiras-orcamento-participativo-feed": {
+    "resourceKey": "wfs:wfs:reference:c10229cb33c94d266a1ba08cd506de625b2f954602ecdf7e9059f747ccaa0bb4",
+    "kind": "wfs:reference"
+  },
+  "oeiras-parquimetros-feed": {
+    "resourceKey": "wfs:wfs:reference:5d8f9b68e72ab290210dff78cdb273756708ec9df29a08ea99202118409c2643",
+    "kind": "wfs:reference"
+  },
+  "oeiras-pontos-carregamento-feed": {
+    "resourceKey": "wfs:wfs:reference:de0a8b47c99f4a4f48414ed8848ddd2c4669aee398f8cd72d08ac23970b80ce1",
+    "kind": "wfs:reference"
+  },
+  "oeiras-residuos-indiferenciados-feed": {
+    "resourceKey": "wfs:wfs:reference:e5e8984197831effdb736d489b31577da90734532aaf941cf13443161745f420",
+    "kind": "wfs:reference"
   },
   "omie-portuguese-day-ahead-prices-feed": {
     "resourceKey": "omie:omie:prices:ef8e991c0a7449584710358d38d43eb638541ad8f30565bfeb14c0d9c0dea7d7",
@@ -855,6 +1051,10 @@
     "resourceKey": "parliament:parliament:careers:5cbbe43ed4235bfca3c38594fb1beac236cadcbea4330be07105336b606a8210",
     "kind": "parliament:careers"
   },
+  "porto-air-quality-feed": {
+    "resourceKey": "ngsi:ngsi:observations:fd4a741d9796998f47c13cf6063fe3562dea16bc82dadf4e5c72681f0ed1c349",
+    "kind": "ngsi:observations"
+  },
   "porto-cultural-agenda-feed": {
     "resourceKey": "ckan:ckan:resource:dc64e39da2b6dedd12fedc2a9f3e9c6740cd6a53ad0b184112434f0d646c05df",
     "kind": "ckan:resource"
@@ -870,6 +1070,18 @@
   "porto-municipal-trees-feed": {
     "resourceKey": "ckan:ckan:resource:f50879971e38cbe52cb0d84694e3f0f96fae58b907ec11d9e91a7b5937135333",
     "kind": "ckan:resource"
+  },
+  "porto-noise-levels-feed": {
+    "resourceKey": "ngsi:ngsi:observations:a93e98cabe053927fbb23b82ab6f20d79f0137a2c4a174ba1a938403ee6d6588",
+    "kind": "ngsi:observations"
+  },
+  "porto-shared-micromobility-spots-feed": {
+    "resourceKey": "ngsi:ngsi:inventory:4b319163a8fa77d04daa0f5270f7de294aa03a30ac0be5afc44c6f956b418eb8",
+    "kind": "ngsi:inventory"
+  },
+  "porto-stcp-bus-positions-feed": {
+    "resourceKey": "ngsi:ngsi:inventory:3f8f41236e0dcc1f92d5e54aef3545d1de7c30afdf89843a44fefa8389de4078",
+    "kind": "ngsi:inventory"
   },
   "portuguese-museums-feed": {
     "resourceKey": "udata:udata:distribution:200cbfe528123a9f183fff502d29871e855452545794c9a94be44a4260e29714",
@@ -1106,6 +1318,10 @@
   "tcb-barreiro-gtfs-feed": {
     "resourceKey": "gtfs:gtfs:static:ab8086160690ce8c5e0d5e3e25647ba8d564c85a28444d409b63d88f59efe5af",
     "kind": "gtfs:static"
+  },
+  "torres-vedras-regime-uso-do-solo-feed": {
+    "resourceKey": "wfs:wfs:reference:307ff2c40fe07c3eccd0825ce5299efcbaab37f732f984b0f8eab4c19e5c5297",
+    "kind": "wfs:reference"
   },
   "tub-braga-gtfs-feed": {
     "resourceKey": "gtfs:gtfs:static:7e30c9a4a5705088b35e9146d9f6a3b370bf57fe37f28b22dda1121dcf011191",

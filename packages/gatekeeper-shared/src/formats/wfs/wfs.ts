@@ -20,6 +20,25 @@ const WFS_HITS_BYTES = 64 * 1024;
 const WFS_PAGE_SIZE = 250;
 const WFS_MAX_FEATURES = 5000;
 
+/**
+ * The `idField` of a reference layer whose features are named by the service
+ * rather than by an attribute of their own. A great many published layers
+ * carry no identifier column — a municipal inventory of road works or waste
+ * containers names a street and a state and nothing that distinguishes one row
+ * from the next — while the feature identity WFS itself gives every feature
+ * (`w_condicionalismos_via_publica.1418`) is derived from the primary key of
+ * the table behind the layer, and is what the service will answer for again.
+ *
+ * It is named explicitly and never inferred, because it is only worth trusting
+ * where those identities are a key and not a row number: a layer rebuilt from
+ * a file on each publication renumbers its features, and keying on that would
+ * report the whole layer as changed every time it moved.
+ */
+export const WFS_FEATURE_ID = "@id";
+
+/** `paging` for a service that will only ever hand over the whole feature type. */
+export const WFS_NO_PAGING = "none";
+
 export const WFS_FEEDS = {
   events: {
     kind: "events",
@@ -83,6 +102,12 @@ export interface WfsReferenceConfig extends WfsCommonConfig {
    * in `dateFields` would promise a timestamp nobody wrote down.
    */
   dateOnlyFields?: string;
+  /** The GeoJSON spelling this service answers to, when `application/json` is not it. */
+  outputFormat?: string;
+  /** `none` for a service that ignores `startIndex` and must be read whole. */
+  paging?: string;
+  /** The coordinate system to ask for, where the layer is not stored in WGS 84. */
+  srsName?: string;
 }
 
 export type WfsConfig = WfsEventsConfig | WfsReferenceConfig;
@@ -143,7 +168,22 @@ export function validateWfsFeedConfig(config: SourceConfig, hosts: ReadonlySet<s
  * run to hundreds of megabytes can be read for its attributes alone.
  */
 function validateReferenceConfig(config: SourceConfig, hosts: ReadonlySet<string>): SourceConfig {
-  const allowed = ["feed", "host", "path", "typeName", "idField", "propertyNames", "filterField", "filterValue", "numberFields", "dateFields", "dateOnlyFields"];
+  const allowed = [
+    "feed",
+    "host",
+    "path",
+    "typeName",
+    "idField",
+    "propertyNames",
+    "filterField",
+    "filterValue",
+    "numberFields",
+    "dateFields",
+    "dateOnlyFields",
+    "outputFormat",
+    "paging",
+    "srsName",
+  ];
   for (const key of Object.keys(config)) if (!allowed.includes(key)) throw new GatekeeperError(`Unsupported WFS field: ${key}`, key === "url" ? "source-denied" : "invalid-config");
   const host = config.host?.trim().toLowerCase();
   if (!host || !hosts.has(host)) throw new GatekeeperError("The WFS host is not allowed", "source-denied");
@@ -154,10 +194,26 @@ function validateReferenceConfig(config: SourceConfig, hosts: ReadonlySet<string
     host,
     path,
     typeName: token(config.typeName, "typeName", /^[A-Za-z0-9_.:-]+$/u),
-    idField: token(config.idField, "idField", /^[A-Za-z_][A-Za-z0-9_]*$/u),
+    idField: token(config.idField, "idField", /^(?:@id|[A-Za-z_][A-Za-z0-9_]*)$/u),
   };
   // A reference layer need not carry numbers or dates at all: it is whatever the feature type holds.
   for (const list of ["numberFields", "dateFields", "dateOnlyFields", "propertyNames"] as const) if (config[list] !== undefined) normalized[list] = fieldList(config[list], list);
+  // Which GeoJSON a service answers to is the service's own business: GeoServer takes the
+  // media type, and the GeoMedia services the national planning registry runs take only the
+  // older `application/vnd.geo+json`, rejecting `application/json` outright.
+  if (config.outputFormat !== undefined) normalized.outputFormat = token(config.outputFormat, "outputFormat", /^[A-Za-z0-9][A-Za-z0-9.+/_-]{0,80}$/u);
+  /*
+   * GeoJSON is longitude and latitude by definition, but a WFS answers in whatever
+   * the layer is stored in unless it is told otherwise, and a municipal layer is
+   * usually stored in a national grid — Oeiras publishes metres on PT-TM06. Asking
+   * for the coordinate system is how a feed gets coordinates it can place; a layer
+   * already stored in WGS 84 need not ask.
+   */
+  if (config.srsName !== undefined) normalized.srsName = token(config.srsName, "srsName", /^[A-Za-z0-9][A-Za-z0-9:._-]{0,60}$/u);
+  if (config.paging !== undefined) {
+    if (config.paging !== WFS_NO_PAGING) throw new GatekeeperError(`WFS paging is either omitted or "${WFS_NO_PAGING}"`, "invalid-config");
+    normalized.paging = WFS_NO_PAGING;
+  }
   if ((config.filterField === undefined) !== (config.filterValue === undefined))
     throw new GatekeeperError("WFS filterField and filterValue are named together or not at all", "invalid-config");
   if (config.filterField !== undefined) {
@@ -218,6 +274,7 @@ export async function collectWfsFeed(
  */
 async function collectWfsReference(config: WfsReferenceConfig, checkpoint: SourceValidator | undefined, fetcher: typeof fetch): Promise<SourceFetch> {
   const filter = referenceFilterXml(config);
+  if (config.paging === WFS_NO_PAGING) return collectWfsWholeType(config, filter, checkpoint, fetcher);
   const hitsUrl = requestUrl(config, filter, { resultType: "hits" });
   const hits = await request(fetcher, hitsUrl, WFS_HITS_BYTES, "WFS count");
   const count = featureCount(new TextDecoder().decode(hits));
@@ -227,7 +284,12 @@ async function collectWfsReference(config: WfsReferenceConfig, checkpoint: Sourc
   let aggregateBytes = 64;
   for (let start = 0; start < count; start += WFS_REFERENCE_PAGE_SIZE) {
     const size = Math.min(WFS_REFERENCE_PAGE_SIZE, count - start);
-    const pageUrl = requestUrl(config, filter, { startIndex: String(start), maxFeatures: String(size), sortBy: config.idField });
+    // Pages are sorted so that they tile rather than overlap. A layer keyed by feature
+    // identity has nothing to sort by — a service rejects `sortBy=@id`, which is not one
+    // of its properties — so it is left in the order the service returns, which for those
+    // layers is the order of the key the identities are derived from.
+    const order = config.idField === WFS_FEATURE_ID ? {} : { sortBy: config.idField };
+    const pageUrl = requestUrl(config, filter, { startIndex: String(start), maxFeatures: String(size), ...order });
     const page = parsePage(await request(fetcher, pageUrl, WFS_PAGE_BYTES, "WFS feature page"));
     if (!isJsonObject(page) || page.type !== "FeatureCollection" || !Array.isArray(page.features)) throw new GatekeeperError("WFS returned malformed GeoJSON", "invalid-response");
     if (page.features.length !== size) throw new GatekeeperError("WFS returned an incomplete feature page", "upstream-error");
@@ -242,6 +304,34 @@ async function collectWfsReference(config: WfsReferenceConfig, checkpoint: Sourc
   if (checkpoint?.etag === etag) return { kind: "not-modified", validator: { etag } };
   const sourceUrl = requestUrl(config, filter, {}).toString();
   return { kind: "body", body: bytes, provenance: { sourceUrl }, completeness: "complete", validator: { etag } };
+}
+
+/**
+ * The whole feature type in one request, for a service that offers no way to
+ * ask for less of it. The national planning registry runs such services: they
+ * ignore `startIndex`, so every page after the first repeats the first, and
+ * they answer `resultType=hits` with the entire collection rather than a count
+ * header. Paging one of those does not divide the work, it multiplies it, and
+ * would publish each feature as many times as there were pages.
+ *
+ * So the type is read once and bounded by bytes rather than by feature count,
+ * which is the only bound a service that will not be asked for a count can be
+ * held to. Feeds configured this way are the ones whose whole type is known to
+ * fit that bound.
+ */
+async function collectWfsWholeType(config: WfsReferenceConfig, filter: string, checkpoint: SourceValidator | undefined, fetcher: typeof fetch): Promise<SourceFetch> {
+  const url = requestUrl(config, filter, {});
+  const document = parsePage(await request(fetcher, url, WFS_REFERENCE_MAX_BYTES, "WFS feature type"));
+  if (!isJsonObject(document) || document.type !== "FeatureCollection" || !Array.isArray(document.features)) {
+    throw new GatekeeperError("WFS returned malformed GeoJSON", "invalid-response");
+  }
+  if (document.features.length > WFS_REFERENCE_MAX_FEATURES) {
+    throw new GatekeeperError(`WFS reference layer holds ${document.features.length} features, more than this library reads`, "response-too-large");
+  }
+  const bytes = new TextEncoder().encode(JSON.stringify({ type: "FeatureCollection", features: document.features }));
+  const etag = await contentEtag(bytes);
+  if (checkpoint?.etag === etag) return { kind: "not-modified", validator: { etag } };
+  return { kind: "body", body: bytes, provenance: { sourceUrl: url.toString() }, completeness: "complete", validator: { etag } };
 }
 
 function parsePage(bytes: Uint8Array): JsonValue {
@@ -275,11 +365,14 @@ function asWfsConfig(config: SourceConfig): WfsConfig {
 }
 
 function asWfsReferenceConfig(config: SourceConfig): WfsReferenceConfig {
-  const { host, path, typeName, idField, numberFields, dateFields, dateOnlyFields, propertyNames, filterField, filterValue } = config;
+  const { host, path, typeName, idField, numberFields, dateFields, dateOnlyFields, propertyNames, filterField, filterValue, outputFormat, paging, srsName } = config;
   if (!host || !path || !typeName || !idField) throw new GatekeeperError("WFS configuration is incomplete", "invalid-config");
   const reference: WfsReferenceConfig = { feed: "reference", host, path, typeName, idField, numberFields: numberFields ?? "", dateFields: dateFields ?? "" };
   if (dateOnlyFields) reference.dateOnlyFields = dateOnlyFields;
   if (propertyNames) reference.propertyNames = propertyNames;
+  if (outputFormat) reference.outputFormat = outputFormat;
+  if (paging) reference.paging = paging;
+  if (srsName) reference.srsName = srsName;
   if (filterField && filterValue) {
     reference.filterField = filterField;
     reference.filterValue = filterValue;
@@ -296,9 +389,11 @@ function requestUrl(config: WfsConfig, filter: string, extra: Record<string, str
   // An unfiltered reference layer is the whole feature type, so it carries no FILTER at all.
   if (filter !== "") url.searchParams.set("FILTER", filter);
   if (config.feed === "reference") {
-    // GeoServer answers to the media type, not to MapServer's "geojson" shorthand.
-    url.searchParams.set("outputFormat", "application/json");
+    // GeoServer answers to the media type, not to MapServer's "geojson" shorthand; a service
+    // that wants a different spelling of GeoJSON names it in the feed's own configuration.
+    url.searchParams.set("outputFormat", config.outputFormat ?? "application/json");
     if (config.propertyNames) url.searchParams.set("propertyName", config.propertyNames);
+    if (config.srsName) url.searchParams.set("srsName", config.srsName);
   }
   for (const [key, value] of Object.entries(extra)) url.searchParams.set(key, value);
   return url;

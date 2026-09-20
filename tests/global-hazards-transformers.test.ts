@@ -162,6 +162,58 @@ describe("global hazard normalizers", () => {
     expect(result.quality).toMatchObject({ acceptedRecords: 3, rejectedRecords: 0 });
   });
 
+  it("names a reference feature by the service's own identity when the layer holds no identifier", () => {
+    const config = {
+      feed: "reference",
+      host: "oeirasinterativa.oeiras.pt",
+      path: "/gis/services/dados_abertos/wfs",
+      typeName: "dados_abertos:w_condicionalismos_via_publica",
+      idField: "@id",
+      dateOnlyFields: "data_prevista_inicio,data_prevista_conclusao",
+      dateFields: "ultima_atualizacao",
+    };
+    const result = new WfsTransformer().transform(
+      fixture("wfs/oeiras-condicionalismos-via-publica.json"),
+      context("oeiras-condicionalismos-via-publica-feed", config, "feature", "reference"),
+    );
+    const product = result.products[0];
+    // Every row names a street and a state and nothing that tells one from the next,
+    // so the key is the feature identity the service gives, not a column.
+    expect(product?.records?.map((record) => record.entityKey)).toEqual([
+      "w_condicionalismos_via_publica.1",
+      "w_condicionalismos_via_publica.2",
+      "w_condicionalismos_via_publica.3",
+    ]);
+    // The identity is the feature's, not a field of it: it is not smuggled into the payload.
+    expect(product?.schema.fields.map((field) => field.id)).not.toContain("@id");
+    expect(product?.records?.[0]?.payload).toMatchObject({ freguesia: "Porto Salvo", estado_obra: "Concluído" });
+    expect(result.quality).toMatchObject({ acceptedRecords: 3, rejectedRecords: 0 });
+  });
+
+  it("places a layer its service stores on a national grid", () => {
+    const config = {
+      feed: "reference",
+      host: "oeirasinterativa.oeiras.pt",
+      path: "/gis/services/dados_abertos/wfs",
+      typeName: "dados_abertos:w_condicionalismos_via_publica",
+      idField: "@id",
+      srsName: "EPSG:4326",
+    };
+    const result = new WfsTransformer().transform(
+      fixture("wfs/oeiras-condicionalismos-via-publica.json"),
+      context("oeiras-condicionalismos-via-publica-feed", config, "feature", "reference"),
+    );
+    const first = result.products[0]?.records?.[0];
+    // Asked without a coordinate system this workspace answers in metres on PT-TM06, which
+    // is geometry nothing can place and a centre that comes out empty. Every row is somewhere.
+    expect(first?.payload.longitude).toBeCloseTo(-9.29, 1);
+    expect(first?.payload.latitude).toBeCloseTo(38.71, 1);
+    for (const record of result.products[0]?.records ?? []) {
+      expect(record.payload.latitude).not.toBeNull();
+      expect(record.payload.longitude).not.toBeNull();
+    }
+  });
+
   it("rejects out-of-range epochs and impossible source calendar dates", async () => {
     const anepc = new AnepcTransformer().transform(
       replacedFixture("anepc/active-occurrences.json", "1789751220000", "9007199254740991"),

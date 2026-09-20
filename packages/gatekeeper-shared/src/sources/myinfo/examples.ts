@@ -29,6 +29,55 @@ const TIMETABLE: CollectionPolicyDefinition = {
 
 const TOPICS = ["mobility"];
 
+/**
+ * Torres Vedras publishes nothing itself — its services portal is behind a
+ * login and its geoportal proxies every layer from hosts inside the building —
+ * so the concelho reaches this catalog through the operator that serves it.
+ * These are the places Barraqueiro Oeste runs to from the town, as its own
+ * search offers them: the beach, the western parishes and the neighbouring
+ * concelhos. The long-distance pairs (Lisbon, Ericeira) are above.
+ */
+const TORRES_VEDRAS = "4384";
+
+interface TorresVedrasRoute {
+  slug: string;
+  place: string;
+  zone: string;
+  /** Set when the return leg is worth its own feed rather than only the outbound one. */
+  both?: true;
+}
+
+const TORRES_VEDRAS_ROUTES: TorresVedrasRoute[] = [
+  { slug: "praia-de-santa-cruz", place: "Praia de Santa Cruz", zone: "4364", both: true },
+  { slug: "lourinha", place: "Lourinhã", zone: "4329", both: true },
+  { slug: "silveira", place: "Silveira", zone: "4377" },
+  { slug: "a-dos-cunhados", place: "A dos Cunhados", zone: "4263" },
+  { slug: "campelos", place: "Campelos", zone: "4422" },
+  { slug: "turcifal", place: "Turcifal", zone: "4385" },
+  // Maxial, Dois Portos and Runa are offered by the search but answer it with no trips:
+  // the operator reaches them, but not on a service that starts in Torres Vedras.
+];
+
+function torresVedrasExample(route: TorresVedrasRoute): ExampleFeed[] {
+  const legs: ExampleFeed[] = [timetable(`torres-vedras-${route.slug}`, "Torres Vedras", route.place, TORRES_VEDRAS, route.zone)];
+  if (route.both) legs.push(timetable(`${route.slug}-torres-vedras`, route.place, "Torres Vedras", route.zone, TORRES_VEDRAS));
+  return legs;
+}
+
+/** One Barraqueiro Oeste timetable, from one of its places to another. */
+function timetable(slug: string, from: string, to: string, origin: string, destination: string): ExampleFeed {
+  return {
+    slug: `barraqueiro-oeste-${slug}-feed`,
+    title: `${from} to ${to} departures`,
+    description: `Every scheduled Barraqueiro Oeste departure from ${from} to ${to}, with its arrival, journey time, lines and the days it runs.`,
+    config: { source: "myinfo", feed: "timetable", operator: "BarraqueiroOeste", origin, destination },
+    policy: { name: "MYINFO timetable", version: 1, collection: TIMETABLE, serving: serving("Barraqueiro Oeste") },
+    staleAfterSeconds: 172_800,
+    publisher: "barraqueiro-oeste",
+    topics: TOPICS,
+  };
+}
+
 export const MYINFO_EXAMPLES: ExampleFeed[] = [
   {
     slug: "barraqueiro-oeste-network-feed",
@@ -110,4 +159,5 @@ export const MYINFO_EXAMPLES: ExampleFeed[] = [
     publisher: "ribatejana",
     topics: TOPICS,
   },
+  ...TORRES_VEDRAS_ROUTES.flatMap(torresVedrasExample),
 ];

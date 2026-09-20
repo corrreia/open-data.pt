@@ -11,6 +11,7 @@ import { ARCGIS_DEPLOYMENT, ARCGIS_EXAMPLES } from "./formats/arcgis";
 import { CKAN_DEPLOYMENT, CKAN_EXAMPLES } from "./formats/ckan";
 import { GBFS_DEPLOYMENT, GBFS_EXAMPLES } from "./formats/gbfs";
 import { GTFS_DEPLOYMENT, GTFS_EXAMPLES } from "./formats/gtfs";
+import { NGSI_DEPLOYMENT, NGSI_EXAMPLES } from "./formats/ngsi";
 import { OGC_DEPLOYMENT, OGC_EXAMPLES } from "./formats/ogc";
 import { OPENDATASOFT_DEPLOYMENT, OPENDATASOFT_EXAMPLES } from "./formats/opendatasoft";
 import { UDATA_DEPLOYMENT, UDATA_EXAMPLES } from "./formats/udata";
@@ -36,6 +37,7 @@ export const LIBRARIES: readonly Library[] = [
   { deployment: CKAN_DEPLOYMENT, examples: CKAN_EXAMPLES },
   { deployment: GBFS_DEPLOYMENT, examples: GBFS_EXAMPLES },
   { deployment: GTFS_DEPLOYMENT, examples: GTFS_EXAMPLES },
+  { deployment: NGSI_DEPLOYMENT, examples: NGSI_EXAMPLES },
   { deployment: OGC_DEPLOYMENT, examples: OGC_EXAMPLES },
   { deployment: OPENDATASOFT_DEPLOYMENT, examples: OPENDATASOFT_EXAMPLES },
   { deployment: UDATA_DEPLOYMENT, examples: UDATA_EXAMPLES },
