@@ -1,0 +1,74 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "id": "w_condicionalismos_via_publica.1",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -100982.85800813,
+                    -105281.89704659
+                ]
+            },
+            "geometry_name": "the_geom",
+            "properties": {
+                "nome": "Colocação de almofadas redutoras de velocidade ",
+                "local": "Vila Fria",
+                "morada": "Rua Actor António Pinheiro",
+                "freguesia": "Porto Salvo",
+                "requerente": "Habidom",
+                "estado_obra": "Concluído",
+                "data_prevista_inicio": "2021-09-14",
+                "data_prevista_conclusao": "2021-09-14",
+                "ultima_atualizacao": "2022-01-20T10:47:45.559Z"
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "w_condicionalismos_via_publica.2",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -103286.09875458,
+                    -109208.20926186
+                ]
+            },
+            "geometry_name": "the_geom",
+            "properties": {
+                "nome": "Reordenamento viário",
+                "local": "Alto da Barra",
+                "morada": "Alameda Alto da Barra",
+                "freguesia": "União das freguesias de Oeiras e São Julião da Barra, Paço de Arcos e Caxias",
+                "requerente": "Armando Cunha, S.A.",
+                "estado_obra": "Concluído",
+                "data_prevista_inicio": "2021-10-04",
+                "data_prevista_conclusao": "2022-01-07",
+                "ultima_atualizacao": "2022-11-09T15:46:01.734Z"
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "w_condicionalismos_via_publica.3",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -102686.73244769,
+                    -107923.03116483
+                ]
+            },
+            "geometry_name": "the_geom",
+            "properties": {
+                "nome": "Abertura de vala",
+                "local": "Santo Amaro de Oeiras",
+                "morada": "Rua Heliodoro Salgado, 11",
+                "freguesia": "União das freguesias de Oeiras e São Julião da Barra, Paço de Arcos e Caxias",
+                "requerente": "Future Opportunity, Lda",
+                "estado_obra": "Concluído",
+                "data_prevista_inicio": "2021-09-10",
+                "data_prevista_conclusao": "2021-09-14",
+                "ultima_atualizacao": "2022-11-09T15:46:01.734Z"
+            }
+        }
+    ]
+}

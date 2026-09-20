@@ -16,6 +16,7 @@ import {
   type TransformContext,
   type UnstampedResult,
 } from "../../index";
+import { WFS_FEATURE_ID } from "./wfs";
 
 export class WfsTransformer {
   readonly id = "ogc-wfs-geojson";
@@ -112,7 +113,8 @@ function transformConfig(config: SourceConfig): SourceConfig {
 function featureRecord(value: JsonValue | undefined, config: SourceConfig, profiles: Profile[]): CanonicalRecord | undefined {
   if (!isJsonObject(value) || !isJsonObject(value.properties)) return undefined;
   const properties = value.properties;
-  const key = properties[config.idField ?? ""];
+  // A layer that names no identifier of its own is keyed by the identity the service gives the feature.
+  const key = config.idField === WFS_FEATURE_ID ? value.id : properties[config.idField ?? ""];
   if ((!isJsonString(key) && !isJsonNumber(key)) || String(key) === "") return undefined;
   const payload: JsonObject = {};
   for (const item of profiles) payload[item.field] = canonical(properties[item.field], item.type);

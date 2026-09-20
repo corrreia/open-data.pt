@@ -20,6 +20,22 @@ const WFS_HITS_BYTES = 64 * 1024;
 const WFS_PAGE_SIZE = 250;
 const WFS_MAX_FEATURES = 5000;
 
+/**
+ * The `idField` of a reference layer whose features are named by the service
+ * rather than by an attribute of their own. A great many published layers
+ * carry no identifier column — a municipal inventory of road works or waste
+ * containers names a street and a state and nothing that distinguishes one row
+ * from the next — while the feature identity WFS itself gives every feature
+ * (`w_condicionalismos_via_publica.1418`) is derived from the primary key of
+ * the table behind the layer, and is what the service will answer for again.
+ *
+ * It is named explicitly and never inferred, because it is only worth trusting
+ * where those identities are a key and not a row number: a layer rebuilt from
+ * a file on each publication renumbers its features, and keying on that would
+ * report the whole layer as changed every time it moved.
+ */
+export const WFS_FEATURE_ID = "@id";
+
 export const WFS_FEEDS = {
   events: {
     kind: "events",
@@ -154,7 +170,7 @@ function validateReferenceConfig(config: SourceConfig, hosts: ReadonlySet<string
     host,
     path,
     typeName: token(config.typeName, "typeName", /^[A-Za-z0-9_.:-]+$/u),
-    idField: token(config.idField, "idField", /^[A-Za-z_][A-Za-z0-9_]*$/u),
+    idField: token(config.idField, "idField", /^(?:@id|[A-Za-z_][A-Za-z0-9_]*)$/u),
   };
   // A reference layer need not carry numbers or dates at all: it is whatever the feature type holds.
   for (const list of ["numberFields", "dateFields", "dateOnlyFields", "propertyNames"] as const) if (config[list] !== undefined) normalized[list] = fieldList(config[list], list);
@@ -227,7 +243,12 @@ async function collectWfsReference(config: WfsReferenceConfig, checkpoint: Sourc
   let aggregateBytes = 64;
   for (let start = 0; start < count; start += WFS_REFERENCE_PAGE_SIZE) {
     const size = Math.min(WFS_REFERENCE_PAGE_SIZE, count - start);
-    const pageUrl = requestUrl(config, filter, { startIndex: String(start), maxFeatures: String(size), sortBy: config.idField });
+    // Pages are sorted so that they tile rather than overlap. A layer keyed by feature
+    // identity has nothing to sort by — a service rejects `sortBy=@id`, which is not one
+    // of its properties — so it is left in the order the service returns, which for those
+    // layers is the order of the key the identities are derived from.
+    const order = config.idField === WFS_FEATURE_ID ? {} : { sortBy: config.idField };
+    const pageUrl = requestUrl(config, filter, { startIndex: String(start), maxFeatures: String(size), ...order });
     const page = parsePage(await request(fetcher, pageUrl, WFS_PAGE_BYTES, "WFS feature page"));
     if (!isJsonObject(page) || page.type !== "FeatureCollection" || !Array.isArray(page.features)) throw new GatekeeperError("WFS returned malformed GeoJSON", "invalid-response");
     if (page.features.length !== size) throw new GatekeeperError("WFS returned an incomplete feature page", "upstream-error");
