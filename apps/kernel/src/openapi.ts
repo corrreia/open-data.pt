@@ -483,6 +483,11 @@ export function openApiDocument(origin: string) {
             name: { type: "string" },
             url: { type: "string", format: "uri" },
             description: { type: "string", description: "What a licence permits or which publisher terms govern it." },
+            logo: {
+              type: "string",
+              format: "uri",
+              description: "A publisher's mark, served from this site, to show beside their name. It is their trademark, not part of the data, and no dataset licence covers it.",
+            },
           },
         },
         Field: {

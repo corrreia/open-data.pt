@@ -40,7 +40,7 @@ One entry in that library's `examples.ts`. Nothing else.
 }
 ```
 
-`source` decides which library reads it. The rest are keys of the three catalog vocabularies in `packages/gatekeeper-shared/src/`: `topics` are browsing tags, any number of them, each a key of `TOPICS`; `publisher` is a key of `PUBLISHERS`, who made the data, never the portal it was read from; `licence` is a key of `LICENCES`, the terms the publisher states, or `source-terms` when it states none. A publisher or licence the vocabulary lacks is one new entry there — name, and its site or licence text when there is one — and a test rejects a key outside the list and an entry no example uses.
+`source` decides which library reads it. The rest are keys of the three catalog vocabularies in `packages/gatekeeper-shared/src/`: `topics` are browsing tags, any number of them, each a key of `TOPICS`; `publisher` is a key of `PUBLISHERS`, who made the data, never the portal it was read from; `licence` is a key of `LICENCES`, the terms the publisher states, or `source-terms` when it states none. A publisher or licence the vocabulary lacks is one new entry there — name, and its site or licence text when there is one — and a test rejects a key outside the list and an entry no example uses. A publisher may also carry their mark: the logo file goes under `apps/site/public/publishers/` named for their key, `logo` names its extension, and `apps/site/public/publishers/README.md` says where a usable one comes from and what shape it has to be. A publisher without one is shown their initials instead, so a missing logo never looks like a broken page.
 
 ### A new source on a format we already read
 

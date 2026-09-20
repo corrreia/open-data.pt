@@ -2,6 +2,7 @@ import { Badge, Button, Checkbox, Collapsible, Empty, InputGroup, Select } from 
 import { FunnelSimpleIcon, MagnifyingGlassIcon, XIcon } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState } from "react";
 import { DatasetCard } from "../components/DatasetCard";
+import { PublisherMark } from "../components/PublisherMark";
 import { ErrorNote, PageHead, Placeholder } from "../components/common";
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
@@ -270,9 +271,10 @@ function Catalog() {
             <div className="grid gap-10">
               {[...groups.entries()].map(([id, group]) => (
                 <div key={id} className="grid gap-3">
-                  <div className="flex items-baseline justify-between gap-4 border-b border-kumo-line pb-2">
-                    <h2 className="font-display text-xl text-kumo-strong">
-                      <a href={publisherHref(id)} className="no-underline hover:underline">
+                  <div className="flex items-center justify-between gap-4 border-b border-kumo-line pb-2">
+                    <h2 className="flex min-w-0 items-center gap-2.5 font-display text-xl text-kumo-strong">
+                      {group[0] ? <PublisherMark publisher={group[0].publisher} size={28} /> : null}
+                      <a href={publisherHref(id)} className="min-w-0 no-underline hover:underline">
                         {group[0]?.publisher.name ?? id}
                       </a>
                     </h2>

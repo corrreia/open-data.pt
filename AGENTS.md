@@ -34,7 +34,7 @@ What a Worker sends
 
 How to contribute
 
-10. New dataset from a known source: one example entry. New source on a known format: one example plus its host in the library's `deployment.ts`. New bespoke source: a library under `sources/` with its `deployment.ts` and fixture tests, listed in `libraries.ts`. New format: a library under `formats/`, listed the same way. New topic, publisher or licence: a key in `TOPICS`, `PUBLISHERS` or `LICENCES`; a test rejects an unknown key and an unused entry.
+10. New dataset from a known source: one example entry. New source on a known format: one example plus its host in the library's `deployment.ts`. New bespoke source: a library under `sources/` with its `deployment.ts` and fixture tests, listed in `libraries.ts`. New format: a library under `formats/`, listed the same way. New topic, publisher or licence: a key in `TOPICS`, `PUBLISHERS` or `LICENCES`; a test rejects an unknown key and an unused entry. A publisher's mark is optional: their logo file under `apps/site/public/publishers/`, named for their key, and `logo` naming its extension — `apps/site/public/publishers/README.md` says what a usable one is, and a publisher without one keeps their initials.
 11. Test against the real source with `LIVE_EXAMPLES=<slug>` before a pull request. Deploys and secrets are the owner's.
 
 Every example configuration carries `source: "<library>"`; that key routes the feed inside the Worker and the library never sees it. No backwards compatibility: delete what should not exist.

@@ -9,6 +9,7 @@ import { RecordsView } from "../components/product/RecordsView";
 import { ChunkBoundary } from "../components/ChunkBoundary";
 import { Shell } from "../components/Shell";
 import { ApiError, apiGet, productPath } from "../lib/api";
+import { PublisherMark } from "../components/PublisherMark";
 import { ROLE, freshness, licenceHref, openableUrl, publisherHref, throughOf } from "../lib/catalog";
 import { fmt } from "../lib/format";
 import { newIssue } from "../lib/project";
@@ -218,12 +219,13 @@ function ProductPage() {
         {feed.data ? (
           // Spacing separates the facts: dot separators ended up alone at the end of a wrapped line.
           <p className="flex flex-wrap items-baseline gap-x-5 gap-y-1 text-sm text-kumo-subtle">
-            <span>
-              Published by{" "}
+            <span className="inline-flex flex-wrap items-center gap-x-1.5">
+              Published by
               <a
                 href={publisherHref(feed.data.publisher.id)}
-                className="font-medium text-kumo-strong underline decoration-kumo-line underline-offset-4 hover:decoration-kumo-strong"
+                className="inline-flex items-center gap-1.5 font-medium text-kumo-strong underline decoration-kumo-line underline-offset-4 hover:decoration-kumo-strong"
               >
+                <PublisherMark publisher={feed.data.publisher} size={20} className="rounded-sm" />
                 {feed.data.publisher.name}
               </a>
             </span>

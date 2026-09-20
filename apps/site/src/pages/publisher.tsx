@@ -3,6 +3,7 @@ import { ArrowRightIcon, BuildingsIcon, HeartbeatIcon } from "@phosphor-icons/re
 import { useMemo } from "react";
 import { DatasetCard } from "../components/DatasetCard";
 import { ErrorNote, Kv, PageHead, Placeholder, StatTile, bodyRows, cardRows } from "../components/common";
+import { PublisherMark } from "../components/PublisherMark";
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { buildDatasets, buildPublishers, fetchFeeds, fetchProducts, licenceHref, productCount, publisherHref, topicsOf, type Publisher, emptyLast } from "../lib/catalog";
@@ -30,7 +31,10 @@ function PublisherIndex({ publishers }: { publishers: Publisher[] }) {
                 <ArrowRightIcon size={14} className="text-kumo-subtle transition-transform group-hover:translate-x-0.5" />
               </LayerCard.Secondary>
               <LayerCard.Primary className={`gap-2.5 ${bodyRows(3)}`}>
-                <h2 className="font-display text-xl leading-snug text-kumo-strong">{publisher.name}</h2>
+                <h2 className="flex items-center gap-2.5 font-display text-xl leading-snug text-kumo-strong">
+                  <PublisherMark publisher={publisher} size={36} />
+                  <span className="min-w-0">{publisher.name}</span>
+                </h2>
                 <div className="flex flex-wrap gap-1.5">
                   {topicsOf(publisher).map((topic) => (
                     <Badge key={topic} variant="outline">
@@ -61,7 +65,15 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
           <Breadcrumbs.Separator />
           <Breadcrumbs.Current>{publisher.name}</Breadcrumbs.Current>
         </Breadcrumbs>
-        <PageHead eyebrow="Publisher" title={publisher.name}>
+        <PageHead
+          eyebrow="Publisher"
+          title={
+            <span className="flex flex-wrap items-center gap-3">
+              <PublisherMark publisher={publisher} size={52} />
+              <span className="min-w-0">{publisher.name}</span>
+            </span>
+          }
+        >
           {plural(publisher.datasets.length, "dataset")} published by {publisher.name}, collected from where they share them.
         </PageHead>
       </div>

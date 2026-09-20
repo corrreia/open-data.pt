@@ -246,8 +246,8 @@ export class Serving {
       return licence.url ?? licence.name;
     };
     const dcatPublisher = (key: string) => {
-      const publisher = publisherRef(key);
-      return { "@type": "foaf:Agent", "foaf:name": publisher.name, "foaf:homepage": publisher.url };
+      const publisher = publisherRef(key, origin);
+      return { "@type": "foaf:Agent", "foaf:name": publisher.name, "foaf:homepage": publisher.url, "foaf:depiction": publisher.logo };
     };
     const products = await this.listProducts();
     const policiesById = new Map(policies.map((policy) => [policy.id, policy]));

@@ -115,13 +115,13 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
       const reg = registry();
       const [feeds, policies] = await Promise.all([reg.listFeeds(), reg.listPolicies()]);
       const cadences = new Map(policies.map((policy) => [policy.id, policy.collection.cadenceSeconds]));
-      return json({ data: feeds.map((feed) => publicFeed(feed, cadences.get(feed.policyId))) });
+      return json({ data: feeds.map((feed) => publicFeed(feed, cadences.get(feed.policyId), url.origin)) });
     }
     const feedMatch = url.pathname.match(/^\/api\/feeds\/([^/]+)$/);
     if (feedMatch?.[1]) {
       const reg = registry();
       const [feed, policies] = await Promise.all([requireFeed(reg, decodeURIComponent(feedMatch[1])), reg.listPolicies()]);
-      return json({ data: publicFeed(feed, policies.find((policy) => policy.id === feed.policyId)?.collection.cadenceSeconds) });
+      return json({ data: publicFeed(feed, policies.find((policy) => policy.id === feed.policyId)?.collection.cadenceSeconds, url.origin) });
     }
 
     /* ---------- Collection runs, across feeds or of one, recent or of one UTC day ---------- */
@@ -540,7 +540,7 @@ const STANDARD_FORMATS = new Set(["arcgis", "ckan", "gbfs", "gtfs", "opendatasof
  * collection is going. The runner's scope and checkpoint, the policy, the library, the lake
  * backlog and raw errors stay inside the platform; /api/outages says when a source failed.
  */
-function publicFeed(feed: Feed, cadenceSeconds: number | undefined) {
+function publicFeed(feed: Feed, cadenceSeconds: number | undefined, origin: string) {
   const {
     feedEpoch: _epoch,
     resolved: _resolved,
@@ -557,7 +557,7 @@ function publicFeed(feed: Feed, cadenceSeconds: number | undefined) {
     ...publicValue
   } = feed;
   const source = config.source ?? "";
-  return { ...publicValue, publisher: publisherRef(publisher), format: STANDARD_FORMATS.has(source) ? source : "own-api", cadenceSeconds: cadenceSeconds ?? null };
+  return { ...publicValue, publisher: publisherRef(publisher, origin), format: STANDARD_FORMATS.has(source) ? source : "own-api", cadenceSeconds: cadenceSeconds ?? null };
 }
 
 /* ---------- Record filters ---------- */

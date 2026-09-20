@@ -4,6 +4,7 @@ import { productHref } from "../lib/api";
 import { publisherHref, type Dataset, type LabelledProduct } from "../lib/catalog";
 import { fmt } from "../lib/format";
 import { RelativeTime, RoleBadge, ToneBadge } from "./common";
+import { PublisherMark } from "./PublisherMark";
 
 const TONE_WORD = { ok: "Current", warn: "Late", bad: "Failing" } as const;
 
@@ -37,7 +38,8 @@ export function DatasetCard({ dataset, showPublisher = true }: { dataset: Datase
       <LayerCard.Secondary className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs">
         <span className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1">
           {showPublisher ? (
-            <a href={publisherHref(dataset.publisher.id)} className="inline-flex min-h-6 min-w-0 items-center font-medium text-kumo-default hover:underline">
+            <a href={publisherHref(dataset.publisher.id)} className="inline-flex min-h-6 min-w-0 items-center gap-1.5 font-medium text-kumo-default hover:underline">
+              <PublisherMark publisher={dataset.publisher} size={18} className="rounded-sm" />
               {dataset.publisher.name}
             </a>
           ) : null}
