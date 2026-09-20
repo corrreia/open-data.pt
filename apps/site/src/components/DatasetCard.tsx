@@ -21,8 +21,11 @@ function ProductLink({ item }: { item: LabelledProduct }) {
         className="group flex min-w-0 items-center gap-2 rounded-2xl bg-kumo-base px-2 py-1.5 text-sm text-kumo-default no-underline ring-1 ring-kumo-line transition-colors hover:bg-kumo-tint hover:ring-kumo-focus/40"
       >
         <RoleBadge role={product.role} />
-        {/* The label is what tells sibling tables apart, so it wraps rather than being cut. */}
-        <span className="min-w-0 flex-1 text-pretty">{label}</span>
+        {/* The label is what tells sibling tables apart, so it wraps rather than being cut. Most
+            are one line: the words every product of a dataset repeats are dropped from all of them
+            (`labelled` in lib/catalog.ts). Three lines is the backstop for the sources that name a
+            series with a sentence; the whole title is this row's tooltip and the product's page. */}
+        <span className="line-clamp-3 min-w-0 flex-1 text-pretty">{label}</span>
         <span className="shrink-0 font-mono text-xs text-kumo-subtle">{count}</span>
         <ArrowUpRightIcon className="shrink-0 text-kumo-subtle opacity-0 transition-opacity group-hover:opacity-100" size={14} aria-hidden="true" />
       </a>

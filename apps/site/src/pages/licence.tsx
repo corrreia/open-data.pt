@@ -11,6 +11,23 @@ import { useQuery } from "../lib/query";
 
 const wanted = new URLSearchParams(window.location.search).get("id");
 
+/**
+ * As many publisher names as the card's two lines hold, then a count of the rest. Counting a fixed
+ * three names cut the count itself off when the names were long ones: “Comissão de Acesso aos
+ * Documentos Administrativos · +13…” said less than “+14 more”. The full list is the row's tooltip.
+ */
+function publisherSummary(names: string[], budget = 64) {
+  const shown: string[] = [];
+  let used = 0;
+  for (const name of names) {
+    if (shown.length > 0 && used + name.length > budget) break;
+    shown.push(name);
+    used += name.length + 3;
+  }
+  const hidden = names.length - shown.length;
+  return `${shown.join(" · ")}${hidden > 0 ? ` · +${hidden} more` : ""}`;
+}
+
 function LicenceIndex({ licences }: { licences: Licence[] }) {
   const datasets = licences.reduce((sum, licence) => sum + licence.datasets.length, 0);
   return (
@@ -21,29 +38,20 @@ function LicenceIndex({ licences }: { licences: Licence[] }) {
       </PageHead>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(min(19rem,100%),1fr))] gap-3">
         {licences.map((licence) => (
-          <a key={licence.id} href={licenceHref(licence.id)} className={`group rounded-lg no-underline ${cardRows(4)}`}>
-            <LayerCard className={`transition-[box-shadow] group-hover:ring-kumo-focus/40 ${cardRows(4)}`}>
+          <a key={licence.id} href={licenceHref(licence.id)} className={`group rounded-lg no-underline ${cardRows(3)}`}>
+            <LayerCard className={`transition-[box-shadow] group-hover:ring-kumo-focus/40 ${cardRows(3)}`}>
               <LayerCard.Secondary className="flex items-center justify-between text-xs">
                 <span>
                   {plural(licence.datasets.length, "dataset")} · {plural(licence.publishers.size, "publisher")}
                 </span>
                 <ArrowRightIcon size={14} className="text-kumo-subtle transition-transform group-hover:translate-x-0.5" />
               </LayerCard.Secondary>
-              <LayerCard.Primary className={`gap-2.5 ${bodyRows(3)}`}>
+              {/* No topics here: a licence is a set of terms, and the topics under it are whatever
+                  its publishers happen to publish. The licence's own page lists them. */}
+              <LayerCard.Primary className={`gap-2.5 ${bodyRows(2)}`}>
                 <h2 className="font-display text-xl leading-snug text-kumo-strong">{licence.name}</h2>
-                <div className="flex flex-wrap gap-1.5">
-                  {topicsOf(licence).map((topic) => (
-                    <Badge key={topic} variant="outline">
-                      {topic}
-                    </Badge>
-                  ))}
-                </div>
                 <p className="line-clamp-2 text-xs text-kumo-subtle" title={[...licence.publishers.values()].map((publisher) => publisher.name).join(" · ")}>
-                  {[...licence.publishers.values()]
-                    .map((publisher) => publisher.name)
-                    .slice(0, 3)
-                    .join(" · ")}
-                  {licence.publishers.size > 3 ? ` · +${licence.publishers.size - 3} more` : ""}
+                  {publisherSummary([...licence.publishers.values()].map((publisher) => publisher.name))}
                 </p>
               </LayerCard.Primary>
             </LayerCard>
@@ -69,6 +77,16 @@ function LicencePage({ licence }: { licence: Licence }) {
           {licence.description ??
             `${plural(licence.datasets.length, "dataset")} from ${plural(licence.publishers.size, "publisher")}, served under these terms as their publishers state them.`}
         </PageHead>
+        {/* The terms themselves are the point of this page, so the way to read them sits next to the
+            title. Where a licence names no text, the card below links each publisher's own site,
+            which is where their terms are stated. */}
+        {licence.url ? (
+          <p className="text-sm">
+            <Link href={licence.url} target="_blank" rel="noopener noreferrer">
+              Read the full text at {new URL(licence.url).hostname} <Link.ExternalIcon />
+            </Link>
+          </p>
+        ) : null}
       </div>
 
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
@@ -77,25 +95,32 @@ function LicencePage({ licence }: { licence: Licence }) {
           <LayerCard.Primary>
             <Kv
               items={[
-                licence.url
-                  ? {
-                      term: "Text",
-                      value: (
-                        <Link href={licence.url} target="_blank" rel="noopener noreferrer">
-                          {new URL(licence.url).hostname} <Link.ExternalIcon />
-                        </Link>
-                      ),
-                    }
-                  : { term: "Text", value: "The publisher names no licence. Check its site for reuse terms." },
+                {
+                  term: "Text",
+                  value: licence.url ? (
+                    <Link href={licence.url} target="_blank" rel="noopener noreferrer">
+                      {new URL(licence.url).hostname} <Link.ExternalIcon />
+                    </Link>
+                  ) : (
+                    "Stated by each publisher, on their own site."
+                  ),
+                },
                 {
                   term: "Publishers",
                   value: (
+                    // Their page here, and their own site beside it: that site is where a publisher
+                    // that names no licence states what may be done with the data.
                     <ul className="grid gap-1.5">
                       {[...licence.publishers.values()].map((publisher) => (
-                        <li key={publisher.id}>
+                        <li key={publisher.id} className="flex flex-wrap items-center gap-x-2">
                           <a href={publisherHref(publisher.id)} className="inline-flex min-h-6 items-center text-kumo-link hover:underline">
                             {publisher.name}
                           </a>
+                          {publisher.url ? (
+                            <Link href={publisher.url} target="_blank" rel="noopener noreferrer" className="text-xs">
+                              {new URL(publisher.url).hostname} <Link.ExternalIcon />
+                            </Link>
+                          ) : null}
                         </li>
                       ))}
                     </ul>

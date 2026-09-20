@@ -2,7 +2,7 @@ import { Badge, Breadcrumbs, Button, Empty, LayerCard, Link } from "@cloudflare/
 import { ArrowRightIcon, BuildingsIcon, HeartbeatIcon } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { DatasetCard } from "../components/DatasetCard";
-import { ErrorNote, Kv, PageHead, Placeholder, StatTile, bodyRows, cardRows } from "../components/common";
+import { ErrorNote, Kv, PageHead, Placeholder, StatTile, TagRow, bodyRows, cardRows } from "../components/common";
 import { PublisherMark, PublisherWatermark } from "../components/PublisherMark";
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
@@ -36,19 +36,11 @@ function PublisherIndex({ publishers }: { publishers: Publisher[] }) {
               <LayerCard.Primary className={`relative isolate gap-2.5 overflow-hidden ${bodyRows(3)}`}>
                 <PublisherWatermark publisher={publisher} height={116} />
                 <h2 className="font-display text-xl leading-snug text-kumo-strong">{publisher.name}</h2>
-                {/* Cards in a row share their tracks, so one card whose topics wrapped to a second line
-                    left a line of empty space in every other card. Three topics fit on one line at any
-                    card width, and the rest are counted. */}
-                <div className="flex flex-wrap gap-1.5" title={topicsOf(publisher).join(" · ")}>
-                  {topicsOf(publisher)
-                    .slice(0, 3)
-                    .map((topic) => (
-                      <Badge key={topic} variant="outline">
-                        {topic}
-                      </Badge>
-                    ))}
-                  {topicsOf(publisher).length > 3 ? <Badge variant="outline">+{topicsOf(publisher).length - 3}</Badge> : null}
-                </div>
+                {/* Cards in a row share their tracks, so one card whose topics wrapped to a second
+                    line left a line of empty space in every other card. Three topics fit on one line
+                    at any card width, and the rest are counted. */}
+                <TagRow items={topicsOf(publisher)} />
+
                 <p className="wrap-anywhere font-mono text-xs text-kumo-subtle">{[...publisher.hosts.keys()].join(" · ")}</p>
               </LayerCard.Primary>
             </LayerCard>
