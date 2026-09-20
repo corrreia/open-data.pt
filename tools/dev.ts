@@ -28,7 +28,7 @@ import { join } from "node:path";
 const ROOT = new URL("..", import.meta.url).pathname;
 const KERNEL_CONFIG = "apps/kernel/wrangler.jsonc";
 const GATEKEEPER_CONFIG = "packages/gatekeeper/wrangler.jsonc";
-const KERNEL_PORT = "8787";
+const DEFAULT_KERNEL_PORT = "8787";
 /** The Gatekeeper answers RPC only, but its own session still needs a port of its own. */
 const GATEKEEPER_PORT = "8788";
 /** And its own inspector port: two sessions both taking Wrangler's default 9229 kill each other. */
@@ -69,22 +69,47 @@ function libraries(): string[] {
 interface Selection {
   only: string[];
   passthrough: string[];
+  /** The port the kernel serves the site and the API on, default or asked for. */
+  port: string;
 }
 
 /** Library names and Wrangler flags, in any order; pnpm passes its own `--` separator through. */
 function parse(argv: string[]): Selection {
   const flagAt = argv.findIndex((argument) => argument.startsWith("-") && argument !== "--");
   const names = (flagAt === -1 ? argv : argv.slice(0, flagAt)).filter((argument) => argument !== "--");
-  const passthrough = flagAt === -1 ? [] : argv.slice(flagAt);
-  if (names.includes("all")) return { only: [], passthrough };
-  if (names.length === 0) return { only: DEFAULT_LIBRARIES, passthrough };
+  const flags = flagAt === -1 ? [] : argv.slice(flagAt);
+  // The port is read out rather than passed along, so the address printed here is the one served.
+  const port = portOf(flags) ?? DEFAULT_KERNEL_PORT;
+  const passthrough = withoutPort(flags);
+  if (names.includes("all")) return { only: [], passthrough, port };
+  if (names.length === 0) return { only: DEFAULT_LIBRARIES, passthrough, port };
   const known = libraries();
   const unknown = names.filter((name) => !known.includes(name));
   if (unknown.length > 0) {
     process.stderr.write(`Unknown library: ${unknown.join(", ")}. Known: ${known.join(", ")}, or "all".\n`);
     process.exit(1);
   }
-  return { only: [...new Set(names)], passthrough };
+  return { only: [...new Set(names)], passthrough, port };
+}
+
+/** `--port 3000` or `--port=3000`, whichever a reader typed; the last one wins, as Wrangler's own parser does. */
+function portOf(flags: string[]): string | undefined {
+  let port: string | undefined;
+  flags.forEach((flag, index) => {
+    if (flag === "--port" || flag === "-p") port = flags[index + 1];
+    else if (flag.startsWith("--port=")) port = flag.slice("--port=".length);
+  });
+  return port;
+}
+
+function withoutPort(flags: string[]): string[] {
+  const rest: string[] = [];
+  for (let index = 0; index < flags.length; index += 1) {
+    const flag = flags[index] ?? "";
+    if (flag === "--port" || flag === "-p") index += 1;
+    else if (!flag.startsWith("--port=")) rest.push(flag);
+  }
+  return rest;
 }
 
 /** This machine's address on the network, for the phone or the other laptop. */
@@ -128,14 +153,14 @@ function supervise(name: string, args: string[], onGone: () => void): Session {
 }
 
 function main(): void {
-  const { only, passthrough } = parse(process.argv.slice(2));
+  const { only, passthrough, port } = parse(process.argv.slice(2));
   const floor = process.env.DEV_MIN_CADENCE_SECONDS ?? DEFAULT_CADENCE_FLOOR;
   const lan = lanAddress();
   process.stdout.write(
     [
       `kernel + gatekeeper, carrying ${only.length === 0 ? "every library" : only.join(", ")}`,
       `no feed collected more often than every ${Math.round(Number(floor) / 60)} min`,
-      `http://localhost:${KERNEL_PORT}${lan ? ` and http://${lan}:${KERNEL_PORT}` : ""}`,
+      `http://localhost:${port}${lan ? ` and http://${lan}:${port}` : ""}`,
       "",
     ].join("\n"),
   );
@@ -145,10 +170,8 @@ function main(): void {
     ["dev", "--config", GATEKEEPER_CONFIG, "--port", GATEKEEPER_PORT, "--inspector-port", GATEKEEPER_INSPECTOR_PORT, "--var", `GATEKEEPER_LIBRARIES:${only.join(",")}`],
     () => stop(1),
   );
-  const kernel = supervise(
-    "kernel",
-    ["dev", "--config", KERNEL_CONFIG, "--ip", "0.0.0.0", "--port", KERNEL_PORT, "--var", `DEV_MIN_CADENCE_SECONDS:${floor}`, ...passthrough],
-    () => stop(1),
+  const kernel = supervise("kernel", ["dev", "--config", KERNEL_CONFIG, "--ip", "0.0.0.0", "--port", port, "--var", `DEV_MIN_CADENCE_SECONDS:${floor}`, ...passthrough], () =>
+    stop(1),
   );
 
   let stopping = false;
