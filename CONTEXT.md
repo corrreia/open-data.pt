@@ -1,5 +1,10 @@
 # Domain language
 
+The words this repository uses, and what each one means here. How they fit together is in
+[`docs/`](docs/): [Architecture](docs/architecture.md) for the path a source takes,
+[Libraries](docs/libraries.md) for what is read and how it is grouped, and
+[Public API](docs/api.md) for what comes out the other end.
+
 ## Gatekeeper
 
 The one trusted Worker that carries every library — `arcgis`, `ckan`, `gtfs`, `ine`, `parliament`, … — reached over private RPC. It validates configuration, accesses allowlisted upstream resources, parses and normalizes source data, and returns a bounded versioned normalized stream. It owns source identity, clocks, validators, pagination, coverage, and source-supported history. It owns no canonical storage or publication state.
@@ -93,3 +98,23 @@ The Worker, Workflow and Durable Objects that validate normalized streams, detec
 ## Usage
 
 How the site, the API and the MCP server are used: one Workers Analytics Engine data point per request the Kernel answers, with its surface (web, api, mcp, mcp-read, docs, discovery), route template, the product or other subject it names, the kind and name of client its User-Agent gives, country, referrer, status and cache outcome. No IP address, cookie or visitor identifier. Analytics Engine keeps it for three months; `/api/analytics` reads the aggregate for the `/analytics/` page. It is not history and never enters the Lake.
+
+## Documentation
+
+What a reader needs that the code does not say. Reasoning about one line lives in a comment beside it;
+`docs/` holds what spans files: [`architecture.md`](docs/architecture.md),
+[`libraries.md`](docs/libraries.md), [`api.md`](docs/api.md) and [`development.md`](docs/development.md).
+A page under [`docs/publishers/`](docs/publishers/) or [`docs/feeds/`](docs/feeds/) is written only when
+reading a source takes knowledge a reader of `examples.ts` would not guess — a credential, a proxy, a
+permission, a cap, a habit of the source. Most publishers and feeds need none, and a page that only
+repeats the configuration is a page that will go stale.
+
+---
+
+## Further reading
+
+- [`docs/architecture.md`](docs/architecture.md) — the Gatekeeper, collection, storage, history and backfill
+- [`docs/libraries.md`](docs/libraries.md) — every library, the publication holds, and the three catalog vocabularies
+- [`docs/api.md`](docs/api.md) — the endpoints these terms are visible through
+- [`docs/publishers/`](docs/publishers/) and [`docs/feeds/`](docs/feeds/) — notes on individual publishers and feeds
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to add one of these things
