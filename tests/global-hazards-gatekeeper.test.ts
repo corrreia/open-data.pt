@@ -40,7 +40,7 @@ const wfsReferenceConfig = {
   idField: "id",
   propertyNames: "id,municipio,area_ha,art_60,data_aprovacao_publicacao",
   numberFields: "area_ha,id_apps",
-  dateFields: "data_aprovacao_publicacao",
+  dateOnlyFields: "data_aprovacao_publicacao",
 };
 
 const now = new Date("2026-09-18T20:00:00Z");
@@ -198,7 +198,7 @@ describe("global hazard source boundaries", () => {
       idField: "id",
       propertyNames: "area_ha,art_60,data_aprovacao_publicacao,id,municipio",
       numberFields: "area_ha,id_apps",
-      dateFields: "data_aprovacao_publicacao",
+      dateOnlyFields: "data_aprovacao_publicacao",
     });
     // A reference layer has no window to filter, so the event fields are not its to carry.
     expect(() => validateWfsFeedConfig({ ...wfsReferenceConfig, days: "180" }, SGIFR_HOSTS)).toThrow("Unsupported WFS field: days");

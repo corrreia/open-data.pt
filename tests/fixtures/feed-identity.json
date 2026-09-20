@@ -932,35 +932,35 @@
     "kind": "myinfo:network"
   },
   "sgifr-apps-aveiro-feed": {
-    "resourceKey": "wfs:wfs:reference:e1062f13ef0be13a440fadcf52543597baadfc2e97f19d8b3a48d876af192700",
+    "resourceKey": "wfs:wfs:reference:6be9b97bcaa2cfe0f29645c8ed868d557767839351cf0699b06c22ad6002ced3",
     "kind": "wfs:reference"
   },
   "sgifr-apps-beja-feed": {
-    "resourceKey": "wfs:wfs:reference:0aca855c21fa53033a9ca8838cf91c86f2b31a12b9b662daec5baafbd8f91aed",
+    "resourceKey": "wfs:wfs:reference:c8c0376cc9f2b22c3d88c5fbc8fc645357535f27e8d7ede2571dd5956e7237da",
     "kind": "wfs:reference"
   },
   "sgifr-apps-braga-feed": {
-    "resourceKey": "wfs:wfs:reference:cef8da0996338a7eca9b91cc259f1a98c21adc7705463393e45a3cb976f1567c",
+    "resourceKey": "wfs:wfs:reference:4380f7df831b5d0429125df9de2f04cf100983be7a2102996d9e29b651017703",
     "kind": "wfs:reference"
   },
   "sgifr-apps-leiria-feed": {
-    "resourceKey": "wfs:wfs:reference:efbbfea8b85317d9a7dc6425bec5ae23dd40ad20f6943d46303b501dbb9cb3ec",
+    "resourceKey": "wfs:wfs:reference:ed059d0da4ab27fe11130f5160b6932750f3ed4c77bb8b6bf5d744ab8265808b",
     "kind": "wfs:reference"
   },
   "sgifr-apps-lisboa-feed": {
-    "resourceKey": "wfs:wfs:reference:20c3cf3b1113afbc1d5964f1b6727b0e4deaa7674c45bbf96dd1e4f5ed06da86",
+    "resourceKey": "wfs:wfs:reference:7216876c47f533b9d9e6c583c003ac658e3fe7e77e8bd3cfdc03bacd90f23403",
     "kind": "wfs:reference"
   },
   "sgifr-apps-porto-feed": {
-    "resourceKey": "wfs:wfs:reference:85864fed36188aad850ea6de8dd71d6ed21deb46dae723d1af330cf592efe7e1",
+    "resourceKey": "wfs:wfs:reference:a97976b144e9eb7961bc211586eed67e8ed3732222ab09487ec3f4ae0baf258f",
     "kind": "wfs:reference"
   },
   "sgifr-apps-setubal-feed": {
-    "resourceKey": "wfs:wfs:reference:82ba9a96da8688bcffbdd1f2e6405a33934a1900a962c93ab1d269fac3ccc134",
+    "resourceKey": "wfs:wfs:reference:4593d795a29e2140fddd79d7d791eec143c35fe7ab036a227811a009b6b66ca5",
     "kind": "wfs:reference"
   },
   "sgifr-apps-viseu-feed": {
-    "resourceKey": "wfs:wfs:reference:eaf25882b28bcfba1b5b30a4e26db3168c261be9cff9f8ed8fe8810113469a1d",
+    "resourceKey": "wfs:wfs:reference:004b9844ab0057ec31c70da732cdd15d4bf690c776c7e83ff2a0a3b231bdd0a8",
     "kind": "wfs:reference"
   },
   "sns-births-and-caesareans-feed": {

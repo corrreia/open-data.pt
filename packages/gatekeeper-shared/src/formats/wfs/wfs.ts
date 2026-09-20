@@ -77,6 +77,12 @@ export interface WfsReferenceConfig extends WfsCommonConfig {
    */
   filterField?: string;
   filterValue?: string;
+  /**
+   * Attributes the service publishes as a calendar day with no time of day.
+   * They are typed `date` and kept as the day the source stated; putting them
+   * in `dateFields` would promise a timestamp nobody wrote down.
+   */
+  dateOnlyFields?: string;
 }
 
 export type WfsConfig = WfsEventsConfig | WfsReferenceConfig;
@@ -137,7 +143,7 @@ export function validateWfsFeedConfig(config: SourceConfig, hosts: ReadonlySet<s
  * run to hundreds of megabytes can be read for its attributes alone.
  */
 function validateReferenceConfig(config: SourceConfig, hosts: ReadonlySet<string>): SourceConfig {
-  const allowed = ["feed", "host", "path", "typeName", "idField", "propertyNames", "filterField", "filterValue", "numberFields", "dateFields"];
+  const allowed = ["feed", "host", "path", "typeName", "idField", "propertyNames", "filterField", "filterValue", "numberFields", "dateFields", "dateOnlyFields"];
   for (const key of Object.keys(config)) if (!allowed.includes(key)) throw new GatekeeperError(`Unsupported WFS field: ${key}`, key === "url" ? "source-denied" : "invalid-config");
   const host = config.host?.trim().toLowerCase();
   if (!host || !hosts.has(host)) throw new GatekeeperError("The WFS host is not allowed", "source-denied");
@@ -149,10 +155,9 @@ function validateReferenceConfig(config: SourceConfig, hosts: ReadonlySet<string
     path,
     typeName: token(config.typeName, "typeName", /^[A-Za-z0-9_.:-]+$/u),
     idField: token(config.idField, "idField", /^[A-Za-z_][A-Za-z0-9_]*$/u),
-    numberFields: fieldList(config.numberFields, "numberFields"),
-    dateFields: fieldList(config.dateFields, "dateFields"),
   };
-  if (config.propertyNames !== undefined) normalized.propertyNames = fieldList(config.propertyNames, "propertyNames");
+  // A reference layer need not carry numbers or dates at all: it is whatever the feature type holds.
+  for (const list of ["numberFields", "dateFields", "dateOnlyFields", "propertyNames"] as const) if (config[list] !== undefined) normalized[list] = fieldList(config[list], list);
   if ((config.filterField === undefined) !== (config.filterValue === undefined))
     throw new GatekeeperError("WFS filterField and filterValue are named together or not at all", "invalid-config");
   if (config.filterField !== undefined) {
@@ -270,9 +275,10 @@ function asWfsConfig(config: SourceConfig): WfsConfig {
 }
 
 function asWfsReferenceConfig(config: SourceConfig): WfsReferenceConfig {
-  const { host, path, typeName, idField, numberFields, dateFields, propertyNames, filterField, filterValue } = config;
-  if (!host || !path || !typeName || !idField || !numberFields || !dateFields) throw new GatekeeperError("WFS configuration is incomplete", "invalid-config");
-  const reference: WfsReferenceConfig = { feed: "reference", host, path, typeName, idField, numberFields, dateFields };
+  const { host, path, typeName, idField, numberFields, dateFields, dateOnlyFields, propertyNames, filterField, filterValue } = config;
+  if (!host || !path || !typeName || !idField) throw new GatekeeperError("WFS configuration is incomplete", "invalid-config");
+  const reference: WfsReferenceConfig = { feed: "reference", host, path, typeName, idField, numberFields: numberFields ?? "", dateFields: dateFields ?? "" };
+  if (dateOnlyFields) reference.dateOnlyFields = dateOnlyFields;
   if (propertyNames) reference.propertyNames = propertyNames;
   if (filterField && filterValue) {
     reference.filterField = filterField;

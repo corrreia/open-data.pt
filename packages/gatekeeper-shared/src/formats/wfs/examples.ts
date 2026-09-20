@@ -74,7 +74,8 @@ function appsExample(district: string): ExampleFeed {
       filterField: "distrito",
       filterValue: district,
       numberFields: "area_ha,id_apps",
-      dateFields: "data_aprovacao_publicacao",
+      // The approval is a calendar day: the service writes "2024-04-22Z", which is a day wearing a zone, not an instant.
+      dateOnlyFields: "data_aprovacao_publicacao",
     },
     publisher: "agif",
     topics: ["environment", "society"],

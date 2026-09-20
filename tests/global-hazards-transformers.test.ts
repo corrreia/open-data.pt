@@ -140,7 +140,7 @@ describe("global hazard normalizers", () => {
       typeName: "apps:apps_adaptacao_subregional",
       idField: "id",
       numberFields: "area_ha,id_apps",
-      dateFields: "data_aprovacao_publicacao",
+      dateOnlyFields: "data_aprovacao_publicacao",
     };
     const result = transformer.transform(fixture("wfs/sgifr-apps-subregionais.json"), context("sgifr-apps-subregionais-feed", config, "feature", "reference"));
     const product = result.products[0];
@@ -149,6 +149,9 @@ describe("global hazard normalizers", () => {
     expect(product?.watermark).toBeUndefined();
     expect(product?.records).toHaveLength(3);
     expect(product?.schema.fields).toContainEqual(expect.objectContaining({ id: "area_ha", type: "number" }));
+    // The approval is a day, not an instant: typed `date` and kept as the day, without the zone the service writes.
+    expect(product?.schema.fields).toContainEqual(expect.objectContaining({ id: "data_aprovacao_publicacao", type: "date" }));
+    expect(product?.records?.[0]?.payload.data_aprovacao_publicacao).toBe("2025-10-27");
     expect(product?.records?.[0]).toMatchObject({
       entityKey: "0104_1",
       // The source's own wording is kept verbatim, including where a column named for
