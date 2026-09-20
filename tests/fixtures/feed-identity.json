@@ -239,12 +239,24 @@
     "resourceKey": "carris:carris:vehicles:fb0545b8aae9c8d7d340949a1613656531ae0e0944c43eec7cd78312525c8de6",
     "kind": "carris:vehicles"
   },
+  "cascais-allotments-feed": {
+    "resourceKey": "ckan:ckan:resource:f0af25a1a834b286e4884688e3bf727bf3bfacca1b6935d8f2fef0b021f10bf5",
+    "kind": "ckan:resource"
+  },
   "cascais-beaches-feed": {
     "resourceKey": "ckan:ckan:resource:68592b1077374fe7860ee23d981f65dec13b608f81dcbd96a94e0b5f07cef99b",
     "kind": "ckan:resource"
   },
   "cascais-bus-stops-feed": {
     "resourceKey": "ckan:ckan:resource:fed16186131ae45da6f74f355d6e2c699001a25a3ce288be22dc6404c61c1647",
+    "kind": "ckan:resource"
+  },
+  "cascais-commerce-services-feed": {
+    "resourceKey": "ckan:ckan:resource:2c0c3a1d97fc2d58d8a3fe1472bf0a17a0aa2413169bff46b9121dd801634560",
+    "kind": "ckan:resource"
+  },
+  "cascais-cultural-facilities-feed": {
+    "resourceKey": "ckan:ckan:resource:a349da98b96e188670aa1993254a4cfcfce8fd5e49b5bc4435dbd2375635033f",
     "kind": "ckan:resource"
   },
   "cascais-cultural-venues-feed": {
@@ -263,12 +275,20 @@
     "resourceKey": "ckan:ckan:resource:c69bd423cc4a9bd553bb7d8dcfe050d8a68385e62eaea2d45d0b29b0b03508f6",
     "kind": "ckan:resource"
   },
+  "cascais-fire-infrastructure-feed": {
+    "resourceKey": "ckan:ckan:resource:982f6ee5058df605dfed1cdd4c4c5a23ffd9486d7e9ece501c5d53fc13fbbd5b",
+    "kind": "ckan:resource"
+  },
   "cascais-fire-stations-feed": {
     "resourceKey": "ckan:ckan:resource:d00b4eaa6bffe6ea971fc384bac448721c30e75faf8b832920f4d4efc9a8ef9b",
     "kind": "ckan:resource"
   },
   "cascais-forest-fires-feed": {
     "resourceKey": "ckan:ckan:resource:f5c3823dfa6865fa3b218584ed44dd2ea7df84b70711fa986e3d338140e196a8",
+    "kind": "ckan:resource"
+  },
+  "cascais-green-spaces-feed": {
+    "resourceKey": "ckan:ckan:resource:e72d961d0cd5fbf86e63e9acf7f2406880cda8b8cca671b1346a7be23f64c335",
     "kind": "ckan:resource"
   },
   "cascais-health-facilities-feed": {
@@ -283,6 +303,14 @@
     "resourceKey": "ckan:ckan:resource:63687570e245feecc2237e72befc9a890e3a99b56075198f7d56223c03140ad9",
     "kind": "ckan:resource"
   },
+  "cascais-municipal-housing-feed": {
+    "resourceKey": "ckan:ckan:resource:21f4dc4060828efc7d4aade899ba1057a2719584355e9c4c957d46f05a774ff0",
+    "kind": "ckan:resource"
+  },
+  "cascais-parking-feed": {
+    "resourceKey": "ckan:ckan:resource:9ff90c608aefade0f030584fb0973c9f62c6708a0eda767ac91c5d5a901dcee9",
+    "kind": "ckan:resource"
+  },
   "cascais-pharmacies-feed": {
     "resourceKey": "ckan:ckan:resource:fd85b694f9055fdd374664bf173cee8beaff02c354c9d083cedae824ff889b8a",
     "kind": "ckan:resource"
@@ -295,8 +323,24 @@
     "resourceKey": "ckan:ckan:resource:2c31570895084cf89290ccd6279228409524d3697fc062b7e38b9c7eaffa9b1a",
     "kind": "ckan:resource"
   },
+  "cascais-rental-kiosks-feed": {
+    "resourceKey": "ckan:ckan:resource:3bbd25205d5fad749c566f828d17f4e9b0f517de2d186166e19de039789cc0b9",
+    "kind": "ckan:resource"
+  },
   "cascais-shared-mobility-stations-feed": {
     "resourceKey": "ckan:ckan:resource:36841e4f2bedc0aa4116e00df7eeff8a98bb2b98b381f82991d379a685455102",
+    "kind": "ckan:resource"
+  },
+  "cascais-social-charter-feed": {
+    "resourceKey": "ckan:ckan:resource:5e274f05411b64ebd6cea82a684a6ac064fd895eaa11e4c3ea9479bd6da6c776",
+    "kind": "ckan:resource"
+  },
+  "cascais-sports-facilities-feed": {
+    "resourceKey": "ckan:ckan:resource:0787f675aeab0fa031f1d3d2664a087d18dbf72f0ffd48268691516f3f53447d",
+    "kind": "ckan:resource"
+  },
+  "cascais-street-trees-feed": {
+    "resourceKey": "ckan:ckan:resource:5e3427d8cdd3a1df9bb623c3b19dfb625092490022296b11a82d9ff78a96d933",
     "kind": "ckan:resource"
   },
   "cascais-taxi-ranks-feed": {
@@ -755,6 +799,78 @@
     "resourceKey": "arcgis:arcgis:layer:2b300781baa689bdf8415db288f33c8011ba4fad3e23c8c541751aa300ec9f83",
     "kind": "arcgis:layer"
   },
+  "mafra-centros-saude-feed": {
+    "resourceKey": "arcgis:arcgis:layer:61d592dd1cffab01afa4dfc14e79df655f7b03afd4497084c2a2d07df8547420",
+    "kind": "arcgis:layer"
+  },
+  "mafra-ciclovias-feed": {
+    "resourceKey": "arcgis:arcgis:layer:01571c6f9ba3dd57e4bfb8b07df702ad3b55e1e9b66602c6c1699be263d3925e",
+    "kind": "arcgis:layer"
+  },
+  "mafra-circuitos-pedestres-btt-feed": {
+    "resourceKey": "arcgis:arcgis:layer:427cfddd3070d5c75deca7ef181937f4fd41bf4340cb0e19f39ced5431a167e1",
+    "kind": "arcgis:layer"
+  },
+  "mafra-ecopontos-contentores-feed": {
+    "resourceKey": "arcgis:arcgis:layer:ffbfdea1a30d080b2029f4082f7238e52a8e7303288fcb27c1b75e3b201f01bd",
+    "kind": "arcgis:layer"
+  },
+  "mafra-equipamentos-cultura-feed": {
+    "resourceKey": "arcgis:arcgis:layer:e6a105d769dcfcb37023522c7ac71552dadcf66d7d86206a5cf6d30e4f09bb46",
+    "kind": "arcgis:layer"
+  },
+  "mafra-equipamentos-escolares-feed": {
+    "resourceKey": "arcgis:arcgis:layer:915c0350b75cd858ab1553e2a7e6b8fbf0a240ffca71ba9bdcfaaf4c3f00e476",
+    "kind": "arcgis:layer"
+  },
+  "mafra-equipamentos-sociais-feed": {
+    "resourceKey": "arcgis:arcgis:layer:957dfef7ff42d58013c3e032638c3609e0fcf5103cdc3743dea206309121ebe8",
+    "kind": "arcgis:layer"
+  },
+  "mafra-espacos-jogo-recreio-feed": {
+    "resourceKey": "arcgis:arcgis:layer:1690123e31254a0e185d0c2fb63f5c1594bd5c21cfa5644a4852dc16e385b75b",
+    "kind": "arcgis:layer"
+  },
+  "mafra-espacos-verdes-feed": {
+    "resourceKey": "arcgis:arcgis:layer:e68c2609dc1de3422b517b129e4f516aed59186fc801f10bde6526382a813b1a",
+    "kind": "arcgis:layer"
+  },
+  "mafra-estacionamento-bicicletas-feed": {
+    "resourceKey": "arcgis:arcgis:layer:ba0896ecbe555479517842d498b012dd421d0c049087df9fd5ab3a99bec51e18",
+    "kind": "arcgis:layer"
+  },
+  "mafra-farmacias-feed": {
+    "resourceKey": "arcgis:arcgis:layer:0698bcdb27c2848b7de0bdebccd87c1e05e7799239120e4c139a91972459afac",
+    "kind": "arcgis:layer"
+  },
+  "mafra-lugares-mobilidade-reduzida-feed": {
+    "resourceKey": "arcgis:arcgis:layer:332079d29416bf7288fe532b2193dec7cf89649aaddc03ea32caa3263815e84b",
+    "kind": "arcgis:layer"
+  },
+  "mafra-parcometros-feed": {
+    "resourceKey": "arcgis:arcgis:layer:8af31089f85dcb69faf9b51cba18f3a5e91202d7ab4cc258be85648a915ed506",
+    "kind": "arcgis:layer"
+  },
+  "mafra-parques-caninos-feed": {
+    "resourceKey": "arcgis:arcgis:layer:44d7206ade402bec9410a401722345f14ed31476b7344563cecae62722a05fe9",
+    "kind": "arcgis:layer"
+  },
+  "mafra-parques-estacionamento-feed": {
+    "resourceKey": "arcgis:arcgis:layer:136c756d301000317c2c11a3024d959be8725aa8f1c511ee829f924c64426972",
+    "kind": "arcgis:layer"
+  },
+  "mafra-patrimonio-inventario-feed": {
+    "resourceKey": "arcgis:arcgis:layer:634d4c247ca07c741de7c7609b59c955464a0979006468382075253c4c659b50",
+    "kind": "arcgis:layer"
+  },
+  "mafra-postos-carregamento-feed": {
+    "resourceKey": "arcgis:arcgis:layer:d59cd4661eca18d1645df5b5147193e42df62e927c3103f776fd72c759d2bd06",
+    "kind": "arcgis:layer"
+  },
+  "mafra-praias-feed": {
+    "resourceKey": "arcgis:arcgis:layer:983eff71b20d4268fb352d713bfd3fcfbcbe721a246784b5082dcac390a7ecfe",
+    "kind": "arcgis:layer"
+  },
   "mare-network-feed": {
     "resourceKey": "myinfo:myinfo:network:0cfe119233f489b6058aa04bdee626471eaadc0e1bbd11670f02e2016a6412eb",
     "kind": "myinfo:network"
@@ -815,9 +931,61 @@
     "resourceKey": "nasapower:nasapower:daily-region:900af3f382fa7491c0e3b28f0ea9cc9659bfed12438faf88c30b5cd6d343b097",
     "kind": "nasapower:daily-region"
   },
+  "oeiras-ciclovias-feed": {
+    "resourceKey": "wfs:wfs:reference:7becffa39f78f79aba240d1ff6ceee6fc533580f26aff5331b64ccfb4f7ad912",
+    "kind": "wfs:reference"
+  },
+  "oeiras-colonias-errantes-feed": {
+    "resourceKey": "wfs:wfs:reference:1b55a9e7b75523daffc72a412bd1aab4ebf01a0f35325ee003792b7dad554757",
+    "kind": "wfs:reference"
+  },
+  "oeiras-condicionalismos-via-publica-feed": {
+    "resourceKey": "wfs:wfs:reference:6d53737577980637f07c367d6baeb6e38ff43fcfbdaa38586f5cac1c1dda1da4",
+    "kind": "wfs:reference"
+  },
+  "oeiras-docas-bicicletas-feed": {
+    "resourceKey": "wfs:wfs:reference:e1c71e423f0c70571f14da0a3fad8bdbec0538c78dd71289e603d9b2e12b0edd",
+    "kind": "wfs:reference"
+  },
+  "oeiras-equipamentos-saude-feed": {
+    "resourceKey": "wfs:wfs:reference:77e683bdab0544979220560000023cee634baf1ef2432776ba2671150da029ae",
+    "kind": "wfs:reference"
+  },
+  "oeiras-espacos-verdes-feed": {
+    "resourceKey": "wfs:wfs:reference:46eebceb733d384dce977e40df707f64faaf7cca809be7ebeec6d51643db6c1e",
+    "kind": "wfs:reference"
+  },
+  "oeiras-estabelecimentos-desocupados-feed": {
+    "resourceKey": "wfs:wfs:reference:692959cfd5aa590e7140db560d3d7d039cf4a53073b05afc6d719c287c68eeac",
+    "kind": "wfs:reference"
+  },
+  "oeiras-hortas-urbanas-feed": {
+    "resourceKey": "wfs:wfs:reference:65af45cb5b099dbeedd248ec7c673efc548c2a1884b4b06ae9ed1a0192459ecd",
+    "kind": "wfs:reference"
+  },
   "oeiras-hourly-environment-feed": {
     "resourceKey": "ckan:ckan:observations:9da1f2287f317aa4b0f677f6ed6d74c8365c68865f7c4c7d11bc8224887c06d1",
     "kind": "ckan:observations"
+  },
+  "oeiras-obras-municipais-feed": {
+    "resourceKey": "wfs:wfs:reference:2869f021d5de0f8f9938e9ae9c044d7c6a0740f2d5df79fc665a8108a0c77b40",
+    "kind": "wfs:reference"
+  },
+  "oeiras-orcamento-participativo-feed": {
+    "resourceKey": "wfs:wfs:reference:14b7656a73cee89b9b1405680dc427f5933bd21d2cd3097a55af849e72fdc493",
+    "kind": "wfs:reference"
+  },
+  "oeiras-parquimetros-feed": {
+    "resourceKey": "wfs:wfs:reference:c1d1a61d8d06c7d570665371f397d119546de45d0375e7ec8d3b9bbb34d1b840",
+    "kind": "wfs:reference"
+  },
+  "oeiras-pontos-carregamento-feed": {
+    "resourceKey": "wfs:wfs:reference:38c9decbfb0ec0a9e4a84609d933a6a58939aa5cd01dbae70d2d33ed9c0b5f29",
+    "kind": "wfs:reference"
+  },
+  "oeiras-residuos-indiferenciados-feed": {
+    "resourceKey": "wfs:wfs:reference:612a9242b8bb2549a546f58aee8dd88165ec059dfa38c2e51cd27e2849a1fa2f",
+    "kind": "wfs:reference"
   },
   "omie-portuguese-day-ahead-prices-feed": {
     "resourceKey": "omie:omie:prices:ef8e991c0a7449584710358d38d43eb638541ad8f30565bfeb14c0d9c0dea7d7",

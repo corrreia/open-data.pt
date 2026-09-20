@@ -61,7 +61,7 @@ interface MafraLayer {
   slug: string;
   title: string;
   description: string;
-  topics: ExampleFeed["topics"];
+  topics: NonNullable<ExampleFeed["topics"]>;
 }
 
 const MAFRA_LAYERS: MafraLayer[] = [

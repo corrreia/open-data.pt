@@ -29,7 +29,7 @@ interface OeirasLayer {
   slug: string;
   title: string;
   description: string;
-  topics: ExampleFeed["topics"];
+  topics: NonNullable<ExampleFeed["topics"]>;
   /** The layer's own key, where it has one; otherwise the service's feature identity. */
   idField?: string;
   numberFields?: string;

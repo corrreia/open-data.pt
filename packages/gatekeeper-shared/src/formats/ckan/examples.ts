@@ -208,14 +208,6 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "67f6aa56-49b2-4d15-b81c-825d449acb9c",
     ["cities", "environment"],
   ),
-  cascaisExample("cascais-markets-feed", "Cascais fairs and markets", "Fairs and markets held in Cascais.", "geocascais-feiramercado", "52ac6f20-e436-4270-93c7-35d2529da157", [
-    "cities",
-    "economy",
-  ]),
-  cascaisExample("cascais-playgrounds-feed", "Cascais playgrounds", "Children's playgrounds in Cascais.", "geocascais-parqueinfantil", "684f9e58-2c4f-4f5b-b0a1-a5455acbed64", [
-    "cities",
-    "society",
-  ]),
   cascaisExample(
     "cascais-fire-infrastructure-feed",
     "Cascais fire-fighting infrastructure",
@@ -241,14 +233,6 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     ["cities", "society"],
   ),
   cascaisExample(
-    "cascais-public-schools-feed",
-    "Cascais public schools",
-    "Public school establishments in Cascais.",
-    "geocascais-estabelecimentoescolar",
-    "b7b1fef2-960c-4934-a912-92f026ffd000",
-    ["cities", "society"],
-  ),
-  cascaisExample(
     "cascais-rental-kiosks-feed",
     "Cascais soft-mobility rental kiosks",
     "Kiosks in Cascais where bicycles and other soft-mobility vehicles are rented.",
@@ -262,14 +246,6 @@ export const CKAN_EXAMPLES: ExampleFeed[] = [
     "Commercial and service establishments in Cascais, with the activity of each.",
     "geocascais-comercioservico",
     "1f30c5fa-acb7-4cab-859e-f0e549999609",
-    ["cities", "economy"],
-  ),
-  cascaisExample(
-    "cascais-hotels-feed",
-    "Cascais hotel units",
-    "Hotel units in Cascais, with their classification and capacity.",
-    "geocascais-unidadehoteleira",
-    "16f33130-4504-4304-9517-e02b1442025d",
     ["cities", "economy"],
   ),
   cascaisExample(
