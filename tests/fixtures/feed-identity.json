@@ -1319,8 +1319,16 @@
     "resourceKey": "gtfs:gtfs:static:ab8086160690ce8c5e0d5e3e25647ba8d564c85a28444d409b63d88f59efe5af",
     "kind": "gtfs:static"
   },
-  "torres-vedras-regime-uso-do-solo-feed": {
-    "resourceKey": "wfs:wfs:reference:307ff2c40fe07c3eccd0825ce5299efcbaab37f732f984b0f8eab4c19e5c5297",
+  "torres-vedras-regime-uso-do-solo-solo-rustico-feed": {
+    "resourceKey": "wfs:wfs:reference:59ed015d241037ebbdcb57155e0aa4bab9a93c970a81d472767684aed43af57c",
+    "kind": "wfs:reference"
+  },
+  "torres-vedras-regime-uso-do-solo-solo-urbanizavel-feed": {
+    "resourceKey": "wfs:wfs:reference:067e801f78af762ba85527514c2ad02866be268c8a28009a8103ea1d652a520a",
+    "kind": "wfs:reference"
+  },
+  "torres-vedras-regime-uso-do-solo-solo-urbano-feed": {
+    "resourceKey": "wfs:wfs:reference:b287d37bcaf69566b4d4b5285f18c5c62e1b8abb99dc2707106c2f363b48b574",
     "kind": "wfs:reference"
   },
   "tub-braga-gtfs-feed": {

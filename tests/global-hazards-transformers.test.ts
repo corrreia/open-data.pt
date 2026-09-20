@@ -190,6 +190,37 @@ describe("global hazard normalizers", () => {
     expect(result.quality).toMatchObject({ acceptedRecords: 3, rejectedRecords: 0 });
   });
 
+  it("keeps the outlines of a plan the service will only hand over a class at a time", () => {
+    const config = {
+      feed: "reference",
+      host: "servicos.dgterritorio.pt",
+      path: "/SDISNITWFSCRUS_1113_1/WFService.aspx",
+      typeName: "gmgml:CRUS_Torres_Vedras_V",
+      idField: "ID1",
+      outputFormat: "application/vnd.geo+json",
+      srsName: "EPSG:4326",
+      paging: "none",
+      filterField: "Classe_2021",
+      filterPattern: "Solo Urbano (*",
+      numberFields: "AREA_HA,ID1",
+      dateFields: "Data_Pub_Origem",
+    };
+    const result = new WfsTransformer().transform(
+      fixture("wfs/torres-vedras-crus.json"),
+      context("torres-vedras-regime-uso-do-solo-solo-urbanizavel-feed", config, "feature", "reference"),
+    );
+    const records = result.products[0]?.records ?? [];
+    expect(records).toHaveLength(2);
+    // A land-use map without its land is a table of adjectives: every parcel keeps its outline,
+    // and a parcel the plan drew is somewhere.
+    for (const record of records) {
+      expect(record.payload.geometry).not.toBeNull();
+      expect(record.payload.latitude).toBeCloseTo(39.05, 1);
+      expect(record.payload.longitude).toBeCloseTo(-9.32, 1);
+    }
+    expect(records[0]).toMatchObject({ entityKey: "269620", payload: { Classe_2021: "Solo Urbano (urbanizável – transitório)", Municipio: "TORRES VEDRAS" } });
+  });
+
   it("places a layer its service stores on a national grid", () => {
     const config = {
       feed: "reference",

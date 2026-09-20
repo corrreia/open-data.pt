@@ -96,6 +96,8 @@ export interface WfsReferenceConfig extends WfsCommonConfig {
    */
   filterField?: string;
   filterValue?: string;
+  /** The pattern that attribute is matched by, where an equality will not do. */
+  filterPattern?: string;
   /**
    * Attributes the service publishes as a calendar day with no time of day.
    * They are typed `date` and kept as the day the source stated; putting them
@@ -183,6 +185,7 @@ function validateReferenceConfig(config: SourceConfig, hosts: ReadonlySet<string
     "outputFormat",
     "paging",
     "srsName",
+    "filterPattern",
   ];
   for (const key of Object.keys(config)) if (!allowed.includes(key)) throw new GatekeeperError(`Unsupported WFS field: ${key}`, key === "url" ? "source-denied" : "invalid-config");
   const host = config.host?.trim().toLowerCase();
@@ -214,11 +217,24 @@ function validateReferenceConfig(config: SourceConfig, hosts: ReadonlySet<string
     if (config.paging !== WFS_NO_PAGING) throw new GatekeeperError(`WFS paging is either omitted or "${WFS_NO_PAGING}"`, "invalid-config");
     normalized.paging = WFS_NO_PAGING;
   }
-  if ((config.filterField === undefined) !== (config.filterValue === undefined))
-    throw new GatekeeperError("WFS filterField and filterValue are named together or not at all", "invalid-config");
+  /*
+   * A layer is cut by one attribute, matched either exactly or by pattern.
+   * Pattern matching is not a convenience: a value holding parentheses — the
+   * national planning registry classes land "Solo Urbano (urbanizável –
+   * transitório)" — is one this registry's own service rejects as an equality,
+   * and `PropertyIsLike` is the only way to ask it for those parcels at all.
+   */
+  const matchers = [config.filterValue, config.filterPattern].filter((value) => value !== undefined);
+  if ((config.filterField === undefined) !== (matchers.length === 0)) {
+    throw new GatekeeperError("WFS filterField is named with exactly one of filterValue or filterPattern, or none of them", "invalid-config");
+  }
+  if (matchers.length > 1) throw new GatekeeperError("WFS filterValue and filterPattern are alternatives, not a pair", "invalid-config");
   if (config.filterField !== undefined) {
     normalized.filterField = token(config.filterField, "filterField", /^[A-Za-z_][A-Za-z0-9_]*$/u);
-    normalized.filterValue = token(config.filterValue, "filterValue", /^[\p{L}\p{N} _.'-]{1,120}$/u);
+    if (config.filterValue !== undefined) normalized.filterValue = token(config.filterValue, "filterValue", /^[\p{L}\p{N} _.'-]{1,120}$/u);
+    // `*` and `?` are the wildcards the filter declares; the rest is what a published
+    // classification actually contains, parentheses and dashes included.
+    else normalized.filterPattern = token(config.filterPattern, "filterPattern", /^[\p{L}\p{N} _.'()*?,:;–—-]{1,120}$/u);
   }
   return normalized;
 }
@@ -365,7 +381,7 @@ function asWfsConfig(config: SourceConfig): WfsConfig {
 }
 
 function asWfsReferenceConfig(config: SourceConfig): WfsReferenceConfig {
-  const { host, path, typeName, idField, numberFields, dateFields, dateOnlyFields, propertyNames, filterField, filterValue, outputFormat, paging, srsName } = config;
+  const { host, path, typeName, idField, numberFields, dateFields, dateOnlyFields, propertyNames, filterField, filterValue, filterPattern, outputFormat, paging, srsName } = config;
   if (!host || !path || !typeName || !idField) throw new GatekeeperError("WFS configuration is incomplete", "invalid-config");
   const reference: WfsReferenceConfig = { feed: "reference", host, path, typeName, idField, numberFields: numberFields ?? "", dateFields: dateFields ?? "" };
   if (dateOnlyFields) reference.dateOnlyFields = dateOnlyFields;
@@ -373,9 +389,10 @@ function asWfsReferenceConfig(config: SourceConfig): WfsReferenceConfig {
   if (outputFormat) reference.outputFormat = outputFormat;
   if (paging) reference.paging = paging;
   if (srsName) reference.srsName = srsName;
-  if (filterField && filterValue) {
+  if (filterField && (filterValue || filterPattern)) {
     reference.filterField = filterField;
-    reference.filterValue = filterValue;
+    if (filterValue) reference.filterValue = filterValue;
+    if (filterPattern) reference.filterPattern = filterPattern;
   }
   return reference;
 }
@@ -406,8 +423,15 @@ function filterXml(config: WfsEventsConfig, now: Date): string {
 
 /** Empty when the layer is read whole; otherwise the one equality the layer is cut by. */
 function referenceFilterXml(config: WfsReferenceConfig): string {
-  if (!config.filterField || !config.filterValue) return "";
-  return `<ogc:Filter xmlns:ogc="http://www.opengis.net/ogc"><ogc:PropertyIsEqualTo><ogc:PropertyName>${config.filterField}</ogc:PropertyName><ogc:Literal>${escapeXml(config.filterValue)}</ogc:Literal></ogc:PropertyIsEqualTo></ogc:Filter>`;
+  if (!config.filterField) return "";
+  const namespace = 'xmlns:ogc="http://www.opengis.net/ogc"';
+  const name = `<ogc:PropertyName>${config.filterField}</ogc:PropertyName>`;
+  if (config.filterPattern) {
+    const literal = `<ogc:Literal>${escapeXml(config.filterPattern)}</ogc:Literal>`;
+    return `<ogc:Filter ${namespace}><ogc:PropertyIsLike wildCard="*" singleChar="?" escapeChar="\\">${name}${literal}</ogc:PropertyIsLike></ogc:Filter>`;
+  }
+  if (!config.filterValue) return "";
+  return `<ogc:Filter ${namespace}><ogc:PropertyIsEqualTo>${name}<ogc:Literal>${escapeXml(config.filterValue)}</ogc:Literal></ogc:PropertyIsEqualTo></ogc:Filter>`;
 }
 
 function escapeXml(value: string): string {
