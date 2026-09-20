@@ -42,6 +42,7 @@ export const PUBLISHERS = {
   "cm-mafra": { name: "Município de Mafra", url: "https://www.cm-mafra.pt/" },
   "cm-oeiras": { name: "Câmara Municipal de Oeiras", url: "https://www.oeiras.pt/", logo: "png" },
   "cm-porto": { name: "Câmara Municipal do Porto", url: "https://www.cm-porto.pt/", logo: "svg" },
+  "cm-torres-vedras": { name: "Município de Torres Vedras", url: "https://www.cm-tvedras.pt/" },
   "cp": { name: "CP", url: "https://www.cp.pt/", logo: "svg" },
   "demarca-design": { name: "DEMARCA Design", logo: "png" },
   "dgeg": { name: "DGEG · Direção-Geral de Energia e Geologia", url: "https://www.dgeg.gov.pt/", logo: "png" },

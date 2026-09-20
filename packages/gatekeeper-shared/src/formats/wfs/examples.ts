@@ -151,7 +151,61 @@ const OEIRAS_LAYERS: OeirasLayer[] = [
   },
 ];
 
+/*
+ * Torres Vedras publishes nothing itself: its services portal is behind a
+ * login it grants by hand, and its geoportal is a viewer whose every layer is
+ * proxied from hosts inside the building, with no WMS, WFS or REST of its own.
+ * Its plan is public all the same, because the municipality deposited it with
+ * the national planning registry, which serves one WFS per concelho keyed by
+ * DICO code — 1113 is Torres Vedras. The plan is the municipality's work; DGT
+ * is where it is published, and states CC BY on it.
+ *
+ * The service is GeoMedia, and rejects `application/json` outright: the only
+ * GeoJSON it answers to is the older `application/vnd.geo+json`.
+ */
+const CRUS_TORRES_VEDRAS: ExampleFeed = {
+  slug: "torres-vedras-regime-uso-do-solo-feed",
+  title: "Torres Vedras land-use regime",
+  description:
+    "Every parcel of the Carta do Regime de Uso do Solo for Torres Vedras: the class and category of soil each holds under the municipal plan, the designation the plan gives it, its area in hectares, the scale it was drawn at, the source it came from and the date its origin was published. Collected without outlines: asked for the parcels whole the service times out, and these attributes are what can be read and compared.",
+  config: {
+    source: "wfs",
+    feed: "reference",
+    host: "servicos.dgterritorio.pt",
+    path: "/SDISNITWFSCRUS_1113_1/WFService.aspx",
+    typeName: "gmgml:CRUS_Torres_Vedras_V",
+    idField: "ID1",
+    outputFormat: "application/vnd.geo+json",
+    // Asked for the whole type with its outlines, the service spends 200 seconds and then
+    // answers 502; asked for these eleven columns it answers all 2,436 parcels in 16, as
+    // one document, because it ignores `startIndex` and cannot be asked for less.
+    paging: "none",
+    propertyNames: "ID1,AREA_HA,Classe_2021,Categoria_2021,Designacao_no_plano,DTCC,Municipio,Autor,Fonte,Escala_origem,Data_Pub_Origem",
+    numberFields: "AREA_HA,ID1",
+    dateFields: "Data_Pub_Origem",
+  },
+  publisher: "cm-torres-vedras",
+  topics: ["cities", "government"],
+  // A municipal plan is revised over years, not weeks.
+  staleAfterSeconds: 2_592_000,
+  policy: {
+    name: "SNIT municipal land-use regime",
+    version: 1,
+    collection: {
+      cadenceSeconds: 604_800,
+      timeoutSeconds: 300,
+      maxBytes: WFS_MAX_BYTES,
+      maxOutputBytes: 48 * 1024 * 1024,
+      maxRecordBytes: 256 * 1024,
+      maxRecords: 20_000,
+      historyMode: "changes",
+    },
+    serving: { licence: "cc-by", attribution: "Município de Torres Vedras, published through the Sistema Nacional de Informação Territorial (DGT)" },
+  },
+};
+
 export const WFS_EXAMPLES: ExampleFeed[] = [
+  CRUS_TORRES_VEDRAS,
   {
     slug: "effis-portugal-recent-burnt-areas-feed",
     title: "Recent EFFIS burnt areas in Portugal",

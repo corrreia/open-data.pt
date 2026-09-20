@@ -75,9 +75,25 @@
     "resourceKey": "myinfo:myinfo:timetable:54fb485fbc564d05fd33ef1a26010db74be4b361112cc0644192c97735ba415e",
     "kind": "myinfo:timetable"
   },
+  "barraqueiro-oeste-lourinha-torres-vedras-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:f4b3fb4949f388fdc0116cc26519234a44a5c2229227c7d5edd57d9daccc1a8b",
+    "kind": "myinfo:timetable"
+  },
   "barraqueiro-oeste-network-feed": {
     "resourceKey": "myinfo:myinfo:network:4a9af14b672fe80cc9c908d737a3a262e2bb89c19abbd951c7c6c31dc9459bbc",
     "kind": "myinfo:network"
+  },
+  "barraqueiro-oeste-praia-de-santa-cruz-torres-vedras-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:a393794830095cfc353911b8d1e8f58e68e115d48b90d0dfbed6d7b9352c7dc7",
+    "kind": "myinfo:timetable"
+  },
+  "barraqueiro-oeste-torres-vedras-a-dos-cunhados-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:7c09d8637abc05b4bcddf747640b0e5f5af324a01f41e6947afea134a7f154ca",
+    "kind": "myinfo:timetable"
+  },
+  "barraqueiro-oeste-torres-vedras-campelos-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:8e4bbd75e5e6eb1719c3ce83e3a628fc97724e5b7f8e05ff1a17728146d2bd87",
+    "kind": "myinfo:timetable"
   },
   "barraqueiro-oeste-torres-vedras-ericeira-feed": {
     "resourceKey": "myinfo:myinfo:timetable:ba07591308e46b00c86a6cff600522b001f1f3d037c34e42399c64d010ca8d87",
@@ -85,6 +101,22 @@
   },
   "barraqueiro-oeste-torres-vedras-lisboa-feed": {
     "resourceKey": "myinfo:myinfo:timetable:78cd174712fad27e54f790ee014e1e42ad44f29e88f641248498193149751132",
+    "kind": "myinfo:timetable"
+  },
+  "barraqueiro-oeste-torres-vedras-lourinha-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:8be3a86766f3fd226446075eb2c1afc4316e4433765d66d654120280d9436e03",
+    "kind": "myinfo:timetable"
+  },
+  "barraqueiro-oeste-torres-vedras-praia-de-santa-cruz-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:a25beb92f2362a6e22fdd56891431471d8a75cfd6f6559a1f37a9f62445909a4",
+    "kind": "myinfo:timetable"
+  },
+  "barraqueiro-oeste-torres-vedras-silveira-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:636af3a96277481a9a67fffe4a135a734026774f68b786782d648a4cc248c28a",
+    "kind": "myinfo:timetable"
+  },
+  "barraqueiro-oeste-torres-vedras-turcifal-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:190f38d259aa6616e13938341764632324fba3f1a5d9e652393756d4651aa165",
     "kind": "myinfo:timetable"
   },
   "base-contract-modifications-2026-feed": {
@@ -1274,6 +1306,10 @@
   "tcb-barreiro-gtfs-feed": {
     "resourceKey": "gtfs:gtfs:static:ab8086160690ce8c5e0d5e3e25647ba8d564c85a28444d409b63d88f59efe5af",
     "kind": "gtfs:static"
+  },
+  "torres-vedras-regime-uso-do-solo-feed": {
+    "resourceKey": "wfs:wfs:reference:307ff2c40fe07c3eccd0825ce5299efcbaab37f732f984b0f8eab4c19e5c5297",
+    "kind": "wfs:reference"
   },
   "tub-braga-gtfs-feed": {
     "resourceKey": "gtfs:gtfs:static:7e30c9a4a5705088b35e9146d9f6a3b370bf57fe37f28b22dda1121dcf011191",
