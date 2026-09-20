@@ -1,8 +1,13 @@
 import type { ExampleFeed } from "../../index";
 import { FUEL_PRICES_MAX_BYTES, FUEL_TYPES_MAX_BYTES } from "./dgeg";
 
+/*
+ * DGEG states the terms on the fuel-price service itself: "A informação
+ * disponível neste sítio é gratuita, podendo ser utilizada livremente. É
+ * proibida a sua utilização para fins comerciais."
+ */
 const SERVING = {
-  licence: "source-terms",
+  licence: "dgeg-precos-terms",
   attribution: "Direção-Geral de Energia e Geologia",
 } as const;
 

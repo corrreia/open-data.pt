@@ -1,11 +1,5 @@
 [
   {
-    "source": "anepc",
-    "reason": "SGIFR's terms require attribution and exclude commercial reuse without prior written consent. Public query access to ANEPC's active-occurrence layer does not establish permission for this general public republication service.",
-    "requiredAction": "Obtain written permission covering public republication of ANEPC active occurrence records, then clear the hold and list the library in `libraries.ts`.",
-    "references": ["https://www.sgifr.gov.pt/termos-e-condicoes"]
-  },
-  {
     "source": "ripestat",
     "reason": "RIPEstat Service Terms Article 3.3 restrict repackaging, compilation and redistribution of RIPEstat data. Keyless API access does not establish permission for this public republication service.",
     "requiredAction": "Establish appropriate republication permission or use a differently licensed underlying source, then clear the hold and list the library in `libraries.ts`.",

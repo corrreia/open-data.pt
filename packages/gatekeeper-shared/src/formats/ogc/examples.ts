@@ -7,9 +7,12 @@ const WEEK = 604_800;
 
 /** The CAOP is republished as a dated edition, not continuously; weekly is frequent enough to catch a correction. */
 const DGT_SERVING: ServingPolicyDefinition = {
-  // DGT publishes no reuse licence with these collections: the service links
-  // only its SNIG catalogue record. Nothing here may be invented.
-  licence: "source-terms",
+  // The service does state its terms, but only in its HTML representation:
+  // `https://ogcapi.dgterritorio.gov.pt/?f=html` carries "Terms of service —
+  // https://creativecommons.org/licenses/by/4.0/", which pygeoapi leaves out
+  // of the `?f=json` landing page this library actually reads. DGT's own site
+  // and its dados.gov.pt records agree on CC BY 4.0.
+  licence: "cc-by-4.0",
   attribution: "Direção-Geral do Território — Carta Administrativa Oficial de Portugal (CAOP) 2025",
 };
 

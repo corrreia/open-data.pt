@@ -18,7 +18,7 @@ export const MCP_SERVER_VERSION = "0.1.0";
 export const SKILL_PATH = "/.well-known/agent-skills/open-data-pt/SKILL.md";
 
 /** Pages every visitor can reach without a query; products and publishers follow from the API. */
-const SITEMAP_PAGES = ["/", "/catalog/", "/publisher/", "/licence/", "/start/", "/status/", "/analytics/", "/operations/", "/contribute/", "/docs"];
+const SITEMAP_PAGES = ["/", "/catalog/", "/publisher/", "/licence/", "/start/", "/status/", "/analytics/", "/operations/", "/contribute/", "/aup/", "/docs"];
 
 /** Words every AI Catalog entry shares, for registries that filter by tag. */
 const TAGS = ["portugal", "open data", "public data", "energy", "mobility", "weather", "health", "economy", "telecom"];

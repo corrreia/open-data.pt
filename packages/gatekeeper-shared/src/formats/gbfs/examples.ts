@@ -10,7 +10,7 @@ const REALTIME_POLICY = {
     timeoutSeconds: 30,
     maxBytes: 4 * 1024 * 1024,
     historyMode: "changes",
-    // Vehicles move on every collection, and Bird's and Lime's stations are virtual spots whose counts wobble with them:
+    // Vehicles move on every collection, and Bird's stations are virtual spots whose counts wobble with them:
     // their revisions are noise, over a million lake rows a day. The fleet series records the counts on every collection.
     withoutHistory: ["vehicles", "stations"],
   },
@@ -20,19 +20,21 @@ const REALTIME_POLICY = {
   },
 } as const;
 
-// Lime answered 34 of 200 collections with HTTP 429 at five-minute polling, so it gets ten.
-const LIME_POLICY = {
-  ...REALTIME_POLICY,
-  name: "GBFS realtime snapshots, ten minutes",
-  collection: { ...REALTIME_POLICY.collection, cadenceSeconds: 600 },
-} as const;
-
 // Docked systems have real stations, a few dozen each: how full a dock was is history worth keeping. Their vehicles are not.
 const DOCKED_POLICY = {
   ...REALTIME_POLICY,
   name: "GBFS docked system snapshots, ten minutes",
   collection: { ...REALTIME_POLICY.collection, cadenceSeconds: 600, withoutHistory: ["vehicles"] },
 } as const;
+
+/*
+ * GBFS carries its own licence field, and TubaBike is the one system here that
+ * fills it: `"license_id": "CC0-1.0"` in its `system_information.json`. The
+ * others leave it blank or point at a document that no longer resolves, so
+ * they keep `source-terms`.
+ */
+const TUBABIKE_SERVING = { licence: "cc0-1.0", attribution: "TubaBike — Mobilidade de Barcelos" } as const;
+const TUBABIKE_POLICY = { ...DOCKED_POLICY, name: "GBFS docked system snapshots, ten minutes, dedicated", serving: TUBABIKE_SERVING } as const;
 
 // Bird advertises a 60-second TTL; a five-minute public snapshot avoids
 // hammering the operator while retaining useful municipal fleet counts.
@@ -67,22 +69,9 @@ const REFERENCE_POLICY = {
   },
 } as const;
 
+const TUBABIKE_REFERENCE_POLICY = { ...REFERENCE_POLICY, name: "GBFS system and station reference, daily, dedicated", serving: TUBABIKE_SERVING } as const;
+
 export const GBFS_EXAMPLES: ExampleFeed[] = [
-  {
-    slug: "lime-lisbon",
-    title: "Lime vehicles and station availability in Lisbon",
-    description: "Current Lime vehicle positions, fleet counts, and how many vehicles each Lisbon station holds.",
-    config: {
-      source: "gbfs",
-      url: "https://data.lime.bike/api/partners/v1/gbfs/lisbon/gbfs.json",
-      language: "en",
-      feed: "status",
-    },
-    policy: LIME_POLICY,
-    staleAfterSeconds: 1800,
-    publisher: "lime",
-    topics: ["mobility"],
-  },
   {
     slug: "bird-lisbon",
     title: "Bird vehicles and station availability in Lisbon",
@@ -133,19 +122,18 @@ export const GBFS_EXAMPLES: ExampleFeed[] = [
       language: "pt",
       feed: "status",
     },
-    policy: DOCKED_POLICY,
+    policy: TUBABIKE_POLICY,
     staleAfterSeconds: 1800,
     publisher: "tubabike",
     topics: ["mobility"],
   },
-  referenceExample("lime-lisbon", "lime", "Lisbon", "https://data.lime.bike/api/partners/v1/gbfs/lisbon/gbfs.json", "en"),
   referenceExample("bird-lisbon", "bird", "Lisbon", "https://mds.bird.co/gbfs/v2/public/lisbon/gbfs.json", "en"),
   referenceExample("bird-braga", "bird", "Braga", "https://mds.bird.co/gbfs/v2/public/braga/gbfs.json", "en"),
   referenceExample("bird-cascais", "bird", "Cascais", "https://mds.bird.co/gbfs/v2/public/cascais/gbfs.json", "en"),
   referenceExample("bird-matosinhos", "bird", "Matosinhos", "https://mds.bird.co/gbfs/v2/public/matosinhos/gbfs.json", "en"),
   referenceExample("bird-porto", "bird", "Porto", "https://mds.bird.co/gbfs/v2/public/porto/gbfs.json", "en"),
   referenceExample("bora-viseu", "bora", "Viseu Dão Lafões", "https://gbfs.primelayer.pt/gbfs-smartmobility/gbfs/v3/gbfs.json", "pt"),
-  referenceExample("tubabike-barcelos", "tubabike", "Barcelos", "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_bx/gbfs.json", "pt"),
+  referenceExample("tubabike-barcelos", "tubabike", "Barcelos", "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_bx/gbfs.json", "pt", TUBABIKE_REFERENCE_POLICY),
 ];
 
 function birdExample(slug: string, city: string): ExampleFeed {
@@ -171,14 +159,14 @@ function birdExample(slug: string, city: string): ExampleFeed {
  * slug keeps its history, and this one carries what the status feed used to
  * re-download on every collection.
  */
-function referenceExample(statusSlug: string, publisher: Publisher, place: string, url: string, language: string): ExampleFeed {
+function referenceExample(statusSlug: string, publisher: Publisher, place: string, url: string, language: string, policy: ExampleFeed["policy"] = REFERENCE_POLICY): ExampleFeed {
   const operator = PUBLISHERS[publisher].name;
   return {
     slug: `${statusSlug}-reference`,
     title: `${operator} stations and system information in ${place}`,
     description: `Where every ${operator} station in ${place} is, what it is called, how much it holds, and who operates the system.`,
     config: { source: "gbfs", url, language, feed: "reference" },
-    policy: REFERENCE_POLICY,
+    policy,
     staleAfterSeconds: 2 * DAY_SECONDS,
     publisher,
     topics: ["mobility"],
