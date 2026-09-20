@@ -1,0 +1,66 @@
+{
+    "entityType": "AirQualityObserved",
+    "entities": [
+        {
+            "id": "urn:ngsi-ld:AirQualityObserved:porto:environment:ubiwhere:5adf39366f555a4514e7ea54",
+            "type": "AirQualityObserved",
+            "co": 21,
+            "dateObserved": "2022-11-18T14:40:00.00Z",
+            "location": {
+                "crs": {
+                    "type": "name",
+                    "properties": {
+                        "name": "EPSG:4326"
+                    }
+                },
+                "type": "Point",
+                "coordinates": [
+                    -8.684325,
+                    41.1735278
+                ]
+            },
+            "no2": 29,
+            "o3": 102,
+            "pm10": 13,
+            "pm25": 8.5
+        },
+        {
+            "id": "urn:ngsi-ld:AirQualityObserved:porto:environment:ubiwhere:5b97a1bde521e3053085c08c",
+            "type": "AirQualityObserved",
+            "co": 227.5,
+            "dateObserved": "2026-09-20T18:15:00.00Z",
+            "location": {
+                "type": "Point",
+                "coordinates": [
+                    -8.605194,
+                    41.180222
+                ]
+            },
+            "name": "Pólo Asprela",
+            "no2": 40.3,
+            "o3": 116.9,
+            "pm1": 2,
+            "pm10": 11,
+            "pm25": 4
+        },
+        {
+            "id": "urn:ngsi-ld:AirQualityObserved:porto:environment:ubiwhere:5b632f2706599b05e998bed8",
+            "type": "AirQualityObserved",
+            "co": 108.1,
+            "dateObserved": "2026-09-20T18:15:00.00Z",
+            "location": {
+                "type": "Point",
+                "coordinates": [
+                    -8.6721462,
+                    41.165162
+                ]
+            },
+            "name": "Av. da Boavista / Av. do Parque",
+            "no2": 33.8,
+            "o3": 107.1,
+            "pm1": 1,
+            "pm10": 10,
+            "pm25": 4
+        }
+    ]
+}

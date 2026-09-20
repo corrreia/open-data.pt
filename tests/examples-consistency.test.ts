@@ -111,6 +111,7 @@ describe("libraries and the Worker that carries them", () => {
       "metrolisboa",
       "myinfo",
       "nasapower",
+      "ngsi",
       "ogc",
       "omie",
       "opendatasoft",

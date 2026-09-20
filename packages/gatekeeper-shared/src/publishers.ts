@@ -66,6 +66,7 @@ export const PUBLISHERS = {
   "nasa-power": { name: "NASA POWER · Prediction Of Worldwide Energy Resources", url: "https://power.larc.nasa.gov/", logo: "svg" },
   "omie": { name: "OMIE · Iberian electricity market", url: "https://www.omie.es/", logo: "png" },
   "peeringdb": { name: "PeeringDB", url: "https://www.peeringdb.com/", logo: "png" },
+  "porto-digital": { name: "Porto Digital", url: "https://www.portodigital.pt/" },
   "ren": { name: "REN · Redes Energéticas Nacionais", url: "https://www.ren.pt/", logo: "svg" },
   "ribatejana": { name: "Ribatejana", logo: "png" },
   "ripe-ncc": { name: "RIPE NCC", url: "https://www.ripe.net/", logo: "svg" },

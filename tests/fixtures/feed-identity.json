@@ -1055,6 +1055,10 @@
     "resourceKey": "parliament:parliament:careers:5cbbe43ed4235bfca3c38594fb1beac236cadcbea4330be07105336b606a8210",
     "kind": "parliament:careers"
   },
+  "porto-air-quality-feed": {
+    "resourceKey": "ngsi:ngsi:observations:fd4a741d9796998f47c13cf6063fe3562dea16bc82dadf4e5c72681f0ed1c349",
+    "kind": "ngsi:observations"
+  },
   "porto-cultural-agenda-feed": {
     "resourceKey": "ckan:ckan:resource:dc64e39da2b6dedd12fedc2a9f3e9c6740cd6a53ad0b184112434f0d646c05df",
     "kind": "ckan:resource"
@@ -1070,6 +1074,18 @@
   "porto-municipal-trees-feed": {
     "resourceKey": "ckan:ckan:resource:f50879971e38cbe52cb0d84694e3f0f96fae58b907ec11d9e91a7b5937135333",
     "kind": "ckan:resource"
+  },
+  "porto-noise-levels-feed": {
+    "resourceKey": "ngsi:ngsi:observations:a93e98cabe053927fbb23b82ab6f20d79f0137a2c4a174ba1a938403ee6d6588",
+    "kind": "ngsi:observations"
+  },
+  "porto-shared-micromobility-spots-feed": {
+    "resourceKey": "ngsi:ngsi:inventory:4b319163a8fa77d04daa0f5270f7de294aa03a30ac0be5afc44c6f956b418eb8",
+    "kind": "ngsi:inventory"
+  },
+  "porto-stcp-bus-positions-feed": {
+    "resourceKey": "ngsi:ngsi:inventory:3f8f41236e0dcc1f92d5e54aef3545d1de7c30afdf89843a44fefa8389de4078",
+    "kind": "ngsi:inventory"
   },
   "portuguese-museums-feed": {
     "resourceKey": "udata:udata:distribution:200cbfe528123a9f183fff502d29871e855452545794c9a94be44a4260e29714",
