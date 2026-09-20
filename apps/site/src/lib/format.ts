@@ -12,6 +12,17 @@ const DATE_TIME = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", time
 const TIME = new Intl.DateTimeFormat(undefined, { timeStyle: "short" });
 const RELATIVE = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
 
+/**
+ * A time as a reader sees it, or as the source wrote it. A source's own field can hold anything —
+ * `2026-99-99T00:00` passes for a timestamp and is not a date — and `Intl` throws on one of those,
+ * which would take the whole page down rather than show one odd value.
+ */
+function formatted(format: Intl.DateTimeFormat, value: string | number | undefined | null) {
+  if (value === undefined || value === null || value === "") return "—";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? String(value) : format.format(date);
+}
+
 export const fmt = {
   int(value: number | null | undefined) {
     return value === null || value === undefined || !Number.isFinite(value) ? "—" : INTEGER.format(value);
@@ -28,16 +39,13 @@ export const fmt = {
     return `${(value / 1024 ** 3).toFixed(2)} GB`;
   },
   date(value: string | number | undefined | null) {
-    if (value === undefined || value === null || value === "") return "—";
-    return DATE.format(new Date(value));
+    return formatted(DATE, value);
   },
   dateTime(value: string | number | undefined | null) {
-    if (value === undefined || value === null || value === "") return "—";
-    return DATE_TIME.format(new Date(value));
+    return formatted(DATE_TIME, value);
   },
   time(value: string | number | undefined | null) {
-    if (value === undefined || value === null || value === "") return "—";
-    return TIME.format(new Date(value));
+    return formatted(TIME, value);
   },
   relative(value: string | number | undefined | null, now = Date.now()) {
     if (value === undefined || value === null || value === "") return "—";

@@ -217,7 +217,9 @@ function ProductPage() {
         <h1 className={`font-display leading-[1.08] text-kumo-strong ${data.title.length > 60 ? "max-w-[46ch] text-3xl" : "max-w-[24ch] text-4xl sm:text-5xl"}`}>{data.title}</h1>
         {data.description ? <Description text={data.description} /> : null}
         {feed.data ? (
-          // Spacing separates the facts: dot separators ended up alone at the end of a wrapped line.
+          // Who made it, and the way to say it is broken. The source, the terms and the schedule are
+          // each stated once, in the cards beside this; a heading that repeated them cost a reader on
+          // a phone five lines before the data.
           <p className="flex flex-wrap items-baseline gap-x-5 gap-y-1 text-sm text-kumo-subtle">
             <span className="inline-flex flex-wrap items-center gap-x-1.5">
               Published by
@@ -229,20 +231,6 @@ function ProductPage() {
                 {feed.data.publisher.name}
               </a>
             </span>
-            {source ? (
-              <Link href={source.href} target="_blank" rel="noopener noreferrer">
-                Original source <Link.ExternalIcon />
-              </Link>
-            ) : null}
-            {data.licence ? (
-              <a href={licenceHref(data.licence.id)} className="hover:underline">
-                {data.licence.name}
-              </a>
-            ) : null}
-            <span>
-              Updated <RelativeTime value={data.updatedAt} />
-            </span>
-            <span>Collected {fmt.every(data.cadenceSeconds)}</span>
             <Link href={newIssue("broken-source", { title: `Broken: ${data.title}`, page: window.location.href })}>Report a problem</Link>
           </p>
         ) : null}
@@ -278,16 +266,7 @@ function ProductPage() {
             <LayerCard.Primary>
               <Kv
                 items={[
-                  feed.data
-                    ? {
-                        term: "Publisher",
-                        value: (
-                          <a href={publisherHref(feed.data.publisher.id)} className="inline-flex min-h-6 items-center text-kumo-link hover:underline">
-                            {feed.data.publisher.name}
-                          </a>
-                        ),
-                      }
-                    : null,
+                  // No publisher row: the heading above names them, and this card is the source and its terms.
                   source
                     ? {
                         term: "Original",
@@ -335,7 +314,7 @@ function ProductPage() {
                 items={[
                   { term: "Cadence", value: fmt.every(data.cadenceSeconds) },
                   feed.data ? { term: "Next run", value: feed.data.enabled ? <Countdown value={feed.data.nextRunAt} /> : "paused" } : null,
-                  feed.data?.lastSuccessAt ? { term: "Last success", value: <RelativeTime value={feed.data.lastSuccessAt} /> } : null,
+                  feed.data?.lastSuccessAt ? { term: "Last collected", value: <RelativeTime value={feed.data.lastSuccessAt} /> } : null,
                   { term: "History", value: data.historyMode === "changes" ? "Every change logged" : "Latest only" },
                   acquisitions.data?.length
                     ? {
@@ -392,17 +371,8 @@ function ProductPage() {
               )
             }
           >
-            {feed.data ? (
-              <>
-                <span>Shared {throughOf(feed.data)}</span>
-                {source ? (
-                  <Link href={source.href} target="_blank" rel="noopener noreferrer" className="wrap-anywhere">
-                    {source.hostname} <Link.ExternalIcon />
-                  </Link>
-                ) : null}
-                {current?.sourcePublishedAt ? <span>Source published {fmt.dateTime(current.sourcePublishedAt)}</span> : null}
-              </>
-            ) : null}
+            {/* Where it was read from is stated once, in the card above; this step is when they published it. */}
+            {current?.sourcePublishedAt ? <span>Source published {fmt.dateTime(current.sourcePublishedAt)}</span> : null}
           </Step>
           <Step
             n={2}

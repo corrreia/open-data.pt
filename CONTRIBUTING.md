@@ -71,11 +71,12 @@ The same, under `formats/<format>/`, with an allowlist var rather than a fixed o
 ```bash
 pnpm install
 pnpm types
-pnpm dev -- ckan            # the kernel and the Gatekeeper carrying CKAN alone
-pnpm dev                    # carrying every library
+pnpm dev ckan               # the kernel and the Gatekeeper carrying CKAN alone
+pnpm dev                    # five libraries that fill the pages: IPMA, DGEG, OMIE, Carris, USGS
+pnpm dev all                # every library, every source
 ```
 
-The selection goes to `packages/gatekeeper/.dev.vars` as `GATEKEEPER_LIBRARIES`; the Worker carries only those libraries, so the Registry installs only their feeds and polls only their sources.
+The Worker carries only the libraries you name, so the Registry installs only their feeds and polls only their sources, and no local feed runs more often than every half hour. The site is on <http://localhost:8787>. [`docs/development.md`](docs/development.md) says how the selection reaches the Worker, which is less obvious than it looks.
 
 ## Testing against the real source
 

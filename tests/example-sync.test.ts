@@ -4,7 +4,9 @@ import {
   SYNC_BATCH,
   SYNC_CHECK_MS,
   SYNC_RESOLVE_ALL_MS,
+  cadenceFloorOf,
   syncStep,
+  withCadenceFloor,
   type CatalogEntry,
   type SyncFeed,
   type SyncPorts,
@@ -205,5 +207,35 @@ describe("example sync", () => {
     expect(fake.state!.lastError).toBeDefined();
     await fake.nextCheck();
     expect(fake.state!.lastError).toBeUndefined();
+  });
+});
+
+describe("the cadence floor a local session puts under a feed", () => {
+  it("slows a feed that runs more often than the floor, and moves its freshness window with it", () => {
+    const minutely = { ...example("a-live"), staleAfterSeconds: 180 };
+    minutely.policy = { ...minutely.policy, collection: { ...minutely.policy.collection, cadenceSeconds: 60 } };
+
+    const slowed = withCadenceFloor(minutely, 1800);
+
+    expect(slowed.policy.collection.cadenceSeconds).toBe(1800);
+    expect(slowed.staleAfterSeconds).toBe(5400);
+  });
+
+  it("leaves a feed that is already slower alone, and never shortens its freshness window", () => {
+    const daily = { ...example("a-daily"), staleAfterSeconds: 172_800 };
+    daily.policy = { ...daily.policy, collection: { ...daily.policy.collection, cadenceSeconds: 86_400 } };
+
+    expect(withCadenceFloor(daily, 1800)).toBe(daily);
+  });
+
+  it("is off without a floor, which is what a deployment has", () => {
+    const feed = example("a-one");
+
+    expect(withCadenceFloor(feed, 0)).toBe(feed);
+    expect(cadenceFloorOf(undefined)).toBe(0);
+    expect(cadenceFloorOf("")).toBe(0);
+    expect(cadenceFloorOf("-60")).toBe(0);
+    expect(cadenceFloorOf("not a number")).toBe(0);
+    expect(cadenceFloorOf("1800")).toBe(1800);
   });
 });

@@ -7,7 +7,8 @@ import { fmt, humanize } from "../../lib/format";
 import { useQuery } from "../../lib/query";
 import type { Change, JsonRecord, Page, Product, SeriesPoint } from "../../lib/types";
 import { Cell, OPERATION_BADGE, isText, seriesLabel, sortValue } from "./cells";
-import { RecordDialog } from "./RecordDialog";
+import { RecordDialog, RowDialog } from "./RecordDialog";
+import { pointRecord } from "./SeriesView";
 
 const when = (value: string | null | undefined) => (value ? fmt.dateTime(value) : "—");
 
@@ -80,6 +81,7 @@ export function ChangesView({ product, refreshKey }: { product: Product; refresh
 
 /** Points that were published and later revised. */
 export function CorrectionsView({ product, refreshKey }: { product: Product; refreshKey: number }) {
+  const [opened, setOpened] = useState<{ row: JsonRecord; title: string } | null>(null);
   const corrections = useQuery(`corrections:${product.slug}`, () => apiGet<Page<SeriesPoint>>(productPath(product.slug, "/series/changes?limit=500")).then((page) => page.data));
   useEffect(() => {
     if (refreshKey > 0) void corrections.refetch();
@@ -96,15 +98,19 @@ export function CorrectionsView({ product, refreshKey }: { product: Product; ref
   if (corrections.loading) return <Loading what="corrections" />;
   if (corrections.error) return <ErrorNote error={corrections.error} what="the corrections" onRetry={() => void corrections.refetch()} />;
   return (
-    <DataTable
-      label={`${product.title} corrections`}
-      rows={corrections.data ?? []}
-      columns={columns}
-      rowKey={(point) => `${point.seriesKey}|${point.eventTime}|${point.ingestedAt ?? ""}`}
-      initialSort={{ key: "ingested", direction: "desc" }}
-      empty="No corrections: one is logged when a later collection changes a point that was already published."
-      footer={<span>A point that was published and later revised, with the moment the correction arrived.</span>}
-    />
+    <>
+      <DataTable
+        label={`${product.title} corrections`}
+        rows={corrections.data ?? []}
+        columns={columns}
+        rowKey={(point) => `${point.seriesKey}|${point.eventTime}|${point.ingestedAt ?? ""}`}
+        initialSort={{ key: "ingested", direction: "desc" }}
+        empty="No corrections: one is logged when a later collection changes a point that was already published."
+        footer={<span>A point that was published and later revised, with the moment the correction arrived.</span>}
+        onRowClick={(point) => setOpened({ row: pointRecord(point), title: seriesLabel(point) })}
+      />
+      <RowDialog row={opened?.row ?? null} title={opened?.title} onClose={() => setOpened(null)} />
+    </>
   );
 }
 

@@ -4,16 +4,14 @@ export function openApiDocument(origin: string) {
     info: {
       title: "open-data.pt API",
       version: "0.1.0",
+      // What a reader needs before the first request, and nothing that a tag, an endpoint or a
+      // parameter says better where it is used.
       description: [
         "Free, keyless, read-only JSON over Portuguese public data. No account, no API key, no paid tier, and no plan to add one. Every product carries the licence and attribution of the institution that published it; cite the publisher, not this site.",
         "",
-        "**Start with `GET /api/products`.** It lists every product with its slug, role, schema, row count, watermark and freshness. Search that list locally, read `GET /api/products/{slug}` for the metadata, then read rows with `/records` (reference, current-state, event-log, summary products) or `/series` (time-series products). `/records` and the GeoJSON export filter by `where=field:value` and `bbox`.",
+        "**Start with `GET /api/products`.** It lists every product with its slug, role and freshness; read `GET /api/products/{slug}` for one of them, then its rows with `/records` or its points with `/series`, whichever its role calls for.",
         "",
-        "**History is queryable.** `/events` and `/series/range` return what was true for an event-time window, as known now or at any past `knownAt`; `/changes/range` and `/series/changes/range` return every revision the platform learned in a knowledge-time window, corrections included. Windows are at most 366 days, pages use deterministic cursors, and every answer reports freshness and coverage, including when the lake begins. Arbitrary public SQL is not exposed.",
-        "",
-        "**For AI assistants** the same API is an MCP server at `/mcp` (Streamable HTTP, no key), built with Cloudflare Code Mode: `search` runs the assistant's JavaScript against this document, and `execute` runs it against the API in a sandbox with no other network access.",
-        "",
-        "The platform collects its sources by itself; nothing here changes it. Every endpoint answers GET, HEAD and OPTIONS; any other method is 405. Unknown query parameters are 400. Current records are served from immutable chunks; `_time.observed` on a record is when that exact value was first observed. History windows that ended more than an hour ago are cached for a day; other reads for 10 to 300 seconds. Requests the cache cannot answer are rate limited per client; a 429 carries `Retry-After`. Errors are `application/problem+json`; server errors carry a request ID. A plain-text summary is at `/llms.txt` and a guide for people at `/start/`.",
+        "Every endpoint answers GET, HEAD and OPTIONS, and nothing here changes anything: the platform collects its sources by itself. An unknown query parameter is a `400`, errors are `application/problem+json`, and a read the cache cannot answer is rate limited per client with `Retry-After`.",
         "",
         "The API is unversioned while the platform is in development.",
       ].join("\n"),
@@ -23,10 +21,25 @@ export function openApiDocument(origin: string) {
       },
     },
     servers: [{ url: origin }],
+    // A tag carries what is true of every endpoint under it: the history rules belong here rather
+    // than repeated in the introduction and in each of the four windows.
     tags: [
-      { name: "Products", description: "Read cleaned current state, reference records, histories, and time series. Public, free, no key." },
+      {
+        name: "Products",
+        description: [
+          "Read a product's current rows or points, and its past. `/records`, `/records/all` and the GeoJSON export filter with `where` and `bbox`; `/series` serves a time-series product's recent window.",
+          "",
+          "History is queryable. `/events` and `/series/range` answer what was true over an event-time window, as known now or at any past `knownAt`; `/changes/range` and `/series/changes/range` list every revision the platform learned over a knowledge-time window, corrections included. A window is at most 366 days, pages follow deterministic cursors, and every answer states its freshness and its coverage, including when the lake begins. Arbitrary SQL is not exposed.",
+          "",
+          "A window that ended more than an hour ago is cached for a day; everything else for 10 to 300 seconds, a quarter of the feed's cadence.",
+        ].join("\n"),
+      },
       { name: "Feeds", description: "Where each dataset comes from and how its collection is going: feeds, runs and outages. Read-only." },
-      { name: "Platform", description: "Discovery and health." },
+      {
+        name: "Platform",
+        description:
+          "Discovery and health. The same API answers Model Context Protocol at `/mcp`, a plain-text summary is at `/llms.txt`, and the guide for people is at `/start/`.",
+      },
     ],
     paths: {
       "/api": {

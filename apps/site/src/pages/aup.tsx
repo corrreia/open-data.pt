@@ -45,7 +45,7 @@ function Aup() {
           </Rule>
           <Rule title="The data may be wrong, late, or gone">
             We copy what a source served at the moment we read it. Sources change shape, go down, and correct themselves. Nothing here is authoritative: for anything that matters,
-            go to the publisher. For an emergency, call 112.
+            go to the publisher.
           </Rule>
         </div>
       </section>
@@ -63,8 +63,9 @@ function Aup() {
             Responses carry ETags. Send them back and you will get a cheap 304 instead of a full body. If you are serving many users, cache on your side rather than passing every
             one of them through to us.
           </Rule>
-          <Rule title="Go to the source for bulk">
-            If you want an entire history rather than a window of it, the publisher usually offers a bulk download and will serve you better than scraping this API page by page.
+          <Rule title="Bulk reading is fine, within reason">
+            Take a whole product, or a year of its history — keeping what sources drop is half the point of this. Read it one request at a time and cache what comes back. If you
+            need everything, over and over, the publisher's own bulk download is faster for you and kinder to a free service.
           </Rule>
           <Rule title="No warranty, no uptime promise">
             This is a free service run by one person. It can break, change, or stop. Do not put it under anything where failure hurts, and if you do, that is your call, not ours.

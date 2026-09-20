@@ -55,7 +55,7 @@ pnpm exec vitest run --maxWorkers=2
 pnpm deploy:dry-run
 ```
 
-`pnpm dev -- <library>` runs the kernel and the Gatekeeper carrying one library, for example `pnpm dev -- ckan`, so only its feeds are installed and polled locally.
+`pnpm dev <library>` runs the kernel and the Gatekeeper carrying one library, for example `pnpm dev ckan`, so only its feeds are installed and polled locally. Each Worker gets its own `wrangler dev` session, which is the only way the selection reaches the Gatekeeper.
 
 ## Constraints
 

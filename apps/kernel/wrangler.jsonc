@@ -96,6 +96,10 @@
     // Lake: set when the Pipelines streams exist.
     "CLOUDFLARE_ACCOUNT_ID": "cc05ea77c39684419e087c3b78b5177d",
     "LAKE_BUCKET": "open-data-pt-history",
+    // The floor a local session puts under every feed's cadence, so a laptop polls a public source
+    // once and then leaves it alone. Empty in a deployment, where each policy's own cadence stands;
+    // `pnpm dev` sets it with --var.
+    "DEV_MIN_CADENCE_SECONDS": "",
   },
   // Secrets (wrangler secret put): CATALOG_TOKEN, for R2 SQL, and ANALYTICS_TOKEN
   // (Account Analytics: Read), for the Analytics Engine SQL API. The API is
