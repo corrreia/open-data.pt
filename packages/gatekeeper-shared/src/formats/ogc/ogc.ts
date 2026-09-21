@@ -551,21 +551,25 @@ async function readShardValues(
     geometry: "skip",
     properties: [shards.sourceField],
     pageSize: Math.min(PAGE_SIZE_LIMIT, 1_000),
-    maxPages: 8,
+    maxPages: Math.ceil(MAX_SHARDS / 1_000) + 1,
   };
-  const url = buildItemsUrl(listing);
-  const response = await requestPage(url, itemHeaders(), listing, hosts, fetcher, sleep);
+  const expected = await readTotal(listing, hosts, fetcher);
+  const first = buildItemsUrl(listing);
+  const response = await requestPage(first, itemHeaders(), listing, hosts, fetcher, sleep);
   assertUpstream(response, "shard values");
-  const value = parseDocument(await readBoundedResponse(response, MAX_METADATA_BYTES, "OGC API Features shard values"), "shard values");
-  if (!isJsonObject(value) || !isJsonArray(value.features)) invalid("OGC API Features shard listing carried no features");
+
   const values: string[] = [];
-  for (const feature of value.features) {
+  // The listing is walked the way any other collection is, so a source of more
+  // than one page is read whole. A shard left behind here is never read at all,
+  // and nothing downstream could tell that it was missing.
+  for await (const feature of features(response, listing, expected, listing.pageSize * listing.maxPages, hosts, fetcher, sleep)) {
     if (!isJsonObject(feature) || !isJsonObject(feature.properties)) continue;
     const held = feature.properties[shards.sourceField];
     const text = isJsonString(held) ? held.trim() : isJsonNumber(held) ? String(held) : "";
     if (text !== "" && text.length <= FILTER_VALUE_LIMIT && !hasControlCharacter(text)) values.push(text);
     if (values.length > MAX_SHARDS) invalid(`OGC API Features shard listing holds more than the ${MAX_SHARDS} shards one feed may work through`);
   }
+
   const unique = [...new Set(values)].toSorted();
   if (unique.length === 0) invalid("OGC API Features shard listing held no usable values");
   return unique;

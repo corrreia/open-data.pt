@@ -565,12 +565,21 @@ describe("OGC API Features sharded reads", () => {
       const url = new URL(input.toString());
       if (url.pathname.endsWith("/schema")) return Response.json(municipiosSchema);
       if (url.pathname.includes("/municipios/items")) {
+        if (url.searchParams.get("resulttype") === "hits") {
+          return Response.json({ type: "FeatureCollection", features: [], numberReturned: 0, numberMatched: codes.length, links: [] });
+        }
+        // The listing is handed over a page at a time, so a reader that stops
+        // after the first page is missing shards rather than failing.
+        const size = Number(url.searchParams.get("limit") ?? "1000");
+        const from = Number(url.searchParams.get("offset") ?? "0");
+        const slice = codes.slice(from, from + size);
+        const links = from + size < codes.length ? [{ rel: "next", href: `https://${DGT_HOST}/collections/municipios/items?f=json&limit=${size}&offset=${from + size}` }] : [];
         return Response.json({
           type: "FeatureCollection",
-          features: codes.map((code, index) => ({ type: "Feature", id: index, properties: { dtmn: code }, geometry: null })),
-          numberReturned: codes.length,
+          features: slice.map((code, index) => ({ type: "Feature", id: from + index, properties: { dtmn: code }, geometry: null })),
+          numberReturned: slice.length,
           numberMatched: codes.length,
-          links: [],
+          links,
         });
       }
       if (!url.pathname.endsWith("/items")) return Response.json({ id: "crus", itemType: "feature", title: "CRUS" });
@@ -609,11 +618,24 @@ describe("OGC API Features sharded reads", () => {
   it("reads the shard values from the collection that lists them", async () => {
     const fetcher = shardFetcher(["0101", "0102"]);
     await readDocument(await collectOgcFeed(sharded, undefined, hosts, fetcher));
-    const listing = fetcher.mock.calls.map((call) => new URL(String(call[0]))).find((url) => url.pathname.includes("/municipios/items"));
+    const listing = fetcher.mock.calls
+      .map((call) => new URL(String(call[0])))
+      .find((url) => url.pathname.includes("/municipios/items") && url.searchParams.get("resulttype") !== "hits");
     expect(listing?.searchParams.get("properties")).toBe("dtmn");
     // The parcels are asked for by that value, not by the name beside it.
     const asked = fetcher.mock.calls.map((call) => new URL(String(call[0])).searchParams.get("dtcc")).filter((value) => value !== null);
     expect(new Set(asked)).toEqual(new Set(["0101", "0102"]));
+  });
+
+  it("reads a shard listing that runs past one page, so no shard is left unread", async () => {
+    // Twelve values at four to a page: a reader that took the first page alone
+    // would never ask for the last eight municipalities at all.
+    const codes = ["0101", "0102", "0103", "0104", "0105", "0106", "0107", "0108", "0109", "0110", "0111", "0112"];
+    const fetcher = shardFetcher(codes);
+    const fetched = await collectOgcFeed({ ...sharded, shardsPerRun: "12" }, { cursor: 8, shards: 12, covered: [] }, hosts, fetcher);
+    // Starting at the ninth, the rotation must reach values that only a later page carries.
+    expect(featureIds(await readDocument(fetched))).toContain("0112-0");
+    expect(bodyOf(fetched).state).toMatchObject({ shards: 12 });
   });
 
   it("starts again when the list of shards has shrunk under the cursor", async () => {
@@ -635,10 +657,17 @@ describe("OGC API Features sharded reads", () => {
     expect(() => validateOgcFeedConfig(candidate, hosts)).toThrow(GatekeeperError);
   });
 
-  it("keeps the shard settings in the resolved configuration, so each is its own resource", async () => {
-    const boundaries = await resolveOgcFeed(sharded, hosts);
-    const table = await resolveOgcFeed({ host: DGT_HOST, collection: "crus", geometry: "skip" }, hosts);
-    expect(boundaries.resourceKey).not.toBe(table.resourceKey);
+  it("reads the same resource whether or not it is sharded, and says the configuration differs", async () => {
+    // Sharding is how much of a collection one run reads, not which collection
+    // it is — the same distinction page size already draws. What it must not do
+    // is quietly reuse a checkpoint: the configuration hash differs, and that is
+    // what decides whether the shard cursor from an unsharded run is handed back.
+    const whole = { host: DGT_HOST, collection: "crus", geometry: "include", pageSize: "10", maxPages: "5" };
+    const inShards = { ...whole, shardField: "dtcc", shardSource: "municipios", shardSourceField: "dtmn", shardsPerRun: "2" };
+    const one = await resolveOgcFeed(whole, hosts);
+    const other = await resolveOgcFeed(inShards, hosts);
+    expect(other.resourceKey).toBe(one.resourceKey);
+    expect(other.configHash).not.toBe(one.configHash);
   });
 });
 
