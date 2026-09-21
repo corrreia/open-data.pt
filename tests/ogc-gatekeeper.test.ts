@@ -546,6 +546,102 @@ describe("OGC API Features freshness", () => {
   });
 });
 
+describe("OGC API Features sharded reads", () => {
+  const sharded = {
+    host: DGT_HOST,
+    collection: "crus",
+    geometry: "include",
+    shardField: "dtcc",
+    shardSource: "municipios",
+    shardSourceField: "dtmn",
+    shardsPerRun: "2",
+    pageSize: "10",
+    maxPages: "5",
+  };
+
+  /** The listing collection, then one page per shard the run asks for. */
+  function shardFetcher(codes: string[], counts: Record<string, number> = {}) {
+    return vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(input.toString());
+      if (url.pathname.endsWith("/schema")) return Response.json(municipiosSchema);
+      if (url.pathname.includes("/municipios/items")) {
+        return Response.json({
+          type: "FeatureCollection",
+          features: codes.map((code, index) => ({ type: "Feature", id: index, properties: { dtmn: code }, geometry: null })),
+          numberReturned: codes.length,
+          numberMatched: codes.length,
+          links: [],
+        });
+      }
+      if (!url.pathname.endsWith("/items")) return Response.json({ id: "crus", itemType: "feature", title: "CRUS" });
+      const code = url.searchParams.get("dtcc") ?? "";
+      const count = counts[code] ?? 1;
+      if (url.searchParams.get("resulttype") === "hits") {
+        return Response.json({ type: "FeatureCollection", features: [], numberReturned: 0, numberMatched: count, links: [] });
+      }
+      return Response.json({
+        type: "FeatureCollection",
+        features: Array.from({ length: count }, (_, index) => ({ ...feature(index), id: `${code}-${index}` })),
+        numberReturned: count,
+        numberMatched: count,
+        links: [],
+      });
+    });
+  }
+
+  it("takes the next shards after where the last run stopped, and says where it got to", async () => {
+    const fetcher = shardFetcher(["0101", "0102", "0103"]);
+    const first = await collectOgcFeed(sharded, undefined, hosts, fetcher);
+    expect(featureIds(await readDocument(first))).toEqual(["0101-0", "0102-0"]);
+    expect(bodyOf(first).state).toMatchObject({ cursor: 2, shards: 3, covered: ["0101", "0102"] });
+
+    const second = await collectOgcFeed(sharded, bodyOf(first).state, hosts, shardFetcher(["0101", "0102", "0103"]));
+    // The list is worked round in turn, so the third shard comes next and the
+    // rotation wraps back to the first.
+    expect(featureIds(await readDocument(second))).toEqual(["0103-0", "0101-0"]);
+  });
+
+  it("is always a part of the collection, so nothing is retracted for being unasked", async () => {
+    const fetched = await collectOgcFeed(sharded, undefined, hosts, shardFetcher(["0101", "0102"]));
+    expect(bodyOf(fetched).completeness).toBe("partial");
+  });
+
+  it("reads the shard values from the collection that lists them", async () => {
+    const fetcher = shardFetcher(["0101", "0102"]);
+    await readDocument(await collectOgcFeed(sharded, undefined, hosts, fetcher));
+    const listing = fetcher.mock.calls.map((call) => new URL(String(call[0]))).find((url) => url.pathname.includes("/municipios/items"));
+    expect(listing?.searchParams.get("properties")).toBe("dtmn");
+    // The parcels are asked for by that value, not by the name beside it.
+    const asked = fetcher.mock.calls.map((call) => new URL(String(call[0])).searchParams.get("dtcc")).filter((value) => value !== null);
+    expect(new Set(asked)).toEqual(new Set(["0101", "0102"]));
+  });
+
+  it("starts again when the list of shards has shrunk under the cursor", async () => {
+    const fetched = await collectOgcFeed(sharded, { cursor: 99, shards: 100, covered: [] }, hosts, shardFetcher(["0101", "0102"]));
+    expect(featureIds(await readDocument(fetched))).toEqual(["0101-0", "0102-0"]);
+  });
+
+  it("walks a shard that runs to several pages, whole", async () => {
+    const fetcher = shardFetcher(["0101"], { "0101": 25 });
+    const document = await readDocument(await collectOgcFeed({ ...sharded, shardsPerRun: "1" }, undefined, hosts, fetcher));
+    expect(featureIds(document)).toHaveLength(25);
+  });
+
+  it.each([
+    ["a shard field that names a query parameter", { ...sharded, shardField: "limit" }],
+    ["a shard listing without the field holding its values", { ...sharded, shardSourceField: "" }],
+    ["a shard read that also cuts by a fixed value", { ...sharded, filterField: "municipio", filterValue: "LISBOA" }],
+  ])("refuses %s", (_label, candidate) => {
+    expect(() => validateOgcFeedConfig(candidate, hosts)).toThrow(GatekeeperError);
+  });
+
+  it("keeps the shard settings in the resolved configuration, so each is its own resource", async () => {
+    const boundaries = await resolveOgcFeed(sharded, hosts);
+    const table = await resolveOgcFeed({ host: DGT_HOST, collection: "crus", geometry: "skip" }, hosts);
+    expect(boundaries.resourceKey).not.toBe(table.resourceKey);
+  });
+});
+
 describe("OGC API Features page retries", () => {
   it("tries a page again when the service answers 502, rather than failing a long walk", async () => {
     // Walking a national collection takes tens of pages, and this service fails
@@ -1039,15 +1135,22 @@ describe("OGC API Features examples", () => {
     // feed per municipality whose land-use regime DGT has published nationally.
     expect(OGC_EXAMPLES.filter((example) => example.slug.startsWith("dgt-caop-"))).toHaveLength(6);
     expect(OGC_EXAMPLES.filter((example) => example.slug.startsWith("dgt-srup-"))).toHaveLength(18);
-    // The land-use regime is one dataset, so it is one feed.
-    expect(OGC_EXAMPLES.filter((example) => example.slug.startsWith("dgt-crus"))).toHaveLength(1);
+    // The land-use regime is one dataset read two ways: the table whole, and
+    // its boundaries a few municipalities at a time.
+    expect(OGC_EXAMPLES.filter((example) => example.slug.startsWith("dgt-crus"))).toHaveLength(2);
   });
 
-  it("reads each collection once, and asks for the whole of it", () => {
-    const collections = OGC_EXAMPLES.map((example) => `${example.config.host}/${example.config.collection}`);
-    expect(collections.filter((one, index) => collections.indexOf(one) !== index)).toEqual([]);
-    // Nothing is cut by an attribute: the land-use regime is read whole, and the
-    // filter the library learned is kept for a collection that needs it.
+  it("reads each collection once, unless the second read is its boundaries", () => {
+    const attributes = OGC_EXAMPLES.filter((example) => example.config.geometry === "skip").map((example) => `${example.config.host}/${example.config.collection}`);
+    expect(attributes.filter((one, index) => attributes.indexOf(one) !== index)).toEqual([]);
+    // Only the land-use charter is read twice, and the two reads differ in what
+    // they are for: one is the table entire, the other the outlines it is too
+    // large to carry, built up a few municipalities a run.
+    const twice = OGC_EXAMPLES.filter((example) => example.config.collection === "crus");
+    expect(twice).toHaveLength(2);
+    expect(twice.filter((example) => example.config.geometry === "skip")).toHaveLength(1);
+    expect(twice.filter((example) => example.config.shardField !== undefined)).toHaveLength(1);
+    // Nothing is cut by a fixed attribute value any more.
     expect(OGC_EXAMPLES.filter((example) => example.config.filterField !== undefined)).toEqual([]);
   });
 
@@ -1784,7 +1887,7 @@ describe("OGC API Features examples", () => {
     expect(OGC_EXAMPLES.filter((example) => example.slug.startsWith("dgt-caop-"))).toHaveLength(6);
     expect(OGC_EXAMPLES.filter((example) => example.slug.startsWith("dgt-srup-"))).toHaveLength(18);
     // The land-use regime is one dataset, so it is one feed.
-    expect(OGC_EXAMPLES.filter((example) => example.slug.startsWith("dgt-crus"))).toHaveLength(1);
+    expect(OGC_EXAMPLES.filter((example) => example.slug.startsWith("dgt-crus"))).toHaveLength(2);
   });
 
   it("reads only the two services it is allowed to read", () => {

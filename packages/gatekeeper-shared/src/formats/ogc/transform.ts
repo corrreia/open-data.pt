@@ -21,11 +21,17 @@ import { SeenIdentities } from "./identity";
 import type { OgcCollectionDescription, OgcProperty } from "./ogc";
 
 /**
- * Largest single feature read from a page, in bytes. One measured DGT district
- * outline is 3.6 MB of coordinates, so this is what the reader must hold to see
- * a feature at all; only one is held at a time.
+ * Largest single feature read from a page, in bytes: what the reader must hold
+ * to see a feature at all, one at a time.
+ *
+ * It is generous because this is the wire form, and pygeoapi pretty-prints. One
+ * measured land-use parcel in Beja is 6.5 MB as the service sends it and 1.95 MB
+ * once the indentation is gone — a factor of about three and a half. What may be
+ * stored is bounded separately by `MAX_RECORD_BYTES`, against the compact form,
+ * so a generous reading budget here lets a large outline be seen and judged
+ * rather than failing the whole collection on the way in.
  */
-export const MAX_FEATURE_BYTES = 8 * 1024 * 1024;
+export const MAX_FEATURE_BYTES = 32 * 1024 * 1024;
 /**
  * Largest single record published, in bytes: the kernel's own per-record
  * ceiling, since a record is stored whole in SQLite. A feature past it is

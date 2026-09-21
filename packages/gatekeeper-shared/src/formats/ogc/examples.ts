@@ -348,6 +348,69 @@ function srupFeed(layer: SrupLayer): ExampleFeed {
 const CRUS_COLUMNS =
   "objectid,dtcc,municipio,designacao_no_plano,classe_2021,categoria_2021,escala_origem,fonte,area_ha,autor,data_pub_origem,registo_ou_deposito,situacao_pdm,codigo";
 
+/*
+ * The same charter, with the outlines this time.
+ *
+ * Every parcel's boundary comes to about 3.4 GB and half an hour of streaming,
+ * from a service that loses a connection every few minutes — one sitting will
+ * not do it. So it is read a few municipalities a run, each one twelve
+ * megabytes and a few seconds, and the runs pile up into a single dataset: the
+ * kernel merges a partial snapshot into what is already served rather than
+ * replacing it.
+ *
+ * Which municipalities exist is read from the administrative charter's own
+ * codes rather than written down here, and `dtcc` on a parcel is that same
+ * code — checked against Lisboa, 1106 either side. Sharding on the code rather
+ * than the name also steps around the layer spelling Constância with an Ã.
+ *
+ * A partial snapshot cannot say a parcel is gone. What can is `dgt-crus-feed`,
+ * which reads every row of the same collection without outlines, finishes in
+ * one sitting, and is authoritative when it does: a shape whose parcel is no
+ * longer in that table is a shape nothing references.
+ */
+const CRUS_BOUNDARIES: ExampleFeed = {
+  slug: "dgt-crus-shapes-feed",
+  title: "Mainland Portugal land-use regime: parcel boundaries (CRUS)",
+  description:
+    "The boundary of every parcel in the Carta do Regime de Uso do Solo, with the class and category of soil its municipal plan puts it in. Read a few municipalities at a time and built up into one national layer, because the whole of it is 3.4 GB of coordinates. Each boundary carries the same parcel identifier as the land-use table, so the two join on it: this feed says where a parcel is, and that one says whether it is still in force.",
+  config: {
+    source: "ogc",
+    host: DGT_HOST,
+    collection: "crus",
+    geometry: "include",
+    properties: CRUS_COLUMNS,
+    shardField: "dtcc",
+    shardSource: "municipios",
+    shardSourceField: "dtmn",
+    // Twenty-four municipalities a run: about 280 MB and a few minutes, and the
+    // whole country in a quarter of weekly runs.
+    shardsPerRun: "24",
+    pageSize: "500",
+    maxPages: "60",
+  },
+  policy: {
+    name: "CRUS parcel boundaries",
+    version: 1,
+    collection: {
+      // Weekly while the country is being covered; once it is, a month between
+      // reads is what the charter itself changes at.
+      cadenceSeconds: WEEK,
+      timeoutSeconds: 600,
+      maxBytes: 512 * MEBIBYTE,
+      maxOutputBytes: 512 * MEBIBYTE,
+      // The largest parcel boundary measured over 3,600 sampled is 749 KiB.
+      maxRecordBytes: 1024 * 1024,
+      maxRecords: 400_000,
+      historyMode: "changes",
+    } satisfies CollectionPolicyDefinition,
+    serving: dgtServing("Carta do Regime de Uso do Solo"),
+  },
+  // A run covers a slice, so the feed is only stale when a whole rotation is missed.
+  staleAfterSeconds: 4 * WEEK,
+  publisher: "dgt",
+  topics: ["cities", "government"],
+};
+
 const CRUS_NATIONAL: ExampleFeed = {
   slug: "dgt-crus-feed",
   title: "Mainland Portugal land-use regime (CRUS)",
@@ -626,6 +689,7 @@ export const OGC_EXAMPLES: ExampleFeed[] = [
 
   ...SRUP_LAYERS.map(srupFeed),
   CRUS_NATIONAL,
+  CRUS_BOUNDARIES,
   ...LNEG_LAYERS.map(lnegFeed),
 
   /*

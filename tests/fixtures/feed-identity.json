@@ -463,6 +463,10 @@
     "resourceKey": "ogc:ogc:collection:50a4df8f1f881a1bb3758556715079c1c2b4c3e7440205d7fc28efed73c4d690",
     "kind": "ogc:collection"
   },
+  "dgt-crus-shapes-feed": {
+    "resourceKey": "ogc:ogc:collection:e2c07f60c9ce5fc9f3710f2ceaac12846d1ad0cf79ac6bcf25ace684fa44fb8c",
+    "kind": "ogc:collection"
+  },
   "dgt-fototeca-index-feed": {
     "resourceKey": "wfs:wfs:reference:d8def949ffdaec3b2e1afa60c02ceb79eef412c914b6d880dc432980ca4a1589",
     "kind": "wfs:reference"
