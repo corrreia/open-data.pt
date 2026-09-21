@@ -621,6 +621,32 @@ function lnegFeed(layer: LnegLayer): ExampleFeed {
   };
 }
 
+/*
+ * The DGT service publishes seventy-five collections. Thirty-nine are rasters,
+ * which a feature reader has no business with — the orthophotos and the Sentinel
+ * mosaics are indexed by the `stac` library from the Centro de Dados instead.
+ * Of the thirty-four feature collections, these are read and the rest are left
+ * on purpose, having been looked at:
+ *
+ *   cos2018v4, cos2025v1   The land cover charter: 1,094,335 and 1,104,426
+ *                          polygons, four and a half times the land-use regime
+ *                          this file already reads a few municipalities at a
+ *                          time. Reachable by the same sharded walk, and a real
+ *                          commitment of storage rather than an oversight.
+ *   cadastro               1,817,861 cadastral parcels.
+ *   srup_perigosidade_inc_rural, sgifr_areas, sgifr_linhas
+ *                          1,787,684, 490,437 and 239,863 features: national
+ *                          coverages rather than registers.
+ *   nuts1                  One row, "Continente", whose columns are the other
+ *                          tables added up.
+ *   admin                  The parishes split into their 3,392 disjoint parts,
+ *                          which the parish outlines now say in themselves.
+ *
+ * Two are catalogues rather than data, and would be a different kind of feed:
+ * `snig` holds 4,580 metadata records describing every official geographic
+ * dataset in the country, and `point` 322 describing municipal plans, which the
+ * `snit` library already reads as the plans themselves.
+ */
 export const OGC_EXAMPLES: ExampleFeed[] = [
   /*
    * DGT publishes the CAOP for Portugal Continental only: 18 districts, 278

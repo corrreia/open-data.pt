@@ -17,6 +17,7 @@ import {
 } from "@open-data-pt/gatekeeper-shared";
 import { OgcTransformer, collectOgcFeed, itemsUrl, ogcCollector, resolveOgcFeed, validateOgcFeedConfig } from "../packages/gatekeeper-shared/src/formats/ogc";
 import { OGC_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/ogc/examples";
+import { boundingBox } from "../packages/gatekeeper-shared/src/formats/ogc/geometry";
 
 const DGT_HOST = "ogcapi.dgterritorio.gov.pt";
 const AZORES_HOST = "ambiente.azores.gov.pt";
@@ -860,6 +861,63 @@ describe("OGC API Features coordinate reference systems", () => {
       serviceFetcher(() => itemsPage({ count: 1, matched: 1 }), 1, { collection: onlyPortuguese }),
     );
     expect(bodyOf(attributesOnly).kind).toBe("body");
+  });
+});
+
+describe("OGC API Features bounding boxes", () => {
+  it("reads a box off a polygon", () => {
+    const ring = {
+      type: "Polygon",
+      coordinates: [
+        [
+          [-9.2, 38.6],
+          [-9.0, 38.6],
+          [-9.0, 38.8],
+          [-9.2, 38.8],
+          [-9.2, 38.6],
+        ],
+      ],
+    };
+    expect(boundingBox(ring)).toEqual([-9.2, 38.6, -9.0, 38.8]);
+  });
+
+  it("drops the elevation of a three-dimensional position rather than reading it as a coordinate", () => {
+    // DGT publishes heights on some geometry, and a height read as a longitude
+    // puts a parish in the Pacific.
+    const ring = {
+      type: "Polygon",
+      coordinates: [
+        [
+          [-7.97, 41.44, 159.7],
+          [-7.95, 41.44, 360.7],
+          [-7.95, 41.45, 360.7],
+          [-7.97, 41.45, 159.7],
+          [-7.97, 41.44, 159.7],
+        ],
+      ],
+    };
+    expect(boundingBox(ring)).toEqual([-7.97, 41.44, -7.95, 41.45]);
+  });
+
+  it("spans every member of a multipart geometry and of a collection", () => {
+    const parts = {
+      type: "MultiPoint",
+      coordinates: [
+        [-8.6, 41.1],
+        [-7.9, 40.2],
+        [-8.2, 41.9],
+      ],
+    };
+    expect(boundingBox(parts)).toEqual([-8.6, 40.2, -7.9, 41.9]);
+    const mixed = { type: "GeometryCollection", geometries: [{ type: "Point", coordinates: [-9.1, 38.7] }, parts] };
+    expect(boundingBox(mixed)).toEqual([-9.1, 38.7, -7.9, 41.9]);
+  });
+
+  it("returns nothing for a geometry it cannot place", () => {
+    expect(boundingBox(null)).toBeUndefined();
+    expect(boundingBox({ type: "Polygon", coordinates: [] })).toBeUndefined();
+    // Out of range is a projected coordinate that was never converted, not a place.
+    expect(boundingBox({ type: "Point", coordinates: [-52_000, 220_000] })).toBeUndefined();
   });
 });
 
