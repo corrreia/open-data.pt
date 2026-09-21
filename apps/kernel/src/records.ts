@@ -27,6 +27,16 @@ export interface PreparedRecord {
   hash: string;
   removal: boolean;
   record: CanonicalRecord;
+  /**
+   * What holding this row costs, in the UTF-16 code units a JavaScript string
+   * is actually stored as — which is the number a memory budget wants, and is
+   * free where counting UTF-8 bytes is a pass over every character.
+   *
+   * Rows of one product are not all of a size: a boundary outline is thousands
+   * of times a name and a code, so anything keeping rows in memory has to weigh
+   * them rather than count them.
+   */
+  weight: number;
 }
 
 export function prepareRecord(record: CanonicalRecord): PreparedRecord {
@@ -40,7 +50,8 @@ export function prepareRecord(record: CanonicalRecord): PreparedRecord {
     sourceSequence: record.sourceSequence ?? null,
   });
   const removal = record.operation === "delete" || record.operation === "retract";
-  return { key: record.entityKey, hash: digest(semantic), removal, record };
+  // The semantic form is already built here, so its length is free to take.
+  return { key: record.entityKey, hash: digest(semantic), removal, record, weight: semantic.length + record.entityKey.length };
 }
 
 /**

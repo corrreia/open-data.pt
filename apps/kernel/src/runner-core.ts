@@ -28,7 +28,7 @@ import {
 import { digest } from "./hash";
 import type { LakeTable } from "./lake";
 import { keys, WINDOW, type ChangeItem, type ObjectStore } from "./object-store";
-import { jsonArrays, MAX_RECORD_BYTES, utf8Length } from "./blob-budget";
+import { BLOB_BYTES, jsonArrays, MAX_RECORD_BYTES, SMALL_PRODUCT_BYTES, utf8Length } from "./blob-budget";
 import { RecentChanges, recordRevision, retractionRevision, type PreparedRecord, type RecordContext } from "./records";
 import { dropAllTables, userTables } from "./sqlite-reset";
 
@@ -882,8 +882,23 @@ export class RunnerCore {
     });
     // A failed product keeps its index, so the next collection rebuilds from it instead of staging every row again.
     for (const product of products) {
-      if (product.mode === "large" && product.entry.status !== "failed" && product.entry.rowCount < SMALL_PRODUCT_ROWS / 2) this.demote(product.productKey);
+      if (product.mode === "large" && product.entry.status !== "failed" && this.fitsInMemory(product.entry)) this.demote(product.productKey);
     }
+  }
+
+  /**
+   * Whether a product on the SQLite index could go back to being compared in
+   * memory. Both halves matter and both are halved, so a product sitting near
+   * either bound does not swap paths on every collection.
+   *
+   * Weight is read from the chunks it is served in, each of which holds close
+   * to `BLOB_BYTES`. Rows alone would send a product back to a path its size
+   * cannot survive: three thousand boundaries are short and very heavy, and
+   * demoting them is what would put the isolate back out of memory.
+   */
+  private fitsInMemory(entry: ProductIndexEntry): boolean {
+    if (entry.rowCount >= SMALL_PRODUCT_ROWS / 2) return false;
+    return (entry.chunks?.length ?? 0) * BLOB_BYTES < SMALL_PRODUCT_BYTES / 2;
   }
 
   /* ---------- History outbox ---------- */

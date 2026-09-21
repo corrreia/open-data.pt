@@ -672,6 +672,20 @@ function lnegFeed(layer: LnegLayer): ExampleFeed {
  * `snig` holds 4,580 metadata records describing every official geographic
  * dataset in the country, and `point` 322 describing municipal plans, which the
  * `snit` library already reads as the plans themselves.
+ *
+ * DGT's imagery is not read at all, and the reason is worth keeping because it
+ * is not obvious. Its Centro de Dados publishes a catalogue of twenty-one
+ * coverages — nine of orthophotos from 1995 to 2025, and the twelve of the 2024
+ * LiDAR, seven of them over the Azores and five over the mainland. A `stac`
+ * library read the orthophotos as tile indexes until September 2026, and the
+ * indexes turned out to say almost nothing: of eighteen columns, ten held one
+ * value for a whole coverage, `fileBytes` was null on every row of every year,
+ * and what was left was a rectangle from a regular grid and a link. Every one of
+ * those links — and every LiDAR asset, which redirects to a Keycloak login —
+ * answers an anonymous request with 403. Twenty-two thousand rows to say what
+ * nine facts say: which coverage flew where, at what resolution, in which year.
+ * So the feeds and the library went. Restoring any of it needs DGT to open the
+ * files, not more code.
  */
 export const OGC_EXAMPLES: ExampleFeed[] = [
   /*

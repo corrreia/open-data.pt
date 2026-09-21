@@ -471,42 +471,6 @@
     "resourceKey": "wfs:wfs:reference:d8def949ffdaec3b2e1afa60c02ceb79eef412c914b6d880dc432980ca4a1589",
     "kind": "wfs:reference"
   },
-  "dgt-ortofotos-1995-feed": {
-    "resourceKey": "stac:stac:collection:949a72559d65ce6f190d3a99e9c643eff80ed1d3378347d267dbfa7830e47fbd",
-    "kind": "stac:collection"
-  },
-  "dgt-ortofotos-2004-2006-feed": {
-    "resourceKey": "stac:stac:collection:66bb2cc7f3368fe2485f2239b1297cd5d2fd3712c8fbbd0eab630356bb8c119d",
-    "kind": "stac:collection"
-  },
-  "dgt-ortofotos-2007-feed": {
-    "resourceKey": "stac:stac:collection:ac12acbc9360cc32b2dec73b279f4a947b1d34a5ce2ee6e8edc25ac30b7d36bd",
-    "kind": "stac:collection"
-  },
-  "dgt-ortofotos-2010-feed": {
-    "resourceKey": "stac:stac:collection:efc85c3f8883073d55ac51b63dcd3839194ceba80159e98578de9c5c42d57833",
-    "kind": "stac:collection"
-  },
-  "dgt-ortofotos-2012-feed": {
-    "resourceKey": "stac:stac:collection:ee229fb63530ec511744e28e9116e5b948ab61b4ba557bf97a71b55eb5b20247",
-    "kind": "stac:collection"
-  },
-  "dgt-ortofotos-2015-feed": {
-    "resourceKey": "stac:stac:collection:5c8577740cfeeadd09d06a2d88ac323a4634bb8110f07acb0f3f2116932504a4",
-    "kind": "stac:collection"
-  },
-  "dgt-ortofotos-2018-feed": {
-    "resourceKey": "stac:stac:collection:d6b6850049fdfc258053e35a0c1b3187f621a6d76be680ecb0656289ce318203",
-    "kind": "stac:collection"
-  },
-  "dgt-ortofotos-2021-feed": {
-    "resourceKey": "stac:stac:collection:cebe8eab9d4ef3e64643833da132719d1f3a4cfb3eced1fca751063e4ff074cb",
-    "kind": "stac:collection"
-  },
-  "dgt-ortofotos-2025-feed": {
-    "resourceKey": "stac:stac:collection:ad34986284ddd1e865672ce40f3b4ba7e4f2b7c9c1f192739a047d8356e3e25d",
-    "kind": "stac:collection"
-  },
   "dgt-rgn-rede-gravimetrica-feed": {
     "resourceKey": "wfs:wfs:reference:0f4ffb14a6982c5e834c280577398f86e5621e196c3fd1cb9050ba260674f806",
     "kind": "wfs:reference"
