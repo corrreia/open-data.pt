@@ -393,7 +393,7 @@ function srupFeed(layer: SrupLayer): ExampleFeed {
  * The Carta do Regime de Uso do Solo is one dataset — every parcel of mainland
  * Portugal, classified the same way — so it is one feed and one product.
  *
- * It is also 229,768 parcels and 191 MB, read in 47 pages of five thousand.
+ * It is also 234,768 parcels and 191 MB, read in 47 pages of five thousand.
  * That is a third of the million rows the kernel's own scale gate covers, and
  * well inside the limits a policy may declare, so nothing about its size calls
  * for cutting it into municipalities. What does have to be handled is the
@@ -404,7 +404,7 @@ function srupFeed(layer: SrupLayer): ExampleFeed {
  *
  * Every column the layer holds is asked for, `autor` and `objectid` included.
  * Walking the whole layer they are constant and redundant — `autor` is DGT on
- * all 229,768 parcels and `objectid` equals `fid` on every one — but they are
+ * all 234,768 parcels and `objectid` equals `fid` on every one — but they are
  * what the charter records about who drew a parcel and what the source calls
  * it, and a reader matching this against DGT's own systems needs them. `Autor`
  * is also half of the pair that says whose data this is: DGT drew it, `fonte`
@@ -416,12 +416,12 @@ const CRUS_COLUMNS =
 /*
  * The same charter, with the outlines this time.
  *
- * Every parcel's boundary comes to about 3.4 GB and half an hour of streaming,
- * from a service that loses a connection every few minutes — one sitting will
- * not do it. So it is read a few municipalities a run, each one twelve
- * megabytes and a few seconds, and the runs pile up into a single dataset: the
- * kernel merges a partial snapshot into what is already served rather than
- * replacing it.
+ * Every parcel's boundary comes to 4.7 GiB and a quarter of an hour of
+ * streaming, from a service that loses a connection every few minutes — one
+ * sitting will not do it. So it is read a few municipalities a run, each one
+ * twenty-two megabytes and a few seconds, and the runs pile up into a single
+ * dataset: the kernel merges a partial snapshot into what is already served
+ * rather than replacing it.
  *
  * Which municipalities exist is read from the administrative charter's own
  * codes rather than written down here, and `dtcc` on a parcel is that same
@@ -437,7 +437,7 @@ const CRUS_BOUNDARIES: ExampleFeed = {
   slug: "dgt-crus-shapes-feed",
   title: "Mainland Portugal land-use regime: parcel boundaries (CRUS)",
   description:
-    "The boundary of every parcel in the Carta do Regime de Uso do Solo, with the class and category of soil its municipal plan puts it in. Read a few municipalities at a time and built up into one national layer, because the whole of it is 3.4 GB of coordinates. Each boundary carries the same parcel identifier as the land-use table, so the two join on it: this feed says where a parcel is, and that one says whether it is still in force.",
+    "The boundary of every parcel in the Carta do Regime de Uso do Solo, with the class and category of soil its municipal plan puts it in. Read a few municipalities at a time and built up into one national layer, because the whole of it is 4.7 GiB of coordinates. Each boundary carries the same parcel identifier as the land-use table, so the two join on it: this feed says where a parcel is, and that one says whether it is still in force.",
   config: {
     source: "ogc",
     host: DGT_HOST,
@@ -505,7 +505,7 @@ const CRUS_NATIONAL: ExampleFeed = {
   slug: "dgt-crus-feed",
   title: "Mainland Portugal land-use regime (CRUS)",
   description:
-    "Every parcel of mainland Portugal in the Carta do Regime de Uso do Solo — 229,768 of them, across all 278 municipalities — with the class and category of soil its municipal plan puts it in, the designation the plan uses, its area in hectares, the scale it was drawn at, where DGT took it from, whether the plan behind it is still in force, and that plan's deposit reference and publication date. Attributes only, without parcel outlines: Lisbon's 861 parcels alone carry nineteen megabytes of them.",
+    "Every parcel of mainland Portugal in the Carta do Regime de Uso do Solo — 234,768 of them, across all 278 municipalities — with the class and category of soil its municipal plan puts it in, the designation the plan uses, its area in hectares, the scale it was drawn at, where DGT took it from, whether the plan behind it is still in force, and that plan's deposit reference and publication date. Attributes only, without parcel outlines: Lisbon's 861 parcels alone carry nineteen megabytes of them.",
   config: {
     source: "ogc",
     host: DGT_HOST,
