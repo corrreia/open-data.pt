@@ -41,6 +41,13 @@ const MAX_REDIRECTS = 3;
 const MAX_PAGE_ATTEMPTS = 3;
 /** Waits before each retry, in milliseconds; the service recovers in seconds. */
 const RETRY_BACKOFF_MS = [500, 2_000] as const;
+/**
+ * Times a walk may be picked up again after a page died while its body was
+ * being read. Retrying the request covers a gateway that refuses; this covers
+ * the connection that closes halfway through a large page, which is what a walk
+ * of tens of pages actually runs into.
+ */
+const MAX_RESUMES = 12;
 /** The statuses a gateway returns when it is briefly unable to answer, not when it refuses. */
 const TRANSIENT_STATUSES = new Set([429, 500, 502, 503, 504]);
 
@@ -544,6 +551,7 @@ async function* features(
   let url = buildItemsUrl(config);
   let offset = 0;
   let yielded = 0;
+  let resumes = 0;
   /*
    * Feature identities seen so far, so a member repeated across pages cannot
    * make up the count of one that was dropped when the collection shifted under
@@ -552,23 +560,49 @@ async function* features(
    */
   const seen = new SeenIdentities(PAGE_SIZE_LIMIT * PAGE_COUNT_LIMIT);
   for (let pageNumber = 0; pageNumber < config.maxPages; pageNumber += 1) {
-    const page = openPage(response);
+    let page = openPage(response);
     let count = 0;
-    for await (const feature of page.features) {
-      count += 1;
-      yielded += 1;
-      // Never truncate to a stale count: a collection that grew between the
-      // count query and this page is reported, not quietly cut to fit.
-      if (yielded > cap) invalid(`OGC API Features returned more than the ${cap} features this feed may read`);
-      if (expected !== undefined && yielded > expected) {
-        invalid(`OGC API Features returned more features than the ${expected} it counted; the collection changed while it was being read`);
+    /*
+     * Read this page, and if the connection dies partway through it, ask again
+     * from the feature it died on rather than losing the whole walk. Offsets
+     * make that exact: what has been read is `offset + count`, so the next
+     * request starts there and the page that follows is counted from there.
+     */
+    for (;;) {
+      try {
+        for await (const feature of page.features) {
+          count += 1;
+          yielded += 1;
+          // Never truncate to a stale count: a collection that grew between the
+          // count query and this page is reported, not quietly cut to fit.
+          if (yielded > cap) invalid(`OGC API Features returned more than the ${cap} features this feed may read`);
+          if (expected !== undefined && yielded > expected) {
+            invalid(`OGC API Features returned more features than the ${expected} it counted; the collection changed while it was being read`);
+          }
+          const identity = featureIdentity(feature);
+          if (identity !== undefined) {
+            if (seen.has(identity)) invalid(`OGC API Features returned feature ${identity} more than once`);
+            seen.add(identity);
+          }
+          yield feature;
+        }
+        break;
+      } catch (error) {
+        // A refusal this library made is final; only the connection is retried.
+        if (error instanceof GatekeeperError) throw error;
+        resumes += 1;
+        if (resumes > MAX_RESUMES) {
+          throw new GatekeeperError(`OGC API Features lost its connection ${resumes} times while reading one collection`, "upstream-error");
+        }
+        await sleep(RETRY_BACKOFF_MS[Math.min(resumes, RETRY_BACKOFF_MS.length) - 1] ?? 2_000);
+        offset += count;
+        count = 0;
+        url = buildItemsUrl(config, offset);
+        response = await requestPage(url, itemHeaders(), config, hosts, fetcher, sleep);
+        assertUpstream(response, "items");
+        assertWgs84(response.headers, config);
+        page = openPage(response);
       }
-      const identity = featureIdentity(feature);
-      if (identity !== undefined) {
-        if (seen.has(identity)) invalid(`OGC API Features returned feature ${identity} more than once`);
-        seen.add(identity);
-      }
-      yield feature;
     }
     // The envelope is only complete once every feature of the page was read, so
     // this check happens on every page, including the last one.
