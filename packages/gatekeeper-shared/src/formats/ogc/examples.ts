@@ -653,7 +653,7 @@ export const OGC_EXAMPLES: ExampleFeed[] = [
     policy: measuredPolicy("CAOP weekly placed table", DGT_SERVING, { source: 63, output: 1, largestRow: 1 }),
     staleAfterSeconds: 1_209_600,
     publisher: "dgt",
-    topics: ["society"],
+    topics: ["society", "government"],
   },
   {
     slug: "dgt-caop-municipios-feed",
@@ -671,7 +671,7 @@ export const OGC_EXAMPLES: ExampleFeed[] = [
     policy: measuredPolicy("CAOP weekly placed table", DGT_SERVING, { source: 194, output: 1, largestRow: 1 }),
     staleAfterSeconds: 1_209_600,
     publisher: "dgt",
-    topics: ["society"],
+    topics: ["society", "government", "cities"],
   },
   {
     slug: "dgt-caop-freguesias-feed",
@@ -689,7 +689,7 @@ export const OGC_EXAMPLES: ExampleFeed[] = [
     policy: measuredPolicy("CAOP weekly boundaries", DGT_SERVING, { source: 506, output: 122, largestRow: 671 }),
     staleAfterSeconds: 1_209_600,
     publisher: "dgt",
-    topics: ["society"],
+    topics: ["society", "government", "cities"],
   },
   /*
    * The `admin` collection is deliberately not read. It holds the same 3,049
@@ -718,7 +718,7 @@ export const OGC_EXAMPLES: ExampleFeed[] = [
     policy: measuredPolicy("CAOP weekly placed table", DGT_SERVING, { source: 50, output: 1, largestRow: 1 }),
     staleAfterSeconds: 1_209_600,
     publisher: "dgt",
-    topics: ["society"],
+    topics: ["society", "government"],
   },
   {
     slug: "dgt-caop-nuts3-feed",
@@ -736,7 +736,7 @@ export const OGC_EXAMPLES: ExampleFeed[] = [
     policy: measuredPolicy("CAOP weekly placed table", DGT_SERVING, { source: 75, output: 1, largestRow: 1 }),
     staleAfterSeconds: 1_209_600,
     publisher: "dgt",
-    topics: ["society"],
+    topics: ["society", "government"],
   },
   {
     slug: "dgt-caop-trocos-feed",
@@ -754,7 +754,7 @@ export const OGC_EXAMPLES: ExampleFeed[] = [
     policy: measuredPolicy("CAOP weekly boundaries", DGT_SERVING, { source: 219, output: 67, largestRow: 397 }),
     staleAfterSeconds: 1_209_600,
     publisher: "dgt",
-    topics: ["society"],
+    topics: ["society", "government"],
   },
 
   ...SRUP_LAYERS.map(srupFeed),
