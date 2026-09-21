@@ -428,11 +428,11 @@
     "kind": "wfs:reference"
   },
   "dgt-caop-distritos-feed": {
-    "resourceKey": "ogc:ogc:collection:825f0ec184a786a1b96a870d3dda68f3206960812f4e9ca912144b8f5b243efc",
+    "resourceKey": "ogc:ogc:collection:a37e3b01f37992612aa551ae5645e9db0bc67fb6a759907af9de8e60ed76f125",
     "kind": "ogc:collection"
   },
   "dgt-caop-freguesias-feed": {
-    "resourceKey": "ogc:ogc:collection:7c37e141baa60a5d2358bc82b9035245381aac293540ddda78e66b962bba5e9c",
+    "resourceKey": "ogc:ogc:collection:0e3bc7d15a69f90ccaee667cb90d1fdd808d3d7f7373959853ddfe2076e82b0b",
     "kind": "ogc:collection"
   },
   "dgt-caop-madeira-freguesias-feed": {
@@ -444,19 +444,19 @@
     "kind": "wfs:reference"
   },
   "dgt-caop-municipios-feed": {
-    "resourceKey": "ogc:ogc:collection:81c9ed713644ec9b74730b3c570fdf7e3c72cdb29ea04d6db770e7e630d60131",
+    "resourceKey": "ogc:ogc:collection:92a4e53676e8432efebcc81f54c2dd98749bbce7f4cc32ec5171e07a4528c7f7",
     "kind": "ogc:collection"
   },
   "dgt-caop-nuts2-feed": {
-    "resourceKey": "ogc:ogc:collection:826f4133c080e5b49fb3942d76b8c55401dda419b564aa98f8898a849bcfc7b8",
+    "resourceKey": "ogc:ogc:collection:59b0423bb4b3637f7b04ea9e84ffa934fb6ea4eeb8ea384a1b390b7143de7094",
     "kind": "ogc:collection"
   },
   "dgt-caop-nuts3-feed": {
-    "resourceKey": "ogc:ogc:collection:7bf063d66da37398c4c0d0918bd77b74ff4dfeb53b5a620890b99e0de3a648d9",
+    "resourceKey": "ogc:ogc:collection:4207a447f03023d47fa8c15924cc1bd32dbfa424fccc5762e780555add28b776",
     "kind": "ogc:collection"
   },
   "dgt-caop-trocos-feed": {
-    "resourceKey": "ogc:ogc:collection:bd914408c96f90ae28df1e0e8e00d97eda154297c50bc5912c7fd133f4d9d022",
+    "resourceKey": "ogc:ogc:collection:16776d4da6317c3c466565afef0e1935307876df65e78786dc84644eef703008",
     "kind": "ogc:collection"
   },
   "dgt-crus-feed": {
@@ -544,19 +544,19 @@
     "kind": "ogc:collection"
   },
   "dgt-srup-aeronautica-feed": {
-    "resourceKey": "ogc:ogc:collection:55100a1ebf5a92ce81e0764e5f6ad615a840fad120e571085c34c75f385feb94",
+    "resourceKey": "ogc:ogc:collection:c5311a2263159bb53a2b7f2c5eb86c64b0661c0ba0758422c40cd4c8c7b08a7d",
     "kind": "ogc:collection"
   },
   "dgt-srup-albufeiras-feed": {
-    "resourceKey": "ogc:ogc:collection:7045af0c9d620b6856b2f92a70271e93e145e5aba61f6df0fc0dcad5081ab22e",
+    "resourceKey": "ogc:ogc:collection:f5f091d4f4cd45ae4877ff893ff6c69ed99c06fbf3de523e2c74f47900a314cd",
     "kind": "ogc:collection"
   },
   "dgt-srup-areas-protegidas-feed": {
-    "resourceKey": "ogc:ogc:collection:f9a931862ba2a491ac017363447f4c29b0c41af7fbda93ad42789970e0ca9552",
+    "resourceKey": "ogc:ogc:collection:2ad66eaa54860ce6dd349c96a6bb51f0c06333c570a3599698bb77f99c62c1ae",
     "kind": "ogc:collection"
   },
   "dgt-srup-arvores-interesse-publico-areas-feed": {
-    "resourceKey": "ogc:ogc:collection:897b805c71bfbd9d0d3e7ca403b5c4065b36d4ff48ce67d78ebfab4f5670367a",
+    "resourceKey": "ogc:ogc:collection:106c3b0972edb096f1b65caf2dd656401c84d1561a38cdf069ba5de5d3e5cbf2",
     "kind": "ogc:collection"
   },
   "dgt-srup-arvores-interesse-publico-pontos-feed": {
@@ -564,43 +564,43 @@
     "kind": "ogc:collection"
   },
   "dgt-srup-captacoes-aguas-subterraneas-feed": {
-    "resourceKey": "ogc:ogc:collection:e9373d0fca6b6fc5f6e4e4fea982e7fa654c4c5deed1afa116316adfc928729b",
+    "resourceKey": "ogc:ogc:collection:cc49160ce150057bb21c8a71619d6099312e32ac3cf71c60714b4059d566bde0",
     "kind": "ogc:collection"
   },
   "dgt-srup-defesa-nacional-feed": {
-    "resourceKey": "ogc:ogc:collection:73effb641d5fff276ac6e73f45811149c73c85e55295c83e39fe74ab01fe7722",
+    "resourceKey": "ogc:ogc:collection:5a7dbd4015b3483fc3ecfa3da38446498ebaa0172691fd25794570aeaa8352e7",
     "kind": "ogc:collection"
   },
   "dgt-srup-defesa-nacional-zonas-feed": {
-    "resourceKey": "ogc:ogc:collection:966cb649722b8e2124cb2f73c092d8812d2fe519e62fbeb5caf1b53566d3015c",
+    "resourceKey": "ogc:ogc:collection:08f56f13e090e0142d0cb8944c418f14af0d8165f489e180ce79f62c6f5cc3fd",
     "kind": "ogc:collection"
   },
   "dgt-srup-estacoes-ferroviarias-feed": {
-    "resourceKey": "ogc:ogc:collection:46476562e3a984258c648b020cd48c59649bdf412a8e7a790d0793cdfbd53cb8",
+    "resourceKey": "ogc:ogc:collection:464490397d32e617c6140b37066e4c12af819d72cb32c175f0dc61ee106cbff7",
     "kind": "ogc:collection"
   },
   "dgt-srup-marcos-geodesicos-feed": {
-    "resourceKey": "ogc:ogc:collection:664752f93fa69db1a86b41518ba4259c0d23c6a8eede11bc3cea77fc3cf47f0c",
+    "resourceKey": "ogc:ogc:collection:9d5553b63b562de37fe09001662f75becf1b2293d9d037989aa3068f8a506e94",
     "kind": "ogc:collection"
   },
   "dgt-srup-rede-eletrica-feed": {
-    "resourceKey": "ogc:ogc:collection:effb28713bb24030dbc19b2f57f14df0f5ff63cc60a69bd9353d3eb1a06fad7c",
+    "resourceKey": "ogc:ogc:collection:65dbe256a52041728958577d88366fc39c71f0c6a05ae007d45a70104fa90cd8",
     "kind": "ogc:collection"
   },
   "dgt-srup-rede-ferroviaria-feed": {
-    "resourceKey": "ogc:ogc:collection:a160861f3dfc1e195bc37ff47f9158ccd28d39f7dcac9d9f05ebff0d43f3fcbf",
+    "resourceKey": "ogc:ogc:collection:a61273830fc1bd28318143bc19039e8caa3d8e3435b13ca10b8a0e8556fc1db0",
     "kind": "ogc:collection"
   },
   "dgt-srup-rede-natura-zec-feed": {
-    "resourceKey": "ogc:ogc:collection:cf549db96cd61746b9a7f3ca9a8f3e80c30b9e3cce11521d9bf93808a59d7fb5",
+    "resourceKey": "ogc:ogc:collection:e6f57cf64a72ef314a09106b45bb3552f230f1d7c8fecff820e6669b71aaa33b",
     "kind": "ogc:collection"
   },
   "dgt-srup-rede-natura-zpe-feed": {
-    "resourceKey": "ogc:ogc:collection:144ea6663d15cb01578be02519b145f70c576ef997776726b872be43009fed5e",
+    "resourceKey": "ogc:ogc:collection:d57c8a75f416ae0ba7da10643b207b833a785d5f97c3a58ad84d84964ef15c16",
     "kind": "ogc:collection"
   },
   "dgt-srup-rede-rodoviaria-feed": {
-    "resourceKey": "ogc:ogc:collection:235b68310882dbbada1acf0f389fb4fa1045549c4a92d106b5debd8b8cd80528",
+    "resourceKey": "ogc:ogc:collection:4479ecd3f3c10ca3957706f7917d018a52d1f8931a6b25aa487a2083935090f7",
     "kind": "ogc:collection"
   },
   "dgt-srup-reserva-agricola-feed": {

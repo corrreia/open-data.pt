@@ -111,3 +111,37 @@ function position(value: JsonValue | undefined): [number, number] | undefined {
   }
   return [value[0], value[1]];
 }
+
+/**
+ * How far a geometry reaches, as west, south, east, north in degrees. It is
+ * what a feed publishes instead of an outline it is too large to carry: with
+ * the representative point it says where a feature is and how much ground it
+ * covers, which is enough to place it and to know what it might touch, without
+ * the million coordinates of the ring itself.
+ *
+ * A geometry crossing the antimeridian is not stitched back together: the box
+ * is taken from the positions as they are written, which is what any other
+ * reader of the same feature sees.
+ */
+export function boundingBox(geometry: JsonObject | null): [number, number, number, number] | undefined {
+  if (!geometry || !isJsonString(geometry.type)) return undefined;
+  const positions = geometry.type === "GeometryCollection" ? collectionPositions(geometry.geometries) : collectPositions(geometry.coordinates);
+  if (positions.length === 0) return undefined;
+  let west = Infinity;
+  let south = Infinity;
+  let east = -Infinity;
+  let north = -Infinity;
+  for (const [x, y] of positions) {
+    if (x < west) west = x;
+    if (x > east) east = x;
+    if (y < south) south = y;
+    if (y > north) north = y;
+  }
+  if (west < -180 || east > 180 || south < -90 || north > 90) return undefined;
+  return [west, south, east, north];
+}
+
+function collectionPositions(value: JsonValue | undefined): Array<[number, number]> {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((member) => (isJsonObject(member) ? collectPositions(member.coordinates) : []));
+}

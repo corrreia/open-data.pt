@@ -15,7 +15,7 @@ import {
   type StreamingTransform,
   type TransformContext,
 } from "../../index";
-import { representativePoint } from "./geometry";
+import { boundingBox, representativePoint } from "./geometry";
 import { SeenIdentities } from "./identity";
 
 import type { OgcCollectionDescription, OgcProperty } from "./ogc";
@@ -54,7 +54,10 @@ const MAX_PROPERTIES = 512;
  */
 const MAX_IDENTITIES = 1_000_000;
 /** Fields every feature carries because they come from its geometry, not from a property. */
-const GEOMETRY_FIELDS = ["geometry", "latitude", "longitude"];
+const GEOMETRY_FIELDS = ["geometry", "latitude", "longitude", "west", "south", "east", "north"];
+
+/** What a feed does with the collection's geometry. */
+type GeometryMode = "include" | "point" | "skip";
 
 interface GeojsonFeature {
   id: JsonValue | undefined;
@@ -150,7 +153,7 @@ export class OgcTransformer {
     const description = parseDescription(envelope.ogc);
     const properties = prepareProperties(description);
     const byName = new Map(properties.map((property) => [property.name, property]));
-    const withGeometry = description.geometry === "include";
+    const geometry = description.geometry;
     let total = 0;
     let accepted = 0;
     const identities = new SeenIdentities(MAX_IDENTITIES);
@@ -171,7 +174,7 @@ export class OgcTransformer {
               discovered.profile.observe(value);
             }
           }
-          const record = featureRecord(feature, properties, withGeometry);
+          const record = featureRecord(feature, properties, geometry);
           if (record) {
             // Validate the final identity too: the source may omit Feature.id and
             // use an identifying schema property, or mix the two representations.
@@ -196,7 +199,7 @@ export class OgcTransformer {
           description: productDescription(description),
           role: "reference",
           kind: "record",
-          schema: collectionSchema(properties, withGeometry, undefined),
+          schema: collectionSchema(properties, geometry, undefined),
           updateMode: "authoritative-snapshot",
           completeness: "complete",
         },
@@ -206,7 +209,7 @@ export class OgcTransformer {
         // A collection whose count the service stated must deliver it; short of
         // that the batch is not the whole membership and may not retract.
         const short = description.expected !== undefined && accepted < description.expected;
-        const final: ProductFinalization = { productKey: PRODUCT_KEY, schema: collectionSchema(properties, withGeometry, total) };
+        const final: ProductFinalization = { productKey: PRODUCT_KEY, schema: collectionSchema(properties, geometry, total) };
         if (short) final.completeness = "partial";
         return { quality: { acceptedRecords: accepted, rejectedRecords: total - accepted }, products: [final] };
       },
@@ -220,18 +223,27 @@ export class OgcTransformer {
  * was requested. A feature without a usable identity, or one too large to
  * store, is left out and counted as rejected.
  */
-function featureRecord(feature: GeojsonFeature, properties: PreparedProperty[], withGeometry: boolean): CanonicalRecord | undefined {
+function featureRecord(feature: GeojsonFeature, properties: PreparedProperty[], geometry: GeometryMode): CanonicalRecord | undefined {
   const key = entityKey(feature, properties);
   if (key === undefined) return undefined;
   const payload: JsonObject = {};
   for (const property of properties) {
     payload[property.outputName] = feature.properties[property.name] ?? null;
   }
-  if (withGeometry) {
-    payload.geometry = feature.geometry;
+  if (geometry !== "skip") {
     const point = representativePoint(feature.geometry);
     payload.latitude = point?.[1] ?? null;
     payload.longitude = point?.[0] ?? null;
+    // `point` reads the outline and keeps what places the feature: where it is,
+    // and how far it reaches. The ring itself is left at the source.
+    if (geometry === "include") payload.geometry = feature.geometry;
+    else {
+      const box = boundingBox(feature.geometry);
+      payload.west = box?.[0] ?? null;
+      payload.south = box?.[1] ?? null;
+      payload.east = box?.[2] ?? null;
+      payload.north = box?.[3] ?? null;
+    }
   }
   const record: CanonicalRecord = { entityKey: key, payload };
   const encoded = JSON.stringify(record);
@@ -266,7 +278,7 @@ function entityKey(feature: GeojsonFeature, properties: PreparedProperty[]): str
  * service's published types; after every feature it narrows the properties the
  * service left untyped and marks as nullable each one some feature omitted.
  */
-function collectionSchema(properties: PreparedProperty[], withGeometry: boolean, total: number | undefined): CanonicalSchema {
+function collectionSchema(properties: PreparedProperty[], geometry: GeometryMode, total: number | undefined): CanonicalSchema {
   const final = total !== undefined;
   const fields = properties.map((property): CanonicalField => ({
     id: fieldId(property.name),
@@ -280,12 +292,17 @@ function collectionSchema(properties: PreparedProperty[], withGeometry: boolean,
         : property.profile.inferredType(),
     nullable: !final || property.profile.present < total,
   }));
-  if (withGeometry) {
-    fields.push(
-      { id: "geometry", name: "geometry", type: "geometry", nullable: true },
-      { id: "latitude", name: "latitude", type: "latitude", nullable: true },
-      { id: "longitude", name: "longitude", type: "longitude", nullable: true },
-    );
+  if (geometry !== "skip") {
+    if (geometry === "include") fields.push({ id: "geometry", name: "geometry", type: "geometry", nullable: true });
+    fields.push({ id: "latitude", name: "latitude", type: "latitude", nullable: true }, { id: "longitude", name: "longitude", type: "longitude", nullable: true });
+    if (geometry === "point") {
+      fields.push(
+        { id: "west", name: "west", type: "number", nullable: true, unit: "°" },
+        { id: "south", name: "south", type: "number", nullable: true, unit: "°" },
+        { id: "east", name: "east", type: "number", nullable: true, unit: "°" },
+        { id: "north", name: "north", type: "number", nullable: true, unit: "°" },
+      );
+    }
   }
   return { fields };
 }
@@ -298,7 +315,7 @@ function parseDescription(value: JsonObject): OgcCollectionDescription {
     title: isJsonString(value.title) ? value.title : requiredString(value.collectionId, "collection id"),
     description: isJsonString(value.description) ? value.description : "",
     keywords: isJsonArray(value.keywords) ? value.keywords.filter(isJsonString) : [],
-    geometry: value.geometry === "skip" ? "skip" : "include",
+    geometry: value.geometry === "skip" ? "skip" : value.geometry === "point" ? "point" : "include",
   };
   if (isJsonArray(value.properties)) description.properties = value.properties.filter(isJsonString);
   if (isJsonNumber(value.expected) && Number.isSafeInteger(value.expected) && value.expected >= 0) {

@@ -4,6 +4,7 @@ const MEBIBYTE = 1024 * 1024;
 const DGT_HOST = "ogcapi.dgterritorio.gov.pt";
 
 const WEEK = 604_800;
+const MONTH = 2_592_000;
 
 /** The CAOP is republished as a dated edition, not continuously; weekly is frequent enough to catch a correction. */
 const DGT_SERVING: ServingPolicyDefinition = {
@@ -21,19 +22,53 @@ function dgtServing(dataset: string): ServingPolicyDefinition {
   return { licence: "cc-by-4.0", attribution: `Direção-Geral do Território — ${dataset}` };
 }
 
-/** Attribute tables: a few hundred kilobytes at most, every property on every feature. */
-function attributePolicy(name: string, serving: ServingPolicyDefinition, maxBytes: number): ExampleFeed["policy"] {
+/**
+ * What one walk of a layer was measured to cost, in mebibytes and kibibytes.
+ *
+ * These are read numbers, not estimates. The service matters here: pygeoapi
+ * pretty-prints its JSON and sends it uncompressed — asking for gzip returns
+ * none — so a layer's outlines cost the same over the wire as they do on disk,
+ * about four times what the same features would take compactly. `source` is
+ * therefore both what is downloaded and what the kernel's byte budget counts.
+ */
+interface LayerSize {
+  /** Mebibytes of JSON the whole walk reads from the service. */
+  source: number;
+  /** Mebibytes of normalized rows the walk produces. */
+  output: number;
+  /** Kibibytes of the largest single row, which sets the per-record ceiling. */
+  largestRow: number;
+}
+
+/** Measured at about five mebibytes a second across every layer read, which is what the deadlines below assume. */
+const SOURCE_MIB_PER_SECOND = 5;
+
+/**
+ * Budgets sized from a reading of the layer rather than guessed at.
+ *
+ * Each allowance is the measurement plus a third, which lets a register gain
+ * rows between one reading and the next without letting a runaway response
+ * through. The deadline is the download at the speed the service was measured
+ * to send, doubled, and never under two minutes: a layer having a slow day
+ * should not be cut off, but one that has stopped answering should be.
+ */
+function measuredCollection(measured: LayerSize, cadenceSeconds: number): CollectionPolicyDefinition {
+  const maxBytes = Math.ceil(measured.source * 1.34) * MEBIBYTE;
   return {
-    name,
-    version: 3,
-    collection: {
-      cadenceSeconds: WEEK,
-      timeoutSeconds: 120,
-      maxBytes,
-      historyMode: "changes",
-    } satisfies CollectionPolicyDefinition,
-    serving,
+    cadenceSeconds,
+    timeoutSeconds: Math.max(120, Math.ceil((measured.source / SOURCE_MIB_PER_SECOND) * 2)),
+    maxBytes,
+    maxOutputBytes: Math.max(MEBIBYTE, Math.ceil(measured.output * 1.34) * MEBIBYTE),
+    // Doubled, because one row growing is a correction to a boundary rather
+    // than a new feature, and capped at the megabyte the kernel stores whole.
+    maxRecordBytes: Math.min(MEBIBYTE, Math.max(64 * 1024, Math.ceil(measured.largestRow * 2) * 1024)),
+    historyMode: "changes",
   };
+}
+
+/** A layer whose budgets come from having read it, polled every week. */
+function measuredPolicy(name: string, serving: ServingPolicyDefinition, measured: LayerSize): ExampleFeed["policy"] {
+  return { name, version: 3, collection: measuredCollection(measured, WEEK), serving };
 }
 
 /**
@@ -49,16 +84,17 @@ interface SrupLayer {
   /** Read once from the service, and what the description promises. */
   features: number;
   /**
-   * Outlines are collected only where they are small enough to be worth it: a
-   * protected area averages half a megabyte of coordinates and a geodetic mark's
-   * protection zone twelve kilobytes, so those are read as attributes alone.
+   * What the feed does with the layer's geometry, decided by reading it: an
+   * outline where no row passes the megabyte a record may hold, a point where
+   * some do — a municipal agricultural reserve reaches eight megabytes — and
+   * nothing at all where the download would dwarf what it buys.
    */
-  geometry?: "include";
+  geometry?: "include" | "point";
   /** The columns worth publishing, where the layer holds one value for the rest of them. */
   properties?: string;
   topics: NonNullable<ExampleFeed["topics"]>;
-  /** Measured: the whole layer as this feed reads it, with room to grow. */
-  maxBytes: number;
+  /** What one walk of this layer cost when it was read, which is what its budgets are sized from. */
+  measured: LayerSize;
 }
 
 /*
@@ -87,214 +123,244 @@ const SRUP_LAYERS: SrupLayer[] = [
     collection: "srup_ren_areal",
     title: "National Ecological Reserve delimitations in force",
     description:
-      "Every municipal delimitation of the Reserva Ecológica Nacional in force on the Portuguese mainland — 399 of them, each an ordinance or notice with the municipality it covers, the area it protects in hectares, whether it is the reserve itself or an exclusion from it, and a link to the act in the Diário da República. Attributes only: the outlines are too large to carry.",
+      "Every municipal delimitation of the Reserva Ecológica Nacional in force on the Portuguese mainland — 399 of them, each an ordinance or notice with the municipality it covers, the area it protects in hectares, whether it is the reserve itself or an exclusion from it, and a link to the act in the Diário da República. Attributes only: each delimitation is drawn across a whole municipality, so the ground it reaches is the municipality, which the charter already publishes.",
     features: 399,
     topics: ["environment", "government"],
-    maxBytes: 2 * MEBIBYTE,
+    measured: { source: 1, output: 1, largestRow: 1 },
   },
   {
     slug: "dgt-srup-reserva-ecologica-linhas-feed",
     collection: "srup_ren_linear",
     title: "National Ecological Reserve watercourse delimitations",
     description:
-      "The 138 linear delimitations of the Reserva Ecológica Nacional — watercourses and the ten-metre beds either side of them — with the act that set each one, its date and the municipality it covers. Attributes only.",
+      "The 138 linear delimitations of the Reserva Ecológica Nacional — watercourses and the ten-metre beds either side of them — with the act that set each one, its date and the municipality it covers. Attributes only, for the same reason as the areas: a delimitation spans its whole municipality.",
     features: 138,
     topics: ["environment", "government"],
-    maxBytes: MEBIBYTE,
+    measured: { source: 1, output: 1, largestRow: 1 },
   },
   {
     slug: "dgt-srup-reserva-agricola-feed",
     collection: "srup_ran",
     title: "National Agricultural Reserve delimitations in force",
     description:
-      "The Reserva Agrícola Nacional as delimited for each of 269 mainland municipalities, with the ordinance or notice that set it, the issue of the Diário da República it appeared in, the date it took effect and a link to the act. Attributes only.",
+      "The Reserva Agrícola Nacional as delimited for each of 269 mainland municipalities, with the ordinance or notice that set it, the issue of the Diário da República it appeared in, the date it took effect and a link to the act. Attributes only: one delimitation covers its whole municipality and runs to eight megabytes of outline, so reading it would cost a gigabyte and a third a week to say where a municipality is.",
     features: 269,
     properties: "designacao,serv_dr,serv_data,serv_hiperligacao,serv_lei,municipio",
     topics: ["environment", "government"],
-    maxBytes: 2 * MEBIBYTE,
+    measured: { source: 1, output: 1, largestRow: 1 },
   },
   {
     slug: "dgt-srup-areas-protegidas-feed",
     collection: "srup_areas_protegidas",
+    geometry: "point",
     title: "Protected areas as a public-utility restriction",
     description:
-      "The 71 classified protected areas of mainland Portugal — national, natural and regional parks, nature reserves, natural monuments and protected landscapes — each with the decree that created it, its date, the municipalities it spans and a link to the act. Attributes only: one protected area averages half a megabyte of outline.",
+      "The 71 classified protected areas of mainland Portugal — national, natural and regional parks, nature reserves, natural monuments and protected landscapes — each placed on the map with the ground it covers, and with the decree that created it, its date, the municipalities it spans and a link to the act. Where each one lies and how far it reaches is published; the outline itself is not, because two of the seventy-one run past the megabyte a record may hold.",
     features: 71,
     topics: ["environment", "government"],
-    maxBytes: MEBIBYTE,
+    measured: { source: 34, output: 1, largestRow: 1 },
   },
   {
     slug: "dgt-srup-rede-natura-zec-feed",
     collection: "srup_zec",
+    geometry: "include",
     title: "Natura 2000 Special Areas of Conservation",
     description:
-      "The 65 Zonas Especiais de Conservação of the Natura 2000 network on the Portuguese mainland, with the phase of the national site list each belongs to, the decree that designated it, its date and the municipalities it covers. Attributes only.",
+      "The 65 Zonas Especiais de Conservação of the Natura 2000 network on the Portuguese mainland, with their outlines, the phase of the national site list each belongs to, the decree that designated it, its date and the municipalities it covers.",
     features: 65,
     topics: ["environment", "government"],
-    maxBytes: MEBIBYTE,
+    measured: { source: 53, output: 13, largestRow: 750 },
   },
   {
     slug: "dgt-srup-rede-natura-zpe-feed",
     collection: "srup_zpe",
+    geometry: "include",
     title: "Natura 2000 Special Protection Areas",
     description:
-      "The 44 Zonas de Proteção Especial for wild birds on the Portuguese mainland, with the decree that designated each one, its date, the municipalities it covers and a link to the act. Attributes only.",
+      "The 44 Zonas de Proteção Especial for wild birds on the Portuguese mainland, with their outlines, the decree that designated each one, its date, the municipalities it covers and a link to the act.",
     features: 44,
     properties: "designacao,serv_dr,serv_data,serv_hiperligacao,serv_lei,municipio,dtccs",
     topics: ["environment", "government"],
-    maxBytes: MEBIBYTE,
+    measured: { source: 17, output: 4, largestRow: 729 },
   },
   {
     slug: "dgt-srup-arvores-interesse-publico-pontos-feed",
     collection: "srup_arvores_point",
+    geometry: "include",
     title: "Trees of public interest",
     description:
       "The 551 individual trees and groves classified as being of public interest in mainland Portugal, where each one stands, its species, whether it is a single tree or a group, and the notice that classified it. Lisbon holds 84 of them and Marinha Grande 34; the oldest classification here dates from 1947.",
     features: 551,
-    geometry: "include",
     topics: ["environment", "culture"],
-    maxBytes: 2 * MEBIBYTE,
+    measured: { source: 1, output: 1, largestRow: 1 },
   },
   {
     slug: "dgt-srup-arvores-interesse-publico-areas-feed",
     collection: "srup_arvores_areal",
+    geometry: "include",
     title: "Groves of public interest",
     description:
-      "The 89 wooded areas classified as being of public interest in mainland Portugal, with the species, the act that classified each one and the municipality it stands in. Attributes only.",
+      "The 89 wooded areas classified as being of public interest in mainland Portugal, each with the ground it covers, the species, the act that classified it and the municipality it stands in.",
     features: 89,
     topics: ["environment", "culture"],
-    maxBytes: MEBIBYTE,
+    measured: { source: 1, output: 1, largestRow: 11 },
   },
   {
     slug: "dgt-srup-marcos-geodesicos-feed",
     collection: "srup_marcos_geod",
+    geometry: "include",
     title: "Geodetic marks and their protection zones",
     description:
-      "The 7,968 geodetic marks of mainland Portugal whose surroundings are protected by law, with the name each one is known by, the network it belongs to and the municipality it stands in. Odemira holds 193 of them. Attributes only: what is stored is the protection zone around each mark, not the mark itself. Every one of these is protected by the same 1982 decree, which the feed states once rather than on every row. This is the easement side of the register; the survey side, with each mark's order and height, is published separately from the geodetic network itself.",
+      "The 7,968 geodetic marks of mainland Portugal whose surroundings are protected by law, with the name each one is known by, the network it belongs to and the municipality it stands in. Odemira holds 193 of them. What is drawn is the protection zone around each mark rather than the mark itself. Every one of these is protected by the same 1982 decree, which the feed states once rather than on every row. This is the easement side of the register; the survey side, with each mark's order and height, is published separately from the geodetic network itself.",
     features: 7968,
     properties: "designacao,tipologia,municipio,dtccs",
     topics: ["government", "society"],
-    maxBytes: 4 * MEBIBYTE,
+    measured: { source: 97, output: 25, largestRow: 3 },
   },
   {
     slug: "dgt-srup-aeronautica-feed",
     collection: "srup_aeronautica",
+    geometry: "point",
     title: "Airport and aerodrome easements",
     description:
-      "The 36 airports and aerodromes of mainland Portugal whose surroundings carry an aeronautical easement, with the decree that established each one, its date, the municipalities it reaches and a link to the act. Attributes only.",
+      "The 36 airports and aerodromes of mainland Portugal whose surroundings carry an aeronautical easement, each placed on the map with the ground its easement reaches, and with the decree that established it, its date, the municipalities it covers and a link to the act. The easement surfaces themselves are left at the source: four of the 36 run past the megabyte a record may hold.",
     features: 36,
     topics: ["mobility", "government"],
-    maxBytes: MEBIBYTE,
+    measured: { source: 40, output: 1, largestRow: 1 },
   },
   {
     slug: "dgt-srup-albufeiras-feed",
     collection: "srup_albufeiras",
+    geometry: "point",
     title: "Classified public water reservoirs",
     description:
-      "The 192 classified reservoirs of mainland Portugal, sorted into protected, conditioned and freely used, with the ordinance that classified each one and the municipalities around it. Attributes only.",
+      "The 192 classified reservoirs of mainland Portugal, each placed on the map with the water it holds, sorted into protected, conditioned and freely used, with the ordinance that classified it and the municipalities around it. The outlines are left at the source: fifteen of the 192 run past the megabyte a record may hold.",
     features: 192,
     topics: ["environment", "energy"],
-    maxBytes: MEBIBYTE,
+    measured: { source: 253, output: 1, largestRow: 1 },
   },
   {
     slug: "dgt-srup-captacoes-aguas-subterraneas-feed",
     collection: "srup_aquiferos",
+    geometry: "include",
     title: "Protection zones around public groundwater abstraction",
     description:
-      "The 949 protection perimeters around groundwater abstracted for public supply in mainland Portugal, with the ordinance that set each one, its date and the municipality it lies in. Pampilhosa da Serra and Góis hold 155 between them. Attributes only: one perimeter averages nine kilobytes of outline.",
+      "The 949 protection perimeters around groundwater abstracted for public supply in mainland Portugal, with the ordinance that set each one, its date and the municipality it lies in. Pampilhosa da Serra and Góis hold 155 between them, and each perimeter is drawn.",
     features: 949,
     topics: ["environment", "health"],
-    maxBytes: 2 * MEBIBYTE,
+    measured: { source: 11, output: 3, largestRow: 358 },
   },
   {
     slug: "dgt-srup-defesa-nacional-feed",
     collection: "srup_defesa_militar",
+    geometry: "include",
     title: "National defence easements",
     description:
-      "The 152 military installations of mainland Portugal carrying a defence easement — barracks, forts and batteries — with the act that established each one, its date and the municipality it stands in. Lisbon holds 20. Attributes only.",
+      "The 152 military installations of mainland Portugal carrying a defence easement — barracks, forts and batteries — each with the ground it occupies, the act that established it, its date and the municipality it stands in. Lisbon holds 20.",
     features: 152,
     topics: ["government"],
-    maxBytes: MEBIBYTE,
+    measured: { source: 6, output: 1, largestRow: 725 },
   },
   {
     slug: "dgt-srup-defesa-nacional-zonas-feed",
     collection: "srup_defesa_militar_zonas",
+    geometry: "include",
     title: "National defence protection zones",
     description:
-      "The 149 protection zones around military installations in mainland Portugal, with the act that established each one, its date and the municipality it covers. Attributes only.",
+      "The 149 protection zones around military installations in mainland Portugal, each with the ground it covers, the act that established it, its date and the municipality it lies in.",
     features: 149,
     topics: ["government"],
-    maxBytes: MEBIBYTE,
+    measured: { source: 6, output: 1, largestRow: 378 },
   },
   {
     slug: "dgt-srup-rede-rodoviaria-feed",
     collection: "srup_rede_viaria",
+    geometry: "include",
     title: "National road network easements",
     description:
-      "The 3,160 stretches of the national road network carrying an easement, each named for the road it belongs to — the A1, the EN2, a link ramp — and sorted into motorway, national road, regional road and municipal road, with the municipality it crosses. Porto holds 121 stretches. Attributes only.",
+      "The 3,160 stretches of the national road network carrying an easement, each named for the road it belongs to — the A1, the EN2, a link ramp — and sorted into motorway, national road, regional road and municipal road, with the municipality it crosses. Porto holds 121 stretches, and each is drawn as it runs.",
     features: 3160,
     topics: ["mobility", "government"],
-    maxBytes: 4 * MEBIBYTE,
+    measured: { source: 520, output: 125, largestRow: 423 },
   },
   {
     slug: "dgt-srup-rede-ferroviaria-feed",
     collection: "srup_rede_ferroviaria",
+    geometry: "include",
     title: "Railway easements",
     description:
-      "The 502 stretches of railway in mainland Portugal carrying an easement, with the act that established it, its date and the municipality it crosses. Attributes only.",
+      "The 502 stretches of railway in mainland Portugal carrying an easement, each drawn as it runs, with the act that established it, its date and the municipality it crosses.",
     features: 502,
     topics: ["mobility", "government"],
-    maxBytes: 2 * MEBIBYTE,
+    measured: { source: 57, output: 14, largestRow: 338 },
   },
   {
     slug: "dgt-srup-estacoes-ferroviarias-feed",
     collection: "srup_rede_ferroviaria_estacoes",
+    geometry: "include",
     title: "Railway stations and halts",
     description:
-      "The 860 railway stations and halts of mainland Portugal held in the easement register, each named and sorted into station, halt, or no longer worked — 298 of them are out of service. Lisbon holds 21. Attributes only. All 860 rest on the same 2003 decree, which the feed states once rather than on every row.",
+      "The 860 railway stations and halts of mainland Portugal held in the easement register, each where it stands, named and sorted into station, halt, or no longer worked — 298 of them are out of service. Lisbon holds 21. All 860 rest on the same 2003 decree, which the feed states once rather than on every row.",
     features: 860,
     properties: "designacao,tipologia,municipio,dtccs",
     topics: ["mobility", "government"],
-    maxBytes: 2 * MEBIBYTE,
+    measured: { source: 11, output: 3, largestRow: 3 },
   },
   {
     slug: "dgt-srup-rede-eletrica-feed",
     collection: "srup_rede_eletrica",
+    geometry: "include",
     title: "Electricity grid easements",
     description:
-      "The 2,456 stretches of the national electricity grid carrying an easement in mainland Portugal, sorted by voltage, with the decree behind each one and the municipality it crosses. Attributes only.",
+      "The 2,456 stretches of the national electricity grid carrying an easement in mainland Portugal, each drawn as it runs, sorted by voltage, with the decree behind it and the municipality it crosses.",
     features: 2456,
     topics: ["energy", "government"],
-    maxBytes: 4 * MEBIBYTE,
+    measured: { source: 43, output: 11, largestRow: 64 },
   },
   {
     slug: "dgt-sgifr-pontos-feed",
     collection: "sgifr_pontos",
+    geometry: "include",
     title: "Rural fire management points",
     description:
       "The 7,841 points held in the sub-regional rural fire management programmes of mainland Portugal: 7,550 water points for firefighting, 172 lookout and detection posts, and the rest strategic fuel-break mosaics. Each carries the intermunicipal body that answers for it, the programme it belongs to and the notice that approved that programme.",
     features: 7841,
-    geometry: "include",
     topics: ["environment", "government"],
-    maxBytes: 12 * MEBIBYTE,
+    measured: { source: 7, output: 4, largestRow: 1 },
   },
 ];
 
+/** A page worth asking for: small enough that losing one to a dropped connection is cheap to repeat. */
+const PAGE_TARGET_BYTES = 16 * MEBIBYTE;
+
+/**
+ * How many features to ask for at once, from how big this layer's features
+ * turned out to be. A register of a few hundred attribute rows still arrives in
+ * one request; a road network whose average stretch is a sixth of a megabyte is
+ * asked for a hundred at a time rather than five hundred, because a page that
+ * fails is re-read from its offset and a smaller page loses less.
+ */
+function pageSizeFor(layer: SrupLayer): number {
+  const perFeature = (layer.measured.source * MEBIBYTE) / layer.features;
+  return Math.max(10, Math.min(500, Math.floor(PAGE_TARGET_BYTES / Math.max(perFeature, 1))));
+}
+
 /**
  * A register layer: read whole every week, with room for the pages the count
- * needs. The service answers each of these in well under a second and publishes
- * no validator, so the cost of a run is one small walk, not a re-download of
- * anything large.
+ * needs. The service publishes no validator, so the cost of a run is the walk
+ * itself — which for an attributes-only register is under a second, and for a
+ * layer read with its outlines is minutes.
  */
 function srupFeed(layer: SrupLayer): ExampleFeed {
   const geometry = layer.geometry ?? "skip";
+  const pageSize = pageSizeFor(layer);
   const config: ExampleFeed["config"] = {
     source: "ogc",
     host: DGT_HOST,
     collection: layer.collection,
     geometry,
-    pageSize: "500",
-    maxPages: String(Math.max(4, Math.ceil(layer.features / 500) + 2)),
+    pageSize: String(pageSize),
+    maxPages: String(Math.max(4, Math.ceil(layer.features / pageSize) + 2)),
   };
   if (layer.properties) config.properties = layer.properties;
   return {
@@ -304,16 +370,14 @@ function srupFeed(layer: SrupLayer): ExampleFeed {
     config,
     policy: {
       name: "SRUP weekly register",
-      version: 1,
-      collection: {
-        // A restriction changes when an act is published, which happens a
-        // handful of times a year across the whole register. Weekly catches one
-        // within days and costs one short walk of a few hundred kilobytes.
-        cadenceSeconds: WEEK,
-        timeoutSeconds: 180,
-        maxBytes: layer.maxBytes,
-        historyMode: "changes",
-      } satisfies CollectionPolicyDefinition,
+      version: 2,
+      // A restriction changes when an act is published, which happens a handful
+      // of times a year across the whole register, so weekly catches one within
+      // days. What that walk costs is the layer's own business: a register read
+      // as attributes is a few hundred kilobytes, the same register read with
+      // its outlines can be a couple of hundred megabytes, and the budgets come
+      // from having read each one.
+      collection: measuredCollection(layer.measured, WEEK),
       serving: dgtServing("Servidões e Restrições de Utilidade Pública"),
     },
     // Two weeks: an act published the day after a run should not make the feed
@@ -448,7 +512,7 @@ const CRUS_NATIONAL: ExampleFeed = {
     } satisfies CollectionPolicyDefinition,
     serving: dgtServing("Carta do Regime de Uso do Solo"),
   },
-  staleAfterSeconds: 2 * 2_592_000,
+  staleAfterSeconds: 2 * MONTH,
   publisher: "dgt",
   topics: ["cities", "government"],
 };
@@ -471,7 +535,8 @@ interface LnegLayer {
   description: string;
   features: number;
   topics: NonNullable<ExampleFeed["topics"]>;
-  maxBytes: number;
+  /** What one walk of this layer cost when it was read; the same reading the DGT layers get. */
+  measured: LayerSize;
 }
 
 const LNEG_LAYERS: LnegLayer[] = [
@@ -483,7 +548,7 @@ const LNEG_LAYERS: LnegLayer[] = [
       "The 5,483 mineral occurrences in LNEG's national inventory: where each one is, what it holds, its geological description, its size, and how it rates for economic and development potential.",
     features: 5483,
     topics: ["economy", "environment"],
-    maxBytes: 12 * MEBIBYTE,
+    measured: { source: 4, output: 4, largestRow: 3 },
   },
   {
     slug: "lneg-sondagens-feed",
@@ -492,7 +557,7 @@ const LNEG_LAYERS: LnegLayer[] = [
     description: "The 3,497 boreholes in LNEG's SondaBase: where each was drilled, its name, its length, the elevation it started from and the direction it took.",
     features: 3497,
     topics: ["environment", "economy"],
-    maxBytes: 4 * MEBIBYTE,
+    measured: { source: 1, output: 1, largestRow: 1 },
   },
   {
     slug: "lneg-pontos-de-agua-feed",
@@ -502,7 +567,7 @@ const LNEG_LAYERS: LnegLayer[] = [
       "The 5,399 water points in LNEG's groundwater inventory: where each is, the district it lies in, its elevation, what kind of point it is, what it is used for and what it was surveyed for.",
     features: 5399,
     topics: ["environment"],
-    maxBytes: 4 * MEBIBYTE,
+    measured: { source: 2, output: 2, largestRow: 1 },
   },
   {
     slug: "lneg-sistemas-aquiferos-feed",
@@ -512,7 +577,7 @@ const LNEG_LAYERS: LnegLayer[] = [
       "The 63 aquifer systems of Portugal as LNEG delimits them, with their outlines, the national code each carries, the geological age of the rock that holds the water and the hydrogeological unit each belongs to.",
     features: 63,
     topics: ["environment"],
-    maxBytes: 4 * MEBIBYTE,
+    measured: { source: 2, output: 2, largestRow: 219 },
   },
   {
     slug: "lneg-falhas-geologicas-feed",
@@ -521,7 +586,7 @@ const LNEG_LAYERS: LnegLayer[] = [
     description: "The 297 faults of the harmonised 1:1,000,000 geological map of Portugal, each with the kind of fault it is and the vocabulary term LNEG classifies it under.",
     features: 297,
     topics: ["environment"],
-    maxBytes: 4 * MEBIBYTE,
+    measured: { source: 1, output: 1, largestRow: 10 },
   },
 ];
 
@@ -540,22 +605,17 @@ function lnegFeed(layer: LnegLayer): ExampleFeed {
     },
     policy: {
       name: "LNEG monthly reference layer",
-      version: 1,
-      collection: {
-        // Geology is not news. Monthly is often enough to catch an inventory
-        // being extended, and asks the service for one walk every four weeks.
-        cadenceSeconds: 2_592_000,
-        timeoutSeconds: 300,
-        maxBytes: layer.maxBytes,
-        historyMode: "changes",
-      } satisfies CollectionPolicyDefinition,
+      version: 2,
+      // Geology is not news. Monthly is often enough to catch an inventory
+      // being extended, and asks the service for one walk every four weeks.
+      collection: measuredCollection(layer.measured, MONTH),
       serving: {
         // The service's HTML landing page states CC BY 4.0, exactly as DGT's does.
         licence: "cc-by-4.0",
         attribution: "Laboratório Nacional de Energia e Geologia",
       },
     },
-    staleAfterSeconds: 2 * 2_592_000,
+    staleAfterSeconds: 2 * MONTH,
     publisher: "lneg",
     topics: layer.topics,
   };
@@ -567,106 +627,113 @@ export const OGC_EXAMPLES: ExampleFeed[] = [
    * municipalities and 3,049 parishes, with the Azores and Madeira absent from
    * these collections. Every title and description says so.
    *
-   * They are collected without geometry. One district outline reaches 3.6 MB
-   * and two municipal outlines pass 1 MB, which is the largest record the
-   * platform stores; the whole municipal layer is 49 MB of coordinates that
-   * would be re-read and re-compared on every collection. `skipGeometry` is a
-   * documented OGC API Features parameter, the product page says the feed asks
-   * for attributes only, and every feature is still published: the scope is
-   * complete, only the shape is left at the source.
+   * What each of these does with its outlines was decided by reading it. The
+   * parishes and the boundary segments are drawn, because no parish reaches the
+   * megabyte a record may hold and they are what almost everything else joins
+   * to. The districts, municipalities and NUTS regions are placed instead: each
+   * of those layers holds outlines past that megabyte — one district is three
+   * and a half of them — and they are in any case the parishes added together,
+   * so nothing is lost that cannot be rebuilt from the parishes that are drawn.
+   * Placing still means downloading the outline and keeping what says where the
+   * area is and how far it reaches; the service offers no way to ask for less.
    */
   {
     slug: "dgt-caop-distritos-feed",
-    title: "Mainland Portugal district reference table (CAOP 2025)",
+    title: "Mainland Portugal districts, placed (CAOP 2025)",
     description:
-      "The 18 districts of mainland Portugal in the official administrative charter: code, name, NUTS 1 region, area, perimeter, and how many municipalities and parishes each holds. Attributes only, without boundary outlines. The Azores and Madeira are not part of this collection.",
+      "The 18 districts of mainland Portugal in the official administrative charter: code, name, NUTS 1 region, area, perimeter, and how many municipalities and parishes each holds, with where each one lies and how far it reaches. The outlines themselves are left at the source — one district alone is three and a half megabytes of coastline — and can be rebuilt from the parish boundaries, which are published whole. The Azores and Madeira are not part of this collection.",
     config: {
       source: "ogc",
       host: DGT_HOST,
       collection: "distritos",
-      geometry: "skip",
-      pageSize: "1000",
-      maxPages: "5",
+      geometry: "point",
+      pageSize: "10",
+      maxPages: "6",
     },
-    policy: attributePolicy("OGC weekly attribute table", DGT_SERVING, 4 * MEBIBYTE),
+    policy: measuredPolicy("CAOP weekly placed table", DGT_SERVING, { source: 63, output: 1, largestRow: 1 }),
     staleAfterSeconds: 1_209_600,
     publisher: "dgt",
     topics: ["society"],
   },
   {
     slug: "dgt-caop-municipios-feed",
-    title: "Mainland Portugal municipality reference table (CAOP 2025)",
+    title: "Mainland Portugal municipalities, placed (CAOP 2025)",
     description:
-      "The 278 municipalities of mainland Portugal in the official administrative charter: DTMN code, name, district, the three NUTS levels, area, perimeter, and parish count. Attributes only, without boundary outlines. The Azores and Madeira are not part of this collection.",
+      "The 278 municipalities of mainland Portugal in the official administrative charter: DTMN code, name, district, the three NUTS levels, area, perimeter, and parish count, with where each one lies and how far it reaches. The outlines themselves are left at the source, because two of the 278 run past the megabyte a record may hold; they can be rebuilt from the parish boundaries, which are published whole. The Azores and Madeira are not part of this collection.",
     config: {
       source: "ogc",
       host: DGT_HOST,
       collection: "municipios",
-      geometry: "skip",
-      pageSize: "1000",
-      maxPages: "5",
+      geometry: "point",
+      pageSize: "25",
+      maxPages: "14",
     },
-    policy: attributePolicy("OGC weekly attribute table", DGT_SERVING, 4 * MEBIBYTE),
+    policy: measuredPolicy("CAOP weekly placed table", DGT_SERVING, { source: 194, output: 1, largestRow: 1 }),
     staleAfterSeconds: 1_209_600,
     publisher: "dgt",
     topics: ["society"],
   },
   {
     slug: "dgt-caop-freguesias-feed",
-    title: "Mainland Portugal parish reference table (CAOP 2025)",
+    title: "Mainland Portugal parish boundaries (CAOP 2025)",
     description:
-      "The 3,049 civil parishes of mainland Portugal in the official administrative charter: DTMNFR code, name, municipality, district, the three NUTS levels, area and perimeter. Attributes only, without boundary outlines. The Azores and Madeira are not part of this collection.",
+      "The 3,049 civil parishes of mainland Portugal in the official administrative charter, each with the ground it covers: DTMNFR code, name, municipality, district, the three NUTS levels, area and perimeter. This is the boundary nearly everything else joins to — a parcel, an easement or a plan that names a parish can be placed by it, and the municipalities, districts and NUTS regions are these outlines added together. The Azores and Madeira are not part of this collection.",
     config: {
       source: "ogc",
       host: DGT_HOST,
       collection: "freguesias",
-      geometry: "skip",
-      pageSize: "1000",
-      maxPages: "5",
+      geometry: "include",
+      pageSize: "100",
+      maxPages: "34",
     },
-    policy: attributePolicy("OGC weekly attribute table", DGT_SERVING, 8 * MEBIBYTE),
+    policy: measuredPolicy("CAOP weekly boundaries", DGT_SERVING, { source: 506, output: 122, largestRow: 671 }),
     staleAfterSeconds: 1_209_600,
     publisher: "dgt",
     topics: ["society"],
   },
   /*
    * The `admin` collection is deliberately not read. It holds the same 3,049
-   * parishes split into their 3,392 disjoint parts, which is a difference in
-   * outline — and these feeds carry no outlines. Without them it would republish
-   * every parish's code, name, municipality and NUTS levels a second time.
+   * parishes split into their 3,392 disjoint parts: an island parish and its
+   * mainland part become two rows carrying one parish's code, name, municipality
+   * and NUTS levels. The parish feed now publishes each parish's whole outline,
+   * multipart and all, so `admin` would republish every one of those columns a
+   * second time to say something the geometry already says.
+   *
+   * `nuts1` is not read either: it is a single row, "Continente", whose columns
+   * are the other tables added up.
    */
   {
     slug: "dgt-caop-nuts2-feed",
-    title: "Mainland Portugal NUTS II reference table (CAOP 2025)",
+    title: "Mainland Portugal NUTS II regions, placed (CAOP 2025)",
     description:
-      "The seven NUTS II regions the charter covers, with the code, the area in hectares, the perimeter and how many municipalities and parishes each holds. The Azores and Madeira appear here as regions of the statistical hierarchy, though their areas are not part of this collection.",
+      "The seven NUTS II regions the charter covers, with the code, the area in hectares, the perimeter, how many municipalities and parishes each holds, and where each one lies and how far it reaches. These are the regions most Portuguese and European statistics are published by, so they are what a figure keyed to a region can be drawn against. The outlines are left at the source, because the mainland regions pass the megabyte a record may hold. The Azores and Madeira appear here as regions of the statistical hierarchy, though their areas are not part of this collection.",
     config: {
       source: "ogc",
       host: DGT_HOST,
       collection: "nuts2",
-      geometry: "skip",
-      pageSize: "100",
+      geometry: "point",
+      pageSize: "10",
       maxPages: "4",
     },
-    policy: attributePolicy("OGC weekly attribute table", DGT_SERVING, MEBIBYTE),
+    policy: measuredPolicy("CAOP weekly placed table", DGT_SERVING, { source: 50, output: 1, largestRow: 1 }),
     staleAfterSeconds: 1_209_600,
     publisher: "dgt",
     topics: ["society"],
   },
   {
     slug: "dgt-caop-nuts3-feed",
-    title: "Mainland Portugal NUTS III reference table (CAOP 2025)",
+    title: "Mainland Portugal NUTS III sub-regions, placed (CAOP 2025)",
     description:
-      "The 24 NUTS III sub-regions of mainland Portugal, with the code, the NUTS II region and NUTS I level above them, the area in hectares, the perimeter, and how many municipalities and parishes each holds.",
+      "The 24 NUTS III sub-regions of mainland Portugal, with the code, the NUTS II region and NUTS I level above them, the area in hectares, the perimeter, how many municipalities and parishes each holds, and where each one lies and how far it reaches. This is the level the intermunicipal communities are drawn on and much regional statistics is published by. The outlines are left at the source: two of the 24 run past the megabyte a record may hold. The Azores and Madeira are not part of this collection.",
     config: {
       source: "ogc",
       host: DGT_HOST,
       collection: "nuts3",
-      geometry: "skip",
-      pageSize: "100",
-      maxPages: "4",
+      geometry: "point",
+      pageSize: "10",
+      maxPages: "5",
     },
-    policy: attributePolicy("OGC weekly attribute table", DGT_SERVING, MEBIBYTE),
+    policy: measuredPolicy("CAOP weekly placed table", DGT_SERVING, { source: 75, output: 1, largestRow: 1 }),
     staleAfterSeconds: 1_209_600,
     publisher: "dgt",
     topics: ["society"],
@@ -675,16 +742,16 @@ export const OGC_EXAMPLES: ExampleFeed[] = [
     slug: "dgt-caop-trocos-feed",
     title: "Mainland Portugal administrative boundary segments (CAOP 2025)",
     description:
-      "The 9,899 segments the administrative boundaries of mainland Portugal are drawn from: which area lies either side of each one, whether it runs on land or along the coast, the order of boundary it carries, whether it is settled or still undefined, and how long it is. Attributes only, without the lines themselves.",
+      "The 9,899 segments the administrative boundaries of mainland Portugal are drawn from, with the line each one follows: which area lies either side of it, whether it runs on land or along the coast, the order of boundary it carries, whether it is settled or still undefined, and how long it is. Where a parish outline says what an area covers, these say what each stretch of its edge is and who agreed to it.",
     config: {
       source: "ogc",
       host: DGT_HOST,
       collection: "trocos",
-      geometry: "skip",
-      pageSize: "1000",
-      maxPages: "14",
+      geometry: "include",
+      pageSize: "500",
+      maxPages: "22",
     },
-    policy: attributePolicy("OGC weekly attribute table", DGT_SERVING, 8 * MEBIBYTE),
+    policy: measuredPolicy("CAOP weekly boundaries", DGT_SERVING, { source: 219, output: 67, largestRow: 397 }),
     staleAfterSeconds: 1_209_600,
     publisher: "dgt",
     topics: ["society"],
