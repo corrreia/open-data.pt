@@ -16,6 +16,7 @@ import {
   type TransformContext,
 } from "../../index";
 import { representativePoint } from "./geometry";
+import { SeenIdentities } from "./identity";
 
 import type { OgcCollectionDescription, OgcProperty } from "./ogc";
 
@@ -40,6 +41,12 @@ const PRODUCT_KEY = "features";
 const MAX_DISTINCT = 20;
 /** Properties the normalizer will describe, whether declared or discovered. */
 const MAX_PROPERTIES = 512;
+/**
+ * Features one walk may check for repeats. Each costs a number rather than its
+ * key, so the national land-use charter's 229,768 parcels fit inside a few
+ * megabytes and there is room for a collection several times its size.
+ */
+const MAX_IDENTITIES = 1_000_000;
 /** Fields every feature carries because they come from its geometry, not from a property. */
 const GEOMETRY_FIELDS = ["geometry", "latitude", "longitude"];
 
@@ -140,8 +147,7 @@ export class OgcTransformer {
     const withGeometry = description.geometry === "include";
     let total = 0;
     let accepted = 0;
-    const identities = new Set<string>();
-    let identityBudget = 0;
+    const identities = new SeenIdentities(MAX_IDENTITIES);
 
     async function* rows(): AsyncGenerator<NormalizedRow> {
       let next = first;
@@ -164,10 +170,6 @@ export class OgcTransformer {
             // Validate the final identity too: the source may omit Feature.id and
             // use an identifying schema property, or mix the two representations.
             if (identities.has(record.entityKey)) invalid("OGC collection repeats a normalized feature identity");
-            identityBudget += record.entityKey.length * 2 + 128;
-            if (identityBudget > 8 * 1024 * 1024) {
-              throw new GatekeeperError("OGC identity validation exceeds its memory budget", "response-too-large");
-            }
             identities.add(record.entityKey);
             accepted += 1;
             yield { productKey: PRODUCT_KEY, record };

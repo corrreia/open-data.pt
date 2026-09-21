@@ -14,6 +14,7 @@ import {
   type SourceConfig,
   type SourceFetch,
 } from "../../index";
+import { SeenIdentities } from "./identity";
 import { MAX_FEATURE_BYTES } from "./transform";
 
 /** The collection description and the property schema are read whole, before any feature. */
@@ -30,6 +31,18 @@ const PAGE_SIZE_LIMIT = 5_000;
 const PAGE_COUNT_LIMIT = 500;
 /** Redirects followed, each one re-validated against the allowlist before it is fetched. */
 const MAX_REDIRECTS = 3;
+/**
+ * Attempts at one page. Walking a national collection takes tens of pages, and
+ * this service fails about one in fifty with a 502: without a second try a long
+ * walk hardly ever reaches its end, and the whole collection is refused for one
+ * bad page. Only a gateway's own answers are tried again — a refusal the
+ * service means is repeated, not worked around.
+ */
+const MAX_PAGE_ATTEMPTS = 3;
+/** Waits before each retry, in milliseconds; the service recovers in seconds. */
+const RETRY_BACKOFF_MS = [500, 2_000] as const;
+/** The statuses a gateway returns when it is briefly unable to answer, not when it refuses. */
+const TRANSIENT_STATUSES = new Set([429, 500, 502, 503, 504]);
 
 const CONFIG_KEYS = new Set(["host", "basePath", "collection", "geometry", "properties", "filterField", "filterValue", "pageSize", "maxPages"]);
 const COLLECTION_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
@@ -84,6 +97,10 @@ export const OGC_FEEDS = {
 } as const satisfies Record<string, FeedKindDescription>;
 
 export type Fetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+/** How the collector waits between attempts; a test passes one that does not. */
+export type Sleep = (milliseconds: number) => Promise<void>;
+
+const wait: Sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
 /** One property as the service's JSON Schema describes it. */
 export interface OgcProperty {
@@ -365,7 +382,13 @@ function unsafeParsed(config: SourceConfig): ValidatedConfig {
  * avoid. The kernel's semantic no-op suppression already makes an unchanged
  * collection cost no revision, no history row and no stored chunk.
  */
-export async function collectOgcFeed(config: SourceConfig, _state: JsonObject | undefined, hosts: ReadonlySet<string>, fetcher: Fetcher): Promise<SourceFetch> {
+export async function collectOgcFeed(
+  config: SourceConfig,
+  _state: JsonObject | undefined,
+  hosts: ReadonlySet<string>,
+  fetcher: Fetcher,
+  sleep: Sleep = wait,
+): Promise<SourceFetch> {
   const validated = parseConfig(validateOgcFeedConfig(config, hosts), hosts);
   const collection = collectionUrl(config);
   const description = await readCollection(collection, validated, hosts, fetcher);
@@ -374,7 +397,7 @@ export async function collectOgcFeed(config: SourceConfig, _state: JsonObject | 
   const expected = await readTotal(validated, hosts, fetcher);
   const cap = validated.pageSize * validated.maxPages;
   const first = buildItemsUrl(validated);
-  const firstResponse = await request(first, itemHeaders(), validated, hosts, fetcher);
+  const firstResponse = await requestPage(first, itemHeaders(), validated, hosts, fetcher, sleep);
   if (firstResponse.status === 304) {
     await firstResponse.body?.cancel("Unsolicited not-modified").catch(() => undefined);
     invalid("OGC API Features answered 304 to an unconditional request");
@@ -397,7 +420,7 @@ export async function collectOgcFeed(config: SourceConfig, _state: JsonObject | 
 
   return {
     kind: "body",
-    body: featureDocument(document, features(firstResponse, validated, expected, cap, hosts, fetcher)),
+    body: featureDocument(document, features(firstResponse, validated, expected, cap, hosts, fetcher, sleep)),
     provenance: { sourceUrl: first.toString() },
     completeness: expected === undefined ? "unknown" : expected <= cap ? "complete" : "partial",
     // Neither service publishes a modification time, so nothing here may date a
@@ -515,6 +538,7 @@ async function* features(
   cap: number,
   hosts: ReadonlySet<string>,
   fetcher: Fetcher,
+  sleep: Sleep,
 ): AsyncGenerator<JsonValue> {
   let response = firstResponse;
   let url = buildItemsUrl(config);
@@ -523,10 +547,10 @@ async function* features(
   /*
    * Feature identities seen so far, so a member repeated across pages cannot
    * make up the count of one that was dropped when the collection shifted under
-   * the walk. Bounded: the walk itself is bounded by `cap`, and a service that
-   * sends more than that fails below before the set can outgrow it.
+   * the walk. Each is held as a digest, so a national collection costs a few
+   * megabytes rather than the tens its keys would.
    */
-  const seen = new Set<string>();
+  const seen = new SeenIdentities(PAGE_SIZE_LIMIT * PAGE_COUNT_LIMIT);
   for (let pageNumber = 0; pageNumber < config.maxPages; pageNumber += 1) {
     const page = openPage(response);
     let count = 0;
@@ -573,7 +597,7 @@ async function* features(
     }
     offset = next;
     url = buildItemsUrl(config, offset);
-    response = await request(url, itemHeaders(), config, hosts, fetcher);
+    response = await requestPage(url, itemHeaders(), config, hosts, fetcher, sleep);
     assertUpstream(response, "items");
     assertWgs84(response.headers, config);
   }
@@ -640,6 +664,33 @@ function nextOffset(envelope: JsonObject, current: URL, currentOffset: number, c
  * One request, following at most a few redirects, each of which is checked
  * against the allowlist and this service's own path before it is fetched.
  */
+/**
+ * One page, tried again when the gateway briefly fails it or the connection
+ * does. Walking a national collection takes tens of pages, and a single page
+ * that times out or answers 502 would otherwise refuse the whole collection.
+ *
+ * Only what the network and the gateway do by accident is retried. A refusal
+ * this library made itself — a redirect off the allowlist, a host that is not
+ * allowed — is a `GatekeeperError` and is raised as it is, because trying it
+ * again would only arrive at the same answer.
+ */
+async function requestPage(url: URL, headers: Headers, config: ValidatedConfig, hosts: ReadonlySet<string>, fetcher: Fetcher, sleep: Sleep): Promise<Response> {
+  for (let attempt = 1; ; attempt += 1) {
+    const last = attempt >= MAX_PAGE_ATTEMPTS;
+    let response: Response;
+    try {
+      response = await request(url, headers, config, hosts, fetcher);
+    } catch (error) {
+      if (last || error instanceof GatekeeperError) throw error;
+      await sleep(RETRY_BACKOFF_MS[attempt - 1] ?? 2_000);
+      continue;
+    }
+    if (response.ok || !TRANSIENT_STATUSES.has(response.status) || last) return response;
+    await response.body?.cancel("Retrying").catch(() => undefined);
+    await sleep(RETRY_BACKOFF_MS[attempt - 1] ?? 2_000);
+  }
+}
+
 async function request(url: URL, headers: Headers, config: ValidatedConfig, hosts: ReadonlySet<string>, fetcher: Fetcher): Promise<Response> {
   const identified = new Headers(headers);
   identified.set("User-Agent", "open-data.pt/1.0 (+https://open-data.pt)");
