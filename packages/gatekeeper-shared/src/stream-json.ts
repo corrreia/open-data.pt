@@ -42,10 +42,41 @@ const decoder = new TextDecoder();
  * Stream the elements of the JSON array found at `path` in a document such as
  * `{"features": [...]}` (`path = ["features"]`) or a top-level array
  * (`path = []`), holding at most one element in memory at a time.
+ *
+ * Several paths may be given, as `[["features"], ["data", "features"]]`, for a
+ * format one service publishes plainly and another wraps in an envelope: the
+ * first of them the document turns out to hold is the array that is streamed.
+ * They must not be prefixes of one another, so that at most one can match.
  */
-export function streamJsonArray(body: ReadableStream<Uint8Array>, path: readonly string[], options?: JsonArrayStreamOptions): JsonArrayStream {
-  const scanner = new ArrayScanner(path, options?.maxElementBytes ?? DEFAULT_ELEMENT_BYTES, options?.maxEnvelopeBytes ?? DEFAULT_ENVELOPE_BYTES);
+export function streamJsonArray(body: ReadableStream<Uint8Array>, path: JsonArrayPath, options?: JsonArrayStreamOptions): JsonArrayStream {
+  const scanner = new ArrayScanner(candidatePaths(path), options?.maxElementBytes ?? DEFAULT_ELEMENT_BYTES, options?.maxEnvelopeBytes ?? DEFAULT_ENVELOPE_BYTES);
   return { elements: scanElements(body, scanner), envelope: () => scanner.envelope() };
+}
+
+/** Where the array sits: one path of object keys, or several to choose between. */
+export type JsonArrayPath = readonly string[] | readonly (readonly string[])[];
+
+/**
+ * The two arms of `JsonArrayPath` are told apart by what the array holds: every
+ * member an array means it is a list of paths, and a member that is not means
+ * it is one path of keys. An empty array is one empty path, which is how a
+ * top-level array is asked for.
+ */
+function isPathList(path: JsonArrayPath): path is ReadonlyArray<readonly string[]> {
+  return path.length > 0 && path.every((member) => Array.isArray(member));
+}
+
+function candidatePaths(path: JsonArrayPath): ReadonlyArray<readonly string[]> {
+  const candidates = isPathList(path) ? path : [path];
+  for (const one of candidates) {
+    for (const other of candidates) {
+      if (one === other) continue;
+      if (one.length <= other.length && one.every((key, index) => key === other[index])) {
+        throw new Error("Streamed array paths must not be prefixes of one another");
+      }
+    }
+  }
+  return candidates;
 }
 
 /** Parse newline-delimited JSON one line at a time. */
@@ -186,10 +217,12 @@ class ArrayScanner {
   private readonly element: BoundedBytes;
   private readonly outside: BoundedBytes;
 
-  private readonly path: readonly string[];
+  private readonly paths: ReadonlyArray<readonly string[]>;
+  private readonly deepest: number;
 
-  constructor(path: readonly string[], maxElementBytes: number, maxEnvelopeBytes: number) {
-    this.path = path;
+  constructor(paths: ReadonlyArray<readonly string[]>, maxElementBytes: number, maxEnvelopeBytes: number) {
+    this.paths = paths;
+    this.deepest = Math.max(...paths.map((path) => path.length));
     const envelopeTooLarge = () => tooLarge(`JSON envelope exceeds ${maxEnvelopeBytes} bytes`);
     this.key = new BoundedBytes(maxEnvelopeBytes, envelopeTooLarge);
     this.outside = new BoundedBytes(maxEnvelopeBytes, envelopeTooLarge);
@@ -263,7 +296,7 @@ class ArrayScanner {
       switch (byte) {
         case QUOTE:
           this.inString = true;
-          if (this.phase === "before" && frame?.object && frame.expectsKey && this.frames.length <= this.path.length) {
+          if (this.phase === "before" && frame?.object && frame.expectsKey && this.frames.length <= this.deepest) {
             this.key.reset();
             this.capturingKey = true;
             keyStart = index;
@@ -329,7 +362,7 @@ class ArrayScanner {
   }
 
   private atTarget(): boolean {
-    return this.frames.length === this.path.length && this.frames.every((frame, index) => frame.object && !frame.expectsKey && frame.key === this.path[index]);
+    return this.paths.some((path) => this.frames.length === path.length && this.frames.every((frame, index) => frame.object && !frame.expectsKey && frame.key === path[index]));
   }
 
   private finishKey(): void {

@@ -85,7 +85,7 @@ export {
 } from "./source-http";
 export { readBoundedBytes, toByteStream } from "./stream";
 export { streamCsvRecords, streamCsvRows, type CsvStreamOptions } from "./stream-csv";
-export { streamJsonArray, streamNdjson, type JsonArrayStream, type JsonArrayStreamOptions } from "./stream-json";
+export { streamJsonArray, streamNdjson, type JsonArrayPath, type JsonArrayStream, type JsonArrayStreamOptions } from "./stream-json";
 export { field, runTransformer, type Transformer, type UnstampedResult } from "./transformer";
 
 export type SourceConfig = Record<string, string>;

@@ -5,13 +5,13 @@ description: Create, modify, or review open-data.pt Gatekeeper libraries and the
 
 # Writing an open-data.pt Gatekeeper
 
-The Gatekeeper is one Cloudflare Worker, `packages/gatekeeper/`, reached through private RPC, carrying every **library** — `arcgis`, `bpstat`, `carris`, `ckan`, `dgeg`, `eurostat`, `firms`, `gbfs`, `gtfs`, `ine`, `ipma`, `metrolisboa`, `myinfo`, `nasapower`, `ogc`, `omie`, `opendatasoft`, `parliament`, `ren`, `udata`, `usgs`, `wfs`. It owns upstream access, parsing, validation, normalization, source clocks, validators, coverage, and source-supported history. It never returns original source bytes to the kernel and owns no canonical storage.
+The Gatekeeper is one Cloudflare Worker, `packages/gatekeeper/`, reached through private RPC, carrying every **library** — `arcgis`, `bpstat`, `carris`, `ckan`, `dgeg`, `eurostat`, `firms`, `gbfs`, `gtfs`, `ine`, `ipma`, `metrolisboa`, `myinfo`, `nasapower`, `ogc`, `omie`, `opendatasoft`, `parliament`, `ren`, `snit`, `stac`, `udata`, `usgs`, `wfs`. It owns upstream access, parsing, validation, normalization, source clocks, validators, coverage, and source-supported history. It never returns original source bytes to the kernel and owns no canonical storage.
 
 The code that does the reading is a library, not the Worker:
 
 ```
-packages/gatekeeper-shared/src/formats/<format>/   arcgis  ckan  opendatasoft  gtfs  gbfs  udata  ogc  wfs
-packages/gatekeeper-shared/src/sources/<name>/     carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat  parliament  myinfo  firms  nasapower  usgs  anepc  ioda  ripeatlas  ripestat  peeringdb
+packages/gatekeeper-shared/src/formats/<format>/   arcgis  ckan  opendatasoft  gtfs  gbfs  udata  ogc  wfs  stac
+packages/gatekeeper-shared/src/sources/<name>/     carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat  parliament  myinfo  firms  nasapower  usgs  anepc  ioda  ripeatlas  ripestat  peeringdb  snit
 packages/gatekeeper-shared/src/libraries.ts        the libraries the Worker carries
 packages/gatekeeper/                               the Worker: `gatekeeper<Env>(LIBRARIES)` and its Wrangler config; it never changes for a new library
 ```

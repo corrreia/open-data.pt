@@ -31,10 +31,37 @@ const PAGE_COUNT_LIMIT = 500;
 /** Redirects followed, each one re-validated against the allowlist before it is fetched. */
 const MAX_REDIRECTS = 3;
 
-const CONFIG_KEYS = new Set(["host", "basePath", "collection", "geometry", "properties", "pageSize", "maxPages"]);
+const CONFIG_KEYS = new Set(["host", "basePath", "collection", "geometry", "properties", "filterField", "filterValue", "pageSize", "maxPages"]);
 const COLLECTION_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
 const PATH_SEGMENT_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const PROPERTY_PATTERN = /^[A-Za-z0-9_]{1,64}$/;
+/** Longest value an attribute may be cut at; the longest real one is a municipality's name. */
+const FILTER_VALUE_LIMIT = 128;
+/**
+ * Query parameters this library builds itself, which a filter may never name.
+ * The filter is written into the URL last, so without this a configuration
+ * asking to cut on `limit` would overwrite the page bound, and one asking to cut
+ * on `skipGeometry` would pull the outlines a feed declared it leaves behind.
+ * These are the OGC API Features parameters plus the ones pygeoapi adds.
+ */
+const RESERVED_QUERY_PARAMETERS = new Set([
+  "bbox",
+  "bbox-crs",
+  "crs",
+  "datetime",
+  "f",
+  "filter",
+  "filter-crs",
+  "filter-lang",
+  "lang",
+  "limit",
+  "offset",
+  "properties",
+  "resulttype",
+  "skipgeometry",
+  "sortby",
+  "token",
+]);
 const CRS84 = "http://www.opengis.net/def/crs/OGC/1.3/CRS84";
 /**
  * The coordinate reference systems a GeoJSON response may be in and still be
@@ -94,6 +121,12 @@ interface ValidatedConfig {
   collection: string;
   geometry: "include" | "skip";
   properties?: string[];
+  /**
+   * One attribute the collection is cut by, and the value to cut at, sent as
+   * the query parameter Part 3 gives a queryable. A national layer too large to
+   * read whole is published a region at a time rather than not at all.
+   */
+  filter?: { field: string; value: string };
   pageSize: number;
   maxPages: number;
 }
@@ -120,6 +153,10 @@ export function validateOgcFeedConfig(config: SourceConfig, hosts: ReadonlySet<s
   };
   if (validated.basePath !== "") canonical.basePath = validated.basePath;
   if (validated.properties) canonical.properties = validated.properties.join(",");
+  if (validated.filter) {
+    canonical.filterField = validated.filter.field;
+    canonical.filterValue = validated.filter.value;
+  }
   return canonical;
 }
 
@@ -139,6 +176,8 @@ function parseConfig(config: SourceConfig, hosts: ReadonlySet<string>): Validate
   };
   const properties = normalizeProperties(config.properties);
   if (properties) validated.properties = properties;
+  const filter = normalizeFilter(config.filterField, config.filterValue);
+  if (filter) validated.filter = filter;
   return validated;
 }
 
@@ -184,6 +223,39 @@ function normalizeProperties(value: string | undefined): string[] | undefined {
     throw new GatekeeperError("properties must be up to 64 comma-separated property names", "invalid-config");
   }
   return [...new Set(names)];
+}
+
+/**
+ * The attribute a collection is cut by and the value to cut at, which only mean
+ * anything together. The value is sent as a query parameter named for the
+ * attribute, so it is bounded and kept to printable characters on one line; the
+ * service decides whether the attribute is queryable at all.
+ */
+function normalizeFilter(field: string | undefined, value: string | undefined): { field: string; value: string } | undefined {
+  const name = field?.trim() ?? "";
+  const wanted = value?.trim() ?? "";
+  if (name === "" && wanted === "") return undefined;
+  if (name === "" || wanted === "") {
+    throw new GatekeeperError("filterField and filterValue are given together or not at all", "invalid-config");
+  }
+  if (!PROPERTY_PATTERN.test(name)) {
+    throw new GatekeeperError("filterField must be a property name of letters, digits, or underscores", "invalid-config");
+  }
+  if (RESERVED_QUERY_PARAMETERS.has(name.toLowerCase())) {
+    throw new GatekeeperError(`filterField may not be ${name}: this library builds that query parameter itself`, "invalid-config");
+  }
+  if (wanted.length > FILTER_VALUE_LIMIT || hasControlCharacter(wanted)) {
+    throw new GatekeeperError(`filterValue must be at most ${FILTER_VALUE_LIMIT} printable characters on one line`, "invalid-config");
+  }
+  return { field: name, value: wanted };
+}
+
+function hasControlCharacter(value: string): boolean {
+  for (const character of value) {
+    const code = character.codePointAt(0) ?? 0;
+    if (code < 0x20 || code === 0x7f) return true;
+  }
+  return false;
 }
 
 function boundedInteger(value: string | undefined, fallback: number, maximum: number, label: string): number {
@@ -233,14 +305,20 @@ function buildItemsUrl(config: ValidatedConfig, offset?: number): URL {
   // does not support a requested CRS must refuse rather than substitute one.
   else url.searchParams.set("crs", CRS84);
   if (config.properties) url.searchParams.set("properties", config.properties.join(","));
+  if (config.filter) url.searchParams.set(config.filter.field, config.filter.value);
   return url;
 }
 
-/** The cheap count query: an empty feature collection carrying `numberMatched` for the whole collection. */
+/**
+ * The cheap count query: an empty feature collection carrying `numberMatched`.
+ * It carries the feed's own filter, so what it counts is what the pages will
+ * return — counting the whole collection would call a complete subset partial.
+ */
 function hitsUrl(config: ValidatedConfig): URL {
   const url = new URL(`${serviceRoot(config)}/collections/${encodeURIComponent(config.collection)}/items`, `https://${config.host}`);
   url.searchParams.set("f", "json");
   url.searchParams.set("resulttype", "hits");
+  if (config.filter) url.searchParams.set(config.filter.field, config.filter.value);
   return url;
 }
 
@@ -263,6 +341,8 @@ function unsafeParsed(config: SourceConfig): ValidatedConfig {
   }
   const properties = normalizeProperties(config.properties);
   if (properties) validated.properties = properties;
+  const filter = normalizeFilter(config.filterField, config.filterValue);
+  if (filter) validated.filter = filter;
   return validated;
 }
 

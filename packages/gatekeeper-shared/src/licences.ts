@@ -72,6 +72,12 @@ export const LICENCES = {
     url: "https://www.earthdata.nasa.gov/engage/open-data-services-software-policies/data-information-guidance",
     summary: "NASA commits to full, open and non-discriminatory sharing of its Earth science data; source acknowledgement remains requested.",
   },
+  "dgt-imagery-quote": {
+    name: "DGT imagery terms (viewing free, files quoted)",
+    url: "https://snig.dgterritorio.gov.pt/rndg/srv/por/catalog.search",
+    summary:
+      "Direção-Geral do Território's terms for its older aerial coverages, as its catalogue records state them: the viewing service carries no restriction and access is public, but the image files themselves are supplied against a quotation from DGT, and any publication must credit them.",
+  },
   "sgifr-terms": {
     name: "SGIFR terms of use",
     url: "https://www.sgifr.gov.pt/termos-e-condicoes",

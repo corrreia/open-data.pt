@@ -20,7 +20,8 @@ import { OGC_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/ogc/exam
 
 const DGT_HOST = "ogcapi.dgterritorio.gov.pt";
 const AZORES_HOST = "ambiente.azores.gov.pt";
-const hosts = new Set([DGT_HOST, AZORES_HOST]);
+const LNEG_HOST = "ogcapi.lneg.pt";
+const hosts = new Set([DGT_HOST, AZORES_HOST, LNEG_HOST]);
 const allowedHosts = [...hosts].join(",");
 
 const config = { host: DGT_HOST, collection: "municipios", geometry: "skip", pageSize: "1000", maxPages: "5" };
@@ -202,8 +203,30 @@ describe("OGC API Features configuration", () => {
     });
   });
 
+  it("keeps an attribute the collection is cut by", () => {
+    expect(validateOgcFeedConfig({ host: DGT_HOST, collection: "crus", filterField: " municipio ", filterValue: " LISBOA " }, hosts)).toEqual({
+      host: DGT_HOST,
+      collection: "crus",
+      geometry: "include",
+      filterField: "municipio",
+      filterValue: "LISBOA",
+      pageSize: "500",
+      maxPages: "100",
+    });
+  });
+
   it.each([
     ["an unknown field", { host: DGT_HOST, collection: "municipios", bbox: "-9,38,-8,39" }],
+    ["a filter attribute without a value", { host: DGT_HOST, collection: "crus", filterField: "municipio" }],
+    ["a filter value without an attribute", { host: DGT_HOST, collection: "crus", filterValue: "LISBOA" }],
+    ["a filter attribute with a quote", { host: DGT_HOST, collection: "crus", filterField: "municipio','x", filterValue: "LISBOA" }],
+    ["a filter value carrying a newline", { host: DGT_HOST, collection: "crus", filterField: "municipio", filterValue: "LISBOA\nPORTO" }],
+    ["a filter value that is only spaces", { host: DGT_HOST, collection: "crus", filterField: "municipio", filterValue: "   " }],
+    ["a filter on the parameter that bounds the page", { host: DGT_HOST, collection: "crus", filterField: "limit", filterValue: "999999" }],
+    ["a filter on the parameter that walks the pages", { host: DGT_HOST, collection: "crus", filterField: "offset", filterValue: "0" }],
+    ["a filter on the parameter that drops the outlines", { host: DGT_HOST, collection: "crus", filterField: "skipGeometry", filterValue: "false" }],
+    ["a filter on the parameter that names the format", { host: DGT_HOST, collection: "crus", filterField: "f", filterValue: "html" }],
+    ["a filter on the parameter that counts instead of returning", { host: DGT_HOST, collection: "crus", filterField: "resulttype", filterValue: "hits" }],
     ["a collection with a slash", { host: DGT_HOST, collection: "municipios/items" }],
     ["a collection that escapes its path", { host: DGT_HOST, collection: ".." }],
     ["a base path that escapes its service", { host: DGT_HOST, basePath: "a/../..", collection: "municipios" }],
@@ -235,6 +258,24 @@ describe("OGC API Features configuration", () => {
     expect(itemsUrl({ host: AZORES_HOST, basePath: "idea-api", collection: "Farois", geometry: "include", properties: "unique_id,designacao" }).toString()).toBe(
       `https://${AZORES_HOST}/idea-api/collections/Farois/items?f=json&limit=500&crs=${encodeURIComponent("http://www.opengis.net/def/crs/OGC/1.3/CRS84")}&properties=unique_id%2Cdesignacao`,
     );
+  });
+
+  it("asks the service for one attribute's value, and counts that subset alone", async () => {
+    const filtered = { ...config, collection: "crus", filterField: "municipio", filterValue: "LISBOA" };
+    expect(itemsUrl(filtered).toString()).toBe(`https://${DGT_HOST}/collections/crus/items?f=json&limit=1000&skipGeometry=true&municipio=LISBOA`);
+    const fetcher = serviceFetcher(() => itemsPage({ count: 1, matched: 1, collection: "crus" }), 1, { collection: { id: "crus", itemType: "feature", title: "CRUS" } });
+    await readDocument(await collectOgcFeed(filtered, undefined, hosts, fetcher));
+    // The count query decides completeness, so it must be cut the same way the
+    // pages are: counting the whole collection would call the subset partial.
+    const hits = fetcher.mock.calls.map((call) => new URL(String(call[0]))).find((url) => url.searchParams.get("resulttype") === "hits");
+    expect(hits?.searchParams.get("municipio")).toBe("LISBOA");
+  });
+
+  it("gives a feed cut by an attribute its own resource key", async () => {
+    const lisboa = await resolveOgcFeed({ host: DGT_HOST, collection: "crus", filterField: "municipio", filterValue: "LISBOA" }, hosts);
+    const porto = await resolveOgcFeed({ host: DGT_HOST, collection: "crus", filterField: "municipio", filterValue: "PORTO" }, hosts);
+    const whole = await resolveOgcFeed({ host: DGT_HOST, collection: "crus" }, hosts);
+    expect(new Set([lisboa.resourceKey, porto.resourceKey, whole.resourceKey]).size).toBe(3);
   });
 
   it("gives two feeds that differ only in how much they read the same resource key", async () => {
@@ -924,22 +965,52 @@ describe("OGC API Features through the shared collector", () => {
 });
 
 describe("OGC API Features examples", () => {
-  it("ships the three curated collections, each naming its own library", () => {
-    expect(OGC_EXAMPLES).toHaveLength(3);
+  it("ships every curated collection under its own slug, each naming its own library", () => {
     expect(OGC_EXAMPLES.every((example) => example.config.source === "ogc")).toBe(true);
     expect(new Set(OGC_EXAMPLES.map((example) => example.slug)).size).toBe(OGC_EXAMPLES.length);
+    // Six CAOP tables, eighteen SRUP registers plus the SGIFR points, and one
+    // feed per municipality whose land-use regime DGT has published nationally.
+    expect(OGC_EXAMPLES.filter((example) => example.slug.startsWith("dgt-caop-"))).toHaveLength(6);
+    expect(OGC_EXAMPLES.filter((example) => example.slug.startsWith("dgt-srup-"))).toHaveLength(18);
+    // Every mainland municipality the national layer holds.
+    expect(OGC_EXAMPLES.filter((example) => example.slug.startsWith("dgt-crus-"))).toHaveLength(278);
   });
 
-  it("reads the one service it is allowed to read and no others", () => {
-    expect(new Set(OGC_EXAMPLES.map((example) => example.config.host))).toEqual(new Set([DGT_HOST]));
+  it("shows a municipality's own name, whatever the layer spells it as", () => {
+    // Constância is stored as CONSTÃNCIA and answers to nothing else, so the
+    // value sent and the name shown are allowed to differ — but no title may
+    // carry the layer's misspelling through to a reader.
+    const cut = OGC_EXAMPLES.filter((example) => example.config.filterField === "municipio");
+    expect(cut.some((example) => example.config.filterValue === "CONSTÃNCIA")).toBe(true);
+    expect(cut.filter((example) => /Constãncia|ãncia/i.test(example.title) || /Constãncia/i.test(example.description))).toEqual([]);
+    expect(cut.find((example) => example.config.filterValue === "CONSTÃNCIA")?.title).toContain("Constância");
   });
 
-  it("says in every DGT title and description that the CAOP covers the mainland only", () => {
-    const dgt = OGC_EXAMPLES.filter((example) => example.config.host === DGT_HOST);
-    expect(dgt).toHaveLength(3);
-    expect(dgt.every((example) => /mainland/i.test(example.title) && /Azores and Madeira are not part/i.test(example.description))).toBe(true);
-    // Every one is honest about asking the service for attributes without outlines.
-    expect(dgt.every((example) => example.config.geometry === "skip" && /without boundary outlines/i.test(example.description))).toBe(true);
+  it("reads each collection once, and cuts the shared one by a different municipality every time", () => {
+    const whole = OGC_EXAMPLES.filter((example) => example.config.filterField === undefined).map((example) => example.config.collection);
+    expect(new Set(whole).size).toBe(whole.length);
+    const cut = OGC_EXAMPLES.filter((example) => example.config.filterField !== undefined);
+    expect(new Set(cut.map((example) => example.config.filterValue)).size).toBe(cut.length);
+    expect(cut.every((example) => example.config.collection === "crus" && example.config.filterField === "municipio")).toBe(true);
+    // No municipality is left out, Torres Vedras included.
+    expect(cut.some((example) => example.config.filterValue === "TORRES VEDRAS")).toBe(true);
+  });
+
+  it("reads only the two services it is allowed to read", () => {
+    expect(new Set(OGC_EXAMPLES.map((example) => example.config.host))).toEqual(new Set([DGT_HOST, LNEG_HOST]));
+  });
+
+  it("says in every CAOP title that the charter covers the mainland only", () => {
+    // The three collections whose scope stops at the mainland say so in their
+    // own descriptions; the islands are read from the GeoServer by the `wfs`
+    // library instead. The NUTS tables name the island regions without holding
+    // their areas, and say that too.
+    const bounded = OGC_EXAMPLES.filter((example) => /^dgt-caop-(distritos|municipios|freguesias)-feed$/.test(example.slug));
+    expect(bounded).toHaveLength(3);
+    expect(bounded.every((example) => /mainland/i.test(example.title) && /Azores and Madeira are not part/i.test(example.description))).toBe(true);
+    expect(bounded.every((example) => /without boundary outlines/i.test(example.description))).toBe(true);
+    // Every CAOP table asks the service for attributes alone.
+    expect(OGC_EXAMPLES.filter((example) => example.slug.startsWith("dgt-caop-")).every((example) => example.config.geometry === "skip")).toBe(true);
   });
 
   // The eight Azores collections that used to live here were removed in September 2026:
@@ -967,9 +1038,25 @@ describe("OGC API Features examples", () => {
     for (const example of OGC_EXAMPLES) {
       const pages = Number(example.config.maxPages ?? "0") * Number(example.config.pageSize ?? "0");
       expect(pages).toBeGreaterThan(0);
-      expect(example.policy.collection.maxBytes).toBeGreaterThanOrEqual(4 * 1024 * 1024);
+      // A megabyte is the floor a 36-feature register needs; the CAOP tables and
+      // the layers with tens of thousands of rows each declare their own, larger.
+      expect(example.policy.collection.maxBytes).toBeGreaterThanOrEqual(1024 * 1024);
       // A record is stored whole in SQLite; no policy may ask for more than the kernel keeps.
       expect(example.policy.collection.maxRecordBytes ?? 256 * 1024).toBeLessThanOrEqual(1024 * 1024);
+    }
+    // The CAOP tables are the largest attribute walks here and keep their own room.
+    for (const example of OGC_EXAMPLES.filter((candidate) => /^dgt-caop-(municipios|freguesias|trocos)-feed$/.test(candidate.slug))) {
+      expect(example.policy.collection.maxBytes).toBeGreaterThanOrEqual(4 * 1024 * 1024);
+    }
+  });
+
+  it("asks for at least as many pages as the collection it promises needs", () => {
+    for (const example of OGC_EXAMPLES) {
+      const promised = /([\d,]{2,})\s/.exec(example.description)?.[1];
+      if (promised === undefined) continue;
+      const features = Number(promised.replaceAll(",", ""));
+      const room = Number(example.config.maxPages ?? "0") * Number(example.config.pageSize ?? "0");
+      expect(room).toBeGreaterThanOrEqual(features);
     }
   });
 });
