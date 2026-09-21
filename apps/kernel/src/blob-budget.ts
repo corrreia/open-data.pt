@@ -16,6 +16,16 @@ export const BLOB_BYTES = 900_000;
 export const MAX_RECORD_BYTES = 1024 * 1024;
 
 /**
+ * The largest batch of rows staged to the runner in one call. It is one RPC
+ * argument, and a Durable Object refuses a serialized call over 32 MiB, so a
+ * batch counted only in rows fails as soon as a product's rows are large: a
+ * record carrying its geometry runs to thousands of times one carrying a name
+ * and a code, and two thousand of them came to 37 MB. A quarter of the limit
+ * leaves room for the call around them and for a row far above the average.
+ */
+export const STAGE_BYTES = 8 * 1024 * 1024;
+
+/**
  * The largest chunk list a record product may have. It is one value in the
  * runner's and the Registry's SQLite and one RPC argument; at about 250 bytes
  * per chunk this is some 4,000 chunks, several million rows, and it leaves the

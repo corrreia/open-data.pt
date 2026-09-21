@@ -434,8 +434,11 @@ const CRUS_NATIONAL: ExampleFeed = {
       // is what the redrawn charter itself changes at, and it asks this service
       // for one walk a month rather than 278.
       cadenceSeconds: 2_592_000,
-      // Measured at 109 seconds for the walk, before any page is retried.
-      timeoutSeconds: 600,
+      // The walk alone measured 109 seconds, and reading it end to end through
+      // the kernel took 292. In production the same run also normalises, stages
+      // and writes every row, and 600 seconds was not enough for it; this is
+      // room for the whole of that, on a feed that runs once a month.
+      timeoutSeconds: 1_800,
       maxBytes: 256 * MEBIBYTE,
       maxOutputBytes: 192 * MEBIBYTE,
       // The largest parcel row measured is 723 bytes.
