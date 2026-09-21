@@ -422,7 +422,10 @@ const CRUS_MUNICIPALITIES: CrusMunicipality[] = [
   { slug: "cinfaes", name: "Cinfães", municipio: "CINFÃES", parcels: 638 },
   { slug: "coimbra", name: "Coimbra", municipio: "COIMBRA", parcels: 862 },
   { slug: "condeixa-a-nova", name: "Condeixa-A-Nova", municipio: "CONDEIXA-A-NOVA", parcels: 396 },
-  { slug: "constancia", name: "Constãncia", municipio: "CONSTÃNCIA", parcels: 178 },
+  // The layer spells this one with an Ã, and is the only thing that answers to
+  // it: asked for CONSTÂNCIA it returns nothing at all. The name shown is the
+  // town's, the value sent is the layer's, and they are not the same string.
+  { slug: "constancia", name: "Constância", municipio: "CONSTÃNCIA", parcels: 178 },
   { slug: "coruche", name: "Coruche", municipio: "CORUCHE", parcels: 1482 },
   { slug: "covilha", name: "Covilhã", municipio: "COVILHÃ", parcels: 820 },
   { slug: "crato", name: "Crato", municipio: "CRATO", parcels: 826 },

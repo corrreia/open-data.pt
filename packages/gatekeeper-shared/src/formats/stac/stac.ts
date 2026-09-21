@@ -339,9 +339,11 @@ interface ItemsPage {
 
 function openPage(response: Response): ItemsPage {
   if (!response.body) invalid("STAC items returned an empty body");
-  // A proxy may wrap the feature collection in `data`; the reader is pointed at
-  // whichever of the two shapes carries the features.
-  const document = streamJsonArray(response.body, ["data", "features"], {
+  // A STAC API answers with a plain ItemCollection, and the proxy in front of
+  // this one wraps that in `data`. Both are read: whichever the page turns out
+  // to hold is the array that is streamed, so a service that stops wrapping —
+  // or a catalogue that never did — is read rather than silently seen as empty.
+  const document = streamJsonArray(response.body, [["features"], ["data", "features"]], {
     maxElementBytes: MAX_ITEM_BYTES,
     maxEnvelopeBytes: MAX_PAGE_ENVELOPE_BYTES,
   });

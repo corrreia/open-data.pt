@@ -148,7 +148,9 @@ function itemRecord(item: JsonValue): CanonicalRecord | undefined {
     bands: asset?.bands ?? null,
     bandNames: asset?.bandNames ?? null,
     crs: isJsonNumber(properties["proj:epsg"]) ? `EPSG:${properties["proj:epsg"]}` : null,
-    fileBytes: isJsonNumber(properties["file:size"]) ? properties["file:size"] : null,
+    // The File extension puts the size on the asset; this catalogue puts it on
+    // the item instead, so the asset is asked first and the item answers for it.
+    fileBytes: asset?.bytes ?? (isJsonNumber(properties["file:size"]) ? properties["file:size"] : null),
     fileType: asset?.type ?? null,
     file: asset?.href ?? null,
     catalogued: isJsonString(properties.datetime) ? properties.datetime : null,
@@ -165,17 +167,28 @@ interface PrimaryAsset {
   type: string | null;
   bands: number | null;
   bandNames: string | null;
+  /** The File extension's size, which belongs on the asset rather than the item. */
+  bytes: number | null;
 }
 
+/** The roles that mark an asset as the thing itself, best first. */
+const DATA_ROLES = ["data", "visual"];
+
 /**
- * The asset a row points at. A STAC item may carry several; the one published
- * is the one the catalogue marks as the data itself, or its only one.
+ * The asset a row points at. A STAC item may carry several — a point cloud and
+ * its thumbnail, a raster and its metadata — and the key an asset is filed
+ * under means nothing in the specification. Its `roles` do, so the one
+ * published is the one that says it is the data, and only a single-asset item
+ * falls back to the one asset it has.
  */
 function primaryAsset(assets: JsonValue | undefined): PrimaryAsset | undefined {
   if (!isJsonObject(assets)) return undefined;
   const entries = Object.entries(assets).filter((entry): entry is [string, JsonObject] => isJsonObject(entry[1]));
   if (entries.length === 0) return undefined;
-  const chosen = entries.find(([name]) => name === "data" || name === "visual" || name === "Data") ?? entries[0];
+  const byRole = DATA_ROLES.map((role) => entries.find(([, asset]) => isJsonArray(asset.roles) && asset.roles.some((member) => member === role))).find(
+    (entry) => entry !== undefined,
+  );
+  const chosen = byRole ?? (entries.length === 1 ? entries[0] : undefined);
   if (!chosen) return undefined;
   const asset = chosen[1];
   const bands = isJsonArray(asset["eo:bands"]) ? asset["eo:bands"] : undefined;
@@ -187,16 +200,33 @@ function primaryAsset(assets: JsonValue | undefined): PrimaryAsset | undefined {
     type: isJsonString(asset.type) ? asset.type : null,
     bands: bands ? bands.length : null,
     bandNames: names && names.length > 0 ? names.join(", ") : null,
+    bytes: isJsonNumber(asset["file:size"]) ? asset["file:size"] : null,
   };
 }
 
-/** A STAC bounding box, west, south, east, north, in WGS 84 degrees. */
+/**
+ * A STAC bounding box in WGS 84 degrees, flattened to its horizontal corners.
+ *
+ * It has four members, or six when the box is a solid: the elevations then sit
+ * between the horizontal numbers, as west, south, lowest, east, north, highest.
+ * The point-cloud collections publish the six-member form, where reading the
+ * first four would take the lowest ground for the eastern edge.
+ *
+ * `west` greater than `east` is left alone: that is how a box crossing the
+ * antimeridian is written, and it is not this library's to straighten.
+ */
 function bbox(value: JsonValue | undefined): [number, number, number, number] | undefined {
-  if (!isJsonArray(value) || value.length < 4) return undefined;
-  const numbers = value.slice(0, 4).map((member) => (isJsonNumber(member) && Number.isFinite(member) ? member : undefined));
-  const [west, south, east, north] = numbers;
+  if (!isJsonArray(value)) return undefined;
+  const order = value.length === 4 ? [0, 1, 2, 3] : value.length === 6 ? [0, 1, 3, 4] : undefined;
+  if (!order) return undefined;
+  const corners = order.map((index) => {
+    const member = value[index];
+    return isJsonNumber(member) && Number.isFinite(member) ? member : undefined;
+  });
+  const [west, south, east, north] = corners;
   if (west === undefined || south === undefined || east === undefined || north === undefined) return undefined;
-  if (west < -180 || east > 180 || south < -90 || north > 90) return undefined;
+  if (west < -180 || west > 180 || east < -180 || east > 180 || south < -90 || north > 90) return undefined;
+  if (south > north) return undefined;
   return [round(west), round(south), round(east), round(north)];
 }
 

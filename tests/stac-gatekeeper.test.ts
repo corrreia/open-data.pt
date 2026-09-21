@@ -59,6 +59,12 @@ function page(options: PageOptions): JsonObject {
   return { data: { type: "FeatureCollection", features: Array.from({ length: options.count }, (_, index) => item(first + index)), links } };
 }
 
+/** What a STAC API answers with when nothing wraps it: a plain ItemCollection. */
+function unwrappedPage(options: PageOptions): JsonObject {
+  const wrapped = page(options);
+  return isJsonObject(wrapped.data) ? wrapped.data : {};
+}
+
 function serviceFetcher(pages: (token: string | null) => JsonValue, overrides: { collection?: JsonValue; onRequest?: (url: URL) => Response | undefined } = {}) {
   return vi.fn(async (input: RequestInfo | URL) => {
     const url = new URL(input.toString());
@@ -164,6 +170,15 @@ describe("STAC collection", () => {
     expect(tokens).toEqual(["t1"]);
   });
 
+  it("reads a plain ItemCollection, which is what a STAC API answers with", async () => {
+    // The proxy in front of this catalogue wraps its answers in `data`; a
+    // catalogue that does not wrap must still be read, and never be mistaken
+    // for an empty coverage that would retract every tile it holds.
+    const fetcher = serviceFetcher((token) => (token === null ? unwrappedPage({ count: 2, next: "t1" }) : unwrappedPage({ count: 1, first: 2 })));
+    const document = await readDocument(await collectStacFeed(config, undefined, hosts, fetcher));
+    expect(itemIds(document)).toEqual(["ORTOS-2025-cog-25cm-0", "ORTOS-2025-cog-25cm-1", "ORTOS-2025-cog-25cm-2"]);
+  });
+
   it("reads the collection through the proxy envelope the service wraps it in", async () => {
     const fetched = await collectStacFeed(
       config,
@@ -255,6 +270,53 @@ describe("STAC normalization", () => {
     });
     // The middle of the tile, so a coverage can be drawn on a map.
     expect(Number(payload.latitude)).toBeCloseTo(37.075, 3);
+  });
+
+  it("reads a three-dimensional bounding box by its dimensions, not its first four numbers", async () => {
+    // The point-cloud collections publish six-member boxes, where members two
+    // and five are elevation. Taking the first four would publish the lowest
+    // ground as the eastern edge and the highest as the northern one.
+    const solid = { ...item(0), bbox: [-8.13, 37.05, 12.5, -8.04, 37.1, 480.25] };
+    const rows = await rowsOf({ type: "FeatureCollection", features: [solid] });
+    expect(rows[0]?.record?.payload).toMatchObject({ west: -8.13, south: 37.05, east: -8.04, north: 37.1 });
+    expect(Number(rows[0]?.record?.payload.latitude)).toBeCloseTo(37.075, 3);
+  });
+
+  it("leaves a bounding box it cannot read empty rather than guessing at it", async () => {
+    const crooked = { ...item(1), bbox: [-8.13, 37.1, -8.04, 37.05] };
+    const short = { ...item(2), bbox: [-8.13, 37.05, -8.04] };
+    const rows = await rowsOf({ type: "FeatureCollection", features: [crooked, short] });
+    // A box whose south is above its north is not a box; a five-member one is not either.
+    expect(rows[0]?.record?.payload.north).toBeNull();
+    expect(rows[1]?.record?.payload.north).toBeNull();
+  });
+
+  it("keeps a box that crosses the antimeridian, where west is east of east", async () => {
+    const crossing = { ...item(3), bbox: [179.5, 37.05, -179.5, 37.1] };
+    const rows = await rowsOf({ type: "FeatureCollection", features: [crossing] });
+    expect(rows[0]?.record?.payload).toMatchObject({ west: 179.5, east: -179.5 });
+  });
+
+  it("chooses the asset by the role it carries, and takes its size from it", async () => {
+    const many = {
+      ...item(4),
+      properties: { ...item(4).properties, "file:size": 10 },
+      assets: {
+        thumbnail: { href: "https://example.test/thumb.png", type: "image/png", roles: ["thumbnail"] },
+        cloud: { href: "https://example.test/cloud.laz", type: "application/vnd.laszip", roles: ["data"], "file:size": 153784946 },
+      },
+    };
+    const payload = (await rowsOf({ type: "FeatureCollection", features: [many] }))[0]?.record?.payload ?? {};
+    // Asset keys carry no meaning in STAC; the role does, and the thumbnail is first.
+    expect(payload.file).toBe("https://example.test/cloud.laz");
+    // The File extension puts the size on the asset, which wins over the item's own.
+    expect(payload.fileBytes).toBe(153784946);
+  });
+
+  it("falls back to the size the catalogue puts on the item, where the asset carries none", async () => {
+    const sized = { ...item(5), properties: { ...item(5).properties, "file:size": 1208140 } };
+    const payload = (await rowsOf({ type: "FeatureCollection", features: [sized] }))[0]?.record?.payload ?? {};
+    expect(payload.fileBytes).toBe(1208140);
   });
 
   it("never dates a tile by the catalogue's loading clock", async () => {

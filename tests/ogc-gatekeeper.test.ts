@@ -976,6 +976,16 @@ describe("OGC API Features examples", () => {
     expect(OGC_EXAMPLES.filter((example) => example.slug.startsWith("dgt-crus-"))).toHaveLength(278);
   });
 
+  it("shows a municipality's own name, whatever the layer spells it as", () => {
+    // Constância is stored as CONSTÃNCIA and answers to nothing else, so the
+    // value sent and the name shown are allowed to differ — but no title may
+    // carry the layer's misspelling through to a reader.
+    const cut = OGC_EXAMPLES.filter((example) => example.config.filterField === "municipio");
+    expect(cut.some((example) => example.config.filterValue === "CONSTÃNCIA")).toBe(true);
+    expect(cut.filter((example) => /Constãncia|ãncia/i.test(example.title) || /Constãncia/i.test(example.description))).toEqual([]);
+    expect(cut.find((example) => example.config.filterValue === "CONSTÃNCIA")?.title).toContain("Constância");
+  });
+
   it("reads each collection once, and cuts the shared one by a different municipality every time", () => {
     const whole = OGC_EXAMPLES.filter((example) => example.config.filterField === undefined).map((example) => example.config.collection);
     expect(new Set(whole).size).toBe(whole.length);
