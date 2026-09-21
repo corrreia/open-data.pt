@@ -21,6 +21,10 @@ export function resolveOgcFeed(config: SourceConfig, hosts: ReadonlySet<string>)
       const identity: SourceConfig = { host: value.host ?? "", collection: value.collection ?? "", geometry: value.geometry ?? "include" };
       if (value.basePath) identity.basePath = value.basePath;
       if (value.properties) identity.properties = value.properties;
+      // A feed cut by an attribute reads a different set of features, so it is a
+      // different resource: one municipality's parcels are not the country's.
+      if (value.filterField) identity.filterField = value.filterField;
+      if (value.filterValue) identity.filterValue = value.filterValue;
       return identity;
     },
   });

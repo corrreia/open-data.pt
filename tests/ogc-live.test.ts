@@ -7,7 +7,7 @@ const wanted = (process.env.LIVE_OGC ?? "")
   .split(",")
   .map((slug) => slug.trim())
   .filter(Boolean);
-const hosts = "ogcapi.dgterritorio.gov.pt,ambiente.azores.gov.pt";
+const hosts = "ogcapi.dgterritorio.gov.pt,ambiente.azores.gov.pt,ogcapi.lneg.pt";
 
 async function readFrames(stream: ReadableStream<Uint8Array>): Promise<JsonObject[]> {
   const reader = stream.getReader();

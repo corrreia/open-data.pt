@@ -7,7 +7,7 @@ Read `.agents/skills/write-gatekeeper/SKILL.md` before touching a Gatekeeper, an
 ```
 packages/gatekeeper-shared/src/           the contract, the shared collector, HTTP/stream/schema helpers
 packages/gatekeeper-shared/src/formats/   arcgis  ckan  opendatasoft  gtfs  gbfs  udata  ogc  wfs
-packages/gatekeeper-shared/src/sources/   carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat  parliament  myinfo  firms  nasapower  usgs  anepc  ioda  ripeatlas  ripestat  peeringdb
+packages/gatekeeper-shared/src/sources/   carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat  parliament  myinfo  firms  nasapower  usgs  anepc  ioda  ripeatlas  ripestat  peeringdb  snit
 packages/gatekeeper-shared/src/libraries.ts  the libraries the Gatekeeper Worker carries
 packages/gatekeeper/                      the Gatekeeper Worker: every listed library behind one private RPC binding
 apps/kernel/                              storage, history, the API and the site
@@ -20,7 +20,7 @@ tools/                                    dev.ts, usage-report.ts
 Where code lives
 
 1. A library per format: anything with a standard (GTFS, GBFS, ArcGIS, CKAN, Opendatasoft, uData, OGC API Features, WFS) is parsed once, under `formats/`. A Worker never contains parsing.
-2. A library per bespoke source, under `sources/`: Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, NASA FIRMS, NASA POWER, USGS, ANEPC, IODA, RIPE Atlas, RIPEstat, PeeringDB.
+2. A library per bespoke source, under `sources/`: Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, NASA FIRMS, NASA POWER, USGS, ANEPC, IODA, RIPE Atlas, RIPEstat, PeeringDB, SNIT.
 3. One Worker carries every library. A library is named for **how** the data is read, never for what it is about or who publishes it. Topics overlap and a publisher may be read two ways, so neither is a code boundary. What the catalog groups by is three keyed vocabularies in `packages/gatekeeper-shared/src/`: `TOPICS` (tags, any number and order), `PUBLISHERS` (who made the data, never the portal it was read from) and `LICENCES` (the terms stated, or `source-terms`); every example names a key of each, and the API serves them expanded as `{ id, name, url?, description? }`. `libraries.ts` lists the libraries the Worker carries; a test holds every library directory to being listed or held.
 4. A library's `deployment.ts` declares its human name and what it needs (vars with their values, secrets, R2 buckets, CPU limit) and builds the library from the Worker's environment. A held source (`packages/gatekeeper-shared/src/publication-holds.json`) is not listed: its code does not ship and its examples are not installed until the hold is lifted.
 5. Feed slugs never change: a feed's ID derives from its slug, and its resource key from its library, so nothing about the Worker is in its identity.

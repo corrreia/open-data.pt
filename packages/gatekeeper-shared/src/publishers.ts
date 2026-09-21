@@ -62,6 +62,10 @@ export const PUBLISHERS = {
   "ine": { name: "INE · Instituto Nacional de Estatística", url: "https://www.ine.pt/", logo: "png" },
   "ioda": { name: "IODA · Internet Intelligence Lab, Georgia Tech", url: "https://ioda.inetintel.cc.gatech.edu/", logo: "png" },
   "ipma": { name: "IPMA · Instituto Português do Mar e da Atmosfera", url: "https://www.ipma.pt/", logo: "svg" },
+  // LNEG draws its own mark white on transparent, which disappears on the tile
+  // the site draws it on, and the only other mark on its services is pygeoapi's,
+  // which is not theirs to stand for them. Their initials stand in instead.
+  "lneg": { name: "LNEG · Laboratório Nacional de Energia e Geologia", url: "https://www.lneg.pt/" },
   "mare": { name: "Maré", logo: "png" },
   "metro-do-porto": { name: "Metro do Porto", url: "https://www.metrodoporto.pt/", logo: "svg" },
   "metropolitano-de-lisboa": { name: "Metropolitano de Lisboa", url: "https://www.metrolisboa.pt/", logo: "png" },

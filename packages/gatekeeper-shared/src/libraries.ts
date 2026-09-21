@@ -30,6 +30,7 @@ import { NASA_POWER_DEPLOYMENT, NASA_POWER_EXAMPLES } from "./sources/nasapower"
 import { OMIE_DEPLOYMENT, OMIE_EXAMPLES } from "./sources/omie";
 import { PARLIAMENT_DEPLOYMENT, PARLIAMENT_EXAMPLES } from "./sources/parliament";
 import { REN_DEPLOYMENT, REN_EXAMPLES } from "./sources/ren";
+import { SNIT_DEPLOYMENT, SNIT_EXAMPLES } from "./sources/snit";
 import { USGS_DEPLOYMENT, USGS_EXAMPLES } from "./sources/usgs";
 
 export const LIBRARIES: readonly Library[] = [
@@ -56,6 +57,7 @@ export const LIBRARIES: readonly Library[] = [
   { deployment: OMIE_DEPLOYMENT, examples: OMIE_EXAMPLES },
   { deployment: PARLIAMENT_DEPLOYMENT, examples: PARLIAMENT_EXAMPLES },
   { deployment: REN_DEPLOYMENT, examples: REN_EXAMPLES },
+  { deployment: SNIT_DEPLOYMENT, examples: SNIT_EXAMPLES },
   { deployment: USGS_DEPLOYMENT, examples: USGS_EXAMPLES },
 ];
 
