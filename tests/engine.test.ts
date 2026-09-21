@@ -135,6 +135,31 @@ describe("collection engine: large products use the SQLite index", () => {
     expect(h.lakeRows("records").filter((row) => row.operation === "retract")).toHaveLength(1);
   }, 60_000);
 
+  it("stages heavy rows in batches a Durable Object will accept, not two thousand at a time", async () => {
+    // A Durable Object refuses a serialized call over 32 MiB. Staging counted
+    // only in rows sent 2,000 of them whatever they weighed, which was a
+    // megabyte for a product of names and codes and 37 MB for one carrying
+    // geometry — the land-use boundaries failed on that in production.
+    const h = await kernelHarness();
+    const heavy = "x".repeat(24 * 1024);
+    const count = SMALL_PRODUCT_ROWS + 2_000;
+    h.source.records = rows(count, () => heavy);
+
+    const batches: number[] = [];
+    const staged = h.port.stageRecords.bind(h.port);
+    h.port.stageRecords = async (id, key, sent) => {
+      batches.push(sent.reduce((bytes, row) => bytes + (row.json?.length ?? 0), 0));
+      return staged(id, key, sent);
+    };
+
+    expect((await h.collect()).status).toBe("succeeded");
+    expect(batches.length).toBeGreaterThan(0);
+    // Every batch stays well inside the limit, and none reaches two thousand
+    // rows, because the bytes run out long before the count does.
+    expect(Math.max(...batches)).toBeLessThan(32 * 1024 * 1024);
+    expect(await h.served()).toHaveLength(count);
+  }, 120_000);
+
   it("promotes a small product that outgrew memory, without inventing creates for existing rows", async () => {
     const h = await kernelHarness();
     await baseline(h, 100);

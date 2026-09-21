@@ -16,6 +16,7 @@ import {
   type SourceCheckpoint,
 } from "@open-data-pt/gatekeeper-shared";
 
+import { STAGE_BYTES, utf8Length } from "./blob-budget";
 import { buildChunks, chunkListProblem, compareKeys, parseChunkRows, servedIdentity, type ChunkSink, type ServingRow } from "./chunks";
 import { CollectionDeadline } from "./collection-deadline";
 import { keepsHistory, type ProductIndexEntry } from "./feed-model";
@@ -554,8 +555,15 @@ class SmallRecordWorker implements ProductWorker {
  * Record products above the in-memory bound: each chunk of rows is classified
  * against the runner's SQLite entity index, which writes only what changed.
  */
+/** Rows staged to the runner in one call, whichever bound is reached first. */
+const STAGE_ROWS = 2_000;
+/** What a staged row costs beyond its own strings: the frame around it. */
+const STAGED_ROW_OVERHEAD = 128;
+
 class LargeRecordWorker implements ProductWorker {
   private buffer: StagedRecord[] = [];
+  /** What the buffered rows weigh, so a batch is bounded by bytes and not only by count. */
+  private bufferBytes = 0;
   private seen = new Uint8Array(1024);
   private readonly changes = new RecentChanges<ChangeItem>(WINDOW.changes);
   private revisions = 0;
@@ -565,8 +573,12 @@ class LargeRecordWorker implements ProductWorker {
 
   async pushRecord(record: CanonicalRecord): Promise<void> {
     const prepared = prepareRecord(record);
-    this.buffer.push({ prepared, json: prepared.removal ? null : servingJson(prepared, this.base.context) });
-    if (this.buffer.length >= 2_000) await this.flush();
+    const json = prepared.removal ? null : servingJson(prepared, this.base.context);
+    this.buffer.push({ prepared, json });
+    // A staged row carries both the prepared record and the JSON it will be
+    // served as, so it weighs about twice what it will be stored as.
+    this.bufferBytes += (json === null ? 0 : utf8Length(json)) + utf8Length(prepared.hash) + prepared.key.length + STAGED_ROW_OVERHEAD;
+    if (this.buffer.length >= STAGE_ROWS || this.bufferBytes >= STAGE_BYTES) await this.flush();
   }
 
   async pushPoint(): Promise<void> {
@@ -577,6 +589,7 @@ class LargeRecordWorker implements ProductWorker {
     if (this.buffer.length === 0) return;
     const rows = this.buffer;
     this.buffer = [];
+    this.bufferBytes = 0;
     const result = await this.base.ports.runner.stageRecords(this.base.plan.acquisitionId, this.base.header.productKey, rows);
     for (const id of result.seen) this.mark(id);
     this.changes.addAll([...result.changes].reverse());
