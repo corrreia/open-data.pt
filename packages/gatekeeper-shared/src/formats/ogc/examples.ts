@@ -337,10 +337,16 @@ function srupFeed(layer: SrupLayer): ExampleFeed {
  * failed page again rather than the dataset being shaped around a flaky
  * gateway.
  *
- * `autor` is DGT on every parcel and `objectid` repeats `fid`, so neither is
- * asked for.
+ * Every column the layer holds is asked for, `autor` and `objectid` included.
+ * Walking the whole layer they are constant and redundant — `autor` is DGT on
+ * all 229,768 parcels and `objectid` equals `fid` on every one — but they are
+ * what the charter records about who drew a parcel and what the source calls
+ * it, and a reader matching this against DGT's own systems needs them. `Autor`
+ * is also half of the pair that says whose data this is: DGT drew it, `fonte`
+ * says which municipality's plan it came from.
  */
-const CRUS_COLUMNS = "dtcc,municipio,designacao_no_plano,classe_2021,categoria_2021,escala_origem,fonte,area_ha,data_pub_origem,registo_ou_deposito,situacao_pdm,codigo";
+const CRUS_COLUMNS =
+  "objectid,dtcc,municipio,designacao_no_plano,classe_2021,categoria_2021,escala_origem,fonte,area_ha,autor,data_pub_origem,registo_ou_deposito,situacao_pdm,codigo";
 
 const CRUS_NATIONAL: ExampleFeed = {
   slug: "dgt-crus-feed",
