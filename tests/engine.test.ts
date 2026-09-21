@@ -184,7 +184,7 @@ describe("collection engine: large products use the SQLite index", () => {
     const failure = await h.run(acquisition.id).catch((error: Error) => error);
     if (!(failure instanceof PromotionRequired)) throw new Error(`Expected a promotion, got ${String(failure)}`);
     // It is the weight that promoted it, not the row count, and the message says so.
-    expect(failure.message).toMatch(/characters of rows/);
+    expect(failure.message).toMatch(/bytes of rows/);
     await h.port.promote(failure.productKey);
     expect(h.core.productPlans()[0]?.mode).toBe("large");
     expect((await h.run(acquisition.id)).status).toBe("succeeded");
@@ -193,6 +193,29 @@ describe("collection engine: large products use the SQLite index", () => {
     expect(h.core.productPlans()[0]?.mode).toBe("large");
     expect(h.core.productPlans()[0]?.entry?.rowCount).toBeLessThan(SMALL_PRODUCT_ROWS / 2);
   }, 120_000);
+
+  it("promotes on the same weight of rows whether or not their characters fit Latin-1", async () => {
+    // A JavaScript string costs one byte a code unit while every character fits
+    // Latin-1 and two as soon as one does not — and it is the whole string that
+    // widens. A bound read as though a code unit were always one byte would let
+    // a product of Greek or CJK text hold twice what it was allowed, which is
+    // the memory this bound exists to keep. Both halves here carry the same
+    // number of code units, so both must promote at the same point.
+    const promotedAt = async (fill: string): Promise<number> => {
+      const h = await kernelHarness();
+      await baseline(h, 10);
+      h.source.records = rows(2_000, () => fill.repeat(16 * 1024));
+      const acquisition = h.core.collectNow("manual");
+      h.core.markStarted(acquisition.id, `width-${fill}`);
+      const failure = await h.run(acquisition.id).catch((error: Error) => error);
+      if (!(failure instanceof PromotionRequired)) throw new Error(`Expected a promotion, got ${String(failure)}`);
+      await h.port.promote(failure.productKey);
+      await h.run(acquisition.id);
+      return h.core.productPlans()[0]?.entry?.rowCount ?? 0;
+    };
+    // "a" is one byte a code unit in the engine; "界" is two. Same lengths, same bound.
+    expect(await promotedAt("界")).toBe(await promotedAt("a"));
+  }, 180_000);
 
   it("promotes a small product that outgrew memory, without inventing creates for existing rows", async () => {
     const h = await kernelHarness();

@@ -26,18 +26,30 @@ export const MAX_RECORD_BYTES = 1024 * 1024;
 export const STAGE_BYTES = 8 * 1024 * 1024;
 
 /**
- * How much of a product in-memory comparison may hold before it is given to
- * SQLite instead, counted in the UTF-16 code units a JavaScript string is
- * stored as.
+ * How many bytes of one copy of a product in-memory comparison may hold before
+ * the product is given to SQLite instead.
  *
- * The small path keeps three copies of a product at once: the rows coming in,
- * the rows currently served, and the merged result. A Worker has 128 MB for all
- * of it, so the bound has to sit well under a third of that. Counting rows
- * cannot do this job: three thousand parish boundaries are 122 MB where twenty
- * thousand names and codes are under two, and it was a row count alone that let
- * the parishes and the national road network run the isolate out of memory.
+ * The small path keeps three copies at once: the rows coming in, the rows
+ * currently served, and the merge of the two. A Worker has 128 MiB for all of
+ * it and for everything else in the isolate, so one copy has to sit well under
+ * a third. Counting rows cannot do this job: three thousand parish boundaries
+ * are 122 MB where twenty thousand names and codes are under two, and it was a
+ * row count alone that let the parishes and the national road network run the
+ * isolate out of memory.
  */
-export const SMALL_PRODUCT_WEIGHT = 24 * 1024 * 1024;
+export const SMALL_PRODUCT_BYTES = 24 * 1024 * 1024;
+
+/**
+ * Bytes a JavaScript string costs per UTF-16 code unit, at worst.
+ *
+ * A string is held as one byte a code unit while every character fits Latin-1,
+ * and as two the moment one does not — and it is the whole string that widens,
+ * not the character. A row of Portuguese place names stays narrow; one em dash
+ * or one Greek letter in a description doubles it. Since the count is taken
+ * from lengths rather than from encoding every row, the bound assumes the
+ * worse of the two.
+ */
+export const BYTES_PER_CODE_UNIT = 2;
 
 /**
  * The largest chunk list a record product may have. It is one value in the

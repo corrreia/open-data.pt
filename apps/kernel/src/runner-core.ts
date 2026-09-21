@@ -28,7 +28,7 @@ import {
 import { digest } from "./hash";
 import type { LakeTable } from "./lake";
 import { keys, WINDOW, type ChangeItem, type ObjectStore } from "./object-store";
-import { BLOB_BYTES, jsonArrays, MAX_RECORD_BYTES, SMALL_PRODUCT_WEIGHT, utf8Length } from "./blob-budget";
+import { BLOB_BYTES, jsonArrays, MAX_RECORD_BYTES, SMALL_PRODUCT_BYTES, utf8Length } from "./blob-budget";
 import { RecentChanges, recordRevision, retractionRevision, type PreparedRecord, type RecordContext } from "./records";
 import { dropAllTables, userTables } from "./sqlite-reset";
 
@@ -898,7 +898,7 @@ export class RunnerCore {
    */
   private fitsInMemory(entry: ProductIndexEntry): boolean {
     if (entry.rowCount >= SMALL_PRODUCT_ROWS / 2) return false;
-    return (entry.chunks?.length ?? 0) * BLOB_BYTES < SMALL_PRODUCT_WEIGHT / 2;
+    return (entry.chunks?.length ?? 0) * BLOB_BYTES < SMALL_PRODUCT_BYTES / 2;
   }
 
   /* ---------- History outbox ---------- */

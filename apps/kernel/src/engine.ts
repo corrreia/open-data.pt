@@ -16,7 +16,7 @@ import {
   type SourceCheckpoint,
 } from "@open-data-pt/gatekeeper-shared";
 
-import { SMALL_PRODUCT_WEIGHT, STAGE_BYTES, utf8Length } from "./blob-budget";
+import { BYTES_PER_CODE_UNIT, SMALL_PRODUCT_BYTES, STAGE_BYTES, utf8Length } from "./blob-budget";
 import { buildChunks, chunkListProblem, compareKeys, parseChunkRows, servedIdentity, type ChunkSink, type ServingRow } from "./chunks";
 import { CollectionDeadline } from "./collection-deadline";
 import { keepsHistory, type ProductIndexEntry } from "./feed-model";
@@ -504,8 +504,11 @@ class SmallRecordWorker implements ProductWorker {
     // A product is small when it is light, not only when it is short: what is
     // held here is held again as the rows now served and again as the merge of
     // the two, so a few thousand boundaries weigh more than the isolate has.
-    if (this.incomingWeight > SMALL_PRODUCT_WEIGHT) {
-      throw new PromotionRequired(this.base.header.productKey, `${SMALL_PRODUCT_WEIGHT} characters of rows`);
+    // The weight is a count of code units, and a code unit is two bytes in a
+    // string holding one character Latin-1 cannot, so the bound assumes two.
+    const bytes = this.incomingWeight * BYTES_PER_CODE_UNIT;
+    if (bytes > SMALL_PRODUCT_BYTES) {
+      throw new PromotionRequired(this.base.header.productKey, `${SMALL_PRODUCT_BYTES} bytes of rows`);
     }
   }
 
