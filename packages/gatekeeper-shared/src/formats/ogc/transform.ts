@@ -16,15 +16,22 @@ import {
   type TransformContext,
 } from "../../index";
 import { representativePoint } from "./geometry";
+import { SeenIdentities } from "./identity";
 
 import type { OgcCollectionDescription, OgcProperty } from "./ogc";
 
 /**
- * Largest single feature read from a page, in bytes. One measured DGT district
- * outline is 3.6 MB of coordinates, so this is what the reader must hold to see
- * a feature at all; only one is held at a time.
+ * Largest single feature read from a page, in bytes: what the reader must hold
+ * to see a feature at all, one at a time.
+ *
+ * It is generous because this is the wire form, and pygeoapi pretty-prints. One
+ * measured land-use parcel in Beja is 6.5 MB as the service sends it and 1.95 MB
+ * once the indentation is gone — a factor of about three and a half. What may be
+ * stored is bounded separately by `MAX_RECORD_BYTES`, against the compact form,
+ * so a generous reading budget here lets a large outline be seen and judged
+ * rather than failing the whole collection on the way in.
  */
-export const MAX_FEATURE_BYTES = 8 * 1024 * 1024;
+export const MAX_FEATURE_BYTES = 32 * 1024 * 1024;
 /**
  * Largest single record published, in bytes: the kernel's own per-record
  * ceiling, since a record is stored whole in SQLite. A feature past it is
@@ -40,6 +47,12 @@ const PRODUCT_KEY = "features";
 const MAX_DISTINCT = 20;
 /** Properties the normalizer will describe, whether declared or discovered. */
 const MAX_PROPERTIES = 512;
+/**
+ * Features one walk may check for repeats. Each costs a number rather than its
+ * key, so the national land-use charter's 229,768 parcels fit inside a few
+ * megabytes and there is room for a collection several times its size.
+ */
+const MAX_IDENTITIES = 1_000_000;
 /** Fields every feature carries because they come from its geometry, not from a property. */
 const GEOMETRY_FIELDS = ["geometry", "latitude", "longitude"];
 
@@ -140,8 +153,7 @@ export class OgcTransformer {
     const withGeometry = description.geometry === "include";
     let total = 0;
     let accepted = 0;
-    const identities = new Set<string>();
-    let identityBudget = 0;
+    const identities = new SeenIdentities(MAX_IDENTITIES);
 
     async function* rows(): AsyncGenerator<NormalizedRow> {
       let next = first;
@@ -164,10 +176,6 @@ export class OgcTransformer {
             // Validate the final identity too: the source may omit Feature.id and
             // use an identifying schema property, or mix the two representations.
             if (identities.has(record.entityKey)) invalid("OGC collection repeats a normalized feature identity");
-            identityBudget += record.entityKey.length * 2 + 128;
-            if (identityBudget > 8 * 1024 * 1024) {
-              throw new GatekeeperError("OGC identity validation exceeds its memory budget", "response-too-large");
-            }
             identities.add(record.entityKey);
             accepted += 1;
             yield { productKey: PRODUCT_KEY, record };
