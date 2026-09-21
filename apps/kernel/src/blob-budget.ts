@@ -26,6 +26,20 @@ export const MAX_RECORD_BYTES = 1024 * 1024;
 export const STAGE_BYTES = 8 * 1024 * 1024;
 
 /**
+ * How much of a product in-memory comparison may hold before it is given to
+ * SQLite instead, counted in the UTF-16 code units a JavaScript string is
+ * stored as.
+ *
+ * The small path keeps three copies of a product at once: the rows coming in,
+ * the rows currently served, and the merged result. A Worker has 128 MB for all
+ * of it, so the bound has to sit well under a third of that. Counting rows
+ * cannot do this job: three thousand parish boundaries are 122 MB where twenty
+ * thousand names and codes are under two, and it was a row count alone that let
+ * the parishes and the national road network run the isolate out of memory.
+ */
+export const SMALL_PRODUCT_WEIGHT = 24 * 1024 * 1024;
+
+/**
  * The largest chunk list a record product may have. It is one value in the
  * runner's and the Registry's SQLite and one RPC argument; at about 250 bytes
  * per chunk this is some 4,000 chunks, several million rows, and it leaves the

@@ -16,7 +16,7 @@ import {
   type SourceCheckpoint,
 } from "@open-data-pt/gatekeeper-shared";
 
-import { STAGE_BYTES, utf8Length } from "./blob-budget";
+import { SMALL_PRODUCT_WEIGHT, STAGE_BYTES, utf8Length } from "./blob-budget";
 import { buildChunks, chunkListProblem, compareKeys, parseChunkRows, servedIdentity, type ChunkSink, type ServingRow } from "./chunks";
 import { CollectionDeadline } from "./collection-deadline";
 import { keepsHistory, type ProductIndexEntry } from "./feed-model";
@@ -102,8 +102,11 @@ export interface EngineOutcome {
 
 /** A small product outgrew in-memory comparison; the runner must seed its index before a retry. */
 export class PromotionRequired extends Error {
-  constructor(readonly productKey: string) {
-    super(`Product ${productKey} exceeded ${SMALL_PRODUCT_ROWS} rows; promoting it to the SQLite index`);
+  constructor(
+    readonly productKey: string,
+    outgrew = `${SMALL_PRODUCT_ROWS} rows`,
+  ) {
+    super(`Product ${productKey} exceeded ${outgrew}; promoting it to the SQLite index`);
     this.name = "PromotionRequired";
   }
 }
@@ -487,14 +490,23 @@ function chunkSink(base: WorkerBase, known: ReadonlySet<string>): ChunkSink {
  */
 class SmallRecordWorker implements ProductWorker {
   private readonly incoming = new Map<string, PreparedRecord>();
+  private incomingWeight = 0;
 
   constructor(private readonly base: WorkerBase) {}
 
   async pushRecord(record: CanonicalRecord): Promise<void> {
     const prepared = prepareRecord(record);
+    this.incomingWeight -= this.incoming.get(prepared.key)?.weight ?? 0;
     this.incoming.delete(prepared.key);
     this.incoming.set(prepared.key, prepared);
+    this.incomingWeight += prepared.weight;
     if (this.incoming.size > SMALL_PRODUCT_ROWS) throw new PromotionRequired(this.base.header.productKey);
+    // A product is small when it is light, not only when it is short: what is
+    // held here is held again as the rows now served and again as the merge of
+    // the two, so a few thousand boundaries weigh more than the isolate has.
+    if (this.incomingWeight > SMALL_PRODUCT_WEIGHT) {
+      throw new PromotionRequired(this.base.header.productKey, `${SMALL_PRODUCT_WEIGHT} characters of rows`);
+    }
   }
 
   async pushPoint(): Promise<void> {

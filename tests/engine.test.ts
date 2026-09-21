@@ -167,6 +167,33 @@ describe("collection engine: large products use the SQLite index", () => {
     expect(await h.served()).toHaveLength(count);
   }, 120_000);
 
+  it("promotes a short product whose rows are heavy, and does not demote it back", async () => {
+    // What put the parish boundaries and the national road network out of
+    // memory in production: three thousand rows, and 122 MB of them, on a path
+    // that only ever counted the rows. Each row here carries a quarter of a
+    // mebibyte, so a few hundred pass the byte bound while the row bound is
+    // nowhere near.
+    const outline = "x".repeat(64 * 1024);
+    const h = await kernelHarness();
+    await baseline(h, 10);
+    expect(h.core.productPlans()[0]?.mode).toBe("small");
+    const heavy = 500;
+    h.source.records = rows(heavy, () => outline);
+    const acquisition = h.core.collectNow("manual");
+    h.core.markStarted(acquisition.id, "heavy-rows");
+    const failure = await h.run(acquisition.id).catch((error: Error) => error);
+    if (!(failure instanceof PromotionRequired)) throw new Error(`Expected a promotion, got ${String(failure)}`);
+    // It is the weight that promoted it, not the row count, and the message says so.
+    expect(failure.message).toMatch(/characters of rows/);
+    await h.port.promote(failure.productKey);
+    expect(h.core.productPlans()[0]?.mode).toBe("large");
+    expect((await h.run(acquisition.id)).status).toBe("succeeded");
+    // Far under the row bound, so a row count alone would send it straight back
+    // to the path it just ran out of memory on.
+    expect(h.core.productPlans()[0]?.mode).toBe("large");
+    expect(h.core.productPlans()[0]?.entry?.rowCount).toBeLessThan(SMALL_PRODUCT_ROWS / 2);
+  }, 120_000);
+
   it("promotes a small product that outgrew memory, without inventing creates for existing rows", async () => {
     const h = await kernelHarness();
     await baseline(h, 100);
