@@ -133,7 +133,6 @@ describe("libraries and the Worker that carries them", () => {
       "ripeatlas",
       "ripestat",
       "snit",
-      "stac",
       "udata",
       "usgs",
       "wfs",
