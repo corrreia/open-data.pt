@@ -43,7 +43,7 @@ export const PUBLISHERS = {
   "cm-cadaval": { name: "Município do Cadaval", url: "https://www.cm-cadaval.pt/", logo: "svg" },
   "cm-cascais": { name: "Câmara Municipal de Cascais", url: "https://www.cascais.pt/", logo: "png" },
   "cm-lisboa": { name: "Câmara Municipal de Lisboa", url: "https://www.lisboa.pt/", logo: "svg" },
-  "cm-mafra": { name: "Município de Mafra", url: "https://www.cm-mafra.pt/" },
+  "cm-mafra": { name: "Município de Mafra", url: "https://www.cm-mafra.pt/", logo: "svg" },
   "cm-oeiras": { name: "Câmara Municipal de Oeiras", url: "https://www.oeiras.pt/", logo: "png" },
   "cm-porto": { name: "Câmara Municipal do Porto", url: "https://www.cm-porto.pt/", logo: "svg" },
   "cp": { name: "CP", url: "https://www.cp.pt/", logo: "svg" },
@@ -65,7 +65,7 @@ export const PUBLISHERS = {
   // LNEG draws its own mark white on transparent, which disappears on the tile
   // the site draws it on, and the only other mark on its services is pygeoapi's,
   // which is not theirs to stand for them. Their initials stand in instead.
-  "lneg": { name: "LNEG · Laboratório Nacional de Energia e Geologia", url: "https://www.lneg.pt/" },
+  "lneg": { name: "LNEG · Laboratório Nacional de Energia e Geologia", url: "https://www.lneg.pt/", logo: "png" },
   "mare": { name: "Maré", logo: "png" },
   "metro-do-porto": { name: "Metro do Porto", url: "https://www.metrodoporto.pt/", logo: "svg" },
   "metropolitano-de-lisboa": { name: "Metropolitano de Lisboa", url: "https://www.metrolisboa.pt/", logo: "png" },

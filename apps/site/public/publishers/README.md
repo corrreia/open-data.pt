@@ -29,6 +29,10 @@ A mark must
 - stay **under 48 KB**.
 
 When a publisher has both a symbol and a wordmark, take the one that still reads at 18px.
+
+A publisher who draws their mark only in white, for their own dark site, is the one case
+where the file is altered rather than taken as it is: the ink is changed and nothing else, so
+the shape stays theirs. Anything past re-inking would be a redrawing, and is not done here.
 A publisher with no usable mark at all is drawn as their initials instead, so an empty
 `logo` is a fine answer and never looks like a broken page.
 
@@ -53,6 +57,7 @@ A publisher with no usable mark at all is drawn as their initials instead, so an
 | `cm-cadaval`              | Município do Cadaval               | https://www.cm-cadaval.pt/favicon/favicon.svg                                                                                                             |
 | `cm-cascais`              | Câmara Municipal de Cascais        | supplied by the project owner, white on a dark plate; the plate is dropped and the dots drawn dark instead, so the mark reads on a light page             |
 | `cm-lisboa`               | Câmara Municipal de Lisboa         | https://www.lisboa.pt/_assets/fbd086277289c830376535e37e006784/Images/logo_vertical.svg                                                                   |
+| `cm-mafra`                | Município de Mafra                 | https://www.cm-mafra.pt/cmmafra/layout/logo-mafra.svg, re-inked dark: Mafra draws it white for a dark site, and white vanishes on the tile                |
 | `cm-oeiras`               | Câmara Municipal de Oeiras         | supplied by the project owner; cropped to the Oeiras Valley lockup, without the Município Oeiras half                                                     |
 | `cm-porto`                | Câmara Municipal do Porto          | https://www.cm-porto.pt/images/logos/logoazul.svg                                                                                                         |
 | `cp`                      | CP                                 | https://www.cp.pt/favicon.svg                                                                                                                             |
@@ -71,6 +76,7 @@ A publisher with no usable mark at all is drawn as their initials instead, so an
 | `ine`                     | INE                                | supplied by the project owner; trimmed here                                                                                                               |
 | `ioda`                    | IODA                               | https://ioda.inetintel.cc.gatech.edu/apple-touch-icon.png                                                                                                 |
 | `ipma`                    | IPMA                               | https://www.ipma.pt/opencms/system/modules/ipma.website/resources/images/logo-ipma-17.svg                                                                 |
+| `lneg`                    | LNEG                               | https://www.lneg.pt/wp-content/themes/lneg/assets/img/logos/logo_lneg.png, re-inked dark for the same reason; every palette entry was white               |
 | `mare`                    | Maré                               | https://myinfo.4cloud.pt/IP/MotorBusca/mare/Images/logos/MareH50.png (on white; maredematosinhos.pt is gone)                                              |
 | `metro-do-porto`          | Metro do Porto                     | https://www.metrodoporto.pt/metrodoporto/layout/metroportologo.svg                                                                                        |
 | `metropolitano-de-lisboa` | Metropolitano de Lisboa            | https://www.metrolisboa.pt/wp-content/uploads/2017/12/logo_ml.png                                                                                         |
