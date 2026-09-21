@@ -972,9 +972,8 @@ describe("OGC API Features examples", () => {
     // feed per municipality whose land-use regime DGT has published nationally.
     expect(OGC_EXAMPLES.filter((example) => example.slug.startsWith("dgt-caop-"))).toHaveLength(6);
     expect(OGC_EXAMPLES.filter((example) => example.slug.startsWith("dgt-srup-"))).toHaveLength(18);
-    // All 278 mainland municipalities are in the layer; Torres Vedras is read
-    // through the `wfs` library instead, so 277 are read here.
-    expect(OGC_EXAMPLES.filter((example) => example.slug.startsWith("dgt-crus-"))).toHaveLength(277);
+    // Every mainland municipality the national layer holds.
+    expect(OGC_EXAMPLES.filter((example) => example.slug.startsWith("dgt-crus-"))).toHaveLength(278);
   });
 
   it("reads each collection once, and cuts the shared one by a different municipality every time", () => {
@@ -983,9 +982,8 @@ describe("OGC API Features examples", () => {
     const cut = OGC_EXAMPLES.filter((example) => example.config.filterField !== undefined);
     expect(new Set(cut.map((example) => example.config.filterValue)).size).toBe(cut.length);
     expect(cut.every((example) => example.config.collection === "crus" && example.config.filterField === "municipio")).toBe(true);
-    // Torres Vedras is read through the `wfs` library, outlines and all; the
-    // same parcels must not also be published as an attribute table here.
-    expect(cut.some((example) => example.config.filterValue === "TORRES VEDRAS")).toBe(false);
+    // No municipality is left out, Torres Vedras included.
+    expect(cut.some((example) => example.config.filterValue === "TORRES VEDRAS")).toBe(true);
   });
 
   it("reads only the two services it is allowed to read", () => {

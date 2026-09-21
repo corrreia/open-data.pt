@@ -329,9 +329,10 @@ function srupFeed(layer: SrupLayer): ExampleFeed {
  * it, read by walking the whole layer once: all 278 of mainland Portugal are
  * in it, not only the ones whose charter has a catalogue record.
  *
- * Torres Vedras is deliberately absent, which is why there are 277 here: its
- * plan is read through the `wfs` library, outlines and all, and publishing its
- * parcels again as an attribute table would be the same land classified twice.
+ * All 278 are read the same way. Torres Vedras used to be read a class at a
+ * time from the per-municipality GeoMedia service, which carried its outlines
+ * but answered in 200 seconds and then 502 when asked for more than one class;
+ * it is read here like every other municipality instead.
  */
 interface CrusMunicipality {
   /** The slug's municipal part; the feed's own slug never changes once bound. */
@@ -587,6 +588,7 @@ const CRUS_MUNICIPALITIES: CrusMunicipality[] = [
   { slug: "tondela", name: "Tondela", municipio: "TONDELA", parcels: 1333 },
   { slug: "torre-de-moncorvo", name: "Torre de Moncorvo", municipio: "TORRE DE MONCORVO", parcels: 384 },
   { slug: "torres-novas", name: "Torres Novas", municipio: "TORRES NOVAS", parcels: 840 },
+  { slug: "torres-vedras", name: "Torres Vedras", municipio: "TORRES VEDRAS", parcels: 2436 },
   { slug: "trancoso", name: "Trancoso", municipio: "TRANCOSO", parcels: 472 },
   { slug: "trofa", name: "Trofa", municipio: "TROFA", parcels: 221 },
   { slug: "vagos", name: "Vagos", municipio: "VAGOS", parcels: 352 },
