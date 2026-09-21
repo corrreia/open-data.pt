@@ -133,6 +133,33 @@ const COVERAGES: Coverage[] = [
   },
 ];
 
+/*
+ * The catalogue holds twenty-one collections and this reads nine of them. The
+ * twelve left out are the 2024 LiDAR programme, and they are left out on
+ * purpose rather than for want of finding them. Walked in September 2026:
+ *
+ *   ACORES-LAZ, ACORES-MDS-1/5/10, ACORES-MDE-1/5/10
+ *     The Azores survey of September 2024: a point cloud and digital surface
+ *     and elevation models at one, five and ten metres. Seven collections over
+ *     the same 1,820 tiles — 12,740 rows, about 100 MiB read in a minute and a
+ *     half. This is the only Azores data the Centro de Dados publishes, which
+ *     matters because the eight Azores collections the `ogc` library used to
+ *     read are gone behind a Cloudflare challenge.
+ *
+ *   LAZ, MDT-50cm, MDT-2m, MDS-50cm, MDS-2m
+ *     The mainland survey, on a one-kilometre grid over 89,000 km²: roughly
+ *     445,000 tiles across the five, some 3.2 GiB stored and half an hour of
+ *     walking a month.
+ *
+ * Adding any of them needs nothing new from this library: a LiDAR item carries
+ * the same `data` asset, `file:size` and bands an orthophoto tile does, and the
+ * six-member bounding box the point clouds publish — `[w, s, minz, e, n, maxz]`,
+ * with heights in metres where a reader that took the first four would find a
+ * longitude of 159 — is already read correctly. What it needs is a decision
+ * about the mainland's cost, and about whether one survey published as seven
+ * collections belongs in the catalogue as seven entries or as one.
+ */
+
 function coverageFeed(coverage: Coverage): ExampleFeed {
   return {
     slug: `${coverage.slug}-feed`,

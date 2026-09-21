@@ -148,8 +148,11 @@ export interface OgcCollectionDescription {
   title: string;
   description: string;
   keywords: string[];
-  /** Whether geometry was requested at all; `skip` means the source was asked for attributes only. */
-  geometry: "include" | "skip";
+  /**
+   * What is done with the collection's geometry: published as an outline,
+   * reduced to the point that places the feature, or never asked for.
+   */
+  geometry: "include" | "point" | "skip";
   /** The properties the request asked for, when it named a subset. */
   properties?: string[];
   /** `numberMatched` for the whole collection, when the service reported one. */
@@ -162,7 +165,7 @@ interface ValidatedConfig {
   host: string;
   basePath: string;
   collection: string;
-  geometry: "include" | "skip";
+  geometry: "include" | "point" | "skip";
   properties?: string[];
   /**
    * One attribute the collection is cut by, and the value to cut at, sent as
@@ -278,10 +281,19 @@ function normalizeBasePath(value: string): string {
   return trimmed;
 }
 
-function normalizeGeometry(value: string): "include" | "skip" {
+/**
+ * What a feed does with a collection's geometry.
+ *
+ * `include` publishes the outline. `skip` never asks for it. `point` asks for
+ * it and publishes where the feature is without the shape of it — which is how
+ * a layer whose outlines are too large to store is still placed on a map. A
+ * district outline is three and a half megabytes and a municipal reserve eight;
+ * the point that stands for either is two numbers.
+ */
+function normalizeGeometry(value: string): "include" | "point" | "skip" {
   const geometry = value.trim().toLowerCase();
-  if (geometry === "include" || geometry === "skip") return geometry;
-  throw new GatekeeperError("geometry must be include or skip", "invalid-config");
+  if (geometry === "include" || geometry === "point" || geometry === "skip") return geometry;
+  throw new GatekeeperError("geometry must be include, point or skip", "invalid-config");
 }
 
 function normalizeProperties(value: string | undefined): string[] | undefined {
@@ -841,9 +853,15 @@ async function* features(
     }
     // The service promised another page; an empty one that still promises more is a loop.
     if (count === 0) invalid("OGC API Features offered another page after returning no features");
-    if (expected !== undefined && yielded === expected) {
-      invalid("OGC API Features offered more pages than the count it reported allows");
-    }
+    /*
+     * Having read exactly what the service counted is not a reason to stop
+     * here. pygeoapi links a next page from the last full one whenever the
+     * count divides evenly by the page size — offset 192 of 192 — and that page
+     * is empty, ends the walk on the service's own terms, and is the cheapest
+     * request of the run. Reading it is also the only way to tell that courtesy
+     * from a collection that grew since it was counted: if features come back,
+     * the per-feature check above refuses them rather than truncating quietly.
+     */
     if (pageNumber + 1 === config.maxPages) {
       if (expected !== undefined && expected <= cap) {
         invalid("OGC API Features offered more pages than the count it reported allows");
