@@ -30,6 +30,7 @@ Today, 23 libraries over 283 example feeds.
 | `eurostat`     | Eurostat                           | 10    |
 | `firms`        | NASA FIRMS thermal anomalies       | 3     |
 | `ine`          | INE, Statistics Portugal           | 26    |
+| `infoagua`     | InfoÁgua flood and drought alerts  | 2     |
 | `ipma`         | IPMA weather and sea               | 10    |
 | `metrolisboa`  | Metro Lisboa                       | 4     |
 | `myinfo`       | Card4B MYINFO operator portals     | 8     |
@@ -37,6 +38,7 @@ Today, 23 libraries over 283 example feeds.
 | `omie`         | OMIE electricity market            | 2     |
 | `parliament`   | Assembleia da República            | 7     |
 | `ren`          | REN electricity grid               | 8     |
+| `snirh`        | SNIRH water resources              | 12    |
 | `usgs`         | USGS earthquake catalog            | 3     |
 
 The counts are the examples each library ships, not the products they produce: one feed often serves
