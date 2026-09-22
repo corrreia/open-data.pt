@@ -114,6 +114,28 @@ export function openApiDocument(origin: string) {
           },
         },
       },
+      "/api/datasets": {
+        get: {
+          operationId: "listDatasets",
+          tags: ["Feeds"],
+          summary: "List every dataset: what the data is, whose it is, and under what terms",
+          parameters: [],
+          responses: { "200": jsonResponse("Datasets", dataOf("Dataset")), ...reads() },
+        },
+      },
+      "/api/datasets/{datasetId}": {
+        get: {
+          operationId: "getDataset",
+          tags: ["Feeds"],
+          summary: "Get one dataset",
+          parameters: [pathParameter("datasetId", "Dataset key")],
+          responses: {
+            "200": jsonResponse("Dataset", { type: "object", required: ["data"], properties: { data: schemaRef("Dataset") } }),
+            "404": responseRef("NotFound"),
+            ...reads(),
+          },
+        },
+      },
       "/api/feeds": {
         get: {
           operationId: "listFeeds",
@@ -683,16 +705,29 @@ export function openApiDocument(origin: string) {
             acquisitionId: { type: "string" },
           },
         },
+        Dataset: {
+          type: "object",
+          description: "One publisher's body of data, read by one or more feeds. What the data is, who published it and under what terms are its word, not any one feed's.",
+          required: ["id", "title", "publisher", "licence", "topics"],
+          properties: {
+            id: { type: "string", description: "Stable; `/api/datasets/{id}` and the dataset's page use it." },
+            title: { type: "string" },
+            description: { type: "string" },
+            publisher: { ...schemaRef("Term"), description: "The institution or company that made the data: never the portal it was read from." },
+            licence: { ...schemaRef("Term"), description: "The terms the publisher states, or `source-terms` where they state none." },
+            attribution: { type: "string", description: "Credit the publisher with this, not open-data.pt." },
+            topics: { type: "array", items: { type: "string" } },
+          },
+        },
         Feed: {
           type: "object",
-          required: ["id", "slug", "title", "description", "publisher", "topics", "format", "cadenceSeconds", "enabled"],
+          required: ["id", "slug", "title", "description", "dataset", "format", "cadenceSeconds", "enabled"],
           properties: {
             id: { type: "string" },
             slug: { type: "string" },
             title: { type: "string" },
             description: { type: "string" },
-            publisher: { ...schemaRef("Term"), description: "The institution or company that made the data: never the portal it was read from." },
-            topics: { type: "array", items: { type: "string" } },
+            dataset: { ...schemaRef("Dataset"), description: "The dataset this feed reads part of." },
             format: {
               type: "string",
               enum: ["arcgis", "ckan", "gbfs", "gtfs", "opendatasoft", "udata", "own-api"],

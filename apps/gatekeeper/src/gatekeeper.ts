@@ -1,5 +1,5 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
-import { publisherEnabled } from "@open-data-pt/catalog";
+import { datasetEnabled } from "@open-data-pt/catalog";
 import {
   buildLibrary,
   collectNormalized,
@@ -55,9 +55,9 @@ export function gatekeeper<E extends object>(libraries: readonly Library[]) {
       return collectNormalized(request, libraryCollector(request.resolved.config, this.libraries()));
     }
 
-    /** A publisher held for permission (`enabled: false`) installs nothing, though the library that reads them ships. */
+    /** A publisher held for permission (`enabled: false`) installs nothing of theirs, though the library that reads them ships. */
     async exampleFeeds(): Promise<ExampleFeed[]> {
-      return this.carried().flatMap((library) => library.examples.filter((example) => publisherEnabled(example.publisher)));
+      return this.carried().flatMap((library) => library.examples.filter((example) => datasetEnabled(example.dataset)));
     }
 
     private libraries(): GatekeeperLibraries {

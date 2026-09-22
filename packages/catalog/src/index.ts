@@ -6,6 +6,7 @@
  * each other. That is `@open-data-pt/contract`, and it is a different package
  * for that reason.
  */
+export { DATASETS, datasetEnabled, isDataset, type Dataset, type DatasetDescription } from "./datasets";
 export { hueOf, initials } from "./mark";
 export { LICENCES, UNSTATED_LICENCE, isLicence, type Licence, type LicenceDescription } from "./licences";
 export { PUBLISHERS, isPublisher, publisherEnabled, type Publisher, type PublisherDescription } from "./publishers";

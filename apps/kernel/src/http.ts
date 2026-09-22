@@ -1,10 +1,11 @@
+import { isDataset } from "@open-data-pt/catalog";
 import type { Acquisition as ApiAcquisition, Coverage, Feed as ApiFeed } from "@open-data-pt/api";
 import { asObject, asString, isJsonString, parseJson, type JsonObject, type JsonValue } from "@open-data-pt/contract";
 
 import { ANALYTICS_WINDOWS, AnalyticsError, analyticsReport } from "./analytics";
 import { CADENCE_HEADER } from "./cache";
 import { REGISTRY_ROOM, type ProductDetail, type Registry } from "./coordinators";
-import { publisherRef } from "./vocabulary";
+import { datasetRef, datasetRefs } from "./vocabulary";
 import { NotFoundError, RequestError, type HeaderMap } from "./errors";
 import type { Acquisition, Feed } from "./feed-model";
 import { ObjectStore } from "./object-store";
@@ -111,7 +112,18 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
       }
     }
 
-    /* ---------- Feeds: where each dataset comes from, and how its collection is going ---------- */
+    /* ---------- Datasets: what the catalog holds, whose it is and under what terms ---------- */
+    if (url.pathname === "/api/datasets") {
+      return json({ data: datasetRefs(url.origin) });
+    }
+    const datasetMatch = url.pathname.match(/^\/api\/datasets\/([^/]+)$/);
+    if (datasetMatch?.[1]) {
+      const id = decodeURIComponent(datasetMatch[1]);
+      if (!isDataset(id)) return problem(404, "Dataset not found", `open-data.pt serves no dataset called “${id}”. Every dataset is listed at ${url.origin}/api/datasets.`);
+      return json({ data: datasetRef(id, url.origin) });
+    }
+
+    /* ---------- Feeds: which part of a dataset each one reads, and how its collection is going ---------- */
     if (url.pathname === "/api/feeds") {
       const reg = registry();
       const [feeds, policies] = await Promise.all([reg.listFeeds(), reg.listPolicies()]);
@@ -154,8 +166,8 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
     /* ---------- Products ---------- */
     if (url.pathname === "/api/catalog.dcat.json") {
       const reg = registry();
-      const [feeds, policies] = await Promise.all([reg.listFeeds(), reg.listPolicies()]);
-      return new Response(JSON.stringify(await serving().dcatCatalog(url.origin, feeds, policies)), {
+      const feeds = await reg.listFeeds();
+      return new Response(JSON.stringify(await serving().dcatCatalog(url.origin, feeds)), {
         headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "public, max-age=300", "Content-Type": "application/ld+json" },
       });
     }
@@ -550,15 +562,15 @@ function publicFeed(feed: Feed, cadenceSeconds: number | undefined, origin: stri
     library: _library,
     semantics: _semantics,
     config,
+    dataset,
     cooldownUntil: _cooldown,
     lastError: _error,
     historyBacklog: _backlog,
     backfill: _backfill,
-    publisher,
     ...publicValue
   } = feed;
   const source = config.source ?? "";
-  return { ...publicValue, publisher: publisherRef(publisher, origin), format: STANDARD_FORMATS.has(source) ? source : "own-api", cadenceSeconds: cadenceSeconds ?? null };
+  return { ...publicValue, dataset: datasetRef(dataset, origin), format: STANDARD_FORMATS.has(source) ? source : "own-api", cadenceSeconds: cadenceSeconds ?? null };
 }
 
 /* ---------- Record filters ---------- */

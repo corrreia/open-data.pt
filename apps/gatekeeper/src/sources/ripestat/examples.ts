@@ -36,11 +36,10 @@ function network(slug: string, title: string, asn: string, holder: string): Exam
 function example(slug: string, title: string, description: string, config: SourceConfig, cadenceSeconds: number): ExampleFeed {
   return {
     slug,
+    dataset: "ripe-ncc-portugal-internet-resources",
     title,
     description,
     config: { source: "ripestat", ...config },
-    publisher: "ripe-ncc",
-    topics: ["telecom"],
     staleAfterSeconds: cadenceSeconds * 3,
     policy: {
       name: "RIPEstat research — republication permission required",
@@ -54,7 +53,6 @@ function example(slug: string, title: string, description: string, config: Sourc
         maxRecords: 5000,
         historyMode: "changes",
       },
-      serving: { licence: "ripe-ncc-terms", attribution: "RIPE NCC, RIPE RIS and RIR statistics" },
     },
   };
 }

@@ -264,10 +264,10 @@ function StatusPage() {
     }
     const openOf = (feed: Feed) => (byFeed.get(feed.id) ?? []).find((outage) => !outage.endedAt);
     const publishers = new Map<string, Feed[]>();
-    for (const feed of enabled) publishers.set(feed.publisher.id, [...(publishers.get(feed.publisher.id) ?? []), feed]);
+    for (const feed of enabled) publishers.set(feed.dataset.publisher.id, [...(publishers.get(feed.dataset.publisher.id) ?? []), feed]);
     const rows = [...publishers.entries()]
       .map(([slug, members]) => ({
-        name: members[0]?.publisher.name ?? slug,
+        name: members[0]?.dataset.publisher.name ?? slug,
         slug,
         members,
         failing: members.filter(openOf),
@@ -466,7 +466,7 @@ function StatusPage() {
                                     label={feed.title}
                                     height="h-5"
                                     onTip={setTip}
-                                    describe={(incident) => `${fmt.duration(incident.ms)}, ${CAUSE_CLAUSE[incident.outage.cause](feed.publisher.name)}`}
+                                    describe={(incident) => `${fmt.duration(incident.ms)}, ${CAUSE_CLAUSE[incident.outage.cause](feed.dataset.publisher.name)}`}
                                   />
                                 </li>
                               );
@@ -526,7 +526,7 @@ function StateBanner({ model, now, counted }: { model: Model; now: number; count
     );
   }
   if (failing.length > 0) {
-    const publishers = [...new Set(failing.map((feed) => feed.publisher.name))];
+    const publishers = [...new Set(failing.map((feed) => feed.dataset.publisher.name))];
     return (
       <Banner
         variant="alert"
@@ -624,8 +624,8 @@ function Incidents({
                   <p className="font-medium text-kumo-strong">
                     {feed ? (
                       <>
-                        <a href={publisherHref(feed.publisher.id)} className="hover:underline">
-                          {feed.publisher.name}
+                        <a href={publisherHref(feed.dataset.publisher.id)} className="hover:underline">
+                          {feed.dataset.publisher.name}
                         </a>
                         <span className="text-kumo-subtle"> · </span>
                         {product ? (
@@ -641,7 +641,7 @@ function Incidents({
                     )}
                   </p>
                   <p className="text-sm text-kumo-subtle">
-                    {causeSentence(outage.cause, feed?.publisher.name)}
+                    {causeSentence(outage.cause, feed?.dataset.publisher.name)}
                     {outage.failures > 1 ? ` (${plural(outage.failures, "attempt")})` : ""}.
                   </p>
                   {outage.lastError ? (

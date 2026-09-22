@@ -1,8 +1,8 @@
-import { PUBLISHERS, type ExampleFeed, type Licence, type Publisher } from "../../index";
+import type { ExampleFeed } from "../../index";
 
 const MIB = 1024 * 1024;
 
-function annualPolicy(name: string, attribution: string, maxBytes: number): ExampleFeed["policy"] {
+function annualPolicy(name: string, maxBytes: number): ExampleFeed["policy"] {
   return {
     name,
     version: 1,
@@ -11,10 +11,6 @@ function annualPolicy(name: string, attribution: string, maxBytes: number): Exam
       timeoutSeconds: 45,
       maxBytes,
       historyMode: "changes",
-    },
-    serving: {
-      licence: "cc-by-4.0",
-      attribution,
     },
   };
 }
@@ -26,14 +22,15 @@ function withOutputCap(policy: ExampleFeed["policy"], maxOutputBytes: number): E
 
 interface GovernmentDistribution {
   slug: string;
-  title: string;
-  description: string;
+  /** The dataset this feed reads, a key of `DATASETS`. */
   dataset: string;
+  /** Names the product the source publishes; the dataset carries the prose. */
+  title: string;
+  /** The dataset id on dados.gov.pt. */
+  portalDataset: string;
   /** Omitted for a publisher that uploads each release as a new resource: the newest in `format` is read. */
   distributionId?: string;
   format: "csv" | "json";
-  publisher: Publisher;
-  licence: Licence;
   cadenceSeconds: number;
   maxBytes: number;
   maxOutputBytes: number;
@@ -47,7 +44,7 @@ function governmentExample(source: GovernmentDistribution): ExampleFeed {
     feed: "distribution",
     transformer: "tabular",
     baseUrl: "https://dados.gov.pt",
-    dataset: source.dataset,
+    dataset: source.portalDataset,
     format: source.format,
     productSlug: source.slug.replace(/-feed$/, ""),
     productTitle: source.title,
@@ -57,26 +54,21 @@ function governmentExample(source: GovernmentDistribution): ExampleFeed {
   if (source.eventTimeField) config.eventTimeField = source.eventTimeField;
   return {
     slug: source.slug,
-    title: source.title,
-    description: source.description,
+    dataset: source.dataset,
     config,
     policy: {
       name: source.title,
       version: 1,
       collection: { cadenceSeconds: source.cadenceSeconds, timeoutSeconds: 240, maxBytes: source.maxBytes, maxOutputBytes: source.maxOutputBytes, historyMode: "changes" },
-      serving: { licence: source.licence, attribution: PUBLISHERS[source.publisher].name },
     },
     staleAfterSeconds: source.cadenceSeconds * 3,
-    publisher: source.publisher,
-    topics: ["government"],
   };
 }
 
 export const UDATA_EXAMPLES: ExampleFeed[] = [
   {
     slug: "municipal-accessibility-feed",
-    title: "Municipal digital accessibility",
-    description: "Accessibility measurements for Portuguese municipal websites, published by DEMARCA Design in 2026.",
+    dataset: "demarca-design-municipal-accessibility",
     config: {
       source: "udata",
       baseUrl: "https://dados.gov.pt",
@@ -89,15 +81,12 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
       feed: "distribution",
       transformer: "municipal-accessibility",
     },
-    policy: annualPolicy("Municipal accessibility annual snapshot", "DEMARCA Design", 2 * MIB),
+    policy: annualPolicy("Municipal accessibility annual snapshot", 2 * MIB),
     staleAfterSeconds: 30 * 86_400,
-    publisher: "demarca-design",
-    topics: ["cities"],
   },
   {
     slug: "justice-facilities-feed",
-    title: "Portuguese justice facilities",
-    description: "Courts and other justice facilities with addresses and coordinates, published by the Directorate-General for Justice Policy.",
+    dataset: "dgpj-justice-facilities",
     config: {
       source: "udata",
       baseUrl: "https://dados.gov.pt",
@@ -111,15 +100,12 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
       feed: "distribution",
       transformer: "tabular",
     },
-    policy: annualPolicy("Justice facilities annual snapshot", "Direção-Geral da Política de Justiça", 1 * MIB),
+    policy: annualPolicy("Justice facilities annual snapshot", 1 * MIB),
     staleAfterSeconds: 30 * 86_400,
-    publisher: "dgpj",
-    topics: ["society"],
   },
   {
     slug: "portuguese-museums-feed",
-    title: "Museums and museum centres in Portugal",
-    description: "Museum names, locations, websites, and archived web histories compiled by Arquivo.pt in 2026.",
+    dataset: "arquivo-pt-portuguese-museums",
     config: {
       source: "udata",
       baseUrl: "https://dados.gov.pt",
@@ -133,15 +119,12 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
       feed: "distribution",
       transformer: "tabular",
     },
-    policy: annualPolicy("Portuguese museums annual snapshot", "Arquivo.pt", 1 * MIB),
+    policy: annualPolicy("Portuguese museums annual snapshot", 1 * MIB),
     staleAfterSeconds: 30 * 86_400,
-    publisher: "arquivo-pt",
-    topics: ["society", "culture"],
   },
   {
     slug: "portuguese-parishes-feed",
-    title: "Portuguese parish websites",
-    description: "Parish names, municipalities, districts, websites, and archived web histories compiled by Arquivo.pt in 2025.",
+    dataset: "arquivo-pt-portuguese-parishes",
     config: {
       source: "udata",
       baseUrl: "https://dados.gov.pt",
@@ -155,15 +138,12 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
       feed: "distribution",
       transformer: "tabular",
     },
-    policy: annualPolicy("Portuguese parishes annual snapshot", "Arquivo.pt", 2 * MIB),
+    policy: annualPolicy("Portuguese parishes annual snapshot", 2 * MIB),
     staleAfterSeconds: 30 * 86_400,
-    publisher: "arquivo-pt",
-    topics: ["cities"],
   },
   {
     slug: "public-libraries-2024-feed",
-    title: "Portuguese public library statistics for 2024",
-    description: "Population, collections, visits, loans, activities, staffing, and services reported by public libraries for 2024.",
+    dataset: "dglab-public-libraries-2024",
     config: {
       source: "udata",
       baseUrl: "https://dados.gov.pt",
@@ -177,15 +157,12 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
       feed: "distribution",
       transformer: "tabular",
     },
-    policy: annualPolicy("Public libraries annual snapshot", "Direção-Geral do Livro, dos Arquivos e das Bibliotecas", 1 * MIB),
+    policy: annualPolicy("Public libraries annual snapshot", 1 * MIB),
     staleAfterSeconds: 30 * 86_400,
-    publisher: "dglab",
-    topics: ["society", "culture"],
   },
   {
     slug: "municipal-ev-charging-feed",
-    title: "Municipal availability of electric-vehicle charging",
-    description: "2023 indicator showing whether each Portuguese municipality provided and located electric-vehicle charging points, published by ARTE.",
+    dataset: "arte-municipal-ev-charging",
     config: {
       source: "udata",
       baseUrl: "https://dados.gov.pt",
@@ -199,15 +176,12 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
       feed: "distribution",
       transformer: "tabular",
     },
-    policy: annualPolicy("Municipal EV charging annual snapshot", "Agência para a Reforma Tecnológica do Estado", 1 * MIB),
+    policy: annualPolicy("Municipal EV charging annual snapshot", 1 * MIB),
     staleAfterSeconds: 30 * 86_400,
-    publisher: "arte",
-    topics: ["cities", "energy"],
   },
   {
     slug: "cadaval-municipal-waste-feed",
-    title: "Cadaval municipal waste in 2024",
-    description: "Monthly tonnes of municipal waste by material and collection route, published by Município do Cadaval for 2024.",
+    dataset: "cm-cadaval-municipal-waste",
     config: {
       source: "udata",
       baseUrl: "https://dados.gov.pt",
@@ -219,15 +193,12 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
       feed: "distribution",
       transformer: "municipal-waste",
     },
-    policy: annualPolicy("Cadaval waste annual snapshot", "Município do Cadaval", 256 * 1024),
+    policy: annualPolicy("Cadaval waste annual snapshot", 256 * 1024),
     staleAfterSeconds: 30 * 86_400,
-    publisher: "cm-cadaval",
-    topics: ["cities", "environment"],
   },
   {
     slug: "primary-care-oral-health-referrals-feed",
-    title: "Primary-care oral-health referrals",
-    description: "Monthly oral-health referrals by sex, age group, and primary-care area, published by the Portuguese health authority.",
+    dataset: "dgs-primary-care-oral-health-referrals",
     config: {
       source: "udata",
       baseUrl: "https://dados.gov.pt",
@@ -243,85 +214,69 @@ export const UDATA_EXAMPLES: ExampleFeed[] = [
       transformer: "tabular",
     },
     // About 45,000 rows: the 5.7 MB CSV can normalize to more than the 16 MiB default output cap.
-    policy: withOutputCap(annualPolicy("Primary-care oral-health monthly series", "Direção-Geral da Saúde", 8 * MIB), 64 * MIB),
+    policy: withOutputCap(annualPolicy("Primary-care oral-health monthly series", 8 * MIB), 64 * MIB),
     staleAfterSeconds: 7 * 86_400,
-    publisher: "dgs",
-    topics: ["health"],
   },
   governmentExample({
     slug: "cada-opinions-2025-feed",
+    dataset: "cada-opinions-2025",
     title: "CADA administrative-document access opinions for 2025",
-    description: "Opinions on access to administrative documents issued in 2025. This is a historical annual publication, not a live legal feed.",
-    dataset: "6a886960e18b67254bb6b93b",
+    portalDataset: "6a886960e18b67254bb6b93b",
     distributionId: "e10e5071-90ea-42cc-aea3-8710222339ba",
     format: "csv",
     keyField: "N.º Parecer",
     eventTimeField: "Data Parecer",
-    publisher: "cada",
-    licence: "cc-by-4.0",
     cadenceSeconds: 30 * 86_400,
     maxBytes: 2 * MIB,
     maxOutputBytes: 8 * MIB,
   }),
   governmentExample({
     slug: "recognised-startups-feed",
+    dataset: "arte-recognised-startups",
     title: "Companies recognised with startup status",
-    description:
-      "The recognised-startup registry snapshot published by ARTE and Startup Portugal, including the source's file date. Publication licence is not specified in the dataset metadata.",
     // ARTE uploads every monthly release as a new resource, so no id is pinned.
-    dataset: "660c3c451ee8ad9bd6b60608",
+    portalDataset: "660c3c451ee8ad9bd6b60608",
     format: "json",
     keyField: "titularNipc",
     eventTimeField: "fileDate",
-    publisher: "arte",
-    licence: "source-terms",
     cadenceSeconds: 604_800,
     maxBytes: 2 * MIB,
     maxOutputBytes: 8 * MIB,
   }),
   governmentExample({
     slug: "base-contract-modifications-2026-feed",
+    dataset: "impic-base-contract-modifications-2026",
     title: "Public-contract modifications published in 2026",
-    description:
-      "Contract modifications in IMPIC's 2026 publication. The source has no distinct amendment identifier; repeated contract IDs use row-content identities rather than claiming a stable amendment ID.",
-    dataset: "668d65dbcb1b953e80198435",
+    portalDataset: "668d65dbcb1b953e80198435",
     distributionId: "d6d13c09-418e-443b-bbf4-b9bd77097571",
     format: "json",
     keyField: "idcontrato",
     eventTimeField: "modifDataPublicacao",
-    publisher: "impic",
-    licence: "other-pd",
     cadenceSeconds: 604_800,
     maxBytes: 8 * MIB,
     maxOutputBytes: 32 * MIB,
   }),
   governmentExample({
     slug: "base-procurement-notices-2026-feed",
+    dataset: "impic-base-procurement-notices-2026",
     title: "Public-procurement notices published in 2026",
-    description:
-      "IMPIC's 2026 procurement notices, including contracting authorities, base prices, procedures, deadlines and source links. One current record per notice; not a duplicate of signed contracts.",
-    dataset: "66d72fbc58cd7a63dae28712",
+    portalDataset: "66d72fbc58cd7a63dae28712",
     distributionId: "1002987e-8985-492f-9215-e732fffdbc83",
     format: "json",
     keyField: "nAnuncio",
     eventTimeField: "dataPublicacao",
-    publisher: "impic",
-    licence: "other-pd",
     cadenceSeconds: 604_800,
     maxBytes: 48 * MIB,
     maxOutputBytes: 96 * MIB,
   }),
   governmentExample({
     slug: "base-procurement-entities-feed",
+    dataset: "impic-base-procurement-entities",
     title: "Public-procurement entities",
-    description:
-      "Entities in IMPIC's public-procurement registry, with source-published cumulative participation totals. Collected monthly as a large reference snapshot, not a live company-register lookup.",
-    dataset: "67d80b2c4750b888116940fb",
+    portalDataset: "67d80b2c4750b888116940fb",
     distributionId: "d85c49f0-b6ab-4cb7-afbe-4e103016b9a0",
     format: "json",
     keyField: "nifEntidade",
-    publisher: "impic",
-    licence: "other-pd",
     cadenceSeconds: 30 * 86_400,
     maxBytes: 80 * MIB,
     maxOutputBytes: 160 * MIB,

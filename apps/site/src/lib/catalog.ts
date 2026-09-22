@@ -95,14 +95,23 @@ export function freshness(product: Product, feed: Feed | undefined): Freshness {
   return { tone: "ok", label: "Current" };
 }
 
+/** The feed a product came from, for the freshness its own collection decides. */
+function feedOf(feeds: Feed[], product: Product): Feed | undefined {
+  return feeds.find((feed) => feed.id === product.feedId);
+}
+
 export interface LabelledProduct {
   product: Product;
   label: string;
 }
 
 export interface Dataset {
-  feed: Feed;
+  /** The dataset's key: what its page is addressed by. */
+  id: string;
+  /** The feeds that read it, the one that last succeeded first. */
+  feeds: Feed[];
   title: string;
+  description: string;
   publisher: Term;
   topics: string[];
   format: string;
@@ -132,21 +141,28 @@ export interface Licence extends Term {
   topics: Map<string, number>;
 }
 
-/** One dataset per feed that serves at least one product. */
+/** One dataset, with every feed that reads part of it and everything those feeds serve. */
 export function buildDatasets(products: Product[], feeds: Feed[]): Dataset[] {
   const byFeed = new Map<string, Product[]>();
   for (const product of products) byFeed.set(product.feedId, [...(byFeed.get(product.feedId) ?? []), product]);
-  const datasets: Dataset[] = [];
+  const grouped = new Map<string, Feed[]>();
   for (const feed of feeds) {
-    const items = byFeed.get(feed.id);
-    if (!items) continue;
+    if (!byFeed.has(feed.id)) continue;
+    grouped.set(feed.dataset.id, [...(grouped.get(feed.dataset.id) ?? []), feed]);
+  }
+  const datasets: Dataset[] = [];
+  for (const [id, members] of grouped) {
+    const feed = members[0]!;
+    const items = members.flatMap((member) => byFeed.get(member.id) ?? []);
     const cadence = Math.min(...items.map((product) => product.cadenceSeconds ?? Number.POSITIVE_INFINITY));
-    const tones = items.map((product) => freshness(product, feed).tone);
+    const tones = items.map((product) => freshness(product, feedOf(members, product)).tone);
     datasets.push({
-      feed,
-      title: feed.title,
-      publisher: feed.publisher,
-      topics: feed.topics ?? [],
+      id,
+      feeds: members,
+      title: feed.dataset.title,
+      description: feed.dataset.description ?? feed.description,
+      publisher: feed.dataset.publisher,
+      topics: feed.dataset.topics,
       format: formatOf(feed),
       cadence,
       updates: updatesOf(cadence),
@@ -177,7 +193,7 @@ export function buildPublishers(datasets: Dataset[]): Publisher[] {
     publisher.datasets.push(dataset);
     for (const topic of dataset.topics) publisher.topics.set(topic, (publisher.topics.get(topic) ?? 0) + 1);
     if (dataset.licence) publisher.licences.set(dataset.licence.id, dataset.licence);
-    const source = openableUrl(dataset.feed.sourceUrl);
+    const source = openableUrl(dataset.feeds.find((feed) => feed.sourceUrl)?.sourceUrl);
     if (source && !publisher.hosts.has(source.hostname)) publisher.hosts.set(source.hostname, source.href);
     publishers.set(publisher.id, publisher);
   }

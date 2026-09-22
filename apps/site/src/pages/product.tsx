@@ -188,7 +188,7 @@ function ProductPage() {
           <Breadcrumbs.Separator />
           {feed.data ? (
             <>
-              <Breadcrumbs.Link href={publisherHref(feed.data.publisher.id)}>{feed.data.publisher.name}</Breadcrumbs.Link>
+              <Breadcrumbs.Link href={publisherHref(feed.data.dataset.publisher.id)}>{feed.data.dataset.publisher.name}</Breadcrumbs.Link>
               <Breadcrumbs.Separator />
             </>
           ) : null}
@@ -224,11 +224,11 @@ function ProductPage() {
             <span className="inline-flex flex-wrap items-center gap-x-1.5">
               Published by
               <a
-                href={publisherHref(feed.data.publisher.id)}
+                href={publisherHref(feed.data.dataset.publisher.id)}
                 className="inline-flex items-center gap-1.5 font-medium text-kumo-strong underline decoration-kumo-line underline-offset-4 hover:decoration-kumo-strong"
               >
-                <PublisherMark publisher={feed.data.publisher} size={20} className="rounded-sm" />
-                {feed.data.publisher.name}
+                <PublisherMark publisher={feed.data.dataset.publisher} size={20} className="rounded-sm" />
+                {feed.data.dataset.publisher.name}
               </a>
             </span>
             <Link href={newIssue("broken-source", { title: `Broken: ${data.title}`, page: window.location.href })}>Report a problem</Link>
@@ -363,8 +363,8 @@ function ProductPage() {
             label="Source"
             title={
               feed.data ? (
-                <a href={publisherHref(feed.data.publisher.id)} className="hover:underline">
-                  {feed.data.publisher.name}
+                <a href={publisherHref(feed.data.dataset.publisher.id)} className="hover:underline">
+                  {feed.data.dataset.publisher.name}
                 </a>
               ) : (
                 <Loader size="sm" />

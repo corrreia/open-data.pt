@@ -1,3 +1,4 @@
+import { datasetOf } from "./catalog";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
@@ -197,7 +198,7 @@ describe("Historical medical-training record ambiguity", () => {
     expect(example.config.series).toBeUndefined();
     expect(example.config.idFields).toBe("registo");
     expect(example.config.windowPeriods).toBe("3");
-    expect(example.description).toContain("cohort or revision label");
+    expect(example.description ?? datasetOf(example).description).toContain("cohort or revision label");
     const document = { ...fixture("vagas-formacao-especializada-internato"), records: fixture("medical-training-2022-records").records };
     const body = new TextEncoder().encode(JSON.stringify(document));
     const result = await new OpendatasoftTransformer().transform(toByteStream(body), {

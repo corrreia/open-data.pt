@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { LICENCES, PUBLISHERS, isLicence, isPublisher, isTopic, publisherEnabled } from "@open-data-pt/catalog";
+import { DATASETS, LICENCES, PUBLISHERS, datasetEnabled, isDataset, isLicence, isPublisher, isTopic, publisherEnabled } from "@open-data-pt/catalog";
 import type { ExampleFeed } from "@open-data-pt/contract";
-import { CARRIED_NAMES, INSTALLED } from "./catalog";
+import { CARRIED_NAMES, INSTALLED, datasetOf } from "./catalog";
 
 /** One library's module namespace, as this test reads it: exported values, one of which is its examples. */
 interface LibraryModule {
@@ -128,19 +128,26 @@ describe("libraries and the Worker that carries them", () => {
     const libraries = await libraryExamples();
     const strays = [...libraries.values()]
       .flat()
-      .filter((example) => (example.topics ?? []).length === 0 || (example.topics ?? []).some((topic) => !isTopic(topic)))
-      .map((example) => `${example.slug} (${(example.topics ?? []).join(", ")})`);
+      .map((example) => ({ example, topics: datasetOf(example).topics }))
+      .filter(({ topics }) => topics.length === 0 || topics.some((topic) => !isTopic(topic)))
+      .map(({ example, topics }) => `${example.slug} (${topics.join(", ")})`);
     expect(strays).toEqual([]);
   });
 
-  it("names every example's publisher and licence from the vocabularies, and leaves no entry unused", async () => {
+  it("names a dataset on every example, whose publisher and licence the vocabularies know, and leaves no entry unused", async () => {
     const examples = [...(await libraryExamples()).values()].flat();
-    const strays = examples
-      .filter((example) => !isPublisher(example.publisher) || !isLicence(example.policy.serving.licence))
-      .map((example) => `${example.slug} (${example.publisher}, ${example.policy.serving.licence})`);
-    expect(strays).toEqual([]);
-    const publishers = new Set(examples.map((example) => example.publisher));
-    const licences = new Set(examples.map((example) => example.policy.serving.licence));
+    const strays = examples.filter((example) => !isDataset(example.dataset)).map((example) => `${example.slug} (${example.dataset})`);
+    expect(strays, "examples naming a dataset the catalog does not list").toEqual([]);
+    const datasets = new Set(examples.map((example) => example.dataset));
+    expect(
+      Object.keys(DATASETS).filter((key) => !datasets.has(key)),
+      "datasets no example reads",
+    ).toEqual([]);
+    const terms = examples.map((example) => datasetOf(example));
+    const unknown = terms.filter((dataset) => !isPublisher(dataset.publisher) || !isLicence(dataset.licence));
+    expect(unknown, "datasets naming a publisher or licence outside the vocabularies").toEqual([]);
+    const publishers = new Set(terms.map((dataset) => dataset.publisher));
+    const licences = new Set(terms.map((dataset) => dataset.licence));
     expect(
       Object.keys(PUBLISHERS).filter((key) => !publishers.has(key)),
       "publishers no example names",
@@ -168,17 +175,17 @@ describe("libraries and the Worker that carries them", () => {
 
   it("installs every example of an enabled publisher, each once", async () => {
     const libraries = await libraryExamples();
-    const offered = [...libraries].flatMap(([, examples]) => examples.filter((example) => publisherEnabled(example.publisher)).map((example) => example.slug)).toSorted();
+    const offered = [...libraries].flatMap(([, examples]) => examples.filter((example) => datasetEnabled(example.dataset)).map((example) => example.slug)).toSorted();
     expect(DEPLOYED.map((example) => example.slug).toSorted()).toEqual(offered);
   });
 
   it("installs nothing from a publisher held for permission", async () => {
     const held = Object.keys(PUBLISHERS).filter((key) => !publisherEnabled(key));
     expect(held.length, "no publisher is held, so nothing proves a hold works").toBeGreaterThan(0);
-    expect(DEPLOYED.filter((example) => held.includes(example.publisher)).map((example) => example.slug)).toEqual([]);
+    expect(DEPLOYED.filter((example) => held.includes(datasetOf(example).publisher)).map((example) => example.slug)).toEqual([]);
     // The libraries that read them still ship: a hold is about whose data we serve, not about what code exists.
     const libraries = await libraryExamples();
-    const readingHeld = [...libraries].filter(([, examples]) => examples.some((example) => held.includes(example.publisher))).map(([name]) => name);
+    const readingHeld = [...libraries].filter(([, examples]) => examples.some((example) => held.includes(datasetOf(example).publisher))).map(([name]) => name);
     expect(
       readingHeld.filter((name) => !CARRIED_NAMES.includes(name)),
       "a library that reads a held publisher but is not carried",

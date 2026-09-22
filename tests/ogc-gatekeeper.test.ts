@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
+import { datasetOf } from "./catalog";
 import {
   GatekeeperError,
   NORMALIZED_PROTOCOL,
@@ -1285,7 +1286,8 @@ describe("OGC API Features examples", () => {
     // carrying its geometry is the one lie a reader cannot check for themselves.
     for (const example of OGC_EXAMPLES) {
       if ((example.config.geometry ?? "include") === "skip") continue;
-      expect(example.description, example.slug).not.toMatch(/attributes only|without boundary outlines/i);
+      // The words are the dataset's when the feed is the whole of it.
+      expect(example.description ?? datasetOf(example).description, example.slug).not.toMatch(/attributes only|without boundary outlines/i);
     }
   });
 
@@ -1297,8 +1299,8 @@ describe("OGC API Features examples", () => {
   // site and on its dados.gov.pt records.
   it("serves the CAOP under the licence DGT states", () => {
     for (const example of OGC_EXAMPLES) {
-      expect(example.policy.serving.licence).toBe("cc-by-4.0");
-      expect(example.policy.serving.attribution ?? "").not.toBe("");
+      expect(datasetOf(example).licence).toBe("cc-by-4.0");
+      expect(datasetOf(example).attribution ?? "").not.toBe("");
     }
   });
 

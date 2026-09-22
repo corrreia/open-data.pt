@@ -61,7 +61,7 @@ beforeAll(async () => {
       policyId: policy,
       enabled: false,
       staleAfterSeconds: 60,
-      topics: [],
+      dataset: "ine-consumer-price-index",
       createdAt: "2026-09-01T00:00:00.000Z",
       updatedAt: "2026-09-01T00:00:00.000Z",
     };

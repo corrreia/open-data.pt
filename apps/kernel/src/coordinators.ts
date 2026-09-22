@@ -1,5 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
-import { isLicence, isPublisher } from "@open-data-pt/catalog";
+import { DATASETS, isDataset } from "@open-data-pt/catalog";
 import { NormalizedInputError, assertResolvedFeed, hashSourceConfig, type ExampleFeed, type SourceCheckpoint, type SourceConfig } from "@open-data-pt/contract";
 
 import { drainOutbox } from "./engine";
@@ -56,8 +56,7 @@ interface FeedInput {
   config: SourceConfig;
   policyId: string;
   staleAfterSeconds: number;
-  publisher: string;
-  topics: string[];
+  dataset: string;
 }
 
 /**
@@ -274,24 +273,24 @@ export class Registry extends DurableObject<Env> {
     // A local session polls politely: `pnpm dev` sets a floor under every cadence, and a deployment sets none.
     const example = withCadenceFloor(raw, cadenceFloorOf(this.env.DEV_MIN_CADENCE_SECONDS));
     // The Gatekeeper's word crosses RPC as plain strings; a key outside the vocabulary is a mistake, never a new entry.
-    if (!isPublisher(example.publisher)) throw new NormalizedInputError(`${example.slug} names an unknown publisher: ${example.publisher}`);
-    if (!isLicence(example.policy.serving.licence)) throw new NormalizedInputError(`${example.slug} names an unknown licence: ${example.policy.serving.licence}`);
+    if (!isDataset(example.dataset)) throw new NormalizedInputError(`${example.slug} names an unknown dataset: ${example.dataset}`);
     // A policy is its name and version; the id is only the row's handle. One installed under an earlier Worker's
     // name keeps its id, so moving a feed between Workers never collides with the row it already uses.
     const current = this.store.getPolicyByName(example.policy.name, example.policy.version);
     const policyId = current?.id ?? `policy_${library}_${slugify(example.policy.name)}_v${example.policy.version}`;
     const policy: FeedPolicy = { id: policyId, ...example.policy, createdAt: current?.createdAt ?? new Date().toISOString() };
     if (!current || policyFingerprint(current) !== policyFingerprint(policy)) this.store.upsertPolicy(policy);
+    const dataset = DATASETS[example.dataset];
     const input: FeedInput = {
       slug: example.slug,
-      title: example.title,
-      description: example.description,
+      // A feed that is the whole of its dataset is called what the dataset is called.
+      title: example.title ?? dataset.title,
+      description: example.description ?? dataset.description,
       library,
       config: example.config,
       policyId,
       staleAfterSeconds: example.staleAfterSeconds,
-      publisher: example.publisher,
-      topics: example.topics ?? [],
+      dataset: example.dataset,
     };
     await this.installFeed(input);
   }
@@ -480,13 +479,15 @@ function productView(entry: ProductSummary, feed: Feed | undefined, policy: Feed
   const lastSuccess = feed?.lastSuccessAt ? Date.parse(feed.lastSuccessAt) : Date.parse(entry.updatedAt);
   const staleAfterSeconds = feed?.staleAfterSeconds ?? 86_400;
   const history = policy !== undefined && keepsHistory(policy, entry.productKey);
+  const terms = feed && isDataset(feed.dataset) ? DATASETS[feed.dataset] : undefined;
   return {
     ...entry,
     stale: lastSuccess + staleAfterSeconds * 1000 < Date.now(),
     exposeHistory: history,
     historyMode: history ? "changes" : "latest",
-    licence: policy ? licenceRef(policy.serving.licence) : null,
-    attribution: policy?.serving.attribution ?? null,
+    // A product is served under its dataset's terms: one feed of a dataset cannot claim other terms than its siblings.
+    licence: terms ? licenceRef(terms.licence) : null,
+    attribution: terms && "attribution" in terms ? terms.attribution : null,
     staleAfterSeconds,
     cadenceSeconds: policy?.collection.cadenceSeconds ?? 86_400,
   };

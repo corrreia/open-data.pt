@@ -5,6 +5,7 @@ import { ripeatlasCollector } from "../apps/gatekeeper/src/sources/ripeatlas/col
 import { RipeatlasTransformer } from "../apps/gatekeeper/src/sources/ripeatlas/transform";
 import { RIPEATLAS_EXAMPLES } from "../apps/gatekeeper/src/sources/ripeatlas/examples";
 import { networkBytes, networkContext, networkFixture, networkFrames, networkRequest, networkRows } from "./networks-support";
+import { datasetOf } from "./catalog";
 
 const PROBES = { feed: "country-probes", country: "PT" };
 const ANCHORS = { feed: "country-anchors", country: "PT" };
@@ -63,9 +64,9 @@ describe("RIPE Atlas source boundaries", () => {
     expect(RIPEATLAS_EXAMPLES).toHaveLength(2);
     for (const example of RIPEATLAS_EXAMPLES) {
       expect(validateRipeatlasFeedConfig(libraryConfig(example.config)).country).toBe("PT");
-      expect(example.topics).toEqual(["telecom"]);
+      expect(datasetOf(example).topics).toEqual(["telecom"]);
       expect(example.policy.collection.cadenceSeconds).toBeGreaterThanOrEqual(86_400);
-      expect(example.policy.serving.licence).toBe("ripe-atlas-terms");
+      expect(datasetOf(example).licence).toBe("ripe-atlas-terms");
     }
   });
 

@@ -2,15 +2,15 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { type ExampleFeed, type NormalizedRow, type TransformContext } from "@open-data-pt/contract";
 import { UDATA_EXAMPLES, udataCollector } from "@open-data-pt/gatekeeper/formats/udata";
-import { INSTALLED } from "./catalog";
+import { INSTALLED, datasetOf } from "./catalog";
 import { INE_EXAMPLES } from "../apps/gatekeeper/src/sources/ine/examples";
 
 /** Topics are catalog tags now, so these are the installed feeds carrying each tag, whatever Worker reads them. */
-const tagged = (topic: string): ExampleFeed[] => INSTALLED.filter((example) => example.topics?.includes(topic));
+const tagged = (topic: string): ExampleFeed[] => INSTALLED.filter((example) => datasetOf(example).topics.includes(topic));
 const GOVERNMENT_EXAMPLES = tagged("government");
 const CITIES_EXAMPLES = tagged("cities");
 const TELECOM_EXAMPLES = tagged("telecom");
-const government = UDATA_EXAMPLES.filter((example) => example.topics?.includes("government"));
+const government = UDATA_EXAMPLES.filter((example) => datasetOf(example).topics.includes("government"));
 
 async function normalized(example: ExampleFeed, observedAt: string) {
   const text = readFileSync(new URL(example.config.format === "csv" ? "./fixtures/cada-opinions.csv" : "./fixtures/government-registry-sample.json", import.meta.url), "utf8");
@@ -48,7 +48,8 @@ describe("government distribution examples", () => {
       expect(example.policy.collection.cadenceSeconds).toBeGreaterThanOrEqual(604_800);
     }
     expect(government.find((example) => example.slug === "base-procurement-entities-feed")?.policy.collection.cadenceSeconds).toBe(30 * 86_400);
-    expect(government.find((example) => example.slug === "recognised-startups-feed")?.policy.serving.licence).toBe("source-terms");
+    const startups = government.find((example) => example.slug === "recognised-startups-feed");
+    expect(startups && datasetOf(startups).licence).toBe("source-terms");
   });
 
   it.each(government)("normalizes $slug as one table without acquisition-time churn", async (example) => {
@@ -63,12 +64,12 @@ describe("government distribution examples", () => {
   });
 
   it("uses keyless government telecom statistics without claiming live coverage", () => {
-    const telecom = INE_EXAMPLES.filter((example) => example.topics?.includes("telecom"));
+    const telecom = INE_EXAMPLES.filter((example) => datasetOf(example).topics.includes("telecom"));
     expect(telecom).toHaveLength(6);
     expect(TELECOM_EXAMPLES.map((example) => example.slug).toSorted()).toEqual(telecom.map((example) => example.slug).toSorted());
     for (const example of telecom) {
       expect(example.policy.collection.cadenceSeconds).toBe(30 * 86_400);
-      expect(example.policy.serving.licence).toBe("cc-by-4.0");
+      expect(datasetOf(example).licence).toBe("cc-by-4.0");
       expect(example.config.indicator).not.toBe("0006853");
     }
   });

@@ -10,11 +10,10 @@ export const FIRMS_EXAMPLES: ExampleFeed[] = [
 function example(slug: string, title: string, region: keyof typeof FIRMS_REGIONS): ExampleFeed {
   return {
     slug,
+    dataset: "nasa-firms-portugal-thermal-anomalies",
     title,
     description: `VIIRS Suomi-NPP near-real-time thermal-anomaly pixels detected during the past ${FIRMS_DAY_RANGE} days in the ${FIRMS_REGIONS[region].name} bounding region. A pixel is not a confirmed wildfire, exact ignition point or burnt-area perimeter.`,
     config: { source: "firms", feed: "hotspots", region, product: "VIIRS_SNPP_NRT" },
-    publisher: "nasa-firms",
-    topics: ["environment"],
     staleAfterSeconds: 21_600,
     policy: {
       name: "NASA FIRMS near-real-time thermal anomalies",
@@ -28,7 +27,6 @@ function example(slug: string, title: string, region: keyof typeof FIRMS_REGIONS
         maxRecords: 20_000,
         historyMode: "changes",
       },
-      serving: { licence: "nasa-earthdata", attribution: "NASA FIRMS, part of NASA's Earth Science Data and Information System (ESDIS)" },
     },
   };
 }

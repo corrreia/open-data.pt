@@ -19,7 +19,9 @@ apps/kernel/            storage, history and the API; serves the site
 apps/site/              the site, built into the kernel's static assets
 packages/contract/      what the two Workers say to each other: the RPC, the normalized stream,
                         JSON helpers and validation
-packages/catalog/       what names a real thing: the TOPICS, PUBLISHERS and LICENCES vocabularies
+packages/catalog/       what names a real thing: the DATASETS, TOPICS, PUBLISHERS and LICENCES
+                        vocabularies, and the publishers' marks
+packages/api/           what the API sends: the wire shapes the kernel builds and the site reads
 ```
 
 1. **A library per format.** Anything with a standard — GTFS, GBFS, ArcGIS, CKAN, Opendatasoft, uData, OGC API Features, WFS — is parsed once, under `formats/`. A Worker never contains parsing.
@@ -33,22 +35,48 @@ A library exports its feed-kind table, `validate<Name>FeedConfig`, `collect<Name
 
 ### A new dataset from a source we already read
 
-One entry in that library's `examples.ts`. Nothing else.
+One entry in `packages/catalog/src/datasets.ts` saying what the data is, and one in that library's `examples.ts` saying how it is read. Nothing else.
 
 ```ts
-{
-  slug: "porto-bicycle-racks-feed",          // never changes once merged
+// packages/catalog/src/datasets.ts — what the data is, whose it is, under what terms
+"cm-porto-bicycle-racks": {
   title: "Porto bicycle racks",
   description: "Public bicycle parking published by Câmara Municipal do Porto.",
-  config: { source: "ckan", host: "opendata.porto.digital", dataset: "estacionamento-bicicletas" },
-  policy: { name: "…", version: 1, collection: { …cadence, timeout, maxBytes, historyMode }, serving: { licence: "cc0-1.0", attribution: "Câmara Municipal do Porto via dadosabertos.cm-porto.pt" } },
-  staleAfterSeconds: 172_800,
   publisher: "cm-porto",
+  licence: "cc0-1.0",
+  attribution: "Câmara Municipal do Porto via dadosabertos.cm-porto.pt",
   topics: ["cities", "mobility"],
+},
+
+// the library's examples.ts — how and how often a part of it is read
+{
+  slug: "porto-bicycle-racks-feed",          // never changes once merged
+  dataset: "cm-porto-bicycle-racks",
+  config: { source: "ckan", host: "opendata.porto.digital", dataset: "estacionamento-bicicletas" },
+  policy: { name: "…", version: 1, collection: { …cadence, timeout, maxBytes, historyMode } },
+  staleAfterSeconds: 172_800,
 }
 ```
 
-`source` decides which library reads it. The rest are keys of the three catalog vocabularies in `packages/catalog/src/`: `topics` are browsing tags, any number of them, each a key of `TOPICS`; `publisher` is a key of `PUBLISHERS`, who made the data, never the portal it was read from; `licence` is a key of `LICENCES`, the terms the publisher states, or `source-terms` when it states none. A publisher or licence the vocabulary lacks is one new entry there — name, and its site or licence text when there is one — and a test rejects a key outside the list and an entry no example uses. A publisher may also carry their mark: the logo file goes under `packages/catalog/publishers/` named for their key, `logo` names its extension, and `packages/catalog/publishers/README.md` says where a usable one comes from and what shape it has to be. A publisher without one is shown their initials instead, so a missing logo never looks like a broken page.
+A **dataset** is one publisher's body of data; a **feed** is one way a part of it is read. Two feeds
+belong to the same dataset when they describe the same things, by the same identifiers, under the
+same terms: Carris's stops, vehicles, alerts and GTFS are one dataset, while IPMA's forecasts and
+its earthquakes share nothing and are two. A feed of a dataset read by several feeds says what it is
+within it (`title`, `description`); a feed that is the whole of its dataset says nothing the dataset
+already says. A dataset key never changes: it addresses the dataset's page, and it opens with its
+publisher's key.
+
+`source` decides which library reads the feed. The dataset's own fields are keys of the catalog's
+vocabularies in `packages/catalog/src/`: `topics` are browsing tags, any number of them, each a key
+of `TOPICS`; `publisher` is a key of `PUBLISHERS`, who made the data, never the portal it was read
+from; `licence` is a key of `LICENCES`, the terms the publisher states, or `source-terms` when they
+state none. A publisher or licence the vocabulary lacks is one new entry there — name, and its site
+or licence text when there is one — and a test rejects a key outside the list, an entry nothing
+uses, and a dataset no feed reads. A publisher may also carry their mark: the logo file goes under
+`packages/catalog/publishers/` named for their key, `logo` names its extension, and
+`packages/catalog/publishers/README.md` says where a usable one comes from and what shape it has to
+be. A publisher without one is shown their initials instead, so a missing logo never looks like a
+broken page.
 
 ### A new source on a format we already read
 

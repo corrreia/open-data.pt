@@ -14,10 +14,6 @@ const REALTIME_POLICY = {
     // their revisions are noise, over a million lake rows a day. The fleet series records the counts on every collection.
     withoutHistory: ["vehicles", "stations"],
   },
-  serving: {
-    licence: "source-terms",
-    attribution: "The GBFS system operator",
-  },
 } as const;
 
 // Docked systems have real stations, a few dozen each: how full a dock was is history worth keeping. Their vehicles are not.
@@ -28,13 +24,11 @@ const DOCKED_POLICY = {
 } as const;
 
 /*
- * GBFS carries its own licence field, and TubaBike is the one system here that
- * fills it: `"license_id": "CC0-1.0"` in its `system_information.json`. The
- * others leave it blank or point at a document that no longer resolves, so
- * they keep `source-terms`.
+ * TubaBike is the one system here that fills GBFS's own licence field —
+ * `"license_id": "CC0-1.0"` in its `system_information.json` — which is why its
+ * feeds are collected under policies of their own.
  */
-const TUBABIKE_SERVING = { licence: "cc0-1.0", attribution: "TubaBike — Mobilidade de Barcelos" } as const;
-const TUBABIKE_POLICY = { ...DOCKED_POLICY, name: "GBFS docked system snapshots, ten minutes, dedicated", serving: TUBABIKE_SERVING } as const;
+const TUBABIKE_POLICY = { ...DOCKED_POLICY, name: "GBFS docked system snapshots, ten minutes, dedicated" } as const;
 
 // Bird advertises a 60-second TTL; a five-minute public snapshot avoids
 // hammering the operator while retaining useful municipal fleet counts.
@@ -63,17 +57,14 @@ const REFERENCE_POLICY = {
     maxBytes: 4 * 1024 * 1024,
     historyMode: "changes",
   },
-  serving: {
-    licence: "source-terms",
-    attribution: "The GBFS system operator",
-  },
 } as const;
 
-const TUBABIKE_REFERENCE_POLICY = { ...REFERENCE_POLICY, name: "GBFS system and station reference, daily, dedicated", serving: TUBABIKE_SERVING } as const;
+const TUBABIKE_REFERENCE_POLICY = { ...REFERENCE_POLICY, name: "GBFS system and station reference, daily, dedicated" } as const;
 
 export const GBFS_EXAMPLES: ExampleFeed[] = [
   {
     slug: "bird-lisbon",
+    dataset: "bird-lisbon",
     title: "Bird vehicles and station availability in Lisbon",
     description: "Current Bird vehicle positions, fleet counts, and how many vehicles each Lisbon virtual station holds.",
     config: {
@@ -84,8 +75,6 @@ export const GBFS_EXAMPLES: ExampleFeed[] = [
     },
     policy: REALTIME_POLICY,
     staleAfterSeconds: 600,
-    publisher: "bird",
-    topics: ["mobility"],
   },
   // Keep the pre-existing Braga definition: removing it would retire published state.
   // It is not counted among the new verified, nonempty fleet feeds.
@@ -99,6 +88,7 @@ export const GBFS_EXAMPLES: ExampleFeed[] = [
   birdExample("porto", "Porto"),
   {
     slug: "bora-viseu",
+    dataset: "bora-viseu",
     title: "Bora bicycles and station availability in Viseu Dão Lafões",
     description: "Current Bora bicycle positions, fleet counts, and how many bicycles and docks each station holds.",
     config: {
@@ -109,11 +99,10 @@ export const GBFS_EXAMPLES: ExampleFeed[] = [
     },
     policy: DOCKED_POLICY,
     staleAfterSeconds: 1800,
-    publisher: "bora",
-    topics: ["mobility"],
   },
   {
     slug: "tubabike-barcelos",
+    dataset: "tubabike-barcelos",
     title: "TubaBike bicycles and station availability in Barcelos",
     description: "Current TubaBike bicycle positions, fleet counts, and how many bicycles and docks each station holds.",
     config: {
@@ -124,8 +113,6 @@ export const GBFS_EXAMPLES: ExampleFeed[] = [
     },
     policy: TUBABIKE_POLICY,
     staleAfterSeconds: 1800,
-    publisher: "tubabike",
-    topics: ["mobility"],
   },
   referenceExample("bird-lisbon", "bird", "Lisbon", "https://mds.bird.co/gbfs/v2/public/lisbon/gbfs.json", "en"),
   referenceExample("bird-braga", "bird", "Braga", "https://mds.bird.co/gbfs/v2/public/braga/gbfs.json", "en"),
@@ -139,6 +126,7 @@ export const GBFS_EXAMPLES: ExampleFeed[] = [
 function birdExample(slug: string, city: string): ExampleFeed {
   return {
     slug: `bird-${slug}`,
+    dataset: `bird-${slug}`,
     title: `Bird vehicles and station availability in ${city}`,
     description: `Current Bird vehicle positions, fleet counts, and how many vehicles each virtual station holds in ${city}.`,
     config: {
@@ -149,8 +137,6 @@ function birdExample(slug: string, city: string): ExampleFeed {
     },
     policy: BIRD_POLICY,
     staleAfterSeconds: 900,
-    publisher: "bird",
-    topics: ["mobility"],
   };
 }
 
@@ -163,12 +149,11 @@ function referenceExample(statusSlug: string, publisher: Publisher, place: strin
   const operator = PUBLISHERS[publisher].name;
   return {
     slug: `${statusSlug}-reference`,
+    dataset: statusSlug,
     title: `${operator} stations and system information in ${place}`,
     description: `Where every ${operator} station in ${place} is, what it is called, how much it holds, and who operates the system.`,
     config: { source: "gbfs", url, language, feed: "reference" },
     policy,
     staleAfterSeconds: 2 * DAY_SECONDS,
-    publisher,
-    topics: ["mobility"],
   };
 }

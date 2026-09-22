@@ -68,9 +68,13 @@ deployment.
 
 ## The vocabularies the catalog groups by
 
-Three keyed lists next to the libraries, each one a test holds every example to:
+Four keyed lists in `packages/catalog/src/`, each one a test holds every example to:
 
-- **`topics.ts`** — browsing tags. A feed carries as many as it likes: `cities`, `culture`, `economy`,
+- **`datasets.ts`** — one publisher's body of data, which one or more feeds read. The dataset says
+  what the data is, whose it is and under what terms; a feed says only how a part of it is read and
+  how often. Two feeds are the same dataset when they describe the same things, by the same
+  identifiers, under the same terms. A key never changes, and opens with its publisher's key.
+- **`topics.ts`** — browsing tags. A dataset carries as many as it likes: `cities`, `culture`, `economy`,
   `energy`, `environment`, `government`, `health`, `mobility`, `society`, `telecom`, `weather`.
 - **`publishers.ts`** — who made the data, never the portal it was read from: dados.gov.pt carries ten
   publishers and is none of them. A publisher read through two libraries is one publisher, with one
@@ -78,9 +82,9 @@ Three keyed lists next to the libraries, each one a test holds every example to:
 - **`licences.ts`** — the terms a product is served under, as its publisher states them, or
   `source-terms` when they state none. A licence spelled three ways is one licence.
 
-A feed names its publisher and its policy names its licence by key; the API serves each expanded as
-`{ id, name, url?, description? }`. A key outside the list, and an entry no example uses, both fail
-the tests.
+A feed names its dataset by key, and the dataset names its publisher, licence and topics; the API
+serves each expanded as `{ id, name, url?, description? }`, and a dataset at `/api/datasets`. A key
+outside the list, an entry nothing uses, and a dataset no feed reads all fail the tests.
 
 ## Writing one
 

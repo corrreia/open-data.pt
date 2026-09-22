@@ -1,26 +1,14 @@
-import type { ExampleFeed, Licence } from "../../index";
+import type { ExampleFeed } from "../../index";
 
 const LISBON_HOST = "services.arcgis.com";
 const LISBON_SERVICE_ROOT = "1dSrzEWVQn5kHHyK/arcgis/rest/services";
 const APA_HOST = "sniambgeoogc.apambiente.pt";
 const APA_SERVICE_ROOT = "getogc/rest/services/SNIAmb";
 
-/*
- * Lisboa states no licence on the ArcGIS services themselves: the service
- * metadata carries `copyrightText: "CM Lisboa 2026"` and no `licenseInfo` at
- * all. The terms live one step away, on the dados.gov.pt record for the same
- * service, and they are not uniform — 232 of the municipality's 316 datasets
- * are CC0, 83 are CC BY and one is ODC-PDDL. So each feed carries the licence
- * of the dataset its own service resolves to, and a feed whose service could
- * not be matched to exactly one record keeps `source-terms` rather than
- * inheriting a neighbour's terms.
- */
-const LISBON_ATTRIBUTION = "Câmara Municipal de Lisboa — Lisboa Aberta";
-const LISBON_POLICY = referencePolicy("ArcGIS daily reference layer", LISBON_ATTRIBUTION, "cc0-1.0");
-const LISBON_CC_BY_POLICY = referencePolicy("ArcGIS daily reference layer, attributed", LISBON_ATTRIBUTION, "cc-by-4.0");
-const LISBON_PDDL_POLICY = referencePolicy("ArcGIS daily reference layer, dedicated", LISBON_ATTRIBUTION, "odc-pddl");
-/** Services that resolve to no single dados.gov.pt record, or to records under two different licences. */
-const LISBON_UNSTATED_POLICY = referencePolicy("ArcGIS daily reference layer, terms unstated", LISBON_ATTRIBUTION, "source-terms");
+const LISBON_POLICY = referencePolicy("ArcGIS daily reference layer");
+const LISBON_CC_BY_POLICY = referencePolicy("ArcGIS daily reference layer, attributed");
+const LISBON_PDDL_POLICY = referencePolicy("ArcGIS daily reference layer, dedicated");
+const LISBON_UNSTATED_POLICY = referencePolicy("ArcGIS daily reference layer, terms unstated");
 // The permits layer is about 12,000 parcel outlines, roughly 13 MB of GeoJSON.
 const LISBON_PERMITS_POLICY = {
   ...LISBON_POLICY,
@@ -31,21 +19,12 @@ const LISBON_PERMITS_POLICY = {
     maxBytes: 24 * 1024 * 1024,
   },
 };
-/*
- * APA states no licence on the SNIAmb services either — `copyrightText` names
- * the agency and `licenseInfo` is absent — but every one of its 4,066 records
- * on dados.gov.pt, including all ten read here, is registered CC BY 4.0.
- */
-const APA_POLICY = referencePolicy("APA daily reference layer", "Agência Portuguesa do Ambiente — SNIAmb", "cc-by-4.0");
+const APA_POLICY = referencePolicy("APA daily reference layer");
 
 /*
  * Mafra means these to be read: a folder named `Dados_Abertos` on the
  * municipality's own server, 52 feature services in it, and an open-data
- * portal at dadosabertos.cm-mafra.pt built on them. What it does not carry is
- * terms — every service answers with an empty `copyrightText` and no
- * `licenseInfo`, the portal states only "Copyright 2025. Município de Mafra",
- * and the municipality publishes nothing on dados.gov.pt to inherit terms
- * from. So these are served under the terms the source states, which is none.
+ * portal at dadosabertos.cm-mafra.pt built on them.
  *
  * Two of the folder's layers are deliberately not read: its copy of the Carris
  * Metropolitana stops is that operator's data, already collected from the
@@ -53,15 +32,39 @@ const APA_POLICY = referencePolicy("APA daily reference layer", "Agência Portug
  */
 const MAFRA_HOST = "geomafra.cm-mafra.pt";
 const MAFRA_SERVICE_ROOT = "arcgisext/rest/services/Dados_Abertos";
-const MAFRA_POLICY = referencePolicy("Mafra daily reference layer", "Município de Mafra — Dados Abertos", "source-terms");
+const MAFRA_POLICY = referencePolicy("Mafra daily reference layer");
+
+/** One layer of a Lisboa service. Where several feeds read one dataset, each says what it is within it. */
+interface LisbonLayer {
+  slug: string;
+  /** The dataset this feed reads, a key of `DATASETS`. */
+  dataset: string;
+  /** What this feed is within its dataset, where the dataset holds more than one. */
+  title?: string;
+  description?: string;
+  service: string;
+  layer: string;
+  /** The terms the service resolves to decide which policy it is served under; the plain one otherwise. */
+  policy?: ExampleFeed["policy"];
+}
+
+/** One layer of an APA SNIAmb service, read the same way. */
+interface ApaLayer {
+  slug: string;
+  dataset: string;
+  title?: string;
+  description?: string;
+  service: string;
+  /** The layer within the map service, where it is not the first. */
+  layer?: string;
+}
 
 interface MafraLayer {
   service: string;
   layer: string;
   slug: string;
-  title: string;
-  description: string;
-  topics: NonNullable<ExampleFeed["topics"]>;
+  /** The dataset this layer is, a key of `DATASETS`. */
+  dataset: string;
 }
 
 const MAFRA_LAYERS: MafraLayer[] = [
@@ -69,10 +72,7 @@ const MAFRA_LAYERS: MafraLayer[] = [
     service: "DadosAbertos_Amb_Ecopontos_Contentores",
     layer: "1",
     slug: "mafra-ecopontos-contentores",
-    title: "Mafra recycling points",
-    description:
-      "Recycling points in Mafra, each naming the containers standing there for paper, packaging, glass, batteries, refuse, bio-waste, oil and textiles, with its street, locality and parish.",
-    topics: ["environment", "cities"],
+    dataset: "cm-mafra-ecopontos-contentores",
   },
   // Layer 2 of that same service holds the 8,635 containers themselves, one record each with
   // capacity and state of conservation, and is the richer half of the pair. It is a table
@@ -82,146 +82,110 @@ const MAFRA_LAYERS: MafraLayer[] = [
     service: "DadosAbertos_Amb_Espacos_Verdes",
     layer: "3",
     slug: "mafra-espacos-verdes",
-    title: "Mafra green spaces",
-    description: "Green spaces in Mafra with their code, the place and locality they lie in, the space they belong to, and the parish.",
-    topics: ["environment", "cities"],
+    dataset: "cm-mafra-espacos-verdes",
   },
   {
     service: "DadosAbertos_Amb_Parques_Caninos",
     layer: "0",
     slug: "mafra-parques-caninos",
-    title: "Mafra dog parks",
-    description: "Dog parks in Mafra with their address, the equipment and drinking fountains they hold, the year each was built, who built and maintains it, and its paving.",
-    topics: ["cities", "society"],
+    dataset: "cm-mafra-parques-caninos",
   },
   {
     service: "DadosAbertos_Postos_Carregamento_Eletrico",
     layer: "0",
     slug: "mafra-postos-carregamento",
-    title: "Mafra electric-vehicle charging points",
-    description:
-      "Charging points in Mafra with their operator, the kind of charge and number of chargers, the form of operation, and the licence and contract periods each runs under.",
-    topics: ["energy", "mobility"],
+    dataset: "cm-mafra-postos-carregamento",
   },
   {
     service: "DadosAbertos_Transito_Estacionamento_Bicicletas",
     layer: "0",
     slug: "mafra-estacionamento-bicicletas",
-    title: "Mafra bicycle parking",
-    description: "Bicycle parking in Mafra with its location, parish and the observations recorded for it.",
-    topics: ["mobility", "cities"],
+    dataset: "cm-mafra-estacionamento-bicicletas",
   },
   {
     service: "DadosAbertos_Transito_Parques_Estacionamento",
     layer: "0",
     slug: "mafra-parques-estacionamento",
-    title: "Mafra parking areas",
-    description: "Parking areas in Mafra with their designation, the number of spaces each holds, whether those spaces are charged for, the address and the parish.",
-    topics: ["mobility", "cities"],
+    dataset: "cm-mafra-parques-estacionamento",
   },
   {
     service: "DadosAbertos_Transito_Parcometros",
     layer: "0",
     slug: "mafra-parcometros",
-    title: "Mafra parking meters",
-    description: "Parking meters in Mafra with the hours they apply on weekdays, Saturdays and Sundays, the tariff, and the least and greatest amount each takes.",
-    topics: ["mobility", "cities"],
+    dataset: "cm-mafra-parcometros",
   },
   {
     service: "DadosAbertos_Transito_Lugares_Mobilidade_Reduzida",
     layer: "0",
     slug: "mafra-lugares-mobilidade-reduzida",
-    title: "Mafra reduced-mobility parking bays",
-    description: "Parking bays reserved for reduced mobility in Mafra, with the street and traffic codes, the locality and parish, and the date each sign was placed.",
-    topics: ["mobility", "society"],
+    dataset: "cm-mafra-lugares-mobilidade-reduzida",
   },
   {
     service: "DadosAbertos_Desp_Ciclovias",
     layer: "0",
     slug: "mafra-ciclovias",
-    title: "Mafra cycle lanes",
-    description: "Cycle lanes in Mafra with their name, typology, and whether each is a principal route.",
-    topics: ["mobility", "cities"],
+    dataset: "cm-mafra-ciclovias",
   },
   {
     service: "DadosAbertos_Desp_CircuitosPedestres_BTT",
     layer: "0",
     slug: "mafra-circuitos-pedestres-btt",
-    title: "Mafra walking and mountain-bike trails",
-    description: "Walking and mountain-bike trails in Mafra with their name, description and type.",
-    topics: ["society", "environment"],
+    dataset: "cm-mafra-circuitos-pedestres-btt",
   },
   {
     service: "DadosAbertos_Cult_Patrimonio_Inventario_Total",
     layer: "0",
     slug: "mafra-patrimonio-inventario",
-    title: "Mafra heritage inventory",
-    description: "The municipal heritage inventory of Mafra: each item's designation, address, period, category and the situation it is in.",
-    topics: ["culture", "cities"],
+    dataset: "cm-mafra-patrimonio-inventario",
   },
   {
     service: "DadosAbertos_Educa_Equip_Escolares",
     layer: "0",
     slug: "mafra-equipamentos-escolares",
-    title: "Mafra schools",
-    description: "Schools in Mafra with their address, parish, contacts, typology, capacity, opening hours and the grouping each belongs to.",
-    topics: ["society", "cities"],
+    dataset: "cm-mafra-equipamentos-escolares",
   },
   {
     service: "DadosAbertos_Equip_Saude",
     layer: "1",
     slug: "mafra-centros-saude",
-    title: "Mafra health centres",
-    description: "Health centres in Mafra with their address, parish, contacts, hours of operation and service shifts.",
-    topics: ["health", "cities"],
+    dataset: "cm-mafra-centros-saude",
   },
   {
     service: "DadosAbertos_Equip_Farmacias",
     layer: "1",
     slug: "mafra-farmacias",
-    title: "Mafra pharmacies",
-    description: "Pharmacies in Mafra with their address, parish, contacts, hours of operation and duty shifts.",
-    topics: ["health", "cities"],
+    dataset: "cm-mafra-farmacias",
   },
   {
     service: "DadosAbertos_ASocial_Equipamentos_Sociais",
     layer: "1",
     slug: "mafra-equipamentos-sociais",
-    title: "Mafra social facilities",
-    description: "Social facilities in Mafra with their address and parish, their legal nature, the services each offers and the capacity it holds.",
-    topics: ["society", "cities"],
+    dataset: "cm-mafra-equipamentos-sociais",
   },
   {
     service: "DadosAbertos_Equip_Esp_Jogo_Recreio",
     layer: "0",
     slug: "mafra-espacos-jogo-recreio",
-    title: "Mafra play areas",
-    description: "Play and recreation areas in Mafra with their name, address, locality, parish and type.",
-    topics: ["society", "cities"],
+    dataset: "cm-mafra-espacos-jogo-recreio",
   },
   {
     service: "DadosAbertos_Equipamentos_Coletivos_Cultura",
     layer: "0",
     slug: "mafra-equipamentos-cultura",
-    title: "Mafra cultural facilities",
-    description: "Cultural bodies and facilities in Mafra with their typology, category, name and location.",
-    topics: ["culture", "cities"],
+    dataset: "cm-mafra-equipamentos-cultura",
   },
   {
     service: "DadosAbertos_Tur_Praias",
     layer: "0",
     slug: "mafra-praias",
-    title: "Mafra beaches",
-    description: "Beaches in Mafra and the distinctions each holds: Blue Flag, accessible beach, healthy beach, gold quality, zero pollution and surf reserve.",
-    topics: ["environment", "society"],
+    dataset: "cm-mafra-praias",
   },
 ];
 
 export const ARCGIS_EXAMPLES: ExampleFeed[] = [
   {
     slug: "lisboa-rede-ciclavel-feed",
-    title: "Lisboa cycling network",
-    description: "Cycle-network line segments published by Lisboa Aberta.",
+    dataset: "cm-lisboa-rede-ciclavel",
     config: {
       source: "arcgis",
       host: LISBON_HOST,
@@ -230,13 +194,10 @@ export const ARCGIS_EXAMPLES: ExampleFeed[] = [
     },
     policy: LISBON_CC_BY_POLICY,
     staleAfterSeconds: 172_800,
-    publisher: "cm-lisboa",
-    topics: ["cities"],
   },
   {
     slug: "lisboa-ecoilhas-subterraneas-feed",
-    title: "Lisboa underground recycling islands",
-    description: "Locations and attributes of underground recycling islands in Lisboa.",
+    dataset: "cm-lisboa-ecoilhas-subterraneas",
     config: {
       source: "arcgis",
       host: LISBON_HOST,
@@ -245,13 +206,10 @@ export const ARCGIS_EXAMPLES: ExampleFeed[] = [
     },
     policy: LISBON_POLICY,
     staleAfterSeconds: 172_800,
-    publisher: "cm-lisboa",
-    topics: ["cities"],
   },
   {
     slug: "lisboa-parques-caninos-feed",
-    title: "Lisboa dog parks",
-    description: "Boundaries and public information for dog parks in Lisboa.",
+    dataset: "cm-lisboa-parques-caninos",
     config: {
       source: "arcgis",
       host: LISBON_HOST,
@@ -260,13 +218,10 @@ export const ARCGIS_EXAMPLES: ExampleFeed[] = [
     },
     policy: LISBON_POLICY,
     staleAfterSeconds: 172_800,
-    publisher: "cm-lisboa",
-    topics: ["cities"],
   },
   {
     slug: "lisboa-parques-infantis-feed",
-    title: "Lisboa playgrounds",
-    description: "Locations and management details for playgrounds in Lisboa.",
+    dataset: "cm-lisboa-parques-infantis",
     config: {
       source: "arcgis",
       host: LISBON_HOST,
@@ -275,204 +230,165 @@ export const ARCGIS_EXAMPLES: ExampleFeed[] = [
     },
     policy: LISBON_POLICY,
     staleAfterSeconds: 172_800,
-    publisher: "cm-lisboa",
-    topics: ["cities"],
   },
-  lisbonExample("lisbon-health-centres-feed", "Lisbon health centres", "Locations and contact details for public health centres in Lisbon.", "POISaude", "0"),
-  lisbonExample("lisbon-metro-stations-feed", "Lisbon metro stations", "Locations and public information for metro stations in Lisbon.", "POITransportes", "1"),
-  lisbonExample("lisbon-primary-schools-feed", "Lisbon public primary schools", "Locations and contact details for public first-cycle schools in Lisbon.", "POIEducacao", "12"),
-  lisbonExample("lisbon-museums-feed", "Lisbon museums", "Locations, contacts, and public information for museums in Lisbon.", "POICultura", "3"),
-  lisbonExample(
-    "lisbon-micromobility-restrictions-feed",
-    "Lisbon micromobility parking restriction zones",
-    "Areas in Lisbon where authorised micromobility operators may not leave vehicles parked.",
-    "MOB_Micromobilidade",
-    "0",
-    LISBON_UNSTATED_POLICY,
-  ),
-  lisbonExample(
-    "lisbon-signalised-crossings-feed",
-    "Lisbon signalised crossings",
-    "Locations and boundaries of road crossings controlled by traffic lights in Lisbon.",
-    "CruzamentosSemaforizados",
-    "0",
-    LISBON_PDDL_POLICY,
-  ),
-  lisbonExample("lisbon-lora-network-feed", "Lisbon LoRa network sites", "Locations of municipal LoRa network sites in Lisbon.", "Rede_LoRa", "0"),
-  lisbonExample(
-    "lisbon-sports-facilities-feed",
-    "Lisbon sports facilities",
-    "Locations, types, and managing organisations for sports facilities in Lisbon.",
-    "Desporto_Instalacoes",
-    "0",
-  ),
-  lisbonExample(
-    "lisbon-libraries-archives-feed",
-    "Lisbon libraries and archives",
-    "Locations, contacts, and public information for libraries, archives, and documentation centres in Lisbon.",
-    "EquipamentosCulturais",
-    "1",
-    LISBON_UNSTATED_POLICY,
-  ),
-  lisbonExample(
-    "lisbon-recycling-points-feed",
-    "Lisbon recycling points",
-    "Locations and collection details for public recycling points in Lisbon.",
-    "Amb_Reciclagem",
-    "2",
-    LISBON_UNSTATED_POLICY,
-  ),
-  lisbonExample("lisbon-cleaning-depots-feed", "Lisbon street-cleaning depots", "Locations of municipal street-cleaning depots in Lisbon.", "Amb_Limpeza", "1"),
-  lisbonExample(
-    "lisbon-tree-incidents-feed",
-    "Lisbon reported tree incidents",
-    "Locations and current details for tree incidents published by Lisbon municipality.",
-    "Incidentes_Arv",
-    "0",
-  ),
-  lisbonExample(
-    "lisbon-parishes-feed",
-    "Lisbon parish boundaries",
-    "Boundaries and identifiers for the 24 civil parishes of Lisbon.",
-    "Base_Freguesias",
-    "0",
-    LISBON_UNSTATED_POLICY,
-  ),
-  lisbonExample("lisbon-tuk-tuk-parking-feed", "Lisbon tuk-tuk parking areas", "Designated tuk-tuk parking locations in Lisbon.", "TukTukEstacionamentos", "0"),
-  apaExample(
-    "apa-bathing-beaches-feed",
-    "Portugal bathing beaches",
-    "Bathing-season dates, water-quality classification, facilities, and public information links for Portuguese beaches.",
-    "Praias",
-  ),
-  apaExample(
-    "apa-air-quality-stations-feed",
-    "Portugal air quality monitoring stations",
-    "Locations and site details for stations in the national air-quality monitoring network.",
-    "Qualidade_do_Ar",
-  ),
-  apaExample(
-    "apa-hydrometric-stations-feed",
-    "Portugal hydrometric stations",
-    "Locations, operating status, station type, and public data links for hydrometric stations.",
-    "Estacoes_hidrometricas",
-  ),
-  apaExample(
-    "apa-meteorological-stations-feed",
-    "Portugal meteorological stations",
-    "Locations, operating status, station type, and public data links for meteorological stations.",
-    "Estacoes_meteorologicas",
-  ),
-  apaExample(
-    "apa-radnet-stations-feed",
-    "Portugal RADNET radiation monitoring stations",
-    "Locations and site details for the national airborne radioactivity alert network.",
-    "RADNET",
-  ),
-  apaExample("apa-flood-marks-feed", "Portugal historical flood marks", "Locations, dates, recorded flood elevations, and sources for historical flood marks.", "Marcas_cheias"),
-  lisbonExample("lisbon-speed-cameras-feed", "Lisbon speed cameras", "Locations of fixed speed cameras on Lisbon roads.", "MOB_RadaresPaineis", "0"),
-  lisbonExample(
-    "lisbon-variable-message-signs-feed",
-    "Lisbon variable message signs",
-    "Locations of electronic road signs that show traffic messages in Lisbon.",
-    "MOB_RadaresPaineis",
-    "1",
-  ),
-  lisbonExample(
-    "lisbon-temporary-occupations-feed",
-    "Lisbon licensed temporary use of public space",
-    "Licensed events and temporary occupations of public space in Lisbon, with dates and parish.",
-    "UCT_OcupacoesTemporariasEspacoPublico",
-    "0",
-    LISBON_UNSTATED_POLICY,
-  ),
-  lisbonExample("lisbon-pharmacies-feed", "Lisbon pharmacies", "Locations and contact details for pharmacies in Lisbon.", "POISaude", "1"),
-  lisbonExample("lisbon-public-hospitals-feed", "Lisbon public hospitals", "Locations and contact details for public hospitals in Lisbon.", "POISaude", "4"),
-  lisbonExample("lisbon-fire-stations-feed", "Lisbon fire stations", "Locations of fire brigade stations in Lisbon.", "POISocorro", "1"),
-  lisbonExample(
-    "lisbon-psp-police-stations-feed",
-    "Lisbon PSP police stations",
-    "Locations and contact details for Public Security Police stations in Lisbon.",
-    "POISeguranca",
-    "1",
-  ),
-  lisbonExample(
-    "lisbon-urgent-works-feed",
-    "Lisbon urgent public works",
-    "Locations of urgent public works carried out by Lisbon municipality.",
-    "DCIEP_OBRAS_25_gdb",
-    "1",
-    LISBON_UNSTATED_POLICY,
-  ),
-  lisbonExample("lisbon-hotels-feed", "Lisbon hotels", "Locations and classification of hotels in Lisbon.", "Alojamento", "0"),
-  {
-    ...lisbonExample(
-      "lisbon-building-permits-feed",
-      "Lisbon building and demolition permits",
-      "Permits issued for building and demolition works in Lisbon, with dates, addresses, and parcel outlines.",
-      "AlvarasObras",
-      "0",
-    ),
-    policy: LISBON_PERMITS_POLICY,
-  },
-  apaExample("apa-bathing-waters-feed", "Portugal bathing waters", "Identified coastal and inland bathing waters, with their classification and location.", "Aguas_Balneares"),
-  apaExample("apa-blue-flag-beaches-feed", "Portugal Blue Flag beaches", "Beaches awarded the Blue Flag for the current bathing season.", "Praias", "2"),
-  apaExample(
-    "apa-seveso-establishments-feed",
-    "Establishments under major-accident prevention rules",
-    "Industrial sites covered by the Seveso major-accident prevention regime (Decree-Law 150/2015).",
-    "Prevencao_Acidentes_Graves",
-  ),
-  apaExample(
-    "apa-emissions-trading-installations-feed",
-    "Installations in the EU emissions trading system",
-    "Portuguese installations covered by the EU greenhouse gas emissions trading system.",
-    "CELE",
-  ),
+  /*
+   * The health-centre dataset is read by three feeds — centres, pharmacies and
+   * hospitals are three layers of one service, keyed and served alike — so each
+   * says what it is within it.
+   */
+  lisbonExample({
+    slug: "lisbon-health-centres-feed",
+    dataset: "cm-lisboa-health-centres",
+    title: "Lisbon health centres",
+    description: "Locations and contact details for public health centres in Lisbon.",
+    service: "POISaude",
+    layer: "0",
+  }),
+  lisbonExample({ slug: "lisbon-metro-stations-feed", dataset: "cm-lisboa-metro-stations", service: "POITransportes", layer: "1" }),
+  lisbonExample({ slug: "lisbon-primary-schools-feed", dataset: "cm-lisboa-primary-schools", service: "POIEducacao", layer: "12" }),
+  lisbonExample({ slug: "lisbon-museums-feed", dataset: "cm-lisboa-museums", service: "POICultura", layer: "3" }),
+  lisbonExample({
+    slug: "lisbon-micromobility-restrictions-feed",
+    dataset: "cm-lisboa-micromobility-restrictions",
+    service: "MOB_Micromobilidade",
+    layer: "0",
+    policy: LISBON_UNSTATED_POLICY,
+  }),
+  lisbonExample({
+    slug: "lisbon-signalised-crossings-feed",
+    dataset: "cm-lisboa-signalised-crossings",
+    service: "CruzamentosSemaforizados",
+    layer: "0",
+    policy: LISBON_PDDL_POLICY,
+  }),
+  lisbonExample({ slug: "lisbon-lora-network-feed", dataset: "cm-lisboa-lora-network", service: "Rede_LoRa", layer: "0" }),
+  lisbonExample({ slug: "lisbon-sports-facilities-feed", dataset: "cm-lisboa-sports-facilities", service: "Desporto_Instalacoes", layer: "0" }),
+  lisbonExample({
+    slug: "lisbon-libraries-archives-feed",
+    dataset: "cm-lisboa-libraries-archives",
+    service: "EquipamentosCulturais",
+    layer: "1",
+    policy: LISBON_UNSTATED_POLICY,
+  }),
+  lisbonExample({ slug: "lisbon-recycling-points-feed", dataset: "cm-lisboa-recycling-points", service: "Amb_Reciclagem", layer: "2", policy: LISBON_UNSTATED_POLICY }),
+  lisbonExample({ slug: "lisbon-cleaning-depots-feed", dataset: "cm-lisboa-cleaning-depots", service: "Amb_Limpeza", layer: "1" }),
+  lisbonExample({ slug: "lisbon-tree-incidents-feed", dataset: "cm-lisboa-tree-incidents", service: "Incidentes_Arv", layer: "0" }),
+  lisbonExample({ slug: "lisbon-parishes-feed", dataset: "cm-lisboa-parishes", service: "Base_Freguesias", layer: "0", policy: LISBON_UNSTATED_POLICY }),
+  lisbonExample({ slug: "lisbon-tuk-tuk-parking-feed", dataset: "cm-lisboa-tuk-tuk-parking", service: "TukTukEstacionamentos", layer: "0" }),
+  apaExample({
+    slug: "apa-bathing-beaches-feed",
+    dataset: "apa-bathing-beaches",
+    title: "Portugal bathing beaches",
+    description: "Bathing-season dates, water-quality classification, facilities, and public information links for Portuguese beaches.",
+    service: "Praias",
+  }),
+  apaExample({ slug: "apa-air-quality-stations-feed", dataset: "apa-air-quality-stations", service: "Qualidade_do_Ar" }),
+  apaExample({ slug: "apa-hydrometric-stations-feed", dataset: "apa-hydrometric-stations", service: "Estacoes_hidrometricas" }),
+  apaExample({ slug: "apa-meteorological-stations-feed", dataset: "apa-meteorological-stations", service: "Estacoes_meteorologicas" }),
+  apaExample({ slug: "apa-radnet-stations-feed", dataset: "apa-radnet-stations", service: "RADNET" }),
+  apaExample({ slug: "apa-flood-marks-feed", dataset: "apa-flood-marks", service: "Marcas_cheias" }),
+  /*
+   * The radars and the message panels are two layers of one service, and one
+   * dataset: each says which of the two it is.
+   */
+  lisbonExample({
+    slug: "lisbon-speed-cameras-feed",
+    dataset: "cm-lisboa-speed-cameras",
+    title: "Lisbon speed cameras",
+    description: "Locations of fixed speed cameras on Lisbon roads.",
+    service: "MOB_RadaresPaineis",
+    layer: "0",
+  }),
+  lisbonExample({
+    slug: "lisbon-variable-message-signs-feed",
+    dataset: "cm-lisboa-speed-cameras",
+    title: "Lisbon variable message signs",
+    description: "Locations of electronic road signs that show traffic messages in Lisbon.",
+    service: "MOB_RadaresPaineis",
+    layer: "1",
+  }),
+  lisbonExample({
+    slug: "lisbon-temporary-occupations-feed",
+    dataset: "cm-lisboa-temporary-occupations",
+    service: "UCT_OcupacoesTemporariasEspacoPublico",
+    layer: "0",
+    policy: LISBON_UNSTATED_POLICY,
+  }),
+  lisbonExample({
+    slug: "lisbon-pharmacies-feed",
+    dataset: "cm-lisboa-health-centres",
+    title: "Lisbon pharmacies",
+    description: "Locations and contact details for pharmacies in Lisbon.",
+    service: "POISaude",
+    layer: "1",
+  }),
+  lisbonExample({
+    slug: "lisbon-public-hospitals-feed",
+    dataset: "cm-lisboa-health-centres",
+    title: "Lisbon public hospitals",
+    description: "Locations and contact details for public hospitals in Lisbon.",
+    service: "POISaude",
+    layer: "4",
+  }),
+  lisbonExample({ slug: "lisbon-fire-stations-feed", dataset: "cm-lisboa-fire-stations", service: "POISocorro", layer: "1" }),
+  lisbonExample({ slug: "lisbon-psp-police-stations-feed", dataset: "cm-lisboa-psp-police-stations", service: "POISeguranca", layer: "1" }),
+  lisbonExample({ slug: "lisbon-urgent-works-feed", dataset: "cm-lisboa-urgent-works", service: "DCIEP_OBRAS_25_gdb", layer: "1", policy: LISBON_UNSTATED_POLICY }),
+  lisbonExample({ slug: "lisbon-hotels-feed", dataset: "cm-lisboa-hotels", service: "Alojamento", layer: "0" }),
+  lisbonExample({ slug: "lisbon-building-permits-feed", dataset: "cm-lisboa-building-permits", service: "AlvarasObras", layer: "0", policy: LISBON_PERMITS_POLICY }),
+  apaExample({ slug: "apa-bathing-waters-feed", dataset: "apa-bathing-waters", service: "Aguas_Balneares" }),
+  apaExample({
+    slug: "apa-blue-flag-beaches-feed",
+    dataset: "apa-bathing-beaches",
+    title: "Portugal Blue Flag beaches",
+    description: "Beaches awarded the Blue Flag for the current bathing season.",
+    service: "Praias",
+    layer: "2",
+  }),
+  apaExample({ slug: "apa-seveso-establishments-feed", dataset: "apa-seveso-establishments", service: "Prevencao_Acidentes_Graves" }),
+  apaExample({ slug: "apa-emissions-trading-installations-feed", dataset: "apa-emissions-trading-installations", service: "CELE" }),
   ...MAFRA_LAYERS.map(mafraExample),
 ];
 
-function lisbonExample(slug: string, title: string, description: string, service: string, layer: string, policy: ExampleFeed["policy"] = LISBON_POLICY): ExampleFeed {
-  return {
-    slug,
-    title,
-    description,
+function lisbonExample(layer: LisbonLayer): ExampleFeed {
+  const example: ExampleFeed = {
+    slug: layer.slug,
+    dataset: layer.dataset,
     config: {
       source: "arcgis",
       host: LISBON_HOST,
-      service: `${LISBON_SERVICE_ROOT}/${service}/FeatureServer`,
-      layer,
+      service: `${LISBON_SERVICE_ROOT}/${layer.service}/FeatureServer`,
+      layer: layer.layer,
     },
-    policy,
+    policy: layer.policy ?? LISBON_POLICY,
     staleAfterSeconds: 172_800,
-    publisher: "cm-lisboa",
-    topics: ["cities"],
   };
+  if (layer.title) example.title = layer.title;
+  if (layer.description) example.description = layer.description;
+  return example;
 }
 
-function apaExample(slug: string, title: string, description: string, service: string, layer = "0"): ExampleFeed {
-  return {
-    slug,
-    title,
-    description,
+function apaExample(layer: ApaLayer): ExampleFeed {
+  const example: ExampleFeed = {
+    slug: layer.slug,
+    dataset: layer.dataset,
     config: {
       source: "arcgis",
       host: APA_HOST,
-      service: `${APA_SERVICE_ROOT}/${service}/MapServer`,
-      layer,
+      service: `${APA_SERVICE_ROOT}/${layer.service}/MapServer`,
+      layer: layer.layer ?? "0",
     },
     policy: APA_POLICY,
     staleAfterSeconds: 172_800,
-    publisher: "apa",
-    topics: ["environment"],
   };
+  if (layer.title) example.title = layer.title;
+  if (layer.description) example.description = layer.description;
+  return example;
 }
 
 function mafraExample(layer: MafraLayer): ExampleFeed {
   return {
     slug: `${layer.slug}-feed`,
-    title: layer.title,
-    description: layer.description,
+    dataset: layer.dataset,
     config: {
       source: "arcgis",
       host: MAFRA_HOST,
@@ -481,12 +397,10 @@ function mafraExample(layer: MafraLayer): ExampleFeed {
     },
     policy: MAFRA_POLICY,
     staleAfterSeconds: 172_800,
-    publisher: "cm-mafra",
-    topics: layer.topics,
   };
 }
 
-function referencePolicy(name: string, attribution: string, licence: Licence): ExampleFeed["policy"] {
+function referencePolicy(name: string): ExampleFeed["policy"] {
   return {
     name,
     version: 1,
@@ -495,10 +409,6 @@ function referencePolicy(name: string, attribution: string, licence: Licence): E
       timeoutSeconds: 60,
       maxBytes: 5 * 1024 * 1024,
       historyMode: "changes" as const,
-    },
-    serving: {
-      licence,
-      attribution,
     },
   };
 }

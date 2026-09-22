@@ -2,10 +2,8 @@ import type { CollectionPolicyDefinition, ExampleFeed } from "../../index";
 
 /**
  * Porto runs its Urban Platform on a FIWARE broker that answers without a key,
- * and registers the broker's own query URLs as the resources of CC0 datasets
- * on its open-data portal. So the terms are the municipality's own, stated for
- * exactly these endpoints, and the attribution names whoever made each feed's
- * data rather than the platform that serves it.
+ * and registers the broker's own query URLs as the resources of datasets on its
+ * open-data portal.
  */
 const PORTO_BROKER = "broker.fiware.urbanplatform.portodigital.pt";
 
@@ -37,6 +35,7 @@ const POSITIONS: CollectionPolicyDefinition = {
 export const NGSI_EXAMPLES: ExampleFeed[] = [
   {
     slug: "porto-air-quality-feed",
+    dataset: "porto-digital-urban-sensors",
     title: "Porto air quality",
     description:
       "Carbon monoxide, nitrogen dioxide, ozone and particulate matter measured by the Porto Digital sensor network, each reading dated by the sensor that took it. The network states no units for these measurements, so none are claimed here.",
@@ -51,13 +50,12 @@ export const NGSI_EXAMPLES: ExampleFeed[] = [
       // unnamed here would sit in the sensor table as though it described the sensor.
       measures: "co,no2,o3,pm10,pm25,pm1,temperature",
     },
-    policy: { name: "NGSI sensor network", version: 1, collection: SENSOR, serving: { licence: "cc0-1.0", attribution: "Porto Digital — Urban Platform" } },
+    policy: { name: "NGSI sensor network", version: 1, collection: SENSOR },
     staleAfterSeconds: 86_400,
-    publisher: "porto-digital",
-    topics: ["environment", "cities"],
   },
   {
     slug: "porto-noise-levels-feed",
+    dataset: "porto-digital-urban-sensors",
     title: "Porto noise levels",
     description: "The equivalent continuous sound level each Porto Digital noise sensor measured, dated by the sensor's own clock.",
     config: {
@@ -69,10 +67,8 @@ export const NGSI_EXAMPLES: ExampleFeed[] = [
       // LAeq is an A-weighted decibel by definition; the broker states no unit of its own.
       measures: "LAeq=dB(A)",
     },
-    policy: { name: "NGSI sensor network", version: 1, collection: SENSOR, serving: { licence: "cc0-1.0", attribution: "Porto Digital — Urban Platform" } },
+    policy: { name: "NGSI sensor network", version: 1, collection: SENSOR },
     staleAfterSeconds: 86_400,
-    publisher: "porto-digital",
-    topics: ["environment", "cities"],
   },
   /*
    * The broker's off-street car parks are not read. Nineteen of the twenty
@@ -82,9 +78,7 @@ export const NGSI_EXAMPLES: ExampleFeed[] = [
    */
   {
     slug: "porto-shared-micromobility-spots-feed",
-    title: "Porto shared micromobility parking",
-    description:
-      "Parking spots for shared scooters and bicycles in Porto: where each is, the spaces it holds and how many of them are free. The broker keeps no clock for these, so each reading is what was true when it was asked.",
+    dataset: "cm-porto-shared-micromobility-spots",
     config: {
       source: "ngsi",
       feed: "inventory",
@@ -94,16 +88,12 @@ export const NGSI_EXAMPLES: ExampleFeed[] = [
       // taxi ranks, which TaxiDigital keeps, and loading bays already read from its portal.
       query: "allowedVehicleType==twoWheeledVehicle",
     },
-    policy: { name: "NGSI inventory", version: 1, collection: SENSOR, serving: { licence: "cc0-1.0", attribution: "Câmara Municipal do Porto — Urban Platform" } },
+    policy: { name: "NGSI inventory", version: 1, collection: SENSOR },
     staleAfterSeconds: 86_400,
-    publisher: "cm-porto",
-    topics: ["mobility", "cities"],
   },
   {
     slug: "porto-stcp-bus-positions-feed",
-    title: "STCP bus positions",
-    description:
-      "Where each STCP bus in service is now, with its heading, speed, the route it is running and the trip it is on, dated by the clock of the vehicle that reported it.",
+    dataset: "stcp-porto-stcp-bus-positions",
     config: {
       source: "ngsi",
       feed: "inventory",
@@ -112,9 +102,7 @@ export const NGSI_EXAMPLES: ExampleFeed[] = [
       query: "vehicleType==bus",
       timeField: "observationDateTime",
     },
-    policy: { name: "NGSI vehicle positions", version: 1, collection: POSITIONS, serving: { licence: "cc0-1.0", attribution: "STCP — Urban Platform" } },
+    policy: { name: "NGSI vehicle positions", version: 1, collection: POSITIONS },
     staleAfterSeconds: 3_600,
-    publisher: "stcp",
-    topics: ["mobility", "cities"],
   },
 ];

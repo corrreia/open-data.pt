@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
+import { datasetOf } from "./catalog";
 import {
   GatekeeperError,
   NORMALIZED_PROTOCOL,
@@ -278,7 +279,7 @@ describe("SNIT examples", () => {
   it("ships one feed per kind of instrument the register holds", () => {
     expect(SNIT_EXAMPLES).toHaveLength(Object.keys(SNIT_TYPES).length);
     expect(new Set(SNIT_EXAMPLES.map((example) => example.slug)).size).toBe(SNIT_EXAMPLES.length);
-    expect(SNIT_EXAMPLES.every((example) => example.config.source === "snit" && example.publisher === "dgt")).toBe(true);
+    expect(SNIT_EXAMPLES.every((example) => example.config.source === "snit" && datasetOf(example).publisher === "dgt")).toBe(true);
   });
 
   it("polls the register weekly at most, and gives the slow types room to answer", () => {
@@ -292,8 +293,8 @@ describe("SNIT examples", () => {
 
   it("serves the register under the licence DGT states for it", () => {
     for (const example of SNIT_EXAMPLES) {
-      expect(example.policy.serving.licence).toBe("cc-by");
-      expect(example.policy.serving.attribution ?? "").not.toBe("");
+      expect(datasetOf(example).licence).toBe("cc-by");
+      expect(datasetOf(example).attribution ?? "").not.toBe("");
     }
   });
 });

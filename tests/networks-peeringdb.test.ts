@@ -5,6 +5,7 @@ import { peeringdbCollector } from "../apps/gatekeeper/src/sources/peeringdb/col
 import { PeeringdbTransformer } from "../apps/gatekeeper/src/sources/peeringdb/transform";
 import { PEERINGDB_EXAMPLES } from "../apps/gatekeeper/src/sources/peeringdb/examples";
 import { networkBytes, networkContext, networkFixture, networkFrames, networkRequest, networkRows, object } from "./networks-support";
+import { datasetOf } from "./catalog";
 
 const CONFIG = { feed: "exchanges", country: "PT" };
 const transformer = new PeeringdbTransformer();
@@ -36,7 +37,7 @@ describe("PeeringDB source boundaries", () => {
     const example = PEERINGDB_EXAMPLES[0]!;
     expect(validatePeeringdbFeedConfig(libraryConfig(example.config))).toEqual(CONFIG);
     expect(example.policy.collection.cadenceSeconds).toBe(604_800);
-    expect(example.policy.serving.licence).toBe("peeringdb-aup");
+    expect(datasetOf(example).licence).toBe("peeringdb-aup");
   });
 
   it("requests only non-contact fields and drains short pages until an explicit empty page", async () => {

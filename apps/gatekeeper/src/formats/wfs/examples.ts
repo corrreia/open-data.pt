@@ -9,27 +9,40 @@ import { WFS_MAX_BYTES } from "./wfs";
  * about 11 MB. These eight are the districts the approved sub-regional
  * programmes cover; the other ten answer with no parcels at all.
  */
-const APPS_DISTRICTS = ["Aveiro", "Beja", "Braga", "Leiria", "Lisboa", "Porto", "Setúbal", "Viseu"] as const;
+/** One district's parcels, which are that district's own dataset. */
+interface AppsDistrict {
+  district: string;
+  /** The dataset this district's parcels are, a key of `DATASETS`. */
+  dataset: string;
+}
+
+const APPS_DISTRICTS: AppsDistrict[] = [
+  { district: "Aveiro", dataset: "agif-sgifr-apps-aveiro" },
+  { district: "Beja", dataset: "agif-sgifr-apps-beja" },
+  { district: "Braga", dataset: "agif-sgifr-apps-braga" },
+  { district: "Leiria", dataset: "agif-sgifr-apps-leiria" },
+  { district: "Lisboa", dataset: "agif-sgifr-apps-lisboa" },
+  { district: "Porto", dataset: "agif-sgifr-apps-porto" },
+  { district: "Setúbal", dataset: "agif-sgifr-apps-setubal" },
+  { district: "Viseu", dataset: "agif-sgifr-apps-viseu" },
+];
 
 /*
  * Oeiras publishes a `dados_abertos` workspace of 240 feature types on its own
- * GeoServer, stating Fees NONE and AccessConstraints NONE in its capabilities
- * and CC BY on the CKAN records beside it. Almost none of those layers carries
- * an identifier column — an inventory of road works names a street, a state
- * and a contractor, and nothing that tells one row from the next — so they are
- * keyed by the identity the service gives each feature, which this GeoServer
- * derives from the key of the table behind the layer and returns in that order.
+ * GeoServer. Almost none of those layers carries an identifier column — an
+ * inventory of road works names a street, a state and a contractor, and nothing
+ * that tells one row from the next — so they are keyed by the identity the
+ * service gives each feature, which this GeoServer derives from the key of the
+ * table behind the layer and returns in that order.
  */
 const OEIRAS_HOST = "oeirasinterativa.oeiras.pt";
 const OEIRAS_PATH = "/gis/services/dados_abertos/wfs";
-const OEIRAS_ATTRIBUTION = "Câmara Municipal de Oeiras — Oeiras Interativa";
 
 interface OeirasLayer {
   layer: string;
   slug: string;
-  title: string;
-  description: string;
-  topics: NonNullable<ExampleFeed["topics"]>;
+  /** The dataset this layer is, a key of `DATASETS`. */
+  dataset: string;
   /** The layer's own key, where it has one; otherwise the service's feature identity. */
   idField?: string;
   numberFields?: string;
@@ -41,45 +54,32 @@ const OEIRAS_LAYERS: OeirasLayer[] = [
   {
     layer: "w_condicionalismos_via_publica",
     slug: "oeiras-condicionalismos-via-publica",
-    title: "Oeiras public-road restrictions",
-    description:
-      "Every works restriction on the public road in Oeiras: what the work is, where it is, who asked for it, the state it has reached, the dates it was expected to start and finish, and when the record was last touched.",
-    topics: ["cities", "mobility"],
+    dataset: "cm-oeiras-condicionalismos-via-publica",
     dateOnlyFields: "data_prevista_inicio,data_prevista_conclusao",
     dateFields: "ultima_atualizacao",
   },
   {
     layer: "w_obras_municipais",
     slug: "oeiras-obras-municipais",
-    title: "Oeiras municipal works",
-    description:
-      "The municipality's own works programme: each work's name, place, classification and type, the state it has reached, and the dates it is expected to start and finish.",
-    topics: ["cities"],
+    dataset: "cm-oeiras-obras-municipais",
     dateOnlyFields: "data_prevista_inicio,data_prevista_conclusao",
     dateFields: "ultima_atualizacao",
   },
   {
     layer: "w_parquimetros",
     slug: "oeiras-parquimetros",
-    title: "Oeiras parking meters",
-    description: "Parking meters in Oeiras with their tariff, zone and sub-zone, street, parish, whether a weekly price applies, and the date each was surveyed.",
-    topics: ["cities", "mobility"],
+    dataset: "cm-oeiras-parquimetros",
     dateOnlyFields: "data_levantamento",
   },
   {
     layer: "w_pontos_carregamento",
     slug: "oeiras-pontos-carregamento",
-    title: "Oeiras electric-vehicle charging points",
-    description: "Charging points in Oeiras with their MOBI.E identifier, operator, charging power, voltage level, connector format and sockets.",
-    topics: ["energy", "mobility"],
+    dataset: "cm-oeiras-pontos-carregamento",
   },
   {
     layer: "w_ciclovias",
     slug: "oeiras-ciclovias",
-    title: "Oeiras cycle network",
-    description:
-      "The cycle network of Oeiras segment by segment: its designation, typology and degree of segregation from traffic, its condition, length in metres, where it starts and ends, and the points of interest it serves.",
-    topics: ["mobility", "cities"],
+    dataset: "cm-oeiras-ciclovias",
     // `data_construcao` is written day-first ("21/09/2002"), which is not a date this
     // library parses, so it is kept as the text the service publishes.
     numberFields: "extensao_m",
@@ -87,76 +87,56 @@ const OEIRAS_LAYERS: OeirasLayer[] = [
   {
     layer: "w_espacos_verdes",
     slug: "oeiras-espacos-verdes",
-    title: "Oeiras green spaces",
-    description: "Green spaces maintained by Oeiras, each with its typology, the street and parish it lies in, the park or garden it belongs to, and its area in square metres.",
-    topics: ["environment", "cities"],
+    dataset: "cm-oeiras-espacos-verdes",
     numberFields: "area_m2",
   },
   {
     layer: "w_residuos_indiferenciados",
     slug: "oeiras-residuos-indiferenciados",
-    title: "Oeiras refuse containers",
-    description:
-      "Containers for undifferentiated refuse in Oeiras, with the street they stand on, the type of equipment, the capacity in litres and whether collection is collective.",
-    topics: ["environment", "cities"],
+    dataset: "cm-oeiras-residuos-indiferenciados",
     numberFields: "capacidade",
   },
   {
     layer: "w_com_serv_estabelecimento_desocupado",
     slug: "oeiras-estabelecimentos-desocupados",
-    title: "Oeiras vacant commercial premises",
-    description: "Commercial premises recorded as unoccupied in Oeiras, each with its address, whether the record is still active, and the context noted for it.",
-    topics: ["economy", "cities"],
+    dataset: "cm-oeiras-estabelecimentos-desocupados",
     idField: "cod_estabelecimento",
   },
   {
     layer: "w_bicicletas_docas_estacionamento",
     slug: "oeiras-docas-bicicletas",
-    title: "Oeiras bicycle parking",
-    description:
-      "Bicycle parking in Oeiras: the street and reference point, the number of docks and spaces, the type of stand, who is responsible for it, and when it was installed.",
-    topics: ["mobility", "cities"],
+    dataset: "cm-oeiras-docas-bicicletas",
     dateOnlyFields: "data_instalacao",
   },
   {
     layer: "w_equipamentos_saude",
     slug: "oeiras-equipamentos-saude",
-    title: "Oeiras health facilities",
-    description: "Health facilities and pharmacies in Oeiras with their address, telephone, email, opening hours, closing days and the body that runs each one.",
-    topics: ["health", "cities"],
+    dataset: "cm-oeiras-equipamentos-saude",
     idField: "nome",
   },
   {
     layer: "w_colonias_errantes",
     slug: "oeiras-colonias-errantes",
-    title: "Oeiras stray cat colonies",
-    description: "Registered stray cat colonies in Oeiras, each with the number of cats counted, how many of them are sterilised, and the state the colony has reached.",
-    topics: ["environment", "society"],
+    dataset: "cm-oeiras-colonias-errantes",
   },
   {
     layer: "w_orcamento_participativo",
     slug: "oeiras-orcamento-participativo",
-    title: "Oeiras participatory budget projects",
-    description: "Projects chosen through the participatory budget of Oeiras, each with its description, the edition that chose it, and where it is being carried out.",
-    topics: ["government", "cities"],
+    dataset: "cm-oeiras-orcamento-participativo",
     idField: "nome",
   },
   {
     layer: "w_hortas_urbanas",
     slug: "oeiras-hortas-urbanas",
-    title: "Oeiras urban allotments",
-    description: "Urban allotments in Oeiras with their area in square metres, the number of plots each holds, and the facilities supporting them.",
-    topics: ["environment", "cities"],
+    dataset: "cm-oeiras-hortas-urbanas",
     idField: "nome",
   },
 ];
 
 /*
- * DGT's GeoServer. Its capabilities state `Fees none` and `AccessConstraints
- * none`, and DGT's dados.gov.pt records carry CC BY, as the rest of its
- * services do. WFS is switched off for the server as a whole — `/geoserver/ows`
- * answers "Service WFS is disabled" — but on for individual workspaces, so
- * every path here names its workspace.
+ * DGT's GeoServer. WFS is switched off for the server as a whole —
+ * `/geoserver/ows` answers "Service WFS is disabled" — but on for individual
+ * workspaces, so every path here names its workspace.
  *
  * This is where the islands are. The pygeoapi service the `ogc` library reads
  * carries the mainland alone, and the CAOP feeds there say so; Madeira and the
@@ -173,10 +153,7 @@ interface Geo2Layer {
   workspace: string;
   layer: string;
   slug: string;
-  title: string;
-  description: string;
-  topics: NonNullable<ExampleFeed["topics"]>;
-  /** What DGT is credited as for this layer. */
+  /** The dataset this layer is, a key of `DATASETS`. */
   dataset: string;
   /** How often the layer is read, in seconds; an edition-based layer weekly, an archive monthly. */
   cadenceSeconds: number;
@@ -192,7 +169,6 @@ interface Geo2Layer {
   maxRecords?: number;
 }
 
-const CAOP_2025 = "Carta Administrativa Oficial de Portugal (CAOP) 2025";
 const CAOP_COLUMNS = "area_ha,perimetro_km";
 /*
  * The island charter is read as attributes, exactly as the mainland one is, and
@@ -209,11 +185,7 @@ const GEO2_LAYERS: Geo2Layer[] = [
     layer: "ram_municipios",
     propertyNames: CAOP_MUNICIPALITY_COLUMNS,
     slug: "dgt-caop-madeira-municipios",
-    title: "Madeira municipality boundaries (CAOP 2025)",
-    description:
-      "The 11 municipalities of the Autonomous Region of Madeira in the official administrative charter: the DTMN code, the island each belongs to, the three NUTS levels, the area in hectares, the perimeter and how many parishes each holds. Attributes only, without boundary outlines.",
-    topics: ["society", "cities"],
-    dataset: CAOP_2025,
+    dataset: "dgt-caop-madeira-municipios",
     cadenceSeconds: 604_800,
     numberFields: `${CAOP_COLUMNS},n_freguesias`,
   },
@@ -222,11 +194,7 @@ const GEO2_LAYERS: Geo2Layer[] = [
     layer: "ram_freguesias",
     propertyNames: CAOP_PARISH_COLUMNS,
     slug: "dgt-caop-madeira-freguesias",
-    title: "Madeira parish boundaries (CAOP 2025)",
-    description:
-      "The 54 civil parishes of the Autonomous Region of Madeira in the official administrative charter: the DTMNFR code, the municipality and island each belongs to, the three NUTS levels, the area in hectares and the perimeter. Attributes only, without boundary outlines.",
-    topics: ["society", "cities"],
-    dataset: CAOP_2025,
+    dataset: "dgt-caop-madeira-freguesias",
     cadenceSeconds: 604_800,
     numberFields: CAOP_COLUMNS,
   },
@@ -235,11 +203,7 @@ const GEO2_LAYERS: Geo2Layer[] = [
     layer: "raa_cen_ori_municipios",
     propertyNames: CAOP_MUNICIPALITY_COLUMNS,
     slug: "dgt-caop-acores-central-oriental-municipios",
-    title: "Azores central and eastern municipality boundaries (CAOP 2025)",
-    description:
-      "The 16 municipalities of the central and eastern island groups of the Azores — Terceira, Graciosa, São Jorge, Pico, Faial, São Miguel and Santa Maria — in the official administrative charter: the DTMN code, the island, the three NUTS levels, the area in hectares, the perimeter and the parish count. Attributes only, without boundary outlines.",
-    topics: ["society", "cities"],
-    dataset: CAOP_2025,
+    dataset: "dgt-caop-acores-central-oriental-municipios",
     cadenceSeconds: 604_800,
     numberFields: `${CAOP_COLUMNS},n_freguesias`,
   },
@@ -248,11 +212,7 @@ const GEO2_LAYERS: Geo2Layer[] = [
     layer: "raa_cen_ori_freguesias",
     propertyNames: CAOP_PARISH_COLUMNS,
     slug: "dgt-caop-acores-central-oriental-freguesias",
-    title: "Azores central and eastern parish boundaries (CAOP 2025)",
-    description:
-      "The 144 civil parishes of the central and eastern island groups of the Azores in the official administrative charter: the DTMNFR code, the municipality and island each belongs to, the three NUTS levels, the area in hectares and the perimeter. Attributes only, without boundary outlines.",
-    topics: ["society", "cities"],
-    dataset: CAOP_2025,
+    dataset: "dgt-caop-acores-central-oriental-freguesias",
     cadenceSeconds: 604_800,
     numberFields: CAOP_COLUMNS,
   },
@@ -261,11 +221,7 @@ const GEO2_LAYERS: Geo2Layer[] = [
     layer: "raa_oci_municipios",
     propertyNames: CAOP_MUNICIPALITY_COLUMNS,
     slug: "dgt-caop-acores-ocidental-municipios",
-    title: "Azores western municipality boundaries (CAOP 2025)",
-    description:
-      "The 3 municipalities of the western island group of the Azores — Flores and Corvo — in the official administrative charter: the DTMN code, the island, the three NUTS levels, the area in hectares, the perimeter and the parish count. Attributes only, without boundary outlines.",
-    topics: ["society", "cities"],
-    dataset: CAOP_2025,
+    dataset: "dgt-caop-acores-ocidental-municipios",
     cadenceSeconds: 604_800,
     numberFields: `${CAOP_COLUMNS},n_freguesias`,
   },
@@ -274,11 +230,7 @@ const GEO2_LAYERS: Geo2Layer[] = [
     layer: "raa_oci_freguesias",
     propertyNames: CAOP_PARISH_COLUMNS,
     slug: "dgt-caop-acores-ocidental-freguesias",
-    title: "Azores western parish boundaries (CAOP 2025)",
-    description:
-      "The 12 civil parishes of Flores and Corvo, the western island group of the Azores, in the official administrative charter: the DTMNFR code, the municipality and island each belongs to, the three NUTS levels, the area in hectares and the perimeter. Attributes only, without boundary outlines.",
-    topics: ["society", "cities"],
-    dataset: CAOP_2025,
+    dataset: "dgt-caop-acores-ocidental-freguesias",
     cadenceSeconds: 604_800,
     numberFields: CAOP_COLUMNS,
   },
@@ -286,11 +238,7 @@ const GEO2_LAYERS: Geo2Layer[] = [
     workspace: "RGN",
     layer: "VG",
     slug: "dgt-rgn-vertices-geodesicos",
-    title: "National geodetic network vertices",
-    description:
-      "The 7,968 vertices of the Rede Geodésica Nacional, where each one stands and what it is worth as a control point: the name it is known by, the 1:50,000 sheet it falls on, the order of the network it belongs to, its topographic height, its PT-TM06 coordinates and whether those were observed or transformed. This is the survey register; the same marks appear in the easement register with the municipality each stands in and nothing about their height.",
-    topics: ["government", "society"],
-    dataset: "Rede Geodésica Nacional",
+    dataset: "dgt-rgn-vertices-geodesicos",
     // The network is resurveyed over years. Monthly is often enough to notice a
     // vertex being added or retired, and costs the service one read a month.
     cadenceSeconds: 2_592_000,
@@ -300,32 +248,21 @@ const GEO2_LAYERS: Geo2Layer[] = [
     workspace: "RGN",
     layer: "RedeNivelamento",
     slug: "dgt-rgn-rede-nivelamento",
-    title: "National levelling network marks",
-    description:
-      "The 4,735 benchmarks of the national levelling network, each with its orthometric height above the Cascais datum, the levelling lines and sections it belongs to, and a written description of exactly where it is set — the doorstep of a citadel, the footing of a column.",
-    topics: ["government", "society"],
-    dataset: "Rede Geodésica Nacional",
+    dataset: "dgt-rgn-rede-nivelamento",
     cadenceSeconds: 2_592_000,
   },
   {
     workspace: "RGN",
     layer: "RedeGravimetrica",
     slug: "dgt-rgn-rede-gravimetrica",
-    title: "National gravimetric network stations",
-    description: "The 6,584 stations of the national gravimetric network, where each one stands and the measurements recorded for it.",
-    topics: ["government", "society"],
-    dataset: "Rede Geodésica Nacional",
+    dataset: "dgt-rgn-rede-gravimetrica",
     cadenceSeconds: 2_592_000,
   },
   {
     workspace: "RGN",
     layer: "ReNEP",
     slug: "dgt-rgn-renep-estacoes",
-    title: "ReNEP permanent GNSS stations",
-    description:
-      "The 42 permanent GNSS stations of the Rede Nacional de Estações Permanentes, each with its four-letter code, its position and ellipsoidal height, who owns it, and the archive its RINEX observations are published to. Real-time positioning from these stations needs an account with DGT; the station register itself does not.",
-    topics: ["government", "society"],
-    dataset: "Rede Nacional de Estações Permanentes (ReNEP)",
+    dataset: "dgt-rgn-renep-estacoes",
     cadenceSeconds: 2_592_000,
     numberFields: "LATITUDE,LONGITUDE,ALTITUDE_E",
   },
@@ -333,11 +270,7 @@ const GEO2_LAYERS: Geo2Layer[] = [
     workspace: "RGN",
     layer: "RedeMaregrafica",
     slug: "dgt-rgn-rede-maregrafica",
-    title: "National tide gauge network",
-    description:
-      "The two tide gauges of the national network, at Cascais and Lagos, with the height of each one's reference mark and the archive its records are published to. The Cascais gauge is the origin of the height datum every orthometric height in Portugal is measured from.",
-    topics: ["environment", "government"],
-    dataset: "Rede Geodésica Nacional",
+    dataset: "dgt-rgn-rede-maregrafica",
     cadenceSeconds: 2_592_000,
   },
   {
@@ -347,11 +280,7 @@ const GEO2_LAYERS: Geo2Layer[] = [
     // an accent; a property list is ASCII, so naming the rest leaves that one behind.
     propertyNames: "Serra,_Nome,_OutroNome,Alinhament,Maiores,Alt_max,Alt_media,Altura,Compto_km,Largura_m,Area_km2,Perimet_km,RochaDomin,UnidadeME,GU,Grandeza,VigorAltim",
     slug: "dgt-serras-principais",
-    title: "Portugal's principal mountain ranges",
-    description:
-      "The 588 principal mountain ranges of Portugal as DGT delimits them, each with the name it goes by, its alignment, its highest and mean altitude, its height above the land around it, its length, width, area and perimeter, the rock that dominates it, the morphostructural and geomorphological units it belongs to, and how it rates for size and altimetric vigour. Attributes only: the 588 outlines come to eleven megabytes, more than one read of this service may carry.",
-    topics: ["environment", "culture"],
-    dataset: "Contributos para a delimitação das serras de Portugal",
+    dataset: "dgt-serras-principais",
     // A gazetteer, revised when the study behind it is: monthly is generous.
     cadenceSeconds: 2_592_000,
     numberFields: "Alt_max,Alt_media,Altura,Compto_km,Area_km2,Perimet_km,Largura_m",
@@ -360,10 +289,7 @@ const GEO2_LAYERS: Geo2Layer[] = [
     workspace: "serras_contributos",
     layer: "Cumes_principais",
     slug: "dgt-serras-cumes-principais",
-    title: "Principal mountain summits",
-    description: "The 587 principal summits of the Portuguese mountain ranges, each with the range it crowns and its altitude in metres.",
-    topics: ["environment", "culture"],
-    dataset: "Contributos para a delimitação das serras de Portugal",
+    dataset: "dgt-serras-cumes-principais",
     cadenceSeconds: 2_592_000,
     numberFields: "Altitude_m",
   },
@@ -371,22 +297,14 @@ const GEO2_LAYERS: Geo2Layer[] = [
     workspace: "serras_contributos",
     layer: "Serras_toponimicas",
     slug: "dgt-serras-toponimicas",
-    title: "Mountain ranges named in use",
-    description:
-      "The 395 mountain ranges of Portugal that carry a name in common use without being delimited as principal ranges — the toponymic layer of the same study, for names that appear on maps and in speech.",
-    topics: ["culture", "environment"],
-    dataset: "Contributos para a delimitação das serras de Portugal",
+    dataset: "dgt-serras-toponimicas",
     cadenceSeconds: 2_592_000,
   },
   {
     workspace: "fototeca",
     layer: "fototeca",
     slug: "dgt-fototeca-index",
-    title: "Aerial photograph archive index",
-    description:
-      "Where each of the 29,979 aerial photographs in DGT's Fototeca was taken and when — the earliest here date from 1945 — with the 1:50,000 sheet, the roll, the strip and the frame number that identify the print in the archive. An index of the collection, not the photographs themselves.",
-    topics: ["culture", "society"],
-    dataset: "Fototeca",
+    dataset: "dgt-fototeca-index",
     // A historical archive: it grows when a collection is catalogued, not weekly.
     cadenceSeconds: 2_592_000,
     // Thirty pages at about six seconds each, on the largest layer read here.
@@ -419,11 +337,8 @@ function geo2Example(layer: Geo2Layer): ExampleFeed {
   if (layer.propertyNames) config.propertyNames = layer.propertyNames;
   return {
     slug: `${layer.slug}-feed`,
-    title: layer.title,
-    description: layer.description,
+    dataset: layer.dataset,
     config,
-    publisher: "dgt",
-    topics: layer.topics,
     // Two reads' grace: a layer republished just after a run is not called stale
     // before the next run has had its chance at it.
     staleAfterSeconds: layer.cadenceSeconds * 2,
@@ -439,7 +354,6 @@ function geo2Example(layer: Geo2Layer): ExampleFeed {
         maxRecords: layer.maxRecords ?? 20_000,
         historyMode: "changes",
       },
-      serving: { licence: "cc-by", attribution: `Direção-Geral do Território — ${layer.dataset}` },
     },
   };
 }
@@ -447,9 +361,7 @@ function geo2Example(layer: Geo2Layer): ExampleFeed {
 export const WFS_EXAMPLES: ExampleFeed[] = [
   {
     slug: "effis-portugal-recent-burnt-areas-feed",
-    title: "Recent EFFIS burnt areas in Portugal",
-    description:
-      "Burnt-area polygons attributed to Portugal in the continuously updated EFFIS MODIS database during the past 180 days, with fire dates, latest update, hectares and land-cover shares. Satellite-derived burnt areas are not emergency-service incident perimeters.",
+    dataset: "effis-jrc-effis-portugal-recent-burnt-areas",
     config: {
       source: "wfs",
       feed: "events",
@@ -466,8 +378,6 @@ export const WFS_EXAMPLES: ExampleFeed[] = [
       dateFields: "FIREDATE,FINALDATE,LASTUPDATE",
       days: "180",
     },
-    publisher: "effis-jrc",
-    topics: ["environment"],
     staleAfterSeconds: 86_400,
     policy: {
       name: "EFFIS recent burnt-area window",
@@ -481,7 +391,6 @@ export const WFS_EXAMPLES: ExampleFeed[] = [
         maxRecords: 5000,
         historyMode: "changes",
       },
-      serving: { licence: "cc-by-4.0", attribution: "European Forest Fire Information System (EFFIS), European Commission Joint Research Centre" },
     },
   },
   ...APPS_DISTRICTS.map(appsExample),
@@ -506,11 +415,8 @@ function oeirasExample(layer: OeirasLayer): ExampleFeed {
   if (layer.dateOnlyFields) config.dateOnlyFields = layer.dateOnlyFields;
   return {
     slug: `${layer.slug}-feed`,
-    title: layer.title,
-    description: layer.description,
+    dataset: layer.dataset,
     config,
-    publisher: "cm-oeiras",
-    topics: layer.topics,
     staleAfterSeconds: 172_800,
     policy: {
       name: "Oeiras daily reference layer",
@@ -524,19 +430,17 @@ function oeirasExample(layer: OeirasLayer): ExampleFeed {
         maxRecords: 20_000,
         historyMode: "changes",
       },
-      serving: { licence: "cc-by", attribution: OEIRAS_ATTRIBUTION },
     },
   };
 }
 
-function appsExample(district: string): ExampleFeed {
+function appsExample({ district, dataset }: AppsDistrict): ExampleFeed {
   return {
     slug: `sgifr-apps-${district
       .toLowerCase()
       .normalize("NFD")
       .replaceAll(/[̀-ͯ]/gu, "")}-feed`,
-    title: `Fire-prevention priority areas in ${district}`,
-    description: `Every Áreas Prioritárias de Prevenção e Segurança (APPS) parcel in the district of ${district}, as approved in the sub-regional action programmes: its municipality, NUTS regions, danger class, type and origin, the plan that approved it, its area in hectares, and whether the burning and land-clearing restrictions of Article 60 and of each paragraph of Article 68 apply to it. Collected without outlines: the national layer's boundaries run to about 250 MB, and these attributes are what can be read and compared.`,
+    dataset,
     config: {
       source: "wfs",
       feed: "reference",
@@ -552,8 +456,6 @@ function appsExample(district: string): ExampleFeed {
       // The approval is a calendar day: the service writes "2024-04-22Z", which is a day wearing a zone, not an instant.
       dateOnlyFields: "data_aprovacao_publicacao",
     },
-    publisher: "agif",
-    topics: ["environment", "society"],
     // The programmes are revised, not streamed: a week between reads catches a revision the week it lands.
     staleAfterSeconds: 1_209_600,
     policy: {
@@ -568,7 +470,6 @@ function appsExample(district: string): ExampleFeed {
         maxRecords: 20_000,
         historyMode: "changes",
       },
-      serving: { licence: "sgifr-terms", attribution: "AGIF and ANEPC through SGIFR — Sistema de Gestão Integrada de Fogos Rurais (https://www.sgifr.gov.pt)" },
     },
   };
 }

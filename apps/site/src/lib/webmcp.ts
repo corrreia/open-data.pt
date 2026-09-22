@@ -62,7 +62,7 @@ const TOOLS: WebMcpTool[] = [
       for (const dataset of buildDatasets(products, feeds)) {
         for (const { product, label } of dataset.products) {
           const haystack =
-            `${dataset.title} ${label} ${product.title} ${product.slug} ${dataset.publisher.name} ${dataset.topics.join(" ")} ${dataset.feed.description}`.toLocaleLowerCase();
+            `${dataset.title} ${label} ${product.title} ${product.slug} ${dataset.publisher.name} ${dataset.topics.join(" ")} ${dataset.description}`.toLocaleLowerCase();
           if (!words.every((word) => haystack.includes(word))) continue;
           results.push({
             slug: product.slug,

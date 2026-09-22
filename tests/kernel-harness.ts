@@ -91,7 +91,6 @@ export function policy(overrides: Partial<FeedPolicy["collection"]> = {}): FeedP
       maxOutputBytes: 2 * 1024 * 1024 * 1024,
       ...overrides,
     },
-    serving: { licence: "source-terms" },
   };
 }
 
@@ -178,7 +177,7 @@ export async function kernelHarness(options: HarnessOptions = {}): Promise<Kerne
     policyId: feedPolicy.id,
     enabled: true,
     staleAfterSeconds: 7200,
-    topics: [],
+    dataset: "ine-consumer-price-index",
     createdAt: "2026-09-10T00:00:00.000Z",
     updatedAt: "2026-09-10T00:00:00.000Z",
   };

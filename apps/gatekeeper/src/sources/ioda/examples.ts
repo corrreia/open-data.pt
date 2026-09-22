@@ -2,18 +2,6 @@ import type { ExampleFeed, SourceConfig } from "../../index";
 import { IODA_MAX_BYTES, IODA_PAGE_LIMIT, IODA_PORTUGUESE_ASNS } from "./ioda";
 
 /**
- * Every IODA response ends with "This data is Copyright (c) 2021-2025 Georgia
- * Tech Research Corporation. All Rights Reserved.", and the project publishes
- * no open licence next to it. Keyless access is not permission, so each policy
- * below repeats that reservation instead of inventing terms the source never
- * granted; republication needs Georgia Tech's agreement first, the same
- * position `ripestat/examples.ts` and `peeringdb/examples.ts` record.
- */
-const LICENCE = "ioda-all-rights-reserved";
-const ATTRIBUTION = "IODA, Internet Intelligence Lab, Georgia Institute of Technology";
-const PUBLISHER = "ioda";
-
-/**
  * IODA detects an outage in ten-minute bins, so a quarter of an hour keeps the
  * event log within about one bin of the source while asking for a two-kilobyte
  * answer ninety-six times a day.
@@ -72,11 +60,10 @@ function network(slug: string, title: string, asn: string): ExampleFeed {
 function example(slug: string, title: string, description: string, config: SourceConfig, cadenceSeconds: number): ExampleFeed {
   return {
     slug,
+    dataset: "ioda-portugal-internet-outages",
     title,
     description,
     config: { source: "ioda", ...config },
-    publisher: PUBLISHER,
-    topics: ["telecom"],
     staleAfterSeconds: cadenceSeconds * 3,
     policy: {
       name: "IODA measurement — republication permission required",
@@ -92,7 +79,6 @@ function example(slug: string, title: string, description: string, config: Sourc
         // corrected signal point is worth keeping.
         historyMode: "changes",
       },
-      serving: { licence: LICENCE, attribution: ATTRIBUTION },
     },
   };
 }

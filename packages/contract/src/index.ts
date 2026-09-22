@@ -1,7 +1,5 @@
 import type { WorkerEntrypoint } from "cloudflare:workers";
 
-import type { Licence, Publisher } from "@open-data-pt/catalog";
-
 import type { JsonObject } from "./json";
 import type { CanonicalRecord, CanonicalSchema, Completeness, ProductFinalization, ProductRole, ProductUpdateMode, SeriesPoint, TransformQuality } from "./data";
 
@@ -201,25 +199,21 @@ export interface CollectionPolicyDefinition {
   withoutHistory?: readonly string[];
 }
 
-/** The catalog is public by construction; a policy only says under what terms. */
-export interface ServingPolicyDefinition {
-  /** The terms the products are served under, a key of `LICENCES`. */
-  licence: Licence;
-  attribution?: string;
-}
-
-/** A ready-to-install feed a Gatekeeper ships as an example of what it can do. */
+/**
+ * A ready-to-install feed a Gatekeeper ships as an example of what it can do.
+ * What the data is, who published it and under what terms belongs to its
+ * dataset; a feed says only how a part of that dataset is read, and how often.
+ */
 export interface ExampleFeed {
   slug: string;
-  title: string;
-  description: string;
+  /** The dataset this feed reads part of, a key of `DATASETS`. */
+  dataset: string;
+  /** What this feed is within its dataset. Absent when the feed is the whole of it, and the dataset's own title and description stand. */
+  title?: string;
+  description?: string;
   config: SourceConfig;
-  policy: { name: string; version: number; collection: CollectionPolicyDefinition; serving: ServingPolicyDefinition };
+  policy: { name: string; version: number; collection: CollectionPolicyDefinition };
   staleAfterSeconds: number;
-  /** Who made the data, a key of `PUBLISHERS`: never the portal it was read from. */
-  publisher: Publisher;
-  /** Free-form topics the catalog groups and filters by, most specific first (for example "energy"). */
-  topics?: string[];
 }
 
 export const NORMALIZED_PROTOCOL = "open-data-normalized/4" as const;

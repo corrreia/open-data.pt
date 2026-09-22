@@ -1,10 +1,5 @@
 import type { ExampleFeed } from "../../index";
 
-const SERVING = {
-  licence: "source-terms",
-  attribution: "Carris Metropolitana",
-} as const;
-
 const REFERENCE = {
   name: "Carris reference data",
   version: 1,
@@ -14,32 +9,30 @@ const REFERENCE = {
     maxBytes: 12 * 1024 * 1024,
     historyMode: "changes",
   },
-  serving: SERVING,
 } as const;
 
 export const CARRIS_EXAMPLES: ExampleFeed[] = [
   {
     slug: "carris-lines-feed",
+    dataset: "carris-metropolitana-network",
     title: "Carris Metropolitana lines",
     description: "Slow-changing transit line reference data.",
     config: { source: "carris", feed: "lines" },
     policy: REFERENCE,
     staleAfterSeconds: 172_800,
-    publisher: "carris-metropolitana",
-    topics: ["mobility"],
   },
   {
     slug: "carris-routes-feed",
+    dataset: "carris-metropolitana-network",
     title: "Carris Metropolitana routes",
     description: "Route variants of each line, with colours and served municipalities.",
     config: { source: "carris", feed: "routes" },
     policy: REFERENCE,
     staleAfterSeconds: 172_800,
-    publisher: "carris-metropolitana",
-    topics: ["mobility"],
   },
   {
     slug: "carris-stops-feed",
+    dataset: "carris-metropolitana-network",
     title: "Carris Metropolitana stops",
     description: "Every stop in the network with its location and served lines.",
     config: { source: "carris", feed: "stops" },
@@ -49,11 +42,10 @@ export const CARRIS_EXAMPLES: ExampleFeed[] = [
       collection: { ...REFERENCE.collection, maxOutputBytes: 64 * 1024 * 1024 },
     },
     staleAfterSeconds: 172_800,
-    publisher: "carris-metropolitana",
-    topics: ["mobility"],
   },
   {
     slug: "carris-vehicles-feed",
+    dataset: "carris-metropolitana-network",
     title: "Carris Metropolitana vehicle positions",
     description: "Near-real-time current vehicle state with minute summaries.",
     config: { source: "carris", feed: "vehicles" },
@@ -69,14 +61,12 @@ export const CARRIS_EXAMPLES: ExampleFeed[] = [
         // The fleet summary repeats the counts the active-vehicles series records. That series keeps every minute.
         withoutHistory: ["vehicles-current", "fleet-summary"],
       },
-      serving: SERVING,
     },
     staleAfterSeconds: 180,
-    publisher: "carris-metropolitana",
-    topics: ["mobility"],
   },
   {
     slug: "carris-alerts-feed",
+    dataset: "carris-metropolitana-network",
     title: "Carris Metropolitana service alerts",
     description: "Current service disruptions with correction history.",
     config: { source: "carris", feed: "alerts" },
@@ -90,10 +80,7 @@ export const CARRIS_EXAMPLES: ExampleFeed[] = [
         maxBytes: 2 * 1024 * 1024,
         historyMode: "changes",
       },
-      serving: SERVING,
     },
     staleAfterSeconds: 900,
-    publisher: "carris-metropolitana",
-    topics: ["mobility"],
   },
 ];

@@ -15,17 +15,12 @@ const DAILY_STATISTICS = {
     maxRecords: 100_000,
     historyMode: "changes",
   },
-  serving: {
-    licence: "bportugal-reuse",
-    attribution: "Banco de Portugal, BPstat",
-  },
 } as const;
 
 export const BPSTAT_EXAMPLES: ExampleFeed[] = [
   {
     slug: "bpstat-consumer-price-index",
-    title: "Consumer price index",
-    description: "Monthly consumer price index year-on-year changes for Portugal by consumption aggregate.",
+    dataset: "banco-de-portugal-consumer-price-index",
     config: {
       source: "bpstat",
       domain: "12",
@@ -39,13 +34,10 @@ export const BPSTAT_EXAMPLES: ExampleFeed[] = [
       collection: { ...DAILY_STATISTICS.collection, maxOutputBytes: 64 * MEBIBYTE },
     },
     staleAfterSeconds: 7 * 86_400,
-    publisher: "banco-de-portugal",
-    topics: ["economy"],
   },
   {
     slug: "bpstat-employment-and-unemployment",
-    title: "Population, employment and unemployment indicators",
-    description: "Population, unemployment benefit, job application, vacancy, and placement indicators for Portugal.",
+    dataset: "banco-de-portugal-employment-and-unemployment",
     config: {
       source: "bpstat",
       domain: "13",
@@ -54,13 +46,10 @@ export const BPSTAT_EXAMPLES: ExampleFeed[] = [
     },
     policy: DAILY_STATISTICS,
     staleAfterSeconds: 7 * 86_400,
-    publisher: "banco-de-portugal",
-    topics: ["economy"],
   },
   {
     slug: "bpstat-payment-system-participants",
-    title: "Direct debit system participants",
-    description: "Monthly and annual counts of active creditors and direct debit authorisations by SEPA scheme.",
+    dataset: "banco-de-portugal-payment-system-participants",
     config: {
       source: "bpstat",
       domain: "8",
@@ -69,13 +58,10 @@ export const BPSTAT_EXAMPLES: ExampleFeed[] = [
     },
     policy: DAILY_STATISTICS,
     staleAfterSeconds: 7 * 86_400,
-    publisher: "banco-de-portugal",
-    topics: ["economy"],
   },
   {
     slug: "bpstat-housing-loan-reference-rates",
-    title: "Housing loans with other reference rates",
-    description: "Monthly shares of new and outstanding permanent-home loans using reference rates outside the named benchmarks.",
+    dataset: "banco-de-portugal-housing-loan-reference-rates",
     config: {
       source: "bpstat",
       domain: "186",
@@ -84,8 +70,6 @@ export const BPSTAT_EXAMPLES: ExampleFeed[] = [
     },
     policy: DAILY_STATISTICS,
     staleAfterSeconds: 7 * 86_400,
-    publisher: "banco-de-portugal",
-    topics: ["economy"],
   },
   ...CATALOG_EXAMPLES,
 ];

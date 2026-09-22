@@ -41,11 +41,10 @@ export const RIPEATLAS_EXAMPLES: ExampleFeed[] = [
 function example(slug: string, title: string, description: string, config: SourceConfig, cadenceSeconds: number, maxRecords: number): ExampleFeed {
   return {
     slug,
+    dataset: "ripe-ncc-atlas-portugal",
     title,
     description,
     config: { source: "ripeatlas", ...config },
-    publisher: "ripe-ncc",
-    topics: ["telecom"],
     staleAfterSeconds: cadenceSeconds * 3,
     policy: {
       name: "RIPE Atlas research — republication permission required",
@@ -58,10 +57,6 @@ function example(slug: string, title: string, description: string, config: Sourc
         maxRecordBytes: 16 * 1024,
         maxRecords,
         historyMode: "changes",
-      },
-      serving: {
-        licence: "ripe-atlas-terms",
-        attribution: "RIPE NCC, RIPE Atlas and its probe hosts",
       },
     },
   };

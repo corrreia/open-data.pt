@@ -41,7 +41,7 @@ describe("Registry ingestion", () => {
       policyId: "policy_1",
       enabled: true,
       staleAfterSeconds: 60,
-      topics: [],
+      dataset: "ine-consumer-price-index",
       createdAt: "2026-09-10T00:00:00.000Z",
       updatedAt: "2026-09-10T00:00:00.000Z",
     });
@@ -83,7 +83,7 @@ async function registryWithFeed(): Promise<RegistryStore> {
     policyId: "policy_1",
     enabled: true,
     staleAfterSeconds: 60,
-    topics: [],
+    dataset: "ine-consumer-price-index",
     createdAt: "2026-09-10T00:00:00.000Z",
     updatedAt: "2026-09-10T00:00:00.000Z",
   });

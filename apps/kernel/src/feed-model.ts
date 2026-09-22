@@ -9,7 +9,6 @@ import type {
   ProductRole,
   ProductUpdateMode,
   ResolvedFeed,
-  ServingPolicyDefinition,
   SourceCheckpoint,
   SourceConfig,
   TransformQuality,
@@ -22,7 +21,6 @@ export interface FeedPolicy {
   name: string;
   version: number;
   collection: CollectionPolicyDefinition;
-  serving: ServingPolicyDefinition;
   createdAt: string;
 }
 
@@ -77,10 +75,8 @@ export interface Feed extends FeedStatus {
   policyId: string;
   enabled: boolean;
   staleAfterSeconds: number;
-  /** Who made the data, a key of `PUBLISHERS`; the API serves it expanded. */
-  publisher: string;
-  /** Topics the catalog filters by, supplied by the Gatekeeper, never by the kernel. */
-  topics: string[];
+  /** The dataset this feed reads part of, a key of `DATASETS`; who published it and under what terms is the dataset's word, not the feed's. */
+  dataset: string;
   createdAt: string;
   updatedAt: string;
 }

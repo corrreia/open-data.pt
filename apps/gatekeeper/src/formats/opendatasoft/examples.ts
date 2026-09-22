@@ -1,16 +1,6 @@
 import type { ExampleFeed } from "../../index";
 import { CATALOG_EXAMPLES } from "./catalog-examples";
 
-const E_REDES_SERVING = {
-  licence: "cc-by-4.0",
-  attribution: "E-REDES",
-} as const;
-
-const SNS_SERVING = {
-  licence: "source-terms",
-  attribution: "SNS Transparência and the publisher named in the dataset metadata",
-} as const;
-
 const MEBIBYTE = 1024 * 1024;
 
 const SNS_MONTHLY_SERIES = {
@@ -22,7 +12,6 @@ const SNS_MONTHLY_SERIES = {
     maxBytes: 8 * MEBIBYTE,
     historyMode: "changes",
   },
-  serving: SNS_SERVING,
 } as const;
 
 const E_REDES_PERIODIC_SERIES = {
@@ -34,7 +23,6 @@ const E_REDES_PERIODIC_SERIES = {
     maxBytes: 8 * MEBIBYTE,
     historyMode: "changes",
   },
-  serving: E_REDES_SERVING,
 } as const;
 
 const SNS_DAILY_SERIES = {
@@ -46,7 +34,6 @@ const SNS_DAILY_SERIES = {
     maxBytes: 8 * MEBIBYTE,
     historyMode: "changes",
   },
-  serving: SNS_SERVING,
 } as const;
 
 const E_REDES_QUARTER_HOUR_SERIES = {
@@ -58,14 +45,12 @@ const E_REDES_QUARTER_HOUR_SERIES = {
     maxBytes: 8 * MEBIBYTE,
     historyMode: "changes",
   },
-  serving: E_REDES_SERVING,
 } as const;
 
 export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
   {
     slug: "e-redes-districts-feed",
-    title: "Portuguese districts",
-    description: "E-REDES district boundaries and representative points for Portugal.",
+    dataset: "e-redes-districts",
     config: {
       source: "opendatasoft",
       host: "e-redes.opendatasoft.com",
@@ -85,16 +70,12 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
         maxRecords: 20_000,
         historyMode: "changes",
       },
-      serving: E_REDES_SERVING,
     },
     staleAfterSeconds: 172_800,
-    publisher: "e-redes",
-    topics: ["energy"],
   },
   {
     slug: "e-redes-national-production-feed",
-    title: "National electricity production",
-    description: "The latest 15-minute national electricity production measurements published by E-REDES.",
+    dataset: "e-redes-national-production",
     config: {
       source: "opendatasoft",
       host: "e-redes.opendatasoft.com",
@@ -112,16 +93,12 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
         maxBytes: 8 * 1024 * 1024,
         historyMode: "changes",
       },
-      serving: E_REDES_SERVING,
     },
     staleAfterSeconds: 172_800,
-    publisher: "e-redes",
-    topics: ["energy"],
   },
   {
     slug: "sns-newborn-screening-feed",
-    title: "National newborn screening programme",
-    description: "Annual newborn screening activity and detected cases published by INSA.",
+    dataset: "sns-transparencia-newborn-screening",
     config: {
       source: "opendatasoft",
       host: "transparencia.sns.gov.pt",
@@ -138,16 +115,12 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
         maxBytes: 2 * 1024 * 1024,
         historyMode: "changes",
       },
-      serving: SNS_SERVING,
     },
     staleAfterSeconds: 1_209_600,
-    publisher: "sns-transparencia",
-    topics: ["health"],
   },
   {
     slug: "sns-health-framework-agreements-feed",
-    title: "Health framework agreements",
-    description: "Current health-sector framework agreements, suppliers, and validity dates published by SPMS.",
+    dataset: "sns-transparencia-health-framework-agreements",
     config: {
       source: "opendatasoft",
       host: "transparencia.sns.gov.pt",
@@ -164,16 +137,12 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
         maxBytes: 2 * 1024 * 1024,
         historyMode: "changes",
       },
-      serving: SNS_SERVING,
     },
     staleAfterSeconds: 2_592_000,
-    publisher: "sns-transparencia",
-    topics: ["health"],
   },
   {
     slug: "sns-hospital-emergency-attendances-feed",
-    title: "Hospital emergency attendances",
-    description: "Monthly emergency attendances by hospital and type of emergency service.",
+    dataset: "sns-transparencia-hospital-emergency-attendances",
     config: {
       source: "opendatasoft",
       host: "transparencia.sns.gov.pt",
@@ -183,13 +152,10 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
     },
     policy: SNS_MONTHLY_SERIES,
     staleAfterSeconds: 1_209_600,
-    publisher: "sns-transparencia",
-    topics: ["health"],
   },
   {
     slug: "sns-surgery-waiting-target-feed",
-    title: "Patients on surgery waiting lists within the 180-day target",
-    description: "Monthly registered surgery patients within and outside the 180-day maximum response time, by hospital.",
+    dataset: "sns-transparencia-surgery-waiting-target",
     config: {
       source: "opendatasoft",
       host: "transparencia.sns.gov.pt",
@@ -199,13 +165,10 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
     },
     policy: SNS_MONTHLY_SERIES,
     staleAfterSeconds: 1_209_600,
-    publisher: "sns-transparencia",
-    topics: ["health"],
   },
   {
     slug: "sns-primary-care-consultation-access-feed",
-    title: "Access to primary-care medical consultations",
-    description: "Monthly consultation use among registered primary-care patients, by primary-care area.",
+    dataset: "sns-transparencia-primary-care-consultation-access",
     config: {
       source: "opendatasoft",
       host: "transparencia.sns.gov.pt",
@@ -215,13 +178,10 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
     },
     policy: SNS_MONTHLY_SERIES,
     staleAfterSeconds: 1_209_600,
-    publisher: "sns-transparencia",
-    topics: ["health"],
   },
   {
     slug: "sns-seasonal-flu-vaccination-coverage-feed",
-    title: "Seasonal influenza vaccination coverage",
-    description: "Annual estimated influenza vaccination coverage for Portugal, including age groups.",
+    dataset: "sns-transparencia-seasonal-flu-vaccination-coverage",
     config: {
       source: "opendatasoft",
       host: "transparencia.sns.gov.pt",
@@ -238,13 +198,10 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
       },
     },
     staleAfterSeconds: 5_184_000,
-    publisher: "sns-transparencia",
-    topics: ["health"],
   },
   {
     slug: "sns-dispensed-medicines-feed",
-    title: "Medicines dispensed by health region",
-    description: "Monthly electronic and manual prescriptions dispensed and the amount paid by the SNS.",
+    dataset: "sns-transparencia-dispensed-medicines",
     config: {
       source: "opendatasoft",
       host: "transparencia.sns.gov.pt",
@@ -254,13 +211,10 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
     },
     policy: SNS_MONTHLY_SERIES,
     staleAfterSeconds: 1_209_600,
-    publisher: "sns-transparencia",
-    topics: ["health"],
   },
   {
     slug: "e-redes-ev-charging-connections-feed",
-    title: "Electric-vehicle charging connection points",
-    description: "The latest 1,000 quarterly charging connection aggregates by municipality and parish.",
+    dataset: "e-redes-ev-charging-connections",
     config: {
       source: "opendatasoft",
       host: "e-redes.opendatasoft.com",
@@ -270,13 +224,10 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
     },
     policy: E_REDES_PERIODIC_SERIES,
     staleAfterSeconds: 1_209_600,
-    publisher: "e-redes",
-    topics: ["energy"],
   },
   {
     slug: "e-redes-scheduled-interruptions-feed",
-    title: "Scheduled electricity interruptions",
-    description: "Planned interruption windows by municipality, parish, and postal code.",
+    dataset: "e-redes-scheduled-interruptions",
     config: {
       source: "opendatasoft",
       host: "e-redes.opendatasoft.com",
@@ -293,16 +244,12 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
         maxBytes: 2 * MEBIBYTE,
         historyMode: "changes",
       },
-      serving: E_REDES_SERVING,
     },
     staleAfterSeconds: 43_200,
-    publisher: "e-redes",
-    topics: ["energy"],
   },
   {
     slug: "e-redes-self-consumption-installations-feed",
-    title: "Self-consumption electricity installations",
-    description: "The latest 1,000 monthly self-consumption installation aggregates by place and technology.",
+    dataset: "e-redes-self-consumption-installations",
     config: {
       source: "opendatasoft",
       host: "e-redes.opendatasoft.com",
@@ -312,39 +259,20 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
     },
     policy: E_REDES_PERIODIC_SERIES,
     staleAfterSeconds: 1_209_600,
-    publisher: "e-redes",
-    topics: ["energy"],
   },
   snsDaily(
     "sns-daily-death-certificates-feed",
-    "Daily death certificates",
-    "Death certificates issued each day in Portugal, published by DGS.",
+    "sns-transparencia-daily-death-certificates",
     "evolucao-diaria-de-certificados-de-obito",
     "data_de_certificacao DESC",
     "1000",
     "no_de_certificados_de_obito_diarios",
   ),
-  snsDaily(
-    "sns-icaro-heat-index-feed",
-    "ÍCARO heat and mortality index",
-    "INSA's daily ÍCARO index of the expected effect of heat on mortality, including the forecast days ahead.",
-    "evolucao-diaria-do-indice-icaro",
-    "periodo DESC",
-    "1000",
-  ),
-  snsDaily(
-    "sns-inem-emergency-calls-feed",
-    "INEM emergency calls answered per day",
-    "Emergency calls answered each day by INEM, the national medical emergency institute.",
-    "atividade-gripe-inem",
-    "periodo DESC",
-    "1000",
-    "n_o_registos",
-  ),
+  snsDaily("sns-icaro-heat-index-feed", "sns-transparencia-icaro-heat-index", "evolucao-diaria-do-indice-icaro", "periodo DESC", "1000"),
+  snsDaily("sns-inem-emergency-calls-feed", "sns-transparencia-inem-emergency-calls", "atividade-gripe-inem", "periodo DESC", "1000", "n_o_registos"),
   snsDaily(
     "sns-inem-dispatches-feed",
-    "INEM emergency dispatches per day",
-    "Daily dispatches of INEM helicopters, medical emergency cars, and ambulances.",
+    "sns-transparencia-inem-dispatches",
     "acionamentos-de-meios-de-emergencia-medica",
     "periodo DESC",
     "1000",
@@ -363,8 +291,7 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
   ),
   snsDaily(
     "sns-inem-occurrences-by-priority-feed",
-    "INEM pre-hospital occurrences by priority",
-    "Daily pre-hospital occurrences handled by INEM, split by triage priority.",
+    "sns-transparencia-inem-occurrences-by-priority",
     "numero-de-ocorrencia-com-prioridade",
     "periodo DESC",
     "1000",
@@ -379,52 +306,34 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
   ),
   snsDaily(
     "sns-primary-care-flu-consultations-feed",
-    "Primary-care consultations and flu activity",
-    "Daily primary-care consultations by health region, including consultations for flu-like illness.",
+    "sns-transparencia-primary-care-flu-consultations",
     "atendimentos-nos-csp-gripe",
     "dia DESC,regiao",
     "5000",
     "no_consultas_nos_csp,no_consultas_csp_programadas,no_consultas_csp_nao_programadas,no_consultas_gripe_nos_csp",
   ),
-  snsDaily(
-    "sns-continuing-care-waiting-feed",
-    "Patients waiting for continuing-care places",
-    "Daily count of patients waiting for a place in the national continuing-care network, by region and care type.",
-    "rncci-episodios",
-    "data DESC,regiao,tipologia",
-    "5000",
-    "episodios",
-  ),
-  snsMonthly(
-    "sns-hospital-occupancy-feed",
-    "Hospital inpatient occupancy",
-    "Monthly inpatient days, staffed beds, and occupancy rate by hospital.",
-    "ocupacao-do-internamento",
-    "8000",
-  ),
+  snsDaily("sns-continuing-care-waiting-feed", "sns-transparencia-continuing-care-waiting", "rncci-episodios", "data DESC,regiao,tipologia", "5000", "episodios"),
+  snsMonthly("sns-hospital-occupancy-feed", "sns-transparencia-hospital-occupancy", "ocupacao-do-internamento", "8000"),
   snsMonthly(
     "sns-emergency-triage-feed",
-    "Hospital emergency attendances by triage colour",
-    "Monthly emergency attendances by hospital and Manchester triage priority, for about the last three years.",
+    "sns-transparencia-emergency-triage",
     "atendimentos-em-urgencia-triagem-manchester",
     // Seven counts per row; the full table normalizes to more than 16 MiB.
     "3000",
   ),
-  snsMonthly("sns-births-and-caesareans-feed", "Hospital births and caesarean sections", "Monthly births and caesarean sections by hospital.", "partos-e-cesarianas", "7000"),
+  snsMonthly("sns-births-and-caesareans-feed", "sns-transparencia-births-and-caesareans", "partos-e-cesarianas", "7000"),
   eRedes(
     "e-redes-national-consumption-feed",
-    "National electricity consumption",
-    "The latest 15-minute national electricity consumption by voltage level, published by E-REDES.",
-    { dataset: "consumo-total-nacional", orderBy: "datahora DESC", limit: "1000", series: "total,bt,mt,at,mat" },
+    "e-redes-national-consumption",
+    { portalDataset: "consumo-total-nacional", orderBy: "datahora DESC", limit: "1000", series: "total,bt,mt,at,mat" },
     E_REDES_QUARTER_HOUR_SERIES,
     172_800,
   ),
   eRedes(
     "e-redes-distribution-injection-feed",
-    "Energy injected into the distribution network",
-    "The latest 15-minute energy injected into the distribution network by cogeneration, wind, solar, hydro, and other sources.",
+    "e-redes-distribution-injection",
     {
-      dataset: "energia-injetada-na-rede-de-distribuicao",
+      portalDataset: "energia-injetada-na-rede-de-distribuicao",
       orderBy: "datahora DESC",
       limit: "1000",
       series: "rede_dist,cogeracao,eolica,fotovoltaica,hidrica,outras_tecnologias",
@@ -434,10 +343,9 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
   ),
   eRedes(
     "e-redes-consumption-forecast-feed",
-    "Electricity consumption forecast",
-    "E-REDES 15-minute consumption forecast by voltage level, from the past day to seven days ahead.",
+    "e-redes-consumption-forecast",
     {
-      dataset: "previsao-de-consumo",
+      portalDataset: "previsao-de-consumo",
       where: "datahora >= now(days=-1) AND datahora < now(days=8)",
       orderBy: "datahora",
       limit: "1000",
@@ -448,33 +356,29 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
   ),
   eRedes(
     "e-redes-energy-communities-feed",
-    "Energy communities and collective self-consumption",
-    "Monthly count of energy communities and collective self-consumption schemes by parish.",
-    { dataset: "comunidades-de-energia", orderBy: "data DESC,codigo_freguesia,tipo_acc_cer", limit: "5000" },
+    "e-redes-energy-communities",
+    { portalDataset: "comunidades-de-energia", orderBy: "data DESC,codigo_freguesia,tipo_acc_cer", limit: "5000" },
     E_REDES_PERIODIC_SERIES,
     1_209_600,
   ),
   eRedes(
     "e-redes-grid-reception-capacity-feed",
-    "Grid capacity for new generation",
-    "Connected, committed, and still available capacity for new generation at each E-REDES substation.",
-    { dataset: "capacidade-rececao-rnd", orderBy: "chave", limit: "1000" },
+    "e-redes-grid-reception-capacity",
+    { portalDataset: "capacidade-rececao-rnd", orderBy: "chave", limit: "1000" },
     E_REDES_PERIODIC_SERIES,
     1_209_600,
   ),
   eRedes(
     "e-redes-substation-load-feed",
-    "Substation load",
-    "Annual winter and summer load, installed power, and guaranteed power for each E-REDES substation.",
-    { dataset: "carga-na-subestacao", orderBy: "ano DESC,codigo_da_instalacao,inverno_verao", limit: "1000" },
+    "e-redes-substation-load",
+    { portalDataset: "carga-na-subestacao", orderBy: "ano DESC,codigo_da_instalacao,inverno_verao", limit: "1000" },
     E_REDES_PERIODIC_SERIES,
     1_209_600,
   ),
   eRedes(
     "e-redes-ev-grid-connection-requests-feed",
-    "Grid connections for electric mobility",
-    "Monthly grid-connection requests completed for electric-vehicle charging, by municipality.",
-    { dataset: "9-plr-mobilidade-eletrica", orderBy: "data DESC,cod_concelho", limit: "1500" },
+    "e-redes-ev-grid-connection-requests",
+    { portalDataset: "9-plr-mobilidade-eletrica", orderBy: "data DESC,cod_concelho", limit: "1500" },
     E_REDES_PERIODIC_SERIES,
     1_209_600,
   ),
@@ -482,39 +386,34 @@ export const OPENDATASOFT_EXAMPLES: ExampleFeed[] = [
 ];
 
 /** An SNS dataset published day by day, collected twice a day. */
-function snsDaily(slug: string, title: string, description: string, dataset: string, orderBy: string, limit: string, series?: string): ExampleFeed {
+function snsDaily(slug: string, dataset: string, portalDataset: string, orderBy: string, limit: string, series?: string): ExampleFeed {
   // Named numeric fields make the dataset a time series; without them it is a table.
-  const config: ExampleFeed["config"] = { source: "opendatasoft", host: "transparencia.sns.gov.pt", dataset, orderBy, limit };
+  const config: ExampleFeed["config"] = { source: "opendatasoft", host: "transparencia.sns.gov.pt", dataset: portalDataset, orderBy, limit };
   if (series) config.series = series;
   return {
     slug,
-    title,
-    description,
+    dataset,
     config,
     policy: SNS_DAILY_SERIES,
     staleAfterSeconds: 172_800,
-    publisher: "sns-transparencia",
-    topics: ["health"],
   };
 }
 
 /** An SNS dataset with one row per hospital and month. */
-function snsMonthly(slug: string, title: string, description: string, dataset: string, limit: string): ExampleFeed {
+function snsMonthly(slug: string, dataset: string, portalDataset: string, limit: string): ExampleFeed {
   return {
     slug,
-    title,
-    description,
-    config: { source: "opendatasoft", host: "transparencia.sns.gov.pt", dataset, orderBy: "tempo DESC,instituicao", limit },
+    dataset,
+    config: { source: "opendatasoft", host: "transparencia.sns.gov.pt", dataset: portalDataset, orderBy: "tempo DESC,instituicao", limit },
     policy: SNS_MONTHLY_SERIES,
     staleAfterSeconds: 1_209_600,
-    publisher: "sns-transparencia",
-    topics: ["health"],
   };
 }
 
 /** The part of an E-REDES feed configuration that differs between datasets. */
 interface ERedesQuery {
-  dataset: string;
+  /** The dataset id on the E-REDES portal. */
+  portalDataset: string;
   orderBy: string;
   limit: string;
   where?: string;
@@ -522,15 +421,13 @@ interface ERedesQuery {
   series?: string;
 }
 
-function eRedes(slug: string, title: string, description: string, query: ERedesQuery, policy: ExampleFeed["policy"], staleAfterSeconds: number): ExampleFeed {
+function eRedes(slug: string, dataset: string, query: ERedesQuery, policy: ExampleFeed["policy"], staleAfterSeconds: number): ExampleFeed {
+  const { portalDataset, ...rest } = query;
   return {
     slug,
-    title,
-    description,
-    config: { source: "opendatasoft", host: "e-redes.opendatasoft.com", ...query },
+    dataset,
+    config: { source: "opendatasoft", host: "e-redes.opendatasoft.com", dataset: portalDataset, ...rest },
     policy,
     staleAfterSeconds,
-    publisher: "e-redes",
-    topics: ["energy"],
   };
 }

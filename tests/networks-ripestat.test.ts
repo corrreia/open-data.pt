@@ -5,6 +5,7 @@ import { RipestatTransformer } from "../apps/gatekeeper/src/sources/ripestat/tra
 import { ripestatCollector } from "../apps/gatekeeper/src/sources/ripestat/collector";
 import { RIPESTAT_EXAMPLES } from "../apps/gatekeeper/src/sources/ripestat/examples";
 import { networkBytes, networkContext, networkFixture, networkFrames, networkRequest, networkRows, object } from "./networks-support";
+import { datasetOf } from "./catalog";
 
 const STATUS = { feed: "routing-status", asn: "64496" };
 const RESOURCES = { feed: "country-resources", country: "PT" };
@@ -52,8 +53,8 @@ describe("RIPEstat capabilities and boundaries", () => {
     expect(asns).not.toContain("12542"); // This is NOS, not the research brief's proposed NOWO.
     for (const example of RIPESTAT_EXAMPLES) {
       expect(() => validateRipestatFeedConfig(libraryConfig(example.config))).not.toThrow();
-      expect(example.policy.serving.licence).toBe("ripe-ncc-terms");
-      expect(example.publisher).toBe("ripe-ncc");
+      expect(datasetOf(example).licence).toBe("ripe-ncc-terms");
+      expect(datasetOf(example).publisher).toBe("ripe-ncc");
       expect(example.policy.collection.cadenceSeconds).toBe(example.config.asn ? 28_800 : 86_400);
     }
   });

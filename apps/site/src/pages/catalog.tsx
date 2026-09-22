@@ -86,7 +86,7 @@ function Catalog() {
     if (words.length === 0) return true;
     const haystack = [
       dataset.title,
-      dataset.feed.description,
+      dataset.description,
       dataset.publisher.name,
       dataset.format,
       ...dataset.topics,
@@ -281,13 +281,13 @@ function Catalog() {
                     <Badge variant="secondary">{plural(group.length, "dataset")}</Badge>
                   </div>
                   {group.map((dataset) => (
-                    <DatasetCard key={dataset.feed.id} dataset={dataset} showPublisher={false} />
+                    <DatasetCard key={dataset.id} dataset={dataset} showPublisher={false} />
                   ))}
                 </div>
               ))}
             </div>
           ) : (
-            ordered.map((dataset) => <DatasetCard key={dataset.feed.id} dataset={dataset} />)
+            ordered.map((dataset) => <DatasetCard key={dataset.id} dataset={dataset} />)
           )}
         </section>
       </div>

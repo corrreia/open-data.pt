@@ -5,6 +5,7 @@ import { IodaTransformer } from "../apps/gatekeeper/src/sources/ioda/transform";
 import { iodaCollector } from "../apps/gatekeeper/src/sources/ioda/collector";
 import { IODA_EXAMPLES } from "../apps/gatekeeper/src/sources/ioda/examples";
 import { networkContext, networkFixture, networkFrames, networkRequest, object } from "./networks-support";
+import { datasetOf } from "./catalog";
 
 const EVENTS: SourceConfig = { feed: "outage-events", entityType: "country", entityCode: "PT", days: "7" };
 const ALERTS: SourceConfig = { feed: "outage-alerts", entityType: "country", entityCode: "PT", days: "7" };
@@ -201,9 +202,9 @@ describe("IODA examples", () => {
     expect(IODA_EXAMPLES.map((example) => example.config.entityCode)).toEqual(["PT", "PT", "3243", "2860", "12353", "20879", "15457", "PT"]);
     for (const example of IODA_EXAMPLES) {
       expect(() => validateIodaFeedConfig(libraryConfig(example.config))).not.toThrow();
-      expect(example.publisher).toBe("ioda");
-      expect(example.topics).toEqual(["telecom"]);
-      expect(example.policy.serving.licence).toBe("ioda-all-rights-reserved");
+      expect(datasetOf(example).publisher).toBe("ioda");
+      expect(datasetOf(example).topics).toEqual(["telecom"]);
+      expect(datasetOf(example).licence).toBe("ioda-all-rights-reserved");
       expect(example.policy.collection.cadenceSeconds).toBe(example.config.feed === "signals" ? 3600 : 900);
       expect(example.staleAfterSeconds).toBe(example.policy.collection.cadenceSeconds * 3);
     }

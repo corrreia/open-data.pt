@@ -10,11 +10,10 @@ export const USGS_EXAMPLES: ExampleFeed[] = [
 function example(slug: string, title: string, region: keyof typeof USGS_REGIONS): ExampleFeed {
   return {
     slug,
+    dataset: "usgs-portugal-earthquakes",
     title,
     description: `Earthquakes of magnitude 1 or greater reported by the USGS during the past 30 days in the ${USGS_REGIONS[region].name} bounding region, including source updates and review status. The rectangle may include nearby international waters or Spain.`,
     config: { source: "usgs", feed: "earthquakes", region, days: "30", minMagnitude: "1" },
-    publisher: "usgs",
-    topics: ["environment"],
     staleAfterSeconds: 7200,
     policy: {
       name: "USGS rolling earthquake catalog",
@@ -28,7 +27,6 @@ function example(slug: string, title: string, region: keyof typeof USGS_REGIONS)
         maxRecords: 20_000,
         historyMode: "changes",
       },
-      serving: { licence: "usgs-public-domain", attribution: "U.S. Geological Survey" },
     },
   };
 }

@@ -55,15 +55,26 @@ export interface Product {
 
 export type AcquisitionStatus = "failed" | "queued" | "running" | "succeeded" | "unchanged";
 
-/** A feed as `/api/feeds` serves it: where the data comes from, how often it is read, and how its collection is going. */
+/** A dataset as `/api/datasets` serves it: what the data is, whose it is, and under what terms. */
+export interface Dataset {
+  id: string;
+  title: string;
+  description?: string;
+  publisher: Term;
+  licence: Term;
+  /** How the publisher asks to be credited, when they say. */
+  attribution?: string;
+  topics: string[];
+}
+
+/** A feed as `/api/feeds` serves it: which part of a dataset it reads, how often, and how its collection is going. */
 export interface Feed {
   id: string;
   slug: string;
   title: string;
   description: string;
-  publisher: Term;
-  /** Topics the catalog filters by, supplied by the Gatekeeper. */
-  topics: string[];
+  /** The dataset this feed reads part of: who published it and under what terms are its word. */
+  dataset: Dataset;
   /** The standard the publisher shares it through (arcgis, ckan, opendatasoft, gtfs, gbfs, udata), or own-api. */
   format: string;
   /** How often it is collected; null for a feed whose policy is gone. */
