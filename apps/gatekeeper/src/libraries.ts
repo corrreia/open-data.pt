@@ -1,9 +1,9 @@
 /**
- * Every library the Gatekeeper Worker carries, in directory order. A library
- * under a publication hold (`publication-holds.json`) is not listed, so its
- * code does not ship and its examples are not installed; lifting the hold is
- * one line here. A test holds every directory under `formats/` and `sources/`
- * to being listed here or held, never both.
+ * Every library the Gatekeeper Worker carries, in directory order: every
+ * directory under `formats/` and `sources/`, which a test holds this list to.
+ * What a library installs is another question: a publisher held for permission
+ * (`enabled: false` in `PUBLISHERS`) installs nothing, so a library that reads
+ * only held publishers ships without polling anybody.
  */
 import type { Library } from "./index";
 
@@ -24,13 +24,17 @@ import { EUROSTAT_DEPLOYMENT, EUROSTAT_EXAMPLES } from "./sources/eurostat";
 import { FIRMS_DEPLOYMENT, FIRMS_EXAMPLES } from "./sources/firms";
 import { INE_DEPLOYMENT, INE_EXAMPLES } from "./sources/ine";
 import { INFOAGUA_DEPLOYMENT, INFOAGUA_EXAMPLES } from "./sources/infoagua";
+import { IODA_DEPLOYMENT, IODA_EXAMPLES } from "./sources/ioda";
 import { IPMA_DEPLOYMENT, IPMA_EXAMPLES } from "./sources/ipma";
 import { METROLISBOA_DEPLOYMENT, METRO_LISBOA_EXAMPLES } from "./sources/metrolisboa";
 import { MYINFO_DEPLOYMENT, MYINFO_EXAMPLES } from "./sources/myinfo";
 import { NASA_POWER_DEPLOYMENT, NASA_POWER_EXAMPLES } from "./sources/nasapower";
 import { OMIE_DEPLOYMENT, OMIE_EXAMPLES } from "./sources/omie";
 import { PARLIAMENT_DEPLOYMENT, PARLIAMENT_EXAMPLES } from "./sources/parliament";
+import { PEERINGDB_DEPLOYMENT, PEERINGDB_EXAMPLES } from "./sources/peeringdb";
 import { REN_DEPLOYMENT, REN_EXAMPLES } from "./sources/ren";
+import { RIPEATLAS_DEPLOYMENT, RIPEATLAS_EXAMPLES } from "./sources/ripeatlas";
+import { RIPESTAT_DEPLOYMENT, RIPESTAT_EXAMPLES } from "./sources/ripestat";
 import { SNIRH_DEPLOYMENT, SNIRH_EXAMPLES } from "./sources/snirh";
 import { SNIT_DEPLOYMENT, SNIT_EXAMPLES } from "./sources/snit";
 import { USGS_DEPLOYMENT, USGS_EXAMPLES } from "./sources/usgs";
@@ -53,13 +57,17 @@ export const LIBRARIES: readonly Library[] = [
   { deployment: FIRMS_DEPLOYMENT, examples: FIRMS_EXAMPLES },
   { deployment: INE_DEPLOYMENT, examples: INE_EXAMPLES },
   { deployment: INFOAGUA_DEPLOYMENT, examples: INFOAGUA_EXAMPLES },
+  { deployment: IODA_DEPLOYMENT, examples: IODA_EXAMPLES },
   { deployment: IPMA_DEPLOYMENT, examples: IPMA_EXAMPLES },
   { deployment: METROLISBOA_DEPLOYMENT, examples: METRO_LISBOA_EXAMPLES },
   { deployment: MYINFO_DEPLOYMENT, examples: MYINFO_EXAMPLES },
   { deployment: NASA_POWER_DEPLOYMENT, examples: NASA_POWER_EXAMPLES },
   { deployment: OMIE_DEPLOYMENT, examples: OMIE_EXAMPLES },
   { deployment: PARLIAMENT_DEPLOYMENT, examples: PARLIAMENT_EXAMPLES },
+  { deployment: PEERINGDB_DEPLOYMENT, examples: PEERINGDB_EXAMPLES },
   { deployment: REN_DEPLOYMENT, examples: REN_EXAMPLES },
+  { deployment: RIPEATLAS_DEPLOYMENT, examples: RIPEATLAS_EXAMPLES },
+  { deployment: RIPESTAT_DEPLOYMENT, examples: RIPESTAT_EXAMPLES },
   { deployment: SNIRH_DEPLOYMENT, examples: SNIRH_EXAMPLES },
   { deployment: SNIT_DEPLOYMENT, examples: SNIT_EXAMPLES },
   { deployment: USGS_DEPLOYMENT, examples: USGS_EXAMPLES },

@@ -1,4 +1,4 @@
-import { isJsonString, parseJson, type JsonValue } from "@open-data-pt/gatekeeper-shared";
+import { isJsonString, parseJson, type JsonValue } from "@open-data-pt/contract";
 
 import { MAX_CHUNK_LIST_BYTES, utf8Length } from "./blob-budget";
 import { hash32, sha256Hex } from "./hash";
@@ -33,7 +33,7 @@ export interface ServingRow {
 }
 
 export interface ChunkObject {
-  rows: Array<import("@open-data-pt/gatekeeper-shared").JsonObject>;
+  rows: Array<import("@open-data-pt/contract").JsonObject>;
 }
 
 export function isChunkBoundary(key: string): boolean {

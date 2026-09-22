@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { NORMALIZED_PROTOCOL, collectNormalized, isJsonObject, libraryConfig, parseJson, type CollectionRequest, type JsonObject } from "@open-data-pt/gatekeeper-shared";
-import { ogcCollector, resolveOgcFeed } from "../packages/gatekeeper-shared/src/formats/ogc";
-import { OGC_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/ogc/examples";
+import { NORMALIZED_PROTOCOL, collectNormalized, isJsonObject, libraryConfig, parseJson, type CollectionRequest, type JsonObject } from "@open-data-pt/gatekeeper";
+import { ogcCollector, resolveOgcFeed } from "../apps/gatekeeper/src/formats/ogc";
+import { OGC_EXAMPLES } from "../apps/gatekeeper/src/formats/ogc/examples";
 
 const wanted = (process.env.LIVE_OGC ?? "")
   .split(",")

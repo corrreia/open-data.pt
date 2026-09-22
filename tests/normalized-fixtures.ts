@@ -1,4 +1,4 @@
-import { NORMALIZED_PROTOCOL, type JsonObject } from "@open-data-pt/gatekeeper-shared";
+import { NORMALIZED_PROTOCOL, type JsonObject } from "@open-data-pt/contract";
 
 export const scope = {
   collectionId: "batch_1",

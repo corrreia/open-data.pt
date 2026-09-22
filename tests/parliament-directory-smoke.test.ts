@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { libraryConfig, readBoundedResponse } from "@open-data-pt/gatekeeper-shared";
-import { PARLIAMENT_EXAMPLES } from "../packages/gatekeeper-shared/src/sources/parliament";
-import { parliamentDirectoryLink, parliamentDocument, parliamentDocumentLink, PARLIAMENT_HTML_BYTES } from "../packages/gatekeeper-shared/src/sources/parliament/parliament";
+import { libraryConfig, readBoundedResponse } from "@open-data-pt/gatekeeper";
+import { PARLIAMENT_EXAMPLES } from "../apps/gatekeeper/src/sources/parliament";
+import { parliamentDirectoryLink, parliamentDocument, parliamentDocumentLink, PARLIAMENT_HTML_BYTES } from "../apps/gatekeeper/src/sources/parliament/parliament";
 
 const saved = process.env.PARLIAMENT_DIRECTORY_SAMPLES === "1";
 const live = process.env.LIVE_PARLIAMENT_DIRECTORY === "1";

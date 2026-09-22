@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NormalizedInputError, type JsonObject, type NormalizedFrame } from "@open-data-pt/gatekeeper-shared";
+import { NormalizedInputError, type JsonObject, type NormalizedFrame } from "@open-data-pt/contract";
 import { failureFrom } from "../apps/kernel/src/engine";
 import { readFrames, type FrameLimits, type FrameScope } from "../apps/kernel/src/frames";
 import { chunked, framed, framedText, header, limits, scope } from "./normalized-fixtures";

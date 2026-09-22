@@ -12,7 +12,7 @@ import {
   type SeriesPoint,
   type SourceFetch,
   type StreamingTransform,
-} from "@open-data-pt/gatekeeper-shared";
+} from "@open-data-pt/gatekeeper";
 import type { ChunkObject } from "../apps/kernel/src/chunks";
 import { drainOutbox, runCollection, type EngineOutcome, type LakeSend, type RunnerPort } from "../apps/kernel/src/engine";
 import type { Feed, FeedPolicy, ProductIndexEntry } from "../apps/kernel/src/feed-model";

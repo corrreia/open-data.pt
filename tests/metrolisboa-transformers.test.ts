@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type { JsonObject, JsonValue, TransformContext } from "@open-data-pt/gatekeeper-shared";
-import { METRO_FEEDS } from "../packages/gatekeeper-shared/src/sources/metrolisboa/metrolisboa";
-import { MetroLisboaTransformer, bracketList, intervalSeconds, metroTimestamp } from "../packages/gatekeeper-shared/src/sources/metrolisboa/transform";
+import type { JsonObject, JsonValue, TransformContext } from "@open-data-pt/contract";
+import { METRO_FEEDS } from "../apps/gatekeeper/src/sources/metrolisboa/metrolisboa";
+import { MetroLisboaTransformer, bracketList, intervalSeconds, metroTimestamp } from "../apps/gatekeeper/src/sources/metrolisboa/transform";
 import { jsonAs } from "./support";
 
 const transformer = new MetroLisboaTransformer();

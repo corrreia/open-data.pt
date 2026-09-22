@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type { CanonicalField, CanonicalRecord, ProductDeclaration, TransformContext, TransformQuality } from "@open-data-pt/gatekeeper-shared";
-import { ARCGIS_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/arcgis";
-import { ArcgisTransformer } from "../packages/gatekeeper-shared/src/formats/arcgis";
+import type { CanonicalField, CanonicalRecord, ProductDeclaration, TransformContext, TransformQuality } from "@open-data-pt/contract";
+import { ARCGIS_EXAMPLES } from "../apps/gatekeeper/src/formats/arcgis";
+import { ArcgisTransformer } from "../apps/gatekeeper/src/formats/arcgis";
 
 const transformer = new ArcgisTransformer();
 

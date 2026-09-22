@@ -1,6 +1,6 @@
 import { jsonAs } from "./support";
 import { describe, expect, it, vi } from "vitest";
-import type { JsonObject, JsonValue, SourceBody, SourceFetch, TransformContext } from "@open-data-pt/gatekeeper-shared";
+import type { JsonObject, JsonValue, SourceBody, SourceFetch, TransformContext } from "@open-data-pt/contract";
 import {
   REN_DATAHUB_URL,
   collectRenFeed,
@@ -10,8 +10,8 @@ import {
   REN_FEEDS,
   REN_MAX_BYTES,
   validateRenFeedConfig,
-} from "../packages/gatekeeper-shared/src/sources/ren/ren";
-import { RenTransformer } from "../packages/gatekeeper-shared/src/sources/ren/transform";
+} from "../apps/gatekeeper/src/sources/ren/ren";
+import { RenTransformer } from "../apps/gatekeeper/src/sources/ren/transform";
 
 function completeChart(): JsonObject {
   return {

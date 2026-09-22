@@ -1,7 +1,7 @@
 # Publishers
 
 A **publisher** is who made the data — one key of
-[`packages/gatekeeper-shared/src/publishers.ts`](../../packages/gatekeeper-shared/src/publishers.ts)
+[`packages/catalog/src/publishers.ts`](../../packages/catalog/src/publishers.ts)
 per institution or operator, never the portal the data was read from. The live list, with a page each,
 is at [open-data.pt/publisher/](https://open-data.pt/publisher/).
 
@@ -44,9 +44,9 @@ What surprised us: encodings, clocks, caps, silent failures, and what the code d
 
 ## Permission
 
-What they were asked, what they answered, and when. A hold in `publication-holds.json` belongs here too.
+What they were asked, what they answered, and when. A publisher held for permission (`enabled: false` in `PUBLISHERS`) belongs here too.
 ```
 
 Their mark is separate: the logo file goes under
-[`apps/site/public/publishers/`](../../apps/site/public/publishers/) named for the key, and `logo` in
+[`packages/catalog/publishers/`](../../packages/catalog/publishers/) named for the key, and `logo` in
 `publishers.ts` names its extension. A publisher without one is shown their initials.

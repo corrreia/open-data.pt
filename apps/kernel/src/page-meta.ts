@@ -6,9 +6,9 @@
  * product, publisher or topic gets that one's own title and description, from
  * the same API the page reads in the browser.
  */
-import type { JsonObject, JsonValue } from "@open-data-pt/gatekeeper-shared";
+import type { JsonObject, JsonValue } from "@open-data-pt/contract";
 import type { SiteHost } from "./discovery";
-import { UNSTATED_LICENCE } from "@open-data-pt/gatekeeper-shared";
+import { UNSTATED_LICENCE } from "@open-data-pt/catalog";
 import { every, pagePath, read, readIfFound, topicLabel, type CatalogFeed, type CatalogProduct, type Term } from "./markdown";
 
 const SITE_NAME = "open-data.pt";

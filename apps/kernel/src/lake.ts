@@ -1,4 +1,4 @@
-import { NormalizedInputError, isJsonNumber, isJsonObject, isJsonString, type JsonObject, type JsonValue } from "@open-data-pt/gatekeeper-shared";
+import { NormalizedInputError, isJsonNumber, isJsonObject, isJsonString, type JsonObject, type JsonValue } from "@open-data-pt/contract";
 
 /**
  * The history plane: append-only revision rows written through Cloudflare

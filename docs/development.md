@@ -33,7 +33,7 @@ Each Worker runs in its own `wrangler dev` session — they find each other over
 as [Wrangler's multi-Worker guide](https://developers.cloudflare.com/workers/local-development/multi-workers/)
 describes — because a command with two `--config` flags treats the first as the primary Worker and
 gives it the command line's flags, so `--var GATEKEEPER_LIBRARIES` never reached the Gatekeeper. It
-cannot travel in `packages/gatekeeper/.dev.vars` either: that Worker declares `secrets.required`, and
+cannot travel in `apps/gatekeeper/.dev.vars` either: that Worker declares `secrets.required`, and
 Wrangler then [loads only those keys](https://developers.cloudflare.com/workers/wrangler/configuration/#secrets-configuration-property)
 from the file. `.dev.vars` is for the secrets a source needs, and `pnpm dev` never writes it.
 

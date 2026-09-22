@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { collectNormalized, libraryConfig, NORMALIZED_PROTOCOL, type CollectionRequest, type ExampleFeed } from "@open-data-pt/gatekeeper-shared";
-import { PARLIAMENT_EXAMPLES, parliamentCollector } from "../packages/gatekeeper-shared/src/sources/parliament";
-import { parliamentDocument } from "../packages/gatekeeper-shared/src/sources/parliament/parliament";
+import { collectNormalized, libraryConfig, NORMALIZED_PROTOCOL, type CollectionRequest, type ExampleFeed } from "@open-data-pt/gatekeeper";
+import { PARLIAMENT_EXAMPLES, parliamentCollector } from "../apps/gatekeeper/src/sources/parliament";
+import { parliamentDocument } from "../apps/gatekeeper/src/sources/parliament/parliament";
 import { readFrames } from "../apps/kernel/src/frames";
 
 // These opt-ins require separate record-processing authorization; they do not override a permission denial.

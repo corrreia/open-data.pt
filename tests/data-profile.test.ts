@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { profileStream, readCsvPage } from "../packages/gatekeeper-shared/src/formats/udata/transform/data-profile";
+import { profileStream, readCsvPage } from "../apps/gatekeeper/src/formats/udata/transform/data-profile";
 
 function chunkedText(value: string, sizes: number[]): ReadableStream<Uint8Array> {
   const bytes = new TextEncoder().encode(value);

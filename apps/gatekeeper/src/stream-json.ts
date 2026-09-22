@@ -1,7 +1,7 @@
 import { GatekeeperError } from "./index";
-import { isJsonObject, isJsonString, parseJson } from "./json";
+import { isJsonObject, isJsonString, parseJson } from "@open-data-pt/contract";
 
-import type { JsonObject, JsonValue } from "./json";
+import type { JsonObject, JsonValue } from "@open-data-pt/contract";
 
 /** Bounds for one streamed JSON document. */
 export interface JsonArrayStreamOptions {

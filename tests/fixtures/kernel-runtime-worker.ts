@@ -17,7 +17,7 @@ import {
   type GatekeeperDescription,
   type ResolvedFeed,
   type SourceConfig,
-} from "@open-data-pt/gatekeeper-shared";
+} from "@open-data-pt/gatekeeper";
 import { REGISTRY_ROOM } from "../../apps/kernel/src/coordinators";
 import { handleApi } from "../../apps/kernel/src/http";
 import KernelWorker from "../../apps/kernel/src/index";

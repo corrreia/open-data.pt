@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resourceTitle } from "../packages/gatekeeper-shared/src/formats/ckan/transform";
+import { resourceTitle } from "../apps/gatekeeper/src/formats/ckan/transform";
 
 describe("CKAN resource titles", () => {
   it("drops a trailing file format, whatever separates it", () => {

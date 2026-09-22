@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import { NORMALIZED_PROTOCOL, collectNormalized, resolveFeed, runTransformer, type CollectionRequest, type JsonObject } from "@open-data-pt/gatekeeper-shared";
+import { NORMALIZED_PROTOCOL, collectNormalized, resolveFeed, runTransformer, type CollectionRequest, type JsonObject } from "@open-data-pt/gatekeeper";
 import {
   MYINFO_FEEDS,
   MYINFO_ORIGIN,
@@ -11,8 +11,8 @@ import {
   parseTrips,
   parseZones,
   validateMyInfoFeedConfig,
-} from "../packages/gatekeeper-shared/src/sources/myinfo/myinfo";
-import { MyInfoTransformer } from "../packages/gatekeeper-shared/src/sources/myinfo/transform";
+} from "../apps/gatekeeper/src/sources/myinfo/myinfo";
+import { MyInfoTransformer } from "../apps/gatekeeper/src/sources/myinfo/transform";
 import { jsonAs } from "./support";
 
 const OPERATORS = new Set(["BarraqueiroOeste", "mare"]);

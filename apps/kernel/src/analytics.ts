@@ -8,7 +8,7 @@
  * only what was asked for, by what kind of client, from which country, and how
  * it went.
  */
-import { asArray, asNumber, asObject, asString, isJsonObject, parseJson, type JsonObject, type JsonValue } from "@open-data-pt/gatekeeper-shared";
+import { asArray, asNumber, asObject, asString, isJsonObject, parseJson, type JsonObject, type JsonValue } from "@open-data-pt/contract";
 
 import { isPage, pagePath } from "./markdown";
 import { NAMING_PARAMETER } from "./page-meta";

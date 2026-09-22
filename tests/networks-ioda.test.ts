@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { collectNormalized, libraryConfig, type JsonObject, type SourceConfig } from "../packages/gatekeeper-shared/src/index";
-import { IODA_HOST, IODA_MAX_BYTES, collectIodaFeed, iodaUrl, validateIodaFeedConfig } from "../packages/gatekeeper-shared/src/sources/ioda/ioda";
-import { IodaTransformer } from "../packages/gatekeeper-shared/src/sources/ioda/transform";
-import { iodaCollector } from "../packages/gatekeeper-shared/src/sources/ioda/collector";
-import { IODA_EXAMPLES } from "../packages/gatekeeper-shared/src/sources/ioda/examples";
+import { collectNormalized, libraryConfig, type JsonObject, type SourceConfig } from "../apps/gatekeeper/src/index";
+import { IODA_HOST, IODA_MAX_BYTES, collectIodaFeed, iodaUrl, validateIodaFeedConfig } from "../apps/gatekeeper/src/sources/ioda/ioda";
+import { IodaTransformer } from "../apps/gatekeeper/src/sources/ioda/transform";
+import { iodaCollector } from "../apps/gatekeeper/src/sources/ioda/collector";
+import { IODA_EXAMPLES } from "../apps/gatekeeper/src/sources/ioda/examples";
 import { networkContext, networkFixture, networkFrames, networkRequest, object } from "./networks-support";
 
 const EVENTS: SourceConfig = { feed: "outage-events", entityType: "country", entityCode: "PT", days: "7" };

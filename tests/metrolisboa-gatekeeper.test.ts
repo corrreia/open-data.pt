@@ -1,15 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import { NORMALIZED_PROTOCOL, collectNormalized, resolveFeed, runTransformer, type CollectionRequest, type JsonObject } from "@open-data-pt/gatekeeper-shared";
-import {
-  METRO_DOCS_URL,
-  METRO_FEEDS,
-  METRO_TOKEN_URL,
-  collectMetroFeed,
-  metroApiOrigin,
-  validateMetroFeedConfig,
-} from "../packages/gatekeeper-shared/src/sources/metrolisboa/metrolisboa";
-import { MetroLisboaTransformer } from "../packages/gatekeeper-shared/src/sources/metrolisboa/transform";
+import { NORMALIZED_PROTOCOL, collectNormalized, resolveFeed, runTransformer, type CollectionRequest, type JsonObject } from "@open-data-pt/gatekeeper";
+import { METRO_DOCS_URL, METRO_FEEDS, METRO_TOKEN_URL, collectMetroFeed, metroApiOrigin, validateMetroFeedConfig } from "../apps/gatekeeper/src/sources/metrolisboa/metrolisboa";
+import { MetroLisboaTransformer } from "../apps/gatekeeper/src/sources/metrolisboa/transform";
 import { jsonAs } from "./support";
 
 const ORIGIN = "https://api.metrolisboa.pt:8243";

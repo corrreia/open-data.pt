@@ -7,7 +7,10 @@
     "@cfworker/json-schema": "^4.1.1",
     "@cloudflare/codemode": "0.5.2",
     "@modelcontextprotocol/sdk": "1.30.0",
-    "@open-data-pt/gatekeeper-shared": "workspace:*",
+    "@open-data-pt/api": "workspace:*",
+    "@open-data-pt/catalog": "workspace:*",
+    "@open-data-pt/contract": "workspace:*",
+    "@open-data-pt/lisbon": "workspace:*",
     "zod": "^4.6.5"
   }
 }

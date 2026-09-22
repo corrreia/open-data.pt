@@ -1,10 +1,10 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { isJsonObject, libraryConfig, parseJson, type ExampleFeed, type JsonObject, type SourceConfig, type TransformContext } from "../packages/gatekeeper-shared/src/index";
-import { BPSTAT_EXAMPLES } from "../packages/gatekeeper-shared/src/sources/bpstat/examples";
-import { CATALOG_EXAMPLES } from "../packages/gatekeeper-shared/src/sources/bpstat/catalog-examples";
-import { collectBpstatDataset, validateBpstatFeedConfig } from "../packages/gatekeeper-shared/src/sources/bpstat/bpstat";
-import { transformBpstatDataset } from "../packages/gatekeeper-shared/src/sources/bpstat/transform";
+import { isJsonObject, libraryConfig, parseJson, type ExampleFeed, type JsonObject, type SourceConfig, type TransformContext } from "../apps/gatekeeper/src/index";
+import { BPSTAT_EXAMPLES } from "../apps/gatekeeper/src/sources/bpstat/examples";
+import { CATALOG_EXAMPLES } from "../apps/gatekeeper/src/sources/bpstat/catalog-examples";
+import { collectBpstatDataset, validateBpstatFeedConfig } from "../apps/gatekeeper/src/sources/bpstat/bpstat";
+import { transformBpstatDataset } from "../apps/gatekeeper/src/sources/bpstat/transform";
 
 function fixture(slug: string): JsonObject {
   const value = parseJson(readFileSync(new URL(`./fixtures/catalogs-expansion/${slug}.json`, import.meta.url), "utf8"));

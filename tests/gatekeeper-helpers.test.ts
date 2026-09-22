@@ -16,7 +16,7 @@ import {
   runTransformer,
   sha256Hex,
   type TransformContext,
-} from "@open-data-pt/gatekeeper-shared";
+} from "@open-data-pt/gatekeeper";
 
 function headers(value?: string): Headers {
   return value === undefined ? new Headers() : new Headers({ "Retry-After": value });

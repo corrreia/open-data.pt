@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { streamCsvRecords, streamCsvRows, type CsvStreamOptions } from "@open-data-pt/gatekeeper-shared";
+import { streamCsvRecords, streamCsvRows, type CsvStreamOptions } from "@open-data-pt/gatekeeper";
 
 function random(seed: number): () => number {
   let state = seed >>> 0;

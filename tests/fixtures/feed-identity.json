@@ -835,6 +835,38 @@
     "resourceKey": "infoagua:infoagua:flood-alerts:dab7a00683a491487f7a854ec935fc6927164e1265b93039931d523c26e045f7",
     "kind": "infoagua:flood-alerts"
   },
+  "ioda-digi-pt-as20879-internet-signals-feed": {
+    "resourceKey": "ioda:ioda:signals:f6d44019b1b2c9e7ed4fe42fa736c78fb7a5f60eb82bf128caa276eb7bf62c71",
+    "kind": "ioda:signals"
+  },
+  "ioda-meo-as3243-internet-signals-feed": {
+    "resourceKey": "ioda:ioda:signals:66bdfd1837b7ab23ed4211c73259f1d8ea54ce76f91fb88c04f69858be2ac872",
+    "kind": "ioda:signals"
+  },
+  "ioda-nos-as2860-internet-signals-feed": {
+    "resourceKey": "ioda:ioda:signals:1f6e743eaf02821dede804060087a8a3068ee785ad7ad4d27d23aba768e013b9",
+    "kind": "ioda:signals"
+  },
+  "ioda-nos-madeira-as15457-internet-signals-feed": {
+    "resourceKey": "ioda:ioda:signals:343312b3768759fbf67aeb12ed8f29bd0409afbb8eea3093ff731c54cc4dfccb",
+    "kind": "ioda:signals"
+  },
+  "ioda-portugal-internet-outage-alerts-feed": {
+    "resourceKey": "ioda:ioda:outage-alerts:8e55b4cca2ca33eeb87d5133c1acaa7cc2e5446739e4ecdee3e13c099e282197",
+    "kind": "ioda:outage-alerts"
+  },
+  "ioda-portugal-internet-outages-feed": {
+    "resourceKey": "ioda:ioda:outage-events:31d541c43e278cb4dbef5adea5bae88102b17a10291d6823858bfc7d70dd9626",
+    "kind": "ioda:outage-events"
+  },
+  "ioda-portugal-internet-signals-feed": {
+    "resourceKey": "ioda:ioda:signals:4ee0f0464d71a72837bc6efc4a9f0d080c412ccf49847159ec3ec4ad6ae23894",
+    "kind": "ioda:signals"
+  },
+  "ioda-vodafone-as12353-internet-signals-feed": {
+    "resourceKey": "ioda:ioda:signals:5eed0303a038b1b0cc380d4b768acc1408a63e450c3186902afbe9712c25f46d",
+    "kind": "ioda:signals"
+  },
   "ipma-daily-forecast-feed": {
     "resourceKey": "ipma:ipma:daily-forecast:f7af22f6fa482f300f46d9c31846ff64f2a88da4d2d68cd2f68203907fd7ad84",
     "kind": "ipma:daily-forecast"
@@ -1235,6 +1267,10 @@
     "resourceKey": "parliament:parliament:careers:5cbbe43ed4235bfca3c38594fb1beac236cadcbea4330be07105336b606a8210",
     "kind": "parliament:careers"
   },
+  "peeringdb-portugal-exchanges-feed": {
+    "resourceKey": "peeringdb:peeringdb:exchanges:ffbfce247c5caba50abf17f905fbf795dfc40776915d1a5def79bfab07c7cd72",
+    "kind": "peeringdb:exchanges"
+  },
   "porto-air-quality-feed": {
     "resourceKey": "ngsi:ngsi:observations:fd4a741d9796998f47c13cf6063fe3562dea16bc82dadf4e5c72681f0ed1c349",
     "kind": "ngsi:observations"
@@ -1326,6 +1362,42 @@
   "ribatejana-network-feed": {
     "resourceKey": "myinfo:myinfo:network:448dbda499e57e33f2a1c92dc04327070e56bcc7ac1cca14d19a189979cfd1a8",
     "kind": "myinfo:network"
+  },
+  "ripe-atlas-portugal-anchors-feed": {
+    "resourceKey": "ripeatlas:ripeatlas:country-anchors:f098e29b2f24b9a76c478f7f4ee3137ef384726aaca095854424e273ca42ae1d",
+    "kind": "ripeatlas:country-anchors"
+  },
+  "ripe-atlas-portugal-probes-feed": {
+    "resourceKey": "ripeatlas:ripeatlas:country-probes:150375a5c8c39f2f878eb0731279fbfcc591f398a8b4dc59c012674ce535c944",
+    "kind": "ripeatlas:country-probes"
+  },
+  "ripe-digi-pt-as20879-routing-feed": {
+    "resourceKey": "ripestat:ripestat:routing-status:22ab79d74a048a2c39d6b370323a2f02982ef774a10db5cf44f40b13873158e7",
+    "kind": "ripestat:routing-status"
+  },
+  "ripe-meo-as3243-routing-feed": {
+    "resourceKey": "ripestat:ripestat:routing-status:5195cf2b0f6ab12bc01c76989144a7c098daa47dea3c0741553c501cb6e8bb6b",
+    "kind": "ripestat:routing-status"
+  },
+  "ripe-nos-as2860-routing-feed": {
+    "resourceKey": "ripestat:ripestat:routing-status:4e7dcf57a26115b921c19007fe13e95a18351480235a38356126cc3e2eb4a4fd",
+    "kind": "ripestat:routing-status"
+  },
+  "ripe-nos-madeira-as15457-routing-feed": {
+    "resourceKey": "ripestat:ripestat:routing-status:facc50f01063b513314b227a6672ba5e2f24d985c13438b7d1cb6b6c0983381d",
+    "kind": "ripestat:routing-status"
+  },
+  "ripe-portugal-internet-resources-feed": {
+    "resourceKey": "ripestat:ripestat:country-resources:a65c576d6c410f1a65b7097f2c64b01c019f0efbb2f01e4aef90ba7a66c50186",
+    "kind": "ripestat:country-resources"
+  },
+  "ripe-portugal-routing-history-feed": {
+    "resourceKey": "ripestat:ripestat:country-routing:83fdbe37d91a4e371334f19a3a0bb68f13d53bc01b8ea599f888979d4eb9f1b5",
+    "kind": "ripestat:country-routing"
+  },
+  "ripe-vodafone-as12353-routing-feed": {
+    "resourceKey": "ripestat:ripestat:routing-status:c161594a3e2e0654176d197d5d0dde825ec758085e2dcf24a0e203b7dae4498b",
+    "kind": "ripestat:routing-status"
   },
   "sgifr-apps-aveiro-feed": {
     "resourceKey": "wfs:wfs:reference:6be9b97bcaa2cfe0f29645c8ed868d557767839351cf0699b06c22ad6002ced3",

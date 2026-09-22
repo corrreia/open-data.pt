@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { collectNormalized, libraryConfig, type JsonObject, type SourceConfig } from "../packages/gatekeeper-shared/src/index";
-import { collectRipestatFeed, RIPESTAT_MAX_BYTES, RIPESTAT_ORIGIN, validateRipestatFeedConfig } from "../packages/gatekeeper-shared/src/sources/ripestat/ripestat";
-import { RipestatTransformer } from "../packages/gatekeeper-shared/src/sources/ripestat/transform";
-import { ripestatCollector } from "../packages/gatekeeper-shared/src/sources/ripestat/collector";
-import { RIPESTAT_EXAMPLES } from "../packages/gatekeeper-shared/src/sources/ripestat/examples";
+import { collectNormalized, libraryConfig, type JsonObject, type SourceConfig } from "../apps/gatekeeper/src/index";
+import { collectRipestatFeed, RIPESTAT_MAX_BYTES, RIPESTAT_ORIGIN, validateRipestatFeedConfig } from "../apps/gatekeeper/src/sources/ripestat/ripestat";
+import { RipestatTransformer } from "../apps/gatekeeper/src/sources/ripestat/transform";
+import { ripestatCollector } from "../apps/gatekeeper/src/sources/ripestat/collector";
+import { RIPESTAT_EXAMPLES } from "../apps/gatekeeper/src/sources/ripestat/examples";
 import { networkBytes, networkContext, networkFixture, networkFrames, networkRequest, networkRows, object } from "./networks-support";
 
 const STATUS = { feed: "routing-status", asn: "64496" };

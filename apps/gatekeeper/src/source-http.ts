@@ -1,5 +1,5 @@
 import { GatekeeperError } from "./index";
-import { parseJsonBytes, type JsonValue } from "./json";
+import { parseJsonBytes, type JsonValue } from "@open-data-pt/contract";
 import { readBoundedBytes } from "./stream";
 
 /** `Retry-After` as whole seconds from now, in either its delay or its HTTP-date form. */

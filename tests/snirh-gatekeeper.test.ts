@@ -14,7 +14,7 @@ import {
   type SourceBody,
   type SourceConfig,
   type SourceFetch,
-} from "@open-data-pt/gatekeeper-shared";
+} from "@open-data-pt/gatekeeper";
 import {
   SNIRH_EXAMPLES,
   SNIRH_ORIGIN,
@@ -26,7 +26,7 @@ import {
   resolveSnirhFeed,
   snirhCollector,
   validateSnirhFeedConfig,
-} from "../packages/gatekeeper-shared/src/sources/snirh";
+} from "../apps/gatekeeper/src/sources/snirh";
 
 const fixture = (name: string): Uint8Array => new Uint8Array(readFileSync(new URL(`./fixtures/snirh/${name}`, import.meta.url)));
 const text = (name: string): string => new TextDecoder().decode(fixture(name));

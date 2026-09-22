@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isJsonObject, parseJson, streamJsonArray, streamNdjson, type JsonArrayStreamOptions, type JsonObject, type JsonValue } from "@open-data-pt/gatekeeper-shared";
+import { isJsonObject, parseJson, streamJsonArray, streamNdjson, type JsonArrayStreamOptions, type JsonObject, type JsonValue } from "@open-data-pt/gatekeeper";
 
 /** A small deterministic PRNG so failures reproduce. */
 function random(seed: number): () => number {

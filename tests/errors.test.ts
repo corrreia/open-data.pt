@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NormalizedInputError, isPermanentCollectionError } from "@open-data-pt/gatekeeper-shared";
+import { NormalizedInputError, isPermanentCollectionError } from "@open-data-pt/contract";
 
 describe("normalized error RPC classification", () => {
   it("recognizes only the complete serialized envelope or local class", () => {

@@ -1,9 +1,9 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { type ExampleFeed, type NormalizedRow, type TransformContext } from "@open-data-pt/gatekeeper-shared";
-import { UDATA_EXAMPLES, udataCollector } from "@open-data-pt/gatekeeper-shared/formats/udata";
+import { type ExampleFeed, type NormalizedRow, type TransformContext } from "@open-data-pt/contract";
+import { UDATA_EXAMPLES, udataCollector } from "@open-data-pt/gatekeeper/formats/udata";
 import { INSTALLED } from "./catalog";
-import { INE_EXAMPLES } from "../packages/gatekeeper-shared/src/sources/ine/examples";
+import { INE_EXAMPLES } from "../apps/gatekeeper/src/sources/ine/examples";
 
 /** Topics are catalog tags now, so these are the installed feeds carrying each tag, whatever Worker reads them. */
 const tagged = (topic: string): ExampleFeed[] => INSTALLED.filter((example) => example.topics?.includes(topic));

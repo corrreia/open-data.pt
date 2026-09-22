@@ -1,5 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
-import { asObject, parseJson, requireString } from "@open-data-pt/gatekeeper-shared";
+import { asObject, parseJson, requireString } from "@open-data-pt/contract";
 import type { ApiContext } from "../../apps/kernel/src/http";
 import KernelWorker from "../../apps/kernel/src/index";
 export { Registry, FeedRunner, CollectionWorkflow } from "../../apps/kernel/src/index";

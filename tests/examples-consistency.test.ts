@@ -1,6 +1,6 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { LICENCES, PUBLISHERS, isJsonObject, isJsonString, isLicence, isPublisher, isTopic, parseJson, type ExampleFeed } from "@open-data-pt/gatekeeper-shared";
+import { LICENCES, PUBLISHERS, isLicence, isPublisher, isTopic, publisherEnabled } from "@open-data-pt/catalog";
+import type { ExampleFeed } from "@open-data-pt/contract";
 import { CARRIED_NAMES, INSTALLED } from "./catalog";
 
 /** One library's module namespace, as this test reads it: exported values, one of which is its examples. */
@@ -20,8 +20,8 @@ interface LibraryModules {
 // namespace object; this test reads its exported values only to find the example
 // feeds among them, and ignores everything that is not one.
 const LIBRARIES = {
-  ...import.meta.glob("../packages/gatekeeper-shared/src/formats/*/index.ts"),
-  ...import.meta.glob("../packages/gatekeeper-shared/src/sources/*/index.ts"),
+  ...import.meta.glob("../apps/gatekeeper/src/formats/*/index.ts"),
+  ...import.meta.glob("../apps/gatekeeper/src/sources/*/index.ts"),
 } as LibraryModules;
 
 function libraryName(path: string): string {
@@ -49,23 +49,6 @@ async function libraryExamples(): Promise<Map<string, readonly ExampleFeed[]>> {
   }
   return found;
 }
-
-/** Explicit review holds are not runtime feature flags: their examples must stay out of what the Worker installs. */
-function publicationHolds(): Map<string, string> {
-  const rows = parseJson(readFileSync(new URL("../packages/gatekeeper-shared/src/publication-holds.json", import.meta.url), "utf8"));
-  if (!Array.isArray(rows)) throw new Error("Publication holds must be an array");
-  const result = new Map<string, string>();
-  for (const row of rows) {
-    if (!isJsonObject(row) || !isJsonString(row.source) || !isJsonString(row.reason) || row.reason.length < 20) {
-      throw new Error("Every publication hold must name its source and concrete reason");
-    }
-    if (result.has(row.source)) throw new Error("Duplicate publication hold");
-    result.set(row.source, row.reason);
-  }
-  return result;
-}
-
-const PUBLICATION_HOLDS = publicationHolds();
 
 /** What the Gatekeeper Worker installs, which is what the Registry turns into feeds. */
 const DEPLOYED: ExampleFeed[] = INSTALLED;
@@ -168,19 +151,14 @@ describe("libraries and the Worker that carries them", () => {
     ).toEqual([]);
   });
 
-  it("carries every cleared library, and no held one", () => {
+  it("carries every library directory, each once", () => {
     const carried = new Set(CARRIED_NAMES);
     expect(CARRIED_NAMES.length, "libraries.ts lists a library twice").toBe(carried.size);
-    const cleared = Object.keys(LIBRARIES)
-      .map(libraryName)
-      .filter((name) => !PUBLICATION_HOLDS.has(name));
     expect(
-      cleared.filter((name) => !carried.has(name)),
-      "cleared but not listed in libraries.ts",
-    ).toEqual([]);
-    expect(
-      [...PUBLICATION_HOLDS.keys()].filter((name) => carried.has(name)),
-      "held but listed in libraries.ts",
+      Object.keys(LIBRARIES)
+        .map(libraryName)
+        .filter((name) => !carried.has(name)),
+      "a library directory no line of libraries.ts lists",
     ).toEqual([]);
     expect(
       CARRIED_NAMES.filter((name) => !(name in LIBRARIES_BY_NAME)),
@@ -188,21 +166,23 @@ describe("libraries and the Worker that carries them", () => {
     ).toEqual([]);
   });
 
-  it("installs every cleared library's examples, each once", async () => {
+  it("installs every example of an enabled publisher, each once", async () => {
     const libraries = await libraryExamples();
-    const offered = [...libraries]
-      .filter(([name]) => !PUBLICATION_HOLDS.has(name))
-      .flatMap(([, examples]) => examples.map((example) => example.slug))
-      .toSorted();
+    const offered = [...libraries].flatMap(([, examples]) => examples.filter((example) => publisherEnabled(example.publisher)).map((example) => example.slug)).toSorted();
     expect(DEPLOYED.map((example) => example.slug).toSorted()).toEqual(offered);
   });
 
-  it("never auto-publishes an adapter awaiting permission or record validation", async () => {
+  it("installs nothing from a publisher held for permission", async () => {
+    const held = Object.keys(PUBLISHERS).filter((key) => !publisherEnabled(key));
+    expect(held.length, "no publisher is held, so nothing proves a hold works").toBeGreaterThan(0);
+    expect(DEPLOYED.filter((example) => held.includes(example.publisher)).map((example) => example.slug)).toEqual([]);
+    // The libraries that read them still ship: a hold is about whose data we serve, not about what code exists.
     const libraries = await libraryExamples();
-    for (const source of PUBLICATION_HOLDS.keys()) {
-      expect(libraries.has(source), `Unknown publication hold ${source}`).toBe(true);
-      expect(DEPLOYED.filter((example) => example.config.source === source)).toEqual([]);
-    }
+    const readingHeld = [...libraries].filter(([, examples]) => examples.some((example) => held.includes(example.publisher))).map(([name]) => name);
+    expect(
+      readingHeld.filter((name) => !CARRIED_NAMES.includes(name)),
+      "a library that reads a held publisher but is not carried",
+    ).toEqual([]);
   });
 
   it("names its own library in every example configuration", async () => {

@@ -12,9 +12,9 @@ import {
   type SourceBody,
   type SourceFetch,
   libraryConfig,
-} from "@open-data-pt/gatekeeper-shared";
-import { MAX_METADATA_BYTES, arcgisCollector, collectArcgisFeed, resolveArcgisFeed, validateArcgisFeedConfig } from "../packages/gatekeeper-shared/src/formats/arcgis";
-import { ARCGIS_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/arcgis/examples";
+} from "@open-data-pt/gatekeeper";
+import { MAX_METADATA_BYTES, arcgisCollector, collectArcgisFeed, resolveArcgisFeed, validateArcgisFeedConfig } from "../apps/gatekeeper/src/formats/arcgis";
+import { ARCGIS_EXAMPLES } from "../apps/gatekeeper/src/formats/arcgis/examples";
 
 const allowedHosts = "services.arcgis.com";
 const hosts = new Set([allowedHosts]);

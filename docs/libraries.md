@@ -1,11 +1,11 @@
 # Libraries
 
 A library is the code that reads one thing: a **format** with a standard, under
-`packages/gatekeeper-shared/src/formats/`, or one bespoke **source** API, under `sources/`. It is
+`apps/gatekeeper/src/formats/`, or one bespoke **source** API, under `sources/`. It is
 named for _how_ the data is read, never for what it is about or who publishes it — topics overlap and
 a publisher may be read two ways, so neither is a code boundary.
 
-`packages/gatekeeper-shared/src/libraries.ts` lists the libraries the Gatekeeper Worker carries.
+`apps/gatekeeper/src/libraries.ts` lists the libraries the Gatekeeper Worker carries.
 Adding one is its directory and one line in that list; a test holds every directory under `formats/`
 and `sources/` to being listed there or held.
 
@@ -45,24 +45,23 @@ The counts are the examples each library ships, not the products they produce: o
 several tables and series. The live numbers are on [the catalog](https://open-data.pt/catalog/) and in
 [`/api/feeds`](https://open-data.pt/api/feeds).
 
-## Sources held back
+## Publishers held back
 
-Source access, validation and permission to republish are separate checks. A library under a
-publication hold is written and tested but not listed in `libraries.ts`: its code does not ship and
-its examples are installed nowhere until the hold in
-[`packages/gatekeeper-shared/src/publication-holds.json`](../packages/gatekeeper-shared/src/publication-holds.json)
-is resolved.
+Source access, validation and permission to republish are separate checks. A publisher we may not
+republish yet carries `enabled: false` in
+[`packages/catalog/src/publishers.ts`](../packages/catalog/src/publishers.ts), with a comment saying
+what we are waiting for. None of their feeds is installed, so nothing of theirs is polled or served.
+The library that reads them still ships: a hold is about whose data we serve, not about what code
+exists. Lifting a hold is deleting one word.
 
-| Library     | Held because                                                                                          |
-| ----------- | ----------------------------------------------------------------------------------------------------- |
-| `ripestat`  | RIPEstat Service Terms Article 3.3 restricts repackaging and redistribution                           |
-| `ripeatlas` | The same bar, plus Atlas terms requiring written authorisation to make its databases available        |
-| `peeringdb` | The acceptable-use policy requires permission for reproduction and bulk sharing                       |
-| `ioda`      | Georgia Tech reserves all rights, and several signals IODA blends carry their own redistribution bars |
+| Publisher   | Read by                 | Held because                                                                                            |
+| ----------- | ----------------------- | ------------------------------------------------------------------------------------------------------- |
+| `ripe-ncc`  | `ripestat`, `ripeatlas` | Service terms Articles 3.3 and 3.5 bar repackaging and redistribution; Atlas adds written authorisation |
+| `peeringdb` | `peeringdb`             | The acceptable-use policy requires permission for reproduction and bulk sharing                         |
+| `ioda`      | `ioda`                  | Georgia Tech reserves all rights, and several signals IODA blends carry their own redistribution bars   |
 
-The hold file carries the reasoning, the action that would lift it, and the references. The
-consistency tests require every cleared library to have a Worker, every example tag to be a known
-catalog topic, and no held example to be auto-published.
+The consistency tests require every library directory to be listed in `libraries.ts`, every example
+tag to be a known catalog topic, and nothing of a held publisher's to be installed.
 
 A successful source request is not proof of a reuse licence, and a successful dry-run is not a
 deployment.

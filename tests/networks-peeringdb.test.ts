@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { collectNormalized, libraryConfig, type JsonObject, type SourceFetch } from "../packages/gatekeeper-shared/src/index";
-import { collectPeeringdbFeed, PEERINGDB_ORIGIN, PEERINGDB_PUBLIC_FIELDS, validatePeeringdbFeedConfig } from "../packages/gatekeeper-shared/src/sources/peeringdb/peeringdb";
-import { peeringdbCollector } from "../packages/gatekeeper-shared/src/sources/peeringdb/collector";
-import { PeeringdbTransformer } from "../packages/gatekeeper-shared/src/sources/peeringdb/transform";
-import { PEERINGDB_EXAMPLES } from "../packages/gatekeeper-shared/src/sources/peeringdb/examples";
+import { collectNormalized, libraryConfig, type JsonObject, type SourceFetch } from "../apps/gatekeeper/src/index";
+import { collectPeeringdbFeed, PEERINGDB_ORIGIN, PEERINGDB_PUBLIC_FIELDS, validatePeeringdbFeedConfig } from "../apps/gatekeeper/src/sources/peeringdb/peeringdb";
+import { peeringdbCollector } from "../apps/gatekeeper/src/sources/peeringdb/collector";
+import { PeeringdbTransformer } from "../apps/gatekeeper/src/sources/peeringdb/transform";
+import { PEERINGDB_EXAMPLES } from "../apps/gatekeeper/src/sources/peeringdb/examples";
 import { networkBytes, networkContext, networkFixture, networkFrames, networkRequest, networkRows, object } from "./networks-support";
 
 const CONFIG = { feed: "exchanges", country: "PT" };

@@ -1,10 +1,10 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import { ANEPC_API_ORIGIN, collectAnepcFeed, validateAnepcFeedConfig } from "../packages/gatekeeper-shared/src/sources/anepc";
-import { FIRMS_API_ORIGIN, collectFirmsFeed, validateFirmsFeedConfig } from "../packages/gatekeeper-shared/src/sources/firms";
-import { NASA_POWER_API_ORIGIN, collectNasaPowerFeed, validateNasaPowerFeedConfig } from "../packages/gatekeeper-shared/src/sources/nasapower";
-import { USGS_API_ORIGIN, collectUsgsFeed, validateUsgsFeedConfig } from "../packages/gatekeeper-shared/src/sources/usgs";
-import { collectWfsFeed, validateWfsFeedConfig } from "../packages/gatekeeper-shared/src/formats/wfs";
+import { ANEPC_API_ORIGIN, collectAnepcFeed, validateAnepcFeedConfig } from "../apps/gatekeeper/src/sources/anepc";
+import { FIRMS_API_ORIGIN, collectFirmsFeed, validateFirmsFeedConfig } from "../apps/gatekeeper/src/sources/firms";
+import { NASA_POWER_API_ORIGIN, collectNasaPowerFeed, validateNasaPowerFeedConfig } from "../apps/gatekeeper/src/sources/nasapower";
+import { USGS_API_ORIGIN, collectUsgsFeed, validateUsgsFeedConfig } from "../apps/gatekeeper/src/sources/usgs";
+import { collectWfsFeed, validateWfsFeedConfig } from "../apps/gatekeeper/src/formats/wfs";
 
 function fixture(path: string): Uint8Array {
   return readFileSync(new URL(`./fixtures/${path}`, import.meta.url));

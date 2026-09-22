@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import type { CanonicalRecord, ProductBuild, UnstampedResult } from "@open-data-pt/gatekeeper-shared";
-import { myInfoCollector, myInfoOperators } from "../packages/gatekeeper-shared/src/sources/myinfo/collector";
-import type { MyInfoDocument } from "../packages/gatekeeper-shared/src/sources/myinfo/myinfo";
-import { MyInfoTransformer } from "../packages/gatekeeper-shared/src/sources/myinfo/transform";
+import type { CanonicalRecord, ProductBuild, UnstampedResult } from "@open-data-pt/gatekeeper";
+import { myInfoCollector, myInfoOperators } from "../apps/gatekeeper/src/sources/myinfo/collector";
+import type { MyInfoDocument } from "../apps/gatekeeper/src/sources/myinfo/myinfo";
+import { MyInfoTransformer } from "../apps/gatekeeper/src/sources/myinfo/transform";
 
 const transformer = new MyInfoTransformer();
 

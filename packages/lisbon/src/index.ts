@@ -1,10 +1,16 @@
 /**
- * Europe/Lisbon wall-clock arithmetic. Several Portuguese sources publish local
- * civil times with no offset, so the platform reads them here, once, without
- * ever consulting the runtime's own time zone.
+ * Europe/Lisbon wall-clock arithmetic, for every side of the platform: the
+ * Gatekeeper reads the local civil times Portuguese sources publish without an
+ * offset, the kernel counts a summary's days and months from Lisbon midnight,
+ * and the site draws them the same way. Read here, once, and never from the
+ * runtime's own time zone.
  */
+
+/** The zone every calendar day and month on this platform is counted in. */
+export const LISBON_TIME_ZONE = "Europe/Lisbon";
+
 const LISBON = new Intl.DateTimeFormat("en-GB", {
-  timeZone: "Europe/Lisbon",
+  timeZone: LISBON_TIME_ZONE,
   year: "numeric",
   month: "2-digit",
   day: "2-digit",
@@ -70,7 +76,7 @@ function wallReading(day: string, time: string): number | undefined {
 }
 
 /** The Lisbon wall clock at an instant, read back as if that wall clock were UTC. */
-function wallMilliseconds(milliseconds: number): number {
+export function wallMilliseconds(milliseconds: number): number {
   const parts = readParts(new Date(milliseconds));
   return Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour), Number(parts.minute), Number(parts.second));
 }

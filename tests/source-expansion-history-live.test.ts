@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { NORMALIZED_PROTOCOL, collectNormalized, libraryConfig, type CollectionRequest, type ExampleFeed, type NormalizedCollector } from "@open-data-pt/gatekeeper-shared";
-import { OPENDATASOFT_EXAMPLES, opendatasoftCollector } from "@open-data-pt/gatekeeper-shared/formats/opendatasoft";
-import { INE_EXAMPLES, ineCollector } from "@open-data-pt/gatekeeper-shared/sources/ine";
+import { NORMALIZED_PROTOCOL, collectNormalized, libraryConfig, type CollectionRequest, type ExampleFeed, type NormalizedCollector } from "@open-data-pt/gatekeeper";
+import { OPENDATASOFT_EXAMPLES, opendatasoftCollector } from "@open-data-pt/gatekeeper/formats/opendatasoft";
+import { INE_EXAMPLES, ineCollector } from "@open-data-pt/gatekeeper/sources/ine";
 import { readFrames } from "../apps/kernel/src/frames";
 import { MAX_RECORD_BYTES } from "../apps/kernel/src/blob-budget";
 

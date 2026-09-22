@@ -1,8 +1,8 @@
-// The one Gatekeeper Worker: every library in `packages/gatekeeper-shared/src/libraries.ts`, behind private RPC.
+// The one Gatekeeper Worker: every library in `src/libraries.ts`, behind private RPC.
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "open-data-pt-gatekeeper",
-  "main": "src/index.ts",
+  "main": "src/worker.ts",
   "compatibility_date": "2026-09-09",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": false,

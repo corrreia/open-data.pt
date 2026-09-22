@@ -9,7 +9,7 @@ import {
   type NormalizedProductHeader,
   type SourceCheckpoint,
   type TransformQuality,
-} from "@open-data-pt/gatekeeper-shared";
+} from "@open-data-pt/contract";
 
 import { chunkIndexFor, chunkListProblem, parseChunkRows, regenerateChunks, servedIdentity, type ChunkSink, type ServingRow } from "./chunks";
 import {

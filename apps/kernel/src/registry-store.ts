@@ -1,5 +1,5 @@
-import { NormalizedInputError, isProductSlug } from "@open-data-pt/gatekeeper-shared";
-import type { CollectionPolicyDefinition, FeedSemantics, JsonObject, ResolvedFeed, ServingPolicyDefinition, SourceConfig } from "@open-data-pt/gatekeeper-shared";
+import { NormalizedInputError, isProductSlug } from "@open-data-pt/contract";
+import type { CollectionPolicyDefinition, FeedSemantics, JsonObject, ResolvedFeed, ServingPolicyDefinition, SourceConfig } from "@open-data-pt/contract";
 import type { ManifestChunk } from "./chunks";
 import { feedDefinition, type Acquisition, type Feed, type FeedPolicy, type FeedStatus, type ProductIndexEntry, type ProductSummary } from "./feed-model";
 import { dropAllTables, userTables } from "./sqlite-reset";

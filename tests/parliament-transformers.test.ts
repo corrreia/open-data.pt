@@ -11,9 +11,9 @@ import {
   type ProductDeclaration,
   type StreamingSummary,
   type TransformContext,
-} from "@open-data-pt/gatekeeper-shared";
-import { PARLIAMENT_EXAMPLES, transformParliament } from "../packages/gatekeeper-shared/src/sources/parliament";
-import { PARLIAMENT_ELEMENT_BYTES } from "../packages/gatekeeper-shared/src/sources/parliament/transform";
+} from "@open-data-pt/gatekeeper";
+import { PARLIAMENT_EXAMPLES, transformParliament } from "../apps/gatekeeper/src/sources/parliament";
+import { PARLIAMENT_ELEMENT_BYTES } from "../apps/gatekeeper/src/sources/parliament/transform";
 
 function fixture(feed: string): JsonValue {
   return parseJson(readFileSync(new URL(`./fixtures/parliament/${feed}.json`, import.meta.url), "utf8"));

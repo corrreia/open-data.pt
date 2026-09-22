@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { TabularTransformer } from "../packages/gatekeeper-shared/src/formats/udata/transform/tabular";
-import type { CanonicalRecord, CanonicalSchema, SeriesPoint, StreamingSummary, StreamingTransform, TransformContext } from "@open-data-pt/gatekeeper-shared";
+import { TabularTransformer } from "../apps/gatekeeper/src/formats/udata/transform/tabular";
+import type { CanonicalRecord, CanonicalSchema, SeriesPoint, StreamingSummary, StreamingTransform, TransformContext } from "@open-data-pt/contract";
 
 const feed: TransformContext["feed"] = {
   id: "feed_csv",

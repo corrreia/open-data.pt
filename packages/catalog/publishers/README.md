@@ -2,7 +2,9 @@
 
 The logo of each publisher whose data this site republishes, shown beside their name
 on the catalog, the publisher pages and every product page, and served from the API
-as each publisher's `logo`. `PUBLISHERS` in `packages/gatekeeper-shared/src/publishers.ts`
+as each publisher's `logo`. They live here, beside the vocabulary that names them; the
+site's build copies this folder into `dist/publishers/`, which is where the API says
+they are. `PUBLISHERS` in `packages/catalog/src/publishers.ts`
 says which publishers have one and with what extension; the file is named for the
 publisher's key, so nothing else has to be stored. `tests/publisher-logos.test.ts` holds
 the two lists to each other.

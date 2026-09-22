@@ -1,15 +1,8 @@
-import { LICENCES, PUBLISHERS, isLicence, isPublisher } from "@open-data-pt/gatekeeper-shared";
+import type { Term } from "@open-data-pt/api";
+import { LICENCES, PUBLISHERS, isLicence, isPublisher } from "@open-data-pt/catalog";
 
-/** A vocabulary entry as the public API serves it: the key, its name, and its page when it has one. */
-export interface VocabularyRef {
-  id: string;
-  name: string;
-  url?: string;
-  /** What a licence means; publishers need no description beyond their name. */
-  description?: string;
-  /** A publisher's mark, served from this site, to show beside their name. Absent for a publisher whose initials stand in for it. */
-  logo?: string;
-}
+/** A vocabulary entry as the public API serves it. */
+export type VocabularyRef = Term;
 
 /**
  * A publisher key, expanded for a reader. A key the vocabulary no longer

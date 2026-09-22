@@ -2,18 +2,10 @@ import { jsonAs } from "./support";
 import { readFileSync } from "node:fs";
 import { deflateRawSync } from "node:zlib";
 import { describe, expect, it, vi } from "vitest";
-import {
-  collectNormalized,
-  GatekeeperError,
-  NORMALIZED_PROTOCOL,
-  resolveFeed,
-  sourceValidator,
-  type CollectionRequest,
-  type NormalizedFrame,
-} from "@open-data-pt/gatekeeper-shared";
-import { collectGtfsFeed, DEFAULT_GTFS_FILES, GTFS_FEEDS, validateGtfsFeedConfig } from "../packages/gatekeeper-shared/src/formats/gtfs/gtfs";
-import { GTFS_NORMALIZER, transformGtfs } from "../packages/gatekeeper-shared/src/formats/gtfs/transform";
-import { gtfsZipEntries, MAX_ARCHIVE_BYTES, type GtfsZipOptions } from "../packages/gatekeeper-shared/src/formats/gtfs/zip";
+import { collectNormalized, GatekeeperError, NORMALIZED_PROTOCOL, resolveFeed, sourceValidator, type CollectionRequest, type NormalizedFrame } from "@open-data-pt/gatekeeper";
+import { collectGtfsFeed, DEFAULT_GTFS_FILES, GTFS_FEEDS, validateGtfsFeedConfig } from "../apps/gatekeeper/src/formats/gtfs/gtfs";
+import { GTFS_NORMALIZER, transformGtfs } from "../apps/gatekeeper/src/formats/gtfs/transform";
+import { gtfsZipEntries, MAX_ARCHIVE_BYTES, type GtfsZipOptions } from "../apps/gatekeeper/src/formats/gtfs/zip";
 
 const ALLOWED_HOSTS = "api.carrismetropolitana.pt,opendata.porto.digital";
 const SOURCE_URL = "https://api.carrismetropolitana.pt/v2/gtfs";

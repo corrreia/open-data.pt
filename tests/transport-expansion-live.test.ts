@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { collectNormalized, libraryConfig, NORMALIZED_PROTOCOL, type CollectionRequest, type ExampleFeed, type NormalizedCollector } from "@open-data-pt/gatekeeper-shared";
-import { CKAN_EXAMPLES, ckanCollector } from "../packages/gatekeeper-shared/src/formats/ckan";
-import { GBFS_EXAMPLES, gbfsCollector } from "../packages/gatekeeper-shared/src/formats/gbfs";
-import { GTFS_EXAMPLES, gtfsCollector } from "../packages/gatekeeper-shared/src/formats/gtfs";
+import { collectNormalized, libraryConfig, NORMALIZED_PROTOCOL, type CollectionRequest, type ExampleFeed, type NormalizedCollector } from "@open-data-pt/gatekeeper";
+import { CKAN_EXAMPLES, ckanCollector } from "../apps/gatekeeper/src/formats/ckan";
+import { GBFS_EXAMPLES, gbfsCollector } from "../apps/gatekeeper/src/formats/gbfs";
+import { GTFS_EXAMPLES, gtfsCollector } from "../apps/gatekeeper/src/formats/gtfs";
 import { readFrames } from "../apps/kernel/src/frames";
 
 const GTFS_SLUGS = new Set(["cp-gtfs-feed", "fertagus-gtfs-feed", "tub-braga-gtfs-feed", "tcb-barreiro-gtfs-feed", "horarios-do-funchal-gtfs-feed"]);

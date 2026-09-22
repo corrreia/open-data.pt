@@ -128,3 +128,15 @@ export function parseJson(text: string): JsonValue {
 export function parseJsonBytes(bytes: Uint8Array): JsonValue {
   return parseJson(new TextDecoder().decode(bytes));
 }
+
+export function requireString(record: JsonObject, key: string): string {
+  const value = asNonEmptyString(record[key]);
+  if (value === undefined) {
+    throw new Error(`Expected ${key} to be a non-empty string`);
+  }
+  return value;
+}
+
+export function optionalString(record: JsonObject, key: string): string | undefined {
+  return asNonEmptyString(record[key]);
+}

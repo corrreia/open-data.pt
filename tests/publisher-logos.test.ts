@@ -1,9 +1,8 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { PUBLISHERS } from "../packages/gatekeeper-shared/src/publishers";
-import { initials } from "../apps/site/src/lib/publisher-mark";
+import { PUBLISHERS, initials } from "@open-data-pt/catalog";
 
-const DIRECTORY = new URL("../apps/site/public/publishers/", import.meta.url);
+const DIRECTORY = new URL("../packages/catalog/publishers/", import.meta.url);
 
 /** What a publisher's key claims is on disk, from the vocabulary. */
 const claimed = new Map(

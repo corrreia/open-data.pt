@@ -28,7 +28,7 @@ how data is read — a format or a bespoke source API — never what the data is
 it: topics overlap (a city Wi-Fi map is `cities` and `telecom`), and a publisher may be read two ways
 (Carris Metropolitana through its own API and through GTFS). Each library declares in `deployment.ts`
 its name, its vars with their values, and any secrets, buckets and CPU limit;
-`packages/gatekeeper-shared/src/libraries.ts` lists the ones the Worker carries.
+`apps/gatekeeper/src/libraries.ts` lists the ones the Worker carries.
 [Libraries](libraries.md) has the full list and the vocabularies the catalog groups by.
 
 The Worker holds no parsing. It builds each library from its declared vars and the Worker's bindings,

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import type { JsonObject, JsonValue } from "@open-data-pt/gatekeeper-shared";
+import type { JsonObject, JsonValue } from "@open-data-pt/contract";
 import { describe, expect, it } from "vitest";
 import { SKILL_PATH, handleSite, type SiteHost } from "../apps/kernel/src/discovery";
 import { prefersMarkdown } from "../apps/kernel/src/markdown";

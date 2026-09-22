@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveLibraryFeed } from "@open-data-pt/gatekeeper-shared";
+import { resolveLibraryFeed } from "@open-data-pt/gatekeeper";
 import { CARRIED, carriedLibraries } from "./catalog";
 
 /**

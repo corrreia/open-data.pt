@@ -1,4 +1,4 @@
-import type { FieldType, JsonObject } from "@open-data-pt/gatekeeper-shared";
+import type { FieldType, JsonObject } from "@open-data-pt/contract";
 import { describe, expect, it } from "vitest";
 import { buildChunks, compareKeys } from "../apps/kernel/src/chunks";
 import type { ProductDetail } from "../apps/kernel/src/coordinators";

@@ -1,7 +1,7 @@
 import { jsonAs } from "./support";
 import { describe, expect, it, vi } from "vitest";
-import { GatekeeperError, type JsonObject, type JsonValue, type SourceBody, type SourceFetch } from "@open-data-pt/gatekeeper-shared";
-import { collectArcgisFeed, validateArcgisFeedConfig, type Fetcher } from "../packages/gatekeeper-shared/src/formats/arcgis";
+import { GatekeeperError, type JsonObject, type JsonValue, type SourceBody, type SourceFetch } from "@open-data-pt/contract";
+import { collectArcgisFeed, validateArcgisFeedConfig, type Fetcher } from "../apps/gatekeeper/src/formats/arcgis";
 
 const apaHost = "sniambgeoogc.apambiente.pt";
 const hosts = new Set(["services.arcgis.com", apaHost]);

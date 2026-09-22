@@ -1,10 +1,10 @@
 import { jsonAs } from "./support";
 import { describe, expect, it, vi } from "vitest";
-import { GBFS_MAX_BYTES, collectGbfsFeed, validateGbfsFeedConfig } from "../packages/gatekeeper-shared/src/formats/gbfs/gbfs";
-import { GBFS_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/gbfs/examples";
+import { GBFS_MAX_BYTES, collectGbfsFeed, validateGbfsFeedConfig } from "../apps/gatekeeper/src/formats/gbfs/gbfs";
+import { GBFS_EXAMPLES } from "../apps/gatekeeper/src/formats/gbfs/examples";
 
-import type { JsonObject, JsonValue, SourceBody, SourceFetch } from "@open-data-pt/gatekeeper-shared";
-import { libraryConfig } from "@open-data-pt/gatekeeper-shared";
+import type { JsonObject, JsonValue, SourceBody, SourceFetch } from "@open-data-pt/contract";
+import { libraryConfig } from "@open-data-pt/gatekeeper";
 const DISCOVERY_URL = "https://mds.bird.co/gbfs/v2/public/lisbon/gbfs.json";
 const ALLOWED_HOSTS = "mds.bird.co,gbfs.primelayer.pt,gbfs.nextbike.net";
 const allowedHosts = new Set(ALLOWED_HOSTS.split(","));

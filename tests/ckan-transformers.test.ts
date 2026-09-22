@@ -14,10 +14,10 @@ import {
   type SeriesPoint,
   type StreamingSummary,
   type TransformContext,
-} from "@open-data-pt/gatekeeper-shared";
-import type { CkanResourceMetadata } from "../packages/gatekeeper-shared/src/formats/ckan/ckan";
-import { CKAN_NORMALIZER, CKAN_SAMPLE_ROWS, epsg3763ToWgs84, parsePythonLiteral, transformCkan } from "../packages/gatekeeper-shared/src/formats/ckan/transform";
-import { ckanCollector } from "../packages/gatekeeper-shared/src/formats/ckan";
+} from "@open-data-pt/gatekeeper";
+import type { CkanResourceMetadata } from "../apps/gatekeeper/src/formats/ckan/ckan";
+import { CKAN_NORMALIZER, CKAN_SAMPLE_ROWS, epsg3763ToWgs84, parsePythonLiteral, transformCkan } from "../apps/gatekeeper/src/formats/ckan/transform";
+import { ckanCollector } from "../apps/gatekeeper/src/formats/ckan";
 
 const context: TransformContext = {
   feed: {

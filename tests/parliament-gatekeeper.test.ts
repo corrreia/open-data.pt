@@ -10,8 +10,8 @@ import {
   type NormalizedFrame,
   type SourceFetch,
   type SourceStaging,
-} from "@open-data-pt/gatekeeper-shared";
-import { PARLIAMENT_EXAMPLES, PARLIAMENT_NORMALIZER, parliamentCollector, resolveParliamentFeed } from "../packages/gatekeeper-shared/src/sources/parliament";
+} from "@open-data-pt/gatekeeper";
+import { PARLIAMENT_EXAMPLES, PARLIAMENT_NORMALIZER, parliamentCollector, resolveParliamentFeed } from "../apps/gatekeeper/src/sources/parliament";
 import {
   collectParliamentFeed,
   parliamentDirectoryLink,
@@ -20,7 +20,7 @@ import {
   PARLIAMENT_HTML_BYTES,
   validateParliamentFeedConfig,
   type ParliamentDocument,
-} from "../packages/gatekeeper-shared/src/sources/parliament/parliament";
+} from "../apps/gatekeeper/src/sources/parliament/parliament";
 import { readFrames } from "../apps/kernel/src/frames";
 
 const config = { feed: "members", legislature: "XVII" };

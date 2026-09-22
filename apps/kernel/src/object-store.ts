@@ -1,4 +1,4 @@
-import type { JsonObject } from "@open-data-pt/gatekeeper-shared";
+import type { JsonObject } from "@open-data-pt/contract";
 import type { SnapshotStore } from "./ports";
 
 /**

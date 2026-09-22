@@ -3,7 +3,7 @@
  * text/markdown. The pages draw themselves in the browser from the API; these
  * say the same from the same reads, as text an agent can use directly.
  */
-import type { JsonObject, JsonValue } from "@open-data-pt/gatekeeper-shared";
+import type { JsonObject, JsonValue } from "@open-data-pt/contract";
 import type { SiteHost } from "./discovery";
 
 export interface CatalogField {

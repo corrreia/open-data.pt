@@ -1,5 +1,5 @@
-import type { FeedGatekeeper } from "@open-data-pt/gatekeeper-shared";
-export { default as Gatekeeper } from "../../packages/gatekeeper/src/index";
+import type { FeedGatekeeper } from "@open-data-pt/contract";
+export { default as Gatekeeper } from "../../apps/gatekeeper/src/worker";
 
 interface FixtureEnv {
   GK: Service<FeedGatekeeper>;

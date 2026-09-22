@@ -12,7 +12,7 @@
 import type { ExecuteResult, Executor } from "@cloudflare/codemode";
 import { openApiMcpServer, type RequestOptions } from "@cloudflare/codemode/mcp";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
-import { asObject, asString, parseJson, type JsonValue } from "@open-data-pt/gatekeeper-shared";
+import { asObject, asString, parseJson, type JsonValue } from "@open-data-pt/contract";
 
 import { mcpCallOf, type McpCall } from "./analytics";
 import { MCP_SERVER_NAME, MCP_SERVER_VERSION } from "./discovery";

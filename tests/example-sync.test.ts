@@ -1,4 +1,4 @@
-import type { ExampleFeed, FeedKindDescription } from "@open-data-pt/gatekeeper-shared";
+import type { ExampleFeed, FeedKindDescription } from "@open-data-pt/contract";
 import { describe, expect, it } from "vitest";
 import {
   SYNC_BATCH,

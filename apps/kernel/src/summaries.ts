@@ -24,12 +24,13 @@
  * A point published further ahead than `PUBLISHED_AHEAD_MS`, and never
  * republished within that window, reaches neither pass.
  */
-import { asNumber, asString, isJsonObject, parseJson, type JsonObject, type JsonValue } from "@open-data-pt/gatekeeper-shared";
+import { LISBON_TIME_ZONE } from "@open-data-pt/lisbon";
+import { asNumber, asString, isJsonObject, parseJson, type JsonObject, type JsonValue } from "@open-data-pt/contract";
 import type { ObjectStore } from "./object-store";
 import { runLakeQuery } from "./query";
 import { InvalidQueryError } from "./serving";
 
-export const SUMMARY_TIME_ZONE = "Europe/Lisbon";
+export const SUMMARY_TIME_ZONE = LISBON_TIME_ZONE;
 /** How long after a Lisbon day ends its points may still arrive; the day is summarised once this has passed. */
 const INGEST_GRACE_MS = 24 * 3_600_000;
 /**

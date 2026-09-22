@@ -1,14 +1,5 @@
-import {
-  asObject,
-  asString,
-  isJsonArray,
-  isJsonNumber,
-  isJsonObject,
-  type CanonicalField,
-  type CanonicalSchema,
-  type JsonObject,
-  type JsonValue,
-} from "@open-data-pt/gatekeeper-shared";
+import type { Product as ApiProduct } from "@open-data-pt/api";
+import { asObject, asString, isJsonArray, isJsonNumber, isJsonObject, type CanonicalField, type CanonicalSchema, type JsonObject, type JsonValue } from "@open-data-pt/contract";
 
 import type { ChunkObject } from "./chunks";
 import type { ProductDetail, ProductView } from "./coordinators";
@@ -394,7 +385,7 @@ function asGeometry(value: JsonValue | undefined): JsonObject | undefined {
   return isJsonArray(members) ? candidate : undefined;
 }
 
-export function publicProduct(entry: ProductView) {
+export function publicProduct(entry: ProductView): ApiProduct {
   return {
     id: entry.id,
     slug: entry.slug,

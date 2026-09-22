@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type { TransformContext } from "@open-data-pt/gatekeeper-shared";
-import { marketPeriodStart, OmieTransformer } from "../packages/gatekeeper-shared/src/sources/omie/transform";
+import type { TransformContext } from "@open-data-pt/contract";
+import { marketPeriodStart, OmieTransformer } from "../apps/gatekeeper/src/sources/omie/transform";
 
 type Series = "marginalpdbc" | "marginalpdbcpt";
 

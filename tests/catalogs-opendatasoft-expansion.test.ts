@@ -10,12 +10,12 @@ import {
   type NormalizedRow,
   type SourceConfig,
   type SourceFetch,
-} from "../packages/gatekeeper-shared/src/index";
-import { OPENDATASOFT_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/opendatasoft/examples";
-import { CATALOG_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/opendatasoft/catalog-examples";
-import { OpendatasoftSource, validateOpendatasoftFeedConfig } from "../packages/gatekeeper-shared/src/formats/opendatasoft/opendatasoft";
-import { resolveOpendatasoftFeed } from "../packages/gatekeeper-shared/src/formats/opendatasoft/collector";
-import { OpendatasoftTransformer } from "../packages/gatekeeper-shared/src/formats/opendatasoft/transform";
+} from "../apps/gatekeeper/src/index";
+import { OPENDATASOFT_EXAMPLES } from "../apps/gatekeeper/src/formats/opendatasoft/examples";
+import { CATALOG_EXAMPLES } from "../apps/gatekeeper/src/formats/opendatasoft/catalog-examples";
+import { OpendatasoftSource, validateOpendatasoftFeedConfig } from "../apps/gatekeeper/src/formats/opendatasoft/opendatasoft";
+import { resolveOpendatasoftFeed } from "../apps/gatekeeper/src/formats/opendatasoft/collector";
+import { OpendatasoftTransformer } from "../apps/gatekeeper/src/formats/opendatasoft/transform";
 
 const HOSTS = new Set(["e-redes.opendatasoft.com", "transparencia.sns.gov.pt"]);
 const BASE = { host: "e-redes.opendatasoft.com", dataset: "sample", limit: "100" };

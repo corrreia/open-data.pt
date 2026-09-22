@@ -18,11 +18,18 @@ export interface PublisherDescription {
   url?: string;
   /**
    * Their mark's file extension, the file itself being
-   * `apps/site/public/publishers/<key>.<logo>`, so the key is the whole of the
+   * `packages/catalog/publishers/<key>.<logo>`, so the key is the whole of the
    * reference. It is their trademark, shown to name them and covered by no
    * dataset's licence. Absent for a publisher whose initials stand in for it.
    */
   logo?: "svg" | "png";
+  /**
+   * Whether we may republish what they publish. Absent means we may. `false`
+   * holds every feed of theirs out of what the Gatekeeper installs, so nothing
+   * of theirs is polled or served, while the code that reads them stays and a
+   * comment here says what we are waiting for. Lifting a hold is one word.
+   */
+  enabled?: boolean;
 }
 
 export const PUBLISHERS = {
@@ -60,7 +67,10 @@ export const PUBLISHERS = {
   "horarios-do-funchal": { name: "Horários do Funchal", url: "https://www.horariosdofunchal.pt/", logo: "png" },
   "impic": { name: "IMPIC · Instituto dos Mercados Públicos, do Imobiliário e da Construção", url: "https://www.impic.pt/", logo: "png" },
   "ine": { name: "INE · Instituto Nacional de Estatística", url: "https://www.ine.pt/", logo: "png" },
-  "ioda": { name: "IODA · Internet Intelligence Lab, Georgia Tech", url: "https://ioda.inetintel.cc.gatech.edu/", logo: "png" },
+  // Held: Georgia Tech states no terms for IODA — every response reserves rights rather than granting them — and
+  // signals it blends (Merit's telescope, Google's Transparency Report, RIPE RIS) carry their own bars on
+  // redistribution. Waiting on ioda-info@cc.gatech.edu. https://api.ioda.inetintel.cc.gatech.edu/v2/datasources/
+  "ioda": { name: "IODA · Internet Intelligence Lab, Georgia Tech", url: "https://ioda.inetintel.cc.gatech.edu/", logo: "png", enabled: false },
   "ipma": { name: "IPMA · Instituto Português do Mar e da Atmosfera", url: "https://www.ipma.pt/", logo: "svg" },
   // LNEG draws its own mark white on transparent, which disappears on the tile
   // the site draws it on, and the only other mark on its services is pygeoapi's,
@@ -72,11 +82,16 @@ export const PUBLISHERS = {
   "nasa-firms": { name: "NASA FIRMS · Fire Information for Resource Management System", url: "https://firms.modaps.eosdis.nasa.gov/", logo: "png" },
   "nasa-power": { name: "NASA POWER · Prediction Of Worldwide Energy Resources", url: "https://power.larc.nasa.gov/", logo: "svg" },
   "omie": { name: "OMIE · Iberian electricity market", url: "https://www.omie.es/", logo: "png" },
-  "peeringdb": { name: "PeeringDB", url: "https://www.peeringdb.com/", logo: "png" },
+  // Held: PeeringDB's acceptable-use policy requires permission for reproduction and bulk sharing outside its
+  // approved operational uses. Asked, awaiting an answer. https://www.peeringdb.com/aup
+  "peeringdb": { name: "PeeringDB", url: "https://www.peeringdb.com/", logo: "png", enabled: false },
   "porto-digital": { name: "Porto Digital", url: "https://www.portodigital.pt/" },
   "ren": { name: "REN · Redes Energéticas Nacionais", url: "https://www.ren.pt/", logo: "svg" },
   "ribatejana": { name: "Ribatejana", logo: "png" },
-  "ripe-ncc": { name: "RIPE NCC", url: "https://www.ripe.net/", logo: "svg" },
+  // Held: the RIPEstat and RIPE Atlas service terms (Articles 3.3 and 3.5) bar re-packaging and redistributing
+  // their data, and Atlas adds that third parties need prior written authorisation. Keyless access is not
+  // permission. Asked, awaiting an answer. https://www.ripe.net/about-us/legal/terms-of-service/
+  "ripe-ncc": { name: "RIPE NCC", url: "https://www.ripe.net/", logo: "svg", enabled: false },
   "sns-transparencia": { name: "SNS Transparência", url: "https://transparencia.sns.gov.pt/", logo: "png" },
   "stcp": { name: "STCP", url: "https://www.stcp.pt/", logo: "svg" },
   "tcb": { name: "Transportes Colectivos do Barreiro", url: "https://www.tcbarreiro.pt/", logo: "svg" },
@@ -89,4 +104,10 @@ export type Publisher = keyof typeof PUBLISHERS;
 
 export function isPublisher(value: string | undefined): value is Publisher {
   return value !== undefined && Object.hasOwn(PUBLISHERS, value);
+}
+
+/** Whether a publisher's feeds may be installed: every publisher but the ones held for permission. */
+export function publisherEnabled(key: string): boolean {
+  const known = isPublisher(key) ? PUBLISHERS[key] : undefined;
+  return known === undefined || !("enabled" in known) || known.enabled;
 }

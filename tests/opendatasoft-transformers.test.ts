@@ -1,8 +1,8 @@
 import { jsonAs } from "./support";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type { CanonicalRecord, JsonObject, JsonValue, ProductDeclaration, SeriesPoint, TransformContext, TransformQuality } from "@open-data-pt/gatekeeper-shared";
-import { OpendatasoftTransformer, SAMPLE_ROWS } from "../packages/gatekeeper-shared/src/formats/opendatasoft/transform";
+import type { CanonicalRecord, JsonObject, JsonValue, ProductDeclaration, SeriesPoint, TransformContext, TransformQuality } from "@open-data-pt/contract";
+import { OpendatasoftTransformer, SAMPLE_ROWS } from "../apps/gatekeeper/src/formats/opendatasoft/transform";
 
 const transformer = new OpendatasoftTransformer();
 

@@ -1,9 +1,9 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type { CanonicalRecord, CanonicalSchema, ProductDeclaration, SeriesPoint, SourceConfig, TransformContext, TransformQuality } from "@open-data-pt/gatekeeper-shared";
-import { libraryConfig } from "@open-data-pt/gatekeeper-shared";
-import { UDATA_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/udata/examples";
-import { chooseTransformer, transformUdata } from "../packages/gatekeeper-shared/src/formats/udata/transform";
+import type { CanonicalRecord, CanonicalSchema, ProductDeclaration, SeriesPoint, SourceConfig, TransformContext, TransformQuality } from "@open-data-pt/contract";
+import { libraryConfig } from "@open-data-pt/gatekeeper";
+import { UDATA_EXAMPLES } from "../apps/gatekeeper/src/formats/udata/examples";
+import { chooseTransformer, transformUdata } from "../apps/gatekeeper/src/formats/udata/transform";
 
 const FIXTURE = new Map([
   ["justice-facilities-feed", "justice-facilities.csv"],

@@ -5,7 +5,7 @@ import { ErrorNote, RelativeTime } from "../common";
 import { apiGet, productPath } from "../../lib/api";
 import { fmt, humanize } from "../../lib/format";
 import { useQuery } from "../../lib/query";
-import type { Change, JsonRecord, Page, Product, SeriesPoint } from "../../lib/types";
+import type { Change, CursorPage, HistoryPage, JsonRecord, Product, SeriesChange } from "../../lib/types";
 import { Cell, OPERATION_BADGE, isText, seriesLabel, sortValue } from "./cells";
 import { RecordDialog, RowDialog } from "./RecordDialog";
 import { pointRecord } from "./SeriesView";
@@ -22,7 +22,7 @@ function Loading({ what }: { what: string }) {
 
 /** Creates, updates, corrections and retractions from the recent window. */
 export function ChangesView({ product, refreshKey }: { product: Product; refreshKey: number }) {
-  const changes = useQuery(`changes:${product.slug}`, () => apiGet<Page<Change>>(productPath(product.slug, "/changes?limit=500")).then((page) => page.data));
+  const changes = useQuery(`changes:${product.slug}`, () => apiGet<CursorPage<Change>>(productPath(product.slug, "/changes?limit=500")).then((page) => page.data));
   const [selected, setSelected] = useState<Change | null>(null);
   useEffect(() => {
     if (refreshKey > 0) void changes.refetch();
@@ -53,7 +53,7 @@ export function ChangesView({ product, refreshKey }: { product: Product; refresh
         label={`${product.title} changes`}
         rows={changes.data ?? []}
         columns={columns}
-        rowKey={(change, index) => change.revisionId ?? `${change.entityKey}-${index}`}
+        rowKey={(change) => change.id}
         initialSort={{ key: "observed", direction: "desc" }}
         onRowClick={setSelected}
         exportRow={(change) => ({
@@ -82,11 +82,13 @@ export function ChangesView({ product, refreshKey }: { product: Product; refresh
 /** Points that were published and later revised. */
 export function CorrectionsView({ product, refreshKey }: { product: Product; refreshKey: number }) {
   const [opened, setOpened] = useState<{ row: JsonRecord; title: string } | null>(null);
-  const corrections = useQuery(`corrections:${product.slug}`, () => apiGet<Page<SeriesPoint>>(productPath(product.slug, "/series/changes?limit=500")).then((page) => page.data));
+  const corrections = useQuery(`corrections:${product.slug}`, () =>
+    apiGet<CursorPage<SeriesChange>>(productPath(product.slug, "/series/changes?limit=500")).then((page) => page.data),
+  );
   useEffect(() => {
     if (refreshKey > 0) void corrections.refetch();
   }, [refreshKey]);
-  const columns = useMemo<Column<SeriesPoint>[]>(
+  const columns = useMemo<Column<SeriesChange>[]>(
     () => [
       { key: "series", header: "Series", cell: (point) => seriesLabel(point), sort: (point) => seriesLabel(point) },
       { key: "eventTime", header: "Event time", cell: (point) => fmt.dateTime(point.eventTime), sort: (point) => point.eventTime, mono: true },
@@ -134,10 +136,10 @@ export function EventHistoryView({ product }: { product: Product }) {
     try {
       const query = new URLSearchParams({ ...range, limit: "200" });
       if (after) query.set("cursor", after);
-      const page = await apiGet<Page<JsonRecord>>(productPath(product.slug, `/events?${query}`));
+      const page = await apiGet<HistoryPage<JsonRecord>>(productPath(product.slug, `/events?${query}`));
       setRows((current) => (after ? [...current, ...page.data] : page.data));
       setCursor(page.nextCursor);
-      setComplete(page.coverage?.complete);
+      setComplete(page.coverage.complete);
     } catch (failure) {
       if (failure instanceof Error) setError(failure);
     } finally {

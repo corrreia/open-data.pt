@@ -1,15 +1,16 @@
 import type { WorkerEntrypoint } from "cloudflare:workers";
 
-import { asNonEmptyString } from "./json";
+import type { Licence, Publisher } from "@open-data-pt/catalog";
 
 import type { JsonObject } from "./json";
-import type { Licence } from "./licences";
-import type { Publisher } from "./publishers";
+import type { CanonicalRecord, CanonicalSchema, Completeness, ProductFinalization, ProductRole, ProductUpdateMode, SeriesPoint, TransformQuality } from "./data";
 
 /*
- * The package surface, named one export at a time: everything a Gatekeeper or
- * the kernel may use. What a module exports only so a sibling module can reach
- * it stays off this list.
+ * The contract between the kernel and the Gatekeeper: the private RPC, the
+ * normalized stream it answers with. The kernel depends on this package and
+ * never on the Gatekeeper; nothing here fetches or parses a source. What names
+ * a real thing in the world — a publisher, a licence, a topic — is catalog
+ * content and lives in `@open-data-pt/catalog`.
  */
 export {
   asArray,
@@ -26,67 +27,48 @@ export {
   isJsonNumber,
   isJsonObject,
   isJsonString,
+  optionalString,
   parseJson,
   parseJsonBytes,
+  requireString,
   toJsonObject,
   type JsonObject,
   type JsonValue,
 } from "./json";
-export {
-  SOURCE_KEY,
-  buildLibrary,
-  libraryCollector,
-  libraryConfig,
-  libraryFeedKinds,
-  resolveLibraryFeed,
-  type GatekeeperLibraries,
-  type GatekeeperLibrary,
-  type Library,
-  type LibraryDeployment,
-  type R2BucketDeployment,
-} from "./library";
-export { lisbonDay, lisbonInstants, lisbonOffsetMinutes, lisbonToUtc } from "./lisbon-time";
-export { r2Staging, type SourceStaging } from "./staging";
-export { LICENCES, UNSTATED_LICENCE, isLicence, type Licence, type LicenceDescription } from "./licences";
-export { PUBLISHERS, isPublisher, type Publisher, type PublisherDescription } from "./publishers";
-export { TOPICS, isTopic, type Topic } from "./topics";
-export {
-  BUFFERED_SOURCE_MAX_BYTES,
-  bufferedTransform,
-  collectNormalized,
-  hashSourceConfig,
-  resolveFeed,
-  responseValidator,
-  sourceValidator,
-  type NormalizedCollector,
-} from "./normalized";
+export { canonicalSourceConfig, hashSourceConfig } from "./source-config";
+export type {
+  CanonicalField,
+  CanonicalRecord,
+  CanonicalSchema,
+  Completeness,
+  FieldDisplay,
+  FieldType,
+  NormalizedRow,
+  ProductBuild,
+  ProductDeclaration,
+  ProductFinalization,
+  ProductRole,
+  ProductUpdateMode,
+  RecordOperation,
+  RecordProductBuild,
+  SeriesPoint,
+  SeriesProductBuild,
+  StreamingSummary,
+  StreamingTransform,
+  TransformQuality,
+  TransformResult,
+} from "./data";
 export {
   NormalizedInputError,
   assertCollectionResult,
   assertHistoryProgress,
   assertResolvedFeed,
+  assertSourceCheckpoint,
   historyCursorKey,
   isNormalizedFrame,
   isPermanentCollectionError,
   isProductSlug,
-} from "./normalized-validation";
-export {
-  allowedHosts,
-  contentEtag,
-  equivalentEtags,
-  fixedOrigin,
-  hashString,
-  invalidResponse,
-  isoDate,
-  readBoundedJson,
-  readBoundedResponse,
-  retryAfterSeconds,
-  sha256Hex,
-} from "./source-http";
-export { readBoundedBytes, toByteStream } from "./stream";
-export { streamCsvRecords, streamCsvRows, type CsvStreamOptions } from "./stream-csv";
-export { streamJsonArray, streamNdjson, type JsonArrayPath, type JsonArrayStream, type JsonArrayStreamOptions } from "./stream-json";
-export { field, runTransformer, type Transformer, type UnstampedResult } from "./transformer";
+} from "./validation";
 
 export type SourceConfig = Record<string, string>;
 
@@ -111,7 +93,6 @@ export interface GatekeeperDescription {
 }
 
 type FeedDomainSubject = "coverage" | "document" | "event" | "feature" | "media" | "observation" | "reference";
-export type Completeness = "complete" | "partial" | "unknown";
 
 /** What a feed is about, and what its products are by default. Everything else about a feed is its policy's business. */
 export interface FeedSemantics {
@@ -185,151 +166,10 @@ export interface SourceExhausted {
 
 export type SourceFetch = SourceBody | SourceNotModified | SourceExhausted;
 
-/* ---------- Products and transforms (what a Gatekeeper returns after translating bytes) ---------- */
-
-export type ProductRole = "current-state" | "event-log" | "reference" | "summary" | "time-series";
-
-/**
- * Field types drive how the pages render a value. They describe the data, not
- * the source: a `color` gets a swatch, a `latitude`/`longitude` pair gets a map,
- * a `category` gets facets, `datetime` gets formatted, `json` gets truncated.
- */
-export type FieldType = "boolean" | "category" | "color" | "date" | "datetime" | "geometry" | "identifier" | "json" | "latitude" | "longitude" | "number" | "string" | "url";
-
-export interface FieldDisplay {
-  /** Render the value as a badge coloured by another field of the same record. */
-  badge?: { colorField: string; textColorField?: string };
-  /** Present a human label instead of the raw field name. */
-  label?: string;
-}
-
-export interface CanonicalField {
-  id: string;
-  name: string;
-  type: FieldType;
-  nullable: boolean;
-  unit?: string;
-  display?: FieldDisplay;
-}
-
-export interface CanonicalSchema {
-  fields: CanonicalField[];
-}
-
-export type RecordOperation = "correct" | "create" | "delete" | "retract" | "upsert";
-
-export interface CanonicalRecord {
-  entityKey: string;
-  operation?: RecordOperation;
-  payload: JsonObject;
-  eventTime?: string;
-  validFrom?: string;
-  validTo?: string;
-  sourcePublishedAt?: string;
-  sourceSequence?: string;
-}
-
-export interface SeriesPoint {
-  seriesKey: string;
-  eventTime: string;
-  value: number;
-  unit: string;
-  dimensions: Record<string, string>;
-}
-
-export type ProductUpdateMode = "authoritative-snapshot" | "partial-snapshot" | "delta" | "source-window";
-
-/** Everything the kernel must know about one product before its first row arrives. */
-export interface ProductDeclaration {
-  /** Stable local identity within one feed; presentation changes never change it. */
-  productKey: string;
-  /** Suggested initial public slug; the kernel owns the durable mapping. */
-  slug: string;
-  title: string;
-  description: string;
-  role: ProductRole;
-  kind: "record" | "series";
-  schema: CanonicalSchema;
-  updateMode: ProductUpdateMode;
-  completeness: Completeness;
-  watermark?: string;
-}
-
-interface ProductBuildBase {
-  productKey: string;
-  slug: string;
-  title: string;
-  description: string;
-  role: ProductRole;
-  schema: CanonicalSchema;
-  updateMode: ProductUpdateMode;
-  completeness: Completeness;
-  watermark?: string;
-}
-
-/** A buffered normalizer's record product: declaration plus every row. */
-export interface RecordProductBuild extends ProductBuildBase {
-  kind: "record";
-  records: CanonicalRecord[];
-  points?: never;
-}
-
-/** A buffered normalizer's series product: declaration plus every point. */
-export interface SeriesProductBuild extends ProductBuildBase {
-  kind: "series";
-  points: SeriesPoint[];
-  records?: never;
-}
-
-export type ProductBuild = RecordProductBuild | SeriesProductBuild;
-
 /** Internal pure-normalizer context assembled by the Gatekeeper after acquisition. */
 export interface TransformContext {
   feed: { slug: string; title: string; description: string; config: SourceConfig; semantics: FeedSemantics };
   observedAt: string;
-}
-
-/** How many rows a normalizer kept and how many it could not use. */
-export interface TransformQuality {
-  acceptedRecords: number;
-  rejectedRecords: number;
-}
-
-/** A buffered normalizer's whole output, held in the Gatekeeper's memory. */
-export interface TransformResult {
-  /** Which translator produced this, for run logs and schema versions. */
-  transformer: { id: string; version: string };
-  products: ProductBuild[];
-  quality: TransformQuality;
-}
-
-/** One normalized row on its way to the kernel. */
-export type NormalizedRow = { productKey: string; record: CanonicalRecord; point?: never } | { productKey: string; point: SeriesPoint; record?: never };
-
-/** Values only known once every row was seen, such as an inferred schema or the newest event time. */
-export interface ProductFinalization {
-  productKey: string;
-  schema?: CanonicalSchema;
-  watermark?: string;
-  /**
-   * A downgrade discovered while streaming, for example a declared file that
-   * turned out to be absent. Never an upgrade: the kernel takes the weaker of
-   * this and the header's completeness, and only `complete` may retract.
-   */
-  completeness?: Completeness;
-}
-
-export interface StreamingSummary {
-  quality: TransformQuality;
-  products?: ProductFinalization[];
-}
-
-/** A streaming normalizer's output: products declared up front, rows pulled one at a time. */
-export interface StreamingTransform {
-  products: ProductDeclaration[];
-  rows: AsyncIterable<NormalizedRow>;
-  /** Called once, after `rows` is exhausted. */
-  finish(): StreamingSummary;
 }
 
 /* ---------- Policies (values a Gatekeeper may suggest; the kernel owns and enforces them) ---------- */
@@ -481,16 +321,4 @@ export class GatekeeperError extends Error {
     this.code = code;
     this.retryAfterSeconds = retryAfterSeconds;
   }
-}
-
-export function requireString(record: JsonObject, key: string): string {
-  const value = asNonEmptyString(record[key]);
-  if (value === undefined) {
-    throw new Error(`Expected ${key} to be a non-empty string`);
-  }
-  return value;
-}
-
-export function optionalString(record: JsonObject, key: string): string | undefined {
-  return asNonEmptyString(record[key]);
 }

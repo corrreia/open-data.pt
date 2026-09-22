@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { collectNormalized, libraryConfig, type ExampleFeed, type NormalizedCollector } from "../packages/gatekeeper-shared/src/index";
-import { RIPESTAT_EXAMPLES, ripestatCollector } from "../packages/gatekeeper-shared/src/sources/ripestat";
-import { PEERINGDB_EXAMPLES, peeringdbCollector } from "../packages/gatekeeper-shared/src/sources/peeringdb";
-import { IODA_EXAMPLES, IODA_HOST, iodaCollector } from "../packages/gatekeeper-shared/src/sources/ioda";
-import { RIPEATLAS_EXAMPLES, ripeatlasCollector } from "../packages/gatekeeper-shared/src/sources/ripeatlas";
+import { collectNormalized, libraryConfig, type ExampleFeed, type NormalizedCollector } from "../apps/gatekeeper/src/index";
+import { RIPESTAT_EXAMPLES, ripestatCollector } from "../apps/gatekeeper/src/sources/ripestat";
+import { PEERINGDB_EXAMPLES, peeringdbCollector } from "../apps/gatekeeper/src/sources/peeringdb";
+import { IODA_EXAMPLES, IODA_HOST, iodaCollector } from "../apps/gatekeeper/src/sources/ioda";
+import { RIPEATLAS_EXAMPLES, ripeatlasCollector } from "../apps/gatekeeper/src/sources/ripeatlas";
 import { networkFrames, networkRequest } from "./networks-support";
 
 // Research-only opt-in: each of these publishers restricts republication. These checks do not deploy or store source data.

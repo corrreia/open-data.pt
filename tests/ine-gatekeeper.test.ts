@@ -1,17 +1,10 @@
 import { jsonAs } from "./support";
 import { describe, expect, it, vi } from "vitest";
-import type { JsonObject, JsonValue, SourceBody, SourceFetch, TransformContext } from "@open-data-pt/gatekeeper-shared";
-import { libraryConfig } from "@open-data-pt/gatekeeper-shared";
-import {
-  INE_FEEDS,
-  INE_HISTORY_MAX_BYTES,
-  INE_MAX_BYTES,
-  collectIneIndicator,
-  collectIneIndicatorHistory,
-  validateIneFeedConfig,
-} from "../packages/gatekeeper-shared/src/sources/ine/ine";
-import { INE_EXAMPLES } from "../packages/gatekeeper-shared/src/sources/ine/examples";
-import { transformIneIndicator } from "../packages/gatekeeper-shared/src/sources/ine/transform";
+import type { JsonObject, JsonValue, SourceBody, SourceFetch, TransformContext } from "@open-data-pt/contract";
+import { libraryConfig } from "@open-data-pt/gatekeeper";
+import { INE_FEEDS, INE_HISTORY_MAX_BYTES, INE_MAX_BYTES, collectIneIndicator, collectIneIndicatorHistory, validateIneFeedConfig } from "../apps/gatekeeper/src/sources/ine/ine";
+import { INE_EXAMPLES } from "../apps/gatekeeper/src/sources/ine/examples";
+import { transformIneIndicator } from "../apps/gatekeeper/src/sources/ine/transform";
 
 const META = [
   {

@@ -11,7 +11,7 @@ import {
   type SourceBody,
   type SourceConfig,
   type SourceFetch,
-} from "@open-data-pt/gatekeeper-shared";
+} from "@open-data-pt/gatekeeper";
 import {
   INFOAGUA_EXAMPLES,
   INFOAGUA_ORIGIN,
@@ -21,7 +21,7 @@ import {
   infoaguaCollector,
   resolveInfoaguaFeed,
   validateInfoaguaFeedConfig,
-} from "../packages/gatekeeper-shared/src/sources/infoagua";
+} from "../apps/gatekeeper/src/sources/infoagua";
 
 const page = (name: string): string => readFileSync(new URL(`./fixtures/infoagua/${name}`, import.meta.url), "utf8");
 const FLOODS = { feed: "flood-alerts" };

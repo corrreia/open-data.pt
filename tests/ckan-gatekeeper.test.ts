@@ -7,9 +7,9 @@ import {
   type CollectionResult,
   type JsonObject,
   type SourceFetch,
-} from "@open-data-pt/gatekeeper-shared";
-import { CKAN_LIMITS, CkanSource } from "../packages/gatekeeper-shared/src/formats/ckan/ckan";
-import { ckanCollector } from "../packages/gatekeeper-shared/src/formats/ckan";
+} from "@open-data-pt/gatekeeper";
+import { CKAN_LIMITS, CkanSource } from "../apps/gatekeeper/src/formats/ckan/ckan";
+import { ckanCollector } from "../apps/gatekeeper/src/formats/ckan";
 
 const RESOURCE_ID = "418c7837-95ee-4943-be22-3d9d09e5b4e9";
 const RESOURCE_URL = "https://opendata.porto.digital/dataset/example/resource/418c7837-95ee-4943-be22-3d9d09e5b4e9/download/data.csv";

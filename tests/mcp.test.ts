@@ -1,5 +1,5 @@
 import type { Executor } from "@cloudflare/codemode";
-import type { JsonObject } from "@open-data-pt/gatekeeper-shared";
+import type { JsonObject } from "@open-data-pt/contract";
 import { describe, expect, it } from "vitest";
 import { MAX_READ_BYTES, fromHostedAssistant, handleMcp, limitRuns, mcpClientKey, type McpHost } from "../apps/kernel/src/mcp";
 import { jsonBody } from "./support";

@@ -1,14 +1,6 @@
 import { DurableObject } from "cloudflare:workers";
-import {
-  NormalizedInputError,
-  assertResolvedFeed,
-  hashSourceConfig,
-  isLicence,
-  isPublisher,
-  type ExampleFeed,
-  type SourceCheckpoint,
-  type SourceConfig,
-} from "@open-data-pt/gatekeeper-shared";
+import { isLicence, isPublisher } from "@open-data-pt/catalog";
+import { NormalizedInputError, assertResolvedFeed, hashSourceConfig, type ExampleFeed, type SourceCheckpoint, type SourceConfig } from "@open-data-pt/contract";
 
 import { drainOutbox } from "./engine";
 import { NotFoundError } from "./errors";

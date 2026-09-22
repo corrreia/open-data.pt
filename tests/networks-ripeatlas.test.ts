@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { collectNormalized, libraryConfig, type JsonObject, type JsonValue, type SourceFetch } from "../packages/gatekeeper-shared/src/index";
-import { collectRipeatlasFeed, RIPEATLAS_ORIGIN, RIPEATLAS_PROBE_FIELDS, validateRipeatlasFeedConfig } from "../packages/gatekeeper-shared/src/sources/ripeatlas/ripeatlas";
-import { ripeatlasCollector } from "../packages/gatekeeper-shared/src/sources/ripeatlas/collector";
-import { RipeatlasTransformer } from "../packages/gatekeeper-shared/src/sources/ripeatlas/transform";
-import { RIPEATLAS_EXAMPLES } from "../packages/gatekeeper-shared/src/sources/ripeatlas/examples";
+import { collectNormalized, libraryConfig, type JsonObject, type JsonValue, type SourceFetch } from "../apps/gatekeeper/src/index";
+import { collectRipeatlasFeed, RIPEATLAS_ORIGIN, RIPEATLAS_PROBE_FIELDS, validateRipeatlasFeedConfig } from "../apps/gatekeeper/src/sources/ripeatlas/ripeatlas";
+import { ripeatlasCollector } from "../apps/gatekeeper/src/sources/ripeatlas/collector";
+import { RipeatlasTransformer } from "../apps/gatekeeper/src/sources/ripeatlas/transform";
+import { RIPEATLAS_EXAMPLES } from "../apps/gatekeeper/src/sources/ripeatlas/examples";
 import { networkBytes, networkContext, networkFixture, networkFrames, networkRequest, networkRows } from "./networks-support";
 
 const PROBES = { feed: "country-probes", country: "PT" };

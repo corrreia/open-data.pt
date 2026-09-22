@@ -1,11 +1,11 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type { NormalizedRow, TransformContext } from "@open-data-pt/gatekeeper-shared";
-import { AnepcTransformer } from "../packages/gatekeeper-shared/src/sources/anepc";
-import { FirmsTransformer } from "../packages/gatekeeper-shared/src/sources/firms";
-import { NasaPowerTransformer } from "../packages/gatekeeper-shared/src/sources/nasapower";
-import { UsgsTransformer } from "../packages/gatekeeper-shared/src/sources/usgs";
-import { WfsTransformer } from "../packages/gatekeeper-shared/src/formats/wfs";
+import type { NormalizedRow, TransformContext } from "@open-data-pt/contract";
+import { AnepcTransformer } from "../apps/gatekeeper/src/sources/anepc";
+import { FirmsTransformer } from "../apps/gatekeeper/src/sources/firms";
+import { NasaPowerTransformer } from "../apps/gatekeeper/src/sources/nasapower";
+import { UsgsTransformer } from "../apps/gatekeeper/src/sources/usgs";
+import { WfsTransformer } from "../apps/gatekeeper/src/formats/wfs";
 
 function fixture(path: string): Uint8Array {
   return readFileSync(new URL(`./fixtures/${path}`, import.meta.url));

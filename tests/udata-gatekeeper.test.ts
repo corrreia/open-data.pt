@@ -9,8 +9,8 @@ import {
   type CollectionResult,
   type JsonObject,
   libraryConfig,
-} from "@open-data-pt/gatekeeper-shared";
-import { UDATA_EXAMPLES, UdataSource, chooseTransformer, resolveUdataFeed, udataCollector, validateUdataFeedConfig } from "../packages/gatekeeper-shared/src/formats/udata";
+} from "@open-data-pt/gatekeeper";
+import { UDATA_EXAMPLES, UdataSource, chooseTransformer, resolveUdataFeed, udataCollector, validateUdataFeedConfig } from "../apps/gatekeeper/src/formats/udata";
 
 const payload = {
   id: "dataset-1",

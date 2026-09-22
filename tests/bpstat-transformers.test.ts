@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type { TransformContext } from "@open-data-pt/gatekeeper-shared";
-import { normalizeReferenceDate, transformBpstatDataset } from "../packages/gatekeeper-shared/src/sources/bpstat/transform";
+import type { TransformContext } from "@open-data-pt/contract";
+import { normalizeReferenceDate, transformBpstatDataset } from "../apps/gatekeeper/src/sources/bpstat/transform";
 
 function fixture(name: string): Uint8Array {
   return new Uint8Array(readFileSync(new URL(`./fixtures/bpstat/${name}`, import.meta.url)));

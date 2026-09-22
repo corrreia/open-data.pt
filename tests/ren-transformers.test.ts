@@ -1,9 +1,9 @@
 import { jsonAs } from "./support";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { runTransformer, type JsonObject, type JsonValue, type TransformContext } from "@open-data-pt/gatekeeper-shared";
-import type { RenServiceName } from "../packages/gatekeeper-shared/src/sources/ren/ren";
-import { RenTransformer } from "../packages/gatekeeper-shared/src/sources/ren/transform";
+import { runTransformer, type JsonObject, type JsonValue, type TransformContext } from "@open-data-pt/gatekeeper";
+import type { RenServiceName } from "../apps/gatekeeper/src/sources/ren/ren";
+import { RenTransformer } from "../apps/gatekeeper/src/sources/ren/transform";
 
 function fixture(name: string): Uint8Array {
   return new Uint8Array(readFileSync(new URL(`./fixtures/ren/${name}.json`, import.meta.url)));

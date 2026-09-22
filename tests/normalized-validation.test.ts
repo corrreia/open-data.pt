@@ -1,13 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  assertCollectionResult,
-  assertHistoryProgress,
-  assertResolvedFeed,
-  historyCursorKey,
-  type JsonObject,
-  type JsonValue,
-  type NormalizedFrame,
-} from "@open-data-pt/gatekeeper-shared";
+import { assertCollectionResult, assertHistoryProgress, assertResolvedFeed, historyCursorKey, type JsonObject, type JsonValue, type NormalizedFrame } from "@open-data-pt/contract";
 import { readFrames, type FrameLimits, type FrameScope } from "../apps/kernel/src/frames";
 
 import { scope, limits, header, framed } from "./normalized-fixtures";

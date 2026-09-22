@@ -12,9 +12,9 @@ import {
   type GatekeeperLibraries,
   type JsonObject,
   type ResolvedFeed,
-} from "@open-data-pt/gatekeeper-shared";
-import { ANEPC_API_ORIGIN, ANEPC_DEPLOYMENT, ANEPC_EXAMPLES } from "../packages/gatekeeper-shared/src/sources/anepc";
-import { isNormalizedFrame } from "../packages/gatekeeper-shared/src/normalized-validation";
+} from "@open-data-pt/gatekeeper";
+import { ANEPC_API_ORIGIN, ANEPC_DEPLOYMENT, ANEPC_EXAMPLES } from "../apps/gatekeeper/src/sources/anepc";
+import { isNormalizedFrame } from "../packages/contract/src/validation";
 import { readFrames } from "../apps/kernel/src/frames";
 import { MAX_RECORD_BYTES } from "../apps/kernel/src/blob-budget";
 import { jsonAs } from "./support";

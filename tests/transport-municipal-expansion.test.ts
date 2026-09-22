@@ -16,12 +16,12 @@ import {
   type SourceConfig,
   type StreamingSummary,
   type TransformContext,
-} from "@open-data-pt/gatekeeper-shared";
-import { CKAN_EXAMPLES, ckanCollector, CkanSource, validateCkanFeedConfig } from "../packages/gatekeeper-shared/src/formats/ckan";
-import { transformCkan, type CkanResourceMetadata } from "../packages/gatekeeper-shared/src/formats/ckan";
-import { GTFS_EXAMPLES, gtfsCollector, transformGtfs } from "../packages/gatekeeper-shared/src/formats/gtfs";
-import { GBFS_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/gbfs";
-import { GtfsCsvReader } from "../packages/gatekeeper-shared/src/formats/gtfs/csv";
+} from "@open-data-pt/gatekeeper";
+import { CKAN_EXAMPLES, ckanCollector, CkanSource, validateCkanFeedConfig } from "../apps/gatekeeper/src/formats/ckan";
+import { transformCkan, type CkanResourceMetadata } from "../apps/gatekeeper/src/formats/ckan";
+import { GTFS_EXAMPLES, gtfsCollector, transformGtfs } from "../apps/gatekeeper/src/formats/gtfs";
+import { GBFS_EXAMPLES } from "../apps/gatekeeper/src/formats/gbfs";
+import { GtfsCsvReader } from "../apps/gatekeeper/src/formats/gtfs/csv";
 
 const HOSTS = new Set(["dadosabertos.cm-agueda.pt", "oeirasinterativa.oeiras.pt"]);
 const OEIRAS = example("oeiras-hourly-environment-feed");

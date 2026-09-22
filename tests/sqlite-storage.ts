@@ -1,5 +1,5 @@
 import { DatabaseSync, type StatementSync } from "node:sqlite";
-import { isJsonString } from "@open-data-pt/gatekeeper-shared";
+import { isJsonString } from "@open-data-pt/contract";
 
 /** https://developers.cloudflare.com/durable-objects/platform/limits/ — "Maximum string, BLOB or table row size: 2 MB". */
 const DURABLE_OBJECT_VALUE_BYTES = 2_000_000;

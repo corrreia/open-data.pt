@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type { TransformContext } from "@open-data-pt/gatekeeper-shared";
-import { NgsiTransformer } from "../packages/gatekeeper-shared/src/formats/ngsi";
+import type { TransformContext } from "@open-data-pt/contract";
+import { NgsiTransformer } from "../apps/gatekeeper/src/formats/ngsi";
 
 function fixture(path: string): Uint8Array {
   return readFileSync(new URL(`./fixtures/${path}`, import.meta.url));

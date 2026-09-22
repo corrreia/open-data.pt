@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { asStringList, parseJson, type ExampleFeed } from "@open-data-pt/gatekeeper-shared";
+import { asStringList, parseJson, type ExampleFeed } from "@open-data-pt/contract";
 import { CARRIED } from "./catalog";
 
 interface LibraryExamples {

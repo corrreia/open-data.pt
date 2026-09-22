@@ -1,4 +1,4 @@
-import { r2Staging } from "@open-data-pt/gatekeeper-shared";
+import { r2Staging } from "@open-data-pt/gatekeeper";
 
 interface StagingEnv {
   STAGING: R2Bucket;

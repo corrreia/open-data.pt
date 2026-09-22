@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
-import type { JsonObject, JsonValue, SourceBody, SourceFetch, TransformContext } from "@open-data-pt/gatekeeper-shared";
+import type { JsonObject, JsonValue, SourceBody, SourceFetch, TransformContext } from "@open-data-pt/contract";
 import {
   EUROSTAT_FEEDS,
   EUROSTAT_MAX_BYTES,
   collectEurostatDataset,
   collectEurostatDatasetHistory,
   validateEurostatFeedConfig,
-} from "../packages/gatekeeper-shared/src/sources/eurostat/eurostat";
-import { transformEurostatDataset } from "../packages/gatekeeper-shared/src/sources/eurostat/transform";
+} from "../apps/gatekeeper/src/sources/eurostat/eurostat";
+import { transformEurostatDataset } from "../apps/gatekeeper/src/sources/eurostat/transform";
 
 const SOURCE_URL = "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/une_rt_m?age=TOTAL&geo=ES&geo=PT&sex=T&lang=EN&lastTimePeriod=3";
 const DATASET = {

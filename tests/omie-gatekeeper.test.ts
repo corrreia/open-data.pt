@@ -1,8 +1,8 @@
 import { jsonAs } from "./support";
 import { describe, expect, it, vi } from "vitest";
-import { retryAfterSeconds, type SourceBody, type SourceFetch, type TransformContext } from "@open-data-pt/gatekeeper-shared";
-import { collectOmieFeed, collectOmieHistory, OMIE_HISTORY_EARLIEST, OMIE_MAX_BYTES, validateOmieFeedConfig } from "../packages/gatekeeper-shared/src/sources/omie/omie";
-import { OmieTransformer } from "../packages/gatekeeper-shared/src/sources/omie/transform";
+import { retryAfterSeconds, type SourceBody, type SourceFetch, type TransformContext } from "@open-data-pt/gatekeeper";
+import { collectOmieFeed, collectOmieHistory, OMIE_HISTORY_EARLIEST, OMIE_MAX_BYTES, validateOmieFeedConfig } from "../apps/gatekeeper/src/sources/omie/omie";
+import { OmieTransformer } from "../apps/gatekeeper/src/sources/omie/transform";
 
 const ORIGIN = "https://www.omie.es";
 const NOW = () => new Date("2026-09-07T10:00:00.000Z");

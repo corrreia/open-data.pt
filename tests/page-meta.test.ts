@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import type { JsonObject, JsonValue } from "@open-data-pt/gatekeeper-shared";
+import type { JsonObject, JsonValue } from "@open-data-pt/contract";
 import { describe, expect, it } from "vitest";
 import { handleSite, type SiteHost } from "../apps/kernel/src/discovery";
 import { PREVIEW_IMAGE } from "../apps/kernel/src/page-meta";

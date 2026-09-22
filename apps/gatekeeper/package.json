@@ -1,5 +1,5 @@
 {
-  "name": "@open-data-pt/gatekeeper-shared",
+  "name": "@open-data-pt/gatekeeper",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,5 +9,10 @@
     "./libraries": "./src/libraries.ts",
     "./formats/*": "./src/formats/*/index.ts",
     "./sources/*": "./src/sources/*/index.ts"
+  },
+  "dependencies": {
+    "@open-data-pt/catalog": "workspace:*",
+    "@open-data-pt/contract": "workspace:*",
+    "@open-data-pt/lisbon": "workspace:*"
   }
 }

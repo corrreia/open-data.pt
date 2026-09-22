@@ -14,10 +14,10 @@ import {
   type JsonValue,
   type SourceBody,
   type SourceFetch,
-} from "@open-data-pt/gatekeeper-shared";
-import { OgcTransformer, collectOgcFeed, itemsUrl, ogcCollector, resolveOgcFeed, validateOgcFeedConfig } from "../packages/gatekeeper-shared/src/formats/ogc";
-import { OGC_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/ogc/examples";
-import { boundingBox } from "../packages/gatekeeper-shared/src/formats/ogc/geometry";
+} from "@open-data-pt/gatekeeper";
+import { OgcTransformer, collectOgcFeed, itemsUrl, ogcCollector, resolveOgcFeed, validateOgcFeedConfig } from "../apps/gatekeeper/src/formats/ogc";
+import { OGC_EXAMPLES } from "../apps/gatekeeper/src/formats/ogc/examples";
+import { boundingBox } from "../apps/gatekeeper/src/formats/ogc/geometry";
 
 const DGT_HOST = "ogcapi.dgterritorio.gov.pt";
 const AZORES_HOST = "ambiente.azores.gov.pt";

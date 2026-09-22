@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { MunicipalAccessibilityTransformer } from "../packages/gatekeeper-shared/src/formats/udata/transform/municipal-accessibility";
-import type { CanonicalRecord, TransformContext } from "@open-data-pt/gatekeeper-shared";
+import { MunicipalAccessibilityTransformer } from "../apps/gatekeeper/src/formats/udata/transform/municipal-accessibility";
+import type { CanonicalRecord, TransformContext } from "@open-data-pt/contract";
 
 const feed: TransformContext["feed"] = {
   id: "feed_accessibility",

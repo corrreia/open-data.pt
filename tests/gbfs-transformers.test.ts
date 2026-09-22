@@ -1,9 +1,9 @@
 import { jsonAs } from "./support";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { isJsonString } from "@open-data-pt/gatekeeper-shared";
-import type { JsonObject, TransformContext } from "@open-data-pt/gatekeeper-shared";
-import { GbfsTransformer } from "../packages/gatekeeper-shared/src/formats/gbfs/transform";
+import { isJsonString } from "@open-data-pt/contract";
+import type { JsonObject, TransformContext } from "@open-data-pt/contract";
+import { GbfsTransformer } from "../apps/gatekeeper/src/formats/gbfs/transform";
 import { prepareRecord } from "../apps/kernel/src/records";
 
 function fixture(name: string): Uint8Array {

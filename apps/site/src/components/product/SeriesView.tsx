@@ -10,7 +10,7 @@ import { SERIES_COLORS } from "../../lib/palette";
 import { fmt } from "../../lib/format";
 import { periodStart } from "../../lib/lisbon";
 import { useQuery } from "../../lib/query";
-import type { JsonRecord, Page, Product, SeriesPoint, SeriesSummary, SummaryBucket, SummaryResolution } from "../../lib/types";
+import type { CursorPage, JsonRecord, Product, SeriesPoint, SeriesSummary, SummaryBucket, SummaryResolution } from "../../lib/types";
 import { seriesLabel } from "./cells";
 import { RowDialog } from "./RecordDialog";
 
@@ -108,10 +108,9 @@ export function pointRecord(point: SeriesPoint): JsonRecord {
     seriesKey: point.seriesKey,
     eventTime: point.eventTime,
     value: point.value,
-    unit: point.unit ?? null,
-    dimensions: point.dimensions ? { ...point.dimensions } : null,
-    observedAt: point.observedAt ?? null,
-    ingestedAt: point.ingestedAt ?? null,
+    unit: point.unit,
+    dimensions: { ...point.dimensions },
+    observedAt: point.observedAt,
   };
 }
 
@@ -186,7 +185,7 @@ const pointKey = (point: SeriesPoint) => `${point.seriesKey}|${point.eventTime}`
 
 export default function SeriesView({ product, refreshKey, withHistory }: { product: Product; refreshKey: number; withHistory: boolean }) {
   const dark = useDarkMode();
-  const current = useQuery(`series:${product.slug}`, () => apiGet<Page<SeriesPoint>>(productPath(product.slug, "/series?limit=1000")).then((page) => page.data));
+  const current = useQuery(`series:${product.slug}`, () => apiGet<CursorPage<SeriesPoint>>(productPath(product.slug, "/series?limit=1000")).then((page) => page.data));
   const [span, setSpan] = useState<Span>({ kind: "live" });
   // Any row opens: a point's dimensions and clocks, or a bucket's exact numbers, are not in its columns.
   const [opened, setOpened] = useState<{ row: JsonRecord; title: string } | null>(null);
@@ -243,7 +242,7 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
   const tail = useQuery(tailKey, () =>
     Promise.all(
       lineKeys.map((key) =>
-        apiGet<Page<SeriesPoint>>(
+        apiGet<CursorPage<SeriesPoint>>(
           productPath(product.slug, `/series?${new URLSearchParams({ seriesKey: key, from: tailFrom ?? "", to: timeWindow?.to ?? "", limit: "1000" })}`),
         ).then((page) => page.data),
       ),

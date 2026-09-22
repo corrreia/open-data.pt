@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { JsonObject } from "@open-data-pt/gatekeeper-shared";
+import type { JsonObject } from "@open-data-pt/contract";
 import { PipelinesLake, validateLakeRow, type StreamBinding } from "../apps/kernel/src/lake";
 import { OutboxBuffer } from "../apps/kernel/src/outbox";
 

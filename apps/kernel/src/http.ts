@@ -1,4 +1,5 @@
-import { asObject, asString, isJsonString, parseJson, type JsonObject, type JsonValue } from "@open-data-pt/gatekeeper-shared";
+import type { Acquisition as ApiAcquisition, Coverage, Feed as ApiFeed } from "@open-data-pt/api";
+import { asObject, asString, isJsonString, parseJson, type JsonObject, type JsonValue } from "@open-data-pt/contract";
 
 import { ANALYTICS_WINDOWS, AnalyticsError, analyticsReport } from "./analytics";
 import { CADENCE_HEADER } from "./cache";
@@ -507,7 +508,7 @@ function withCadence(response: Response, product: ProductDetail): Response {
   return response;
 }
 
-function coverageFor(feed: Feed, from: string, to: string, lakeStartsAt: string | undefined) {
+function coverageFor(feed: Feed, from: string, to: string, lakeStartsAt: string | undefined): Coverage {
   const backfill = feed.backfill;
   const coveredFrom = backfill ? Object.values(backfill.floors).sort()[0] : undefined;
   return {
@@ -540,7 +541,7 @@ const STANDARD_FORMATS = new Set(["arcgis", "ckan", "gbfs", "gtfs", "opendatasof
  * collection is going. The runner's scope and checkpoint, the policy, the library, the lake
  * backlog and raw errors stay inside the platform; /api/outages says when a source failed.
  */
-function publicFeed(feed: Feed, cadenceSeconds: number | undefined, origin: string) {
+function publicFeed(feed: Feed, cadenceSeconds: number | undefined, origin: string): ApiFeed {
   const {
     feedEpoch: _epoch,
     resolved: _resolved,
@@ -595,7 +596,7 @@ function parseBbox(value: string): BoundingBox {
 /* ---------- Views ---------- */
 
 /** A run as the API shows it; the policy version and the lake bookkeeping stay inside the platform. */
-function publicAcquisition(acquisition: Acquisition) {
+function publicAcquisition(acquisition: Acquisition): ApiAcquisition {
   const { policyVersion: _policy, historyRows: _history, ...publicValue } = acquisition;
   return publicValue;
 }

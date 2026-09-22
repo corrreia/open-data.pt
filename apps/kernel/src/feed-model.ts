@@ -1,4 +1,4 @@
-import { isJsonObject } from "@open-data-pt/gatekeeper-shared";
+import { isJsonObject } from "@open-data-pt/contract";
 import type {
   CanonicalSchema,
   CollectionPolicyDefinition,
@@ -13,7 +13,7 @@ import type {
   SourceCheckpoint,
   SourceConfig,
   TransformQuality,
-} from "@open-data-pt/gatekeeper-shared";
+} from "@open-data-pt/contract";
 
 import type { ManifestChunk } from "./chunks";
 

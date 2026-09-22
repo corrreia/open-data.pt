@@ -23,8 +23,7 @@ import {
   type TransformContext,
   type TransformResult,
 } from "./index";
-import { isJsonObject, isJsonString } from "./json";
-import { assertSourceCheckpoint } from "./normalized-validation";
+import { assertSourceCheckpoint, canonicalSourceConfig, hashSourceConfig, isJsonObject, isJsonString } from "@open-data-pt/contract";
 import { limitBytes, readBoundedBytes, toByteStream } from "./stream";
 
 /**
@@ -66,15 +65,6 @@ export async function resolveFeed(config: SourceConfig, options: ResolveFeedOpti
   const resolved: ResolvedFeed = { config: canonical, configHash, resourceKey, kind: kind.kind, semantics: kind.semantics };
   if (kind.history) resolved.history = kind.history;
   return resolved;
-}
-
-function canonicalSourceConfig(config: SourceConfig): string {
-  return JSON.stringify(Object.fromEntries(Object.entries(config).sort(([left], [right]) => left.localeCompare(right))));
-}
-
-export async function hashSourceConfig(config: SourceConfig): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonicalSourceConfig(config)));
-  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 /** The transport validators a checkpoint carries, for HTTP and compound-source adapters. */

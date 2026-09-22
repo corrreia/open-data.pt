@@ -9,11 +9,11 @@ import {
   type CollectionRequest,
   type ExampleFeed,
   type NormalizedFrame,
-} from "../packages/gatekeeper-shared/src/index";
-import { opendatasoftCollector } from "../packages/gatekeeper-shared/src/formats/opendatasoft/collector";
-import { CATALOG_EXAMPLES as ODS_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/opendatasoft/catalog-examples";
-import { bpstatCollector } from "../packages/gatekeeper-shared/src/sources/bpstat/collector";
-import { CATALOG_EXAMPLES as BPSTAT_EXAMPLES } from "../packages/gatekeeper-shared/src/sources/bpstat/catalog-examples";
+} from "../apps/gatekeeper/src/index";
+import { opendatasoftCollector } from "../apps/gatekeeper/src/formats/opendatasoft/collector";
+import { CATALOG_EXAMPLES as ODS_EXAMPLES } from "../apps/gatekeeper/src/formats/opendatasoft/catalog-examples";
+import { bpstatCollector } from "../apps/gatekeeper/src/sources/bpstat/collector";
+import { CATALOG_EXAMPLES as BPSTAT_EXAMPLES } from "../apps/gatekeeper/src/sources/bpstat/catalog-examples";
 
 // Opt in to precisely the new catalog feeds; no production writes or topic wiring is required.
 const selected = (process.env.LIVE_CATALOGS ?? "").split(",");

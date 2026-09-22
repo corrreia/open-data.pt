@@ -18,12 +18,12 @@ import {
   type SourceFetch,
   type TransformContext,
   libraryConfig,
-} from "@open-data-pt/gatekeeper-shared";
-import { MAX_HISTORY_DOCUMENT_BYTES, MAX_HISTORY_RECORDS, OPENDATASOFT_FEEDS, OpendatasoftSource } from "../packages/gatekeeper-shared/src/formats/opendatasoft/opendatasoft";
-import { OPENDATASOFT_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/opendatasoft/examples";
-import { OpendatasoftTransformer, seriesSlug } from "../packages/gatekeeper-shared/src/formats/opendatasoft/transform";
-import { opendatasoftCollector } from "../packages/gatekeeper-shared/src/formats/opendatasoft";
-import { isProductSlug } from "../packages/gatekeeper-shared/src/normalized-validation";
+} from "@open-data-pt/gatekeeper";
+import { MAX_HISTORY_DOCUMENT_BYTES, MAX_HISTORY_RECORDS, OPENDATASOFT_FEEDS, OpendatasoftSource } from "../apps/gatekeeper/src/formats/opendatasoft/opendatasoft";
+import { OPENDATASOFT_EXAMPLES } from "../apps/gatekeeper/src/formats/opendatasoft/examples";
+import { OpendatasoftTransformer, seriesSlug } from "../apps/gatekeeper/src/formats/opendatasoft/transform";
+import { opendatasoftCollector } from "../apps/gatekeeper/src/formats/opendatasoft";
+import { isProductSlug } from "../packages/contract/src/validation";
 
 const metadata = {
   dataset_id: "sample-dataset",

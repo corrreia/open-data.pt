@@ -87,7 +87,7 @@ export interface Freshness {
 
 export function freshness(product: Product, feed: Feed | undefined): Freshness {
   if (product.status === "failed") return { tone: "bad", label: "Last rebuild failed" };
-  if (product.stale || product.status === "stale") return { tone: "warn", label: "Late" };
+  if (product.stale) return { tone: "warn", label: "Late" };
   if (feed?.lastSuccessAt && feed.staleAfterSeconds) {
     const age = (Date.now() - new Date(feed.lastSuccessAt).getTime()) / 1000;
     if (age > feed.staleAfterSeconds) return { tone: "warn", label: "Late" };

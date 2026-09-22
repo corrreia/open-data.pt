@@ -2,9 +2,9 @@ import { jsonAs } from "./support";
 import { readFileSync } from "node:fs";
 import { deflateRawSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
-import type { CanonicalRecord, ProductDeclaration, StreamingSummary, TransformContext } from "@open-data-pt/gatekeeper-shared";
-import { GtfsCsvReader } from "../packages/gatekeeper-shared/src/formats/gtfs/csv";
-import { GTFS_NORMALIZER, transformGtfs, type GtfsTransformLimits } from "../packages/gatekeeper-shared/src/formats/gtfs/transform";
+import type { CanonicalRecord, ProductDeclaration, StreamingSummary, TransformContext } from "@open-data-pt/contract";
+import { GtfsCsvReader } from "../apps/gatekeeper/src/formats/gtfs/csv";
+import { GTFS_NORMALIZER, transformGtfs, type GtfsTransformLimits } from "../apps/gatekeeper/src/formats/gtfs/transform";
 
 interface GtfsFixture {
   source: string;

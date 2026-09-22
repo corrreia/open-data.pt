@@ -10,18 +10,21 @@ per-source notes under [`docs/publishers/`](docs/publishers/) and [`docs/feeds/`
 ## Where code lives
 
 ```
-packages/gatekeeper-shared/src/
-  formats/<format>/     arcgis  ckan  opendatasoft  gtfs  gbfs  udata  ogc  wfs
-  sources/<name>/       carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat  parliament  myinfo  firms
+apps/gatekeeper/        the Gatekeeper Worker: every listed library behind one private RPC binding
+  src/formats/<format>/ arcgis  ckan  opendatasoft  gtfs  gbfs  udata  ogc  wfs
+  src/sources/<name>/   carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat  parliament  myinfo  firms
                         nasapower  usgs  anepc  ioda  ripeatlas  ripestat  peeringdb
-  libraries.ts          the libraries the Gatekeeper Worker carries
-packages/gatekeeper/    the Gatekeeper Worker: every listed library behind one private RPC binding
-apps/kernel/            storage, history, the API and the site
+  src/libraries.ts      the libraries the Gatekeeper Worker carries
+apps/kernel/            storage, history and the API; serves the site
+apps/site/              the site, built into the kernel's static assets
+packages/contract/      what the two Workers say to each other: the RPC, the normalized stream,
+                        JSON helpers and validation
+packages/catalog/       what names a real thing: the TOPICS, PUBLISHERS and LICENCES vocabularies
 ```
 
 1. **A library per format.** Anything with a standard — GTFS, GBFS, ArcGIS, CKAN, Opendatasoft, uData, OGC API Features, WFS — is parsed once, under `formats/`. A Worker never contains parsing.
 2. **A library per bespoke source,** under `sources/`: Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, MYINFO, NASA FIRMS, NASA POWER, USGS, ANEPC, IODA, RIPE Atlas, RIPEstat, PeeringDB.
-3. **One Worker, every library.** A library is how the data is read, never what it is about or who publishes it: topics overlap — a city Wi-Fi map is `cities` and `telecom` — and a publisher may be read two ways, so neither is a code boundary. Each library's `deployment.ts` declares its name, its vars with their values, and any secrets, buckets and CPU limit; `libraries.ts` lists the libraries the Worker carries, and a library under a publication hold is not listed. Topics (`TOPICS` in `packages/gatekeeper-shared/src/topics.ts`) and the publisher are labels on a feed, shown on the site.
+3. **One Worker, every library.** A library is how the data is read, never what it is about or who publishes it: topics overlap — a city Wi-Fi map is `cities` and `telecom` — and a publisher may be read two ways, so neither is a code boundary. Each library's `deployment.ts` declares its name, its vars with their values, and any secrets, buckets and CPU limit; `libraries.ts` lists the libraries the Worker carries, every one of them. Topics (`TOPICS` in `packages/catalog/src/topics.ts`) and the publisher are labels on a feed, shown on the site.
 4. **Feed slugs never change.** A feed's ID derives from its slug, so a feed keeps its history wherever it runs. Renaming a slug throws that history away.
 
 A library exports its feed-kind table, `validate<Name>FeedConfig`, `collect<Name>Feed`, its transformer, its examples array, `<name>Collector(options)`, and `<NAME>_DEPLOYMENT` from `deployment.ts` — what the Worker needs to carry it. Every example configuration carries `source: "<library>"`, which is what routes it inside the Worker; the library never sees that key.
@@ -45,7 +48,7 @@ One entry in that library's `examples.ts`. Nothing else.
 }
 ```
 
-`source` decides which library reads it. The rest are keys of the three catalog vocabularies in `packages/gatekeeper-shared/src/`: `topics` are browsing tags, any number of them, each a key of `TOPICS`; `publisher` is a key of `PUBLISHERS`, who made the data, never the portal it was read from; `licence` is a key of `LICENCES`, the terms the publisher states, or `source-terms` when it states none. A publisher or licence the vocabulary lacks is one new entry there — name, and its site or licence text when there is one — and a test rejects a key outside the list and an entry no example uses. A publisher may also carry their mark: the logo file goes under `apps/site/public/publishers/` named for their key, `logo` names its extension, and `apps/site/public/publishers/README.md` says where a usable one comes from and what shape it has to be. A publisher without one is shown their initials instead, so a missing logo never looks like a broken page.
+`source` decides which library reads it. The rest are keys of the three catalog vocabularies in `packages/catalog/src/`: `topics` are browsing tags, any number of them, each a key of `TOPICS`; `publisher` is a key of `PUBLISHERS`, who made the data, never the portal it was read from; `licence` is a key of `LICENCES`, the terms the publisher states, or `source-terms` when it states none. A publisher or licence the vocabulary lacks is one new entry there — name, and its site or licence text when there is one — and a test rejects a key outside the list and an entry no example uses. A publisher may also carry their mark: the logo file goes under `packages/catalog/publishers/` named for their key, `logo` names its extension, and `packages/catalog/publishers/README.md` says where a usable one comes from and what shape it has to be. A publisher without one is shown their initials instead, so a missing logo never looks like a broken page.
 
 ### A new source on a format we already read
 
@@ -53,7 +56,7 @@ The example above, plus its hostname in the library's allowlist var (`CKAN_ALLOW
 
 ### A new bespoke source
 
-A directory under `packages/gatekeeper-shared/src/sources/<name>/`: `<name>.ts` (feed kinds, validation, fetching), `transform.ts` (bytes to products), `examples.ts`, `collector.ts` (the factory), `deployment.ts` (its `<NAME>_API_ORIGIN` var and anything else the Worker must give it), `index.ts` (the barrel), and one line in `libraries.ts`. Fixture tests under `tests/` with saved source responses — no network in unit tests, and no module mocking.
+A directory under `apps/gatekeeper/src/sources/<name>/`: `<name>.ts` (feed kinds, validation, fetching), `transform.ts` (bytes to products), `examples.ts`, `collector.ts` (the factory), `deployment.ts` (its `<NAME>_API_ORIGIN` var and anything else the Worker must give it), `index.ts` (the barrel), and one line in `libraries.ts`. Fixture tests under `tests/` with saved source responses — no network in unit tests, and no module mocking.
 
 ### A new format
 

@@ -12,11 +12,11 @@ import {
   type JsonObject,
   type NormalizedRow,
   type SourceConfig,
-} from "../packages/gatekeeper-shared/src/index";
-import { CATALOG_EXAMPLES } from "../packages/gatekeeper-shared/src/formats/opendatasoft/catalog-examples";
-import { opendatasoftCollector } from "../packages/gatekeeper-shared/src/formats/opendatasoft/collector";
-import { MAX_HISTORY_NORMALIZED_ROWS, OpendatasoftSource } from "../packages/gatekeeper-shared/src/formats/opendatasoft/opendatasoft";
-import { OpendatasoftTransformer } from "../packages/gatekeeper-shared/src/formats/opendatasoft/transform";
+} from "../apps/gatekeeper/src/index";
+import { CATALOG_EXAMPLES } from "../apps/gatekeeper/src/formats/opendatasoft/catalog-examples";
+import { opendatasoftCollector } from "../apps/gatekeeper/src/formats/opendatasoft/collector";
+import { MAX_HISTORY_NORMALIZED_ROWS, OpendatasoftSource } from "../apps/gatekeeper/src/formats/opendatasoft/opendatasoft";
+import { OpendatasoftTransformer } from "../apps/gatekeeper/src/formats/opendatasoft/transform";
 
 function fixture(name: string): JsonObject {
   const value = parseJson(readFileSync(new URL(`./fixtures/catalogs-expansion/${name}.json`, import.meta.url), "utf8"));

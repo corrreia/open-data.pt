@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type { TransformContext } from "@open-data-pt/gatekeeper-shared";
-import { DgegTransformer } from "../packages/gatekeeper-shared/src/sources/dgeg/transform";
+import type { TransformContext } from "@open-data-pt/contract";
+import { DgegTransformer } from "../apps/gatekeeper/src/sources/dgeg/transform";
 
 function fixture(name: string): Uint8Array {
   return readFileSync(new URL(`./fixtures/dgeg/${name}`, import.meta.url));

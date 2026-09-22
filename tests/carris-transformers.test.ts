@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { CarrisTransformer } from "../packages/gatekeeper-shared/src/sources/carris/transform";
-import type { JsonValue, TransformContext } from "@open-data-pt/gatekeeper-shared";
+import { CarrisTransformer } from "../apps/gatekeeper/src/sources/carris/transform";
+import type { JsonValue, TransformContext } from "@open-data-pt/contract";
 
 function feed(kind: "alerts" | "lines" | "routes" | "stops" | "vehicles"): TransformContext["feed"] {
   return {

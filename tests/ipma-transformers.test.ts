@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type { TransformContext, TransformResult } from "@open-data-pt/gatekeeper-shared";
+import type { TransformContext, TransformResult } from "@open-data-pt/contract";
 import { prepareRecord } from "../apps/kernel/src/records";
-import { IpmaTransformer } from "../packages/gatekeeper-shared/src/sources/ipma/transform";
+import { IpmaTransformer } from "../apps/gatekeeper/src/sources/ipma/transform";
 
 type FeedKind = "station-observations" | "daily-forecast" | "seismic";
 

@@ -14,7 +14,7 @@ import {
   type JsonValue,
   type SourceBody,
   type SourceFetch,
-} from "@open-data-pt/gatekeeper-shared";
+} from "@open-data-pt/gatekeeper";
 import {
   SNIT_API_ORIGIN,
   SNIT_EXAMPLES,
@@ -25,7 +25,7 @@ import {
   resolveSnitFeed,
   snitCollector,
   validateSnitFeedConfig,
-} from "../packages/gatekeeper-shared/src/sources/snit";
+} from "../apps/gatekeeper/src/sources/snit";
 
 const config = { feed: "instruments", type: "prof" };
 

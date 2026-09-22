@@ -14,7 +14,7 @@ import {
   type SourceConfig,
   type StreamingTransform,
   type TransformContext,
-} from "../packages/gatekeeper-shared/src/index";
+} from "../apps/gatekeeper/src/index";
 
 export function networkFixture(name: string): JsonObject {
   const value = parseJson(readFileSync(new URL(`./fixtures/networks/${name}.json`, import.meta.url), "utf8"));

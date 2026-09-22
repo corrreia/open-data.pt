@@ -1,5 +1,6 @@
-// A publisher's mark: which initials stand in for one we do not have, and the colour
-// that goes with them. The drawing is in components/PublisherMark.tsx.
+// A publisher's mark where we have no logo file: the initials that stand in for it
+// and the colour behind them. It belongs beside the vocabulary that says which
+// publishers have a mark; the drawing is the site's (components/PublisherMark.tsx).
 
 /** Words that carry no initial: connectives, and the two that open a third of Portuguese municipalities. */
 const UNSPOKEN = new Set(["de", "do", "da", "dos", "das", "e", "of", "the", "for", "and", "camara", "municipal", "municipio"]);
