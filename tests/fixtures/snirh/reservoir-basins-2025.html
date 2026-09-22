@@ -1,0 +1,734 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>SNIRH :: Armazenamento Mensal nas Albufeiras</title>
+
+<style type="text/css">
+<!--
+#menu_seleccao { display: inline; float: none; height: 50px; margin: 0; padding: 0; text-align: left; }
+#menu_seleccao ul, #menu_seleccao li { display: inline; list-style-type: none; margin: 0; padding: 0; }
+#menu_seleccao a, #menu_seleccao a:link { height:27px; background:#f3f3e7; border: 1px solid #40a3de; color: #001D88; cursor: pointer; display: inline; font: bold 12px Arial, Helvetica, sans-serif; margin: 0 0 0 2px; padding: 2px 5px; text-decoration: none; }
+#menu_seleccao a.active, #menu_seleccao a:link.active, #menu_seleccao a:hover.active, #menu_seleccao a:active { background: #FFFFFF; border-bottom: 1px solid #FFFFFF; color: #000000; }
+#menu_seleccao a:hover { background: #FFFFFF; border: 1px solid #0000ff; }
+#menu_seleccao li span { font-family:Arial, Helvetica, sans-serif; font-size:16px; margin-left:80px}
+
+.div_tit {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:14px;
+	font-weight:bolder;
+	text-align:center;
+	border-bottom:1px solid #c8d7f2;
+	margin-top:20px
+}
+
+.tbl_tit1 {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:12px;
+	font-weight:bolder;
+	text-align:center;
+	border-right:1px solid #c8d7f2;
+}
+.tbl_tit2 {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:11px;
+	font-weight:bolder;
+	text-align:center;
+}
+.tbl_tit3 {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:xx-small;
+	text-align:center;
+	color:#999999;
+	border-right:1px solid #c8d7f2;
+	border-bottom:1px solid #c8d7f2;
+}
+.tbl_val1 {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:11px;
+	text-align:left;
+	border-bottom:1px solid #c8d7f2;
+}
+.tbl_val2 {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:xx-small;
+	text-align:right;
+	white-space:nowrap;
+	border-right:1px solid #c8d7f2;
+	border-bottom:1px solid #c8d7f2;
+
+}
+
+body {
+	background:none !important;
+	background-color:#eeeeee !important;
+}
+
+-->
+</style>
+
+
+<script type="text/javascript">
+function ActivaLinkSeccao(link_id) {
+	document.getElementById(link_id).className += "active";
+}
+</script>
+
+<link href="/main.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body topmargin="2px" leftmargin="2px" bottommargin="2px" rightmargin="5px">
+
+<div class='mainjanela_header'></div><div class='mainjanela_header_print'><img src='/snirh/_level0/imagens2/logo_SNIRH200px_v1.png' width='190'></div><div class='mainjanela_title'>Armazenamento Mensal nas Albufeiras</div>
+<div align="left" style="margin:0px">
+<ul id="menu_seleccao">
+
+	    
+        <li><a id="link_seleccao_1" href="?albuftblgeralopcao=1&percOUvolum=1&anohi=2025&mes=09&bacia=&albuf=">Resumo por bacia (%)</a></li>
+        <li><a id="link_seleccao_2" href="?albuftblgeralopcao=2&percOUvolum=2&anohi=2025&mes=09&bacia=&albuf=">Resumo por bacia (10<sup>6</sup> m<sup>3</sup>)</a></li>
+        <li><a id="link_seleccao_3" href="?albuftblgeralopcao=3&percOUvolum=1&anohi=2025&mes=09&bacia=&albuf=">Detalhe por bacia (%)</a></li>
+        <li><a id="link_seleccao_4" href="?albuftblgeralopcao=4&percOUvolum=2&anohi=2025&mes=09&bacia=&albuf=">Detalhe por bacia (10<sup>6</sup> m<sup>3</sup>)</a></li>
+    </ul>
+</div>
+
+	<table width="100%" border="0" cellspacing="0" cellpadding="2px">
+	 <tr>
+		<td></td>
+		<td></td>
+					<td class="tbl_tit1">ARADE</td>
+					<td class="tbl_tit1">AVE</td>
+					<td class="tbl_tit1">CÁVADO/RIBEIRAS COSTEIRAS</td>
+					<td class="tbl_tit1">DOURO</td>
+					<td class="tbl_tit1">GUADIANA</td>
+					<td class="tbl_tit1">LIMA</td>
+					<td class="tbl_tit1">MIRA</td>
+					<td class="tbl_tit1">MONDEGO</td>
+					<td class="tbl_tit1">RIBEIRAS DO ALGARVE</td>
+					<td class="tbl_tit1">RIBEIRAS DO OESTE</td>
+					<td class="tbl_tit1">SADO</td>
+					<td class="tbl_tit1">TEJO</td>
+			
+	 </tr>
+	
+	<!-- Capacidade total -->
+	 <tr>
+		 <td colspan="2" class="tbl_tit2">Capacidade Total 10<sup>6</sup>m<sup>3</sup></td>
+					<td class="tbl_val2">233.1 </td>
+					<td class="tbl_val2">21.1 </td>
+					<td class="tbl_val2">1 169.6 </td>
+					<td class="tbl_val2">297.2 </td>
+					<td class="tbl_val2">4 603.5 </td>
+					<td class="tbl_val2">405.5 </td>
+					<td class="tbl_val2">486.6 </td>
+					<td class="tbl_val2">508.2 </td>
+					<td class="tbl_val2">34.8 </td>
+					<td class="tbl_val2">7.9 </td>
+					<td class="tbl_val2">618.4 </td>
+					<td class="tbl_val2">2 546.4 </td>
+			
+	 </tr>
+	
+	<!-- Média -->
+		 <tr bgcolor="#E3EEF4"> 
+				 <td rowspan="12" class="tbl_tit2">Média<br>
+	   (%)</td>
+      		<td class="tbl_val2">OUT</td>	
+					<td class="tbl_val2">37.4</td>
+					<td class="tbl_val2">58.7</td>
+					<td class="tbl_val2">60.6</td>
+					<td class="tbl_val2">61.9</td>
+					<td class="tbl_val2">71.8</td>
+					<td class="tbl_val2">54.1</td>
+					<td class="tbl_val2">64.6</td>
+					<td class="tbl_val2">63.8</td>
+					<td class="tbl_val2">50.9</td>
+					<td class="tbl_val2">51.6</td>
+					<td class="tbl_val2">42.5</td>
+					<td class="tbl_val2">62.2</td>
+			
+	 </tr>
+		 <tr bgcolor="#E3EEF4"> 
+				<td class="tbl_val2">NOV</td>	
+					<td class="tbl_val2">38.0</td>
+					<td class="tbl_val2">63.8</td>
+					<td class="tbl_val2">63.8</td>
+					<td class="tbl_val2">62.6</td>
+					<td class="tbl_val2">74.1</td>
+					<td class="tbl_val2">55.4</td>
+					<td class="tbl_val2">66.5</td>
+					<td class="tbl_val2">67.0</td>
+					<td class="tbl_val2">53.9</td>
+					<td class="tbl_val2">56.4</td>
+					<td class="tbl_val2">45.1</td>
+					<td class="tbl_val2">65.3</td>
+			
+	 </tr>
+		 <tr bgcolor="#E3EEF4"> 
+				<td class="tbl_val2">DEZ</td>	
+					<td class="tbl_val2">52.9</td>
+					<td class="tbl_val2">70.4</td>
+					<td class="tbl_val2">67.9</td>
+					<td class="tbl_val2">68.8</td>
+					<td class="tbl_val2">76.4</td>
+					<td class="tbl_val2">59.5</td>
+					<td class="tbl_val2">68.2</td>
+					<td class="tbl_val2">69.2</td>
+					<td class="tbl_val2">60.1</td>
+					<td class="tbl_val2">61.0</td>
+					<td class="tbl_val2">51.6</td>
+					<td class="tbl_val2">71.7</td>
+			
+	 </tr>
+		 <tr bgcolor="#E3EEF4"> 
+				<td class="tbl_val2">JAN</td>	
+					<td class="tbl_val2">55.1</td>
+					<td class="tbl_val2">75.2</td>
+					<td class="tbl_val2">70.8</td>
+					<td class="tbl_val2">70.3</td>
+					<td class="tbl_val2">78.3</td>
+					<td class="tbl_val2">61.4</td>
+					<td class="tbl_val2">71.0</td>
+					<td class="tbl_val2">71.3</td>
+					<td class="tbl_val2">65.2</td>
+					<td class="tbl_val2">65.9</td>
+					<td class="tbl_val2">57.3</td>
+					<td class="tbl_val2">74.7</td>
+			
+	 </tr>
+		 <tr bgcolor="#E3EEF4"> 
+				<td class="tbl_val2">FEV</td>	
+					<td class="tbl_val2">47.4</td>
+					<td class="tbl_val2">75.7</td>
+					<td class="tbl_val2">72.4</td>
+					<td class="tbl_val2">72.9</td>
+					<td class="tbl_val2">82.1</td>
+					<td class="tbl_val2">64.9</td>
+					<td class="tbl_val2">72.6</td>
+					<td class="tbl_val2">74.2</td>
+					<td class="tbl_val2">68.7</td>
+					<td class="tbl_val2">67.8</td>
+					<td class="tbl_val2">60.8</td>
+					<td class="tbl_val2">77.6</td>
+			
+	 </tr>
+		 <tr bgcolor="#E3EEF4"> 
+				<td class="tbl_val2">MAR</td>	
+					<td class="tbl_val2">59.9</td>
+					<td class="tbl_val2">71.7</td>
+					<td class="tbl_val2">74.1</td>
+					<td class="tbl_val2">75.2</td>
+					<td class="tbl_val2">83.3</td>
+					<td class="tbl_val2">70.5</td>
+					<td class="tbl_val2">74.7</td>
+					<td class="tbl_val2">78.1</td>
+					<td class="tbl_val2">72.1</td>
+					<td class="tbl_val2">71.0</td>
+					<td class="tbl_val2">62.2</td>
+					<td class="tbl_val2">79.0</td>
+			
+	 </tr>
+		 <tr bgcolor="#E3EEF4"> 
+				<td class="tbl_val2">ABR</td>	
+					<td class="tbl_val2">60.2</td>
+					<td class="tbl_val2">76.9</td>
+					<td class="tbl_val2">74.5</td>
+					<td class="tbl_val2">74.8</td>
+					<td class="tbl_val2">84.0</td>
+					<td class="tbl_val2">75.0</td>
+					<td class="tbl_val2">74.3</td>
+					<td class="tbl_val2">88.5</td>
+					<td class="tbl_val2">72.7</td>
+					<td class="tbl_val2">71.9</td>
+					<td class="tbl_val2">63.3</td>
+					<td class="tbl_val2">80.0</td>
+			
+	 </tr>
+		 <tr bgcolor="#E3EEF4"> 
+				<td class="tbl_val2">MAI</td>	
+					<td class="tbl_val2">55.4</td>
+					<td class="tbl_val2">78.4</td>
+					<td class="tbl_val2">75.1</td>
+					<td class="tbl_val2">74.2</td>
+					<td class="tbl_val2">82.9</td>
+					<td class="tbl_val2">75.4</td>
+					<td class="tbl_val2">73.5</td>
+					<td class="tbl_val2">89.8</td>
+					<td class="tbl_val2">70.6</td>
+					<td class="tbl_val2">70.5</td>
+					<td class="tbl_val2">63.8</td>
+					<td class="tbl_val2">80.6</td>
+			
+	 </tr>
+		 <tr bgcolor="#E3EEF4"> 
+				<td class="tbl_val2">JUN</td>	
+					<td class="tbl_val2">53.8</td>
+					<td class="tbl_val2">69.4</td>
+					<td class="tbl_val2">72.0</td>
+					<td class="tbl_val2">72.7</td>
+					<td class="tbl_val2">79.8</td>
+					<td class="tbl_val2">71.9</td>
+					<td class="tbl_val2">71.7</td>
+					<td class="tbl_val2">86.7</td>
+					<td class="tbl_val2">66.4</td>
+					<td class="tbl_val2">66.6</td>
+					<td class="tbl_val2">58.6</td>
+					<td class="tbl_val2">76.8</td>
+			
+	 </tr>
+		 <tr bgcolor="#E3EEF4"> 
+				<td class="tbl_val2">JUL</td>	
+					<td class="tbl_val2">47.9</td>
+					<td class="tbl_val2">58.9</td>
+					<td class="tbl_val2">68.7</td>
+					<td class="tbl_val2">70.1</td>
+					<td class="tbl_val2">75.9</td>
+					<td class="tbl_val2">65.3</td>
+					<td class="tbl_val2">67.4</td>
+					<td class="tbl_val2">78.2</td>
+					<td class="tbl_val2">61.1</td>
+					<td class="tbl_val2">60.4</td>
+					<td class="tbl_val2">51.4</td>
+					<td class="tbl_val2">72.2</td>
+			
+	 </tr>
+		 <tr bgcolor="#E3EEF4"> 
+				<td class="tbl_val2">AGO</td>	
+					<td class="tbl_val2">39.0</td>
+					<td class="tbl_val2">54.5</td>
+					<td class="tbl_val2">64.0</td>
+					<td class="tbl_val2">66.0</td>
+					<td class="tbl_val2">74.5</td>
+					<td class="tbl_val2">59.6</td>
+					<td class="tbl_val2">66.9</td>
+					<td class="tbl_val2">68.8</td>
+					<td class="tbl_val2">55.3</td>
+					<td class="tbl_val2">57.3</td>
+					<td class="tbl_val2">44.6</td>
+					<td class="tbl_val2">66.4</td>
+			
+	 </tr>
+		 <tr bgcolor="#E3EEF4"> 
+				<td class="tbl_val2">SET</td>	
+					<td class="tbl_val2">n/d</td>
+					<td class="tbl_val2">n/d</td>
+					<td class="tbl_val2">n/d</td>
+					<td class="tbl_val2">n/d</td>
+					<td class="tbl_val2">n/d</td>
+					<td class="tbl_val2">n/d</td>
+					<td class="tbl_val2">n/d</td>
+					<td class="tbl_val2">n/d</td>
+					<td class="tbl_val2">n/d</td>
+					<td class="tbl_val2">n/d</td>
+					<td class="tbl_val2">n/d</td>
+					<td class="tbl_val2">n/d</td>
+			
+	 </tr>
+		 
+	
+	<!-- Anoh anterior -->
+		 <tr> 
+				 <td rowspan="12" class="tbl_tit2">2024/25<br>(%)</td>
+				<td class="tbl_val2">OUT</td>	
+					<td class="tbl_val2">31.0</td>
+					<td class="tbl_val2">76.2</td>
+					<td class="tbl_val2">78.0</td>
+					<td class="tbl_val2">72.4</td>
+					<td class="tbl_val2">76.6</td>
+					<td class="tbl_val2">71.3</td>
+					<td class="tbl_val2">37.2</td>
+					<td class="tbl_val2">71.9</td>
+					<td class="tbl_val2">12.6</td>
+					<td class="tbl_val2">71.6</td>
+					<td class="tbl_val2">47.3</td>
+					<td class="tbl_val2">64.4</td>
+			
+	 </tr>
+		 <tr> 
+				<td class="tbl_val2">NOV</td>	
+					<td class="tbl_val2">30.4</td>
+					<td class="tbl_val2">58.8</td>
+					<td class="tbl_val2">69.5</td>
+					<td class="tbl_val2">71.7</td>
+					<td class="tbl_val2">77.8</td>
+					<td class="tbl_val2">50.6</td>
+					<td class="tbl_val2">37.0</td>
+					<td class="tbl_val2">74.6</td>
+					<td class="tbl_val2">12.6</td>
+					<td class="tbl_val2">70.7</td>
+					<td class="tbl_val2">48.2</td>
+					<td class="tbl_val2">66.9</td>
+			
+	 </tr>
+		 <tr> 
+				<td class="tbl_val2">DEZ</td>	
+					<td class="tbl_val2">29.7</td>
+					<td class="tbl_val2">55.9</td>
+					<td class="tbl_val2">69.4</td>
+					<td class="tbl_val2">71.9</td>
+					<td class="tbl_val2">76.6</td>
+					<td class="tbl_val2">49.5</td>
+					<td class="tbl_val2">36.4</td>
+					<td class="tbl_val2">73.8</td>
+					<td class="tbl_val2">12.6</td>
+					<td class="tbl_val2">68.6</td>
+					<td class="tbl_val2">48.4</td>
+					<td class="tbl_val2">66.0</td>
+			
+	 </tr>
+		 <tr> 
+				<td class="tbl_val2">JAN</td>	
+					<td class="tbl_val2">37.5</td>
+					<td class="tbl_val2">98.0</td>
+					<td class="tbl_val2">83.0</td>
+					<td class="tbl_val2">84.4</td>
+					<td class="tbl_val2">81.7</td>
+					<td class="tbl_val2">81.9</td>
+					<td class="tbl_val2">39.4</td>
+					<td class="tbl_val2">79.9</td>
+					<td class="tbl_val2">15.4</td>
+					<td class="tbl_val2">74.5</td>
+					<td class="tbl_val2">58.0</td>
+					<td class="tbl_val2">89.6</td>
+			
+	 </tr>
+		 <tr> 
+				<td class="tbl_val2">FEV</td>	
+					<td class="tbl_val2">41.8</td>
+					<td class="tbl_val2">67.4</td>
+					<td class="tbl_val2">77.6</td>
+					<td class="tbl_val2">82.8</td>
+					<td class="tbl_val2">84.5</td>
+					<td class="tbl_val2">75.9</td>
+					<td class="tbl_val2">40.4</td>
+					<td class="tbl_val2">74.8</td>
+					<td class="tbl_val2">20.7</td>
+					<td class="tbl_val2">74.7</td>
+					<td class="tbl_val2">61.9</td>
+					<td class="tbl_val2">86.7</td>
+			
+	 </tr>
+		 <tr> 
+				<td class="tbl_val2">MAR</td>	
+					<td class="tbl_val2">82.1</td>
+					<td class="tbl_val2">76.9</td>
+					<td class="tbl_val2">83.5</td>
+					<td class="tbl_val2">89.8</td>
+					<td class="tbl_val2">96.9</td>
+					<td class="tbl_val2">82.2</td>
+					<td class="tbl_val2">57.9</td>
+					<td class="tbl_val2">92.7</td>
+					<td class="tbl_val2">57.5</td>
+					<td class="tbl_val2">92.5</td>
+					<td class="tbl_val2">82.6</td>
+					<td class="tbl_val2">97.3</td>
+			
+	 </tr>
+		 <tr> 
+				<td class="tbl_val2">ABR</td>	
+					<td class="tbl_val2">87.4</td>
+					<td class="tbl_val2">91.3</td>
+					<td class="tbl_val2">90.4</td>
+					<td class="tbl_val2">91.0</td>
+					<td class="tbl_val2">97.4</td>
+					<td class="tbl_val2">93.3</td>
+					<td class="tbl_val2">58.8</td>
+					<td class="tbl_val2">99.5</td>
+					<td class="tbl_val2">60.9</td>
+					<td class="tbl_val2">96.6</td>
+					<td class="tbl_val2">84.1</td>
+					<td class="tbl_val2">96.1</td>
+			
+	 </tr>
+		 <tr> 
+				<td class="tbl_val2">MAI</td>	
+					<td class="tbl_val2">86.1</td>
+					<td class="tbl_val2">90.7</td>
+					<td class="tbl_val2">90.7</td>
+					<td class="tbl_val2">84.8</td>
+					<td class="tbl_val2">96.1</td>
+					<td class="tbl_val2">90.8</td>
+					<td class="tbl_val2">58.3</td>
+					<td class="tbl_val2">92.4</td>
+					<td class="tbl_val2">59.7</td>
+					<td class="tbl_val2">94.0</td>
+					<td class="tbl_val2">79.3</td>
+					<td class="tbl_val2">92.8</td>
+			
+	 </tr>
+		 <tr> 
+				<td class="tbl_val2">JUN</td>	
+					<td class="tbl_val2">83.1</td>
+					<td class="tbl_val2">70.3</td>
+					<td class="tbl_val2">86.7</td>
+					<td class="tbl_val2">81.7</td>
+					<td class="tbl_val2">92.8</td>
+					<td class="tbl_val2">83.9</td>
+					<td class="tbl_val2">57.1</td>
+					<td class="tbl_val2">88.8</td>
+					<td class="tbl_val2">56.4</td>
+					<td class="tbl_val2">88.6</td>
+					<td class="tbl_val2">71.9</td>
+					<td class="tbl_val2">88.9</td>
+			
+	 </tr>
+		 <tr> 
+				<td class="tbl_val2">JUL</td>	
+					<td class="tbl_val2">79.6</td>
+					<td class="tbl_val2">67.3</td>
+					<td class="tbl_val2">82.9</td>
+					<td class="tbl_val2">76.2</td>
+					<td class="tbl_val2">88.8</td>
+					<td class="tbl_val2">81.4</td>
+					<td class="tbl_val2">55.8</td>
+					<td class="tbl_val2">78.1</td>
+					<td class="tbl_val2">52.5</td>
+					<td class="tbl_val2">82.8</td>
+					<td class="tbl_val2">61.6</td>
+					<td class="tbl_val2">84.9</td>
+			
+	 </tr>
+		 <tr> 
+				<td class="tbl_val2">AGO</td>	
+					<td class="tbl_val2">75.7</td>
+					<td class="tbl_val2">57.3</td>
+					<td class="tbl_val2">79.3</td>
+					<td class="tbl_val2">77.0</td>
+					<td class="tbl_val2">84.9</td>
+					<td class="tbl_val2">69.6</td>
+					<td class="tbl_val2">54.5</td>
+					<td class="tbl_val2">67.1</td>
+					<td class="tbl_val2">48.4</td>
+					<td class="tbl_val2">77.0</td>
+					<td class="tbl_val2">51.9</td>
+					<td class="tbl_val2">78.1</td>
+			
+	 </tr>
+		 <tr> 
+				<td class="tbl_val2">SET</td>	
+					<td class="tbl_val2">72.7</td>
+					<td class="tbl_val2">48.3</td>
+					<td class="tbl_val2">75.5</td>
+					<td class="tbl_val2">74.0</td>
+					<td class="tbl_val2">82.0</td>
+					<td class="tbl_val2">58.2</td>
+					<td class="tbl_val2">53.4</td>
+					<td class="tbl_val2">57.0</td>
+					<td class="tbl_val2">45.3</td>
+					<td class="tbl_val2">72.4</td>
+					<td class="tbl_val2">46.8</td>
+					<td class="tbl_val2">72.6</td>
+			
+	 </tr>
+		 
+	
+	<!-- Anoh actual -->
+		 <tr bgcolor="#E3EEF4"> 
+				 <td rowspan="12" class="tbl_tit2">2025/26<br>(%)</td>
+				<td class="tbl_val2">OUT</td>	
+					<td class="tbl_val2">70.3</td>
+					<td class="tbl_val2">42.9</td>
+					<td class="tbl_val2">72.9</td>
+					<td class="tbl_val2">71.7</td>
+					<td class="tbl_val2">79.3</td>
+					<td class="tbl_val2">46.9</td>
+					<td class="tbl_val2">52.7</td>
+					<td class="tbl_val2">55.3</td>
+					<td class="tbl_val2">44.4</td>
+					<td class="tbl_val2">68.8</td>
+					<td class="tbl_val2">46.3</td>
+					<td class="tbl_val2">69.0</td>
+			
+	 </tr>
+		 <tr bgcolor="#E3EEF4"> 
+				<td class="tbl_val2">NOV</td>	
+					<td class="tbl_val2">74.8</td>
+					<td class="tbl_val2">56.7</td>
+					<td class="tbl_val2">78.6</td>
+					<td class="tbl_val2">81.7</td>
+					<td class="tbl_val2">80.0</td>
+					<td class="tbl_val2">71.9</td>
+					<td class="tbl_val2">53.7</td>
+					<td class="tbl_val2">76.5</td>
+					<td class="tbl_val2">45.8</td>
+					<td class="tbl_val2">90.8</td>
+					<td class="tbl_val2">51.5</td>
+					<td class="tbl_val2">80.4</td>
+			
+	 </tr>
+		 <tr bgcolor="#E3EEF4"> 
+				<td class="tbl_val2">DEZ</td>	
+					<td class="tbl_val2">80.8</td>
+					<td class="tbl_val2">80.9</td>
+					<td class="tbl_val2">80.6</td>
+					<td class="tbl_val2">81.8</td>
+					<td class="tbl_val2">86.2</td>
+					<td class="tbl_val2">70.0</td>
+					<td class="tbl_val2">58.1</td>
+					<td class="tbl_val2">78.7</td>
+					<td class="tbl_val2">54.6</td>
+					<td class="tbl_val2">98.1</td>
+					<td class="tbl_val2">63.2</td>
+					<td class="tbl_val2">86.6</td>
+			
+	 </tr>
+		 <tr bgcolor="#E3EEF4"> 
+				<td class="tbl_val2">JAN</td>	
+					<td class="tbl_val2">83.3</td>
+					<td class="tbl_val2">93.2</td>
+					<td class="tbl_val2">84.7</td>
+					<td class="tbl_val2">87.3</td>
+					<td class="tbl_val2">97.0</td>
+					<td class="tbl_val2">86.8</td>
+					<td class="tbl_val2">76.7</td>
+					<td class="tbl_val2">79.5</td>
+					<td class="tbl_val2">91.7</td>
+					<td class="tbl_val2">99.3</td>
+					<td class="tbl_val2">84.9</td>
+					<td class="tbl_val2">92.8</td>
+			
+	 </tr>
+		 <tr bgcolor="#E3EEF4"> 
+				<td class="tbl_val2">FEV</td>	
+					<td class="tbl_val2">87.0</td>
+					<td class="tbl_val2">92.6</td>
+					<td class="tbl_val2">96.2</td>
+					<td class="tbl_val2">88.7</td>
+					<td class="tbl_val2">97.3</td>
+					<td class="tbl_val2">93.8</td>
+					<td class="tbl_val2">98.4</td>
+					<td class="tbl_val2">74.7</td>
+					<td class="tbl_val2">100.0</td>
+					<td class="tbl_val2">98.3</td>
+					<td class="tbl_val2">97.8</td>
+					<td class="tbl_val2">94.3</td>
+			
+	 </tr>
+		 <tr bgcolor="#E3EEF4"> 
+				<td class="tbl_val2">MAR</td>	
+					<td class="tbl_val2">89.9</td>
+					<td class="tbl_val2">54.5</td>
+					<td class="tbl_val2">91.3</td>
+					<td class="tbl_val2">87.7</td>
+					<td class="tbl_val2">97.5</td>
+					<td class="tbl_val2">87.9</td>
+					<td class="tbl_val2">99.4</td>
+					<td class="tbl_val2">82.7</td>
+					<td class="tbl_val2">100.0</td>
+					<td class="tbl_val2">98.1</td>
+					<td class="tbl_val2">98.4</td>
+					<td class="tbl_val2">92.1</td>
+			
+	 </tr>
+		 <tr bgcolor="#E3EEF4"> 
+				<td class="tbl_val2">ABR</td>	
+					<td class="tbl_val2">89.4</td>
+					<td class="tbl_val2">73.1</td>
+					<td class="tbl_val2">87.8</td>
+					<td class="tbl_val2">82.1</td>
+					<td class="tbl_val2">95.3</td>
+					<td class="tbl_val2">81.0</td>
+					<td class="tbl_val2">98.7</td>
+					<td class="tbl_val2">82.3</td>
+					<td class="tbl_val2">100.0</td>
+					<td class="tbl_val2">97.8</td>
+					<td class="tbl_val2">97.0</td>
+					<td class="tbl_val2">90.3</td>
+			
+	 </tr>
+		 <tr bgcolor="#E3EEF4"> 
+				<td class="tbl_val2">MAI</td>	
+					<td class="tbl_val2">87.7</td>
+					<td class="tbl_val2">77.3</td>
+					<td class="tbl_val2">83.3</td>
+					<td class="tbl_val2">81.1</td>
+					<td class="tbl_val2">91.9</td>
+					<td class="tbl_val2">75.0</td>
+					<td class="tbl_val2">97.7</td>
+					<td class="tbl_val2">91.9</td>
+					<td class="tbl_val2">96.9</td>
+					<td class="tbl_val2">95.8</td>
+					<td class="tbl_val2">93.0</td>
+					<td class="tbl_val2">90.3</td>
+			
+	 </tr>
+		 <tr bgcolor="#E3EEF4"> 
+				<td class="tbl_val2">JUN</td>	
+					<td class="tbl_val2">84.3</td>
+					<td class="tbl_val2">76.0</td>
+					<td class="tbl_val2">78.7</td>
+					<td class="tbl_val2">77.5</td>
+					<td class="tbl_val2">87.0</td>
+					<td class="tbl_val2">68.6</td>
+					<td class="tbl_val2">96.2</td>
+					<td class="tbl_val2">85.1</td>
+					<td class="tbl_val2">92.3</td>
+					<td class="tbl_val2">91.7</td>
+					<td class="tbl_val2">83.5</td>
+					<td class="tbl_val2">86.9</td>
+			
+	 </tr>
+		 <tr bgcolor="#E3EEF4"> 
+				<td class="tbl_val2">JUL</td>	
+					<td class="tbl_val2">81.0</td>
+					<td class="tbl_val2">66.8</td>
+					<td class="tbl_val2">70.8</td>
+					<td class="tbl_val2">71.0</td>
+					<td class="tbl_val2">83.3</td>
+					<td class="tbl_val2">51.9</td>
+					<td class="tbl_val2">94.3</td>
+					<td class="tbl_val2">74.2</td>
+					<td class="tbl_val2">86.7</td>
+					<td class="tbl_val2">100.0</td>
+					<td class="tbl_val2">72.8</td>
+					<td class="tbl_val2">80.0</td>
+			
+	 </tr>
+		 <tr bgcolor="#E3EEF4"> 
+				<td class="tbl_val2">AGO</td>	
+					<td class="tbl_val2">77.5</td>
+					<td class="tbl_val2">59.2</td>
+					<td class="tbl_val2">67.0</td>
+					<td class="tbl_val2">67.7</td>
+					<td class="tbl_val2">81.0</td>
+					<td class="tbl_val2">49.6</td>
+					<td class="tbl_val2">92.6</td>
+					<td class="tbl_val2">63.1</td>
+					<td class="tbl_val2">81.6</td>
+					<td class="tbl_val2">85.6</td>
+					<td class="tbl_val2">64.7</td>
+					<td class="tbl_val2">74.7</td>
+			
+	 </tr>
+		 <tr bgcolor="#E3EEF4"> 
+				<td class="tbl_val2">SET</td>	
+					<td class="tbl_val2">n/d</td>
+					<td class="tbl_val2">n/d</td>
+					<td class="tbl_val2">n/d</td>
+					<td class="tbl_val2">n/d</td>
+					<td class="tbl_val2">n/d</td>
+					<td class="tbl_val2">n/d</td>
+					<td class="tbl_val2">n/d</td>
+					<td class="tbl_val2">n/d</td>
+					<td class="tbl_val2">n/d</td>
+					<td class="tbl_val2">n/d</td>
+					<td class="tbl_val2">n/d</td>
+					<td class="tbl_val2">n/d</td>
+			
+	 </tr>
+		 
+	</table>
+    
+	
+
+
+
+
+
+
+<div class='mainjanela_footer'>(c) SNIRH 2005-2026 <a href='https://snirh.apambiente.pt' target='_blank'>https://snirh.apambiente.pt</a>&nbsp;</div>
+	<script language="javascript">
+		ActivaLinkSeccao("link_seleccao_1");
+	</script>
+
+</body>
+</html>

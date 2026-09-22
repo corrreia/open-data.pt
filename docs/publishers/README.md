@@ -12,12 +12,13 @@ credential, a proxy, an unusual cadence, a permission, a known habit of the sour
 
 ## Pages
 
-| Publisher                                             | Why it has a page                                                      |
-| ----------------------------------------------------- | ---------------------------------------------------------------------- |
-| [Metropolitano de Lisboa](metropolitano-de-lisboa.md) | OAuth credentials, and a proxy hostname their TLS chain forces on us   |
-| [Assembleia da República](assembleia-da-republica.md) | 93 MB documents with no validators, staged in R2 and compared by hash  |
-| [Carris Metropolitana](carris-metropolitana.md)       | Read through two libraries, and positions that must not become history |
-| [The Card4B MYINFO operators](card4b-operators.md)    | Four publishers on one shared platform, allowlisted by folder          |
+| Publisher                                             | Why it has a page                                                              |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------ |
+| [Metropolitano de Lisboa](metropolitano-de-lisboa.md) | OAuth credentials, and a proxy hostname their TLS chain forces on us           |
+| [Assembleia da República](assembleia-da-republica.md) | 93 MB documents with no validators, staged in R2 and compared by hash          |
+| [Carris Metropolitana](carris-metropolitana.md)       | Read through two libraries, and positions that must not become history         |
+| [The Card4B MYINFO operators](card4b-operators.md)    | Four publishers on one shared platform, allowlisted by folder                  |
+| [APA](apa.md)                                         | Read through three libraries split so no value repeats, and a site with no API |
 
 ## Writing one
 
