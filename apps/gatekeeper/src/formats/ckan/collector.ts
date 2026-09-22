@@ -1,4 +1,4 @@
-import { allowedHosts, resolveFeed, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../index";
+import { allowedHosts, resolveFeed, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { CKAN_FEEDS, CkanSource, validateCkanFeedConfig, type CkanResourceMetadata } from "./ckan";
 import { CKAN_NORMALIZER, transformCkan } from "./transform";
 

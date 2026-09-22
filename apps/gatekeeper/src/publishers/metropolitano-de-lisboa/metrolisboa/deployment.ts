@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../../index";
+import type { LibraryDeployment } from "#/index";
 import { metrolisboaCollector } from "./collector";
 import { METRO_FEEDS } from "./metrolisboa";
 

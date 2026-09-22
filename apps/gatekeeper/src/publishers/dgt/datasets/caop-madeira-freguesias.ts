@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { CAOP_COLUMNS, CAOP_PARISH_COLUMNS, geo2Feed } from "../wfs";
+import type { DatasetDefinition } from "#/catalog/define";
+import { CAOP_COLUMNS, CAOP_PARISH_COLUMNS, geo2Feed } from "#/publishers/dgt/wfs";
 
 export const DATASET: DatasetDefinition = {
   title: "Madeira parish boundaries (CAOP 2025)",

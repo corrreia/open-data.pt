@@ -1,4 +1,4 @@
-import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../../index";
+import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { ANEPC_FEEDS, collectAnepcFeed, validateAnepcFeedConfig } from "./anepc";
 import { AnepcTransformer } from "./transform";
 

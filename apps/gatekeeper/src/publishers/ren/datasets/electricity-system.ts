@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { renChartFeed } from "../ren/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { renChartFeed } from "#/publishers/ren/ren/feeds";
 
 /** REN completes an electricity quarter-hour only twice an hour, so a faster cadence can never see a new point. */
 const ELECTRICITY_POLICY = {

@@ -1,4 +1,4 @@
-import { allowedHosts, resolveFeed, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../index";
+import { allowedHosts, resolveFeed, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { OPENDATASOFT_FEEDS, OpendatasoftSource, validateOpendatasoftFeedConfig } from "./opendatasoft";
 import { OpendatasoftTransformer } from "./transform";
 

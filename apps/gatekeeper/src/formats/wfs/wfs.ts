@@ -12,7 +12,7 @@ import {
   type SourceConfig,
   type SourceFetch,
   type SourceValidator,
-} from "../../index";
+} from "#/index";
 
 export const WFS_MAX_BYTES = 16 * 1024 * 1024;
 const WFS_PAGE_BYTES = 8 * 1024 * 1024;

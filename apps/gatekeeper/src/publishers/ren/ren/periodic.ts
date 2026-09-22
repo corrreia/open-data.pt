@@ -22,7 +22,7 @@ import {
   type SourceValidator,
   type StreamingTransform,
   type TransformContext,
-} from "../../../index";
+} from "#/index";
 
 export const REN_PERIODIC_ORIGIN = "https://servicebus.ren.pt";
 const MAX_SOURCE_BYTES = 512 * 1024;

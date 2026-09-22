@@ -14,5 +14,8 @@
   "dependencies": {
     "@open-data-pt/contract": "workspace:*",
     "@open-data-pt/lisbon": "workspace:*"
+  },
+  "imports": {
+    "#/*": "./src/*.ts"
   }
 }

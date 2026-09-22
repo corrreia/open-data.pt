@@ -9,8 +9,8 @@ import type {
   StreamingTransform,
   TransformContext,
   TransformQuality,
-} from "../../index";
-import { GatekeeperError, field } from "../../index";
+} from "#/index";
+import { GatekeeperError, field } from "#/index";
 import { GtfsCsvReader, type GtfsRow } from "./csv";
 import { requestedGtfsFiles } from "./gtfs";
 import { gtfsZipEntries, MAX_ENTRY_BYTES } from "./zip";

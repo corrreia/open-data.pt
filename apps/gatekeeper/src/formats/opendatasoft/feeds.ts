@@ -1,4 +1,4 @@
-import type { FeedDefinition, SourceConfig } from "../../index";
+import type { FeedDefinition, SourceConfig } from "#/index";
 
 export const MEBIBYTE = 1024 * 1024;
 export const WEEK = 604_800;

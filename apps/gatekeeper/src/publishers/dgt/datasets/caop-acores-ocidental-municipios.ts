@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { CAOP_COLUMNS, CAOP_MUNICIPALITY_COLUMNS, geo2Feed } from "../wfs";
+import type { DatasetDefinition } from "#/catalog/define";
+import { CAOP_COLUMNS, CAOP_MUNICIPALITY_COLUMNS, geo2Feed } from "#/publishers/dgt/wfs";
 
 export const DATASET: DatasetDefinition = {
   title: "Azores western municipality boundaries (CAOP 2025)",

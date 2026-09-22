@@ -1,4 +1,4 @@
-import type { FeedDefinition } from "../../../index";
+import type { FeedDefinition } from "#/index";
 
 const MEBIBYTE = 1024 * 1024;
 const WEEK = 604_800;

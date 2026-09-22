@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { DAILY_STATISTICS } from "../ine/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { DAILY_STATISTICS } from "#/publishers/ine/ine/feeds";
 
 export const DATASET: DatasetDefinition = {
   title: "Monthly consumer price index",

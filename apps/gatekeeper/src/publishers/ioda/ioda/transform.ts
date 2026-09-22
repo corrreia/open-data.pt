@@ -12,7 +12,7 @@ import {
   type SourceConfig,
   type TransformContext,
   type UnstampedResult,
-} from "../../../index";
+} from "#/index";
 import { IODA_PAGE_LIMIT, envelope, envelopeType, number, object, sourceTime, text, validateIodaFeedConfig } from "./ioda";
 
 /** More points than any allowed window can hold; a longer answer is a source that changed shape. */

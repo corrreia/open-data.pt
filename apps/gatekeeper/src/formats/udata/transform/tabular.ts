@@ -14,7 +14,7 @@ import {
   readBoundedBytes,
   streamCsvRows,
   streamJsonArray,
-} from "../../../index";
+} from "#/index";
 import type {
   CanonicalField,
   CanonicalRecord,
@@ -27,7 +27,7 @@ import type {
   StreamingSummary,
   StreamingTransform,
   TransformContext,
-} from "../../../index";
+} from "#/index";
 import { isUtf8, peekBody, sniffJson, sniffText, type JsonSniff } from "./body";
 import type { Transformer } from "./transformer";
 

@@ -1,5 +1,5 @@
-import type { DatasetDefinition, FeedDefinition } from "../../../catalog/define";
-import { USGS_MAX_BYTES, USGS_REGIONS } from "../usgs";
+import type { DatasetDefinition, FeedDefinition } from "#/catalog/define";
+import { USGS_MAX_BYTES, USGS_REGIONS } from "#/publishers/usgs/usgs/index";
 
 export const DATASET: DatasetDefinition = {
   title: "USGS earthquakes around Portugal",

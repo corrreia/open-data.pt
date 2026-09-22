@@ -12,7 +12,7 @@ import {
   type SourceConfig,
   type SourceFetch,
   type SourceValidator,
-} from "../../../index";
+} from "#/index";
 
 /** The token endpoint stays on the gateway's standard port, whose certificate chain is complete. */
 export const METRO_TOKEN_URL = "https://api.metrolisboa.pt/oauth2/token";

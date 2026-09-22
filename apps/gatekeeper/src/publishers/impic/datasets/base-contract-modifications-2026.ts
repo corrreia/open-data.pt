@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { MIB, governmentFeed } from "../../../formats/udata/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { MIB, governmentFeed } from "#/formats/udata/feeds";
 
 export const DATASET: DatasetDefinition = {
   title: "Public-contract modifications published in 2026",

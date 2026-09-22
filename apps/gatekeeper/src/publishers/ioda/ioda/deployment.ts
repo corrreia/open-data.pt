@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../../index";
+import type { LibraryDeployment } from "#/index";
 import { iodaCollector } from "./collector";
 import { IODA_FEEDS, IODA_HOST } from "./ioda";
 

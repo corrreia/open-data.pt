@@ -1,4 +1,4 @@
-import { isJsonString, parseJson } from "../../../index";
+import { isJsonString, parseJson } from "#/index";
 
 /** The first bytes of a body, and the whole body again with those bytes still at its front. */
 export interface PeekedBody {

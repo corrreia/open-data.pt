@@ -1,6 +1,6 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { MONTH } from "../../../formats/opendatasoft/feeds";
-import { energy } from "../opendatasoft";
+import type { DatasetDefinition } from "#/catalog/define";
+import { MONTH } from "#/formats/opendatasoft/feeds";
+import { energy } from "#/publishers/e-redes/opendatasoft";
 
 export const DATASET: DatasetDefinition = {
   title: "Public street lighting by municipality and lamp type",

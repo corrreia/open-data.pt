@@ -1,4 +1,4 @@
-import type { DatasetDefinition } from "../../../catalog/define";
+import type { DatasetDefinition } from "#/catalog/define";
 
 export const DATASET: DatasetDefinition = {
   title: "IPMA daily municipal climate",

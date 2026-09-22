@@ -1,4 +1,4 @@
-import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../../index";
+import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { REN_FEEDS, collectRenFeed, collectRenHistory, validateRenFeedConfig } from "./ren";
 import { RenTransformer } from "./transform";
 import { isRenPeriodicService, REN_PERIODIC_ORIGIN, renPeriodicCollector } from "./periodic";

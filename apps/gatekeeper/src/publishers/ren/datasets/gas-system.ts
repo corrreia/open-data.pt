@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { renChartFeed } from "../ren/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { renChartFeed } from "#/publishers/ren/ren/feeds";
 
 /** The gas charts gain one point an hour. */
 const GAS_POLICY = {

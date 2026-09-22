@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../../index";
+import type { LibraryDeployment } from "#/index";
 import { snitCollector } from "./collector";
 import { SNIT_API_ORIGIN, SNIT_FEEDS } from "./snit";
 

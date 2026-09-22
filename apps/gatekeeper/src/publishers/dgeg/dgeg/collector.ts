@@ -1,4 +1,4 @@
-import { resolveFeed, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../../index";
+import { resolveFeed, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { DGEG_FEEDS, collectDgegFeed, validateDgegFeedConfig } from "./dgeg";
 import { DgegTransformer } from "./transform";
 

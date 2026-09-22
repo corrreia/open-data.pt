@@ -1,4 +1,4 @@
-import type { FeedDefinition } from "../../catalog/define";
+import type { FeedDefinition } from "#/catalog/define";
 
 export const DAY_SECONDS = 86_400;
 

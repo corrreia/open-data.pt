@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { LISBON_UNSTATED_POLICY, lisbonFeed } from "../arcgis";
+import type { DatasetDefinition } from "#/catalog/define";
+import { LISBON_UNSTATED_POLICY, lisbonFeed } from "#/publishers/cm-lisboa/arcgis";
 
 export const DATASET: DatasetDefinition = {
   title: "Lisbon recycling points",

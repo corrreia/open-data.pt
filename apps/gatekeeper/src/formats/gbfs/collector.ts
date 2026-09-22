@@ -1,4 +1,4 @@
-import { resolveFeed, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../index";
+import { resolveFeed, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { GBFS_FEEDS, allowedGbfsHosts, collectGbfsFeed, validateGbfsFeedConfig } from "./gbfs";
 import { GbfsTransformer } from "./transform";
 

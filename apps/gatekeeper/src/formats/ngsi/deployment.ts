@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../index";
+import type { LibraryDeployment } from "#/index";
 import { ngsiCollector } from "./collector";
 import { NGSI_FEEDS } from "./ngsi";
 

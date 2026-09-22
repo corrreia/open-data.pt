@@ -20,7 +20,7 @@ import {
   type SourceFetch,
   type SourceValidator,
   type SourceConfig,
-} from "../../../index";
+} from "#/index";
 import { normalizeEurostatPeriod, validateEurostatDatasetStructure } from "./transform";
 
 export const EUROSTAT_MAX_BYTES = 8 * 1024 * 1024;

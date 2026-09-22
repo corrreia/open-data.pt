@@ -1,6 +1,6 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { REALTIME_POLICY, referenceFeed } from "../../../formats/gbfs/feeds";
-import { PUBLISHER } from "../index";
+import type { DatasetDefinition } from "#/catalog/define";
+import { REALTIME_POLICY, referenceFeed } from "#/formats/gbfs/feeds";
+import { PUBLISHER } from "#/publishers/bird/index";
 
 export const DATASET: DatasetDefinition = {
   title: "Bird vehicles and station availability in Lisbon",

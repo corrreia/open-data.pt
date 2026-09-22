@@ -1,4 +1,4 @@
-import { resolveFeed, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../../index";
+import { resolveFeed, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { FIRMS_FEEDS, collectFirmsFeed, validateFirmsFeedConfig } from "./firms";
 import { FirmsTransformer } from "./transform";
 

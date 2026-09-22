@@ -1,6 +1,6 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import type { FeedDefinition } from "../../../catalog/define";
-import { MYINFO_NETWORK_POLICY, MYINFO_TIMETABLE_POLICY } from "../../../formats/myinfo/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import type { FeedDefinition } from "#/catalog/define";
+import { MYINFO_NETWORK_POLICY, MYINFO_TIMETABLE_POLICY } from "#/formats/myinfo/feeds";
 
 const LISBOA = "4325";
 

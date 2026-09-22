@@ -1,4 +1,4 @@
-import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../../index";
+import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { METRO_FEEDS, collectMetroFeed, validateMetroFeedConfig, type MetroCredentials } from "./metrolisboa";
 import { MetroLisboaTransformer } from "./transform";
 

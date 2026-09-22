@@ -16,7 +16,7 @@ import {
   type SourceProvenance,
   type SourceValidator,
   type SourceConfig,
-} from "../../../index";
+} from "#/index";
 
 export const INE_MAX_BYTES = 8 * 1024 * 1024;
 export const INE_HISTORY_MAX_BYTES = INE_MAX_BYTES;

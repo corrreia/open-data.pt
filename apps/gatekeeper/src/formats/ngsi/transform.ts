@@ -16,7 +16,7 @@ import {
   type SourceConfig,
   type TransformContext,
   type UnstampedResult,
-} from "../../index";
+} from "#/index";
 import { ngsiMeasures } from "./ngsi";
 
 /**

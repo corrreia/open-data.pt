@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { SNIRH_MONTHLY_POLICY } from "../snirh/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { SNIRH_MONTHLY_POLICY } from "#/publishers/apa/snirh/feeds";
 
 export const DATASET: DatasetDefinition = {
   title: "SNIRH monthly bulletins",

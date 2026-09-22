@@ -16,7 +16,7 @@ import {
   type SourceNotModified,
   type SourceValidator,
   type SourceConfig,
-} from "../../index";
+} from "#/index";
 
 export const GBFS_MAX_BYTES = 4 * 1024 * 1024;
 const DISCOVERY_MAX_BYTES = 256 * 1024;

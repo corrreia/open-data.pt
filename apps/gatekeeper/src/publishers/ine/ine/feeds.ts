@@ -1,4 +1,4 @@
-import type { FeedDefinition } from "../../../catalog/define";
+import type { FeedDefinition } from "#/catalog/define";
 
 const MEBIBYTE = 1024 * 1024;
 

@@ -1,4 +1,4 @@
-import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../index";
+import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { WFS_FEEDS, collectWfsFeed, validateWfsFeedConfig, wfsHosts } from "./wfs";
 import { WfsTransformer } from "./transform";
 

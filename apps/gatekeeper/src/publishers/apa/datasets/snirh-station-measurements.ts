@@ -1,6 +1,6 @@
-import type { DatasetDefinition, FeedDefinition } from "../../../catalog/define";
-import { SNIRH_READINGS, type SnirhReadingName } from "../snirh";
-import { SNIRH_DAILY_POLICY, SNIRH_HOURLY_POLICY, SNIRH_MONTHLY_POLICY } from "../snirh/feeds";
+import type { DatasetDefinition, FeedDefinition } from "#/catalog/define";
+import { SNIRH_READINGS, type SnirhReadingName } from "#/publishers/apa/snirh/index";
+import { SNIRH_DAILY_POLICY, SNIRH_HOURLY_POLICY, SNIRH_MONTHLY_POLICY } from "#/publishers/apa/snirh/feeds";
 
 function reading(slug: string, name: SnirhReadingName, policy: FeedDefinition["policy"]): FeedDefinition {
   const definition = SNIRH_READINGS[name];

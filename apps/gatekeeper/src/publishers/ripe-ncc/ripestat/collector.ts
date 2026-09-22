@@ -1,4 +1,4 @@
-import { resolveFeed, type NormalizedCollector, type SourceConfig } from "../../../index";
+import { resolveFeed, type NormalizedCollector, type SourceConfig } from "#/index";
 import { collectRipestatFeed, RIPESTAT_FEEDS, validateRipestatFeedConfig } from "./ripestat";
 import { RipestatTransformer } from "./transform";
 

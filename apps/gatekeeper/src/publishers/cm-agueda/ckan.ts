@@ -1,5 +1,5 @@
-import type { FeedDefinition } from "../../catalog/define";
-import type { SourceConfig } from "../../index";
+import type { FeedDefinition } from "#/catalog/define";
+import type { SourceConfig } from "#/index";
 
 /** One slowly changing municipal location inventory, with no live availability claim. */
 export function aguedaFeed(slug: string, portalDataset: string, resource: string, options: SourceConfig): FeedDefinition {

@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { LISBON_POLICY, lisbonFeed } from "../arcgis";
+import type { DatasetDefinition } from "#/catalog/define";
+import { LISBON_POLICY, lisbonFeed } from "#/publishers/cm-lisboa/arcgis";
 
 // The permits layer is about 12,000 parcel outlines, roughly 13 MB of GeoJSON.
 const LISBON_PERMITS_POLICY = {

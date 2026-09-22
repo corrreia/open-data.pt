@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { annualLatest } from "../ine/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { annualLatest } from "#/publishers/ine/ine/feeds";
 
 export const DATASET: DatasetDefinition = {
   title: "Households with broadband internet access",

@@ -15,7 +15,7 @@ import {
   type JsonValue,
   type SourceConfig,
   type SourceFetch,
-} from "../../../index";
+} from "#/index";
 
 export const RIPESTAT_ORIGIN = "https://stat.ripe.net";
 export const RIPESTAT_MAX_BYTES = 1024 * 1024;

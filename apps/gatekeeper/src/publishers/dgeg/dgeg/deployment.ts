@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../../index";
+import type { LibraryDeployment } from "#/index";
 import { dgegCollector } from "./collector";
 import { DGEG_FEEDS } from "./dgeg";
 

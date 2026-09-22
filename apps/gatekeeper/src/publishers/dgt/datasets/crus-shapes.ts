@@ -1,7 +1,7 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import type { CollectionPolicyDefinition } from "../../../index";
-import { HOUR, MEBIBYTE } from "../../../formats/ogc/feeds";
-import { CRUS_COLUMNS, DGT_HOST } from "../ogc";
+import type { DatasetDefinition } from "#/catalog/define";
+import type { CollectionPolicyDefinition } from "#/index";
+import { HOUR, MEBIBYTE } from "#/formats/ogc/feeds";
+import { CRUS_COLUMNS, DGT_HOST } from "#/publishers/dgt/ogc";
 
 export const DATASET: DatasetDefinition = {
   title: "Mainland Portugal land-use regime: parcel boundaries (CRUS)",

@@ -1,4 +1,4 @@
-import { GatekeeperError } from "../../index";
+import { GatekeeperError } from "#/index";
 
 /** One GTFS CSV row keyed by its header names. Missing trailing values read as "". */
 export type GtfsRow = Record<string, string>;

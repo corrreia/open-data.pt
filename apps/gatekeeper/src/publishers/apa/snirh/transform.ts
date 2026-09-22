@@ -14,7 +14,7 @@ import {
   type TransformContext,
   type Transformer,
   type UnstampedResult,
-} from "../../../index";
+} from "#/index";
 import { SNIRH_READINGS, decodeEntities, isSnirhReading, parseReadingsCsv, validateSnirhFeedConfig, type SnirhDocument, type SnirhReadingName, type SnirhStation } from "./snirh";
 
 const SERIES_SCHEMA: CanonicalSchema = {

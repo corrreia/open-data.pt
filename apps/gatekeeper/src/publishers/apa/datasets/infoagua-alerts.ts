@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { INFOAGUA_MAX_BYTES } from "../infoagua";
+import type { DatasetDefinition } from "#/catalog/define";
+import { INFOAGUA_MAX_BYTES } from "#/publishers/apa/infoagua/index";
 
 export const DATASET: DatasetDefinition = {
   title: "InfoÁgua alerts",

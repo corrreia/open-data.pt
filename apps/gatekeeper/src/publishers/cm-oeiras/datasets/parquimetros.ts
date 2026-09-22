@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { oeirasFeed } from "../wfs";
+import type { DatasetDefinition } from "#/catalog/define";
+import { oeirasFeed } from "#/publishers/cm-oeiras/wfs";
 
 export const DATASET: DatasetDefinition = {
   title: "Oeiras parking meters",

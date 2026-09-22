@@ -1,4 +1,4 @@
-import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../../index";
+import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { INFOAGUA_FEEDS, collectInfoaguaFeed, validateInfoaguaFeedConfig } from "./infoagua";
 import { InfoaguaTransformer } from "./transform";
 

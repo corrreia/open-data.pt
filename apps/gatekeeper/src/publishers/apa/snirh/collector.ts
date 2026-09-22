@@ -1,4 +1,4 @@
-import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../../index";
+import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { SNIRH_FEEDS, collectSnirhFeed, collectSnirhHistory, validateSnirhFeedConfig } from "./snirh";
 import { SnirhTransformer } from "./transform";
 

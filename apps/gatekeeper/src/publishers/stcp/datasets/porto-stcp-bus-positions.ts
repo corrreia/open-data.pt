@@ -1,6 +1,6 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import type { CollectionPolicyDefinition } from "../../../index";
-import { PORTO_BROKER } from "../../porto-digital/ngsi";
+import type { DatasetDefinition } from "#/catalog/define";
+import type { CollectionPolicyDefinition } from "#/index";
+import { PORTO_BROKER } from "#/publishers/porto-digital/ngsi";
 
 /**
  * Where the buses are is worth knowing now and worth nothing later, so the

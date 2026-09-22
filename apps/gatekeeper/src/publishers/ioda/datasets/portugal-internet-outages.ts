@@ -1,6 +1,6 @@
-import type { DatasetDefinition, FeedDefinition } from "../../../catalog/define";
-import type { SourceConfig } from "../../../index";
-import { IODA_MAX_BYTES, IODA_PAGE_LIMIT, IODA_PORTUGUESE_ASNS } from "../ioda";
+import type { DatasetDefinition, FeedDefinition } from "#/catalog/define";
+import type { SourceConfig } from "#/index";
+import { IODA_MAX_BYTES, IODA_PAGE_LIMIT, IODA_PORTUGUESE_ASNS } from "#/publishers/ioda/ioda/index";
 
 /**
  * IODA detects an outage in ten-minute bins, so a quarter of an hour keeps the

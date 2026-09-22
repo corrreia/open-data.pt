@@ -1,4 +1,4 @@
-import { GatekeeperError } from "../../index";
+import { GatekeeperError } from "#/index";
 
 /**
  * Identities a walk has already seen, so a feature repeated across pages cannot

@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { appsFeed } from "../wfs";
+import type { DatasetDefinition } from "#/catalog/define";
+import { appsFeed } from "#/publishers/agif/wfs";
 
 export const DATASET: DatasetDefinition = {
   title: "Fire-prevention priority areas in Porto",

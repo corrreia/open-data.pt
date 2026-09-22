@@ -1,6 +1,6 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { MONTH } from "../../../formats/opendatasoft/feeds";
-import { energy } from "../opendatasoft";
+import type { DatasetDefinition } from "#/catalog/define";
+import { MONTH } from "#/formats/opendatasoft/feeds";
+import { energy } from "#/publishers/e-redes/opendatasoft";
 
 export const DATASET: DatasetDefinition = {
   title: "Historical hourly electricity consumption in postal areas 1000 and 4000",

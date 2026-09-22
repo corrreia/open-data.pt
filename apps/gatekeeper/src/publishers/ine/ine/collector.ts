@@ -1,4 +1,4 @@
-import { resolveFeed, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../../index";
+import { resolveFeed, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { INE_FEEDS, collectIneIndicator, collectIneIndicatorHistory, validateIneFeedConfig } from "./ine";
 import { transformIneIndicator } from "./transform";
 

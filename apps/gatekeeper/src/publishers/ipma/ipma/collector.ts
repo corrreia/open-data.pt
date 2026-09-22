@@ -1,4 +1,4 @@
-import { resolveFeed, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../../index";
+import { resolveFeed, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { IPMA_FEEDS, collectIpmaFeed, validateIpmaFeedConfig } from "./ipma";
 import { IpmaTransformer } from "./transform";
 import { IpmaDatasetTransformer, isIpmaDatasetFeed } from "./datasets";

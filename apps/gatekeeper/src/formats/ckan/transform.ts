@@ -21,7 +21,7 @@ import {
   type ProductFinalization,
   type StreamingTransform,
   type TransformContext,
-} from "../../index";
+} from "#/index";
 import type { CkanResourceMetadata } from "./ckan";
 import { csvSeriesOptions, transformCkanCsvSeries } from "./csv-series";
 

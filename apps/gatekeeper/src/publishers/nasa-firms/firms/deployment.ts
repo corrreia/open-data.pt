@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../../index";
+import type { LibraryDeployment } from "#/index";
 import { firmsCollector } from "./collector";
 import { FIRMS_API_ORIGIN, FIRMS_FEEDS } from "./firms";
 

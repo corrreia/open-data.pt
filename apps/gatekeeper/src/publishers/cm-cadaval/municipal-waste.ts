@@ -1,7 +1,7 @@
-import { field, streamCsvRows } from "../../index";
-import type { NormalizedRow, ProductDeclaration, ProductFinalization, StreamingTransform, TransformContext } from "../../index";
-import { isUtf8, peekBody } from "../../formats/udata/transform/body";
-import type { StreamingTransformer } from "../../index";
+import { field, streamCsvRows } from "#/index";
+import type { NormalizedRow, ProductDeclaration, ProductFinalization, StreamingTransform, TransformContext } from "#/index";
+import { isUtf8, peekBody } from "#/formats/udata/transform/body";
+import type { StreamingTransformer } from "#/index";
 
 /** Bytes read to choose between UTF-8 and Windows-1252 before the rows stream. */
 const PREFIX_BYTES = 64 * 1024;

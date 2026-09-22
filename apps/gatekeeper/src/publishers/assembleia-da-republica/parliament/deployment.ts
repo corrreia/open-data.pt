@@ -1,4 +1,4 @@
-import { r2Staging, type LibraryDeployment } from "../../../index";
+import { r2Staging, type LibraryDeployment } from "#/index";
 import { parliamentCollector, type ParliamentCollectorOptions } from "./collector";
 import { PARLIAMENT_FEEDS } from "./parliament";
 

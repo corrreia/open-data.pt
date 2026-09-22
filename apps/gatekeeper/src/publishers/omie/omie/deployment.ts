@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../../index";
+import type { LibraryDeployment } from "#/index";
 import { omieCollector } from "./collector";
 import { OMIE_FEEDS } from "./omie";
 

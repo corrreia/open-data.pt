@@ -12,7 +12,7 @@ import {
   type JsonValue,
   type SourceConfig,
   type SourceFetch,
-} from "../../../index";
+} from "#/index";
 
 export const IODA_HOST = "api.ioda.inetintel.cc.gatech.edu";
 /** A three-hour signal window of one entity is about 10 KB; a megabyte leaves room for a slower day. */

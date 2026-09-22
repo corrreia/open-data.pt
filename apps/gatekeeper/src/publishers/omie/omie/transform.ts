@@ -11,7 +11,7 @@ import {
   type SeriesPoint,
   type TransformContext,
   type TransformResult,
-} from "../../../index";
+} from "#/index";
 import { OMIE_SERIES, type OmieSeries } from "./omie";
 import { marketPeriodStart, parseMarketDate } from "./market-time";
 

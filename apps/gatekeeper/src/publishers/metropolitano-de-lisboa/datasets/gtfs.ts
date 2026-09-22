@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { DAILY_STATIC } from "../../../formats/gtfs/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { DAILY_STATIC } from "#/formats/gtfs/feeds";
 
 export const DATASET: DatasetDefinition = {
   title: "Metropolitano de Lisboa GTFS",

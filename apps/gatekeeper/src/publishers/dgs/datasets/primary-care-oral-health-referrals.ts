@@ -1,5 +1,5 @@
-import type { DatasetDefinition, FeedDefinition } from "../../../catalog/define";
-import { MIB, annualPolicy } from "../../../formats/udata/feeds";
+import type { DatasetDefinition, FeedDefinition } from "#/catalog/define";
+import { MIB, annualPolicy } from "#/formats/udata/feeds";
 
 /** A policy whose normalized output may exceed the kernel's 16 MiB default cap. */
 function withOutputCap(policy: FeedDefinition["policy"], maxOutputBytes: number): FeedDefinition["policy"] {

@@ -17,7 +17,7 @@ import {
   type SourceFetch,
   type SourceNotModified,
   type SourceValidator,
-} from "../../index";
+} from "#/index";
 import { MAX_FEATURE_BYTES } from "./transform";
 
 export const MAX_METADATA_BYTES = 1024 * 1024;

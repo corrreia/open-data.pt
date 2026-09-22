@@ -12,7 +12,7 @@ import {
   type NormalizedRow,
   type StreamingTransform,
   type TransformContext,
-} from "../../index";
+} from "#/index";
 
 /** Largest single feature accepted, in bytes: a detailed boundary polygon fits. */
 export const MAX_FEATURE_BYTES = 5 * 1024 * 1024;

@@ -14,7 +14,7 @@ import {
   type ProductFinalization,
   type StreamingTransform,
   type TransformContext,
-} from "../../../index";
+} from "#/index";
 import { pageEnvelope, RIPEATLAS_MAX_PAGE_BYTES, RIPEATLAS_MAX_RECORDS, validateRipeatlasFeedConfig } from "./ripeatlas";
 
 /** The probe states this platform inventories, named from the status ID rather than the free-text label. */

@@ -1,4 +1,4 @@
-import type { FeedDefinition } from "../../../catalog/define";
+import type { FeedDefinition } from "#/catalog/define";
 import type { RenServiceName } from "./ren";
 
 /** One REN chart service, read at its dataset's policy and marked stale after an hour. */

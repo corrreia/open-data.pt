@@ -1,6 +1,6 @@
 import type { ExampleFeed } from "@open-data-pt/contract";
 
-import type { StreamingTransformer } from "../library";
+import type { StreamingTransformer } from "#/library";
 
 import type { Licence } from "./licences";
 import type { Topic } from "./topics";

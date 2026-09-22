@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { ANNUAL_SERIES } from "../ine/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { ANNUAL_SERIES } from "#/publishers/ine/ine/feeds";
 
 export const DATASET: DatasetDefinition = {
   title: "Average monthly earnings by area",

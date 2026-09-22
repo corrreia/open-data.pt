@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { DAILY_STATISTICS, DAY } from "../eurostat/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { DAILY_STATISTICS, DAY } from "#/publishers/eurostat/eurostat/feeds";
 
 export const DATASET: DatasetDefinition = {
   title: "Portugal monthly unemployment rate",

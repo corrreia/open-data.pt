@@ -1,5 +1,5 @@
-import { field, isJsonNumber, isJsonObject, isJsonString, lisbonDay, lisbonInstants, parseJsonBytes } from "../../../index";
-import type { CanonicalRecord, CanonicalSchema, JsonObject, JsonValue, ProductBuild, SeriesPoint, TransformContext, Transformer, UnstampedResult } from "../../../index";
+import { field, isJsonNumber, isJsonObject, isJsonString, lisbonDay, lisbonInstants, parseJsonBytes } from "#/index";
+import type { CanonicalRecord, CanonicalSchema, JsonObject, JsonValue, ProductBuild, SeriesPoint, TransformContext, Transformer, UnstampedResult } from "#/index";
 import { isRenNoDataResponse, REN_SERVICES, validateRenFeedConfig, type RenCollectionDocument, type RenServiceName } from "./ren";
 
 interface ParsedSeries {

@@ -8,7 +8,7 @@ import {
   type SourceConfig,
   type SourceFetch,
   type SourceValidator,
-} from "../../index";
+} from "#/index";
 import { MAX_ARCHIVE_BYTES } from "./zip";
 
 export const GTFS_ENTRY_NAMES = ["agency", "stops", "routes", "calendar", "calendar_dates", "trips", "shapes", "stop_times", "feed_info"] as const;

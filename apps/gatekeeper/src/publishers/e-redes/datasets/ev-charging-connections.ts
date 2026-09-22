@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { E_REDES_PERIODIC_SERIES } from "../opendatasoft";
+import type { DatasetDefinition } from "#/catalog/define";
+import { E_REDES_PERIODIC_SERIES } from "#/publishers/e-redes/opendatasoft";
 
 export const DATASET: DatasetDefinition = {
   title: "Electric-vehicle charging connection points",

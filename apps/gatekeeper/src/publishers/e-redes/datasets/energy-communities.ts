@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { E_REDES_PERIODIC_SERIES, eRedes } from "../opendatasoft";
+import type { DatasetDefinition } from "#/catalog/define";
+import { E_REDES_PERIODIC_SERIES, eRedes } from "#/publishers/e-redes/opendatasoft";
 
 export const DATASET: DatasetDefinition = {
   title: "Energy communities and collective self-consumption",

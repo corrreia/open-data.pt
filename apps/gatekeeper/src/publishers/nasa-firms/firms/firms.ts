@@ -1,4 +1,4 @@
-import { GatekeeperError, retryAfterSeconds, type FeedKindDescription, type SourceConfig, type SourceFetch } from "../../../index";
+import { GatekeeperError, retryAfterSeconds, type FeedKindDescription, type SourceConfig, type SourceFetch } from "#/index";
 
 export const FIRMS_API_ORIGIN = "https://firms.modaps.eosdis.nasa.gov";
 export const FIRMS_MAX_BYTES = 4 * 1024 * 1024;

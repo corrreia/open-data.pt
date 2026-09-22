@@ -1,5 +1,5 @@
-import type { FeedDefinition } from "../../catalog/define";
-import { MEBIBYTE, WEEK, measuredCollection, type LayerSize } from "../../formats/ogc/feeds";
+import type { FeedDefinition } from "#/catalog/define";
+import { MEBIBYTE, WEEK, measuredCollection, type LayerSize } from "#/formats/ogc/feeds";
 
 export const DGT_HOST = "ogcapi.dgterritorio.gov.pt";
 

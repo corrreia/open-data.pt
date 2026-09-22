@@ -1,4 +1,4 @@
-import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../../index";
+import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { NASA_POWER_FEEDS, collectNasaPowerFeed, validateNasaPowerFeedConfig } from "./nasapower";
 import { NasaPowerTransformer } from "./transform";
 

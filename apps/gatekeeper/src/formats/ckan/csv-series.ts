@@ -13,7 +13,7 @@ import {
   type SourceConfig,
   type StreamingTransform,
   type TransformContext,
-} from "../../index";
+} from "#/index";
 
 interface Measure {
   field: string;

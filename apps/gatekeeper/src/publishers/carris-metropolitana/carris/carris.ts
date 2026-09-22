@@ -7,7 +7,7 @@ import {
   type SourceNotModified,
   type SourceValidator,
   type SourceConfig,
-} from "../../../index";
+} from "#/index";
 
 export const CARRIS_FEEDS = {
   alerts: {

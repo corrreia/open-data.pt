@@ -1,6 +1,6 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { lisbonFeed } from "../arcgis";
-import { arcgisReferencePolicy } from "../../../formats/arcgis/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { lisbonFeed } from "#/publishers/cm-lisboa/arcgis";
+import { arcgisReferencePolicy } from "#/formats/arcgis/feeds";
 
 export const DATASET: DatasetDefinition = {
   title: "Lisbon signalised crossings",

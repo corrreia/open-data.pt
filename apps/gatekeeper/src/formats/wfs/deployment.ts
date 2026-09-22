@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../index";
+import type { LibraryDeployment } from "#/index";
 import { wfsCollector } from "./collector";
 import { WFS_FEEDS } from "./wfs";
 

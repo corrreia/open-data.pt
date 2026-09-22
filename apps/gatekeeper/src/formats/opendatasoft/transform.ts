@@ -19,7 +19,7 @@ import {
   type StreamingSummary,
   type StreamingTransform,
   type TransformContext,
-} from "../../index";
+} from "#/index";
 import { MAX_METADATA_BYTES, MAX_PAGE_BYTES } from "./opendatasoft";
 
 /**

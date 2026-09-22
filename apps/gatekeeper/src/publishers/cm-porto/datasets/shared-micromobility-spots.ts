@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { PORTO_BROKER, SENSOR } from "../../porto-digital/ngsi";
+import type { DatasetDefinition } from "#/catalog/define";
+import { PORTO_BROKER, SENSOR } from "#/publishers/porto-digital/ngsi";
 
 export const DATASET: DatasetDefinition = {
   title: "Porto shared micromobility parking",

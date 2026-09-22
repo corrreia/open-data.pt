@@ -1,5 +1,5 @@
-import type { DatasetDefinition, FeedDefinition } from "../../../catalog/define";
-import type { SourceConfig } from "../../../index";
+import type { DatasetDefinition, FeedDefinition } from "#/catalog/define";
+import type { SourceConfig } from "#/index";
 
 export const DATASET: DatasetDefinition = {
   title: "RIPEstat Portuguese internet resources",

@@ -11,7 +11,7 @@ import {
   type SourceConfig,
   type SourceFetch,
   type SourceValidator,
-} from "../../index";
+} from "#/index";
 
 /**
  * NGSI v2 is the context API a FIWARE broker answers on: one collection,

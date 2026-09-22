@@ -1,6 +1,6 @@
-import { field, streamCsvRecords } from "../../index";
-import type { NormalizedRow, ProductDeclaration, StreamingTransform, TransformContext } from "../../index";
-import type { StreamingTransformer } from "../../index";
+import { field, streamCsvRecords } from "#/index";
+import type { NormalizedRow, ProductDeclaration, StreamingTransform, TransformContext } from "#/index";
+import type { StreamingTransformer } from "#/index";
 
 const PRODUCT_KEY = "municipal-accessibility";
 

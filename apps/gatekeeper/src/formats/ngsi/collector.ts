@@ -1,4 +1,4 @@
-import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../index";
+import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { NGSI_FEEDS, collectNgsiFeed, ngsiHosts, validateNgsiFeedConfig } from "./ngsi";
 import { NgsiTransformer } from "./transform";
 

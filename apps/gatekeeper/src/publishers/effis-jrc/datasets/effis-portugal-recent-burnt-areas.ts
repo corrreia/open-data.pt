@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { WFS_MAX_BYTES } from "../../../formats/wfs";
+import type { DatasetDefinition } from "#/catalog/define";
+import { WFS_MAX_BYTES } from "#/formats/wfs/index";
 
 export const DATASET: DatasetDefinition = {
   title: "Recent EFFIS burnt areas in Portugal",

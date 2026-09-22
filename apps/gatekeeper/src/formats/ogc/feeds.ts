@@ -1,4 +1,4 @@
-import type { CollectionPolicyDefinition } from "../../index";
+import type { CollectionPolicyDefinition } from "#/index";
 
 export const MEBIBYTE = 1024 * 1024;
 

@@ -1,4 +1,4 @@
-import type { FeedDefinition } from "../../../catalog/define";
+import type { FeedDefinition } from "#/catalog/define";
 import { SNIRH_MAX_BYTES } from "./snirh";
 
 /**

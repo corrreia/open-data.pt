@@ -1,13 +1,4 @@
-import {
-  GatekeeperError,
-  field,
-  streamCsvRecords,
-  type CanonicalRecord,
-  type CanonicalSchema,
-  type NormalizedRow,
-  type StreamingTransform,
-  type TransformContext,
-} from "../../../index";
+import { GatekeeperError, field, streamCsvRecords, type CanonicalRecord, type CanonicalSchema, type NormalizedRow, type StreamingTransform, type TransformContext } from "#/index";
 import { FIRMS_REGIONS, validateFirmsFeedConfig } from "./firms";
 
 const SCHEMA: CanonicalSchema = {

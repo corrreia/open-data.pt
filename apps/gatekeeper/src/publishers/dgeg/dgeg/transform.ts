@@ -11,7 +11,7 @@ import {
   type ProductBuild,
   type TransformContext,
   type TransformResult,
-} from "../../../index";
+} from "#/index";
 import { dgegDateTime } from "./dgeg";
 
 const FUEL_TYPE_SCHEMA: CanonicalSchema = {

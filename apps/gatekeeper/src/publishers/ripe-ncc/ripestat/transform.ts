@@ -17,7 +17,7 @@ import {
   type SeriesPoint,
   type StreamingTransform,
   type TransformContext,
-} from "../../../index";
+} from "#/index";
 import { asn, endpoint, envelope, hasWarnings, sourceTime, validateCountry, validateRipestatFeedConfig } from "./ripestat";
 
 const DAY_MS = 86_400_000;

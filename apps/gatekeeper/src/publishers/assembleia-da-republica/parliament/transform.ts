@@ -17,7 +17,7 @@ import {
   type ProductRole,
   type StreamingTransform,
   type TransformContext,
-} from "../../../index";
+} from "#/index";
 import { parliamentDocument, type ParliamentFeed } from "./parliament";
 
 export const PARLIAMENT_NORMALIZER = { id: "parliament-public-records", version: "3" } as const;

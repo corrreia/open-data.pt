@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../../index";
+import type { LibraryDeployment } from "#/index";
 import { ripestatCollector } from "./collector";
 import { RIPESTAT_FEEDS } from "./ripestat";
 

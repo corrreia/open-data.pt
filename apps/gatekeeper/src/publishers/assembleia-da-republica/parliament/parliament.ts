@@ -12,8 +12,8 @@ import {
   type SourceFetch,
   type SourceStaging,
   type SourceValidator,
-} from "../../../index";
-import { limitBytes } from "../../../stream";
+} from "#/index";
+import { limitBytes } from "#/stream";
 
 const PAGE_ORIGIN = "https://www.parlamento.pt";
 const DOCUMENT_ORIGIN = "https://app.parlamento.pt";

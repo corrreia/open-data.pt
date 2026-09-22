@@ -12,7 +12,7 @@ import {
   type TransformContext,
   type Transformer,
   type UnstampedResult,
-} from "../../../index";
+} from "#/index";
 import { validateInfoaguaFeedConfig } from "./infoagua";
 
 function badge(id: string, colorField: string, label: string): CanonicalField {

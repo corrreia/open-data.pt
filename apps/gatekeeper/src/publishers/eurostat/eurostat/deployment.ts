@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../../index";
+import type { LibraryDeployment } from "#/index";
 import { eurostatCollector } from "./collector";
 import { EUROSTAT_FEEDS } from "./eurostat";
 

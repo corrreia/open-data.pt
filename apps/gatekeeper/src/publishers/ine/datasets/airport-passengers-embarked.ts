@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { latestPeriod } from "../ine/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { latestPeriod } from "#/publishers/ine/ine/feeds";
 
 export const DATASET: DatasetDefinition = {
   title: "Passengers boarding at Portuguese airports",

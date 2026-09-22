@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../../index";
+import type { LibraryDeployment } from "#/index";
 import { bpstatCollector } from "./collector";
 import { BPSTAT_FEEDS } from "./bpstat";
 

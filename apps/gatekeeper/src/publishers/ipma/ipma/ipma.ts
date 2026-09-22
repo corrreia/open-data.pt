@@ -11,8 +11,8 @@ import {
   type SourceFetch,
   type SourceValidator,
   type SourceConfig,
-} from "../../../index";
-import { limitBytes } from "../../../stream";
+} from "#/index";
+import { limitBytes } from "#/stream";
 import { isIpmaDatasetFeed, type IpmaDatasetFeed } from "./datasets";
 
 const ALLOWED_ORIGIN = "https://api.ipma.pt";

@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../../index";
+import type { LibraryDeployment } from "#/index";
 import { ineCollector } from "./collector";
 import { INE_FEEDS } from "./ine";
 

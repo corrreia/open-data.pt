@@ -14,7 +14,7 @@ import {
   type JsonValue,
   type SourceConfig,
   type SourceFetch,
-} from "../../../index";
+} from "#/index";
 
 export const RIPEATLAS_ORIGIN = "https://atlas.ripe.net";
 export const RIPEATLAS_MAX_BYTES = 2 * 1024 * 1024;

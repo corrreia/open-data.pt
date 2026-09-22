@@ -1,6 +1,6 @@
-import type { DatasetDefinition, FeedDefinition } from "../../../catalog/define";
-import { WEEK, measuredCollection, type LayerSize } from "../../../formats/ogc/feeds";
-import { DGT_HOST } from "../ogc";
+import type { DatasetDefinition, FeedDefinition } from "#/catalog/define";
+import { WEEK, measuredCollection, type LayerSize } from "#/formats/ogc/feeds";
+import { DGT_HOST } from "#/publishers/dgt/ogc";
 
 /**
  * A layer whose budgets come from having read it, polled every week: the CAOP is

@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { DAILY_STATISTICS } from "../bpstat/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { DAILY_STATISTICS } from "#/publishers/banco-de-portugal/bpstat/feeds";
 
 export const DATASET: DatasetDefinition = {
   title: "Population, employment and unemployment indicators",

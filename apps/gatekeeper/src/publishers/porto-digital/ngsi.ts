@@ -1,4 +1,4 @@
-import type { CollectionPolicyDefinition } from "../../index";
+import type { CollectionPolicyDefinition } from "#/index";
 
 /**
  * Porto runs its Urban Platform on a FIWARE broker that answers without a key,

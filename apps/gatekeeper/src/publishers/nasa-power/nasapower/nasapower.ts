@@ -9,7 +9,7 @@ import {
   type SourceConfig,
   type SourceFetch,
   type SourceValidator,
-} from "../../../index";
+} from "#/index";
 
 export const NASA_POWER_API_ORIGIN = "https://power.larc.nasa.gov";
 export const NASA_POWER_MAX_BYTES = 4 * 1024 * 1024;

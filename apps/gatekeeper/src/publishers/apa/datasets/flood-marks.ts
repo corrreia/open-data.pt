@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { apaFeed } from "../arcgis";
+import type { DatasetDefinition } from "#/catalog/define";
+import { apaFeed } from "#/publishers/apa/arcgis";
 
 export const DATASET: DatasetDefinition = {
   title: "Portugal historical flood marks",

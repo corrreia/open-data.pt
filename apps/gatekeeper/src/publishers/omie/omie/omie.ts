@@ -11,7 +11,7 @@ import {
   type SourceNotModified,
   type SourceValidator,
   type SourceConfig,
-} from "../../../index";
+} from "#/index";
 import { marketDateBefore, marketPeriodStart, OMIE_HISTORY_EARLIEST_MARKET_DATE, shiftMarketDate } from "./market-time";
 
 const ALLOWED_ORIGIN = "https://www.omie.es";

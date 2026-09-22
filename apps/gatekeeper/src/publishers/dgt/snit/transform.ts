@@ -13,7 +13,7 @@ import {
   type ProductBuild,
   type TransformContext,
   type UnstampedResult,
-} from "../../../index";
+} from "#/index";
 
 /** One instrument: what it governs, where it applies and how far its paper trail reaches. */
 const INSTRUMENT_SCHEMA: CanonicalSchema = {

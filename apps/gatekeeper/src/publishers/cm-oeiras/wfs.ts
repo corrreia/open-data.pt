@@ -1,5 +1,5 @@
-import type { FeedDefinition } from "../../catalog/define";
-import { WFS_MAX_BYTES } from "../../formats/wfs";
+import type { FeedDefinition } from "#/catalog/define";
+import { WFS_MAX_BYTES } from "#/formats/wfs/index";
 
 /*
  * Oeiras publishes a `dados_abertos` workspace of 240 feature types on its own

@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { LICENSED_DAILY_STATIC } from "../../../formats/gtfs/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { LICENSED_DAILY_STATIC } from "#/formats/gtfs/feeds";
 
 const REFERENCE = {
   name: "Carris reference data",

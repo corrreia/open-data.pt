@@ -1,4 +1,4 @@
-import { resolveFeed, type NormalizedCollector, type SourceConfig } from "../../../index";
+import { resolveFeed, type NormalizedCollector, type SourceConfig } from "#/index";
 import { collectRipeatlasFeed, RIPEATLAS_FEEDS, validateRipeatlasFeedConfig } from "./ripeatlas";
 import { RipeatlasTransformer } from "./transform";
 

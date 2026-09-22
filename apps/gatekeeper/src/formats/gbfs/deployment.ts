@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../index";
+import type { LibraryDeployment } from "#/index";
 import { gbfsCollector } from "./collector";
 import { GBFS_FEEDS } from "./gbfs";
 

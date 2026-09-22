@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../../index";
+import type { LibraryDeployment } from "#/index";
 import { usgsCollector } from "./collector";
 import { USGS_API_ORIGIN, USGS_FEEDS } from "./usgs";
 

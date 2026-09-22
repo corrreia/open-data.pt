@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { lnegFeed } from "../ogc";
+import type { DatasetDefinition } from "#/catalog/define";
+import { lnegFeed } from "#/publishers/lneg/ogc";
 
 export const DATASET: DatasetDefinition = {
   title: "Groundwater points",

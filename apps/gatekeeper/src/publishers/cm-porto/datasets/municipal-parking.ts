@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { DAILY_REFERENCE, PORTO_HOST } from "../ckan";
+import type { DatasetDefinition } from "#/catalog/define";
+import { DAILY_REFERENCE, PORTO_HOST } from "#/publishers/cm-porto/ckan";
 
 export const DATASET: DatasetDefinition = {
   title: "Porto municipal car parks",

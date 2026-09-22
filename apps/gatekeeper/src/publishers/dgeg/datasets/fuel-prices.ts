@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { FUEL_PRICES_MAX_BYTES, FUEL_TYPES_MAX_BYTES } from "../dgeg/dgeg";
+import type { DatasetDefinition } from "#/catalog/define";
+import { FUEL_PRICES_MAX_BYTES, FUEL_TYPES_MAX_BYTES } from "#/publishers/dgeg/dgeg/dgeg";
 
 const HOURLY_PRICES = {
   name: "DGEG hourly fuel prices",

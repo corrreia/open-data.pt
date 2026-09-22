@@ -1,6 +1,6 @@
-import type { DatasetDefinition, FeedDefinition } from "../../../catalog/define";
-import { parliamentDocument, type ParliamentFeed } from "../parliament/parliament";
-import { PARLIAMENT_MAX_RECORDS } from "../parliament/transform";
+import type { DatasetDefinition, FeedDefinition } from "#/catalog/define";
+import { parliamentDocument, type ParliamentFeed } from "#/publishers/assembleia-da-republica/parliament/parliament";
+import { PARLIAMENT_MAX_RECORDS } from "#/publishers/assembleia-da-republica/parliament/transform";
 
 interface CollectionLimits {
   timeoutSeconds: number;

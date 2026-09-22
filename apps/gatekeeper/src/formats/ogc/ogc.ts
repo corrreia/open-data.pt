@@ -13,7 +13,7 @@ import {
   type JsonValue,
   type SourceConfig,
   type SourceFetch,
-} from "../../index";
+} from "#/index";
 import { SeenIdentities } from "./identity";
 import { MAX_FEATURE_BYTES } from "./transform";
 

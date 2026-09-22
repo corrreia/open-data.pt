@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { aguedaFeed } from "../ckan";
+import type { DatasetDefinition } from "#/catalog/define";
+import { aguedaFeed } from "#/publishers/cm-agueda/ckan";
 
 export const DATASET: DatasetDefinition = {
   title: "beÁgueda bicycle station locations",

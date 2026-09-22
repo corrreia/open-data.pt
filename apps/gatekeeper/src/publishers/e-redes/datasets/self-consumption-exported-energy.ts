@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { energy } from "../opendatasoft";
+import type { DatasetDefinition } from "#/catalog/define";
+import { energy } from "#/publishers/e-redes/opendatasoft";
 
 export const DATASET: DatasetDefinition = {
   title: "Energy exported by self-consumption installations",

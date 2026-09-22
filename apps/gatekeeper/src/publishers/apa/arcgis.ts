@@ -1,5 +1,5 @@
-import type { FeedDefinition } from "../../catalog/define";
-import { arcgisReferencePolicy } from "../../formats/arcgis/feeds";
+import type { FeedDefinition } from "#/catalog/define";
+import { arcgisReferencePolicy } from "#/formats/arcgis/feeds";
 
 const APA_HOST = "sniambgeoogc.apambiente.pt";
 const APA_SERVICE_ROOT = "getogc/rest/services/SNIAmb";

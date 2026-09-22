@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../../index";
+import type { LibraryDeployment } from "#/index";
 import { infoaguaCollector } from "./collector";
 import { INFOAGUA_FEEDS, INFOAGUA_ORIGIN } from "./infoagua";
 

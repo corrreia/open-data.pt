@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { portugalMonthly } from "../eurostat/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { portugalMonthly } from "#/publishers/eurostat/eurostat/feeds";
 
 export const DATASET: DatasetDefinition = {
   title: "Portugal monthly industrial production index",

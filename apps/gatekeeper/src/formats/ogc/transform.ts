@@ -14,7 +14,7 @@ import {
   type ProductFinalization,
   type StreamingTransform,
   type TransformContext,
-} from "../../index";
+} from "#/index";
 import { boundingBox, representativePoint } from "./geometry";
 import { SeenIdentities } from "./identity";
 

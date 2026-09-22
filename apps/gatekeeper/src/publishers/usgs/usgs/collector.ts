@@ -1,4 +1,4 @@
-import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../../index";
+import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { USGS_FEEDS, collectUsgsFeed, validateUsgsFeedConfig } from "./usgs";
 import { UsgsTransformer } from "./transform";
 

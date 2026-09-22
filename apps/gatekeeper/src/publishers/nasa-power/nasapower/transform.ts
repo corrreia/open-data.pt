@@ -11,7 +11,7 @@ import {
   type SeriesPoint,
   type TransformContext,
   type UnstampedResult,
-} from "../../../index";
+} from "#/index";
 import { validateNasaPowerFeedConfig } from "./nasapower";
 
 const SCHEMA: CanonicalSchema = {

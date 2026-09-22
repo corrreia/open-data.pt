@@ -13,7 +13,7 @@ import {
   type SourceFetch,
   type SourceProvenance,
   type SourceValidator,
-} from "../../../index";
+} from "#/index";
 
 export const ANEPC_API_ORIGIN = "https://api.sgifr.gov.pt";
 export const ANEPC_MAX_BYTES = 4 * 1024 * 1024;

@@ -1,6 +1,6 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { DOCKED_POLICY, REFERENCE_POLICY, referenceFeed } from "../../../formats/gbfs/feeds";
-import { PUBLISHER } from "../index";
+import type { DatasetDefinition } from "#/catalog/define";
+import { DOCKED_POLICY, REFERENCE_POLICY, referenceFeed } from "#/formats/gbfs/feeds";
+import { PUBLISHER } from "#/publishers/tubabike/index";
 
 /*
  * TubaBike is the one system here that fills GBFS's own licence field —

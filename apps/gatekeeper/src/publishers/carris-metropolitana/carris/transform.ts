@@ -1,5 +1,5 @@
-import { field, isJsonBoolean, isJsonNumber, isJsonObject, isJsonString, parseJsonBytes } from "../../../index";
-import type { CanonicalRecord, CanonicalSchema, JsonValue, ProductBuild, TransformContext, Transformer, UnstampedResult } from "../../../index";
+import { field, isJsonBoolean, isJsonNumber, isJsonObject, isJsonString, parseJsonBytes } from "#/index";
+import type { CanonicalRecord, CanonicalSchema, JsonValue, ProductBuild, TransformContext, Transformer, UnstampedResult } from "#/index";
 
 const LINE_SCHEMA: CanonicalSchema = {
   fields: [

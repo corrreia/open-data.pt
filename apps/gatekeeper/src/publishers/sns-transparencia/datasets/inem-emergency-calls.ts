@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { snsDaily } from "../opendatasoft";
+import type { DatasetDefinition } from "#/catalog/define";
+import { snsDaily } from "#/publishers/sns-transparencia/opendatasoft";
 
 export const DATASET: DatasetDefinition = {
   title: "INEM emergency calls answered per day",

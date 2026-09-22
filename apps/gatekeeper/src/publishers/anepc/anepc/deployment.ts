@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../../index";
+import type { LibraryDeployment } from "#/index";
 import { anepcCollector } from "./collector";
 import { ANEPC_API_ORIGIN, ANEPC_FEEDS } from "./anepc";
 

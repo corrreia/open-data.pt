@@ -1,4 +1,4 @@
-import { resolveFeed, type NormalizedCollector, type ResolvedFeed, type SourceConfig, type SourceStaging } from "../../../index";
+import { resolveFeed, type NormalizedCollector, type ResolvedFeed, type SourceConfig, type SourceStaging } from "#/index";
 import { collectParliamentFeed, PARLIAMENT_FEEDS, validateParliamentFeedConfig } from "./parliament";
 import { PARLIAMENT_NORMALIZER, transformParliament } from "./transform";
 

@@ -14,7 +14,7 @@ import {
   type SourceConfig,
   type SourceFetch,
   type SourceValidator,
-} from "../../../index";
+} from "#/index";
 
 /**
  * SNIT-SGT, the system behind the national register of territorial management

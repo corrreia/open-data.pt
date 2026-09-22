@@ -9,7 +9,7 @@ import {
   type SourceConfig,
   type SourceFetch,
   type SourceValidator,
-} from "../../../index";
+} from "#/index";
 
 /**
  * SNIRH, APA's national water resources information system. It has no API:

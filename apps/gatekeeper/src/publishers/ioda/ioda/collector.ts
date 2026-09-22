@@ -1,4 +1,4 @@
-import { resolveFeed, runTransformer, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../../index";
+import { resolveFeed, runTransformer, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { IODA_FEEDS, collectIodaFeed, iodaHosts, validateIodaFeedConfig } from "./ioda";
 import { IodaTransformer } from "./transform";
 

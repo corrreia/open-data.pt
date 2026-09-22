@@ -1,6 +1,6 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { DOCKED_POLICY, referenceFeed } from "../../../formats/gbfs/feeds";
-import { PUBLISHER } from "../index";
+import type { DatasetDefinition } from "#/catalog/define";
+import { DOCKED_POLICY, referenceFeed } from "#/formats/gbfs/feeds";
+import { PUBLISHER } from "#/publishers/bora/index";
 
 export const DATASET: DatasetDefinition = {
   title: "Bora bicycles and station availability in Viseu Dão Lafões",

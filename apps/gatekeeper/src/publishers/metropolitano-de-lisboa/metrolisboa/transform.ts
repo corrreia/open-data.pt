@@ -14,7 +14,7 @@ import {
   type ProductBuild,
   type Transformer,
   type UnstampedResult,
-} from "../../../index";
+} from "#/index";
 import { METRO_DAY_TYPES, METRO_LINES, type MetroDayType, type MetroLine } from "./metrolisboa";
 
 const LINE_NAMES = { amarela: "Amarela", azul: "Azul", verde: "Verde", vermelha: "Vermelha" } as const satisfies Record<MetroLine, string>;

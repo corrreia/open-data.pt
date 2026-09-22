@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../../index";
+import type { LibraryDeployment } from "#/index";
 import { carrisCollector } from "./collector";
 import { CARRIS_FEEDS } from "./carris";
 

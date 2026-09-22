@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../../index";
+import type { LibraryDeployment } from "#/index";
 import { renCollector } from "./collector";
 import { REN_FEEDS } from "./ren";
 

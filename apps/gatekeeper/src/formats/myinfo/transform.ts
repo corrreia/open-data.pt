@@ -13,7 +13,7 @@ import {
   type ProductBuild,
   type Transformer,
   type UnstampedResult,
-} from "../../index";
+} from "#/index";
 
 /**
  * A Card4B MYINFO portal's collection document — the stop network one page

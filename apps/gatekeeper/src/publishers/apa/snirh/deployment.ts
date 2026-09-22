@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../../index";
+import type { LibraryDeployment } from "#/index";
 import { snirhCollector } from "./collector";
 import { SNIRH_FEEDS, SNIRH_ORIGIN } from "./snirh";
 

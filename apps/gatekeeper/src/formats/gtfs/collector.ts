@@ -1,4 +1,4 @@
-import { resolveFeed, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../index";
+import { resolveFeed, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { GTFS_FEEDS, collectGtfsFeed, validateGtfsFeedConfig } from "./gtfs";
 import { GTFS_NORMALIZER, transformGtfs } from "./transform";
 

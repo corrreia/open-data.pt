@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { MIB, annualPolicy } from "../../../formats/udata/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { MIB, annualPolicy } from "#/formats/udata/feeds";
 
 export const DATASET: DatasetDefinition = {
   title: "Portuguese parish websites",

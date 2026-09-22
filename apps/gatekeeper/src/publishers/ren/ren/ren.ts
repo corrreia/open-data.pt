@@ -21,7 +21,7 @@ import {
   type SourceNotModified,
   type SourceValidator,
   type SourceConfig,
-} from "../../../index";
+} from "#/index";
 import { REN_PERIODIC_FEEDS, REN_PERIODIC_ORIGIN, collectRenPeriodic, isRenPeriodicService, validateRenPeriodicConfig } from "./periodic";
 
 export const REN_ORIGIN = "https://datahub.ren.pt";

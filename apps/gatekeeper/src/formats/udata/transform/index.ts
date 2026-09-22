@@ -1,4 +1,4 @@
-import type { SourceConfig, StreamingTransform, StreamingTransformer, TransformContext } from "../../../index";
+import type { SourceConfig, StreamingTransform, StreamingTransformer, TransformContext } from "#/index";
 import { TabularTransformer } from "./tabular";
 
 /** The one translator this library ships: any CSV or JSON table, read generically. */

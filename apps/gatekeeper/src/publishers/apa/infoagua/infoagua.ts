@@ -15,7 +15,7 @@ import {
   type SourceConfig,
   type SourceFetch,
   type SourceValidator,
-} from "../../../index";
+} from "#/index";
 
 /**
  * InfoÁgua, APA's public water app. It has no API: each page is rendered on

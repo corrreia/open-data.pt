@@ -1,4 +1,4 @@
-import { isJsonNumber, isJsonObject, isJsonString, type JsonObject, type JsonValue } from "../../index";
+import { isJsonNumber, isJsonObject, isJsonString, type JsonObject, type JsonValue } from "#/index";
 
 /**
  * A single longitude/latitude pair standing for a whole geometry, so a boundary

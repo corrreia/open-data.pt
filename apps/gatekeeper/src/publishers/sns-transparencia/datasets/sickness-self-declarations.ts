@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { health } from "../opendatasoft";
+import type { DatasetDefinition } from "#/catalog/define";
+import { health } from "#/publishers/sns-transparencia/opendatasoft";
 
 export const DATASET: DatasetDefinition = {
   title: "Sickness self-declarations by channel, sex and age",

@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../../index";
+import type { LibraryDeployment } from "#/index";
 import { ipmaCollector } from "./collector";
 import { IPMA_FEEDS } from "./ipma";
 

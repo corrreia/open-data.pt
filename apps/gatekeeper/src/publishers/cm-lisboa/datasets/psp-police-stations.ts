@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { lisbonFeed } from "../arcgis";
+import type { DatasetDefinition } from "#/catalog/define";
+import { lisbonFeed } from "#/publishers/cm-lisboa/arcgis";
 
 export const DATASET: DatasetDefinition = {
   title: "Lisbon PSP police stations",

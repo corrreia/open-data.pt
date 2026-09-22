@@ -1,4 +1,4 @@
-import type { SourceConfig } from "../../index";
+import type { SourceConfig } from "#/index";
 import { chooseTransformer } from "./transform";
 import { validateUdataSourceConfig } from "./udata";
 

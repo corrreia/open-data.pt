@@ -1,4 +1,4 @@
-import { GatekeeperError } from "../../index";
+import { GatekeeperError } from "#/index";
 
 /** Largest compressed archive read from the wire, whatever the feed policy allows. */
 export const MAX_ARCHIVE_BYTES = 128 * 1024 * 1024;

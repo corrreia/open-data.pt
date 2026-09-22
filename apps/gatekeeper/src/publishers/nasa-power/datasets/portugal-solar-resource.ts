@@ -1,5 +1,5 @@
-import type { DatasetDefinition, FeedDefinition } from "../../../catalog/define";
-import { NASA_POWER_LAG_DAYS, NASA_POWER_MAX_BYTES, NASA_POWER_REGIONS } from "../nasapower";
+import type { DatasetDefinition, FeedDefinition } from "#/catalog/define";
+import { NASA_POWER_LAG_DAYS, NASA_POWER_MAX_BYTES, NASA_POWER_REGIONS } from "#/publishers/nasa-power/nasapower/index";
 
 export const DATASET: DatasetDefinition = {
   title: "NASA POWER solar resource",

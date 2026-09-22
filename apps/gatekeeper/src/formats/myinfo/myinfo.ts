@@ -16,7 +16,7 @@ import {
   type SourceConfig,
   type SourceFetch,
   type SourceValidator,
-} from "../../index";
+} from "#/index";
 
 /** The one origin MYINFO answers on; every operator is a folder under it. */
 export const MYINFO_ORIGIN = "https://myinfo.4cloud.pt";

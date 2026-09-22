@@ -1,5 +1,5 @@
-import { asArray, isJsonArray, isJsonObject, parseJson, readBoundedBytes, streamCsvRecords, streamJsonArray } from "../../../index";
-import type { JsonObject, JsonValue } from "../../../index";
+import { asArray, isJsonArray, isJsonObject, parseJson, readBoundedBytes, streamCsvRecords, streamJsonArray } from "#/index";
+import type { JsonObject, JsonValue } from "#/index";
 import { isUtf8, peekBody, sniffJson, sniffText } from "./body";
 
 export interface DataColumn {

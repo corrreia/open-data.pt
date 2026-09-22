@@ -9,7 +9,7 @@ import {
   type SourceConfig,
   type SourceFetch,
   type SourceValidator,
-} from "../../../index";
+} from "#/index";
 
 export const USGS_API_ORIGIN = "https://earthquake.usgs.gov";
 export const USGS_MAX_BYTES = 4 * 1024 * 1024;

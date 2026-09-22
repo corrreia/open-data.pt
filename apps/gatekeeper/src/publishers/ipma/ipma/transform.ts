@@ -1,5 +1,5 @@
-import type { CanonicalRecord, CanonicalSchema, JsonObject, JsonValue, ProductBuild, SeriesPoint, TransformContext, TransformResult } from "../../../index";
-import { field, lisbonToUtc, sha256Hex, isJsonBoolean, isJsonNumber, isJsonObject, isJsonString, parseJsonBytes } from "../../../index";
+import type { CanonicalRecord, CanonicalSchema, JsonObject, JsonValue, ProductBuild, SeriesPoint, TransformContext, TransformResult } from "#/index";
+import { field, lisbonToUtc, sha256Hex, isJsonBoolean, isJsonNumber, isJsonObject, isJsonString, parseJsonBytes } from "#/index";
 
 const LATEST_STATION_SCHEMA: CanonicalSchema = {
   fields: [

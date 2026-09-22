@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../index";
+import type { LibraryDeployment } from "#/index";
 import { ckanCollector } from "./collector";
 import { CKAN_FEEDS } from "./ckan";
 

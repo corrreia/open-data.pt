@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { cascaisFeed } from "../ckan";
+import type { DatasetDefinition } from "#/catalog/define";
+import { cascaisFeed } from "#/publishers/cm-cascais/ckan";
 
 export const DATASET: DatasetDefinition = {
   title: "Cascais drinking fountains",

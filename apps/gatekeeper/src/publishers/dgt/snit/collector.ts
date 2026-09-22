@@ -1,4 +1,4 @@
-import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../../index";
+import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { SNIT_FEEDS, collectSnitFeed, validateSnitFeedConfig } from "./snit";
 import { SnitTransformer } from "./transform";
 

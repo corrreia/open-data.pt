@@ -1,4 +1,4 @@
-import { resolveFeed, type NormalizedCollector, type SourceConfig } from "../../../index";
+import { resolveFeed, type NormalizedCollector, type SourceConfig } from "#/index";
 import { collectPeeringdbFeed, PEERINGDB_FEEDS, validatePeeringdbFeedConfig } from "./peeringdb";
 import { PeeringdbTransformer } from "./transform";
 

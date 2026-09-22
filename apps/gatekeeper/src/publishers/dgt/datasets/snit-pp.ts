@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { MEBIBYTE, snitFeed } from "../snit/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { MEBIBYTE, snitFeed } from "#/publishers/dgt/snit/feeds";
 
 export const DATASET: DatasetDefinition = {
   title: "Detail plans",

@@ -1,5 +1,5 @@
-import type { FeedDefinition } from "../../catalog/define";
-import { WFS_MAX_BYTES } from "../../formats/wfs";
+import type { FeedDefinition } from "#/catalog/define";
+import { WFS_MAX_BYTES } from "#/formats/wfs/index";
 
 /*
  * The APPS layer is national — 22,631 parcels, about 22 MB of attributes — but

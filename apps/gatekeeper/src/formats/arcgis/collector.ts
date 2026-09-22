@@ -1,4 +1,4 @@
-import { allowedHosts, resolveFeed, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../index";
+import { allowedHosts, resolveFeed, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { ARCGIS_FEEDS, collectArcgisFeed, validateArcgisFeedConfig } from "./arcgis";
 import { ArcgisTransformer } from "./transform";
 

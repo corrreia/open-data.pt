@@ -1,5 +1,5 @@
-import type { FeedDefinition } from "../../catalog/define";
-import { WFS_MAX_BYTES } from "../../formats/wfs";
+import type { FeedDefinition } from "#/catalog/define";
+import { WFS_MAX_BYTES } from "#/formats/wfs/index";
 
 /*
  * DGT's GeoServer. WFS is switched off for the server as a whole —

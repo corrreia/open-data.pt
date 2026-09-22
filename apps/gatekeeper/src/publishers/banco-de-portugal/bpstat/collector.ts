@@ -1,4 +1,4 @@
-import { resolveFeed, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../../index";
+import { resolveFeed, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { BPSTAT_FEEDS, collectBpstatDataset, validateBpstatFeedConfig } from "./bpstat";
 import { transformBpstatDataset } from "./transform";
 

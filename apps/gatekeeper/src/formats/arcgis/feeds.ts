@@ -1,4 +1,4 @@
-import type { FeedDefinition } from "../../catalog/define";
+import type { FeedDefinition } from "#/catalog/define";
 
 /** A reference layer read once a day, whole, keeping only what changed. */
 export function arcgisReferencePolicy(name: string): FeedDefinition["policy"] {

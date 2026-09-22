@@ -17,7 +17,7 @@ import {
   type SourceNotModified,
   type SourceValidator,
   type SourceConfig,
-} from "../../../index";
+} from "#/index";
 
 // JSON-stat is buffered. Keep its source budget small; scoped examples use the
 // provider's series_ids and obs_last_n filters instead of downloading broad

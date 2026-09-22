@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../index";
+import type { LibraryDeployment } from "#/index";
 import { opendatasoftCollector } from "./collector";
 import { OPENDATASOFT_FEEDS } from "./opendatasoft";
 

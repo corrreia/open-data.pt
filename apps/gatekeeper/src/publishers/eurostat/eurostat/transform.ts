@@ -12,7 +12,7 @@ import {
   type SeriesPoint,
   type TransformContext,
   type TransformResult,
-} from "../../../index";
+} from "#/index";
 
 interface JsonStatDimension {
   id: string;

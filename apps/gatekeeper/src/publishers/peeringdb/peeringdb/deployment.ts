@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../../index";
+import type { LibraryDeployment } from "#/index";
 import { peeringdbCollector } from "./collector";
 import { PEERINGDB_FEEDS } from "./peeringdb";
 

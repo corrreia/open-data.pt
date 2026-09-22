@@ -13,7 +13,7 @@ import {
   type SeriesPoint,
   type TransformContext,
   type TransformResult,
-} from "../../index";
+} from "#/index";
 import { gbfsPart } from "./gbfs";
 
 const VEHICLE_SCHEMA: CanonicalSchema = {

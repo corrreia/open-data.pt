@@ -44,7 +44,7 @@ Then `pnpm catalog`, which adds it to the index the Worker imports. Nothing else
 
 ```ts
 // apps/gatekeeper/src/publishers/cm-porto/datasets/bicycle-racks.ts
-import type { DatasetDefinition } from "../../../catalog/define";
+import type { DatasetDefinition } from "#/catalog/define";
 
 export const DATASET: DatasetDefinition = {
   title: "Porto bicycle racks",
@@ -62,6 +62,11 @@ export const DATASET: DatasetDefinition = {
   ],
 };
 ```
+
+Inside the Gatekeeper, an import that leaves its own folder starts at `src/`: `#/index`,
+`#/catalog/define`, `#/formats/wfs/index`. That is Node's subpath imports (`"imports"` in
+`apps/gatekeeper/package.json`), which TypeScript, Wrangler's bundler and Vitest all read. An
+import of a sibling in the same folder stays relative.
 
 The dataset's key is its publisher's folder and its file: `cm-porto-bicycle-racks`. It never
 changes once merged — it addresses the dataset's page — so neither does the file's name.
@@ -83,7 +88,7 @@ lacks is one new entry there, and a test rejects one nothing uses.
 A folder named for their key, `apps/gatekeeper/src/publishers/<publisher>/`, with an `index.ts`:
 
 ```ts
-import type { PublisherDefinition } from "../../catalog/define";
+import type { PublisherDefinition } from "#/catalog/define";
 
 export const PUBLISHER: PublisherDefinition = {
   name: "Câmara Municipal do Porto",

@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { MYINFO_NETWORK_POLICY, MYINFO_TIMETABLE_POLICY } from "../../../formats/myinfo/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { MYINFO_NETWORK_POLICY, MYINFO_TIMETABLE_POLICY } from "#/formats/myinfo/feeds";
 
 export const DATASET: DatasetDefinition = {
   title: "Ribatejana stops and lines",

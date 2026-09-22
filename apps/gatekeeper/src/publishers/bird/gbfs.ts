@@ -1,5 +1,5 @@
-import type { FeedDefinition } from "../../catalog/define";
-import { REALTIME_POLICY } from "../../formats/gbfs/feeds";
+import type { FeedDefinition } from "#/catalog/define";
+import { REALTIME_POLICY } from "#/formats/gbfs/feeds";
 
 // Bird advertises a 60-second TTL; a five-minute public snapshot avoids
 // hammering the operator while retaining useful municipal fleet counts.

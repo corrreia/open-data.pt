@@ -16,7 +16,7 @@ import {
   type SourceFetch,
   type SourceValidator,
   type SourceConfig,
-} from "../../index";
+} from "#/index";
 
 export const MAX_METADATA_BYTES = 2 * 1024 * 1024;
 /** One records page, and therefore also the largest single record accepted. */

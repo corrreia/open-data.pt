@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../../index";
+import type { LibraryDeployment } from "#/index";
 import { nasaPowerCollector } from "./collector";
 import { NASA_POWER_API_ORIGIN, NASA_POWER_FEEDS } from "./nasapower";
 

@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { MEBIBYTE } from "../../../formats/opendatasoft/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { MEBIBYTE } from "#/formats/opendatasoft/feeds";
 
 export const DATASET: DatasetDefinition = {
   title: "Scheduled electricity interruptions",

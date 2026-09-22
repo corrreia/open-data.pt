@@ -11,7 +11,7 @@ import {
   type ProductBuild,
   type UnstampedResult,
   type TransformContext,
-} from "../../../index";
+} from "#/index";
 
 const SCHEMA: CanonicalSchema = {
   fields: [

@@ -1,4 +1,4 @@
-import type { PublisherDefinition } from "../../catalog/define";
+import type { PublisherDefinition } from "#/catalog/define";
 
 export const PUBLISHER: PublisherDefinition = {
   name: "USGS · U.S. Geological Survey",

@@ -13,7 +13,7 @@ import {
   type ProductFinalization,
   type StreamingTransform,
   type TransformContext,
-} from "../../../index";
+} from "#/index";
 import { pageRecords, PEERINGDB_MAX_RECORDS, validatePeeringdbFeedConfig } from "./peeringdb";
 
 const SCHEMA = {

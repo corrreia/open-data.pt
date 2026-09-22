@@ -16,7 +16,7 @@ import {
   type SourceConfig,
   type SourceFetch,
   type SourceNotModified,
-} from "../../index";
+} from "#/index";
 
 const MAX_METADATA_BYTES = 2 * 1024 * 1024;
 

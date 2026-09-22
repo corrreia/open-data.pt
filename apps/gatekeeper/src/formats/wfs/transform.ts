@@ -15,7 +15,7 @@ import {
   type SourceConfig,
   type TransformContext,
   type UnstampedResult,
-} from "../../index";
+} from "#/index";
 import { WFS_FEATURE_ID } from "./wfs";
 
 export class WfsTransformer {

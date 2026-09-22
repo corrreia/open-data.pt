@@ -11,7 +11,7 @@ import {
   type JsonValue,
   type SourceConfig,
   type SourceFetch,
-} from "../../../index";
+} from "#/index";
 
 export const PEERINGDB_ORIGIN = "https://www.peeringdb.com";
 export const PEERINGDB_PAGE_SIZE = 100;

@@ -14,7 +14,7 @@ import {
   type ProductFinalization,
   type StreamingTransform,
   type TransformContext,
-} from "../../../index";
+} from "#/index";
 
 export type IpmaDatasetFeed = "municipal-precipitation" | "municipal-temperature" | "shellfish-restrictions";
 

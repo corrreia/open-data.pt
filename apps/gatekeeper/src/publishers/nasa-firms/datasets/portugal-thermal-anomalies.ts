@@ -1,5 +1,5 @@
-import type { DatasetDefinition, FeedDefinition } from "../../../catalog/define";
-import { FIRMS_DAY_RANGE, FIRMS_MAX_BYTES, FIRMS_REGIONS } from "../firms";
+import type { DatasetDefinition, FeedDefinition } from "#/catalog/define";
+import { FIRMS_DAY_RANGE, FIRMS_MAX_BYTES, FIRMS_REGIONS } from "#/publishers/nasa-firms/firms/index";
 
 export const DATASET: DatasetDefinition = {
   title: "NASA FIRMS thermal anomalies",

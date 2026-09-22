@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { DAILY_STATISTICS } from "../bpstat/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { DAILY_STATISTICS } from "#/publishers/banco-de-portugal/bpstat/feeds";
 
 const MEBIBYTE = 1024 * 1024;
 

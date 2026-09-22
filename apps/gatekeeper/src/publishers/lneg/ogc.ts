@@ -1,5 +1,5 @@
-import type { FeedDefinition } from "../../catalog/define";
-import { MONTH, measuredCollection, type LayerSize } from "../../formats/ogc/feeds";
+import type { FeedDefinition } from "#/catalog/define";
+import { MONTH, measuredCollection, type LayerSize } from "#/formats/ogc/feeds";
 
 /*
  * LNEG runs its own pygeoapi at `ogcapi.lneg.pt`. These five are its collections

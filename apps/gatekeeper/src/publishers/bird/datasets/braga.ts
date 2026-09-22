@@ -1,7 +1,7 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { DAY_SECONDS, REALTIME_POLICY, referenceFeed } from "../../../formats/gbfs/feeds";
-import { birdFeed } from "../gbfs";
-import { PUBLISHER } from "../index";
+import type { DatasetDefinition } from "#/catalog/define";
+import { DAY_SECONDS, REALTIME_POLICY, referenceFeed } from "#/formats/gbfs/feeds";
+import { birdFeed } from "#/publishers/bird/gbfs";
+import { PUBLISHER } from "#/publishers/bird/index";
 
 // Bird Braga is an empty system: five vehicles that never move and a vehicle feed
 // stamped `last_updated: 0`. Keeping the feed keeps its published state; polling it

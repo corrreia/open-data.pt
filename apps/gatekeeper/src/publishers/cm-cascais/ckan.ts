@@ -1,4 +1,4 @@
-import type { FeedDefinition } from "../../catalog/define";
+import type { FeedDefinition } from "#/catalog/define";
 
 export const CASCAIS_DAILY_REFERENCE = {
   name: "Cascais CKAN daily reference snapshot",

@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../../index";
+import type { LibraryDeployment } from "#/index";
 import { ripeatlasCollector } from "./collector";
 import { RIPEATLAS_FEEDS } from "./ripeatlas";
 

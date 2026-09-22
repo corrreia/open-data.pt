@@ -21,7 +21,7 @@ import {
   type SourceProvenance,
   type SourceValidator,
   type SourceConfig,
-} from "../../index";
+} from "#/index";
 
 import { CKAN_NORMALIZER } from "./transform";
 import { csvSeriesOptions } from "./csv-series";

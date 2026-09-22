@@ -1,4 +1,4 @@
-import { allowedHosts, resolveFeed, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../index";
+import { allowedHosts, resolveFeed, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { OGC_FEEDS, collectOgcFeed, validateOgcFeedConfig } from "./ogc";
 import { OgcTransformer } from "./transform";
 

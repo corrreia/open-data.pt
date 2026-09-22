@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { srupFeed } from "../ogc";
+import type { DatasetDefinition } from "#/catalog/define";
+import { srupFeed } from "#/publishers/dgt/ogc";
 
 export const DATASET: DatasetDefinition = {
   title: "Protected areas as a public-utility restriction",

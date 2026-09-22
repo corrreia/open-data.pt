@@ -1,5 +1,5 @@
-import type { FeedDefinition, SourceConfig } from "../../index";
-import { MEBIBYTE, WEEK, boundedReportingPeriodFeed } from "../../formats/opendatasoft/feeds";
+import type { FeedDefinition, SourceConfig } from "#/index";
+import { MEBIBYTE, WEEK, boundedReportingPeriodFeed } from "#/formats/opendatasoft/feeds";
 import { PUBLISHER } from "./index";
 
 const HOST = "e-redes.opendatasoft.com";

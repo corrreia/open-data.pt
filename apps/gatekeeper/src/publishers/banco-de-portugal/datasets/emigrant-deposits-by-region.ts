@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { selectedSeries } from "../bpstat/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { selectedSeries } from "#/publishers/banco-de-portugal/bpstat/feeds";
 
 export const DATASET: DatasetDefinition = {
   title: "Emigrant deposits by Portuguese NUTS II region",

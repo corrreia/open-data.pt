@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { OMIE_MAX_BYTES } from "../omie/omie";
+import type { DatasetDefinition } from "#/catalog/define";
+import { OMIE_MAX_BYTES } from "#/publishers/omie/omie/omie";
 
 const POLICY = {
   name: "OMIE day-ahead prices",

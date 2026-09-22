@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { geo2Feed } from "../wfs";
+import type { DatasetDefinition } from "#/catalog/define";
+import { geo2Feed } from "#/publishers/dgt/wfs";
 
 export const DATASET: DatasetDefinition = {
   title: "Principal mountain summits",

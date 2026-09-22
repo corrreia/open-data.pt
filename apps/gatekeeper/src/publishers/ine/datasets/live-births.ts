@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { MONTHLY_SERIES } from "../ine/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { MONTHLY_SERIES } from "#/publishers/ine/ine/feeds";
 
 export const DATASET: DatasetDefinition = {
   title: "Monthly live births by area and sex",

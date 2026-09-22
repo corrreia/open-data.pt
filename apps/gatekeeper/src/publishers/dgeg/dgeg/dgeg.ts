@@ -15,7 +15,7 @@ import {
   type SourceNotModified,
   type SourceValidator,
   type SourceConfig,
-} from "../../../index";
+} from "#/index";
 
 export const DGEG_API_ORIGIN = "https://precoscombustiveis.dgeg.gov.pt";
 export const FUEL_TYPES_MAX_BYTES = 256 * 1024;

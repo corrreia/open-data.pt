@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { annualPolicy } from "../../../formats/udata/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { annualPolicy } from "#/formats/udata/feeds";
 
 export const DATASET: DatasetDefinition = {
   title: "Cadaval municipal waste in 2024",

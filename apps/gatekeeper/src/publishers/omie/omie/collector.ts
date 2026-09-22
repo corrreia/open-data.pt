@@ -1,4 +1,4 @@
-import { resolveFeed, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../../index";
+import { resolveFeed, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { OMIE_FEEDS, collectOmieFeed, collectOmieHistory, validateOmieFeedConfig } from "./omie";
 import { OmieTransformer } from "./transform";
 

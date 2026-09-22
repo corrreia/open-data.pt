@@ -1,4 +1,4 @@
-import type { DatasetDefinition } from "../../../catalog/define";
+import type { DatasetDefinition } from "#/catalog/define";
 
 export const DATASET: DatasetDefinition = {
   title: "Internet exchanges in Portugal",

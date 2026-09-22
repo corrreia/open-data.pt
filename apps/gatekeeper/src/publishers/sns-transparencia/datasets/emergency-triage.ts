@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { snsMonthly } from "../opendatasoft";
+import type { DatasetDefinition } from "#/catalog/define";
+import { snsMonthly } from "#/publishers/sns-transparencia/opendatasoft";
 
 export const DATASET: DatasetDefinition = {
   title: "Hospital emergency attendances by triage colour",

@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { ANNUAL_SERIES, annualLatest } from "../ine/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { ANNUAL_SERIES, annualLatest } from "#/publishers/ine/ine/feeds";
 
 export const DATASET: DatasetDefinition = {
   title: "Declared income after assessed tax by income quintile",

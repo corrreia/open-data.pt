@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { SNS_MONTHLY_SERIES } from "../opendatasoft";
+import type { DatasetDefinition } from "#/catalog/define";
+import { SNS_MONTHLY_SERIES } from "#/publishers/sns-transparencia/opendatasoft";
 
 export const DATASET: DatasetDefinition = {
   title: "Patients on surgery waiting lists within the 180-day target",

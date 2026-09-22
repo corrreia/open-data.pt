@@ -1,4 +1,4 @@
-import type { FeedDefinition } from "../../../catalog/define";
+import type { FeedDefinition } from "#/catalog/define";
 import { EUROSTAT_MAX_BYTES } from "./eurostat";
 
 export const DAY = 86_400;

@@ -1,5 +1,5 @@
-import type { FeedDefinition } from "../../catalog/define";
-import { arcgisReferencePolicy } from "../../formats/arcgis/feeds";
+import type { FeedDefinition } from "#/catalog/define";
+import { arcgisReferencePolicy } from "#/formats/arcgis/feeds";
 
 /*
  * Mafra means these to be read: a folder named `Dados_Abertos` on the

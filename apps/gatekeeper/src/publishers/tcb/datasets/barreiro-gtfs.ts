@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { LICENSED_DAILY_STATIC } from "../../../formats/gtfs/feeds";
+import type { DatasetDefinition } from "#/catalog/define";
+import { LICENSED_DAILY_STATIC } from "#/formats/gtfs/feeds";
 
 export const DATASET: DatasetDefinition = {
   title: "Transportes Colectivos do Barreiro GTFS",

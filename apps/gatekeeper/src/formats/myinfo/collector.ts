@@ -1,4 +1,4 @@
-import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../index";
+import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
 import { MYINFO_FEEDS, collectMyInfoFeed, validateMyInfoFeedConfig } from "./myinfo";
 import { MyInfoTransformer } from "./transform";
 

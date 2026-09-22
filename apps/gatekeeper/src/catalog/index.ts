@@ -1,6 +1,6 @@
 import type { CatalogDescription, ExampleFeed, SourceConfig } from "@open-data-pt/contract";
 
-import type { PublisherInputs, StreamingTransformer } from "../library";
+import type { PublisherInputs, StreamingTransformer } from "#/library";
 
 import { PUBLISHER_FOLDERS } from "./folders.generated";
 import { LICENCES } from "./licences";

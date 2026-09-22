@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../index";
+import type { LibraryDeployment } from "#/index";
 import { gtfsCollector } from "./collector";
 import { GTFS_FEEDS } from "./gtfs";
 

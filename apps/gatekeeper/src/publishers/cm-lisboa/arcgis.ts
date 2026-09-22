@@ -1,5 +1,5 @@
-import type { FeedDefinition } from "../../catalog/define";
-import { arcgisReferencePolicy } from "../../formats/arcgis/feeds";
+import type { FeedDefinition } from "#/catalog/define";
+import { arcgisReferencePolicy } from "#/formats/arcgis/feeds";
 
 const LISBON_HOST = "services.arcgis.com";
 const LISBON_SERVICE_ROOT = "1dSrzEWVQn5kHHyK/arcgis/rest/services";

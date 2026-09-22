@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../index";
+import type { LibraryDeployment } from "#/index";
 import { arcgisCollector } from "./collector";
 import { ARCGIS_FEEDS } from "./arcgis";
 

@@ -7,7 +7,7 @@ import {
   type ResolvedFeed,
   type SourceConfig,
   type StreamingTransformer,
-} from "../../index";
+} from "#/index";
 import { validateUdataFeedConfig } from "./config";
 import { chooseTransformer } from "./transform";
 import { UdataSource, type DistributionSelector } from "./udata";

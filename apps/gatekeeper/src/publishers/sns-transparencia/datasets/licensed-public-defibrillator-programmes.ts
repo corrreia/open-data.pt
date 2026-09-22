@@ -1,6 +1,6 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { MONTH } from "../../../formats/opendatasoft/feeds";
-import { health } from "../opendatasoft";
+import type { DatasetDefinition } from "#/catalog/define";
+import { MONTH } from "#/formats/opendatasoft/feeds";
+import { health } from "#/publishers/sns-transparencia/opendatasoft";
 
 export const DATASET: DatasetDefinition = {
   title: "Licensed public-space defibrillator programmes",

@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { ANEPC_MAX_BYTES } from "../anepc/anepc";
+import type { DatasetDefinition } from "#/catalog/define";
+import { ANEPC_MAX_BYTES } from "#/publishers/anepc/anepc/anepc";
 
 export const DATASET: DatasetDefinition = {
   title: "Active civil-protection occurrences in mainland Portugal",

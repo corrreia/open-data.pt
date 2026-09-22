@@ -1,5 +1,5 @@
-import type { DatasetDefinition } from "../../../catalog/define";
-import { mafraFeed } from "../arcgis";
+import type { DatasetDefinition } from "#/catalog/define";
+import { mafraFeed } from "#/publishers/cm-mafra/arcgis";
 
 export const DATASET: DatasetDefinition = {
   title: "Mafra health centres",

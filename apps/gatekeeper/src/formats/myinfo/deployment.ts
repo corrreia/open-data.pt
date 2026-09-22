@@ -1,4 +1,4 @@
-import type { LibraryDeployment } from "../../index";
+import type { LibraryDeployment } from "#/index";
 import { myInfoCollector } from "./collector";
 import { MYINFO_FEEDS, MYINFO_ORIGIN } from "./myinfo";
 
