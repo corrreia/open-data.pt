@@ -227,6 +227,18 @@ export interface CanonicalRecord {
   validTo?: string;
   sourcePublishedAt?: string;
   sourceSequence?: string;
+  /**
+   * Which slice of the product this row belongs to, for a source too large to
+   * read in one sitting. A feed that reads a few municipalities a run names the
+   * municipality here; with `partitionsRead` on the finalization, that is what
+   * lets a run be authoritative over the ground it covered without claiming
+   * anything about the ground it did not.
+   *
+   * It is not part of the row's identity — two runs of the same slice hold the
+   * same entity keys — and the kernel never reads it from the payload. A feed
+   * that reads its source whole has no use for it.
+   */
+  partition?: string;
 }
 
 export interface SeriesPoint {
@@ -317,6 +329,21 @@ export interface ProductFinalization {
    * this and the header's completeness, and only `complete` may retract.
    */
   completeness?: Completeness;
+  /**
+   * The slices this collection read in full, named as the rows name them.
+   *
+   * A partial snapshot says "here are some rows" and can never retract, so a
+   * feed built up a few municipalities a run could hold a parcel's boundary
+   * for ever after the parcel was deleted. Declaring the slices read turns that
+   * into a bounded claim: every row of these partitions was sent, so one the
+   * kernel still holds within them is gone, while everything outside them is
+   * untouched. It is authority over the ground covered, which is what a sliced
+   * source has and what neither snapshot mode could express.
+   *
+   * Only meaningful on a `partial-snapshot`, and only for partitions whose rows
+   * this collection actually carried.
+   */
+  partitionsRead?: string[];
 }
 
 export interface StreamingSummary {

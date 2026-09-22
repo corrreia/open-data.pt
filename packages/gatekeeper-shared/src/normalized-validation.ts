@@ -237,24 +237,42 @@ function isSourceCheckpoint(value: JsonValue | undefined): boolean {
 function finalization(value: JsonValue): boolean {
   return (
     isJsonObject(value) &&
-    onlyKeys(value, ["productKey", "schema", "watermark", "completeness"]) &&
+    onlyKeys(value, ["productKey", "schema", "watermark", "completeness", "partitionsRead"]) &&
     text(value.productKey, 256) &&
     (value.schema === undefined || schema(value.schema)) &&
     optionalTime(value.watermark) &&
-    (value.completeness === undefined || ["complete", "partial", "unknown"].includes(asString(value.completeness) ?? ""))
+    (value.completeness === undefined || ["complete", "partial", "unknown"].includes(asString(value.completeness) ?? "")) &&
+    partitionsRead(value.partitionsRead)
   );
 }
+/** A slice name is a value from the source, not free text: a municipal code, a year, a region. */
+const PARTITION_MAX = 256;
+/** How many slices one collection may claim to have read in full. */
+const PARTITIONS_MAX = 4_096;
+
+/**
+ * The slices a collection read whole. Each must be nameable and non-empty,
+ * because an empty name matches nothing a row could carry, and the list is
+ * bounded: it becomes one `IN` list against the entity index.
+ */
+function partitionsRead(value: JsonValue | undefined): boolean {
+  if (value === undefined) return true;
+  if (!Array.isArray(value) || value.length > PARTITIONS_MAX) return false;
+  return value.every((name) => text(name, PARTITION_MAX) && name.trim() !== "");
+}
+
 function record(value: JsonValue | undefined): boolean {
   return (
     isJsonObject(value) &&
-    onlyKeys(value, ["entityKey", "operation", "payload", "eventTime", "validFrom", "validTo", "sourcePublishedAt", "sourceSequence"]) &&
+    onlyKeys(value, ["entityKey", "operation", "payload", "eventTime", "validFrom", "validTo", "sourcePublishedAt", "sourceSequence", "partition"]) &&
     text(value.entityKey) &&
     isJsonObject(value.payload) &&
     (value.operation === undefined || ["correct", "create", "delete", "retract", "upsert"].includes(asString(value.operation) ?? "")) &&
     optionalTime(value.eventTime) &&
     timeRange(value.validFrom, value.validTo) &&
     optionalTime(value.sourcePublishedAt) &&
-    optionalText(value.sourceSequence)
+    optionalText(value.sourceSequence) &&
+    (value.partition === undefined || text(value.partition, PARTITION_MAX))
   );
 }
 function point(value: JsonValue | undefined): boolean {

@@ -113,6 +113,92 @@ describe("collection engine: current state", () => {
   });
 });
 
+describe("collection engine: a partial snapshot authoritative over the slices it read", () => {
+  /** Rows of one municipality, tagged with it, as a sharded reader sends them. */
+  function slice(partition: string, keys: string[]): ReturnType<typeof record>[] {
+    return keys.map((key) => ({ ...record(key, key), partition }));
+  }
+
+  /**
+   * One run of a sharded feed. A product whose rows name their slice lives on
+   * the SQLite index, so the first such run asks to be promoted and is retried
+   * — which is what the runner does for itself in production.
+   */
+  async function sliced(h: KernelHarness, records: ReturnType<typeof record>[], partitionsRead?: string[]): Promise<EngineOutcome> {
+    h.source.updateMode = "partial-snapshot";
+    h.source.records = records;
+    h.source.partitionsRead = partitionsRead;
+    const acquisition = h.core.collectNow("manual");
+    h.core.markStarted(acquisition.id, "sliced");
+    const outcome = await h.run(acquisition.id).catch(async (error: Error) => {
+      if (!(error instanceof PromotionRequired)) throw error;
+      await h.port.promote(error.productKey);
+      return h.run(acquisition.id);
+    });
+    // The history a run commits is delivered separately; these tests read it.
+    await h.deliver();
+    return outcome;
+  }
+
+  it("retracts a row missing from a slice it read, and leaves every other slice alone", async () => {
+    const h = await kernelHarness();
+    // Two municipalities arrive on separate runs, the way a sharded walk covers
+    // the country a few at a time.
+    await sliced(h, slice("1106", ["a1", "a2", "a3"]), ["1106"]);
+    await sliced(h, slice("1312", ["b1", "b2"]), ["1312"]);
+    expect((await h.served()).map((row) => row.id)).toEqual(["a1", "a2", "a3", "b1", "b2"]);
+
+    // Lisbon loses a parcel. The run covers Lisbon and nothing else, so that
+    // one is gone and Porto — which this run said nothing about — is untouched.
+    const outcome = await sliced(h, slice("1106", ["a1", "a3"]), ["1106"]);
+    expect(outcome.revisions).toBe(1);
+    expect((await h.served()).map((row) => row.id)).toEqual(["a1", "a3", "b1", "b2"]);
+    expect(h.lakeRows("records").at(-1)).toMatchObject({ entity_key: "a2", operation: "retract" });
+  });
+
+  it("keeps every slice it did not read, however many runs pass", async () => {
+    const h = await kernelHarness();
+    await sliced(h, slice("1106", ["a1", "a2"]), ["1106"]);
+    await sliced(h, slice("1312", ["b1"]), ["1312"]);
+    // Three runs of Porto alone must never touch Lisbon.
+    for (let run = 0; run < 3; run += 1) await sliced(h, slice("1312", ["b1"]), ["1312"]);
+    expect((await h.served()).map((row) => row.id)).toEqual(["a1", "a2", "b1"]);
+    expect(h.lakeRows("records").filter((row) => row.operation === "retract")).toEqual([]);
+  });
+
+  it("retracts nothing when the run named no slice, which is what a partial snapshot always meant", async () => {
+    const h = await kernelHarness();
+    await sliced(h, slice("1106", ["a1", "a2"]), ["1106"]);
+    await sliced(h, [record("a1", "a1")]);
+    // No claim was made about any slice, so a2 stays.
+    expect((await h.served()).map((row) => row.id)).toEqual(["a1", "a2"]);
+  });
+
+  it("reads a row written before partitions existed as belonging to no slice", async () => {
+    const h = await kernelHarness();
+    // A baseline from before the feed sliced anything: no partition on its rows.
+    await sliced(h, [record("old1", 1), record("old2", 2)]);
+    // A later sliced run must not sweep them away: nothing ever claimed to have
+    // read the slice they would be in.
+    await sliced(h, slice("1106", ["a1"]), ["1106"]);
+    expect((await h.served()).map((row) => row.id)).toEqual(["a1", "old1", "old2"]);
+  });
+
+  it("records the slice of a row that did not otherwise change, so a later run of it can retract", async () => {
+    const h = await kernelHarness();
+    // First run leaves no partition on the rows, as an older build would.
+    await sliced(h, [record("a1", "a1"), record("a2", "a2")]);
+    // Second run carries the same values, and the slice they belong to. Nothing
+    // about the rows changed, so this is not a revision.
+    const tagged = await sliced(h, slice("1106", ["a1", "a2"]), ["1106"]);
+    expect(tagged.revisions).toBe(0);
+    // Third run drops one. It can only be retracted if the second run's slice stuck.
+    const outcome = await sliced(h, slice("1106", ["a1"]), ["1106"]);
+    expect(outcome.revisions).toBe(1);
+    expect((await h.served()).map((row) => row.id)).toEqual(["a1"]);
+  });
+});
+
 describe("collection engine: large products use the SQLite index", () => {
   it("stays in SQLite above the in-memory bound, writes only changed rows, and rebuilds only dirty chunks", async () => {
     const h = await kernelHarness();

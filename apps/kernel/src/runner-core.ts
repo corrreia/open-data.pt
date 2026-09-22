@@ -178,6 +178,9 @@ export interface DeclaredProduct {
   previous: ProductIndexEntry | null;
 }
 
+/** One row staged for the index: its key, then the hash, served JSON and partition an upsert carries and a removal leaves null. */
+type StagedRow = [string, string | null, string | null, string | null];
+
 /** One prepared record on its way into the large-product index. */
 export interface StagedRecord {
   prepared: PreparedRecord;
@@ -278,8 +281,18 @@ export class RunnerCore {
     this.exec(`CREATE TABLE IF NOT EXISTS products (
       product_key TEXT PRIMARY KEY, slug TEXT NOT NULL UNIQUE, mode TEXT NOT NULL, entry_json TEXT NOT NULL, regenerate INTEGER NOT NULL DEFAULT 0)`);
     this.exec(`CREATE TABLE IF NOT EXISTS entities (
-      id INTEGER PRIMARY KEY, product_key TEXT NOT NULL, entity_key TEXT NOT NULL, hash TEXT NOT NULL, row_json TEXT NOT NULL)`);
+      id INTEGER PRIMARY KEY, product_key TEXT NOT NULL, entity_key TEXT NOT NULL, hash TEXT NOT NULL, row_json TEXT NOT NULL, partition TEXT)`);
     this.exec(`CREATE UNIQUE INDEX IF NOT EXISTS entities_key ON entities(product_key, entity_key)`);
+    /*
+     * `partition` arrived after this table did, and adding it must not reset a
+     * runner: a reset re-baselines every product it holds, which for a feed of
+     * a quarter of a million rows is a rewrite of the lot to gain one nullable
+     * column. So it is added in place where an older runner lacks it, and a row
+     * written before it existed simply has none — which reads exactly as it
+     * should, since nothing then claimed to have read any partition in full.
+     */
+    if (!this.columnExists("entities", "partition")) this.exec(`ALTER TABLE entities ADD COLUMN partition TEXT`);
+    this.exec(`CREATE INDEX IF NOT EXISTS entities_partition ON entities(product_key, partition)`);
     this.exec(`CREATE TABLE IF NOT EXISTS stage (seq INTEGER PRIMARY KEY, acquisition_id TEXT NOT NULL, product_key TEXT NOT NULL, body TEXT NOT NULL)`);
     this.exec(`CREATE INDEX IF NOT EXISTS stage_acquisition ON stage(acquisition_id, product_key)`);
     this.exec(`CREATE TABLE IF NOT EXISTS outbox (
@@ -622,7 +635,7 @@ export class RunnerCore {
     const latest = new Map<string, StagedRecord>();
     for (const row of rows) latest.set(row.prepared.key, row);
     const existing = this.lookup(productKey, [...latest.keys()]);
-    const staged: Array<[string, string | null, string | null]> = [];
+    const staged: StagedRow[] = [];
     const changes = new RecentChanges<ChangeItem>(WINDOW.changes);
     const lake: JsonObject[] = [];
     const seen: number[] = [];
@@ -630,13 +643,20 @@ export class RunnerCore {
     for (const row of latest.values()) {
       const previous = existing.get(row.prepared.key);
       if (previous) seen.push(previous.id);
-      if (previous && !row.prepared.removal && previous.hash === row.prepared.hash) continue;
+      const partition = row.prepared.record.partition ?? null;
+      const unchanged = previous !== undefined && !row.prepared.removal && previous.hash === row.prepared.hash;
+      // A row that did not change still has to record which slice it was read
+      // in, or a later run of that slice could not tell it from a row it has
+      // never covered. Writing it back is not a revision: nothing about the row
+      // itself moved, only what the kernel knows about where it came from.
+      if (unchanged && previous.partition === partition) continue;
       if (row.prepared.removal) {
-        if (previous) staged.push([row.prepared.key, null, null]);
+        if (previous) staged.push([row.prepared.key, null, null, null]);
       } else {
         if (row.json === null) throw new NormalizedInputError("An upsert must carry its served JSON");
-        staged.push([row.prepared.key, row.prepared.hash, row.json]);
+        staged.push([row.prepared.key, row.prepared.hash, row.json, partition]);
       }
+      if (unchanged) continue;
       const revision = recordRevision(row.prepared, Boolean(previous), context);
       changes.add(revision.change);
       revisions += 1;
@@ -650,22 +670,38 @@ export class RunnerCore {
   }
 
   /** After a complete authoritative snapshot, stage removal of every indexed entity the batch did not contain. */
-  sweepRecords(acquisitionId: string, productKey: string, seen: Uint8Array, retract: boolean): SweepResult {
+  sweepRecords(acquisitionId: string, productKey: string, seen: Uint8Array, retract: boolean, partitions?: string[]): SweepResult {
     const context = this.recordContext(acquisitionId, productKey);
     const changes = new RecentChanges<ChangeItem>(WINDOW.changes);
     let removed = 0;
     let revisions = 0;
     let after = 0;
     while (true) {
-      const page = this.rows<{ id: number; entity_key: string }>(`SELECT id, entity_key FROM entities WHERE product_key = ? AND id > ? ORDER BY id LIMIT 5000`, productKey, after);
+      /*
+       * Without partitions this walks every row the product has, which is what
+       * a whole authoritative snapshot means. With them it walks only the rows
+       * of the slices this run read, so a run that covered four municipalities
+       * says nothing about the other 274. A row written before partitions
+       * existed has none and is never swept by a scoped run, which is right: at
+       * the time it was written nothing claimed to have read its slice in full.
+       */
+      const page =
+        partitions === undefined
+          ? this.rows<{ id: number; entity_key: string }>(`SELECT id, entity_key FROM entities WHERE product_key = ? AND id > ? ORDER BY id LIMIT 5000`, productKey, after)
+          : this.rows<{ id: number; entity_key: string }>(
+              `SELECT id, entity_key FROM entities WHERE product_key = ? AND id > ? AND partition IN (SELECT value FROM json_each(?)) ORDER BY id LIMIT 5000`,
+              productKey,
+              after,
+              JSON.stringify(partitions),
+            );
       if (page.length === 0) break;
       after = page.at(-1)!.id;
-      const staged: Array<[string, null, null]> = [];
+      const staged: StagedRow[] = [];
       const lake: JsonObject[] = [];
       for (const row of page) {
         const byte = seen[row.id >> 3] ?? 0;
         if ((byte & (1 << (row.id & 7))) !== 0) continue;
-        staged.push([row.entity_key, null, null]);
+        staged.push([row.entity_key, null, null, null]);
         removed += 1;
         if (!retract) continue;
         const revision = retractionRevision(row.entity_key, context);
@@ -882,7 +918,7 @@ export class RunnerCore {
     });
     // A failed product keeps its index, so the next collection rebuilds from it instead of staging every row again.
     for (const product of products) {
-      if (product.mode === "large" && product.entry.status !== "failed" && this.fitsInMemory(product.entry)) this.demote(product.productKey);
+      if (product.mode === "large" && product.entry.status !== "failed" && this.fitsInMemory(product.productKey, product.entry)) this.demote(product.productKey);
     }
   }
 
@@ -896,9 +932,17 @@ export class RunnerCore {
    * cannot survive: three thousand boundaries are short and very heavy, and
    * demoting them is what would put the isolate back out of memory.
    */
-  private fitsInMemory(entry: ProductIndexEntry): boolean {
+  private fitsInMemory(productKey: string, entry: ProductIndexEntry): boolean {
     if (entry.rowCount >= SMALL_PRODUCT_ROWS / 2) return false;
-    return (entry.chunks?.length ?? 0) * BLOB_BYTES < SMALL_PRODUCT_BYTES / 2;
+    if ((entry.chunks?.length ?? 0) * BLOB_BYTES >= SMALL_PRODUCT_BYTES / 2) return false;
+    /*
+     * A product whose rows name the slice they were read in never goes back,
+     * however small it is. Demotion drops the index, and the index is the only
+     * place a partition is written: the chunks it would be rebuilt from carry
+     * rows, not where each came from. A product that went back and forth would
+     * lose every partition on the way and be authoritative over nothing.
+     */
+    return this.rows(`SELECT 1 FROM entities WHERE product_key = ? AND partition IS NOT NULL LIMIT 1`, productKey).length === 0;
   }
 
   /* ---------- History outbox ---------- */
@@ -1087,16 +1131,16 @@ export class RunnerCore {
     return context;
   }
 
-  private lookup(productKey: string, entityKeys: string[]): Map<string, { id: number; hash: string }> {
-    const found = new Map<string, { id: number; hash: string }>();
+  private lookup(productKey: string, entityKeys: string[]): Map<string, { id: number; hash: string; partition: string | null }> {
+    const found = new Map<string, { id: number; hash: string; partition: string | null }>();
     for (let start = 0; start < entityKeys.length; start += LOOKUP_BATCH) {
       const slice = entityKeys.slice(start, start + LOOKUP_BATCH);
-      for (const row of this.rows<{ id: number; entity_key: string; hash: string }>(
-        `SELECT id, entity_key, hash FROM entities WHERE product_key = ? AND entity_key IN (SELECT value FROM json_each(?))`,
+      for (const row of this.rows<{ id: number; entity_key: string; hash: string; partition: string | null }>(
+        `SELECT id, entity_key, hash, partition FROM entities WHERE product_key = ? AND entity_key IN (SELECT value FROM json_each(?))`,
         productKey,
         JSON.stringify(slice),
       )) {
-        found.set(row.entity_key, { id: row.id, hash: row.hash });
+        found.set(row.entity_key, { id: row.id, hash: row.hash, partition: row.partition });
       }
     }
     return found;
@@ -1110,7 +1154,7 @@ export class RunnerCore {
   }
 
   /** Staged entity changes as blobs within the SQLite value budget; applyStage reads them back in order. */
-  private insertStage(acquisitionId: string, productKey: string, staged: Array<[string, string | null, string | null]>): void {
+  private insertStage(acquisitionId: string, productKey: string, staged: StagedRow[]): void {
     for (const blob of jsonArrays(staged.map((item) => JSON.stringify(item)))) {
       this.exec(`INSERT INTO stage (acquisition_id, product_key, body) VALUES (?, ?, ?)`, acquisitionId, productKey, blob.json);
     }
@@ -1124,10 +1168,10 @@ export class RunnerCore {
   private applyStage(acquisitionId: string, productKey: string): void {
     for (const { seq } of this.rows<{ seq: number }>(`SELECT seq FROM stage WHERE acquisition_id = ? AND product_key = ? ORDER BY seq`, acquisitionId, productKey)) {
       this.exec(
-        `INSERT INTO entities (product_key, entity_key, hash, row_json)
-         SELECT ?, json_extract(j.value, '$[0]'), json_extract(j.value, '$[1]'), json_extract(j.value, '$[2]')
+        `INSERT INTO entities (product_key, entity_key, hash, row_json, partition)
+         SELECT ?, json_extract(j.value, '$[0]'), json_extract(j.value, '$[1]'), json_extract(j.value, '$[2]'), json_extract(j.value, '$[3]')
          FROM stage s, json_each(s.body) j WHERE s.seq = ? AND json_extract(j.value, '$[1]') IS NOT NULL
-         ON CONFLICT(product_key, entity_key) DO UPDATE SET hash = excluded.hash, row_json = excluded.row_json`,
+         ON CONFLICT(product_key, entity_key) DO UPDATE SET hash = excluded.hash, row_json = excluded.row_json, partition = excluded.partition`,
         productKey,
         seq,
       );
@@ -1339,6 +1383,12 @@ export class RunnerCore {
 
   private tableExists(name: string): boolean {
     return this.rows<{ name: string }>(`SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?`, name).length > 0;
+  }
+
+  /** Whether a table a older runner created already carries a column added since. */
+  private columnExists(table: string, column: string): boolean {
+    if (!this.tableExists(table)) return false;
+    return this.rows<{ name: string }>(`SELECT name FROM pragma_table_info(?)`, table).some((row) => row.name === column);
   }
 
   private exec(query: string, ...bindings: SqlStorageValue[]): void {

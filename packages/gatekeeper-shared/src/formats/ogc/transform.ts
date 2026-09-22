@@ -18,7 +18,7 @@ import {
 import { boundingBox, representativePoint } from "./geometry";
 import { SeenIdentities } from "./identity";
 
-import type { OgcCollectionDescription, OgcProperty } from "./ogc";
+import type { OgcCollectionDescription, OgcProperty, ShardCount } from "./ogc";
 
 /**
  * Largest single feature read from a page, in bytes: what the reader must hold
@@ -157,6 +157,8 @@ export class OgcTransformer {
     let total = 0;
     let accepted = 0;
     const identities = new SeenIdentities(MAX_IDENTITIES);
+    /** Features published per shard, to check each against the count the service gave for it. */
+    const delivered = new Map<string, number>();
 
     async function* rows(): AsyncGenerator<NormalizedRow> {
       let next = first;
@@ -174,8 +176,9 @@ export class OgcTransformer {
               discovered.profile.observe(value);
             }
           }
-          const record = featureRecord(feature, properties, geometry);
+          const record = featureRecord(feature, properties, geometry, description.partitionField);
           if (record) {
+            if (record.partition !== undefined) delivered.set(record.partition, (delivered.get(record.partition) ?? 0) + 1);
             // Validate the final identity too: the source may omit Feature.id and
             // use an identifying schema property, or mix the two representations.
             if (identities.has(record.entityKey)) invalid("OGC collection repeats a normalized feature identity");
@@ -211,6 +214,18 @@ export class OgcTransformer {
         const short = description.expected !== undefined && accepted < description.expected;
         const final: ProductFinalization = { productKey: PRODUCT_KEY, schema: collectionSchema(properties, geometry, total) };
         if (short) final.completeness = "partial";
+        /*
+         * A shard is declared read whole only where it delivered every feature
+         * the service counted in it. One that came up short is still published
+         * — its rows are good — but the kernel may not retract within it, since
+         * what is missing from this run may be missing from the run, not from
+         * the source. A shard the service would not count cannot be claimed at
+         * all, for the same reason.
+         */
+        const read = (description.partitions ?? [])
+          .filter((shard) => shard.expected !== undefined && (delivered.get(shard.name) ?? 0) === shard.expected)
+          .map((shard) => shard.name);
+        if (!short && read.length > 0) final.partitionsRead = read;
         return { quality: { acceptedRecords: accepted, rejectedRecords: total - accepted }, products: [final] };
       },
     };
@@ -223,7 +238,7 @@ export class OgcTransformer {
  * was requested. A feature without a usable identity, or one too large to
  * store, is left out and counted as rejected.
  */
-function featureRecord(feature: GeojsonFeature, properties: PreparedProperty[], geometry: GeometryMode): CanonicalRecord | undefined {
+function featureRecord(feature: GeojsonFeature, properties: PreparedProperty[], geometry: GeometryMode, partitionField: string | undefined): CanonicalRecord | undefined {
   const key = entityKey(feature, properties);
   if (key === undefined) return undefined;
   const payload: JsonObject = {};
@@ -246,6 +261,14 @@ function featureRecord(feature: GeojsonFeature, properties: PreparedProperty[], 
     }
   }
   const record: CanonicalRecord = { entityKey: key, payload };
+  // Which slice this feature was read in, taken from the feature itself rather
+  // than from the request, so a service answering a filter loosely tags its
+  // rows with what they are and not with what was asked for.
+  if (partitionField !== undefined) {
+    const value = feature.properties[partitionField];
+    const name = isJsonString(value) ? value.trim() : isJsonNumber(value) ? String(value) : "";
+    if (name !== "") record.partition = name;
+  }
   const encoded = JSON.stringify(record);
   // UTF-16 length is a lower bound on UTF-8 bytes and `length * 3` an upper one,
   // so only a record between the two needs the exact count. Checking
@@ -325,7 +348,24 @@ function parseDescription(value: JsonObject): OgcCollectionDescription {
     const schema = value.schema.flatMap((entry) => (isJsonObject(entry) && isJsonString(entry.name) ? [parseProperty(entry, entry.name)] : []));
     if (schema.length > 0) description.schema = schema.slice(0, MAX_PROPERTIES);
   }
+  // A sharded read says which property names the slice, and how many features
+  // each slice was counted at; both together are what lets its rows be
+  // authoritative, once the counts are checked against what arrived.
+  if (isJsonString(value.partitionField) && value.partitionField !== "" && isJsonArray(value.partitions)) {
+    const partitions = value.partitions.flatMap((entry) =>
+      isJsonObject(entry) && isJsonString(entry.name) && entry.name.trim() !== "" ? [parseShardCount(entry, entry.name)] : [],
+    );
+    if (partitions.length > 0) {
+      description.partitionField = value.partitionField;
+      description.partitions = partitions;
+    }
+  }
   return description;
+}
+
+function parseShardCount(value: JsonObject, name: string): ShardCount {
+  const expected = value.expected;
+  return isJsonNumber(expected) && Number.isSafeInteger(expected) && expected >= 0 ? { name, expected } : { name };
 }
 
 function parseProperty(value: JsonObject, name: string): OgcProperty {

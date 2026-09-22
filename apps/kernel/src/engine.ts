@@ -63,7 +63,7 @@ export interface RunnerPort {
   declare(acquisitionId: string, input: DeclareInput): Promise<DeclaredProduct[]>;
   promote(productKey: string): Promise<void>;
   stageRecords(acquisitionId: string, productKey: string, rows: StagedRecord[]): Promise<StageResult>;
-  sweepRecords(acquisitionId: string, productKey: string, seen: Uint8Array, retract: boolean): Promise<SweepResult>;
+  sweepRecords(acquisitionId: string, productKey: string, seen: Uint8Array, retract: boolean, partitions?: string[]): Promise<SweepResult>;
   appendOutbox(acquisitionId: string, table: LakeTable, rowsJson: string, rows: number): Promise<void>;
   commit(acquisitionId: string, input: CommitInput): Promise<CommitResult>;
   unchanged(acquisitionId: string, checkpoint: SourceCheckpoint): Promise<void>;
@@ -104,9 +104,9 @@ export interface EngineOutcome {
 export class PromotionRequired extends Error {
   constructor(
     readonly productKey: string,
-    outgrew = `${SMALL_PRODUCT_ROWS} rows`,
+    because = `it exceeded ${SMALL_PRODUCT_ROWS} rows`,
   ) {
-    super(`Product ${productKey} exceeded ${outgrew}; promoting it to the SQLite index`);
+    super(`Product ${productKey} moves to the SQLite index because ${because}`);
     this.name = "PromotionRequired";
   }
 }
@@ -358,6 +358,12 @@ interface ProductRules {
   replaceCurrent: boolean;
   /** Absent entities are authoritative deletions and become retraction revisions. */
   retract: boolean;
+  /**
+   * The slices this batch was the whole membership of. Undefined where the
+   * batch spoke for the product entire; a list narrows `replaceCurrent` and
+   * `retract` to the rows of those slices and leaves every other row alone.
+   */
+  partitions: string[] | undefined;
   final: ProductFinalization | undefined;
 }
 
@@ -366,10 +372,25 @@ function rulesFor(product: NormalizedProductHeader, complete: CompleteFrame, fin
   const declared = weaker(product.completeness, final?.completeness ?? product.completeness);
   const completeness: Completeness = complete.quality.rejectedRecords > 0 && declared === "complete" ? "partial" : declared;
   const updateMode: ProductUpdateMode = product.updateMode === "authoritative-snapshot" && completeness !== "complete" ? "partial-snapshot" : product.updateMode;
-  const replaceCurrent = (updateMode === "authoritative-snapshot" || updateMode === "source-window") && completeness === "complete";
-  // A complete authoritative snapshot is the whole membership: what it leaves out has been deleted.
-  const retract = updateMode === "authoritative-snapshot";
-  return { completeness, updateMode, replaceCurrent, retract, final };
+  /*
+   * A partial snapshot that named the slices it read is authoritative over
+   * them and silent about everything else. It is the mode a source too large
+   * to read at once actually has: every parcel of these four municipalities,
+   * and no claim at all about the other 274. Without it such a feed can never
+   * retract, so a parcel deleted at the source keeps its row for ever.
+   *
+   * Duplicates and empties are dropped rather than refused: an empty name
+   * cannot be matched against a stored partition, and a repeated one would
+   * only widen the `IN` list it becomes.
+   */
+  const named = updateMode === "partial-snapshot" ? [...new Set((final?.partitionsRead ?? []).filter((name) => name !== ""))] : [];
+  const partitions = named.length > 0 ? named : undefined;
+  const whole = (updateMode === "authoritative-snapshot" || updateMode === "source-window") && completeness === "complete";
+  const replaceCurrent = whole || partitions !== undefined;
+  // A complete authoritative snapshot is the whole membership: what it leaves
+  // out has been deleted. So is a partial one, within the slices it named.
+  const retract = updateMode === "authoritative-snapshot" || partitions !== undefined;
+  return { completeness, updateMode, replaceCurrent, retract, partitions, final };
 }
 
 /** Completeness only ever weakens: complete, then partial, then unknown. */
@@ -495,6 +516,10 @@ class SmallRecordWorker implements ProductWorker {
   constructor(private readonly base: WorkerBase) {}
 
   async pushRecord(record: CanonicalRecord): Promise<void> {
+    // In-memory comparison reads the rows now served out of their chunks, and a
+    // chunk carries a row, not the slice it was read in. A product built up in
+    // slices therefore belongs on the index, which remembers.
+    if (record.partition !== undefined) throw new PromotionRequired(this.base.header.productKey, "its rows name the slice they were read in, which only the index records");
     const prepared = prepareRecord(record);
     this.incomingWeight -= this.incoming.get(prepared.key)?.weight ?? 0;
     this.incoming.delete(prepared.key);
@@ -508,7 +533,7 @@ class SmallRecordWorker implements ProductWorker {
     // string holding one character Latin-1 cannot, so the bound assumes two.
     const bytes = this.incomingWeight * BYTES_PER_CODE_UNIT;
     if (bytes > SMALL_PRODUCT_BYTES) {
-      throw new PromotionRequired(this.base.header.productKey, `${SMALL_PRODUCT_BYTES} bytes of rows`);
+      throw new PromotionRequired(this.base.header.productKey, `it exceeded ${SMALL_PRODUCT_BYTES} bytes of rows`);
     }
   }
 
@@ -626,7 +651,7 @@ class LargeRecordWorker implements ProductWorker {
     await this.flush();
     const { base } = this;
     if (rules.replaceCurrent && base.declared.previous) {
-      const sweep = await base.ports.runner.sweepRecords(base.plan.acquisitionId, base.header.productKey, this.seen, rules.retract);
+      const sweep = await base.ports.runner.sweepRecords(base.plan.acquisitionId, base.header.productKey, this.seen, rules.retract, rules.partitions);
       this.changes.addAll([...sweep.changes].reverse());
       this.revisions += sweep.revisions;
       this.staged += sweep.removed;

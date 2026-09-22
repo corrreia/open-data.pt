@@ -616,6 +616,60 @@ describe("OGC API Features sharded reads", () => {
     expect(bodyOf(fetched).completeness).toBe("partial");
   });
 
+  /** The records themselves, because what matters here is what each one is tagged with. */
+  async function normalizeShards(fetched: SourceFetch) {
+    const text = await readText(bodyOf(fetched).body);
+    const transform = await new OgcTransformer().transform(chunked(text, text.length), transformContext);
+    const records = [];
+    for await (const row of transform.rows) if (row.record) records.push(row.record);
+    return { transform, records };
+  }
+
+  it("names on every row the shard it was read in, and declares the shards it read whole", async () => {
+    // A partial snapshot cannot retract, so without this the feed could hold a
+    // parcel for ever after the service dropped it. Naming the shards turns the
+    // run into a claim the kernel can act on: all of these two, and no others.
+    const fetcher = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(input.toString());
+      const base = await shardFetcher(["0101", "0102"])(input);
+      if (!url.pathname.endsWith("/crus/items") || url.searchParams.get("resulttype") === "hits") return base;
+      // The service answers with the shard column on each feature, as DGT does.
+      const code = url.searchParams.get("dtcc") ?? "";
+      const only = { ...feature(0), id: `${code}-0`, properties: { ...feature(0).properties, dtcc: code } };
+      return Response.json({ type: "FeatureCollection", features: [only], numberReturned: 1, numberMatched: 1, links: [] });
+    });
+    const { records, transform } = await normalizeShards(await collectOgcFeed(sharded, undefined, hosts, fetcher));
+    expect(records).toHaveLength(2);
+    expect(records.map((item) => item.partition)).toEqual(["0101", "0102"]);
+    expect(transform.finish().products?.[0]?.partitionsRead).toEqual(["0101", "0102"]);
+  });
+
+  it("claims only the shards that delivered every feature they were counted at", async () => {
+    // The service counts three in the first shard and hands over two. Those two
+    // are published, but the kernel must not retract within that shard: what is
+    // missing may be missing from the reading, not from the source.
+    const fetcher = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(input.toString());
+      const base = await shardFetcher(["0101", "0102"])(input);
+      if (!url.pathname.endsWith("/crus/items")) return base;
+      const code = url.searchParams.get("dtcc") ?? "";
+      if (url.searchParams.get("resulttype") === "hits") {
+        return code === "0101" ? Response.json({ type: "FeatureCollection", features: [], numberReturned: 0, numberMatched: 3, links: [] }) : base;
+      }
+      const count = code === "0101" ? 2 : 1;
+      return Response.json({
+        type: "FeatureCollection",
+        features: Array.from({ length: count }, (_, index) => ({ ...feature(index), id: `${code}-${index}`, properties: { ...feature(index).properties, dtcc: code } })),
+        numberReturned: count,
+        numberMatched: code === "0101" ? 3 : 1,
+        links: [],
+      });
+    });
+    const { records, transform } = await normalizeShards(await collectOgcFeed(sharded, undefined, hosts, fetcher));
+    expect(records).toHaveLength(3);
+    expect(transform.finish().products?.[0]?.partitionsRead).toEqual(["0102"]);
+  });
+
   it("reads the shard values from the collection that lists them", async () => {
     const fetcher = shardFetcher(["0101", "0102"]);
     await readDocument(await collectOgcFeed(sharded, undefined, hosts, fetcher));

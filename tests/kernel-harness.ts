@@ -7,6 +7,7 @@ import {
   type Completeness,
   type FeedKindDescription,
   type JsonObject,
+  type ProductFinalization,
   type ProductUpdateMode,
   type ResolvedFeed,
   type SeriesPoint,
@@ -62,6 +63,8 @@ export interface FixtureSource {
   generate?: () => Iterable<CanonicalRecord>;
   fetch?: () => Promise<SourceFetch>;
   finalCompleteness?: Completeness;
+  /** Slices this collection read in full, declared on the finalization. */
+  partitionsRead?: string[];
 }
 
 const KIND: FeedKindDescription = {
@@ -190,7 +193,7 @@ export async function kernelHarness(options: HarnessOptions = {}): Promise<Kerne
     declare: (id, input) => core.declare(id, input),
     promote: (key) => core.promote(key),
     stageRecords: async (id, key, rows) => core.stageRecords(id, key, rows),
-    sweepRecords: async (id, key, seen, retract) => core.sweepRecords(id, key, seen, retract),
+    sweepRecords: async (id, key, seen, retract, partitions) => core.sweepRecords(id, key, seen, retract, partitions),
     appendOutbox: async (id, table, json, rows) => core.appendOutbox(id, table, json, rows),
     commit: (id, input) => core.commit(id, input),
     unchanged: async (id, checkpoint) => core.unchanged(id, checkpoint),
@@ -294,9 +297,12 @@ function fixtureTransform(source: FixtureSource): StreamingTransform {
         source.kind === "record" ? [{ ...product, kind: "record", records: source.records }] : [{ ...product, kind: "series", updateMode: "source-window", points: source.points }],
       quality: { acceptedRecords: source.records.length + source.points.length, rejectedRecords: source.rejected },
     });
-    if (!source.finalCompleteness) return base;
-    const completeness = source.finalCompleteness;
-    return { ...base, finish: () => ({ ...base.finish(), products: [{ productKey: product.productKey, completeness }] }) };
+    const { finalCompleteness, partitionsRead } = source;
+    if (!finalCompleteness && !partitionsRead) return base;
+    const final: ProductFinalization = { productKey: product.productKey };
+    if (finalCompleteness) final.completeness = finalCompleteness;
+    if (partitionsRead) final.partitionsRead = partitionsRead;
+    return { ...base, finish: () => ({ ...base.finish(), products: [final] }) };
   }
   const generate = source.generate;
   let accepted = 0;

@@ -159,6 +159,17 @@ export interface OgcCollectionDescription {
   expected?: number;
   /** The published property schema, when the service has one. */
   schema?: OgcProperty[];
+  /**
+   * For a sharded read: the property whose value names the slice a feature was
+   * read in, and the slices this run asked the service for in full.
+   *
+   * Together they let the run be authoritative over the ground it covered. The
+   * rows carry the first as their partition; the second is what the collection
+   * finally declares having read, so the kernel may retract a feature the
+   * service no longer has in those slices while leaving the rest alone.
+   */
+  partitionField?: string;
+  partitions?: ShardCount[];
 }
 
 interface ValidatedConfig {
@@ -516,11 +527,29 @@ async function collectShardedFeed(validated: ValidatedConfig, state: JsonObject 
   };
   if (validated.properties) document.properties = validated.properties;
   if (schema) document.schema = schema;
+  /*
+   * How many features each shard holds, asked before any is read. The walk
+   * needed these anyway, one `hits` request a shard; carrying them on the
+   * document is what lets the normalizer declare a shard read whole only when
+   * it delivered what it was counted at. A shard that came up short is read
+   * and published like any other — its rows are good — but it is not one the
+   * kernel may retract within.
+   */
+  const counted: ShardCount[] = [];
+  for (const name of taken.values) {
+    const shard: ValidatedConfig = { ...validated, filter: { field: shards.field, value: name } };
+    const expected = await readTotal(shard, hosts, fetcher);
+    counted.push(expected === undefined ? { name } : { name, expected });
+  }
+  // Every feature of these shards was asked for, so the rows can say which one
+  // they came from and the collection can say which ones it read in full.
+  document.partitionField = shards.field;
+  document.partitions = counted;
 
   const next: ShardState = { cursor: (taken.cursor + taken.values.length) % Math.max(values.length, 1), shards: values.length, covered: taken.values };
   return {
     kind: "body",
-    body: featureDocument(document, shardFeatures(validated, shards, taken.values, hosts, fetcher, sleep)),
+    body: featureDocument(document, shardFeatures(validated, shards, counted, hosts, fetcher, sleep)),
     provenance: { sourceUrl: browsable.toString() },
     // A part of the collection, always: what this run did not ask for is not
     // missing, and the kernel must not read its absence as a deletion.
@@ -607,18 +636,24 @@ function shardsForRun(values: string[], perRun: number, state: JsonObject | unde
   return { cursor, values: taken };
 }
 
+/** One shard of a run, and how many features the service said it holds. */
+export interface ShardCount {
+  name: string;
+  /** `numberMatched` for this shard, or undefined where the service would not say. */
+  expected?: number;
+}
+
 /** Every feature of every shard this run took, one shard walked whole at a time. */
 async function* shardFeatures(
   validated: ValidatedConfig,
   shards: NonNullable<ValidatedConfig["shards"]>,
-  values: string[],
+  taken: ShardCount[],
   hosts: ReadonlySet<string>,
   fetcher: Fetcher,
   sleep: Sleep,
 ): AsyncGenerator<JsonValue> {
-  for (const value of values) {
+  for (const { name: value, expected } of taken) {
     const shard: ValidatedConfig = { ...validated, filter: { field: shards.field, value } };
-    const expected = await readTotal(shard, hosts, fetcher);
     const cap = shard.pageSize * shard.maxPages;
     const first = buildItemsUrl(shard);
     const response = await requestPage(first, itemHeaders(), shard, hosts, fetcher, sleep);
