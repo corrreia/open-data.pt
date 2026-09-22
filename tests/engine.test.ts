@@ -184,6 +184,32 @@ describe("collection engine: a partial snapshot authoritative over the slices it
     expect((await h.served()).map((row) => row.id)).toEqual(["a1", "old1", "old2"]);
   });
 
+  it("clears only the slice it named when that slice has emptied, never the whole product", async () => {
+    // The run that carries no rows at all is the one the small path would have
+    // got wrong: nothing pushed means nothing to move the product to the index,
+    // and that path retracts everything the batch did not carry.
+    const h = await kernelHarness();
+    await sliced(h, [...slice("1106", ["a1", "a2"]), ...slice("1312", ["b1"])], ["1106", "1312"]);
+    const outcome = await sliced(h, [], ["1106"]);
+    expect(outcome.revisions).toBe(2);
+    expect((await h.served()).map((row) => row.id)).toEqual(["b1"]);
+  });
+
+  it("claims no slice at all when the batch rejected a row, since absent would read as deleted", async () => {
+    const h = await kernelHarness();
+    await sliced(h, slice("1106", ["a1", "a2"]), ["1106"]);
+    // A row the batch could not carry is absent from what the kernel was sent,
+    // and a scoped sweep cannot tell that from a row the source deleted.
+    h.source.rejected = 1;
+    const outcome = await sliced(h, slice("1106", ["a1"]), ["1106"]);
+    expect(outcome.revisions).toBe(0);
+    expect((await h.served()).map((row) => row.id)).toEqual(["a1", "a2"]);
+    // With nothing rejected the same run does retract, so it was the rejection.
+    h.source.rejected = 0;
+    expect((await sliced(h, slice("1106", ["a1"]), ["1106"])).revisions).toBe(1);
+    expect((await h.served()).map((row) => row.id)).toEqual(["a1"]);
+  });
+
   it("records the slice of a row that did not otherwise change, so a later run of it can retract", async () => {
     const h = await kernelHarness();
     // First run leaves no partition on the rows, as an older build would.

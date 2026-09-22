@@ -371,6 +371,18 @@ function normalizeShards(config: SourceConfig): ValidatedConfig["shards"] {
   if (!PROPERTY_PATTERN.test(field) || !PROPERTY_PATTERN.test(sourceField)) {
     throw new GatekeeperError("shardField and shardSourceField must be property names of letters, digits, or underscores", "invalid-config");
   }
+  /*
+   * A projection that leaves the shard field out lets a conforming service
+   * omit it, and then no row can say which shard it came from: the run would
+   * publish its features and quietly claim authority over nothing, for ever.
+   * The field is asked for explicitly rather than smuggled into the request,
+   * because a reader of this feed wants to know which municipality a row is in
+   * as much as the kernel does.
+   */
+  const projection = config.properties?.trim();
+  if (projection !== undefined && projection !== "" && !projection.split(",").some((name) => name.trim() === field)) {
+    throw new GatekeeperError(`a sharded read must publish its shard field, so properties has to name ${field}`, "invalid-config");
+  }
   if (RESERVED_QUERY_PARAMETERS.has(field.toLowerCase())) {
     throw new GatekeeperError(`shardField may not be ${field}: this library builds that query parameter itself`, "invalid-config");
   }

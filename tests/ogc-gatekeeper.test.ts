@@ -239,6 +239,12 @@ describe("OGC API Features configuration", () => {
     ["a page size past the cap", { host: DGT_HOST, collection: "municipios", pageSize: "50000" }],
     ["a page count past the cap", { host: DGT_HOST, collection: "municipios", maxPages: "5000" }],
     ["a property name with a quote", { host: DGT_HOST, collection: "municipios", properties: "dtmn','x" }],
+    [
+      // Without the shard field on the row, nothing can say which shard it came
+      // from, and the run would publish its features while claiming nothing.
+      "a sharded read whose projection leaves out the shard field",
+      { host: DGT_HOST, collection: "crus", shardField: "dtcc", shardSource: "municipios", shardSourceField: "dtmn", properties: "objectid,municipio" },
+    ],
   ])("refuses %s", (_label, candidate) => {
     expect(() => validateOgcFeedConfig(candidate, hosts)).toThrow(GatekeeperError);
   });

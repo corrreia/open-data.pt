@@ -383,7 +383,15 @@ function rulesFor(product: NormalizedProductHeader, complete: CompleteFrame, fin
    * cannot be matched against a stored partition, and a repeated one would
    * only widen the `IN` list it becomes.
    */
-  const named = updateMode === "partial-snapshot" ? [...new Set((final?.partitionsRead ?? []).filter((name) => name !== ""))] : [];
+  /*
+   * A rejected record is one the batch could not carry — too large to store,
+   * or malformed. It is absent from what the kernel was sent, and absent is
+   * exactly what a scoped sweep reads as deleted, so a rejection inside a
+   * declared slice would retract a row the source still has. Whole-product
+   * authority already refuses on any rejection; scoped authority refuses with
+   * it, and the slice is read again on the next rotation.
+   */
+  const named = updateMode === "partial-snapshot" && complete.quality.rejectedRecords === 0 ? [...new Set((final?.partitionsRead ?? []).filter((name) => name !== ""))] : [];
   const partitions = named.length > 0 ? named : undefined;
   const whole = (updateMode === "authoritative-snapshot" || updateMode === "source-window") && completeness === "complete";
   const replaceCurrent = whole || partitions !== undefined;
@@ -543,6 +551,19 @@ class SmallRecordWorker implements ProductWorker {
 
   async finish(rules: ProductRules): Promise<FinishedProduct> {
     const { base } = this;
+    /*
+     * This path compares against the rows now served, read from their chunks,
+     * and a chunk carries a row rather than the slice it came from. So it
+     * cannot honour a scoped claim: its `replaceCurrent` below would retract
+     * every row the batch did not carry, across the whole product, when the
+     * claim covered one municipality.
+     *
+     * Pushing a partitioned record already moves a product here to the index.
+     * This catches the case that has no such record to push — a run that
+     * declares a slice and finds it empty, which is exactly when the sweep
+     * matters and exactly when the wrong path would clear the product.
+     */
+    if (rules.partitions !== undefined) throw new PromotionRequired(base.header.productKey, "it claimed authority over a slice, which only the index can scope");
     const previousRows = new Map<string, { hash: string; json: string }>();
     for (const chunk of base.declared.previous?.chunks ?? []) {
       for (const row of parseChunkRows((await base.ports.objects.readText(chunk.key)) ?? "")) previousRows.set(row.key, { hash: hashOf(row.json), json: row.json });
