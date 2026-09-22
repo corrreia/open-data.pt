@@ -1,6 +1,13 @@
 import { DurableObject } from "cloudflare:workers";
-import { DATASETS, isDataset } from "@open-data-pt/catalog";
-import { NormalizedInputError, assertResolvedFeed, hashSourceConfig, type ExampleFeed, type SourceCheckpoint, type SourceConfig } from "@open-data-pt/contract";
+import {
+  NormalizedInputError,
+  assertResolvedFeed,
+  hashSourceConfig,
+  type CatalogDescription,
+  type ExampleFeed,
+  type SourceCheckpoint,
+  type SourceConfig,
+} from "@open-data-pt/contract";
 
 import { drainOutbox } from "./engine";
 import { NotFoundError } from "./errors";
@@ -8,7 +15,7 @@ import { cadenceFloorOf, syncStep, withCadenceFloor, type CatalogEntry, type Syn
 import type { ManifestChunk } from "./chunks";
 import { definitionFingerprint, keepsHistory, policyFingerprint, type Acquisition, type Feed, type FeedPolicy, type ProductIndexEntry, type ProductSummary } from "./feed-model";
 import { gatekeeperOf } from "./gatekeeper";
-import { licenceRef, type VocabularyRef } from "./vocabulary";
+import { EMPTY_CATALOG, Vocabulary, checkedCatalog, type VocabularyRef } from "./vocabulary";
 import { digest } from "./hash";
 import { PipelinesLake, lakeStreams, type LakeTable } from "./lake";
 import { ObjectStore } from "./object-store";
@@ -39,6 +46,8 @@ export type { SyncProgress } from "./example-sync";
 export const REGISTRY_ROOM = "main";
 
 const SYNC_STATE_KEY = "example-sync";
+/** The catalog the Gatekeeper last declared: its publishers, licences, topics and datasets. */
+const CATALOG_STATE_KEY = "catalog";
 const AUDIT_DUE_KEY = "lake-audit-due";
 /** History its Workflow has not delivered after this long is drained by the runner's alarm. */
 const LEFTOVER_HISTORY_AFTER_MS = 10 * 60_000;
@@ -107,6 +116,8 @@ export class Registry extends DurableObject<Env> {
   private reportsSincePrune = 0;
   /** The sync step in flight: its RPC round trips let other events in, and two steps must never interleave. */
   private syncing: Promise<SyncProgress> | undefined;
+  /** The stored catalog, expanded once and kept until the Gatekeeper declares another. */
+  private vocabularyCache: Vocabulary | undefined;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -247,13 +258,18 @@ export class Registry extends DurableObject<Env> {
   /**
    * The Gatekeeper's examples and feed kinds, grouped by the library each
    * example names in `source`, so a change to one library's kinds re-resolves
-   * that library's feeds and no other's. A Gatekeeper that does not answer, or
-   * lists nothing, is broken rather than emptied.
+   * that library's feeds and no other's. Its catalog is stored on the way, so
+   * the examples are applied against the datasets it declared with them. A
+   * Gatekeeper that does not answer, or lists nothing, is broken rather than emptied.
    */
   private async readCatalog(): Promise<CatalogEntry[] | undefined> {
     try {
-      const [examples, kinds] = await Promise.all([gatekeeperOf(this.env).exampleFeeds(), gatekeeperOf(this.env).listFeedKinds()]);
+      const gatekeeper = gatekeeperOf(this.env);
+      const [examples, kinds, declared] = await Promise.all([gatekeeper.exampleFeeds(), gatekeeper.listFeedKinds(), gatekeeper.catalog()]);
       if (examples.length === 0) throw new Error("The Gatekeeper listed no examples");
+      const description = checkedCatalog(declared);
+      if (description.datasets.length === 0) throw new Error("The Gatekeeper declared no datasets");
+      this.storeCatalog(description);
       const catalog = new Map<string, CatalogEntry>();
       for (const example of examples) {
         const library = example.config.source;
@@ -269,18 +285,35 @@ export class Registry extends DurableObject<Env> {
     }
   }
 
+  /** Every publisher, licence, topic and dataset the Gatekeeper last declared; empty until it first answers. */
+  catalog(): CatalogDescription {
+    return this.store.getState<CatalogDescription>(CATALOG_STATE_KEY) ?? EMPTY_CATALOG;
+  }
+
+  private vocabulary(): Vocabulary {
+    this.vocabularyCache ??= new Vocabulary(this.catalog());
+    return this.vocabularyCache;
+  }
+
+  /** Written only when it changed: a Gatekeeper that says the same thing every check costs one read. */
+  private storeCatalog(description: CatalogDescription): void {
+    if (JSON.stringify(this.store.getState<CatalogDescription>(CATALOG_STATE_KEY)) === JSON.stringify(description)) return;
+    this.store.setState(CATALOG_STATE_KEY, description);
+    this.vocabularyCache = undefined;
+  }
+
   private async applyExample(library: string, raw: ExampleFeed): Promise<void> {
     // A local session polls politely: `pnpm dev` sets a floor under every cadence, and a deployment sets none.
     const example = withCadenceFloor(raw, cadenceFloorOf(this.env.DEV_MIN_CADENCE_SECONDS));
-    // The Gatekeeper's word crosses RPC as plain strings; a key outside the vocabulary is a mistake, never a new entry.
-    if (!isDataset(example.dataset)) throw new NormalizedInputError(`${example.slug} names an unknown dataset: ${example.dataset}`);
+    // The Gatekeeper's word crosses RPC as plain strings; a key outside its catalog is a mistake, never a new entry.
+    const dataset = this.vocabulary().dataset(example.dataset);
+    if (!dataset) throw new NormalizedInputError(`${example.slug} names an unknown dataset: ${example.dataset}`);
     // A policy is its name and version; the id is only the row's handle. One installed under an earlier Worker's
     // name keeps its id, so moving a feed between Workers never collides with the row it already uses.
     const current = this.store.getPolicyByName(example.policy.name, example.policy.version);
     const policyId = current?.id ?? `policy_${library}_${slugify(example.policy.name)}_v${example.policy.version}`;
     const policy: FeedPolicy = { id: policyId, ...example.policy, createdAt: current?.createdAt ?? new Date().toISOString() };
     if (!current || policyFingerprint(current) !== policyFingerprint(policy)) this.store.upsertPolicy(policy);
-    const dataset = DATASETS[example.dataset];
     const input: FeedInput = {
       slug: example.slug,
       // A feed that is the whole of its dataset is called what the dataset is called.
@@ -363,9 +396,10 @@ export class Registry extends DurableObject<Env> {
   listProducts(): ProductView[] {
     const feeds = new Map(this.store.listFeeds().map((feed) => [feed.id, feed]));
     const policies = new Map(this.store.listPolicies().map((policy) => [policy.id, policy]));
+    const vocabulary = this.vocabulary();
     return this.store.listProducts().map((entry) => {
       const feed = feeds.get(entry.feedId);
-      return productView(entry, feed, feed ? policies.get(feed.policyId) : undefined);
+      return productView(entry, feed, feed ? policies.get(feed.policyId) : undefined, vocabulary);
     });
   }
 
@@ -374,7 +408,7 @@ export class Registry extends DurableObject<Env> {
     const entry = this.store.getProductBySlug(slug);
     if (!entry) return undefined;
     const feed = this.store.getFeed(entry.feedId);
-    return { ...productView(entry, feed, feed ? this.store.getPolicy(feed.policyId) : undefined), chunks: entry.chunks };
+    return { ...productView(entry, feed, feed ? this.store.getPolicy(feed.policyId) : undefined, this.vocabulary()), chunks: entry.chunks };
   }
 
   claimProducts(feedId: string, slugs: string[]): void {
@@ -475,19 +509,19 @@ export class Registry extends DurableObject<Env> {
   }
 }
 
-function productView(entry: ProductSummary, feed: Feed | undefined, policy: FeedPolicy | undefined): ProductView {
+function productView(entry: ProductSummary, feed: Feed | undefined, policy: FeedPolicy | undefined, vocabulary: Vocabulary): ProductView {
   const lastSuccess = feed?.lastSuccessAt ? Date.parse(feed.lastSuccessAt) : Date.parse(entry.updatedAt);
   const staleAfterSeconds = feed?.staleAfterSeconds ?? 86_400;
   const history = policy !== undefined && keepsHistory(policy, entry.productKey);
-  const terms = feed && isDataset(feed.dataset) ? DATASETS[feed.dataset] : undefined;
+  const terms = feed ? vocabulary.dataset(feed.dataset) : undefined;
   return {
     ...entry,
     stale: lastSuccess + staleAfterSeconds * 1000 < Date.now(),
     exposeHistory: history,
     historyMode: history ? "changes" : "latest",
     // A product is served under its dataset's terms: one feed of a dataset cannot claim other terms than its siblings.
-    licence: terms ? licenceRef(terms.licence) : null,
-    attribution: terms && "attribution" in terms ? terms.attribution : null,
+    licence: terms ? vocabulary.licenceRef(terms.licence) : null,
+    attribution: terms?.attribution ?? null,
     staleAfterSeconds,
     cadenceSeconds: policy?.collection.cadenceSeconds ?? 86_400,
   };

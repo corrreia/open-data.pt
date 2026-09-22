@@ -11,8 +11,8 @@ import {
   parseTrips,
   parseZones,
   validateMyInfoFeedConfig,
-} from "../apps/gatekeeper/src/sources/myinfo/myinfo";
-import { MyInfoTransformer } from "../apps/gatekeeper/src/sources/myinfo/transform";
+} from "../apps/gatekeeper/src/formats/myinfo/myinfo";
+import { MyInfoTransformer } from "../apps/gatekeeper/src/formats/myinfo/transform";
 import { jsonAs } from "./support";
 
 const OPERATORS = new Set(["BarraqueiroOeste", "mare"]);

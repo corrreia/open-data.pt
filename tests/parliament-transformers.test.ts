@@ -12,8 +12,9 @@ import {
   type StreamingSummary,
   type TransformContext,
 } from "@open-data-pt/gatekeeper";
-import { PARLIAMENT_EXAMPLES, transformParliament } from "../apps/gatekeeper/src/sources/parliament";
-import { PARLIAMENT_ELEMENT_BYTES } from "../apps/gatekeeper/src/sources/parliament/transform";
+import { transformParliament } from "../apps/gatekeeper/src/publishers/assembleia-da-republica/parliament";
+import { PARLIAMENT_ELEMENT_BYTES } from "../apps/gatekeeper/src/publishers/assembleia-da-republica/parliament/transform";
+import { feedsOf } from "./catalog";
 
 function fixture(feed: string): JsonValue {
   return parseJson(readFileSync(new URL(`./fixtures/parliament/${feed}.json`, import.meta.url), "utf8"));
@@ -42,7 +43,7 @@ function body(text: string, chunkSize = 1): ReadableStream<Uint8Array> {
   });
 }
 function context(feed: string, observedAt = "2026-09-15T00:00:00Z"): TransformContext {
-  const example = PARLIAMENT_EXAMPLES.find((example) => example.config.feed === feed);
+  const example = feedsOf("parliament").find((example) => example.config.feed === feed);
   if (!example) throw new Error("Missing Parliament example");
   return {
     observedAt,
@@ -76,7 +77,7 @@ async function runText(feed: string, text: string, chunkSize = 1, observedAt?: s
 }
 
 describe("Parliament streaming normalization", () => {
-  it.each(PARLIAMENT_EXAMPLES)("is acquisition-clock independent for $slug, including one-byte UTF-8 chunks", async (example) => {
+  it.each(feedsOf("parliament"))("is acquisition-clock independent for $slug, including one-byte UTF-8 chunks", async (example) => {
     const feed = example.config.feed ?? "";
     const first = await run(feed);
     const later = await run(feed, fixture(feed), 31, "2027-01-01T12:00:00Z");

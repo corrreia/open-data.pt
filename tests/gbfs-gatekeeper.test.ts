@@ -1,8 +1,7 @@
 import { jsonAs } from "./support";
 import { describe, expect, it, vi } from "vitest";
 import { GBFS_MAX_BYTES, collectGbfsFeed, validateGbfsFeedConfig } from "../apps/gatekeeper/src/formats/gbfs/gbfs";
-import { GBFS_EXAMPLES } from "../apps/gatekeeper/src/formats/gbfs/examples";
-import { datasetOf } from "./catalog";
+import { datasetOf, feedsOf } from "./catalog";
 
 import type { JsonObject, JsonValue, SourceBody, SourceFetch } from "@open-data-pt/contract";
 import { libraryConfig } from "@open-data-pt/gatekeeper";
@@ -10,7 +9,7 @@ const DISCOVERY_URL = "https://mds.bird.co/gbfs/v2/public/lisbon/gbfs.json";
 const ALLOWED_HOSTS = "mds.bird.co,gbfs.primelayer.pt,gbfs.nextbike.net";
 const allowedHosts = new Set(ALLOWED_HOSTS.split(","));
 const newExampleSlugs = new Set(["bird-cascais", "bird-matosinhos", "bird-porto", "tubabike-barcelos"]);
-const newExamples = GBFS_EXAMPLES.filter((example) => newExampleSlugs.has(example.slug));
+const newExamples = feedsOf("gbfs").filter((example) => newExampleSlugs.has(example.slug));
 
 function jsonResponse(value: JsonValue, headers?: HeadersInit): Response {
   return new Response(JSON.stringify(value), {
@@ -160,8 +159,8 @@ describe("GBFS Gatekeeper", () => {
   });
 
   it("pairs every system with a daily reference feed that keeps the status slug's history", () => {
-    const status = GBFS_EXAMPLES.filter((example) => example.config.feed === "status");
-    const reference = GBFS_EXAMPLES.filter((example) => example.config.feed === "reference");
+    const status = feedsOf("gbfs").filter((example) => example.config.feed === "status");
+    const reference = feedsOf("gbfs").filter((example) => example.config.feed === "reference");
 
     expect(status.map((example) => example.slug).toSorted()).toEqual([
       "bird-braga",
@@ -182,7 +181,7 @@ describe("GBFS Gatekeeper", () => {
   });
 
   it("polls each system as fast as its data really moves", () => {
-    const cadence = (slug: string) => GBFS_EXAMPLES.find((example) => example.slug === slug)?.policy.collection.cadenceSeconds;
+    const cadence = (slug: string) => feedsOf("gbfs").find((example) => example.slug === slug)?.policy.collection.cadenceSeconds;
 
     expect(cadence("bird-lisbon")).toBe(180);
     expect(cadence("bird-cascais")).toBe(300);
@@ -201,7 +200,7 @@ describe("GBFS Gatekeeper", () => {
 
   it("ships every working additional Portuguese system", () => {
     expect(newExamples.map((example) => example.slug)).toEqual(["bird-cascais", "bird-matosinhos", "bird-porto", "tubabike-barcelos"]);
-    expect(GBFS_EXAMPLES.some((example) => example.slug === "bird-braga")).toBe(true);
+    expect(feedsOf("gbfs").some((example) => example.slug === "bird-braga")).toBe(true);
     expect(newExamples.every((example) => example.policy.collection.cadenceSeconds === (datasetOf(example).publisher === "bird" ? 300 : 600))).toBe(true);
     expect(
       newExamples

@@ -1,18 +1,24 @@
-import { cpSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
 
-/** The publisher marks live with the vocabulary that names them; the build puts them where the API says they are. */
+/** Each publisher's mark lives in their folder in the Gatekeeper; the build puts it where the API says it is, `publishers/<key>.<ext>`. */
 function publisherMarks(): Plugin {
   return {
     name: "publisher-marks",
     closeBundle() {
-      cpSync(resolve(import.meta.dirname, "../../packages/catalog/publishers"), resolve(import.meta.dirname, "dist/publishers"), {
-        recursive: true,
-        filter: (source) => !source.endsWith("README.md"),
-      });
+      const folders = resolve(import.meta.dirname, "../gatekeeper/src/publishers");
+      const target = resolve(import.meta.dirname, "dist/publishers");
+      mkdirSync(target, { recursive: true });
+      for (const folder of readdirSync(folders, { withFileTypes: true })) {
+        if (!folder.isDirectory()) continue;
+        for (const extension of ["svg", "png"]) {
+          const mark = resolve(folders, folder.name, `logo.${extension}`);
+          if (existsSync(mark)) copyFileSync(mark, resolve(target, `${folder.name}.${extension}`));
+        }
+      }
     },
   };
 }

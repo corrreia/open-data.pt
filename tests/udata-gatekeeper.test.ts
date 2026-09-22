@@ -10,7 +10,8 @@ import {
   type JsonObject,
   libraryConfig,
 } from "@open-data-pt/gatekeeper";
-import { UDATA_EXAMPLES, UdataSource, chooseTransformer, resolveUdataFeed, udataCollector, validateUdataFeedConfig } from "../apps/gatekeeper/src/formats/udata";
+import { UdataSource, chooseTransformer, resolveUdataFeed, udataCollector, validateUdataFeedConfig } from "../apps/gatekeeper/src/formats/udata";
+import { feedsOf } from "./catalog";
 
 const payload = {
   id: "dataset-1",
@@ -202,7 +203,7 @@ describe("UdataSource", () => {
   });
 
   it("validates every curated example and resolves its transformer", () => {
-    for (const example of UDATA_EXAMPLES) {
+    for (const example of feedsOf("udata")) {
       const validated = validateUdataFeedConfig(libraryConfig(example.config), new Set([UDATA_HOSTS]));
       expect(validated.baseUrl, example.slug).toBe("https://dados.gov.pt");
       expect(() => chooseTransformer(validated), example.slug).not.toThrow();

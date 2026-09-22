@@ -2,7 +2,7 @@
 // way, so a wall of publishers reads evenly however many of them sent us a logo.
 
 import { useState } from "react";
-import { hueOf, initials } from "@open-data-pt/catalog";
+import { hueOf, initials } from "../lib/publisher-mark";
 import type { Term } from "../lib/types";
 import { useDarkMode } from "./common";
 

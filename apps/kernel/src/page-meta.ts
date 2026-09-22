@@ -6,9 +6,8 @@
  * product, publisher or topic gets that one's own title and description, from
  * the same API the page reads in the browser.
  */
-import type { JsonObject, JsonValue } from "@open-data-pt/contract";
+import { UNSTATED_LICENCE, type JsonObject, type JsonValue } from "@open-data-pt/contract";
 import type { SiteHost } from "./discovery";
-import { UNSTATED_LICENCE } from "@open-data-pt/catalog";
 import type { Feed as CatalogFeed, Product as CatalogProduct, Term } from "@open-data-pt/api";
 import { every, pagePath, read, readIfFound, topicLabel } from "./markdown";
 

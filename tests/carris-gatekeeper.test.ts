@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { collectCarrisFeed, validateCarrisFeedConfig } from "../apps/gatekeeper/src/sources/carris/carris";
+import { collectCarrisFeed, validateCarrisFeedConfig } from "../apps/gatekeeper/src/publishers/carris-metropolitana/carris/carris";
 
 describe("Carris Gatekeeper", () => {
   it("rejects unsupported feed names", () => {

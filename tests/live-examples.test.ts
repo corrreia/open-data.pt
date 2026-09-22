@@ -13,12 +13,11 @@ import {
   type JsonObject,
   type ResolvedFeed,
 } from "@open-data-pt/gatekeeper";
-import { ANEPC_API_ORIGIN, ANEPC_DEPLOYMENT, ANEPC_EXAMPLES } from "../apps/gatekeeper/src/sources/anepc";
 import { isNormalizedFrame } from "../packages/contract/src/validation";
 import { readFrames } from "../apps/kernel/src/frames";
 import { MAX_RECORD_BYTES } from "../apps/kernel/src/blob-budget";
 import { jsonAs } from "./support";
-import { CARRIED, carriedLibraries } from "./catalog";
+import { CARRIED, carriedLibraries, feedsOf } from "./catalog";
 
 /**
  * Collects curated examples from their real sources, the way the kernel
@@ -33,20 +32,14 @@ const SELECTED =
 const MIB = 1024 * 1024;
 
 /** The wiring the Worker deploys, from the same declarations and vars, with the real fetch. */
-const LIBRARIES: Array<{ libraries: GatekeeperLibraries; examples: readonly ExampleFeed[] }> = [
-  ...CARRIED.map((library) => ({
-    libraries: carriedLibraries(library.deployment.source, {
-      ML_CONSUMER_KEY: process.env.ML_CONSUMER_KEY,
-      ML_CONSUMER_SECRET: process.env.ML_CONSUMER_SECRET,
-      NASA_FIRMS_MAP_KEY: process.env.NASA_FIRMS_MAP_KEY,
-    }),
-    examples: library.examples,
-  })),
-  {
-    libraries: new Map([["anepc", ANEPC_DEPLOYMENT.library({ ANEPC_API_ORIGIN })]]),
-    examples: ANEPC_EXAMPLES,
-  },
-];
+const LIBRARIES: Array<{ libraries: GatekeeperLibraries; examples: readonly ExampleFeed[] }> = CARRIED.map((library) => ({
+  libraries: carriedLibraries(library.deployment.source, {
+    ML_CONSUMER_KEY: process.env.ML_CONSUMER_KEY,
+    ML_CONSUMER_SECRET: process.env.ML_CONSUMER_SECRET,
+    NASA_FIRMS_MAP_KEY: process.env.NASA_FIRMS_MAP_KEY,
+  }),
+  examples: feedsOf(library.deployment.source),
+}));
 
 /** The request the kernel builds for a live collection under this example's policy. */
 function liveRequest(example: ExampleFeed, resolved: ResolvedFeed): CollectionRequest {

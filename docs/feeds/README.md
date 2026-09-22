@@ -2,7 +2,7 @@
 
 A **feed** is one repeatable collection: a library, a resolved source configuration, a policy, and a
 slug that never changes. Everything the platform collects is described by an example feed in its
-library's `examples.ts`; the Registry installs them and keeps them in sync, so adding a dataset is
+publisher's dataset files, `apps/gatekeeper/src/publishers/<publisher>/datasets/`; the Registry installs them and keeps them in sync, so adding a dataset is
 adding an entry there.
 
 This folder holds notes on individual feeds whose configuration needs explaining beyond the comment

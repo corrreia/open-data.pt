@@ -1,9 +1,10 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { collectNormalized, libraryConfig, NORMALIZED_PROTOCOL, type CollectionRequest, type ExampleFeed } from "@open-data-pt/gatekeeper";
-import { PARLIAMENT_EXAMPLES, parliamentCollector } from "../apps/gatekeeper/src/sources/parliament";
-import { parliamentDocument } from "../apps/gatekeeper/src/sources/parliament/parliament";
+import { parliamentCollector } from "../apps/gatekeeper/src/publishers/assembleia-da-republica/parliament";
+import { parliamentDocument } from "../apps/gatekeeper/src/publishers/assembleia-da-republica/parliament/parliament";
 import { readFrames } from "../apps/kernel/src/frames";
+import { feedsOf } from "./catalog";
 
 // These opt-ins require separate record-processing authorization; they do not override a permission denial.
 const SAMPLE_DIRECTORY = process.env.PARLIAMENT_SAMPLE_DIR;
@@ -79,7 +80,7 @@ async function collect(example: ExampleFeed, fetcher: typeof fetch, mode: "saved
 
 /** Opt-in local source-size check against the previously downloaded research; this is NOT live verification. */
 describe.skipIf(!samples)("Parliament saved research normalization", () => {
-  it.each(PARLIAMENT_EXAMPLES)(
+  it.each(feedsOf("parliament"))(
     "validates the complete recorded $slug source with aggregate-only output",
     async (example) => {
       if (!SAMPLE_DIRECTORY) throw new Error("Set PARLIAMENT_SAMPLE_DIR to an explicitly authorized research directory");
@@ -97,7 +98,7 @@ describe.skipIf(!samples)("Parliament saved research normalization", () => {
 
 /** No guessed download links: the live collector must discover the public folder and file itself. */
 describe.skipIf(live.length === 0)("Parliament live public-directory collection", () => {
-  it.each(PARLIAMENT_EXAMPLES.filter((example) => live.includes("all") || live.includes(example.config.feed ?? "") || live.includes(example.slug)))(
+  it.each(feedsOf("parliament").filter((example) => live.includes("all") || live.includes(example.config.feed ?? "") || live.includes(example.slug)))(
     "collects $slug live",
     async (example) => {
       await collect(example, (input, init) => fetch(input, init), "live");

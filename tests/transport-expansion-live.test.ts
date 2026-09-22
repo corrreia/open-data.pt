@@ -1,18 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { collectNormalized, libraryConfig, NORMALIZED_PROTOCOL, type CollectionRequest, type ExampleFeed, type NormalizedCollector } from "@open-data-pt/gatekeeper";
-import { CKAN_EXAMPLES, ckanCollector } from "../apps/gatekeeper/src/formats/ckan";
-import { GBFS_EXAMPLES, gbfsCollector } from "../apps/gatekeeper/src/formats/gbfs";
-import { GTFS_EXAMPLES, gtfsCollector } from "../apps/gatekeeper/src/formats/gtfs";
+import { ckanCollector } from "../apps/gatekeeper/src/formats/ckan";
+import { gbfsCollector } from "../apps/gatekeeper/src/formats/gbfs";
+import { gtfsCollector } from "../apps/gatekeeper/src/formats/gtfs";
 import { readFrames } from "../apps/kernel/src/frames";
+import { feedsOf } from "./catalog";
 
 const GTFS_SLUGS = new Set(["cp-gtfs-feed", "fertagus-gtfs-feed", "tub-braga-gtfs-feed", "tcb-barreiro-gtfs-feed", "horarios-do-funchal-gtfs-feed"]);
 const GTFS_HOSTS = "publico.cp.pt,www.fertagus.pt,www.tub.pt,backend.tcbarreiro.pt,www.horariosdofunchal.pt";
 const BIRD_SLUGS = new Set(["bird-porto", "bird-cascais", "bird-matosinhos"]);
 const CKAN_HOSTS = "dadosabertos.cm-agueda.pt,oeirasinterativa.oeiras.pt";
 const examples = [
-  ...GTFS_EXAMPLES.filter((example) => GTFS_SLUGS.has(example.slug)),
-  ...GBFS_EXAMPLES.filter((example) => BIRD_SLUGS.has(example.slug)),
-  ...CKAN_EXAMPLES.filter((example) => example.slug.startsWith("agueda-") || example.slug === "oeiras-hourly-environment-feed"),
+  ...feedsOf("gtfs").filter((example) => GTFS_SLUGS.has(example.slug)),
+  ...feedsOf("gbfs").filter((example) => BIRD_SLUGS.has(example.slug)),
+  ...feedsOf("ckan").filter((example) => example.slug.startsWith("agueda-") || example.slug === "oeiras-hourly-environment-feed"),
 ];
 const selected =
   process.env.LIVE_TRANSPORT_EXPANSION?.split(",")

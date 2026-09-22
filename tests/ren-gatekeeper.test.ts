@@ -10,8 +10,8 @@ import {
   REN_FEEDS,
   REN_MAX_BYTES,
   validateRenFeedConfig,
-} from "../apps/gatekeeper/src/sources/ren/ren";
-import { RenTransformer } from "../apps/gatekeeper/src/sources/ren/transform";
+} from "../apps/gatekeeper/src/publishers/ren/ren/ren";
+import { RenTransformer } from "../apps/gatekeeper/src/publishers/ren/ren/transform";
 
 function completeChart(): JsonObject {
   return {

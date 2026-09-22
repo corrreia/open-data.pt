@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { collectNormalized, libraryConfig, type JsonObject, type JsonValue, type SourceFetch } from "../apps/gatekeeper/src/index";
-import { collectRipeatlasFeed, RIPEATLAS_ORIGIN, RIPEATLAS_PROBE_FIELDS, validateRipeatlasFeedConfig } from "../apps/gatekeeper/src/sources/ripeatlas/ripeatlas";
-import { ripeatlasCollector } from "../apps/gatekeeper/src/sources/ripeatlas/collector";
-import { RipeatlasTransformer } from "../apps/gatekeeper/src/sources/ripeatlas/transform";
-import { RIPEATLAS_EXAMPLES } from "../apps/gatekeeper/src/sources/ripeatlas/examples";
+import { collectRipeatlasFeed, RIPEATLAS_ORIGIN, RIPEATLAS_PROBE_FIELDS, validateRipeatlasFeedConfig } from "../apps/gatekeeper/src/publishers/ripe-ncc/ripeatlas/ripeatlas";
+import { ripeatlasCollector } from "../apps/gatekeeper/src/publishers/ripe-ncc/ripeatlas/collector";
+import { RipeatlasTransformer } from "../apps/gatekeeper/src/publishers/ripe-ncc/ripeatlas/transform";
 import { networkBytes, networkContext, networkFixture, networkFrames, networkRequest, networkRows } from "./networks-support";
-import { datasetOf } from "./catalog";
+import { datasetOf, feedsOf } from "./catalog";
 
 const PROBES = { feed: "country-probes", country: "PT" };
 const ANCHORS = { feed: "country-anchors", country: "PT" };
@@ -61,8 +60,8 @@ describe("RIPE Atlas source boundaries", () => {
       { feed: "country-probes", country: "PT", fields: "address_v4" },
     ])
       expect(() => validateRipeatlasFeedConfig(config)).toThrow();
-    expect(RIPEATLAS_EXAMPLES).toHaveLength(2);
-    for (const example of RIPEATLAS_EXAMPLES) {
+    expect(feedsOf("ripeatlas")).toHaveLength(2);
+    for (const example of feedsOf("ripeatlas")) {
       expect(validateRipeatlasFeedConfig(libraryConfig(example.config)).country).toBe("PT");
       expect(datasetOf(example).topics).toEqual(["telecom"]);
       expect(example.policy.collection.cadenceSeconds).toBeGreaterThanOrEqual(86_400);

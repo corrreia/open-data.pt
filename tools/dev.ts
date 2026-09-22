@@ -59,10 +59,18 @@ function wranglerBinary(): string {
   return existsSync(local) ? local : "wrangler";
 }
 
-/** Every library directory, held or not; the Worker carries only the listed ones, so a held name selects nothing. */
+/** Every library: each format, and each publisher's own library, which is the folder beside their datasets that has a deployment. */
 function libraries(): string[] {
   const src = join(ROOT, "apps/gatekeeper/src");
-  return ["formats", "sources"].flatMap((group) => readdirSync(join(src, group))).toSorted();
+  const formats = readdirSync(join(src, "formats"));
+  const own = readdirSync(join(src, "publishers"), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .flatMap((publisher) =>
+      readdirSync(join(src, "publishers", publisher.name), { withFileTypes: true })
+        .filter((entry) => entry.isDirectory() && existsSync(join(src, "publishers", publisher.name, entry.name, "deployment.ts")))
+        .map((entry) => entry.name),
+    );
+  return [...formats, ...own].toSorted();
 }
 
 /** What the command line asked for: the libraries to carry, and the flags Wrangler is handed. */

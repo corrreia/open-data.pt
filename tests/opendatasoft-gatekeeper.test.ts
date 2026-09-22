@@ -20,7 +20,7 @@ import {
   libraryConfig,
 } from "@open-data-pt/gatekeeper";
 import { MAX_HISTORY_DOCUMENT_BYTES, MAX_HISTORY_RECORDS, OPENDATASOFT_FEEDS, OpendatasoftSource } from "../apps/gatekeeper/src/formats/opendatasoft/opendatasoft";
-import { OPENDATASOFT_EXAMPLES } from "../apps/gatekeeper/src/formats/opendatasoft/examples";
+import { feedsOf } from "./catalog";
 import { OpendatasoftTransformer, seriesSlug } from "../apps/gatekeeper/src/formats/opendatasoft/transform";
 import { opendatasoftCollector } from "../apps/gatekeeper/src/formats/opendatasoft";
 import { isProductSlug } from "../packages/contract/src/validation";
@@ -146,8 +146,9 @@ describe("Opendatasoft Gatekeeper", () => {
   it("ships example feeds whose configurations and policies all validate", () => {
     const instance = source(fetch);
     expect(OPENDATASOFT_FEEDS.dataset.history).toEqual({});
-    expect(OPENDATASOFT_EXAMPLES).toHaveLength(57);
-    for (const example of OPENDATASOFT_EXAMPLES) {
+    const examples = feedsOf("opendatasoft");
+    expect(examples).toHaveLength(57);
+    for (const example of examples) {
       expect(() => instance.validateConfig(libraryConfig(example.config))).not.toThrow();
       expect(["changes", "latest"]).toContain(example.policy.collection.historyMode);
       expect(Object.keys(example.policy.collection)).not.toContain("allowedLatenessSeconds");

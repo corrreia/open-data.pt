@@ -6,8 +6,8 @@ import {
   collectEurostatDataset,
   collectEurostatDatasetHistory,
   validateEurostatFeedConfig,
-} from "../apps/gatekeeper/src/sources/eurostat/eurostat";
-import { transformEurostatDataset } from "../apps/gatekeeper/src/sources/eurostat/transform";
+} from "../apps/gatekeeper/src/publishers/eurostat/eurostat/eurostat";
+import { transformEurostatDataset } from "../apps/gatekeeper/src/publishers/eurostat/eurostat/transform";
 
 const SOURCE_URL = "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/une_rt_m?age=TOTAL&geo=ES&geo=PT&sex=T&lang=EN&lastTimePeriod=3";
 const DATASET = {

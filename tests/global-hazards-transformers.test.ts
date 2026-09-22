@@ -1,10 +1,10 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { NormalizedRow, TransformContext } from "@open-data-pt/contract";
-import { AnepcTransformer } from "../apps/gatekeeper/src/sources/anepc";
-import { FirmsTransformer } from "../apps/gatekeeper/src/sources/firms";
-import { NasaPowerTransformer } from "../apps/gatekeeper/src/sources/nasapower";
-import { UsgsTransformer } from "../apps/gatekeeper/src/sources/usgs";
+import { AnepcTransformer } from "../apps/gatekeeper/src/publishers/anepc/anepc";
+import { FirmsTransformer } from "../apps/gatekeeper/src/publishers/nasa-firms/firms";
+import { NasaPowerTransformer } from "../apps/gatekeeper/src/publishers/nasa-power/nasapower";
+import { UsgsTransformer } from "../apps/gatekeeper/src/publishers/usgs/usgs";
 import { WfsTransformer } from "../apps/gatekeeper/src/formats/wfs";
 
 function fixture(path: string): Uint8Array {

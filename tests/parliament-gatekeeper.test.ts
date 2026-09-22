@@ -11,7 +11,7 @@ import {
   type SourceFetch,
   type SourceStaging,
 } from "@open-data-pt/gatekeeper";
-import { PARLIAMENT_EXAMPLES, PARLIAMENT_NORMALIZER, parliamentCollector, resolveParliamentFeed } from "../apps/gatekeeper/src/sources/parliament";
+import { PARLIAMENT_NORMALIZER, parliamentCollector, resolveParliamentFeed } from "../apps/gatekeeper/src/publishers/assembleia-da-republica/parliament";
 import {
   collectParliamentFeed,
   parliamentDirectoryLink,
@@ -20,8 +20,9 @@ import {
   PARLIAMENT_HTML_BYTES,
   validateParliamentFeedConfig,
   type ParliamentDocument,
-} from "../apps/gatekeeper/src/sources/parliament/parliament";
+} from "../apps/gatekeeper/src/publishers/assembleia-da-republica/parliament/parliament";
 import { readFrames } from "../apps/kernel/src/frames";
+import { feedsOf } from "./catalog";
 
 const config = { feed: "members", legislature: "XVII" };
 const document = parliamentDocument(config);
@@ -93,7 +94,7 @@ describe("Parliament public-directory source", () => {
       expect(() => validateParliamentFeedConfig(invalid)).toThrow();
   });
 
-  it.each(PARLIAMENT_EXAMPLES)("resolves stable selected-file identity for $slug", async (example) => {
+  it.each(feedsOf("parliament"))("resolves stable selected-file identity for $slug", async (example) => {
     const raw = libraryConfig(example.config);
     const first = await resolveParliamentFeed(raw);
     const second = await resolveParliamentFeed({ ...raw });
@@ -265,7 +266,7 @@ describe("Parliament public-directory source", () => {
     await expect(consume(fetched)).rejects.toMatchObject({ code: "response-too-large" });
   });
 
-  it.each(PARLIAMENT_EXAMPLES)("streams $slug through the complete protocol-v4 collector", async (example) => {
+  it.each(feedsOf("parliament"))("streams $slug through the complete protocol-v4 collector", async (example) => {
     const raw = libraryConfig(example.config);
     const doc = parliamentDocument(raw);
     const collector = parliamentCollector({ config: raw, fetcher: sourceFetcher(doc) });

@@ -10,81 +10,103 @@ per-source notes under [`docs/publishers/`](docs/publishers/) and [`docs/feeds/`
 ## Where code lives
 
 ```
-apps/gatekeeper/        the Gatekeeper Worker: every listed library behind one private RPC binding
-  src/formats/<format>/ arcgis  ckan  opendatasoft  gtfs  gbfs  udata  ogc  wfs
-  src/sources/<name>/   carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat  parliament  myinfo  firms
-                        nasapower  usgs  anepc  ioda  ripeatlas  ripestat  peeringdb
-  src/libraries.ts      the libraries the Gatekeeper Worker carries
-apps/kernel/            storage, history and the API; serves the site
-apps/site/              the site, built into the kernel's static assets
-packages/contract/      what the two Workers say to each other: the RPC, the normalized stream,
-                        JSON helpers and validation
-packages/catalog/       what names a real thing: the DATASETS, TOPICS, PUBLISHERS and LICENCES
-                        vocabularies, and the publishers' marks
-packages/api/           what the API sends: the wire shapes the kernel builds and the site reads
+apps/gatekeeper/src/
+  publishers/<publisher>/   one folder per publisher: everything about them in one place
+    index.ts                who they are (name, site, whether we may republish them)
+    logo.svg | logo.png     their mark, when we have one
+    datasets/<name>.ts      each dataset: what it is, its terms and topics, and the feeds that read it
+    <library>/              their own API's library, when they have one (carris, ipma, snirh, …)
+  formats/<format>/         the standards many publishers share: arcgis  ckan  gbfs  gtfs  myinfo  ngsi
+                            ogc  opendatasoft  udata  wfs
+  catalog/                  the licences and topics every dataset names, and the folder index
+  libraries.ts              the libraries the Worker carries
+apps/kernel/                storage, history and the API; serves the site
+apps/site/                  the site, built into the kernel's static assets
+packages/contract/          what the two Workers say to each other: the RPC (the catalog included),
+                            the normalized stream, JSON helpers and validation
+packages/api/               what the API sends: the wire shapes the kernel builds and the site reads
+packages/lisbon/            Europe/Lisbon wall-clock arithmetic
 ```
 
 1. **A library per format.** Anything with a standard — GTFS, GBFS, ArcGIS, CKAN, Opendatasoft, uData, OGC API Features, WFS — is parsed once, under `formats/`. A Worker never contains parsing.
-2. **A library per bespoke source,** under `sources/`: Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, MYINFO, NASA FIRMS, NASA POWER, USGS, ANEPC, IODA, RIPE Atlas, RIPEstat, PeeringDB.
-3. **One Worker, every library.** A library is how the data is read, never what it is about or who publishes it: topics overlap — a city Wi-Fi map is `cities` and `telecom` — and a publisher may be read two ways, so neither is a code boundary. Each library's `deployment.ts` declares its name, its vars with their values, and any secrets, buckets and CPU limit; `libraries.ts` lists the libraries the Worker carries, every one of them. Topics (`TOPICS` in `packages/catalog/src/topics.ts`) and the publisher are labels on a feed, shown on the site.
+2. **A library per bespoke source, in its publisher's folder:** `publishers/carris-metropolitana/carris/`, `publishers/apa/snirh/`, `publishers/ripe-ncc/ripestat/`. A source that carries many publishers — MYINFO, one platform behind a dozen bus operators — is a format.
+3. **One Worker, every library.** A library is how the data is read, never what it is about or who publishes it: topics overlap — a city Wi-Fi map is `cities` and `telecom` — and a publisher may be read two ways, so neither is a code boundary. Each library's `deployment.ts` declares its name, its vars with their values, and any secrets, buckets and CPU limit; `libraries.ts` lists the libraries the Worker carries, every one of them. Topics (`TOPICS` in `apps/gatekeeper/src/catalog/topics.ts`) and the publisher are labels on a dataset, shown on the site.
 4. **Feed slugs never change.** A feed's ID derives from its slug, so a feed keeps its history wherever it runs. Renaming a slug throws that history away.
 
 A library exports its feed-kind table, `validate<Name>FeedConfig`, `collect<Name>Feed`, its transformer, its examples array, `<name>Collector(options)`, and `<NAME>_DEPLOYMENT` from `deployment.ts` — what the Worker needs to carry it. Every example configuration carries `source: "<library>"`, which is what routes it inside the Worker; the library never sees that key.
 
-## The four kinds of contribution
+## The kinds of contribution
 
 ### A new dataset from a source we already read
 
-One entry in `packages/catalog/src/datasets.ts` saying what the data is, and one in that library's `examples.ts` saying how it is read. Nothing else.
+One file in the publisher's folder: `apps/gatekeeper/src/publishers/<publisher>/datasets/<name>.ts`.
+Then `pnpm catalog`, which adds it to the index the Worker imports. Nothing else.
 
 ```ts
-// packages/catalog/src/datasets.ts — what the data is, whose it is, under what terms
-"cm-porto-bicycle-racks": {
+// apps/gatekeeper/src/publishers/cm-porto/datasets/bicycle-racks.ts
+import type { DatasetDefinition } from "../../../catalog/define";
+
+export const DATASET: DatasetDefinition = {
   title: "Porto bicycle racks",
   description: "Public bicycle parking published by Câmara Municipal do Porto.",
-  publisher: "cm-porto",
   licence: "cc0-1.0",
   attribution: "Câmara Municipal do Porto via dadosabertos.cm-porto.pt",
   topics: ["cities", "mobility"],
-},
-
-// the library's examples.ts — how and how often a part of it is read
-{
-  slug: "porto-bicycle-racks-feed",          // never changes once merged
-  dataset: "cm-porto-bicycle-racks",
-  config: { source: "ckan", host: "opendata.porto.digital", dataset: "estacionamento-bicicletas" },
-  policy: { name: "…", version: 1, collection: { …cadence, timeout, maxBytes, historyMode } },
-  staleAfterSeconds: 172_800,
-}
+  feeds: [
+    {
+      slug: "porto-bicycle-racks-feed", // never changes once merged
+      config: { source: "ckan", host: "opendata.porto.digital", dataset: "estacionamento-bicicletas" },
+      policy: { name: "…", version: 1, collection: { …cadence, timeout, maxBytes, historyMode } },
+      staleAfterSeconds: 172_800,
+    },
+  ],
+};
 ```
+
+The dataset's key is its publisher's folder and its file: `cm-porto-bicycle-racks`. It never
+changes once merged — it addresses the dataset's page — so neither does the file's name.
 
 A **dataset** is one publisher's body of data; a **feed** is one way a part of it is read. Two feeds
 belong to the same dataset when they describe the same things, by the same identifiers, under the
 same terms: Carris's stops, vehicles, alerts and GTFS are one dataset, while IPMA's forecasts and
 its earthquakes share nothing and are two. A feed of a dataset read by several feeds says what it is
 within it (`title`, `description`); a feed that is the whole of its dataset says nothing the dataset
-already says. A dataset key never changes: it addresses the dataset's page, and it opens with its
-publisher's key.
+already says, and a test holds both.
 
-`source` decides which library reads the feed. The dataset's own fields are keys of the catalog's
-vocabularies in `packages/catalog/src/`: `topics` are browsing tags, any number of them, each a key
-of `TOPICS`; `publisher` is a key of `PUBLISHERS`, who made the data, never the portal it was read
-from; `licence` is a key of `LICENCES`, the terms the publisher states, or `source-terms` when they
-state none. A publisher or licence the vocabulary lacks is one new entry there — name, and its site
-or licence text when there is one — and a test rejects a key outside the list, an entry nothing
-uses, and a dataset no feed reads. A publisher may also carry their mark: the logo file goes under
-`packages/catalog/publishers/` named for their key, `logo` names its extension, and
-`packages/catalog/publishers/README.md` says where a usable one comes from and what shape it has to
-be. A publisher without one is shown their initials instead, so a missing logo never looks like a
-broken page.
+`source` decides which library reads the feed. `licence` is a key of `LICENCES`
+(`apps/gatekeeper/src/catalog/licences.ts`): the terms the publisher states, or `source-terms` when
+they state none. `topics` are keys of `TOPICS`, as many as fit. A licence or topic the vocabulary
+lacks is one new entry there, and a test rejects one nothing uses.
+
+### A new publisher
+
+A folder named for their key, `apps/gatekeeper/src/publishers/<publisher>/`, with an `index.ts`:
+
+```ts
+import type { PublisherDefinition } from "../../catalog/define";
+
+export const PUBLISHER: PublisherDefinition = {
+  name: "Câmara Municipal do Porto",
+  url: "https://www.cm-porto.pt/",
+  logo: "svg",
+};
+```
+
+and at least one dataset. Who made the data, never the portal it was read from: dados.gov.pt
+carries ten publishers and is none of them. Their mark is optional: `logo.svg` or `logo.png` beside
+the `index.ts`, with `logo` naming its extension; [the publishers README](apps/gatekeeper/src/publishers/README.md)
+says where a usable one comes from and what shape it has to be. A publisher without one is shown
+their initials, so a missing logo never looks like a broken page. A publisher we may not republish
+yet carries `enabled: false` and a comment saying what we are waiting for: their folder and code
+stay, and nothing of theirs is polled or served.
 
 ### A new source on a format we already read
 
-The example above, plus its hostname in the library's allowlist var (`CKAN_ALLOWED_HOSTS`, `ARCGIS_ALLOWED_HOSTS`, …) in that library's `deployment.ts`.
+The dataset file above, plus its hostname in the library's allowlist var (`CKAN_ALLOWED_HOSTS`, `ARCGIS_ALLOWED_HOSTS`, …) in that library's `deployment.ts`.
 
 ### A new bespoke source
 
-A directory under `apps/gatekeeper/src/sources/<name>/`: `<name>.ts` (feed kinds, validation, fetching), `transform.ts` (bytes to products), `examples.ts`, `collector.ts` (the factory), `deployment.ts` (its `<NAME>_API_ORIGIN` var and anything else the Worker must give it), `index.ts` (the barrel), and one line in `libraries.ts`. Fixture tests under `tests/` with saved source responses — no network in unit tests, and no module mocking.
+A library folder inside its publisher's, `apps/gatekeeper/src/publishers/<publisher>/<name>/`: `<name>.ts` (feed kinds, validation, fetching), `transform.ts` (bytes to products), `collector.ts` (the factory), `deployment.ts` (its `<NAME>_API_ORIGIN` var and anything else the Worker must give it), `index.ts` (the barrel), and one line in `libraries.ts`. Its feeds go in the publisher's dataset files, like any other. Fixture tests under `tests/` with saved source responses — no network in unit tests, and no module mocking.
 
 ### A new format
 

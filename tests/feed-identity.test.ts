@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { resolveLibraryFeed } from "@open-data-pt/gatekeeper";
-import { CARRIED, carriedLibraries } from "./catalog";
+import { FEEDS } from "@open-data-pt/gatekeeper/catalog";
+import { carriedLibraries } from "./catalog";
 
 /**
  * A feed's resolved identity decides whether its epoch rotates and whether its
@@ -13,12 +14,9 @@ import { CARRIED, carriedLibraries } from "./catalog";
 describe("every example's resolved identity", () => {
   it("is what it was", async () => {
     const identities: Record<string, { resourceKey: string; kind: string }> = {};
-    for (const library of CARRIED) {
-      const libraries = carriedLibraries(library.deployment.source);
-      for (const example of library.examples) {
-        const resolved = await resolveLibraryFeed(example.config, libraries);
-        identities[example.slug] = { resourceKey: resolved.resourceKey, kind: resolved.kind };
-      }
+    for (const feed of FEEDS) {
+      const resolved = await resolveLibraryFeed(feed.config, carriedLibraries(feed.config.source ?? ""));
+      identities[feed.slug] = { resourceKey: resolved.resourceKey, kind: resolved.kind };
     }
     const text = `${JSON.stringify(Object.fromEntries(Object.entries(identities).toSorted(([a], [b]) => a.localeCompare(b))), null, 2)}\n`;
     await expect(text).toMatchFileSnapshot("./fixtures/feed-identity.json");

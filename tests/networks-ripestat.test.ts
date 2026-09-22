@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { collectNormalized, libraryConfig, type JsonObject, type SourceConfig } from "../apps/gatekeeper/src/index";
-import { collectRipestatFeed, RIPESTAT_MAX_BYTES, RIPESTAT_ORIGIN, validateRipestatFeedConfig } from "../apps/gatekeeper/src/sources/ripestat/ripestat";
-import { RipestatTransformer } from "../apps/gatekeeper/src/sources/ripestat/transform";
-import { ripestatCollector } from "../apps/gatekeeper/src/sources/ripestat/collector";
-import { RIPESTAT_EXAMPLES } from "../apps/gatekeeper/src/sources/ripestat/examples";
+import { collectRipestatFeed, RIPESTAT_MAX_BYTES, RIPESTAT_ORIGIN, validateRipestatFeedConfig } from "../apps/gatekeeper/src/publishers/ripe-ncc/ripestat/ripestat";
+import { RipestatTransformer } from "../apps/gatekeeper/src/publishers/ripe-ncc/ripestat/transform";
+import { ripestatCollector } from "../apps/gatekeeper/src/publishers/ripe-ncc/ripestat/collector";
 import { networkBytes, networkContext, networkFixture, networkFrames, networkRequest, networkRows, object } from "./networks-support";
-import { datasetOf } from "./catalog";
+import { datasetOf, feedsOf } from "./catalog";
 
 const STATUS = { feed: "routing-status", asn: "64496" };
 const RESOURCES = { feed: "country-resources", country: "PT" };
@@ -47,11 +46,13 @@ describe("RIPEstat capabilities and boundaries", () => {
   });
 
   it("ships seven verified, honestly labelled examples with source-appropriate cadence and permission warnings", () => {
-    expect(RIPESTAT_EXAMPLES).toHaveLength(7);
-    const asns = RIPESTAT_EXAMPLES.filter((example) => example.config.asn).map((example) => example.config.asn);
+    expect(feedsOf("ripestat")).toHaveLength(7);
+    const asns = feedsOf("ripestat")
+      .filter((example) => example.config.asn)
+      .map((example) => example.config.asn);
     expect(asns).toEqual(["3243", "2860", "12353", "20879", "15457"]);
     expect(asns).not.toContain("12542"); // This is NOS, not the research brief's proposed NOWO.
-    for (const example of RIPESTAT_EXAMPLES) {
+    for (const example of feedsOf("ripestat")) {
       expect(() => validateRipestatFeedConfig(libraryConfig(example.config))).not.toThrow();
       expect(datasetOf(example).licence).toBe("ripe-ncc-terms");
       expect(datasetOf(example).publisher).toBe("ripe-ncc");

@@ -1,9 +1,9 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { NORMALIZED_PROTOCOL, collectNormalized, isNormalizedFrame, parseJson, type CollectionRequest, type NormalizedRow, type TransformContext } from "@open-data-pt/gatekeeper";
-import { collectIpmaFeed, IPMA_FEEDS, validateIpmaFeedConfig } from "../apps/gatekeeper/src/sources/ipma/ipma";
-import { ipmaCollector, resolveIpmaFeed } from "../apps/gatekeeper/src/sources/ipma/collector";
-import { IpmaDatasetTransformer, type IpmaDatasetFeed } from "../apps/gatekeeper/src/sources/ipma/datasets";
+import { collectIpmaFeed, IPMA_FEEDS, validateIpmaFeedConfig } from "../apps/gatekeeper/src/publishers/ipma/ipma/ipma";
+import { ipmaCollector, resolveIpmaFeed } from "../apps/gatekeeper/src/publishers/ipma/ipma/collector";
+import { IpmaDatasetTransformer, type IpmaDatasetFeed } from "../apps/gatekeeper/src/publishers/ipma/ipma/datasets";
 
 const transformer = new IpmaDatasetTransformer();
 const ORIGIN = "https://api.ipma.pt";

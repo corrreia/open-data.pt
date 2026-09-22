@@ -17,11 +17,11 @@ import {
   type StreamingSummary,
   type TransformContext,
 } from "@open-data-pt/gatekeeper";
-import { CKAN_EXAMPLES, ckanCollector, CkanSource, validateCkanFeedConfig } from "../apps/gatekeeper/src/formats/ckan";
+import { ckanCollector, CkanSource, validateCkanFeedConfig } from "../apps/gatekeeper/src/formats/ckan";
 import { transformCkan, type CkanResourceMetadata } from "../apps/gatekeeper/src/formats/ckan";
-import { GTFS_EXAMPLES, gtfsCollector, transformGtfs } from "../apps/gatekeeper/src/formats/gtfs";
-import { GBFS_EXAMPLES } from "../apps/gatekeeper/src/formats/gbfs";
+import { gtfsCollector, transformGtfs } from "../apps/gatekeeper/src/formats/gtfs";
 import { GtfsCsvReader } from "../apps/gatekeeper/src/formats/gtfs/csv";
+import { feedsOf } from "./catalog";
 
 const HOSTS = new Set(["dadosabertos.cm-agueda.pt", "oeirasinterativa.oeiras.pt"]);
 const OEIRAS = example("oeiras-hourly-environment-feed");
@@ -47,7 +47,7 @@ function text(value: JsonValue | undefined): string {
   return value;
 }
 function example(slug: string): ExampleFeed {
-  const found = CKAN_EXAMPLES.find((entry) => entry.slug === slug);
+  const found = feedsOf("ckan").find((entry) => entry.slug === slug);
   if (!found) throw new Error(slug);
   return found;
 }
@@ -99,7 +99,7 @@ async function normalize(value: string, entry: ExampleFeed, format: "geojson" | 
 
 describe("Portuguese transport expansion", () => {
   it.each(GTFS)("normalizes the recorded $slug schedule through one-byte ZIP chunks", async (recorded) => {
-    const entry = GTFS_EXAMPLES.find((entry) => entry.slug === recorded.slug);
+    const entry = feedsOf("gtfs").find((entry) => entry.slug === recorded.slug);
     if (!entry) throw new Error("Missing GTFS example");
     const config = libraryConfig(entry.config);
     const collector = gtfsCollector({
@@ -139,12 +139,12 @@ describe("Portuguese transport expansion", () => {
 
   it("retains existing Bird feeds and excludes position history", () => {
     for (const slug of ["bird-porto", "bird-cascais", "bird-matosinhos"]) {
-      const bird = GBFS_EXAMPLES.find((entry) => entry.slug === slug);
+      const bird = feedsOf("gbfs").find((entry) => entry.slug === slug);
       expect(bird?.config.url).toMatch(/\/gbfs\.json$/);
       expect(bird?.policy.collection.cadenceSeconds).toBe(300);
       expect(bird?.policy.collection.withoutHistory).toEqual(["vehicles", "stations"]);
     }
-    expect(GBFS_EXAMPLES.find((entry) => entry.slug === "bird-braga")).toBeDefined();
+    expect(feedsOf("gbfs").find((entry) => entry.slug === "bird-braga")).toBeDefined();
   });
 });
 

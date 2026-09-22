@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import { datasetOf } from "./catalog";
+import { datasetOf, feedsOf } from "./catalog";
 import {
   GatekeeperError,
   NORMALIZED_PROTOCOL,
@@ -18,7 +18,6 @@ import {
 } from "@open-data-pt/gatekeeper";
 import {
   SNIT_API_ORIGIN,
-  SNIT_EXAMPLES,
   SNIT_LANDING_PAGE,
   SNIT_TYPES,
   SnitTransformer,
@@ -26,7 +25,7 @@ import {
   resolveSnitFeed,
   snitCollector,
   validateSnitFeedConfig,
-} from "../apps/gatekeeper/src/sources/snit";
+} from "../apps/gatekeeper/src/publishers/dgt/snit";
 
 const config = { feed: "instruments", type: "prof" };
 
@@ -122,7 +121,7 @@ describe("SNIT configuration", () => {
     expect(SNIT_TYPES["prot-plano"].abbreviation).toBe(SNIT_TYPES["prot-programa"].abbreviation);
   });
 
-  it.each(SNIT_EXAMPLES)("validates the curated $slug example", (example) => {
+  it.each(feedsOf("snit"))("validates the curated $slug example", (example) => {
     const candidate = libraryConfig(example.config);
     expect(validateSnitFeedConfig(candidate)).toEqual(candidate);
   });
@@ -277,13 +276,13 @@ describe("SNIT through the shared collector", () => {
 
 describe("SNIT examples", () => {
   it("ships one feed per kind of instrument the register holds", () => {
-    expect(SNIT_EXAMPLES).toHaveLength(Object.keys(SNIT_TYPES).length);
-    expect(new Set(SNIT_EXAMPLES.map((example) => example.slug)).size).toBe(SNIT_EXAMPLES.length);
-    expect(SNIT_EXAMPLES.every((example) => example.config.source === "snit" && datasetOf(example).publisher === "dgt")).toBe(true);
+    expect(feedsOf("snit")).toHaveLength(Object.keys(SNIT_TYPES).length);
+    expect(new Set(feedsOf("snit").map((example) => example.slug)).size).toBe(feedsOf("snit").length);
+    expect(feedsOf("snit").every((example) => example.config.source === "snit" && datasetOf(example).publisher === "dgt")).toBe(true);
   });
 
   it("polls the register weekly at most, and gives the slow types room to answer", () => {
-    for (const example of SNIT_EXAMPLES) {
+    for (const example of feedsOf("snit")) {
       expect(example.policy.collection.cadenceSeconds).toBeGreaterThanOrEqual(604_800);
       expect(example.staleAfterSeconds).toBeGreaterThanOrEqual(example.policy.collection.cadenceSeconds);
       expect(example.policy.collection.historyMode).toBe("changes");
@@ -292,7 +291,7 @@ describe("SNIT examples", () => {
   });
 
   it("serves the register under the licence DGT states for it", () => {
-    for (const example of SNIT_EXAMPLES) {
+    for (const example of feedsOf("snit")) {
       expect(datasetOf(example).licence).toBe("cc-by");
       expect(datasetOf(example).attribution ?? "").not.toBe("");
     }

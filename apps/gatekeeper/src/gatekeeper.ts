@@ -1,5 +1,7 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
-import { datasetEnabled } from "@open-data-pt/catalog";
+import type { CatalogDescription } from "@open-data-pt/contract";
+
+import { CATALOG, FEEDS, datasetEnabled } from "./catalog";
 import {
   buildLibrary,
   collectNormalized,
@@ -55,9 +57,14 @@ export function gatekeeper<E extends object>(libraries: readonly Library[]) {
       return collectNormalized(request, libraryCollector(request.resolved.config, this.libraries()));
     }
 
-    /** A publisher held for permission (`enabled: false`) installs nothing of theirs, though the library that reads them ships. */
+    /** Every feed of a publisher we may republish that a carried library reads; a held publisher's code ships, and installs nothing. */
     async exampleFeeds(): Promise<ExampleFeed[]> {
-      return this.carried().flatMap((library) => library.examples.filter((example) => datasetEnabled(example.dataset)));
+      const carried = new Set(this.carried().map((library) => library.deployment.source));
+      return FEEDS.filter((feed) => carried.has(feed.config.source ?? "") && datasetEnabled(feed.dataset));
+    }
+
+    async catalog(): Promise<CatalogDescription> {
+      return CATALOG;
     }
 
     private libraries(): GatekeeperLibraries {

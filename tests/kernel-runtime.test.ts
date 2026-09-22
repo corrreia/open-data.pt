@@ -155,6 +155,26 @@ describe("a kernel nobody operates", () => {
     expect((await server.fetch("/api/usage")).status).toBe(404);
   }, 180_000);
 
+  it("serves the catalog its Gatekeeper declared, and a product under its dataset's terms", async () => {
+    const datasets = await jsonBody<{ data: Array<{ id: string }> }>(await server.fetch("/test/api/datasets"));
+    expect(datasets.data).toEqual([
+      {
+        id: "fixture-dataset",
+        title: "Fixture dataset",
+        description: "What the runtime test reads",
+        publisher: { id: "fixture-publisher", name: "Fixture Publisher", url: "https://example.test/", logo: expect.stringMatching(/\/publishers\/fixture-publisher\.svg$/) },
+        licence: { id: "cc-by-4.0", name: "CC BY 4.0", url: "https://creativecommons.org/licenses/by/4.0/", description: "Reuse with credit." },
+        topics: ["economy"],
+        attribution: "Fixture Publisher",
+      },
+    ]);
+    expect((await server.fetch("/test/api/datasets/ine-consumer-price-index")).status).toBe(404);
+    const feed = await jsonBody<{ data: { dataset: { id: string; publisher: { name: string } } } }>(await server.fetch(`/test/api/feeds/${feedId}`));
+    expect(feed.data.dataset).toMatchObject({ id: "fixture-dataset", publisher: { name: "Fixture Publisher" } });
+    const product = await jsonBody<{ licence: { id: string } | null; attribution: string | null }>(await server.fetch("/test/api/products/fixture-things"));
+    expect(product).toMatchObject({ licence: { id: "cc-by-4.0" }, attribution: "Fixture Publisher" });
+  }, 60_000);
+
   it("cools a permanent source failure down, and a changed definition retries the same acquisition at once", async () => {
     await source([], true);
     const seen = await knownIds();

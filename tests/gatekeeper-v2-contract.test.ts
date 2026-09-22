@@ -24,7 +24,7 @@ afterAll(async () => server.close(), 30_000);
 describe("the Gatekeeper entrypoint exposes the normalized five-operation contract", () => {
   it("gives the Worker the five operations and no legacy RPC", () => {
     const factory = readFileSync("apps/gatekeeper/src/gatekeeper.ts", "utf8");
-    for (const method of ["describe", "listFeedKinds", "resolveFeed", "collect", "exampleFeeds"]) expect(factory).toContain(`async ${method}(`);
+    for (const method of ["describe", "listFeedKinds", "resolveFeed", "collect", "exampleFeeds", "catalog"]) expect(factory).toContain(`async ${method}(`);
     expect(factory).not.toContain("async validateFeedConfig(");
     expect(factory).not.toContain("async collectHistory(");
     expect(readFileSync("apps/gatekeeper/src/worker.ts", "utf8")).toContain("gatekeeper<Env>(LIBRARIES)");

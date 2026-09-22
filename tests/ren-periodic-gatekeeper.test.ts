@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { NORMALIZED_PROTOCOL, collectNormalized, isNormalizedFrame, parseJson, type CollectionRequest, type NormalizedRow, type TransformContext } from "@open-data-pt/gatekeeper";
-import { renCollector, resolveRenFeed } from "../apps/gatekeeper/src/sources/ren/collector";
+import { renCollector, resolveRenFeed } from "../apps/gatekeeper/src/publishers/ren/ren/collector";
 import {
   REN_PERIODIC_ORIGIN,
   REN_PERIODIC_FEEDS,
@@ -9,7 +9,7 @@ import {
   collectRenPeriodic,
   validateRenPeriodicConfig,
   type RenPeriodicService,
-} from "../apps/gatekeeper/src/sources/ren/periodic";
+} from "../apps/gatekeeper/src/publishers/ren/ren/periodic";
 
 const fixture = (name: string) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf8");
 const NOW = new Date("2026-09-16T12:00:00Z");

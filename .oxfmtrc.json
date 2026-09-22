@@ -19,6 +19,7 @@
     "**/worker-configuration.d.ts",
     "tests/fixtures/**",
     "research/**",
-    "pnpm-lock.yaml"
+    "pnpm-lock.yaml",
+    "apps/gatekeeper/src/catalog/folders.generated.ts"
   ]
 }

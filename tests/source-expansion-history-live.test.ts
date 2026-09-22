@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { NORMALIZED_PROTOCOL, collectNormalized, libraryConfig, type CollectionRequest, type ExampleFeed, type NormalizedCollector } from "@open-data-pt/gatekeeper";
-import { OPENDATASOFT_EXAMPLES, opendatasoftCollector } from "@open-data-pt/gatekeeper/formats/opendatasoft";
-import { INE_EXAMPLES, ineCollector } from "@open-data-pt/gatekeeper/sources/ine";
+import { opendatasoftCollector } from "@open-data-pt/gatekeeper/formats/opendatasoft";
+import { ineCollector } from "../apps/gatekeeper/src/publishers/ine/ine";
 import { readFrames } from "../apps/kernel/src/frames";
 import { MAX_RECORD_BYTES } from "../apps/kernel/src/blob-budget";
+import { feedsOf } from "./catalog";
 
 const selected = process.env.LIVE_HISTORY_EXPANSION?.split(",") ?? [];
-const examples = [...OPENDATASOFT_EXAMPLES, ...INE_EXAMPLES].filter((example) => selected.includes(example.slug));
+const examples = [...feedsOf("opendatasoft"), ...feedsOf("ine")].filter((example) => selected.includes(example.slug));
 
 function sourceCollector(example: ExampleFeed): NormalizedCollector {
   const config = libraryConfig(example.config);

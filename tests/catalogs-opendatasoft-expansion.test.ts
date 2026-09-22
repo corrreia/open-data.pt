@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { datasetOf } from "./catalog";
+import { datasetOf, feedsOf } from "./catalog";
 import {
   isJsonObject,
   libraryConfig,
@@ -12,11 +12,13 @@ import {
   type SourceConfig,
   type SourceFetch,
 } from "../apps/gatekeeper/src/index";
-import { OPENDATASOFT_EXAMPLES } from "../apps/gatekeeper/src/formats/opendatasoft/examples";
-import { CATALOG_EXAMPLES } from "../apps/gatekeeper/src/formats/opendatasoft/catalog-examples";
 import { OpendatasoftSource, validateOpendatasoftFeedConfig } from "../apps/gatekeeper/src/formats/opendatasoft/opendatasoft";
 import { resolveOpendatasoftFeed } from "../apps/gatekeeper/src/formats/opendatasoft/collector";
 import { OpendatasoftTransformer } from "../apps/gatekeeper/src/formats/opendatasoft/transform";
+
+const OPENDATASOFT_EXAMPLES = feedsOf("opendatasoft");
+/** The feeds that read a bounded window of reporting periods: the catalog expansion. */
+const CATALOG_EXAMPLES = OPENDATASOFT_EXAMPLES.filter((example) => example.policy.name.endsWith("bounded reporting-period collection"));
 
 const HOSTS = new Set(["e-redes.opendatasoft.com", "transparencia.sns.gov.pt"]);
 const BASE = { host: "e-redes.opendatasoft.com", dataset: "sample", limit: "100" };

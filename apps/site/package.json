@@ -10,7 +10,6 @@
   "dependencies": {
     "@cloudflare/kumo": "2.13.2",
     "@open-data-pt/api": "workspace:*",
-    "@open-data-pt/catalog": "workspace:*",
     "@open-data-pt/lisbon": "workspace:*",
     "@phosphor-icons/react": "^2.1.10",
     "echarts": "^6.1.0",

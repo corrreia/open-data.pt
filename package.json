@@ -18,12 +18,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -p apps/gatekeeper/tsconfig.json && tsc -p apps/kernel/tsconfig.json && tsc -p apps/site/tsconfig.json --noEmit",
-    "check": "pnpm lint && pnpm format:check && pnpm types:check && pnpm typecheck && pnpm test && pnpm deploy:dry-run"
+    "check": "pnpm lint && pnpm format:check && pnpm types:check && pnpm typecheck && pnpm test && pnpm deploy:dry-run",
+    "catalog": "node tools/catalog-index.ts"
   },
   "devDependencies": {
     "@apidevtools/swagger-parser": "^13.0.0",
     "@open-data-pt/api": "workspace:*",
-    "@open-data-pt/catalog": "workspace:*",
     "@open-data-pt/contract": "workspace:*",
     "@open-data-pt/gatekeeper": "workspace:*",
     "@open-data-pt/lisbon": "workspace:*",

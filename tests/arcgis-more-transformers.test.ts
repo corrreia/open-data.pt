@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { CanonicalField, CanonicalRecord, ProductDeclaration, TransformContext, TransformQuality } from "@open-data-pt/contract";
-import { ARCGIS_EXAMPLES } from "../apps/gatekeeper/src/formats/arcgis";
+import { feedsOf } from "./catalog";
 import { ArcgisTransformer } from "../apps/gatekeeper/src/formats/arcgis";
 
 const transformer = new ArcgisTransformer();
@@ -147,20 +147,20 @@ describe("ArcGIS transformers — APA SNIAmb live fixtures", () => {
   });
 
   it("ships ten ready-to-install APA examples", () => {
-    const examples = ARCGIS_EXAMPLES.filter((example) => example.config.host === "sniambgeoogc.apambiente.pt");
+    const examples = feedsOf("arcgis").filter((example) => example.config.host === "sniambgeoogc.apambiente.pt");
 
     expect(examples).toHaveLength(10);
-    expect(examples.map((example) => `${example.config.service}/${example.config.layer}`)).toEqual([
-      "getogc/rest/services/SNIAmb/Praias/MapServer/0",
-      "getogc/rest/services/SNIAmb/Qualidade_do_Ar/MapServer/0",
+    expect(examples.map((example) => `${example.config.service}/${example.config.layer}`).toSorted()).toEqual([
+      "getogc/rest/services/SNIAmb/Aguas_Balneares/MapServer/0",
+      "getogc/rest/services/SNIAmb/CELE/MapServer/0",
       "getogc/rest/services/SNIAmb/Estacoes_hidrometricas/MapServer/0",
       "getogc/rest/services/SNIAmb/Estacoes_meteorologicas/MapServer/0",
-      "getogc/rest/services/SNIAmb/RADNET/MapServer/0",
       "getogc/rest/services/SNIAmb/Marcas_cheias/MapServer/0",
-      "getogc/rest/services/SNIAmb/Aguas_Balneares/MapServer/0",
+      "getogc/rest/services/SNIAmb/Praias/MapServer/0",
       "getogc/rest/services/SNIAmb/Praias/MapServer/2",
       "getogc/rest/services/SNIAmb/Prevencao_Acidentes_Graves/MapServer/0",
-      "getogc/rest/services/SNIAmb/CELE/MapServer/0",
+      "getogc/rest/services/SNIAmb/Qualidade_do_Ar/MapServer/0",
+      "getogc/rest/services/SNIAmb/RADNET/MapServer/0",
     ]);
     expect(examples.every((example) => example.policy.collection.maxBytes === 5 * 1024 * 1024 && example.policy.collection.historyMode === "changes")).toBe(true);
   });

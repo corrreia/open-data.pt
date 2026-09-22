@@ -2,8 +2,8 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { CanonicalRecord, CanonicalSchema, ProductDeclaration, SeriesPoint, SourceConfig, TransformContext, TransformQuality } from "@open-data-pt/contract";
 import { libraryConfig } from "@open-data-pt/gatekeeper";
-import { UDATA_EXAMPLES } from "../apps/gatekeeper/src/formats/udata/examples";
 import { chooseTransformer, transformUdata } from "../apps/gatekeeper/src/formats/udata/transform";
+import { datasetOf, feedsOf } from "./catalog";
 
 const FIXTURE = new Map([
   ["justice-facilities-feed", "justice-facilities.csv"],
@@ -64,10 +64,13 @@ interface Transformed {
 }
 
 async function transformExample(slug: string, chunkSize = 7): Promise<Transformed> {
-  const example = UDATA_EXAMPLES.find((candidate) => candidate.slug === slug);
+  const example = feedsOf("udata").find((candidate) => candidate.slug === slug);
   const fixtureName = FIXTURE.get(slug);
   if (!example || !fixtureName) throw new Error(`No example fixture for ${slug}`);
-  const transform = await transformUdata(fixture(fixtureName, chunkSize), context(libraryConfig(example.config), example.slug, example.title, example.description));
+  const transform = await transformUdata(
+    fixture(fixtureName, chunkSize),
+    context(libraryConfig(example.config), example.slug, example.title, example.description ?? datasetOf(example).description),
+  );
   const records = new Map<string, CanonicalRecord[]>();
   const points = new Map<string, SeriesPoint[]>();
   for await (const row of transform.rows) {
@@ -90,7 +93,7 @@ async function transformExample(slug: string, chunkSize = 7): Promise<Transforme
 describe("uData curated example transformers", () => {
   it("transforms every new example fixture with a fully typed schema", async () => {
     for (const [slug] of FIXTURE) {
-      const example = UDATA_EXAMPLES.find((candidate) => candidate.slug === slug);
+      const example = feedsOf("udata").find((candidate) => candidate.slug === slug);
       expect(example, slug).toBeDefined();
       expect(chooseTransformer(example!.config).id, slug).not.toBe("");
       const result = await transformExample(slug);
@@ -153,7 +156,7 @@ describe("uData curated example transformers", () => {
   });
 
   it("normalizes the Cadaval decimal-comma workbook into tonne records and monthly points", async () => {
-    const example = UDATA_EXAMPLES.find((candidate) => candidate.slug === "cadaval-municipal-waste-feed")!;
+    const example = feedsOf("udata").find((candidate) => candidate.slug === "cadaval-municipal-waste-feed")!;
     expect(chooseTransformer(libraryConfig(example.config))).toMatchObject({ id: "cadaval-municipal-waste-v1", version: "2" });
     const result = await transformExample("cadaval-municipal-waste-feed", 1);
     expect(result.products[0]?.records[0]?.payload).toMatchObject({

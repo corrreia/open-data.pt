@@ -1,9 +1,9 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import { ANEPC_API_ORIGIN, collectAnepcFeed, validateAnepcFeedConfig } from "../apps/gatekeeper/src/sources/anepc";
-import { FIRMS_API_ORIGIN, collectFirmsFeed, validateFirmsFeedConfig } from "../apps/gatekeeper/src/sources/firms";
-import { NASA_POWER_API_ORIGIN, collectNasaPowerFeed, validateNasaPowerFeedConfig } from "../apps/gatekeeper/src/sources/nasapower";
-import { USGS_API_ORIGIN, collectUsgsFeed, validateUsgsFeedConfig } from "../apps/gatekeeper/src/sources/usgs";
+import { ANEPC_API_ORIGIN, collectAnepcFeed, validateAnepcFeedConfig } from "../apps/gatekeeper/src/publishers/anepc/anepc";
+import { FIRMS_API_ORIGIN, collectFirmsFeed, validateFirmsFeedConfig } from "../apps/gatekeeper/src/publishers/nasa-firms/firms";
+import { NASA_POWER_API_ORIGIN, collectNasaPowerFeed, validateNasaPowerFeedConfig } from "../apps/gatekeeper/src/publishers/nasa-power/nasapower";
+import { USGS_API_ORIGIN, collectUsgsFeed, validateUsgsFeedConfig } from "../apps/gatekeeper/src/publishers/usgs/usgs";
 import { collectWfsFeed, validateWfsFeedConfig } from "../apps/gatekeeper/src/formats/wfs";
 
 function fixture(path: string): Uint8Array {

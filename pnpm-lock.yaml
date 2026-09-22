@@ -14,9 +14,6 @@ importers:
       '@open-data-pt/api':
         specifier: workspace:*
         version: link:packages/api
-      '@open-data-pt/catalog':
-        specifier: workspace:*
-        version: link:packages/catalog
       '@open-data-pt/contract':
         specifier: workspace:*
         version: link:packages/contract
@@ -50,9 +47,6 @@ importers:
 
   apps/gatekeeper:
     dependencies:
-      '@open-data-pt/catalog':
-        specifier: workspace:*
-        version: link:../../packages/catalog
       '@open-data-pt/contract':
         specifier: workspace:*
         version: link:../../packages/contract
@@ -74,9 +68,6 @@ importers:
       '@open-data-pt/api':
         specifier: workspace:*
         version: link:../../packages/api
-      '@open-data-pt/catalog':
-        specifier: workspace:*
-        version: link:../../packages/catalog
       '@open-data-pt/contract':
         specifier: workspace:*
         version: link:../../packages/contract
@@ -95,9 +86,6 @@ importers:
       '@open-data-pt/api':
         specifier: workspace:*
         version: link:../../packages/api
-      '@open-data-pt/catalog':
-        specifier: workspace:*
-        version: link:../../packages/catalog
       '@open-data-pt/lisbon':
         specifier: workspace:*
         version: link:../../packages/lisbon
@@ -148,13 +136,7 @@ importers:
         specifier: workspace:*
         version: link:../contract
 
-  packages/catalog: {}
-
-  packages/contract:
-    dependencies:
-      '@open-data-pt/catalog':
-        specifier: workspace:*
-        version: link:../catalog
+  packages/contract: {}
 
   packages/lisbon: {}
 

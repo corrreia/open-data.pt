@@ -1,10 +1,13 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { isJsonObject, libraryConfig, parseJson, type ExampleFeed, type JsonObject, type SourceConfig, type TransformContext } from "../apps/gatekeeper/src/index";
-import { BPSTAT_EXAMPLES } from "../apps/gatekeeper/src/sources/bpstat/examples";
-import { CATALOG_EXAMPLES } from "../apps/gatekeeper/src/sources/bpstat/catalog-examples";
-import { collectBpstatDataset, validateBpstatFeedConfig } from "../apps/gatekeeper/src/sources/bpstat/bpstat";
-import { transformBpstatDataset } from "../apps/gatekeeper/src/sources/bpstat/transform";
+import { feedsOf } from "./catalog";
+import { collectBpstatDataset, validateBpstatFeedConfig } from "../apps/gatekeeper/src/publishers/banco-de-portugal/bpstat/bpstat";
+import { transformBpstatDataset } from "../apps/gatekeeper/src/publishers/banco-de-portugal/bpstat/transform";
+
+const BPSTAT_EXAMPLES = feedsOf("bpstat");
+/** The feeds that select series and their latest observations: the catalog expansion. */
+const CATALOG_EXAMPLES = BPSTAT_EXAMPLES.filter((example) => example.config.seriesIds !== undefined);
 
 function fixture(slug: string): JsonObject {
   const value = parseJson(readFileSync(new URL(`./fixtures/catalogs-expansion/${slug}.json`, import.meta.url), "utf8"));
@@ -120,7 +123,7 @@ describe("BPstat catalog expansion", () => {
   });
 
   it("fails oversized per-series windows instead of publishing old observations as a latest slice", () => {
-    const example = CATALOG_EXAMPLES[0]!;
+    const example = CATALOG_EXAMPLES.find((item) => item.slug === "bpstat-banknotes-issued")!;
     const configured = context(example);
     configured.feed.config.lastN = "1";
     expect(() => transformBpstatDataset(encode(fixture(example.slug)), configured)).toThrow("exceeded the requested latest-observation window");

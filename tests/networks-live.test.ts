@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { collectNormalized, libraryConfig, type ExampleFeed, type NormalizedCollector } from "../apps/gatekeeper/src/index";
-import { RIPESTAT_EXAMPLES, ripestatCollector } from "../apps/gatekeeper/src/sources/ripestat";
-import { PEERINGDB_EXAMPLES, peeringdbCollector } from "../apps/gatekeeper/src/sources/peeringdb";
-import { IODA_EXAMPLES, IODA_HOST, iodaCollector } from "../apps/gatekeeper/src/sources/ioda";
-import { RIPEATLAS_EXAMPLES, ripeatlasCollector } from "../apps/gatekeeper/src/sources/ripeatlas";
+import { ripestatCollector } from "../apps/gatekeeper/src/publishers/ripe-ncc/ripestat";
+import { peeringdbCollector } from "../apps/gatekeeper/src/publishers/peeringdb/peeringdb";
+import { IODA_HOST, iodaCollector } from "../apps/gatekeeper/src/publishers/ioda/ioda";
+import { ripeatlasCollector } from "../apps/gatekeeper/src/publishers/ripe-ncc/ripeatlas";
 import { networkFrames, networkRequest } from "./networks-support";
+import { feedsOf } from "./catalog";
 
 // Research-only opt-in: each of these publishers restricts republication. These checks do not deploy or store source data.
 const selected = (process.env.LIVE_NETWORKS ?? "").split(",");
@@ -19,7 +20,7 @@ function collector(example: ExampleFeed, fetcher: typeof fetch): NormalizedColle
 }
 
 describe("internet infrastructure live research", () => {
-  for (const example of [...RIPESTAT_EXAMPLES, ...PEERINGDB_EXAMPLES, ...IODA_EXAMPLES, ...RIPEATLAS_EXAMPLES]) {
+  for (const example of ["ripestat", "peeringdb", "ioda", "ripeatlas"].flatMap((name) => feedsOf(name))) {
     it.skipIf(!selected.includes(example.slug) && !selected.includes(example.config.source ?? ""))(
       example.slug,
       async () => {
@@ -65,7 +66,7 @@ describe("internet infrastructure live research", () => {
   it.skipIf(!selected.includes("ripestat"))(
     "RIPEstat source-supported historical window",
     async () => {
-      const example = RIPESTAT_EXAMPLES.find((item) => item.config.feed === "country-routing")!;
+      const example = feedsOf("ripestat").find((item) => item.config.feed === "country-routing")!;
       const adapter = collector(example, (input, init) => fetch(input, init));
       const request = await networkRequest(adapter, libraryConfig(example.config));
       const now = new Date();

@@ -1,4 +1,4 @@
-import { datasetOf } from "./catalog";
+import { datasetOf, feedsOf } from "./catalog";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
@@ -14,7 +14,6 @@ import {
   type NormalizedRow,
   type SourceConfig,
 } from "../apps/gatekeeper/src/index";
-import { CATALOG_EXAMPLES } from "../apps/gatekeeper/src/formats/opendatasoft/catalog-examples";
 import { opendatasoftCollector } from "../apps/gatekeeper/src/formats/opendatasoft/collector";
 import { MAX_HISTORY_NORMALIZED_ROWS, OpendatasoftSource } from "../apps/gatekeeper/src/formats/opendatasoft/opendatasoft";
 import { OpendatasoftTransformer } from "../apps/gatekeeper/src/formats/opendatasoft/transform";
@@ -193,7 +192,7 @@ describe("Opendatasoft measure-expanded history bounds", () => {
 
 describe("Historical medical-training record ambiguity", () => {
   it("preserves both genuine source records instead of choosing or summing conflicting series values", async () => {
-    const example = CATALOG_EXAMPLES.find((item) => item.slug === "sns-medical-specialty-training-vacancies-feed");
+    const example = feedsOf("opendatasoft").find((item) => item.slug === "sns-medical-specialty-training-vacancies-feed");
     if (!example) throw new Error("Missing training example");
     expect(example.config.series).toBeUndefined();
     expect(example.config.idFields).toBe("registo");

@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { collectNormalized, libraryConfig, type JsonObject, type SourceFetch } from "../apps/gatekeeper/src/index";
-import { collectPeeringdbFeed, PEERINGDB_ORIGIN, PEERINGDB_PUBLIC_FIELDS, validatePeeringdbFeedConfig } from "../apps/gatekeeper/src/sources/peeringdb/peeringdb";
-import { peeringdbCollector } from "../apps/gatekeeper/src/sources/peeringdb/collector";
-import { PeeringdbTransformer } from "../apps/gatekeeper/src/sources/peeringdb/transform";
-import { PEERINGDB_EXAMPLES } from "../apps/gatekeeper/src/sources/peeringdb/examples";
+import { collectPeeringdbFeed, PEERINGDB_ORIGIN, PEERINGDB_PUBLIC_FIELDS, validatePeeringdbFeedConfig } from "../apps/gatekeeper/src/publishers/peeringdb/peeringdb/peeringdb";
+import { peeringdbCollector } from "../apps/gatekeeper/src/publishers/peeringdb/peeringdb/collector";
+import { PeeringdbTransformer } from "../apps/gatekeeper/src/publishers/peeringdb/peeringdb/transform";
 import { networkBytes, networkContext, networkFixture, networkFrames, networkRequest, networkRows, object } from "./networks-support";
-import { datasetOf } from "./catalog";
+import { datasetOf, feedsOf } from "./catalog";
 
 const CONFIG = { feed: "exchanges", country: "PT" };
 const transformer = new PeeringdbTransformer();
@@ -33,8 +32,8 @@ describe("PeeringDB source boundaries", () => {
       { ...CONFIG, fields: "tech_email" },
     ])
       expect(() => validatePeeringdbFeedConfig(config)).toThrow();
-    expect(PEERINGDB_EXAMPLES).toHaveLength(1);
-    const example = PEERINGDB_EXAMPLES[0]!;
+    expect(feedsOf("peeringdb")).toHaveLength(1);
+    const example = feedsOf("peeringdb")[0]!;
     expect(validatePeeringdbFeedConfig(libraryConfig(example.config))).toEqual(CONFIG);
     expect(example.policy.collection.cadenceSeconds).toBe(604_800);
     expect(datasetOf(example).licence).toBe("peeringdb-aup");

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { feedsOf } from "./catalog";
 import { NORMALIZED_PROTOCOL, collectNormalized, isJsonObject, libraryConfig, parseJson, type CollectionRequest, type JsonObject } from "@open-data-pt/gatekeeper";
 import { ogcCollector, resolveOgcFeed } from "../apps/gatekeeper/src/formats/ogc";
-import { OGC_EXAMPLES } from "../apps/gatekeeper/src/formats/ogc/examples";
 
 const wanted = (process.env.LIVE_OGC ?? "")
   .split(",")
@@ -29,7 +29,7 @@ async function readFrames(stream: ReadableStream<Uint8Array>): Promise<JsonObjec
 }
 
 describe.runIf(wanted.length > 0)("OGC live collection", () => {
-  const chosen = OGC_EXAMPLES.filter((example) => wanted.includes(example.slug));
+  const chosen = feedsOf("ogc").filter((example) => wanted.includes(example.slug));
   it.each(chosen)(
     "collects $slug from its real service",
     async (example) => {

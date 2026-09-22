@@ -1,16 +1,15 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { type ExampleFeed, type NormalizedRow, type TransformContext } from "@open-data-pt/contract";
-import { UDATA_EXAMPLES, udataCollector } from "@open-data-pt/gatekeeper/formats/udata";
-import { INSTALLED, datasetOf } from "./catalog";
-import { INE_EXAMPLES } from "../apps/gatekeeper/src/sources/ine/examples";
+import { udataCollector } from "@open-data-pt/gatekeeper/formats/udata";
+import { INSTALLED, datasetOf, feedsOf } from "./catalog";
 
 /** Topics are catalog tags now, so these are the installed feeds carrying each tag, whatever Worker reads them. */
 const tagged = (topic: string): ExampleFeed[] => INSTALLED.filter((example) => datasetOf(example).topics.includes(topic));
 const GOVERNMENT_EXAMPLES = tagged("government");
 const CITIES_EXAMPLES = tagged("cities");
 const TELECOM_EXAMPLES = tagged("telecom");
-const government = UDATA_EXAMPLES.filter((example) => datasetOf(example).topics.includes("government"));
+const government = feedsOf("udata").filter((example) => datasetOf(example).topics.includes("government"));
 
 async function normalized(example: ExampleFeed, observedAt: string) {
   const text = readFileSync(new URL(example.config.format === "csv" ? "./fixtures/cada-opinions.csv" : "./fixtures/government-registry-sample.json", import.meta.url), "utf8");
@@ -64,7 +63,7 @@ describe("government distribution examples", () => {
   });
 
   it("uses keyless government telecom statistics without claiming live coverage", () => {
-    const telecom = INE_EXAMPLES.filter((example) => datasetOf(example).topics.includes("telecom"));
+    const telecom = feedsOf("ine").filter((example) => datasetOf(example).topics.includes("telecom"));
     expect(telecom).toHaveLength(6);
     expect(TELECOM_EXAMPLES.map((example) => example.slug).toSorted()).toEqual(telecom.map((example) => example.slug).toSorted());
     for (const example of telecom) {
@@ -82,7 +81,7 @@ describe("government distribution examples", () => {
       "ine-declared-income-per-inhabitant",
       "ine-household-income-p90-p10",
     ];
-    const examples = INE_EXAMPLES.filter((example) => slugs.includes(example.slug));
+    const examples = feedsOf("ine").filter((example) => slugs.includes(example.slug));
     expect(examples).toHaveLength(5);
     for (const example of examples) {
       expect(example.config.indicator).not.toBe("0009940");

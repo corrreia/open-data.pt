@@ -1,11 +1,10 @@
-import { isDataset } from "@open-data-pt/catalog";
 import type { Acquisition as ApiAcquisition, Coverage, Feed as ApiFeed } from "@open-data-pt/api";
 import { asObject, asString, isJsonString, parseJson, type JsonObject, type JsonValue } from "@open-data-pt/contract";
 
 import { ANALYTICS_WINDOWS, AnalyticsError, analyticsReport } from "./analytics";
 import { CADENCE_HEADER } from "./cache";
 import { REGISTRY_ROOM, type ProductDetail, type Registry } from "./coordinators";
-import { datasetRef, datasetRefs } from "./vocabulary";
+import { Vocabulary } from "./vocabulary";
 import { NotFoundError, RequestError, type HeaderMap } from "./errors";
 import type { Acquisition, Feed } from "./feed-model";
 import { ObjectStore } from "./object-store";
@@ -114,27 +113,30 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
 
     /* ---------- Datasets: what the catalog holds, whose it is and under what terms ---------- */
     if (url.pathname === "/api/datasets") {
-      return json({ data: datasetRefs(url.origin) });
+      return json({ data: new Vocabulary(await registry().catalog()).datasetRefs(url.origin) });
     }
     const datasetMatch = url.pathname.match(/^\/api\/datasets\/([^/]+)$/);
     if (datasetMatch?.[1]) {
       const id = decodeURIComponent(datasetMatch[1]);
-      if (!isDataset(id)) return problem(404, "Dataset not found", `open-data.pt serves no dataset called “${id}”. Every dataset is listed at ${url.origin}/api/datasets.`);
-      return json({ data: datasetRef(id, url.origin) });
+      const vocabulary = new Vocabulary(await registry().catalog());
+      if (!vocabulary.dataset(id))
+        return problem(404, "Dataset not found", `open-data.pt serves no dataset called “${id}”. Every dataset is listed at ${url.origin}/api/datasets.`);
+      return json({ data: vocabulary.datasetRef(id, url.origin) });
     }
 
     /* ---------- Feeds: which part of a dataset each one reads, and how its collection is going ---------- */
     if (url.pathname === "/api/feeds") {
       const reg = registry();
-      const [feeds, policies] = await Promise.all([reg.listFeeds(), reg.listPolicies()]);
+      const [feeds, policies, catalog] = await Promise.all([reg.listFeeds(), reg.listPolicies(), reg.catalog()]);
       const cadences = new Map(policies.map((policy) => [policy.id, policy.collection.cadenceSeconds]));
-      return json({ data: feeds.map((feed) => publicFeed(feed, cadences.get(feed.policyId), url.origin)) });
+      const vocabulary = new Vocabulary(catalog);
+      return json({ data: feeds.map((feed) => publicFeed(feed, cadences.get(feed.policyId), vocabulary, url.origin)) });
     }
     const feedMatch = url.pathname.match(/^\/api\/feeds\/([^/]+)$/);
     if (feedMatch?.[1]) {
       const reg = registry();
-      const [feed, policies] = await Promise.all([requireFeed(reg, decodeURIComponent(feedMatch[1])), reg.listPolicies()]);
-      return json({ data: publicFeed(feed, policies.find((policy) => policy.id === feed.policyId)?.collection.cadenceSeconds, url.origin) });
+      const [feed, policies, catalog] = await Promise.all([requireFeed(reg, decodeURIComponent(feedMatch[1])), reg.listPolicies(), reg.catalog()]);
+      return json({ data: publicFeed(feed, policies.find((policy) => policy.id === feed.policyId)?.collection.cadenceSeconds, new Vocabulary(catalog), url.origin) });
     }
 
     /* ---------- Collection runs, across feeds or of one, recent or of one UTC day ---------- */
@@ -166,8 +168,8 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
     /* ---------- Products ---------- */
     if (url.pathname === "/api/catalog.dcat.json") {
       const reg = registry();
-      const feeds = await reg.listFeeds();
-      return new Response(JSON.stringify(await serving().dcatCatalog(url.origin, feeds)), {
+      const [feeds, catalog] = await Promise.all([reg.listFeeds(), reg.catalog()]);
+      return new Response(JSON.stringify(await serving().dcatCatalog(url.origin, feeds, new Vocabulary(catalog))), {
         headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "public, max-age=300", "Content-Type": "application/ld+json" },
       });
     }
@@ -553,7 +555,7 @@ const STANDARD_FORMATS = new Set(["arcgis", "ckan", "gbfs", "gtfs", "opendatasof
  * collection is going. The runner's scope and checkpoint, the policy, the library, the lake
  * backlog and raw errors stay inside the platform; /api/outages says when a source failed.
  */
-function publicFeed(feed: Feed, cadenceSeconds: number | undefined, origin: string): ApiFeed {
+function publicFeed(feed: Feed, cadenceSeconds: number | undefined, vocabulary: Vocabulary, origin: string): ApiFeed {
   const {
     feedEpoch: _epoch,
     resolved: _resolved,
@@ -570,7 +572,7 @@ function publicFeed(feed: Feed, cadenceSeconds: number | undefined, origin: stri
     ...publicValue
   } = feed;
   const source = config.source ?? "";
-  return { ...publicValue, dataset: datasetRef(dataset, origin), format: STANDARD_FORMATS.has(source) ? source : "own-api", cadenceSeconds: cadenceSeconds ?? null };
+  return { ...publicValue, dataset: vocabulary.datasetRef(dataset, origin), format: STANDARD_FORMATS.has(source) ? source : "own-api", cadenceSeconds: cadenceSeconds ?? null };
 }
 
 /* ---------- Record filters ---------- */

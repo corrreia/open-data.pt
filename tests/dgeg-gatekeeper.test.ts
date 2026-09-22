@@ -1,6 +1,6 @@
 import type { JsonValue } from "@open-data-pt/contract";
 import { describe, expect, it, vi } from "vitest";
-import { collectDgegFeed, DGEG_API_ORIGIN, FUEL_TYPES_MAX_BYTES, validateDgegFeedConfig } from "../apps/gatekeeper/src/sources/dgeg/dgeg";
+import { collectDgegFeed, DGEG_API_ORIGIN, FUEL_TYPES_MAX_BYTES, validateDgegFeedConfig } from "../apps/gatekeeper/src/publishers/dgeg/dgeg/dgeg";
 
 const fuelTypes = {
   status: true,

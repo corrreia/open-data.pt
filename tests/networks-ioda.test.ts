@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { collectNormalized, libraryConfig, type JsonObject, type SourceConfig } from "../apps/gatekeeper/src/index";
-import { IODA_HOST, IODA_MAX_BYTES, collectIodaFeed, iodaUrl, validateIodaFeedConfig } from "../apps/gatekeeper/src/sources/ioda/ioda";
-import { IodaTransformer } from "../apps/gatekeeper/src/sources/ioda/transform";
-import { iodaCollector } from "../apps/gatekeeper/src/sources/ioda/collector";
-import { IODA_EXAMPLES } from "../apps/gatekeeper/src/sources/ioda/examples";
+import { IODA_HOST, IODA_MAX_BYTES, collectIodaFeed, iodaUrl, validateIodaFeedConfig } from "../apps/gatekeeper/src/publishers/ioda/ioda/ioda";
+import { IodaTransformer } from "../apps/gatekeeper/src/publishers/ioda/ioda/transform";
+import { iodaCollector } from "../apps/gatekeeper/src/publishers/ioda/ioda/collector";
 import { networkContext, networkFixture, networkFrames, networkRequest, object } from "./networks-support";
-import { datasetOf } from "./catalog";
+import { datasetOf, feedsOf } from "./catalog";
 
 const EVENTS: SourceConfig = { feed: "outage-events", entityType: "country", entityCode: "PT", days: "7" };
 const ALERTS: SourceConfig = { feed: "outage-alerts", entityType: "country", entityCode: "PT", days: "7" };
@@ -198,9 +197,9 @@ describe("IODA products", () => {
 
 describe("IODA examples", () => {
   it("ships eight Portugal-scoped examples with cadences its own clocks justify", () => {
-    expect(IODA_EXAMPLES).toHaveLength(8);
-    expect(IODA_EXAMPLES.map((example) => example.config.entityCode)).toEqual(["PT", "PT", "3243", "2860", "12353", "20879", "15457", "PT"]);
-    for (const example of IODA_EXAMPLES) {
+    expect(feedsOf("ioda")).toHaveLength(8);
+    expect(feedsOf("ioda").map((example) => example.config.entityCode)).toEqual(["PT", "PT", "3243", "2860", "12353", "20879", "15457", "PT"]);
+    for (const example of feedsOf("ioda")) {
       expect(() => validateIodaFeedConfig(libraryConfig(example.config))).not.toThrow();
       expect(datasetOf(example).publisher).toBe("ioda");
       expect(datasetOf(example).topics).toEqual(["telecom"]);

@@ -2,9 +2,16 @@ import { jsonAs } from "./support";
 import { describe, expect, it, vi } from "vitest";
 import type { JsonObject, JsonValue, SourceBody, SourceFetch, TransformContext } from "@open-data-pt/contract";
 import { libraryConfig } from "@open-data-pt/gatekeeper";
-import { INE_FEEDS, INE_HISTORY_MAX_BYTES, INE_MAX_BYTES, collectIneIndicator, collectIneIndicatorHistory, validateIneFeedConfig } from "../apps/gatekeeper/src/sources/ine/ine";
-import { INE_EXAMPLES } from "../apps/gatekeeper/src/sources/ine/examples";
-import { transformIneIndicator } from "../apps/gatekeeper/src/sources/ine/transform";
+import {
+  INE_FEEDS,
+  INE_HISTORY_MAX_BYTES,
+  INE_MAX_BYTES,
+  collectIneIndicator,
+  collectIneIndicatorHistory,
+  validateIneFeedConfig,
+} from "../apps/gatekeeper/src/publishers/ine/ine/ine";
+import { transformIneIndicator } from "../apps/gatekeeper/src/publishers/ine/ine/transform";
+import { feedsOf } from "./catalog";
 
 const META = [
   {
@@ -140,8 +147,8 @@ function bodyBytes(fetched: SourceBody): Uint8Array {
 
 describe("INE Gatekeeper", () => {
   it("ships example feeds whose configurations all validate", () => {
-    expect(INE_EXAMPLES).toHaveLength(26);
-    for (const example of INE_EXAMPLES) {
+    expect(feedsOf("ine")).toHaveLength(26);
+    for (const example of feedsOf("ine")) {
       expect(() => validateIneFeedConfig(libraryConfig(example.config))).not.toThrow();
     }
   });

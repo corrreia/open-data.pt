@@ -1,13 +1,4 @@
-import {
-  GatekeeperError,
-  hashSourceConfig,
-  type ExampleFeed,
-  type FeedKindDescription,
-  type NormalizedCollector,
-  type ResolvedFeed,
-  type SourceConfig,
-  type TransformContext,
-} from "./index";
+import { GatekeeperError, hashSourceConfig, type FeedKindDescription, type NormalizedCollector, type ResolvedFeed, type SourceConfig, type TransformContext } from "./index";
 
 /**
  * The Gatekeeper Worker is wiring. It carries every library, hands each its
@@ -52,11 +43,10 @@ export interface LibraryDeployment<E> {
   library: (env: E) => GatekeeperLibrary;
 }
 
-/** One library as the Worker and the tests read it: its deployment declaration and its example feeds. */
+/** One library as the Worker and the tests read it: the code that reads one format or one API, and what it needs. Which feeds it reads is the publisher folders' word. */
 export interface Library {
   /** Every library's environment differs; `never` lets one list hold them all, and `buildLibrary` supplies it. */
   deployment: LibraryDeployment<never>;
-  examples: readonly ExampleFeed[];
 }
 
 /**

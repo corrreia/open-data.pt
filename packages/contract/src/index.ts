@@ -6,9 +6,9 @@ import type { CanonicalRecord, CanonicalSchema, Completeness, ProductFinalizatio
 /*
  * The contract between the kernel and the Gatekeeper: the private RPC, the
  * normalized stream it answers with. The kernel depends on this package and
- * never on the Gatekeeper; nothing here fetches or parses a source. What names
- * a real thing in the world — a publisher, a licence, a topic — is catalog
- * content and lives in `@open-data-pt/catalog`.
+ * never on the Gatekeeper; nothing here fetches or parses a source. The catalog
+ * — publishers, datasets, licences, topics — is the Gatekeeper's to declare, in
+ * its publisher folders; this package only says what shape it crosses RPC in.
  */
 export {
   asArray,
@@ -199,6 +199,65 @@ export interface CollectionPolicyDefinition {
   withoutHistory?: readonly string[];
 }
 
+/* ---------- The catalog (what the Gatekeeper reads, whose it is, and under what terms) ---------- */
+
+/**
+ * Who made the data, as the Gatekeeper's publisher folders declare them. Only
+ * the publishers whose data may be republished cross RPC: one held for
+ * permission is not in the catalog, and neither are its datasets or feeds.
+ */
+export interface CatalogPublisher {
+  id: string;
+  name: string;
+  /** Their own site, not the portal the data was read from. */
+  url?: string;
+  /** Their mark's file extension; the site serves it at `/publishers/<id>.<logo>`. */
+  logo?: "svg" | "png";
+}
+
+/** A set of terms a dataset is served under, one key per set, as the publisher states them. */
+export interface CatalogLicence {
+  id: string;
+  /** Short enough for a badge. */
+  name: string;
+  /** The licence text or the publisher's terms page, when there is one. */
+  url?: string;
+  /** One sentence on what the terms allow, for the licence page. */
+  summary: string;
+}
+
+/** A browsing tag. */
+export interface CatalogTopic {
+  id: string;
+  name: string;
+}
+
+/** One publisher's body of data, which one or more feeds read. */
+export interface CatalogDataset {
+  id: string;
+  title: string;
+  description: string;
+  /** A publisher's `id`. */
+  publisher: string;
+  /** A licence's `id`, or `source-terms` when the publisher states none. */
+  licence: string;
+  /** How the publisher asks to be credited, when they say. */
+  attribution?: string;
+  /** Topic `id`s. */
+  topics: string[];
+}
+
+/** Everything the catalog names, as the Gatekeeper declares it; the kernel stores it and serves it expanded. */
+export interface CatalogDescription {
+  publishers: CatalogPublisher[];
+  licences: CatalogLicence[];
+  topics: CatalogTopic[];
+  datasets: CatalogDataset[];
+}
+
+/** The licence key for data whose publisher states no reuse terms: not a licence, so no markup names one. */
+export const UNSTATED_LICENCE = "source-terms";
+
 /**
  * A ready-to-install feed a Gatekeeper ships as an example of what it can do.
  * What the data is, who published it and under what terms belongs to its
@@ -296,13 +355,14 @@ export type NormalizedFrame =
       exhausted?: boolean;
     };
 
-/** Five-operation, normalized-only private RPC. */
+/** The Gatekeeper's private RPC: its feed kinds, its catalog and example feeds, and normalized collection. */
 export interface FeedGatekeeper extends WorkerEntrypoint {
   describe(): Promise<GatekeeperDescription>;
   listFeedKinds(): Promise<FeedKindDescription[]>;
   resolveFeed(config: SourceConfig): Promise<ResolvedFeed>;
   collect(request: CollectionRequest): Promise<CollectionResult>;
   exampleFeeds(): Promise<ExampleFeed[]>;
+  catalog(): Promise<CatalogDescription>;
 }
 
 export class GatekeeperError extends Error {

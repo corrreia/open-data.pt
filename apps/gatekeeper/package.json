@@ -5,13 +5,13 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./catalog": "./src/catalog/index.ts",
     "./gatekeeper": "./src/gatekeeper.ts",
     "./libraries": "./src/libraries.ts",
     "./formats/*": "./src/formats/*/index.ts",
-    "./sources/*": "./src/sources/*/index.ts"
+    "./publishers/*": "./src/publishers/*/index.ts"
   },
   "dependencies": {
-    "@open-data-pt/catalog": "workspace:*",
     "@open-data-pt/contract": "workspace:*",
     "@open-data-pt/lisbon": "workspace:*"
   }

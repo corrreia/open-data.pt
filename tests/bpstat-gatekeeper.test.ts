@@ -1,7 +1,7 @@
 import { parseJson } from "@open-data-pt/contract";
 import type { JsonValue, SourceBody, SourceFetch } from "@open-data-pt/contract";
 import { describe, expect, it, vi } from "vitest";
-import { BPSTAT_MAX_BYTES, collectBpstatDataset, validateBpstatFeedConfig } from "../apps/gatekeeper/src/sources/bpstat/bpstat";
+import { BPSTAT_MAX_BYTES, collectBpstatDataset, validateBpstatFeedConfig } from "../apps/gatekeeper/src/publishers/banco-de-portugal/bpstat/bpstat";
 
 const DATASET_ID = "7f13efcd65fc6bd0c5adb0e8d29d9b44";
 const SOURCE_URL = `https://bpstat.bportugal.pt/data/v1/domains/12/datasets/${DATASET_ID}/?lang=EN`;

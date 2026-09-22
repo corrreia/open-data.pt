@@ -13,7 +13,6 @@ import {
   type SourceFetch,
 } from "@open-data-pt/gatekeeper";
 import {
-  INFOAGUA_EXAMPLES,
   INFOAGUA_ORIGIN,
   InfoaguaTransformer,
   assignedJson,
@@ -21,7 +20,8 @@ import {
   infoaguaCollector,
   resolveInfoaguaFeed,
   validateInfoaguaFeedConfig,
-} from "../apps/gatekeeper/src/sources/infoagua";
+} from "../apps/gatekeeper/src/publishers/apa/infoagua";
+import { feedsOf } from "./catalog";
 
 const page = (name: string): string => readFileSync(new URL(`./fixtures/infoagua/${name}`, import.meta.url), "utf8");
 const FLOODS = { feed: "flood-alerts" };
@@ -61,7 +61,7 @@ async function records(config: SourceConfig, fetcher = infoagua()): Promise<Cano
 }
 
 describe("InfoÁgua configuration", () => {
-  it.each(INFOAGUA_EXAMPLES)("validates the curated $slug example", (example) => {
+  it.each(feedsOf("infoagua"))("validates the curated $slug example", (example) => {
     const candidate = libraryConfig(example.config);
     expect(validateInfoaguaFeedConfig(candidate)).toEqual(candidate);
   });

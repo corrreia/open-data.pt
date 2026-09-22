@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { JsonValue, TransformContext } from "@open-data-pt/contract";
-import { normalizeEurostatPeriod, transformEurostatDataset } from "../apps/gatekeeper/src/sources/eurostat/transform";
+import { normalizeEurostatPeriod, transformEurostatDataset } from "../apps/gatekeeper/src/publishers/eurostat/eurostat/transform";
 
 function fixture(name: string): Uint8Array {
   return new Uint8Array(readFileSync(new URL(`./fixtures/eurostat/${name}`, import.meta.url)));

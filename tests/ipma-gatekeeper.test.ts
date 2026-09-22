@@ -1,6 +1,6 @@
 import type { JsonValue } from "@open-data-pt/contract";
 import { describe, expect, it, vi } from "vitest";
-import { collectIpmaFeed, IPMA_FEED_LIMITS, validateIpmaFeedConfig } from "../apps/gatekeeper/src/sources/ipma/ipma";
+import { collectIpmaFeed, IPMA_FEED_LIMITS, validateIpmaFeedConfig } from "../apps/gatekeeper/src/publishers/ipma/ipma/ipma";
 
 const ORIGIN = "https://api.ipma.pt";
 

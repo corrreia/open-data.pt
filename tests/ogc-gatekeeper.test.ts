@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import { datasetOf } from "./catalog";
+import { datasetOf, feedsOf } from "./catalog";
 import {
   GatekeeperError,
   NORMALIZED_PROTOCOL,
@@ -17,7 +17,6 @@ import {
   type SourceFetch,
 } from "@open-data-pt/gatekeeper";
 import { OgcTransformer, collectOgcFeed, itemsUrl, ogcCollector, resolveOgcFeed, validateOgcFeedConfig } from "../apps/gatekeeper/src/formats/ogc";
-import { OGC_EXAMPLES } from "../apps/gatekeeper/src/formats/ogc/examples";
 import { boundingBox } from "../apps/gatekeeper/src/formats/ogc/geometry";
 
 const DGT_HOST = "ogcapi.dgterritorio.gov.pt";
@@ -248,7 +247,7 @@ describe("OGC API Features configuration", () => {
     expect(() => validateOgcFeedConfig({ host: "attacker.example", collection: "municipios" }, hosts)).toThrow(/not allowed/);
   });
 
-  it.each(OGC_EXAMPLES)("validates the curated $slug example", (example) => {
+  it.each(feedsOf("ogc"))("validates the curated $slug example", (example) => {
     const candidate = libraryConfig(example.config);
     expect(validateOgcFeedConfig(candidate, hosts)).toEqual(candidate);
   });
@@ -1236,33 +1235,35 @@ describe("OGC API Features through the shared collector", () => {
 
 describe("OGC API Features examples", () => {
   it("ships every curated collection under its own slug, each naming its own library", () => {
-    expect(OGC_EXAMPLES.every((example) => example.config.source === "ogc")).toBe(true);
-    expect(new Set(OGC_EXAMPLES.map((example) => example.slug)).size).toBe(OGC_EXAMPLES.length);
+    expect(feedsOf("ogc").every((example) => example.config.source === "ogc")).toBe(true);
+    expect(new Set(feedsOf("ogc").map((example) => example.slug)).size).toBe(feedsOf("ogc").length);
     // Six CAOP tables, eighteen SRUP registers plus the SGIFR points, and one
     // feed per municipality whose land-use regime DGT has published nationally.
-    expect(OGC_EXAMPLES.filter((example) => example.slug.startsWith("dgt-caop-"))).toHaveLength(6);
-    expect(OGC_EXAMPLES.filter((example) => example.slug.startsWith("dgt-srup-"))).toHaveLength(18);
+    expect(feedsOf("ogc").filter((example) => example.slug.startsWith("dgt-caop-"))).toHaveLength(6);
+    expect(feedsOf("ogc").filter((example) => example.slug.startsWith("dgt-srup-"))).toHaveLength(18);
     // The land-use regime is one dataset read two ways: the table whole, and
     // its boundaries a few municipalities at a time.
-    expect(OGC_EXAMPLES.filter((example) => example.slug.startsWith("dgt-crus"))).toHaveLength(2);
+    expect(feedsOf("ogc").filter((example) => example.slug.startsWith("dgt-crus"))).toHaveLength(2);
   });
 
   it("reads each collection once, unless the second read is its boundaries", () => {
-    const attributes = OGC_EXAMPLES.filter((example) => example.config.geometry === "skip").map((example) => `${example.config.host}/${example.config.collection}`);
+    const attributes = feedsOf("ogc")
+      .filter((example) => example.config.geometry === "skip")
+      .map((example) => `${example.config.host}/${example.config.collection}`);
     expect(attributes.filter((one, index) => attributes.indexOf(one) !== index)).toEqual([]);
     // Only the land-use charter is read twice, and the two reads differ in what
     // they are for: one is the table entire, the other the outlines it is too
     // large to carry, built up a few municipalities a run.
-    const twice = OGC_EXAMPLES.filter((example) => example.config.collection === "crus");
+    const twice = feedsOf("ogc").filter((example) => example.config.collection === "crus");
     expect(twice).toHaveLength(2);
     expect(twice.filter((example) => example.config.geometry === "skip")).toHaveLength(1);
     expect(twice.filter((example) => example.config.shardField !== undefined)).toHaveLength(1);
     // Nothing is cut by a fixed attribute value any more.
-    expect(OGC_EXAMPLES.filter((example) => example.config.filterField !== undefined)).toEqual([]);
+    expect(feedsOf("ogc").filter((example) => example.config.filterField !== undefined)).toEqual([]);
   });
 
   it("reads only the two services it is allowed to read", () => {
-    expect(new Set(OGC_EXAMPLES.map((example) => example.config.host))).toEqual(new Set([DGT_HOST, LNEG_HOST]));
+    expect(new Set(feedsOf("ogc").map((example) => example.config.host))).toEqual(new Set([DGT_HOST, LNEG_HOST]));
   });
 
   it("says in every CAOP title that the charter covers the mainland only", () => {
@@ -1270,7 +1271,7 @@ describe("OGC API Features examples", () => {
     // descriptions; the islands are read from the GeoServer by the `wfs`
     // library instead. The NUTS tables name the island regions without holding
     // their areas, and say that too.
-    const bounded = OGC_EXAMPLES.filter((example) => /^dgt-caop-(distritos|municipios|freguesias|nuts[23])-feed$/.test(example.slug));
+    const bounded = feedsOf("ogc").filter((example) => /^dgt-caop-(distritos|municipios|freguesias|nuts[23])-feed$/.test(example.slug));
     expect(bounded).toHaveLength(5);
     for (const example of bounded) {
       expect(example.title, example.slug).toMatch(/mainland/i);
@@ -1284,7 +1285,7 @@ describe("OGC API Features examples", () => {
   it("never calls a feed attributes-only when it publishes coordinates", () => {
     // A description that still says "attributes only" after the feed started
     // carrying its geometry is the one lie a reader cannot check for themselves.
-    for (const example of OGC_EXAMPLES) {
+    for (const example of feedsOf("ogc")) {
       if ((example.config.geometry ?? "include") === "skip") continue;
       // The words are the dataset's when the feed is the whole of it.
       expect(example.description ?? datasetOf(example).description, example.slug).not.toMatch(/attributes only|without boundary outlines/i);
@@ -1298,14 +1299,14 @@ describe("OGC API Features examples", () => {
   // leaves out of the JSON this library reads; the same licence is on DGT's own
   // site and on its dados.gov.pt records.
   it("serves the CAOP under the licence DGT states", () => {
-    for (const example of OGC_EXAMPLES) {
+    for (const example of feedsOf("ogc")) {
       expect(datasetOf(example).licence).toBe("cc-by-4.0");
       expect(datasetOf(example).attribution ?? "").not.toBe("");
     }
   });
 
   it("polls reference layers weekly or monthly, never faster, and never calls one stale before it is due", () => {
-    for (const example of OGC_EXAMPLES) {
+    for (const example of feedsOf("ogc")) {
       const { cadenceSeconds } = example.policy.collection;
       // A sharded feed's runs do not repeat each other: each reads shards the
       // last did not, so what the source is asked for a given row is the
@@ -1320,7 +1321,7 @@ describe("OGC API Features examples", () => {
   });
 
   it("gives every example room for the collection it reads", () => {
-    for (const example of OGC_EXAMPLES) {
+    for (const example of feedsOf("ogc")) {
       const pages = Number(example.config.maxPages ?? "0") * Number(example.config.pageSize ?? "0");
       expect(pages, example.slug).toBeGreaterThan(0);
       // A megabyte is the floor a 36-feature register needs; the layers read
@@ -1336,8 +1337,8 @@ describe("OGC API Features examples", () => {
   });
 
   it("asks for at least as many pages as the collection it promises needs", () => {
-    for (const example of OGC_EXAMPLES) {
-      const promised = /([\d,]{2,})\s/.exec(example.description)?.[1];
+    for (const example of feedsOf("ogc")) {
+      const promised = /([\d,]{2,})\s/.exec(example.description ?? datasetOf(example).description)?.[1];
       if (promised === undefined) continue;
       const features = Number(promised.replaceAll(",", ""));
       const room = Number(example.config.maxPages ?? "0") * Number(example.config.pageSize ?? "0");

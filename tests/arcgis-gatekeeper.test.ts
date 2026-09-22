@@ -14,7 +14,7 @@ import {
   libraryConfig,
 } from "@open-data-pt/gatekeeper";
 import { MAX_METADATA_BYTES, arcgisCollector, collectArcgisFeed, resolveArcgisFeed, validateArcgisFeedConfig } from "../apps/gatekeeper/src/formats/arcgis";
-import { ARCGIS_EXAMPLES } from "../apps/gatekeeper/src/formats/arcgis/examples";
+import { feedsOf } from "./catalog";
 
 const allowedHosts = "services.arcgis.com";
 const hosts = new Set([allowedHosts]);
@@ -25,7 +25,7 @@ const config = {
 };
 const layerUrl = "https://services.arcgis.com/account/arcgis/rest/services/Useful_Layer/FeatureServer/0";
 const revision = { etag: 'W/"1788509530839"', lastModified: "Fri, 04 Sep 2026 08:12:10 GMT" };
-const newLisbonExamples = ARCGIS_EXAMPLES.filter((example) => example.slug.startsWith("lisbon-"));
+const newLisbonExamples = feedsOf("arcgis").filter((example) => example.slug.startsWith("lisbon-"));
 
 const metadata = {
   name: "Useful layer",
@@ -133,7 +133,7 @@ describe("ArcGIS Gatekeeper", () => {
     expect(validateArcgisFeedConfig({ layerUrl }, hosts)).toEqual(config);
   });
 
-  it.each(newLisbonExamples)("validates the curated $title example", (example) => {
+  it.each(newLisbonExamples)("validates the curated $slug example", (example) => {
     const config = libraryConfig(example.config);
     expect(validateArcgisFeedConfig(config, hosts)).toEqual(config);
   });

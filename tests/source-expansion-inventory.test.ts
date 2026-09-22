@@ -1,13 +1,13 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { asStringList, parseJson, type ExampleFeed } from "@open-data-pt/contract";
-import { CARRIED, datasetOf } from "./catalog";
+import { CARRIED, datasetOf, feedsOf } from "./catalog";
 
 interface LibraryExamples {
   library: string;
   examples: ExampleFeed[];
 }
-const libraries: LibraryExamples[] = CARRIED.map((library) => ({ library: library.deployment.source, examples: [...library.examples] }));
+const libraries: LibraryExamples[] = CARRIED.map((library) => ({ library: library.deployment.source, examples: feedsOf(library.deployment.source) }));
 const baseline = new Set(asStringList(parseJson(readFileSync(new URL("./fixtures/source-expansion-baseline-slugs.json", import.meta.url), "utf8"))));
 
 describe("source expansion inventory", () => {

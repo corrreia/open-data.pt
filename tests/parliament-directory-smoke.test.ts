@@ -1,8 +1,13 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { libraryConfig, readBoundedResponse } from "@open-data-pt/gatekeeper";
-import { PARLIAMENT_EXAMPLES } from "../apps/gatekeeper/src/sources/parliament";
-import { parliamentDirectoryLink, parliamentDocument, parliamentDocumentLink, PARLIAMENT_HTML_BYTES } from "../apps/gatekeeper/src/sources/parliament/parliament";
+import { feedsOf } from "./catalog";
+import {
+  parliamentDirectoryLink,
+  parliamentDocument,
+  parliamentDocumentLink,
+  PARLIAMENT_HTML_BYTES,
+} from "../apps/gatekeeper/src/publishers/assembleia-da-republica/parliament/parliament";
 
 const saved = process.env.PARLIAMENT_DIRECTORY_SAMPLES === "1";
 const live = process.env.LIVE_PARLIAMENT_DIRECTORY === "1";
@@ -10,7 +15,7 @@ const DIRECTORY = process.env.PARLIAMENT_DIRECTORY_SAMPLE_DIR;
 
 /** These tests inspect public directory HTML only. They never open document JSON or biography records. */
 describe.skipIf(!saved)("Parliament recorded public-directory HTML", () => {
-  it.each(PARLIAMENT_EXAMPLES)("identifies the actual two-level $slug download listing", (example) => {
+  it.each(feedsOf("parliament"))("identifies the actual two-level $slug download listing", (example) => {
     if (!DIRECTORY) throw new Error("Set PARLIAMENT_DIRECTORY_SAMPLE_DIR to a directory containing public listing HTML");
     const document = parliamentDocument(libraryConfig(example.config));
     const first = readFileSync(`${DIRECTORY}/parl_${document.page}.html`, "utf8");

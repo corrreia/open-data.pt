@@ -75,7 +75,7 @@ export interface Feed extends FeedStatus {
   policyId: string;
   enabled: boolean;
   staleAfterSeconds: number;
-  /** The dataset this feed reads part of, a key of `DATASETS`; who published it and under what terms is the dataset's word, not the feed's. */
+  /** The dataset this feed reads part of, a key of the catalog the Gatekeeper declares; who published it and under what terms is the dataset's word, not the feed's. */
   dataset: string;
   createdAt: string;
   updatedAt: string;

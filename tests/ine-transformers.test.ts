@@ -2,7 +2,7 @@ import { jsonAs } from "./support";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { JsonObject, TransformContext } from "@open-data-pt/contract";
-import { transformIneIndicator } from "../apps/gatekeeper/src/sources/ine/transform";
+import { transformIneIndicator } from "../apps/gatekeeper/src/publishers/ine/ine/transform";
 
 function fixture(name: string): Uint8Array {
   return readFileSync(new URL(`./fixtures/ine/${name}`, import.meta.url));

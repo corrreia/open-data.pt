@@ -11,12 +11,13 @@ import {
   type NormalizedFrame,
 } from "../apps/gatekeeper/src/index";
 import { opendatasoftCollector } from "../apps/gatekeeper/src/formats/opendatasoft/collector";
-import { CATALOG_EXAMPLES as ODS_EXAMPLES } from "../apps/gatekeeper/src/formats/opendatasoft/catalog-examples";
-import { bpstatCollector } from "../apps/gatekeeper/src/sources/bpstat/collector";
-import { CATALOG_EXAMPLES as BPSTAT_EXAMPLES } from "../apps/gatekeeper/src/sources/bpstat/catalog-examples";
+import { bpstatCollector } from "../apps/gatekeeper/src/publishers/banco-de-portugal/bpstat/collector";
+import { feedsOf } from "./catalog";
 
 // Opt in to precisely the new catalog feeds; no production writes or topic wiring is required.
 const selected = (process.env.LIVE_CATALOGS ?? "").split(",");
+const ODS_EXAMPLES = feedsOf("opendatasoft").filter((example) => example.policy.name.endsWith("bounded reporting-period collection"));
+const BPSTAT_EXAMPLES = feedsOf("bpstat").filter((example) => example.config.seriesIds !== undefined);
 const examples = [...ODS_EXAMPLES, ...BPSTAT_EXAMPLES];
 
 describe("catalog expansion live collection", () => {

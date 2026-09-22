@@ -1,51 +1,30 @@
 import { describe, expect, it } from "vitest";
-import { DATASETS, LICENCES, PUBLISHERS, datasetEnabled, isDataset, isLicence, isPublisher, isTopic, publisherEnabled } from "@open-data-pt/catalog";
-import type { ExampleFeed } from "@open-data-pt/contract";
+import { LICENCES, TOPICS, isLicence, isTopic, type ExampleFeed } from "@open-data-pt/gatekeeper";
+import { DATASETS, FEEDS, PUBLISHERS, datasetEnabled, publisherEnabled } from "@open-data-pt/gatekeeper/catalog";
 import { CARRIED_NAMES, INSTALLED, datasetOf } from "./catalog";
 
-/** One library's module namespace, as this test reads it: exported values, one of which is its examples. */
-interface LibraryModule {
-  readonly [name: string]: readonly ExampleFeed[];
-}
-
 /**
- * The library indexes Vite found, each a loader for its module: a new library
- * under `formats/` or `sources/` is held to these rules without being listed here.
+ * Every library directory Vite finds: each format, and each publisher's own
+ * library, which is a folder beside their datasets with a deployment in it. A
+ * new one is held to these rules without being listed here.
  */
-interface LibraryModules {
-  readonly [path: string]: () => Promise<LibraryModule>;
-}
-
-// SAFETY: `import.meta.glob` types every module as `unknown`. A library index is a
-// namespace object; this test reads its exported values only to find the example
-// feeds among them, and ignores everything that is not one.
-const LIBRARIES = {
-  ...import.meta.glob("../apps/gatekeeper/src/formats/*/index.ts"),
-  ...import.meta.glob("../apps/gatekeeper/src/sources/*/index.ts"),
-} as LibraryModules;
+const LIBRARY_PATHS = Object.keys({
+  ...import.meta.glob("../apps/gatekeeper/src/formats/*/deployment.ts"),
+  ...import.meta.glob("../apps/gatekeeper/src/publishers/*/*/deployment.ts"),
+});
 
 function libraryName(path: string): string {
   return path.split("/").at(-2)!;
 }
 
-const LIBRARIES_BY_NAME = Object.fromEntries(Object.keys(LIBRARIES).map((path) => [libraryName(path), path]));
+const LIBRARY_NAMES = LIBRARY_PATHS.map(libraryName);
 
-function isExampleFeed(value: ExampleFeed | undefined): boolean {
-  return value !== undefined && value.slug !== undefined && value.config !== undefined && value.policy !== undefined;
-}
-
-/** The example arrays one library module exports; a library must export exactly one. */
-function exampleArrays(module: LibraryModule): Array<readonly ExampleFeed[]> {
-  return Object.values(module).filter((value) => Array.isArray(value) && value.length > 0 && isExampleFeed(value[0]));
-}
-
-async function libraryExamples(): Promise<Map<string, readonly ExampleFeed[]>> {
-  const found = new Map<string, readonly ExampleFeed[]>();
-  for (const [path, load] of Object.entries(LIBRARIES)) {
-    const name = libraryName(path);
-    const arrays = exampleArrays(await load());
-    expect(arrays, `${name} must export exactly one examples array`).toHaveLength(1);
-    found.set(name, arrays[0]!);
+/** Every feed every publisher folder declares, held or not, by the library that reads it. */
+function feedsByLibrary(): Map<string, ExampleFeed[]> {
+  const found = new Map<string, ExampleFeed[]>();
+  for (const feed of FEEDS) {
+    const name = feed.config.source ?? "";
+    found.set(name, [...(found.get(name) ?? []), feed]);
   }
   return found;
 }
@@ -89,7 +68,7 @@ describe("example feed policies", () => {
 
 describe("libraries and the Worker that carries them", () => {
   it("finds a format library per standard and a source library per bespoke API", () => {
-    expect(Object.keys(LIBRARIES).map(libraryName).toSorted()).toEqual([
+    expect(LIBRARY_NAMES.toSorted()).toEqual([
       "anepc",
       "arcgis",
       "bpstat",
@@ -124,79 +103,81 @@ describe("libraries and the Worker that carries them", () => {
     ]);
   });
 
-  it("tags every example, held or not, with catalog topics and nothing else", async () => {
-    const libraries = await libraryExamples();
-    const strays = [...libraries.values()]
-      .flat()
-      .map((example) => ({ example, topics: datasetOf(example).topics }))
-      .filter(({ topics }) => topics.length === 0 || topics.some((topic) => !isTopic(topic)))
-      .map(({ example, topics }) => `${example.slug} (${topics.join(", ")})`);
+  it("tags every dataset, held or not, with catalog topics and nothing else", () => {
+    const strays = [...DATASETS]
+      .filter(([, dataset]) => dataset.topics.length === 0 || dataset.topics.some((topic) => !isTopic(topic)))
+      .map(([id, dataset]) => `${id} (${dataset.topics.join(", ")})`);
     expect(strays).toEqual([]);
   });
 
-  it("names a dataset on every example, whose publisher and licence the vocabularies know, and leaves no entry unused", async () => {
-    const examples = [...(await libraryExamples()).values()].flat();
-    const strays = examples.filter((example) => !isDataset(example.dataset)).map((example) => `${example.slug} (${example.dataset})`);
-    expect(strays, "examples naming a dataset the catalog does not list").toEqual([]);
-    const datasets = new Set(examples.map((example) => example.dataset));
+  it("gives every publisher a dataset and every dataset a feed, and names only licences the vocabulary knows, each used", () => {
     expect(
-      Object.keys(DATASETS).filter((key) => !datasets.has(key)),
-      "datasets no example reads",
+      [...PUBLISHERS.keys()].filter((id) => ![...DATASETS.values()].some((dataset) => dataset.publisher === id)),
+      "publishers with no dataset",
     ).toEqual([]);
-    const terms = examples.map((example) => datasetOf(example));
-    const unknown = terms.filter((dataset) => !isPublisher(dataset.publisher) || !isLicence(dataset.licence));
-    expect(unknown, "datasets naming a publisher or licence outside the vocabularies").toEqual([]);
-    const publishers = new Set(terms.map((dataset) => dataset.publisher));
-    const licences = new Set(terms.map((dataset) => dataset.licence));
     expect(
-      Object.keys(PUBLISHERS).filter((key) => !publishers.has(key)),
-      "publishers no example names",
+      [...DATASETS].filter(([, dataset]) => dataset.feeds.length === 0).map(([id]) => id),
+      "datasets no feed reads",
     ).toEqual([]);
+    expect(
+      [...DATASETS].filter(([, dataset]) => !isLicence(dataset.licence)).map(([id]) => id),
+      "datasets naming a licence outside the vocabulary",
+    ).toEqual([]);
+    const licences = new Set([...DATASETS.values()].map((dataset) => dataset.licence));
     expect(
       Object.keys(LICENCES).filter((key) => !licences.has(key)),
-      "licences no example names",
+      "licences no dataset names",
     ).toEqual([]);
+    const topics = new Set([...DATASETS.values()].flatMap((dataset) => dataset.topics));
+    expect(
+      Object.keys(TOPICS).filter((key) => !topics.has(key)),
+      "topics no dataset names",
+    ).toEqual([]);
+  });
+
+  it("names what a feed is only when its dataset has others to tell it from", () => {
+    const wrong = [...DATASETS].flatMap(([id, dataset]) =>
+      dataset.feeds
+        .filter((feed) => dataset.feeds.length > 1 !== (feed.title !== undefined && feed.description !== undefined))
+        .map((feed) => `${id}: ${feed.slug} ${dataset.feeds.length > 1 ? "needs its own title and description" : "repeats its dataset's"}`),
+    );
+    expect(wrong).toEqual([]);
   });
 
   it("carries every library directory, each once", () => {
     const carried = new Set(CARRIED_NAMES);
     expect(CARRIED_NAMES.length, "libraries.ts lists a library twice").toBe(carried.size);
     expect(
-      Object.keys(LIBRARIES)
-        .map(libraryName)
-        .filter((name) => !carried.has(name)),
+      LIBRARY_NAMES.filter((name) => !carried.has(name)),
       "a library directory no line of libraries.ts lists",
     ).toEqual([]);
     expect(
-      CARRIED_NAMES.filter((name) => !(name in LIBRARIES_BY_NAME)),
+      CARRIED_NAMES.filter((name) => !LIBRARY_NAMES.includes(name)),
       "listed in libraries.ts but no such directory",
     ).toEqual([]);
   });
 
-  it("installs every example of an enabled publisher, each once", async () => {
-    const libraries = await libraryExamples();
-    const offered = [...libraries].flatMap(([, examples]) => examples.filter((example) => datasetEnabled(example.dataset)).map((example) => example.slug)).toSorted();
+  it("installs every feed of an enabled publisher, each once", () => {
+    const offered = FEEDS.filter((feed) => datasetEnabled(feed.dataset))
+      .map((feed) => feed.slug)
+      .toSorted();
     expect(DEPLOYED.map((example) => example.slug).toSorted()).toEqual(offered);
   });
 
-  it("installs nothing from a publisher held for permission", async () => {
-    const held = Object.keys(PUBLISHERS).filter((key) => !publisherEnabled(key));
+  it("installs nothing from a publisher held for permission", () => {
+    const held = [...PUBLISHERS.keys()].filter((key) => !publisherEnabled(key));
     expect(held.length, "no publisher is held, so nothing proves a hold works").toBeGreaterThan(0);
     expect(DEPLOYED.filter((example) => held.includes(datasetOf(example).publisher)).map((example) => example.slug)).toEqual([]);
     // The libraries that read them still ship: a hold is about whose data we serve, not about what code exists.
-    const libraries = await libraryExamples();
-    const readingHeld = [...libraries].filter(([, examples]) => examples.some((example) => held.includes(datasetOf(example).publisher))).map(([name]) => name);
+    const readingHeld = [...feedsByLibrary()].filter(([, examples]) => examples.some((example) => held.includes(datasetOf(example).publisher))).map(([name]) => name);
     expect(
       readingHeld.filter((name) => !CARRIED_NAMES.includes(name)),
       "a library that reads a held publisher but is not carried",
     ).toEqual([]);
   });
 
-  it("names its own library in every example configuration", async () => {
-    const libraries = await libraryExamples();
-    const wrong = [...libraries].flatMap(([name, examples]) =>
-      examples.filter((example) => example.config.source !== name).map((example) => `${example.slug}: ${example.config.source ?? "(none)"} is not ${name}`),
-    );
+  it("reads every feed through a library the Worker carries", () => {
+    const wrong = FEEDS.filter((feed) => !CARRIED_NAMES.includes(feed.config.source ?? "")).map((feed) => `${feed.slug}: ${feed.config.source ?? "(none)"}`);
     expect(wrong).toEqual([]);
   });
 });

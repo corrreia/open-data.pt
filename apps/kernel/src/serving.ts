@@ -1,4 +1,3 @@
-import { DATASETS, isDataset } from "@open-data-pt/catalog";
 import type { Product as ApiProduct } from "@open-data-pt/api";
 import { asObject, asString, isJsonArray, isJsonNumber, isJsonObject, type CanonicalField, type CanonicalSchema, type JsonObject, type JsonValue } from "@open-data-pt/contract";
 
@@ -7,7 +6,7 @@ import type { ProductDetail, ProductView } from "./coordinators";
 import { NotFoundError } from "./errors";
 import type { Feed } from "./feed-model";
 import type { ChangesWindow, ObjectStore, SeriesChangesWindow, SeriesWindow } from "./object-store";
-import { licenceRef, publisherRef } from "./vocabulary";
+import type { Vocabulary } from "./vocabulary";
 
 /** One equality filter on a string, category or identifier field. */
 export interface FieldFilter {
@@ -231,14 +230,14 @@ export class Serving {
     });
   }
 
-  async dcatCatalog(origin: string, feeds: Feed[]) {
+  async dcatCatalog(origin: string, feeds: Feed[], vocabulary: Vocabulary) {
     // DCAT wants a licence as a URI when it has one; a publisher's own terms, or none stated, are named instead.
     const dcatLicence = (key: string) => {
-      const licence = licenceRef(key);
+      const licence = vocabulary.licenceRef(key);
       return licence.url ?? licence.name;
     };
     const dcatPublisher = (key: string) => {
-      const publisher = publisherRef(key, origin);
+      const publisher = vocabulary.publisherRef(key, origin);
       return { "@type": "foaf:Agent", "foaf:name": publisher.name, "foaf:homepage": publisher.url, "foaf:depiction": publisher.logo };
     };
     const products = await this.listProducts();
@@ -249,7 +248,7 @@ export class Serving {
       "dct:title": "open-data.pt products",
       "dcat:dataset": products.map((product) => {
         const feed = feeds.find((candidate) => candidate.id === product.feedId);
-        const dataset = feed && isDataset(feed.dataset) ? DATASETS[feed.dataset] : undefined;
+        const dataset = feed ? vocabulary.dataset(feed.dataset) : undefined;
         const endpoint = product.role === "time-series" ? "series" : "records";
         return {
           "@id": `${origin}/api/products/${encodeURIComponent(product.slug)}`,

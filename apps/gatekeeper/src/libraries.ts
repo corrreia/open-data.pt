@@ -1,76 +1,76 @@
 /**
- * Every library the Gatekeeper Worker carries, in directory order: every
- * directory under `formats/` and `sources/`, which a test holds this list to.
- * What a library installs is another question: a publisher held for permission
- * (`enabled: false` in `PUBLISHERS`) installs nothing, so a library that reads
- * only held publishers ships without polling anybody.
+ * Every library the Gatekeeper Worker carries: every format under `formats/`,
+ * and every publisher's own library under `publishers/<publisher>/`, which a
+ * test holds this list to. A library is code; which feeds it reads is the
+ * publisher folders' word, and a publisher held for permission installs
+ * nothing, so a library that reads only held publishers ships and polls nobody.
  */
 import type { Library } from "./index";
 
-import { ARCGIS_DEPLOYMENT, ARCGIS_EXAMPLES } from "./formats/arcgis";
-import { CKAN_DEPLOYMENT, CKAN_EXAMPLES } from "./formats/ckan";
-import { GBFS_DEPLOYMENT, GBFS_EXAMPLES } from "./formats/gbfs";
-import { GTFS_DEPLOYMENT, GTFS_EXAMPLES } from "./formats/gtfs";
-import { NGSI_DEPLOYMENT, NGSI_EXAMPLES } from "./formats/ngsi";
-import { OGC_DEPLOYMENT, OGC_EXAMPLES } from "./formats/ogc";
-import { OPENDATASOFT_DEPLOYMENT, OPENDATASOFT_EXAMPLES } from "./formats/opendatasoft";
-import { UDATA_DEPLOYMENT, UDATA_EXAMPLES } from "./formats/udata";
-import { WFS_DEPLOYMENT, WFS_EXAMPLES } from "./formats/wfs";
-import { ANEPC_DEPLOYMENT, ANEPC_EXAMPLES } from "./sources/anepc";
-import { BPSTAT_DEPLOYMENT, BPSTAT_EXAMPLES } from "./sources/bpstat";
-import { CARRIS_DEPLOYMENT, CARRIS_EXAMPLES } from "./sources/carris";
-import { DGEG_DEPLOYMENT, DGEG_EXAMPLES } from "./sources/dgeg";
-import { EUROSTAT_DEPLOYMENT, EUROSTAT_EXAMPLES } from "./sources/eurostat";
-import { FIRMS_DEPLOYMENT, FIRMS_EXAMPLES } from "./sources/firms";
-import { INE_DEPLOYMENT, INE_EXAMPLES } from "./sources/ine";
-import { INFOAGUA_DEPLOYMENT, INFOAGUA_EXAMPLES } from "./sources/infoagua";
-import { IODA_DEPLOYMENT, IODA_EXAMPLES } from "./sources/ioda";
-import { IPMA_DEPLOYMENT, IPMA_EXAMPLES } from "./sources/ipma";
-import { METROLISBOA_DEPLOYMENT, METRO_LISBOA_EXAMPLES } from "./sources/metrolisboa";
-import { MYINFO_DEPLOYMENT, MYINFO_EXAMPLES } from "./sources/myinfo";
-import { NASA_POWER_DEPLOYMENT, NASA_POWER_EXAMPLES } from "./sources/nasapower";
-import { OMIE_DEPLOYMENT, OMIE_EXAMPLES } from "./sources/omie";
-import { PARLIAMENT_DEPLOYMENT, PARLIAMENT_EXAMPLES } from "./sources/parliament";
-import { PEERINGDB_DEPLOYMENT, PEERINGDB_EXAMPLES } from "./sources/peeringdb";
-import { REN_DEPLOYMENT, REN_EXAMPLES } from "./sources/ren";
-import { RIPEATLAS_DEPLOYMENT, RIPEATLAS_EXAMPLES } from "./sources/ripeatlas";
-import { RIPESTAT_DEPLOYMENT, RIPESTAT_EXAMPLES } from "./sources/ripestat";
-import { SNIRH_DEPLOYMENT, SNIRH_EXAMPLES } from "./sources/snirh";
-import { SNIT_DEPLOYMENT, SNIT_EXAMPLES } from "./sources/snit";
-import { USGS_DEPLOYMENT, USGS_EXAMPLES } from "./sources/usgs";
+import { ARCGIS_DEPLOYMENT } from "./formats/arcgis";
+import { CKAN_DEPLOYMENT } from "./formats/ckan";
+import { GBFS_DEPLOYMENT } from "./formats/gbfs";
+import { GTFS_DEPLOYMENT } from "./formats/gtfs";
+import { NGSI_DEPLOYMENT } from "./formats/ngsi";
+import { OGC_DEPLOYMENT } from "./formats/ogc";
+import { OPENDATASOFT_DEPLOYMENT } from "./formats/opendatasoft";
+import { UDATA_DEPLOYMENT } from "./formats/udata";
+import { WFS_DEPLOYMENT } from "./formats/wfs";
+import { ANEPC_DEPLOYMENT } from "./publishers/anepc/anepc";
+import { BPSTAT_DEPLOYMENT } from "./publishers/banco-de-portugal/bpstat";
+import { CARRIS_DEPLOYMENT } from "./publishers/carris-metropolitana/carris";
+import { DGEG_DEPLOYMENT } from "./publishers/dgeg/dgeg";
+import { EUROSTAT_DEPLOYMENT } from "./publishers/eurostat/eurostat";
+import { FIRMS_DEPLOYMENT } from "./publishers/nasa-firms/firms";
+import { INE_DEPLOYMENT } from "./publishers/ine/ine";
+import { INFOAGUA_DEPLOYMENT } from "./publishers/apa/infoagua";
+import { IODA_DEPLOYMENT } from "./publishers/ioda/ioda";
+import { IPMA_DEPLOYMENT } from "./publishers/ipma/ipma";
+import { METROLISBOA_DEPLOYMENT } from "./publishers/metropolitano-de-lisboa/metrolisboa";
+import { MYINFO_DEPLOYMENT } from "./formats/myinfo";
+import { NASA_POWER_DEPLOYMENT } from "./publishers/nasa-power/nasapower";
+import { OMIE_DEPLOYMENT } from "./publishers/omie/omie";
+import { PARLIAMENT_DEPLOYMENT } from "./publishers/assembleia-da-republica/parliament";
+import { PEERINGDB_DEPLOYMENT } from "./publishers/peeringdb/peeringdb";
+import { REN_DEPLOYMENT } from "./publishers/ren/ren";
+import { RIPEATLAS_DEPLOYMENT } from "./publishers/ripe-ncc/ripeatlas";
+import { RIPESTAT_DEPLOYMENT } from "./publishers/ripe-ncc/ripestat";
+import { SNIRH_DEPLOYMENT } from "./publishers/apa/snirh";
+import { SNIT_DEPLOYMENT } from "./publishers/dgt/snit";
+import { USGS_DEPLOYMENT } from "./publishers/usgs/usgs";
 
 export const LIBRARIES: readonly Library[] = [
-  { deployment: ARCGIS_DEPLOYMENT, examples: ARCGIS_EXAMPLES },
-  { deployment: CKAN_DEPLOYMENT, examples: CKAN_EXAMPLES },
-  { deployment: GBFS_DEPLOYMENT, examples: GBFS_EXAMPLES },
-  { deployment: GTFS_DEPLOYMENT, examples: GTFS_EXAMPLES },
-  { deployment: NGSI_DEPLOYMENT, examples: NGSI_EXAMPLES },
-  { deployment: OGC_DEPLOYMENT, examples: OGC_EXAMPLES },
-  { deployment: OPENDATASOFT_DEPLOYMENT, examples: OPENDATASOFT_EXAMPLES },
-  { deployment: UDATA_DEPLOYMENT, examples: UDATA_EXAMPLES },
-  { deployment: WFS_DEPLOYMENT, examples: WFS_EXAMPLES },
-  { deployment: ANEPC_DEPLOYMENT, examples: ANEPC_EXAMPLES },
-  { deployment: BPSTAT_DEPLOYMENT, examples: BPSTAT_EXAMPLES },
-  { deployment: CARRIS_DEPLOYMENT, examples: CARRIS_EXAMPLES },
-  { deployment: DGEG_DEPLOYMENT, examples: DGEG_EXAMPLES },
-  { deployment: EUROSTAT_DEPLOYMENT, examples: EUROSTAT_EXAMPLES },
-  { deployment: FIRMS_DEPLOYMENT, examples: FIRMS_EXAMPLES },
-  { deployment: INE_DEPLOYMENT, examples: INE_EXAMPLES },
-  { deployment: INFOAGUA_DEPLOYMENT, examples: INFOAGUA_EXAMPLES },
-  { deployment: IODA_DEPLOYMENT, examples: IODA_EXAMPLES },
-  { deployment: IPMA_DEPLOYMENT, examples: IPMA_EXAMPLES },
-  { deployment: METROLISBOA_DEPLOYMENT, examples: METRO_LISBOA_EXAMPLES },
-  { deployment: MYINFO_DEPLOYMENT, examples: MYINFO_EXAMPLES },
-  { deployment: NASA_POWER_DEPLOYMENT, examples: NASA_POWER_EXAMPLES },
-  { deployment: OMIE_DEPLOYMENT, examples: OMIE_EXAMPLES },
-  { deployment: PARLIAMENT_DEPLOYMENT, examples: PARLIAMENT_EXAMPLES },
-  { deployment: PEERINGDB_DEPLOYMENT, examples: PEERINGDB_EXAMPLES },
-  { deployment: REN_DEPLOYMENT, examples: REN_EXAMPLES },
-  { deployment: RIPEATLAS_DEPLOYMENT, examples: RIPEATLAS_EXAMPLES },
-  { deployment: RIPESTAT_DEPLOYMENT, examples: RIPESTAT_EXAMPLES },
-  { deployment: SNIRH_DEPLOYMENT, examples: SNIRH_EXAMPLES },
-  { deployment: SNIT_DEPLOYMENT, examples: SNIT_EXAMPLES },
-  { deployment: USGS_DEPLOYMENT, examples: USGS_EXAMPLES },
+  { deployment: ARCGIS_DEPLOYMENT },
+  { deployment: CKAN_DEPLOYMENT },
+  { deployment: GBFS_DEPLOYMENT },
+  { deployment: GTFS_DEPLOYMENT },
+  { deployment: NGSI_DEPLOYMENT },
+  { deployment: OGC_DEPLOYMENT },
+  { deployment: OPENDATASOFT_DEPLOYMENT },
+  { deployment: UDATA_DEPLOYMENT },
+  { deployment: WFS_DEPLOYMENT },
+  { deployment: ANEPC_DEPLOYMENT },
+  { deployment: BPSTAT_DEPLOYMENT },
+  { deployment: CARRIS_DEPLOYMENT },
+  { deployment: DGEG_DEPLOYMENT },
+  { deployment: EUROSTAT_DEPLOYMENT },
+  { deployment: FIRMS_DEPLOYMENT },
+  { deployment: INE_DEPLOYMENT },
+  { deployment: INFOAGUA_DEPLOYMENT },
+  { deployment: IODA_DEPLOYMENT },
+  { deployment: IPMA_DEPLOYMENT },
+  { deployment: METROLISBOA_DEPLOYMENT },
+  { deployment: MYINFO_DEPLOYMENT },
+  { deployment: NASA_POWER_DEPLOYMENT },
+  { deployment: OMIE_DEPLOYMENT },
+  { deployment: PARLIAMENT_DEPLOYMENT },
+  { deployment: PEERINGDB_DEPLOYMENT },
+  { deployment: REN_DEPLOYMENT },
+  { deployment: RIPEATLAS_DEPLOYMENT },
+  { deployment: RIPESTAT_DEPLOYMENT },
+  { deployment: SNIRH_DEPLOYMENT },
+  { deployment: SNIT_DEPLOYMENT },
+  { deployment: USGS_DEPLOYMENT },
 ];
 
 /** One listed library by the `source` value its examples carry. */

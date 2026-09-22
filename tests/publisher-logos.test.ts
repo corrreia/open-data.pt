@@ -1,19 +1,23 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { PUBLISHERS, initials } from "@open-data-pt/catalog";
+import { PUBLISHERS } from "@open-data-pt/gatekeeper/catalog";
+import { initials } from "../apps/site/src/lib/publisher-mark";
 
-const DIRECTORY = new URL("../packages/catalog/publishers/", import.meta.url);
+/** Every publisher is a folder here, with their mark beside their `index.ts` as `logo.<ext>`. */
+const FOLDERS = new URL("../apps/gatekeeper/src/publishers/", import.meta.url);
 
-/** What a publisher's key claims is on disk, from the vocabulary. */
-const claimed = new Map(
-  Object.entries(PUBLISHERS)
-    .filter(([, publisher]) => "logo" in publisher)
-    .map(([key, publisher]) => [`${key}.${"logo" in publisher ? publisher.logo : ""}`, key]),
-);
+/** A mark by the name the site serves it under, `<key>.<ext>`, and where it is in the key's folder. */
+const markPath = (file: string) => {
+  const dot = file.lastIndexOf(".");
+  return new URL(`${file.slice(0, dot)}/logo${file.slice(dot)}`, FOLDERS);
+};
+
+/** What a publisher's `PUBLISHER` claims is on disk. */
+const claimed = new Map([...PUBLISHERS].filter(([, publisher]) => publisher.logo !== undefined).map(([key, publisher]) => [`${key}.${publisher.logo ?? ""}`, key]));
 
 /** A mark's drawn size: a PNG says so in its header, an SVG in its viewBox. */
 function drawnSize(file: string) {
-  const bytes = readFileSync(new URL(file, DIRECTORY));
+  const bytes = readFileSync(markPath(file));
   if (file.endsWith(".png")) return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
   const head = bytes.toString("utf8", 0, 6000);
   const box = head.match(/viewBox\s*=\s*["']\s*([-\d.eE]+)[,\s]+([-\d.eE]+)[,\s]+([-\d.eE]+)[,\s]+([-\d.eE]+)/);
@@ -23,7 +27,14 @@ function drawnSize(file: string) {
   return { width: Number(width?.[1] ?? 0), height: Number(height?.[1] ?? 0) };
 }
 
-const files = readdirSync(DIRECTORY).filter((name) => name !== "README.md");
+/** Every mark on disk, as `<key>.<ext>`: a folder's `logo.*`, whatever its `PUBLISHER` says. */
+const files = readdirSync(FOLDERS, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .flatMap((folder) =>
+    readdirSync(new URL(`${folder.name}/`, FOLDERS))
+      .filter((name) => name.startsWith("logo."))
+      .map((name) => `${folder.name}${name.slice("logo".length)}`),
+  );
 
 describe("publisher logos", () => {
   it("names only files that exist, and every file is named", () => {
@@ -32,7 +43,7 @@ describe("publisher logos", () => {
   });
 
   it("keeps every mark small enough to ship with the page", () => {
-    expect(files.filter((file) => readFileSync(new URL(file, DIRECTORY)).byteLength > 48_000)).toEqual([]);
+    expect(files.filter((file) => readFileSync(markPath(file)).byteLength > 48_000)).toEqual([]);
   });
 
   it("keeps every mark inside the shape the tile can draw", () => {
@@ -48,7 +59,7 @@ describe("publisher logos", () => {
   it("draws every mark from this site alone, contacting nobody", () => {
     const external = files.filter((file) => {
       if (!file.endsWith(".svg")) return false;
-      const text = readFileSync(new URL(file, DIRECTORY), "utf8");
+      const text = readFileSync(markPath(file), "utf8");
       // An `xmlns` is a name, not an address a browser fetches; anything else is a request to a third party.
       return /(?:href|src|url\()\s*=?\s*["'(]?https?:/i.test(text);
     });

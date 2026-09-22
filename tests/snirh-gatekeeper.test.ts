@@ -16,7 +16,6 @@ import {
   type SourceFetch,
 } from "@open-data-pt/gatekeeper";
 import {
-  SNIRH_EXAMPLES,
   SNIRH_ORIGIN,
   SnirhTransformer,
   collectSnirhFeed,
@@ -26,7 +25,8 @@ import {
   resolveSnirhFeed,
   snirhCollector,
   validateSnirhFeedConfig,
-} from "../apps/gatekeeper/src/sources/snirh";
+} from "../apps/gatekeeper/src/publishers/apa/snirh";
+import { feedsOf } from "./catalog";
 
 const fixture = (name: string): Uint8Array => new Uint8Array(readFileSync(new URL(`./fixtures/snirh/${name}`, import.meta.url)));
 const text = (name: string): string => new TextDecoder().decode(fixture(name));
@@ -132,7 +132,7 @@ describe("SNIRH configuration", () => {
     }
   });
 
-  it.each(SNIRH_EXAMPLES)("validates the curated $slug example", (example) => {
+  it.each(feedsOf("snirh"))("validates the curated $slug example", (example) => {
     const candidate = libraryConfig(example.config);
     expect(validateSnirhFeedConfig(candidate)).toEqual(candidate);
   });

@@ -1,6 +1,5 @@
 /** Opendatasoft Explore catalogs, parsed once for every feed that reads one. */
 export { opendatasoftCollector, resolveOpendatasoftFeed, type OpendatasoftCollectorOptions } from "./collector";
-export { OPENDATASOFT_EXAMPLES } from "./examples";
 export {
   HISTORY_SLICE_SECONDS,
   MAX_HISTORY_DOCUMENT_BYTES,
