@@ -83,6 +83,11 @@ export const LICENCES = {
     summary:
       "IPMA allows its information to be copied and used free of charge for personal or public purposes provided no profit-making purpose follows from that use, and asks that the source always be named.",
   },
+  "snirh-terms": {
+    name: "SNIRH terms of use",
+    url: "https://snirh.apambiente.pt/index.php?idMain=5&idItem=5",
+    summary: 'SNIRH permits use of its contents provided the source is named: "É permitido o uso dos conteúdos deste site, desde que mencionada a sua fonte."',
+  },
   "dgeg-precos-terms": {
     name: "DGEG fuel price terms",
     url: "https://precoscombustiveis.dgeg.gov.pt/apresentacao/",

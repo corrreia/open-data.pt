@@ -827,6 +827,14 @@
     "resourceKey": "ine:ine:indicator:c78b6c6d677cb7f380c1855beb84eda60f3c80e6c7be50fe99404e76ecb7fd01",
     "kind": "ine:indicator"
   },
+  "infoagua-drought-index-feed": {
+    "resourceKey": "infoagua:infoagua:drought-index:664fea93f659f9389aa694f990ed6a6b4a4f58628569c8dd86abc6cf9ee293e9",
+    "kind": "infoagua:drought-index"
+  },
+  "infoagua-flood-alerts-feed": {
+    "resourceKey": "infoagua:infoagua:flood-alerts:dab7a00683a491487f7a854ec935fc6927164e1265b93039931d523c26e045f7",
+    "kind": "infoagua:flood-alerts"
+  },
   "ipma-daily-forecast-feed": {
     "resourceKey": "ipma:ipma:daily-forecast:f7af22f6fa482f300f46d9c31846ff64f2a88da4d2d68cd2f68203907fd7ad84",
     "kind": "ipma:daily-forecast"
@@ -1350,6 +1358,54 @@
   "sgifr-apps-viseu-feed": {
     "resourceKey": "wfs:wfs:reference:004b9844ab0057ec31c70da732cdd15d4bf690c776c7e83ff2a0a3b231bdd0a8",
     "kind": "wfs:reference"
+  },
+  "snirh-air-temperature-feed": {
+    "resourceKey": "snirh:snirh:readings:6d36c81031e53d4c0a2a1670a89ede91f2938c25a840bec0b28fb262117a7297",
+    "kind": "snirh:readings"
+  },
+  "snirh-groundwater-levels-feed": {
+    "resourceKey": "snirh:snirh:readings:6e79ff37e0eb6eeb8122cebfc6003991aa3ab9e5d48d425e452aa43e14d9b00a",
+    "kind": "snirh:readings"
+  },
+  "snirh-groundwater-state-feed": {
+    "resourceKey": "snirh:snirh:groundwater-state:a879ab19090a9eef81554466219eaa16301a4c40972acbe734d056b0b98a40f1",
+    "kind": "snirh:groundwater-state"
+  },
+  "snirh-monthly-precipitation-feed": {
+    "resourceKey": "snirh:snirh:monthly-precipitation:392b1fb56e8b77f80a48e53254386a7d2cc83bbf1040ef82e23600cae8464510",
+    "kind": "snirh:monthly-precipitation"
+  },
+  "snirh-precipitation-feed": {
+    "resourceKey": "snirh:snirh:readings:70d48097bf16f59fc1e39795a2a42cf6cdec48cf8c9811671c35f97fb7f7306c",
+    "kind": "snirh:readings"
+  },
+  "snirh-relative-humidity-feed": {
+    "resourceKey": "snirh:snirh:readings:f083fd3ee418bf654b3157c8384bad8502f3616db8ad7cf6c040f401df6af844",
+    "kind": "snirh:readings"
+  },
+  "snirh-reservoir-basins-feed": {
+    "resourceKey": "snirh:snirh:reservoir-basins:b1cbe0dd65d2cb9386331734b40d40b2d5f013c43b62a12d4a104a5e19db60d7",
+    "kind": "snirh:reservoir-basins"
+  },
+  "snirh-reservoir-levels-feed": {
+    "resourceKey": "snirh:snirh:readings:5c3f5f26a366c91da7be5f9169aeee9a6767230f0f0f2995cc98e6ebbc1e5fa7",
+    "kind": "snirh:readings"
+  },
+  "snirh-reservoir-storage-feed": {
+    "resourceKey": "snirh:snirh:readings:43d5ebb8c1b2446d745cdc92b75a6ba606343c568418e9b5f2af0b2ecf58d600",
+    "kind": "snirh:readings"
+  },
+  "snirh-river-flows-feed": {
+    "resourceKey": "snirh:snirh:readings:45b755ce99224cb1b1cab3bebf839e4d7f77f0076542cb64dc8749ec2a256582",
+    "kind": "snirh:readings"
+  },
+  "snirh-river-levels-feed": {
+    "resourceKey": "snirh:snirh:readings:087064668fbd6a276ea58975507bb0ec43f384fd9789b9a771ded64d762f2a91",
+    "kind": "snirh:readings"
+  },
+  "snirh-wind-speed-feed": {
+    "resourceKey": "snirh:snirh:readings:dd3a0313a8c47b2f63e940c50bc0a560eaf52770cb4a6484c73a3fdb6e6ed06d",
+    "kind": "snirh:readings"
   },
   "snit-medidas-preventivas-feed": {
     "resourceKey": "snit:snit:instruments:35dfa945dabab7616f4823626c1f5c8c492a8d5ee44a0129d25278020d8ada2e",
