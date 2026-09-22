@@ -1,5 +1,7 @@
 import type { ExampleFeed } from "@open-data-pt/contract";
 
+import type { StreamingTransformer } from "../library";
+
 import type { Licence } from "./licences";
 import type { Topic } from "./topics";
 
@@ -8,7 +10,9 @@ import type { Topic } from "./topics";
  * `src/publishers/`, named for their key: its `index.ts` exports `PUBLISHER`,
  * its logo sits beside it as `logo.svg` or `logo.png`, the code that reads their
  * own API (when they have one) is a library folder beside that, and every
- * dataset of theirs is one file under `datasets/`, exporting `DATASET`.
+ * dataset of theirs is one file under `datasets/`, exporting `DATASET`. A
+ * publisher whose data a shared format cannot read as it is brings its own
+ * translator in `transformers.ts`, exporting `TRANSFORMERS`.
  *
  * Nothing here repeats what the folders already say: a publisher's key is its
  * folder's name, a dataset's key is its publisher's key and its file's name,
@@ -51,4 +55,13 @@ export interface DatasetDefinition {
    * is the whole of its dataset carries no title or description of its own.
    */
   feeds: readonly FeedDefinition[];
+}
+
+/**
+ * Translators a publisher brings for their own data: by the library that
+ * applies them, then by the name a feed's `transformer` configures. A name is
+ * the publisher's to choose and must not clash with another publisher's.
+ */
+export interface PublisherTransformers {
+  readonly [library: string]: { readonly [name: string]: StreamingTransformer };
 }

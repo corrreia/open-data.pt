@@ -1,7 +1,7 @@
-import { field, streamCsvRows } from "../../../index";
-import type { NormalizedRow, ProductDeclaration, ProductFinalization, StreamingTransform, TransformContext } from "../../../index";
-import { isUtf8, peekBody } from "./body";
-import type { Transformer } from "./transformer";
+import { field, streamCsvRows } from "../../index";
+import type { NormalizedRow, ProductDeclaration, ProductFinalization, StreamingTransform, TransformContext } from "../../index";
+import { isUtf8, peekBody } from "../../formats/udata/transform/body";
+import type { StreamingTransformer } from "../../index";
 
 /** Bytes read to choose between UTF-8 and Windows-1252 before the rows stream. */
 const PREFIX_BYTES = 64 * 1024;
@@ -43,7 +43,7 @@ const PRODUCTS: ProductDeclaration[] = [
 ];
 
 /** Fixed-schema translator for the Cadaval municipal waste workbook exported as CSV, one row at a time. */
-export class MunicipalWasteTransformer implements Transformer {
+export class MunicipalWasteTransformer implements StreamingTransformer {
   readonly id = "cadaval-municipal-waste-v1";
   readonly version = "2";
 

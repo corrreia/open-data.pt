@@ -20,6 +20,9 @@ export {
   type GatekeeperLibrary,
   type Library,
   type LibraryDeployment,
+  type PublisherInputs,
+  type StreamingTransformer,
+  NO_PUBLISHER_INPUTS,
   type R2BucketDeployment,
 } from "./library";
 export { lisbonDay, lisbonInstants, lisbonOffsetMinutes, lisbonToUtc } from "@open-data-pt/lisbon";

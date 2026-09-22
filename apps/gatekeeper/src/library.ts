@@ -1,4 +1,13 @@
-import { GatekeeperError, hashSourceConfig, type FeedKindDescription, type NormalizedCollector, type ResolvedFeed, type SourceConfig, type TransformContext } from "./index";
+import {
+  GatekeeperError,
+  hashSourceConfig,
+  type FeedKindDescription,
+  type NormalizedCollector,
+  type ResolvedFeed,
+  type SourceConfig,
+  type StreamingTransform,
+  type TransformContext,
+} from "./index";
 
 /**
  * The Gatekeeper Worker is wiring. It carries every library, hands each its
@@ -39,9 +48,35 @@ export interface LibraryDeployment<E> {
   r2Buckets?: readonly R2BucketDeployment[];
   /** The CPU limit one collection needs; the Worker takes the largest any library declares. */
   cpuMs?: number;
-  /** Builds the library from the Worker's environment. */
-  library: (env: E) => GatekeeperLibrary;
+  /** Builds the library from the Worker's environment and what the publishers it reads bring to it. */
+  library: (env: E, publishers: PublisherInputs) => GatekeeperLibrary;
 }
+
+/**
+ * A streaming translator from one source dialect into products: pure and
+ * versioned, reading the source as a byte stream and handing rows out one at a
+ * time. A format ships the generic ones; a publisher whose data needs its own
+ * brings it in their folder.
+ */
+export interface StreamingTransformer {
+  readonly id: string;
+  readonly version: string;
+  transform(body: ReadableStream<Uint8Array>, context: TransformContext): Promise<StreamingTransform>;
+}
+
+/**
+ * What the publisher folders bring a library, so that a new publisher never has
+ * to edit a format: the hosts their feeds name, which are the only ones the
+ * library may fetch, and any translators of their own, by the name a feed's
+ * `transformer` configures.
+ */
+export interface PublisherInputs {
+  hosts: readonly string[];
+  transformers: ReadonlyMap<string, StreamingTransformer>;
+}
+
+/** A library built with nothing from the publishers: no host allowed, no translator of theirs. */
+export const NO_PUBLISHER_INPUTS: PublisherInputs = { hosts: [], transformers: new Map() };
 
 /** One library as the Worker and the tests read it: the code that reads one format or one API, and what it needs. Which feeds it reads is the publisher folders' word. */
 export interface Library {
@@ -55,11 +90,11 @@ export interface Library {
  * The environment is the Worker's, whatever bindings it has; the deployment
  * declares which of them it reads.
  */
-export function buildLibrary<E extends object>(deployment: LibraryDeployment<never>, env: E): GatekeeperLibrary {
+export function buildLibrary<E extends object>(deployment: LibraryDeployment<never>, env: E, publishers: PublisherInputs = NO_PUBLISHER_INPUTS): GatekeeperLibrary {
   const bound = { ...deployment.vars, ...env };
   // SAFETY: a deployment reads its own declared vars, secrets and buckets from the environment, and this one is
   // built from those declarations; `never` only lets deployments with different environments share a list.
-  return deployment.library(bound as never);
+  return deployment.library(bound as never, publishers);
 }
 
 /** The routing key every example configuration carries; it names the library, not the publisher. */

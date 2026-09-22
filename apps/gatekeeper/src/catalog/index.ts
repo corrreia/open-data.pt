@@ -1,4 +1,6 @@
-import type { CatalogDescription, ExampleFeed } from "@open-data-pt/contract";
+import type { CatalogDescription, ExampleFeed, SourceConfig } from "@open-data-pt/contract";
+
+import type { PublisherInputs, StreamingTransformer } from "../library";
 
 import { PUBLISHER_FOLDERS } from "./folders.generated";
 import { LICENCES } from "./licences";
@@ -50,3 +52,29 @@ export const CATALOG: CatalogDescription = {
   topics: Object.entries(TOPICS).map(([id, name]) => ({ id, name })),
   datasets: [...DATASETS].filter(([id]) => datasetEnabled(id)).map(([id, { feeds: _feeds, topics, ...dataset }]) => ({ id, ...dataset, topics: [...topics] })),
 };
+
+/** The hosts a feed's configuration names: its `host`, and the host of any URL it carries. */
+function hostsNamed(config: SourceConfig): string[] {
+  return Object.entries(config).flatMap(([key, value]) => {
+    if (key === "host") return [value];
+    return /^https?:\/\//.test(value) ? [new URL(value).hostname] : [];
+  });
+}
+
+/**
+ * What the publisher folders bring one library: the hosts their feeds name —
+ * the only ones it may fetch, so a new publisher on a shared format never edits
+ * the format — and the translators they bring for it. Two publishers bringing a
+ * translator under one name is a mistake, refused when the Worker starts.
+ */
+export function publisherInputs(source: string): PublisherInputs {
+  const hosts = new Set(FEEDS.filter((feed) => feed.config.source === source).flatMap((feed) => hostsNamed(feed.config)));
+  const transformers = new Map<string, StreamingTransformer>();
+  for (const folder of PUBLISHER_FOLDERS) {
+    for (const [name, transformer] of Object.entries(folder.transformers?.[source] ?? {})) {
+      if (transformers.has(name)) throw new Error(`Two publishers bring a ${source} translator called ${name}`);
+      transformers.set(name, transformer);
+    }
+  }
+  return { hosts: [...hosts].toSorted(), transformers };
+}

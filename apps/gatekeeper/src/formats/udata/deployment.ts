@@ -1,13 +1,12 @@
 import type { LibraryDeployment } from "../../index";
 import { UDATA_FEEDS, udataCollector } from "./collector";
 
-/** Hosts its feeds may be read from. */
-export const UDATA_DEPLOYMENT: LibraryDeployment<{ readonly UDATA_ALLOWED_HOSTS: string }> = {
+export const UDATA_DEPLOYMENT: LibraryDeployment<object> = {
   source: "udata",
   name: "uData portals",
-  vars: { UDATA_ALLOWED_HOSTS: "dados.gov.pt" },
-  library: (env) => ({
+  vars: {},
+  library: (_env, publishers) => ({
     kinds: Object.values(UDATA_FEEDS),
-    collector: (config) => udataCollector({ config, hosts: env.UDATA_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }),
+    collector: (config) => udataCollector({ config, hosts: publishers.hosts.join(","), transformers: publishers.transformers, fetcher: (input, init) => fetch(input, init) }),
   }),
 };

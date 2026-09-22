@@ -5,7 +5,7 @@ import { GTFS_NORMALIZER, transformGtfs } from "./transform";
 /** What a Worker hands this library: the feed's configuration, its allowlist, and the fetch it may use. */
 export interface GtfsCollectorOptions {
   config: SourceConfig;
-  /** `GTFS_ALLOWED_HOSTS`, comma-separated. */
+  /** The hosts its publishers' feeds name, comma-separated: the only ones it may fetch. */
   hosts: string;
   fetcher: typeof fetch;
 }

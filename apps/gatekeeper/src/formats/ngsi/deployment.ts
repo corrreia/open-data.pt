@@ -3,12 +3,12 @@ import { ngsiCollector } from "./collector";
 import { NGSI_FEEDS } from "./ngsi";
 
 /** The brokers its feeds may be read from. */
-export const NGSI_DEPLOYMENT: LibraryDeployment<{ readonly NGSI_ALLOWED_HOSTS: string }> = {
+export const NGSI_DEPLOYMENT: LibraryDeployment<object> = {
   source: "ngsi",
   name: "FIWARE NGSI v2 brokers",
-  vars: { NGSI_ALLOWED_HOSTS: "broker.fiware.urbanplatform.portodigital.pt" },
-  library: (env) => ({
+  vars: {},
+  library: (_env, publishers) => ({
     kinds: Object.values(NGSI_FEEDS),
-    collector: (config) => ngsiCollector({ config, hosts: env.NGSI_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }),
+    collector: (config) => ngsiCollector({ config, hosts: publishers.hosts.join(","), fetcher: (input, init) => fetch(input, init) }),
   }),
 };

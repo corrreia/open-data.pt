@@ -76,7 +76,7 @@ export function validateNgsiFeedConfig(config: SourceConfig, hosts: ReadonlySet<
 
 export function ngsiHosts(value: string): ReadonlySet<string> {
   const hosts = allowedHosts(value);
-  if (hosts.size === 0) throw new GatekeeperError("NGSI_ALLOWED_HOSTS is empty", "source-denied");
+  if (hosts.size === 0) throw new GatekeeperError("No publisher's feed names a NGSI host to read", "source-denied");
   return hosts;
 }
 

@@ -36,6 +36,7 @@ export function validateUdataFeedConfig(config: SourceConfig, hosts: ReadonlySet
     const value = config[setting];
     if (value) validated[setting] = value;
   }
-  chooseTransformer(validated);
+  // A named translator is checked when the collector picks it from what the publishers bring.
+  if (!validated.transformer) chooseTransformer(validated);
   return validated;
 }

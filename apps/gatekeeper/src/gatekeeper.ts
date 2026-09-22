@@ -1,7 +1,7 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
 import type { CatalogDescription } from "@open-data-pt/contract";
 
-import { CATALOG, FEEDS, datasetEnabled } from "./catalog";
+import { CATALOG, FEEDS, datasetEnabled, publisherInputs } from "./catalog";
 import {
   buildLibrary,
   collectNormalized,
@@ -68,7 +68,7 @@ export function gatekeeper<E extends object>(libraries: readonly Library[]) {
     }
 
     private libraries(): GatekeeperLibraries {
-      return new Map(this.carried().map((library) => [library.deployment.source, buildLibrary(library.deployment, this.env)]));
+      return new Map(this.carried().map((library) => [library.deployment.source, buildLibrary(library.deployment, this.env, publisherInputs(library.deployment.source))]));
     }
 
     private carried(): readonly Library[] {

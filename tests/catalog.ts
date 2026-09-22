@@ -1,5 +1,5 @@
 import { buildLibrary, type DatasetDefinition, type ExampleFeed, type GatekeeperLibraries, type Library } from "@open-data-pt/gatekeeper";
-import { DATASETS, FEEDS, datasetEnabled } from "@open-data-pt/gatekeeper/catalog";
+import { DATASETS, FEEDS, datasetEnabled, publisherInputs } from "@open-data-pt/gatekeeper/catalog";
 import { LIBRARIES, library } from "@open-data-pt/gatekeeper/libraries";
 
 /** Every library the Gatekeeper Worker carries, as `libraries.ts` lists them. */
@@ -16,9 +16,9 @@ export function feedsOf(name: string): ExampleFeed[] {
 /** Every feed the Registry installs: every feed a carried library reads, less the publishers held for permission. */
 export const INSTALLED: ExampleFeed[] = FEEDS.filter((feed) => CARRIED_NAMES.includes(feed.config.source ?? "") && datasetEnabled(feed.dataset));
 
-/** One library built the way the Worker builds it, from its declared vars plus whatever else the caller hands over (secrets). */
+/** One library built the way the Worker builds it: its declared vars, whatever else the caller hands over (secrets), and what its publishers bring. */
 export function carriedLibraries(name: string, extra: Record<string, string | undefined> = {}): GatekeeperLibraries {
-  return new Map([[name, buildLibrary(library(name).deployment, extra)]]);
+  return new Map([[name, buildLibrary(library(name).deployment, extra, publisherInputs(name))]]);
 }
 
 /** What the publisher folders say about the dataset a feed reads part of: its publisher, its terms, its topics. */

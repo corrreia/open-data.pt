@@ -102,7 +102,21 @@ stay, and nothing of theirs is polled or served.
 
 ### A new source on a format we already read
 
-The dataset file above, plus its hostname in the library's allowlist var (`CKAN_ALLOWED_HOSTS`, `ARCGIS_ALLOWED_HOSTS`, …) in that library's `deployment.ts`.
+The publisher's folder and the dataset file above, and nothing in the format. A format fetches
+only the hosts its publishers' feeds name: the Worker gathers them from the folders, so the host in
+the feed's `config` is the allowlist entry.
+
+If the format cannot read their data as it is — a file laid out in a way only this publisher lays
+it out — the translator for it goes in their folder too, in `transformers.ts`:
+
+```ts
+// apps/gatekeeper/src/publishers/cm-cadaval/transformers.ts
+export const TRANSFORMERS: PublisherTransformers = {
+  udata: { "municipal-waste": new MunicipalWasteTransformer() },
+};
+```
+
+and the feed names it with `transformer: "municipal-waste"` in its `config`.
 
 ### A new bespoke source
 
@@ -110,7 +124,7 @@ A library folder inside its publisher's, `apps/gatekeeper/src/publishers/<publis
 
 ### A new format
 
-The same, under `formats/<format>/`, with an allowlist var rather than a fixed origin.
+The same, under `formats/<format>/`, taking the hosts its publishers' feeds name (`publishers.hosts`, the second argument of its deployment's `library`) rather than a fixed origin.
 
 ## What a Worker sends
 

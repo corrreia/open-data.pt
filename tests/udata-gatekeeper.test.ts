@@ -1,3 +1,4 @@
+import { publisherInputs } from "@open-data-pt/gatekeeper/catalog";
 import { describe, expect, it, vi } from "vitest";
 import {
   GatekeeperError,
@@ -206,7 +207,7 @@ describe("UdataSource", () => {
     for (const example of feedsOf("udata")) {
       const validated = validateUdataFeedConfig(libraryConfig(example.config), new Set([UDATA_HOSTS]));
       expect(validated.baseUrl, example.slug).toBe("https://dados.gov.pt");
-      expect(() => chooseTransformer(validated), example.slug).not.toThrow();
+      expect(() => chooseTransformer(validated, publisherInputs("udata").transformers), example.slug).not.toThrow();
     }
   });
 });
@@ -249,7 +250,7 @@ describe("uData collection", () => {
       .mockResolvedValueOnce(Response.json(payload))
       .mockResolvedValueOnce(new Response(null, { status: 304 }));
     const base = await request();
-    const selected = chooseTransformer(config);
+    const selected = chooseTransformer(config, publisherInputs("udata").transformers);
     const result = await collect(fetcher, {
       ...base,
       checkpoint: {

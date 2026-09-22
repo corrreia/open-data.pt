@@ -241,7 +241,7 @@ function validateReferenceConfig(config: SourceConfig, hosts: ReadonlySet<string
 
 export function wfsHosts(value: string): ReadonlySet<string> {
   const hosts = allowedHosts(value);
-  if (hosts.size === 0) throw new GatekeeperError("WFS_ALLOWED_HOSTS is empty", "source-denied");
+  if (hosts.size === 0) throw new GatekeeperError("No publisher's feed names a WFS host to read", "source-denied");
   return hosts;
 }
 

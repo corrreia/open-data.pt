@@ -1,4 +1,13 @@
-import { allowedHosts, requireString, resolveFeed, type FeedKindDescription, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "../../index";
+import {
+  allowedHosts,
+  requireString,
+  resolveFeed,
+  type FeedKindDescription,
+  type NormalizedCollector,
+  type ResolvedFeed,
+  type SourceConfig,
+  type StreamingTransformer,
+} from "../../index";
 import { validateUdataFeedConfig } from "./config";
 import { chooseTransformer } from "./transform";
 import { UdataSource, type DistributionSelector } from "./udata";
@@ -18,8 +27,10 @@ export const UDATA_FEEDS = {
 /** What a Worker hands this library: the feed's configuration, its allowlist, and the fetch it may use. */
 export interface UdataCollectorOptions {
   config: SourceConfig;
-  /** `UDATA_ALLOWED_HOSTS`, comma-separated. */
+  /** The hosts its publishers' feeds name, comma-separated: the only ones it may fetch. */
   hosts: string;
+  /** Translators the publishers bring, by the name a feed's `transformer` configures. */
+  transformers: ReadonlyMap<string, StreamingTransformer>;
   fetcher: typeof fetch;
 }
 
@@ -47,7 +58,7 @@ export function resolveUdataFeed(config: SourceConfig, hosts: ReadonlySet<string
  */
 export function udataCollector(options: UdataCollectorOptions): NormalizedCollector {
   const hosts = allowedHosts(options.hosts);
-  const selected = chooseTransformer(options.config);
+  const selected = chooseTransformer(options.config, options.transformers);
   return {
     normalizer: { id: selected.id, version: selected.version },
     resolve: (value) => resolveUdataFeed(value, hosts),

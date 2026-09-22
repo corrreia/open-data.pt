@@ -2,13 +2,12 @@ import type { LibraryDeployment } from "../../index";
 import { arcgisCollector } from "./collector";
 import { ARCGIS_FEEDS } from "./arcgis";
 
-/** Hosts its feeds may be read from. */
-export const ARCGIS_DEPLOYMENT: LibraryDeployment<{ readonly ARCGIS_ALLOWED_HOSTS: string }> = {
+export const ARCGIS_DEPLOYMENT: LibraryDeployment<object> = {
   source: "arcgis",
   name: "ArcGIS feature services",
-  vars: { ARCGIS_ALLOWED_HOSTS: "services.arcgis.com,sniambgeoogc.apambiente.pt,geomafra.cm-mafra.pt" },
-  library: (env) => ({
+  vars: {},
+  library: (_env, publishers) => ({
     kinds: Object.values(ARCGIS_FEEDS),
-    collector: (config) => arcgisCollector({ config, hosts: env.ARCGIS_ALLOWED_HOSTS, fetcher: (input, init) => fetch(input, init) }),
+    collector: (config) => arcgisCollector({ config, hosts: publishers.hosts.join(","), fetcher: (input, init) => fetch(input, init) }),
   }),
 };

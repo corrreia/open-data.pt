@@ -1,6 +1,6 @@
-import { field, streamCsvRecords } from "../../../index";
-import type { NormalizedRow, ProductDeclaration, StreamingTransform, TransformContext } from "../../../index";
-import type { Transformer } from "./transformer";
+import { field, streamCsvRecords } from "../../index";
+import type { NormalizedRow, ProductDeclaration, StreamingTransform, TransformContext } from "../../index";
+import type { StreamingTransformer } from "../../index";
 
 const PRODUCT_KEY = "municipal-accessibility";
 
@@ -26,7 +26,7 @@ const PRODUCT: ProductDeclaration = {
   completeness: "complete",
 };
 
-export class MunicipalAccessibilityTransformer implements Transformer {
+export class MunicipalAccessibilityTransformer implements StreamingTransformer {
   readonly id = "municipal-accessibility-v1";
   readonly version = "3";
 
