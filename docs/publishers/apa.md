@@ -34,7 +34,9 @@ No credentials. SNIRH has no API: the `snirh` library reads what its own pages r
 - **Blocked by name, 22 September 2026.** Since about 12:30 UTC that day, SNIRH answers 403 to any
   request whose User-Agent contains `open-data.pt`, and to nothing else. It began about three hours
   into the first history walk, which sent tens of thousands of slow exports, several at once. SNIRH
-  is now read at most once every five seconds (`minIntervalSeconds` in APA's `index.ts`).
+  is now read at most once every five seconds (`minIntervalSeconds` in APA's `index.ts`), and under a
+  common Chrome User-Agent (`userAgent` there) rather than ours. The history walk still runs, at that
+  pace.
 
 ## Quirks
 
