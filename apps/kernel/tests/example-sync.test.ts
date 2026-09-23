@@ -4,7 +4,9 @@ import {
   SYNC_BATCH,
   SYNC_CHECK_MS,
   SYNC_RESOLVE_ALL_MS,
+  VERSION_CHECK_MIN_MS,
   cadenceFloorOf,
+  checkForVersion,
   syncStep,
   withCadenceFloor,
   type CatalogEntry,
@@ -44,6 +46,7 @@ interface InstalledFeed extends SyncFeed {
 /** A Registry in memory: what the sync installs, updates and retires, and its stored sync state. */
 class FakeRegistry implements SyncPorts {
   catalog: CatalogEntry[] | undefined = [];
+  version: string | undefined = "v1";
   readonly installed = new Map<string, InstalledFeed>();
   readonly applied: string[] = [];
   readonly retired: string[] = [];
@@ -54,6 +57,9 @@ class FakeRegistry implements SyncPorts {
 
   async readCatalog(): Promise<CatalogEntry[] | undefined> {
     return structuredClone(this.catalog);
+  }
+  async catalogVersion(): Promise<string | undefined> {
+    return this.version;
   }
   feeds(): SyncFeed[] {
     return [...this.installed.values()];
@@ -124,6 +130,55 @@ describe("example sync", () => {
     expect((await syncStep(fake, { check: true })).checked).toBe(true);
     fake.clock += SYNC_CHECK_MS;
     expect((await syncStep(fake)).checked).toBe(true);
+  });
+
+  it("keeps the catalog version each check read, and forgets it when a Gatekeeper cannot say", async () => {
+    const fake = registry();
+    await fake.drain();
+    expect(fake.state?.catalogVersion).toBe("v1");
+    fake.version = undefined;
+    await fake.nextCheck();
+    expect(fake.state).not.toHaveProperty("catalogVersion");
+  });
+
+  it("brings the next check forward when a runner hears a catalog the last check did not read", async () => {
+    const fake = registry();
+    await fake.drain();
+    const settled = fake.load();
+    // The version the last check read, or none heard at all: the schedule stands.
+    expect(checkForVersion(settled, "v1", fake.clock)).toBeUndefined();
+    expect(checkForVersion(settled, undefined, fake.clock)).toBeUndefined();
+
+    // A release: the next step checks at once and installs what it added.
+    fake.version = "v2";
+    fake.catalog![1]!.examples.push(example("b4"));
+    fake.clock += 1_000;
+    const forward = checkForVersion(settled, "v2", fake.clock);
+    expect(forward).toMatchObject({ nextCheckAt: fake.clock, versionCheckAt: fake.clock });
+    fake.save(forward!);
+    const steps = await fake.drain();
+    expect(steps[0]?.checked).toBe(true);
+    expect(fake.installed.has("b4")).toBe(true);
+    expect(fake.state?.catalogVersion).toBe("v2");
+  });
+
+  it("brings a check forward at most once a minute while a release rolls out", async () => {
+    const fake = registry();
+    await fake.drain();
+    fake.clock += 1_000;
+    const forward = checkForVersion(fake.load(), "v2", fake.clock)!;
+    // The check ran, but reached an instance still on the old release.
+    fake.save({ ...forward, nextCheckAt: fake.clock + SYNC_CHECK_MS, catalogVersion: "v1" });
+    expect(checkForVersion(fake.load(), "v2", fake.clock + VERSION_CHECK_MIN_MS - 1)).toBeUndefined();
+    expect(checkForVersion(fake.load(), "v2", fake.clock + VERSION_CHECK_MIN_MS)).toMatchObject({ nextCheckAt: fake.clock + VERSION_CHECK_MIN_MS });
+  });
+
+  it("leaves a check alone that is already due or under way", async () => {
+    const fake = registry();
+    expect(checkForVersion(undefined, "v2", fake.clock)).toBeUndefined();
+    await syncStep(fake);
+    expect(fake.state?.queue.length).toBeGreaterThan(0);
+    expect(checkForVersion(fake.load(), "v2", fake.clock)).toBeUndefined();
   });
 
   it("updates a changed example under the same feed ID, and every example of a library whose feed kinds changed", async () => {

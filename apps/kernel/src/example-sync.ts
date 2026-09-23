@@ -10,6 +10,12 @@ import { digest } from "./hash";
 
 /** How often the Gatekeeper's examples and feed kinds are compared with the feeds. */
 export const SYNC_CHECK_MS = 15 * 60_000;
+/**
+ * The least time between two checks brought forward by a catalog version the
+ * last check did not see: while a release rolls out, runners hear the new
+ * Gatekeeper before every instance of it answers the Registry.
+ */
+export const VERSION_CHECK_MIN_MS = 60_000;
 /** How often every feed is resolved and handed to its runner again, even when nothing it came from changed. */
 export const SYNC_RESOLVE_ALL_MS = 24 * 60 * 60_000;
 /**
@@ -66,6 +72,10 @@ export interface SyncState {
   hashes: Record<string, string>;
   lastCheckedAt?: string;
   lastError?: string;
+  /** The Gatekeeper's catalog version the last check read with its catalog; absent from one that does not say. */
+  catalogVersion?: string;
+  /** When a newer catalog version last brought a check forward. */
+  versionCheckAt?: number;
 }
 
 export interface SyncProgress {
@@ -80,6 +90,8 @@ export interface SyncProgress {
 export interface SyncPorts {
   /** The Gatekeeper's examples and kinds, by library; `undefined` when it did not answer, or answered with nothing. */
   readCatalog(): Promise<CatalogEntry[] | undefined>;
+  /** The Gatekeeper's catalog version; `undefined` from one too old to say. */
+  catalogVersion(): Promise<string | undefined>;
   feeds(): SyncFeed[];
   apply(library: string, example: ExampleFeed): Promise<void>;
   retire(feedId: string): Promise<void>;
@@ -100,13 +112,15 @@ export async function syncStep(ports: SyncPorts, options: { check?: boolean } = 
   const state = ports.load() ?? { nextCheckAt: 0, nextResolveAllAt: 0, queue: [], hashes: {} };
   const progress: SyncProgress = { checked: false, applied: 0, retired: 0, failed: 0, pending: 0 };
   if (state.queue.length === 0 && (options.check === true || now >= state.nextCheckAt)) {
-    const catalog = await ports.readCatalog();
+    const [catalog, version] = await Promise.all([ports.readCatalog(), ports.catalogVersion()]);
     state.nextCheckAt = now + SYNC_CHECK_MS;
     if (catalog === undefined) {
       state.lastError = "The Gatekeeper did not answer; its feeds are kept as they are";
       ports.save(state);
       return progress;
     }
+    if (version === undefined) delete state.catalogVersion;
+    else state.catalogVersion = version;
     const resolveAll = now >= state.nextResolveAllAt;
     state.queue = planSync(catalog, ports.feeds(), state.hashes, resolveAll);
     if (resolveAll) state.nextResolveAllAt = now + SYNC_RESOLVE_ALL_MS;
@@ -159,4 +173,19 @@ export function planSync(catalog: CatalogEntry[], feeds: SyncFeed[], hashes: Rec
   }
   for (const feed of feeds) if (!listed.has(feed.slug)) ops.push({ op: "retire", feedId: feed.id, slug: feed.slug });
   return ops;
+}
+
+/**
+ * The sync state with its next check brought forward to now, when a runner
+ * heard a catalog version the last check did not read: a Gatekeeper release
+ * reaches the feeds within a minute of answering, not at the next scheduled
+ * check. `undefined` when nothing should change: no version heard, the one
+ * already read, a check already due or under way, or one brought forward
+ * within the last minute.
+ */
+export function checkForVersion(state: SyncState | undefined, version: string | undefined, now: number): SyncState | undefined {
+  if (!state || version === undefined || state.catalogVersion === version) return undefined;
+  if (state.queue.length > 0 || state.nextCheckAt <= now) return undefined;
+  if (state.versionCheckAt !== undefined && now - state.versionCheckAt < VERSION_CHECK_MIN_MS) return undefined;
+  return { ...state, nextCheckAt: now, versionCheckAt: now };
 }

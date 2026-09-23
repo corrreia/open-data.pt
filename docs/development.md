@@ -87,8 +87,10 @@ CATALOG_TOKEN=... infra/lake/provision.sh
 pnpm run deploy
 ```
 
-After a deploy the Registry picks up new, changed and removed examples by itself within 15 minutes:
-new feeds are installed, changed ones keep their IDs and are reconfigured, and runners of feeds whose
+After a Gatekeeper deploy the Registry picks up new, changed and removed examples by itself, usually
+within a minute: every runner's report carries the Gatekeeper's catalog version, and a version the
+Registry has not synced brings its next check forward to now. The check every 15 minutes still runs,
+for a Gatekeeper too old to say. New feeds are installed, changed ones keep their IDs and are reconfigured, and runners of feeds whose
 example disappeared delete their serving objects and retire once their history is delivered. Durable
 Object schemas are not migrated: a changed schema version resets that object and the sync reinstalls
 its feeds. Existing lake history is kept.

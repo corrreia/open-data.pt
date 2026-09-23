@@ -18,6 +18,10 @@ import {
   type ResolvedFeed,
   type SourceConfig,
 } from "./index";
+import { sha256Hex } from "./source-http";
+
+/** Each selection of libraries' catalog version, worked out once per isolate: the catalog is fixed for a release. */
+const VERSIONS = new Map<string, Promise<string>>();
 
 /**
  * The libraries this Worker carries, comma-separated, so `pnpm dev ckan`
@@ -32,7 +36,7 @@ interface DevVars {
 
 /**
  * The Gatekeeper Worker: every library, built from the Worker's environment,
- * behind the five RPC operations of `FeedGatekeeper`. A feed's `source` key
+ * behind the RPC operations of `FeedGatekeeper`. A feed's `source` key
  * routes it to its library; the Worker parses nothing itself.
  */
 export function gatekeeper<E extends object>(libraries: readonly Library[]) {
@@ -68,6 +72,19 @@ export function gatekeeper<E extends object>(libraries: readonly Library[]) {
 
     async catalog(): Promise<CatalogDescription> {
       return CATALOG;
+    }
+
+    /** The digest of what `catalog`, `exampleFeeds` and `listFeedKinds` answer for the libraries this Worker carries. */
+    async catalogVersion(): Promise<string> {
+      const selection = this.carried()
+        .map((library) => library.deployment.source)
+        .join(",");
+      let version = VERSIONS.get(selection);
+      if (!version) {
+        version = Promise.all([this.exampleFeeds(), this.listFeedKinds()]).then(([examples, kinds]) => sha256Hex(JSON.stringify({ catalog: CATALOG, examples, kinds })));
+        VERSIONS.set(selection, version);
+      }
+      return version;
     }
 
     private libraries(): GatekeeperLibraries {
