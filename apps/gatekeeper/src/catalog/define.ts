@@ -73,12 +73,6 @@ export function defineFeed<E, C, M extends object = never>(library: LibraryDeplo
 /** One publisher's body of data, and the feeds that read it. */
 export interface DatasetDefinition {
   title: string;
-  /**
-   * Whether we may republish this dataset. Absent means we may. `false` holds
-   * it alone out of the catalog, for a publisher whose permission covers some
-   * of what they publish, with a comment saying what we are waiting for.
-   */
-  enabled?: boolean;
   description: string;
   /** The terms the publisher states for it, or `source-terms` when they state none. */
   licence: Licence;

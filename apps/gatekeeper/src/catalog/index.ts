@@ -49,7 +49,7 @@ export function publisherEnabled(id: string): boolean {
 /** Whether a dataset's feeds may be installed: every one but those of a held publisher. */
 export function datasetEnabled(id: string): boolean {
   const dataset = DATASETS.get(id);
-  return dataset !== undefined && dataset.enabled !== false && publisherEnabled(dataset.publisher);
+  return dataset !== undefined && publisherEnabled(dataset.publisher);
 }
 
 /** Every feed file, by slug: the functions the Worker runs when the kernel asks for a feed's collection. */

@@ -50,16 +50,15 @@ several tables and series. The live numbers are on [the catalog](https://open-da
 
 Source access, validation and permission to republish are separate checks. A publisher we may not
 republish yet carries `enabled: false` in
-their folder's `index.ts` (or a single dataset in its own `index.ts`) under [`apps/gatekeeper/src/publishers/`](../apps/gatekeeper/src/publishers/), with a comment saying
+their folder's `index.ts` under [`apps/gatekeeper/src/publishers/`](../apps/gatekeeper/src/publishers/), with a comment saying
 what we are waiting for. None of their feeds is installed, so nothing of theirs is polled or served.
 The library that reads them still ships: a hold is about whose data we serve, not about what code
 exists. Lifting a hold is deleting one word.
 
-| Publisher   | Read by     | Held because                                                                                                |
-| ----------- | ----------- | ----------------------------------------------------------------------------------------------------------- |
-| `ripe-ncc`  | `ripeatlas` | Only the Atlas dataset: its terms require written authorisation, asked for ([page](publishers/ripe-ncc.md)) |
-| `peeringdb` | `peeringdb` | The acceptable-use policy requires permission for reproduction and bulk sharing                             |
-| `ioda`      | `ioda`      | Georgia Tech reserves all rights, and several signals IODA blends carry their own redistribution bars       |
+| Publisher   | Read by     | Held because                                                                                          |
+| ----------- | ----------- | ----------------------------------------------------------------------------------------------------- |
+| `peeringdb` | `peeringdb` | The acceptable-use policy requires permission for reproduction and bulk sharing                       |
+| `ioda`      | `ioda`      | Georgia Tech reserves all rights, and several signals IODA blends carry their own redistribution bars |
 
 The consistency tests require every library directory to be listed in `libraries.ts`, every example
 tag to be a known catalog topic, and nothing of a held publisher's to be installed.

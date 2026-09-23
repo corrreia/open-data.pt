@@ -19,7 +19,7 @@ credential, a proxy, an unusual cadence, a permission, a known habit of the sour
 | [Carris Metropolitana](carris-metropolitana.md)       | Read through two libraries, and positions that must not become history         |
 | [The Card4B MYINFO operators](card4b-operators.md)    | Four publishers on one shared platform, allowlisted by folder                  |
 | [APA](apa.md)                                         | Read through three libraries split so no value repeats, and a site with no API |
-| [RIPE NCC](ripe-ncc.md)                               | Permission to republish RIPEstat, a `sourceapp` they asked for, Atlas held     |
+| [RIPE NCC](ripe-ncc.md)                               | Permission to republish RIPEstat, and a `sourceapp` they asked for             |
 
 ## Writing one
 

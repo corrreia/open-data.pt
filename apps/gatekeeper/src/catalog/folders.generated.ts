@@ -740,9 +740,6 @@ import { DATASET as d_ribatejana__network } from "#/publishers/ribatejana/datase
 import { FEED as f_ribatejana__network__foros_salvaterra_marinhais } from "#/publishers/ribatejana/datasets/network/foros-salvaterra-marinhais";
 import { FEED as f_ribatejana__network__network } from "#/publishers/ribatejana/datasets/network/network";
 import { PUBLISHER as p_ripe_ncc } from "#/publishers/ripe-ncc/index";
-import { DATASET as d_ripe_ncc__atlas_portugal } from "#/publishers/ripe-ncc/datasets/atlas-portugal/index";
-import { FEED as f_ripe_ncc__atlas_portugal__portugal_anchors } from "#/publishers/ripe-ncc/datasets/atlas-portugal/portugal-anchors";
-import { FEED as f_ripe_ncc__atlas_portugal__portugal_probes } from "#/publishers/ripe-ncc/datasets/atlas-portugal/portugal-probes";
 import { DATASET as d_ripe_ncc__portugal_internet_resources } from "#/publishers/ripe-ncc/datasets/portugal-internet-resources/index";
 import { FEED as f_ripe_ncc__portugal_internet_resources__digi_pt_as20879_routing } from "#/publishers/ripe-ncc/datasets/portugal-internet-resources/digi-pt-as20879-routing";
 import { FEED as f_ripe_ncc__portugal_internet_resources__meo_as3243_routing } from "#/publishers/ripe-ncc/datasets/portugal-internet-resources/meo-as3243-routing";
@@ -1442,7 +1439,6 @@ export const PUBLISHER_FOLDERS: readonly PublisherFolder[] = [
     id: "ripe-ncc",
     publisher: p_ripe_ncc,
     datasets: [
-      { id: "ripe-ncc-atlas-portugal", dataset: d_ripe_ncc__atlas_portugal, feeds: [f_ripe_ncc__atlas_portugal__portugal_anchors, f_ripe_ncc__atlas_portugal__portugal_probes] },
       { id: "ripe-ncc-portugal-internet-resources", dataset: d_ripe_ncc__portugal_internet_resources, feeds: [f_ripe_ncc__portugal_internet_resources__digi_pt_as20879_routing, f_ripe_ncc__portugal_internet_resources__meo_as3243_routing, f_ripe_ncc__portugal_internet_resources__nos_as2860_routing, f_ripe_ncc__portugal_internet_resources__nos_madeira_as15457_routing, f_ripe_ncc__portugal_internet_resources__portugal_internet_resources, f_ripe_ncc__portugal_internet_resources__portugal_routing_history, f_ripe_ncc__portugal_internet_resources__vodafone_as12353_routing] },
     ],
   },

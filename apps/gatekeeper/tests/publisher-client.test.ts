@@ -24,13 +24,10 @@ function recorder(redirects: Record<string, string> = {}, status = 302) {
 describe("a publisher's client", () => {
   it("names open-data.pt in every request, and adds what the publisher asked for", async () => {
     const { seen, fetcher } = recorder();
-    const client = publisherClient([{ host: "stat.ripe.net", query: { sourceapp: "open-data.pt" } }, "atlas.ripe.net"], fetcher);
+    const client = publisherClient([{ host: "stat.ripe.net", query: { sourceapp: "open-data.pt" } }, "www.ripe.net"], fetcher);
     await client("https://stat.ripe.net/data/country-resource-list/data.json?resource=PT", { headers: { "User-Agent": "something else" } });
-    await client(new URL("https://atlas.ripe.net/api/v2/probes/"));
-    expect(seen.map((request) => request.url)).toEqual([
-      "https://stat.ripe.net/data/country-resource-list/data.json?resource=PT&sourceapp=open-data.pt",
-      "https://atlas.ripe.net/api/v2/probes/",
-    ]);
+    await client(new URL("https://www.ripe.net/"));
+    expect(seen.map((request) => request.url)).toEqual(["https://stat.ripe.net/data/country-resource-list/data.json?resource=PT&sourceapp=open-data.pt", "https://www.ripe.net/"]);
     expect(seen.map((request) => request.userAgent)).toEqual([USER_AGENT, USER_AGENT]);
   });
 

@@ -98,7 +98,6 @@ describe("libraries and the Worker that carries them", () => {
       "parliament",
       "peeringdb",
       "ren",
-      "ripeatlas",
       "ripestat",
       "snirh",
       "snit",

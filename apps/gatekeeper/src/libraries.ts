@@ -33,7 +33,6 @@ import { OMIE_DEPLOYMENT } from "./publishers/omie/omie";
 import { PARLIAMENT_DEPLOYMENT } from "./publishers/assembleia-da-republica/parliament";
 import { PEERINGDB_DEPLOYMENT } from "./publishers/peeringdb/peeringdb";
 import { REN_DEPLOYMENT } from "./publishers/ren/ren";
-import { RIPEATLAS_DEPLOYMENT } from "./publishers/ripe-ncc/ripeatlas";
 import { RIPESTAT_DEPLOYMENT } from "./publishers/ripe-ncc/ripestat";
 import { SNIRH_DEPLOYMENT } from "./publishers/apa/snirh";
 import { SNIT_DEPLOYMENT } from "./publishers/dgt/snit";
@@ -66,7 +65,6 @@ export const LIBRARIES: readonly Library[] = [
   { deployment: PARLIAMENT_DEPLOYMENT },
   { deployment: PEERINGDB_DEPLOYMENT },
   { deployment: REN_DEPLOYMENT },
-  { deployment: RIPEATLAS_DEPLOYMENT },
   { deployment: RIPESTAT_DEPLOYMENT },
   { deployment: SNIRH_DEPLOYMENT },
   { deployment: SNIT_DEPLOYMENT },

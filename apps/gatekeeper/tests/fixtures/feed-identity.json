@@ -1363,14 +1363,6 @@
     "resourceKey": "myinfo:myinfo:network:448dbda499e57e33f2a1c92dc04327070e56bcc7ac1cca14d19a189979cfd1a8",
     "kind": "myinfo:network"
   },
-  "ripe-atlas-portugal-anchors-feed": {
-    "resourceKey": "ripeatlas:ripeatlas:country-anchors:f098e29b2f24b9a76c478f7f4ee3137ef384726aaca095854424e273ca42ae1d",
-    "kind": "ripeatlas:country-anchors"
-  },
-  "ripe-atlas-portugal-probes-feed": {
-    "resourceKey": "ripeatlas:ripeatlas:country-probes:150375a5c8c39f2f878eb0731279fbfcc591f398a8b4dc59c012674ce535c944",
-    "kind": "ripeatlas:country-probes"
-  },
   "ripe-digi-pt-as20879-routing-feed": {
     "resourceKey": "ripestat:ripestat:routing-status:22ab79d74a048a2c39d6b370323a2f02982ef774a10db5cf44f40b13873158e7",
     "kind": "ripestat:routing-status"
