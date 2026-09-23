@@ -7,13 +7,17 @@ import {
   isOwnPageFetch,
   mcpCallOf,
   referrerOf,
+  referrerSource,
   reportWindow,
   routeOf,
   subjectOf,
   surfaceOf,
   usagePoint,
   type UsageEvent,
-} from "../apps/kernel/src/analytics";
+} from "../src/analytics";
+
+/** The Worker's account, as its generated `Env` types it: the only value the type allows. */
+const ACCOUNT = "cc05ea77c39684419e087c3b78b5177d";
 
 const site = (path: string) => new URL(`https://open-data.pt${path}`);
 
@@ -29,6 +33,15 @@ describe("who sent a request", () => {
     ["Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)", "crawler", "Googlebot"],
     ["Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/140.0.0.0 Safari/537.36", "crawler", "Headless Chrome"],
     ["SomeNewBot/1.2 (+https://example.org)", "crawler", "SomeNewBot"],
+    ["Mozilla/5.0 (compatible; Foo/1.0; +http://example.com/bot.html)", "crawler", "Foo"],
+    [
+      "Mozilla/5.0 (Linux; Android 5.0) AppleWebKit/537.36 (KHTML, like Gecko) Mobile Safari/537.36 (compatible; Bytespider; spider-feedback@bytedance.com)",
+      "ai-agent",
+      "Bytespider",
+    ],
+    ["Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; DeepSeekBot/1.0; +https://www.deepseek.com/bot)", "ai-agent", "DeepSeekBot"],
+    ["facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)", "crawler", "Facebook"],
+    ["claude-code/2.0.14", "ai-agent", "Claude Code"],
     ["curl/8.14.1", "library", "curl"],
     ["python-requests/2.32.4", "library", "Python requests"],
     ["python-httpx/0.28.1", "library", "Python httpx"],
@@ -46,14 +59,27 @@ describe("who sent a request", () => {
     expect(classifyClient("  ")).toEqual({ kind: "unknown", name: "(none)" });
   });
 
-  it("names the linking site, or the AI assistant it belongs to, and nothing from this site", () => {
+  it("keeps the linking site's host, and nothing from this site", () => {
     const from = (referer: string) => referrerOf(new Request("https://open-data.pt/", { headers: { Referer: referer } }), site("/"));
-    expect(from("https://chatgpt.com/c/123")).toBe("ChatGPT");
-    expect(from("https://www.claude.ai/chat/abc")).toBe("Claude");
+    expect(from("https://chatgpt.com/c/123")).toBe("chatgpt.com");
     expect(from("https://www.google.com/search?q=dados")).toBe("google.com");
     expect(from("https://open-data.pt/catalog/")).toBe("");
     expect(from("not a url")).toBe("");
     expect(referrerOf(new Request("https://open-data.pt/"), site("/"))).toBe("");
+  });
+
+  it.each([
+    ["google.com.hk", "Google", "search"],
+    ["chatgpt.com", "ChatGPT", "chatbot"],
+    ["news.ycombinator.com", "Hacker News", "social"],
+    ["teams.public.onecdn.static.microsoft", "Microsoft Teams", "social"],
+    ["statics.teams.cdn.office.net", "Microsoft Teams", "social"],
+    ["outlook.office.com", "Outlook", "email"],
+    ["t.co", "X", "social"],
+    ["Claude", "Claude", "chatbot"],
+    ["dados.gov.pt", "dados.gov.pt", "unknown"],
+  ])("names the referrer %s as %s (%s)", (host, referrer, medium) => {
+    expect(referrerSource(host)).toEqual({ referrer, medium });
   });
 
   it("leaves out the API reads this site's own pages make, but not navigations", () => {
@@ -139,7 +165,7 @@ describe("the data point", () => {
   it("puts each field where the report's queries read it", () => {
     expect(usagePoint(event())).toEqual({
       indexes: ["api"],
-      blobs: ["/api/products/{slug}/records", "carris-stops", "library", "curl", "", "ChatGPT", "2xx", "hit", "", "", "json"],
+      blobs: ["/api/products/{slug}/records", "carris-stops", "library", "curl", "", "chatgpt.com", "2xx", "hit", "", "", "json"],
       doubles: [12],
     });
   });
@@ -193,7 +219,7 @@ describe("the report", () => {
   it("asks Analytics Engine one query per part, and reads its quoted counts", async () => {
     const sent: string[] = [];
     const fetcher: typeof fetch = async (input, init) => {
-      expect(String(input)).toBe("https://api.cloudflare.com/client/v4/accounts/test-account/analytics_engine/sql");
+      expect(String(input)).toBe(`https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/analytics_engine/sql`);
       expect(new Headers(init?.headers).get("Authorization")).toBe("Bearer test-token");
       const sql = String(init?.body);
       sent.push(sql);
@@ -201,7 +227,7 @@ describe("the report", () => {
       if (sql.includes("meanMs")) return Response.json({ data: [{ surface: "api", route: "/api/products", requests: 7, meanMs: 18.4 }] });
       return Response.json({ data: [] });
     };
-    const report = await analyticsReport({ ANALYTICS_TOKEN: "test-token", CLOUDFLARE_ACCOUNT_ID: "test-account" }, 7, now, fetcher);
+    const report = await analyticsReport({ ANALYTICS_TOKEN: "test-token", CLOUDFLARE_ACCOUNT_ID: ACCOUNT }, 7, now, fetcher);
 
     expect(sent).toHaveLength(8);
     for (const sql of sent) {
@@ -215,8 +241,8 @@ describe("the report", () => {
   });
 
   it("says when it is not enabled, and when Analytics Engine fails", async () => {
-    await expect(analyticsReport({ ANALYTICS_TOKEN: "", CLOUDFLARE_ACCOUNT_ID: "a" }, 7, now)).rejects.toMatchObject({ failure: "disabled" });
+    await expect(analyticsReport({ ANALYTICS_TOKEN: "", CLOUDFLARE_ACCOUNT_ID: ACCOUNT }, 7, now)).rejects.toMatchObject({ failure: "disabled" });
     const failing: typeof fetch = async () => new Response("bad query", { status: 422 });
-    await expect(analyticsReport({ ANALYTICS_TOKEN: "t", CLOUDFLARE_ACCOUNT_ID: "a" }, 7, now, failing)).rejects.toThrow(AnalyticsError);
+    await expect(analyticsReport({ ANALYTICS_TOKEN: "t", CLOUDFLARE_ACCOUNT_ID: ACCOUNT }, 7, now, failing)).rejects.toThrow(AnalyticsError);
   });
 });

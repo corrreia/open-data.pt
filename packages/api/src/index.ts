@@ -321,7 +321,7 @@ export interface AnalyticsReport {
   routes: Array<{ surface: string; route: string; requests: number; meanMs: number }>;
   subjects: Array<{ surface: string; route: string; subject: string; requests: number }>;
   countries: Array<{ surface: string; country: string; requests: number }>;
-  referrers: Array<{ surface: string; referrer: string; requests: number }>;
+  referrers: Array<{ surface: string; referrer: string; medium: string; requests: number }>;
   outcomes: Array<{ surface: string; status: string; cache: string; format: string; requests: number }>;
   mcp: Array<{ call: string; client: string; requests: number }>;
 }

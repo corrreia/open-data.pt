@@ -7,5 +7,4 @@ Served as they are, at the site's root.
   domain. Trimmed to `iso_a2` and `name` with coordinates rounded to two decimals (172 KB, about
   53 KB over the wire), and fetched only by the analytics page. Rebuild it from
   `ne_110m_admin_0_countries.geojson` if a country's borders or codes change.
-- `client-icons/` — logos for the clients and referrers on `/analytics/`; see its own README.
 - `llms.txt`, `robots.txt`, the icons and `og-image.png` — what agents, crawlers and link previews read.

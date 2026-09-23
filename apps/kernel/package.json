@@ -10,6 +10,8 @@
     "@open-data-pt/api": "workspace:*",
     "@open-data-pt/contract": "workspace:*",
     "@open-data-pt/lisbon": "workspace:*",
+    "isbot": "^5.2.2",
+    "ts-referer-parser": "^1.1.0",
     "zod": "^4.6.5"
   }
 }

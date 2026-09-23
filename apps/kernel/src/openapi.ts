@@ -95,7 +95,11 @@ export function openApiDocument(origin: string) {
                   subject: { type: "string", description: "The product, feed, publisher, licence or topic asked for." },
                 }),
                 countries: countsOf({ surface: { type: "string" }, country: { type: "string", description: "ISO 3166-1 alpha-2, as Cloudflare locates the client." } }),
-                referrers: countsOf({ surface: { type: "string" }, referrer: { type: "string", description: "The linking site's host, or the AI assistant's name." } }),
+                referrers: countsOf({
+                  surface: { type: "string" },
+                  referrer: { type: "string", description: "The linking source's name, such as Google or Microsoft Teams, or its host when it has none." },
+                  medium: { type: "string", enum: ["search", "social", "email", "chatbot", "paid", "unknown"], description: "What kind of source it is." },
+                }),
                 outcomes: countsOf({
                   surface: { type: "string" },
                   status: { type: "string" },

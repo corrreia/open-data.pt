@@ -1,12 +1,26 @@
 import { Badge, Button, ChartLegend, ChoroplethMap, Empty, LayerCard, Loader, Tabs, TimeseriesChart, type MapGeoJson } from "@cloudflare/kumo";
-import { ChartBarIcon, GlobeIcon, LinkSimpleIcon, PlugsConnectedIcon, QuestionIcon, RobotIcon, SparkleIcon, TerminalWindowIcon, type Icon } from "@phosphor-icons/react";
+import {
+  ChartBarIcon,
+  ChatsCircleIcon,
+  EnvelopeSimpleIcon,
+  GlobeIcon,
+  LinkSimpleIcon,
+  MagnifyingGlassIcon,
+  MegaphoneIcon,
+  PlugsConnectedIcon,
+  QuestionIcon,
+  RobotIcon,
+  SparkleIcon,
+  TerminalWindowIcon,
+  type Icon,
+} from "@phosphor-icons/react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ErrorNote, PageHead, SectionHead, StatTile, useDarkMode } from "../components/common";
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { ApiError, apiGet, productHref } from "../lib/api";
 import { fetchProducts, licenceHref, publisherHref } from "../lib/catalog";
-import { clientIcon, mcpClientIcon, referrerIcon, type IconFile } from "../lib/client-icons";
+import { brandIcon } from "../lib/client-icons";
 import { echarts } from "../lib/echarts";
 import { fmt } from "../lib/format";
 import { SERIES_COLORS } from "../lib/palette";
@@ -76,6 +90,15 @@ const KIND_ICON = new Map<string, Icon>([
   ["ai-agent", SparkleIcon],
   ["crawler", RobotIcon],
   ["unknown", QuestionIcon],
+]);
+
+/** A referrer's medium, as the kernel names it: a badge, and the icon drawn where the source has no logo. */
+const MEDIUM = new Map<string, { label: string; icon: Icon }>([
+  ["search", { label: "Search", icon: MagnifyingGlassIcon }],
+  ["social", { label: "Social", icon: ChatsCircleIcon }],
+  ["email", { label: "Email", icon: EnvelopeSimpleIcon }],
+  ["chatbot", { label: "AI assistant", icon: SparkleIcon }],
+  ["paid", { label: "Ad", icon: MegaphoneIcon }],
 ]);
 
 const SURFACE_NAME = new Map([
@@ -186,7 +209,6 @@ function AnalyticsPage() {
 }
 
 function Report({ report, view, titles }: { report: AnalyticsReport; view: View; titles: Map<string, string> }) {
-  const dark = useDarkMode();
   const { counts, reads } = surfacesOf(view);
   const counted = <T extends { surface: string }>(rows: T[]) => rows.filter((row) => counts.includes(row.surface));
   const read = <T extends { surface: string }>(rows: T[]) => rows.filter((row) => reads.includes(row.surface));
@@ -210,6 +232,7 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
     .sort((a, b) => b.requests - a.requests);
   const countries = tally(counted(report.countries), (row) => row.country);
   const referrers = tally(counted(report.referrers), (row) => row.referrer);
+  const mediums = new Map(report.referrers.map((row) => [row.referrer, row.medium]));
   const outcomes = counted(report.outcomes);
   const cached = sum(outcomes.filter((row) => row.cache === "hit"));
   const cacheable = sum(outcomes.filter((row) => row.cache !== "none"));
@@ -272,7 +295,7 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
             title="Clients"
             rows={tally(clients, (row) => `${row.kind}|${row.name}`).map(({ key, requests }) => {
               const [kind = "", name = ""] = key.split("|");
-              return { key, label: name, tag: KIND_LABEL.get(kind) ?? kind, icon: <Logo file={clientIcon(name, dark)} fallback={KIND_ICON.get(kind) ?? QuestionIcon} />, requests };
+              return { key, label: name, tag: KIND_LABEL.get(kind) ?? kind, icon: <Logo name={name} fallback={KIND_ICON.get(kind) ?? QuestionIcon} />, requests };
             })}
           />
           <div className="grid content-start gap-4">
@@ -281,7 +304,7 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
               rows={kinds.map(({ key, requests }) => ({
                 key,
                 label: KIND_LABEL.get(key) ?? key,
-                icon: <Logo file={undefined} fallback={KIND_ICON.get(key) ?? QuestionIcon} />,
+                icon: <Logo fallback={KIND_ICON.get(key) ?? QuestionIcon} />,
                 requests,
               }))}
             />
@@ -294,7 +317,7 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
                   return {
                     key,
                     label: client ? `${callLabel(call)} · ${client}` : callLabel(call),
-                    icon: <Logo file={client ? mcpClientIcon(client, dark) : undefined} fallback={PlugsConnectedIcon} />,
+                    icon: <Logo name={client} fallback={PlugsConnectedIcon} />,
                     requests,
                   };
                 })}
@@ -341,16 +364,19 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
 
       <section aria-labelledby="where-title">
         <SectionHead eyebrow="Where" title="Countries and referrers" id="where-title">
-          Countries as Cloudflare locates each client. Referrers are the sites visitors followed a link from, with AI assistants named.
+          Countries as Cloudflare locates each client. Referrers are the sites visitors followed a link from, named with what kind of site they are.
         </SectionHead>
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="grid content-start gap-4">
             <WorldMap countries={countries} />
-            <Ranked title="Countries" rows={countries.map(({ key, requests }) => ({ key, label: countryName(key), requests }))} />
+            <Ranked title="Countries" rows={countries.map(({ key, requests }) => ({ key, label: countryName(key), icon: <Flag code={key} />, requests }))} />
           </div>
           <Ranked
             title="Referrers"
-            rows={referrers.map(({ key, requests }) => ({ key, label: key, icon: <Logo file={referrerIcon(key, dark)} fallback={LinkSimpleIcon} />, requests }))}
+            rows={referrers.map(({ key, requests }) => {
+              const medium = MEDIUM.get(mediums.get(key) ?? "");
+              return { key, label: key, tag: medium?.label, icon: <Logo name={key} fallback={medium?.icon ?? LinkSimpleIcon} />, requests };
+            })}
             empty="No request came with a link from another site."
           />
         </div>
@@ -505,10 +531,19 @@ interface RankedRow {
   icon?: ReactNode;
 }
 
-/** A client's logo from /client-icons/, or a plain icon for its kind when it has none. The label beside it names it, so the image is decorative. */
-function Logo({ file, fallback: Fallback }: { file: IconFile | undefined; fallback: Icon }) {
-  if (!file) return <Fallback size={16} aria-hidden="true" className="shrink-0 text-kumo-subtle" />;
-  return <img src={file.src} alt="" width={16} height={16} loading="lazy" decoding="async" className={`size-4 shrink-0 object-contain ${file.invert ? "invert" : ""}`} />;
+/** A client's or referrer's logo, or a plain icon for its kind when it has none. The label beside it names it, so the image is decorative. */
+function Logo({ name, fallback: Fallback }: { name?: string; fallback: Icon }) {
+  const brand = name ? brandIcon(name) : undefined;
+  if (!brand) return <Fallback size={16} aria-hidden="true" className="shrink-0 text-kumo-subtle" />;
+  // A single-colour logo is a mask over the text's colour, so it shows in either theme.
+  if (brand.mono) return <span aria-hidden="true" className="size-4 shrink-0 bg-current text-kumo-default" style={{ mask: `url(${brand.src}) center / contain no-repeat` }} />;
+  return <img src={brand.src} alt="" width={16} height={16} loading="lazy" decoding="async" className="size-4 shrink-0 object-contain" />;
+}
+
+/** A country's flag from /flags/, which the build copies from country-flag-icons; Tor and unknown locations have none. */
+function Flag({ code }: { code: string }) {
+  if (!/^[A-Z]{2}$/.test(code) || code === "XX" || code === "T1") return <GlobeIcon size={16} aria-hidden="true" className="shrink-0 text-kumo-subtle" />;
+  return <img src={`/flags/${code}.svg`} alt="" width={18} height={12} loading="lazy" decoding="async" className="h-3 w-[18px] shrink-0 rounded-[2px] object-cover" />;
 }
 
 /** A ranked list: each row's count, with a bar scaled to the largest. */

@@ -4,8 +4,5 @@
     "skipLibCheck": true,
     "types": ["node", "../apps/kernel/worker-configuration.d.ts"]
   },
-  "include": ["**/*.ts"],
-  // Both are the analytics work in progress, not yet moved beside the kernel and the site: they join their
-  // apps' test type checks when they move, and leave this list then.
-  "exclude": ["analytics.test.ts", "client-icons.test.ts"]
+  "include": ["**/*.ts"]
 }
