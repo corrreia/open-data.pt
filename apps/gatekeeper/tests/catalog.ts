@@ -26,9 +26,13 @@ export function feedsOf(name: string): ExampleFeed[] {
 /** Every feed the Registry installs: every feed a carried library reads, less the publishers held for permission. */
 export const INSTALLED: ExampleFeed[] = FEEDS.filter((feed) => CARRIED_NAMES.includes(feed.config.source ?? "") && datasetEnabled(feed.dataset));
 
-/** One library built the way the Worker builds it: its declared vars, whatever else the caller hands over (secrets), and what its publishers bring. */
-export function carriedLibraries(name: string, extra: Record<string, string | undefined> = {}): GatekeeperLibraries {
-  return new Map([[name, buildLibrary(library(name).deployment, extra, publisherInputs(name))]]);
+/**
+ * One library built the way the Worker builds it: its declared vars, whatever
+ * else the caller hands over (secrets), what its publishers bring, and what it
+ * reads its source with while a feed is resolved.
+ */
+export function carriedLibraries(name: string, extra: Record<string, string | undefined> = {}, fetcher?: typeof fetch): GatekeeperLibraries {
+  return new Map([[name, buildLibrary(library(name).deployment, extra, publisherInputs(name), fetcher)]]);
 }
 
 /** What the publisher folders say about the dataset a feed reads part of: its publisher, its terms, its topics. */

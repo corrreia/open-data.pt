@@ -119,8 +119,12 @@ export interface LibraryDeployment<E, C = never> {
   r2Buckets?: readonly R2BucketDeployment[];
   /** The CPU limit one collection needs; the Worker takes the largest any library declares. */
   cpuMs?: number;
-  /** Builds the library from the Worker's environment and what the publishers it reads bring to it. */
-  library: (env: E, publishers: PublisherInputs) => GatekeeperLibrary<C>;
+  /**
+   * Builds the library from the Worker's environment and what the publishers it
+   * reads bring to it. `fetcher` is what a library that checks a feed against
+   * its source (DGEG's fuel types) reads with while the feed is resolved.
+   */
+  library: (env: E, publishers: PublisherInputs, fetcher: typeof fetch) => GatekeeperLibrary<C>;
 }
 
 /**
@@ -165,11 +169,12 @@ export function buildLibrary<E extends object>(
   deployment: LibraryDeployment<never, unknown>,
   env: E,
   publishers: PublisherInputs = NO_PUBLISHER_INPUTS,
+  fetcher: typeof fetch = (input, init) => fetch(input, init),
 ): GatekeeperLibrary<unknown> {
   const bound = { ...deployment.vars, ...env };
   // SAFETY: a deployment reads its own declared vars, secrets and buckets from the environment, and this one is
   // built from those declarations; `never` only lets deployments with different environments share a list.
-  return deployment.library(bound as never, publishers);
+  return deployment.library(bound as never, publishers, fetcher);
 }
 
 /** The routing key every example configuration carries; it names the library, not the publisher. */

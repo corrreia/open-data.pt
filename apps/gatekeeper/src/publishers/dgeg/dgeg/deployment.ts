@@ -8,15 +8,10 @@ export const DGEG_DEPLOYMENT: LibraryDeployment<{ readonly DGEG_API_ORIGIN: stri
   source: "dgeg",
   name: "DGEG fuel prices",
   vars: { DGEG_API_ORIGIN: "https://precoscombustiveis.dgeg.gov.pt" },
-  library: (env, publishers) => ({
+  library: (env, publishers, fetcher) => ({
     kinds: Object.values(DGEG_FEEDS),
     // Checking a feed reads DGEG's reference lists, so it goes through the same client a run does.
-    resolve: (config) =>
-      resolveDgegFeed(
-        config,
-        env.DGEG_API_ORIGIN,
-        publisherClient(publishers.hosts, (input, init) => fetch(input, init)),
-      ),
+    resolve: (config) => resolveDgegFeed(config, env.DGEG_API_ORIGIN, publisherClient(publishers.hosts, fetcher)),
     context: { apiOrigin: env.DGEG_API_ORIGIN },
   }),
 };
