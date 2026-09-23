@@ -2,7 +2,7 @@ import { NormalizedInputError, isProductSlug } from "@open-data-pt/contract";
 import type { CollectionPolicyDefinition, FeedSemantics, JsonObject, ResolvedFeed, SourceConfig } from "@open-data-pt/contract";
 import type { ManifestChunk } from "./chunks";
 import { feedDefinition, type Acquisition, type Feed, type FeedPolicy, type FeedStatus, type ProductIndexEntry, type ProductSummary } from "./feed-model";
-import { dropAllTables, userTables } from "./sqlite-reset";
+import { dropAllTables, userTables, type SqlExec } from "./sqlite-reset";
 
 /**
  * SQLite inside the Registry Durable Object: feed definitions, policies, a
@@ -13,7 +13,7 @@ export const REGISTRY_SCHEMA_VERSION = 201;
 const ACTIVITY_KEEP = 5_000;
 
 export class RegistryStore {
-  constructor(private readonly sql: SqlStorage) {}
+  constructor(private readonly sql: SqlExec) {}
 
   /** A different schema version resets the Registry; the one terminology cleanup below preserves the current schema's data in place. */
   migrate(): void {

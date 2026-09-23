@@ -158,15 +158,42 @@ pnpm dev all                # every library, every source
 
 The Worker carries only the libraries you name, so the Registry installs only their feeds and polls only their sources, and no local feed runs more often than every half hour. The site is on <http://localhost:8787>. [`docs/development.md`](docs/development.md) says how the selection reaches the Worker, which is less obvious than it looks.
 
-## Testing against the real source
+## Tests
 
-Unit tests use fixtures. Before a pull request, collect your example from the source it actually names:
+A test sits beside what it tests, with the responses it replays in a `fixtures/` folder next to it:
+
+```
+apps/gatekeeper/src/publishers/<publisher>/<library>/tests/   a publisher's own library
+apps/gatekeeper/src/formats/<format>/tests/                    a shared format
+apps/gatekeeper/tests/                                         the Gatekeeper as a whole: every feed's identity, the folder rules
+apps/kernel/tests/                                             the kernel
+apps/site/tests/                                               the site
+tests/                                                         only what runs both Workers together
+```
+
+A fixture is what the source really answered, byte for byte, so formatting never touches a
+`fixtures/` folder. Unit tests never reach the network: inject a fetcher, never mock a module. Tests
+are type-checked like the code (`pnpm typecheck` includes each app's `tsconfig.test.json`). Inside the
+Gatekeeper a test imports its shared helpers as `#/tests/catalog` and `#/tests/support`.
+
+One publisher's tests, with the checks every feed is held to:
 
 ```bash
+pnpm test:publisher apa
+```
+
+## Testing against the real source
+
+Before a pull request, collect your feeds from the source they actually name:
+
+```bash
+pnpm test:publisher apa --live
 LIVE_EXAMPLES=porto-bicycle-racks-feed pnpm exec vitest run tests/live-examples.test.ts --maxWorkers=1
 ```
 
-It resolves and collects exactly the way the deployed Worker does, and reads the result through the kernel's own frame validation. `LIVE_EXAMPLES=all` runs every example; be kind to the sources.
+It resolves and collects exactly the way the deployed Worker does, and reads the result through the
+kernel's own frame validation. `LIVE_EXAMPLES` takes feed slugs, a publisher's key (every feed of
+theirs), or `all`; be kind to the sources.
 
 ## Before you open a pull request
 

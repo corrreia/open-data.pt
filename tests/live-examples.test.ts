@@ -18,18 +18,24 @@ import { readFrames } from "../apps/kernel/src/frames";
 import { MAX_RECORD_BYTES } from "../apps/kernel/src/blob-budget";
 import { jsonAs } from "./support";
 import { RUNNABLE } from "@open-data-pt/gatekeeper/catalog";
-import { CARRIED, carriedLibraries, feedsOf } from "./catalog";
+import { CARRIED, carriedLibraries, datasetOf, feedsOf } from "../apps/gatekeeper/tests/catalog";
 
 /**
  * Collects curated examples from their real sources, the way the kernel
  * would, and reads the output through the kernel's own frame validation.
  * Opt-in because it calls public services: set LIVE_EXAMPLES to "all" or to
- * a comma-separated list of example slugs.
+ * a comma-separated list of example slugs and publisher keys, a publisher's
+ * key meaning every feed of their datasets (`LIVE_EXAMPLES=apa`).
  */
 const SELECTED =
   process.env.LIVE_EXAMPLES?.split(",")
-    .map((slug) => slug.trim())
+    .map((selection) => selection.trim())
     .filter(Boolean) ?? [];
+
+/** Whether LIVE_EXAMPLES asks for this feed: every feed, the feed by its slug, or every feed of its publisher. */
+function selected(example: ExampleFeed): boolean {
+  return SELECTED.includes("all") || SELECTED.includes(example.slug) || SELECTED.includes(datasetOf(example).publisher);
+}
 const MIB = 1024 * 1024;
 
 /** The wiring the Worker deploys, from the same declarations and vars, with the real fetch. */
@@ -50,7 +56,7 @@ function liveRequest(example: ExampleFeed, resolved: ResolvedFeed): CollectionRe
   return {
     protocol: NORMALIZED_PROTOCOL,
     collectionId: `live_${example.slug}`,
-    feed: { id: "feed_live", slug: example.slug, title: example.title, description: example.description },
+    feed: { id: "feed_live", slug: example.slug, title: example.title ?? datasetOf(example).title, description: example.description ?? datasetOf(example).description },
     resolved,
     feedEpoch: "live",
     mode: { kind: "live" },
@@ -67,11 +73,7 @@ function liveRequest(example: ExampleFeed, resolved: ResolvedFeed): CollectionRe
   };
 }
 
-const cases = LIBRARIES.flatMap((library) =>
-  library.examples
-    .filter((example) => SELECTED.includes("all") || SELECTED.includes(example.slug))
-    .map((example) => ({ slug: example.slug, example, libraries: library.libraries })),
-);
+const cases = LIBRARIES.flatMap((library) => library.examples.filter(selected).map((example) => ({ slug: example.slug, example, libraries: library.libraries })));
 
 describe.skipIf(cases.length === 0)("live examples", () => {
   it.each(cases)(

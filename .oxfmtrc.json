@@ -17,9 +17,9 @@
     ".windsurf/**",
     "tools/oxlint/anti-slop/**",
     "**/worker-configuration.d.ts",
-    "tests/fixtures/**",
     "research/**",
     "pnpm-lock.yaml",
-    "apps/gatekeeper/src/catalog/folders.generated.ts"
+    "apps/gatekeeper/src/catalog/folders.generated.ts",
+    "**/tests/fixtures/**"
   ]
 }

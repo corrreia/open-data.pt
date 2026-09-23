@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "types": ["node", "./worker-configuration.d.ts"]
+  },
+  "include": ["src/**/*.ts", "tests/**/*.ts", "../../packages/contract/src/**/*.ts", "worker-configuration.d.ts"],
+  "exclude": []
+}

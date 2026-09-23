@@ -1,0 +1,183 @@
+import { readFixture, readFixtureBytes } from "#/tests/support";
+import { describe, expect, it } from "vitest";
+import type { TransformContext } from "@open-data-pt/contract";
+import { WfsTransformer } from "#/formats/wfs/index";
+
+function fixture(name: string): Uint8Array {
+  return readFixtureBytes(new URL(`./fixtures/${name}`, import.meta.url));
+}
+
+function replacedFixture(name: string, from: string, to: string): Uint8Array {
+  return new TextEncoder().encode(readFixture(new URL(`./fixtures/${name}`, import.meta.url)).replaceAll(from, to));
+}
+
+function context(
+  slug: string,
+  config: Record<string, string>,
+  domainSubject: "event" | "observation" | "feature",
+  defaultProductRole: "event-log" | "time-series" | "reference",
+): TransformContext {
+  return {
+    feed: { slug, title: `${slug} title`, description: `${slug} description`, config, semantics: { domainSubject, defaultProductRole } },
+    observedAt: "2026-09-18T20:00:00Z",
+  };
+}
+
+const wfsConfig = {
+  feed: "events",
+  host: "maps.effis.emergency.copernicus.eu",
+  path: "/effis",
+  typeName: "ms:modis.ba.poly",
+  idField: "id",
+  eventTimeField: "FIREDATE",
+  sourcePublishedAtField: "LASTUPDATE",
+  countryField: "COUNTRY",
+  countryValue: "PT",
+  dateField: "FIREDATE",
+  numberFields: "AREA_HA,BROADLEA,CONIFER,MIXED,PERCNA2K",
+  dateFields: "FIREDATE,FINALDATE,LASTUPDATE",
+  days: "180",
+};
+
+describe("WFS normalizer", () => {
+  it("infers typed EFFIS attributes while retaining source geometry and clocks", () => {
+    const transformer = new WfsTransformer();
+    const transformContext = context("effis-portugal-recent-burnt-areas-feed", wfsConfig, "event", "event-log");
+    const result = transformer.transform(fixture("effis-burnt-areas.json"), transformContext);
+    const product = result.products[0];
+    expect(product).toMatchObject({ role: "event-log", updateMode: "source-window", watermark: "2026-08-18T11:57:54.973Z" });
+    expect(product?.schema.fields).toContainEqual(expect.objectContaining({ id: "AREA_HA", type: "number" }));
+    expect(product?.schema.fields).toContainEqual(expect.objectContaining({ id: "FIREDATE", type: "datetime" }));
+    expect(product?.records?.[0]).toMatchObject({
+      entityKey: "888",
+      eventTime: "2026-08-08T00:00:00.000Z",
+      sourcePublishedAt: "2026-08-18T11:57:54.973Z",
+      payload: { COUNTRY: "PT", AREA_HA: 26593, latitude: 40.85, longitude: -8.05 },
+    });
+
+    const blank = transformer.transform(replacedFixture("effis-burnt-areas.json", '"AREA_HA": "26593"', '"AREA_HA": "   "'), transformContext);
+    expect(blank.products[0]?.records?.[0]?.payload.AREA_HA).toBeNull();
+  });
+
+  it("keeps a WFS reference layer whole and undated, with no outline to store", () => {
+    const transformer = new WfsTransformer();
+    const config = {
+      feed: "reference",
+      host: "api.sgifr.gov.pt",
+      path: "/v1/wfs/AGIF/apps-subregionais",
+      typeName: "apps:apps_adaptacao_subregional",
+      idField: "id",
+      numberFields: "area_ha,id_apps",
+      dateOnlyFields: "data_aprovacao_publicacao",
+    };
+    const result = transformer.transform(fixture("sgifr-apps-subregionais.json"), context("sgifr-apps-subregionais-feed", config, "feature", "reference"));
+    const product = result.products[0];
+    // A standing inventory: every read replaces the last, and no feature carries an event time.
+    expect(product).toMatchObject({ role: "reference", updateMode: "authoritative-snapshot" });
+    expect(product?.watermark).toBeUndefined();
+    expect(product?.records).toHaveLength(3);
+    expect(product?.schema.fields).toContainEqual(expect.objectContaining({ id: "area_ha", type: "number" }));
+    // The approval is a day, not an instant: typed `date` and kept as the day, without the zone the service writes.
+    expect(product?.schema.fields).toContainEqual(expect.objectContaining({ id: "data_aprovacao_publicacao", type: "date" }));
+    expect(product?.records?.[0]?.payload.data_aprovacao_publicacao).toBe("2025-10-27");
+    expect(product?.records?.[0]).toMatchObject({
+      entityKey: "0104_1",
+      // The source's own wording is kept verbatim, including where a column named for
+      // one article carries the text of another: `art_60` here reads "Artigo 61.º".
+      payload: { municipio: "Arouca", art_60: "Aplicam-se condicionamentos do Artigo 61.º", geometry: null },
+    });
+    expect(product?.records?.[0]?.eventTime).toBeUndefined();
+    expect(result.quality).toMatchObject({ acceptedRecords: 3, rejectedRecords: 0 });
+  });
+
+  it("names a reference feature by the service's own identity when the layer holds no identifier", () => {
+    const config = {
+      feed: "reference",
+      host: "oeirasinterativa.oeiras.pt",
+      path: "/gis/services/dados_abertos/wfs",
+      typeName: "dados_abertos:w_condicionalismos_via_publica",
+      idField: "@id",
+      dateOnlyFields: "data_prevista_inicio,data_prevista_conclusao",
+      dateFields: "ultima_atualizacao",
+    };
+    const result = new WfsTransformer().transform(
+      fixture("oeiras-condicionalismos-via-publica.json"),
+      context("oeiras-condicionalismos-via-publica-feed", config, "feature", "reference"),
+    );
+    const product = result.products[0];
+    // Every row names a street and a state and nothing that tells one from the next,
+    // so the key is the feature identity the service gives, not a column.
+    expect(product?.records?.map((record) => record.entityKey)).toEqual([
+      "w_condicionalismos_via_publica.1",
+      "w_condicionalismos_via_publica.2",
+      "w_condicionalismos_via_publica.3",
+    ]);
+    // The identity is the feature's, not a field of it: it is not smuggled into the payload.
+    expect(product?.schema.fields.map((field) => field.id)).not.toContain("@id");
+    expect(product?.records?.[0]?.payload).toMatchObject({ freguesia: "Porto Salvo", estado_obra: "Concluído" });
+    expect(result.quality).toMatchObject({ acceptedRecords: 3, rejectedRecords: 0 });
+  });
+
+  it("keeps the outlines of a plan the service will only hand over a class at a time", () => {
+    const config = {
+      feed: "reference",
+      host: "servicos.dgterritorio.pt",
+      path: "/SDISNITWFSCRUS_1113_1/WFService.aspx",
+      typeName: "gmgml:CRUS_Torres_Vedras_V",
+      idField: "ID1",
+      outputFormat: "application/vnd.geo+json",
+      srsName: "EPSG:4326",
+      paging: "none",
+      filterField: "Classe_2021",
+      filterPattern: "Solo Urbano (*",
+      numberFields: "AREA_HA,ID1",
+      dateFields: "Data_Pub_Origem",
+    };
+    const result = new WfsTransformer().transform(
+      fixture("torres-vedras-crus.json"),
+      context("torres-vedras-regime-uso-do-solo-solo-urbanizavel-feed", config, "feature", "reference"),
+    );
+    const records = result.products[0]?.records ?? [];
+    expect(records).toHaveLength(2);
+    // A land-use map without its land is a table of adjectives: every parcel keeps its outline,
+    // and a parcel the plan drew is somewhere.
+    for (const record of records) {
+      expect(record.payload.geometry).not.toBeNull();
+      expect(record.payload.latitude).toBeCloseTo(39.05, 1);
+      expect(record.payload.longitude).toBeCloseTo(-9.32, 1);
+    }
+    expect(records[0]).toMatchObject({ entityKey: "269620", payload: { Classe_2021: "Solo Urbano (urbanizável – transitório)", Municipio: "TORRES VEDRAS" } });
+  });
+
+  it("places a layer its service stores on a national grid", () => {
+    const config = {
+      feed: "reference",
+      host: "oeirasinterativa.oeiras.pt",
+      path: "/gis/services/dados_abertos/wfs",
+      typeName: "dados_abertos:w_condicionalismos_via_publica",
+      idField: "@id",
+      srsName: "EPSG:4326",
+    };
+    const result = new WfsTransformer().transform(
+      fixture("oeiras-condicionalismos-via-publica.json"),
+      context("oeiras-condicionalismos-via-publica-feed", config, "feature", "reference"),
+    );
+    const first = result.products[0]?.records?.[0];
+    // Asked without a coordinate system this workspace answers in metres on PT-TM06, which
+    // is geometry nothing can place and a centre that comes out empty. Every row is somewhere.
+    expect(first?.payload.longitude).toBeCloseTo(-9.29, 1);
+    expect(first?.payload.latitude).toBeCloseTo(38.71, 1);
+    for (const record of result.products[0]?.records ?? []) {
+      expect(record.payload.latitude).not.toBeNull();
+      expect(record.payload.longitude).not.toBeNull();
+    }
+  });
+
+  it("rejects an impossible source calendar date", () => {
+    const wfs = new WfsTransformer().transform(
+      replacedFixture("effis-burnt-areas.json", "2026-08-08 00:00:00", "2026-02-30 00:00:00"),
+      context("effis-portugal-recent-burnt-areas-feed", wfsConfig, "event", "event-log"),
+    );
+    expect(wfs.quality).toEqual({ acceptedRecords: 0, rejectedRecords: 1 });
+  });
+});
