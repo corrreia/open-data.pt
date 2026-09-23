@@ -3,7 +3,7 @@ import { collectNormalized } from "#/index";
 import { networkFrames, networkRequest } from "#/tests/networks-support";
 import { datasetOf, feedCollection, feedsOf } from "#/tests/catalog";
 
-// Research-only opt-in: RIPEstat restricts republication. This check does not deploy or store source data.
+// Opt-in because it calls RIPEstat. This check does not deploy or store source data.
 const selected = (process.env.LIVE_NETWORKS ?? "").split(",");
 
 describe("RIPEstat live research", () => {

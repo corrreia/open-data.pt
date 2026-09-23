@@ -554,7 +554,7 @@ async function request(url: URL, session: Session, what: string, init: RequestIn
   if (url.origin !== session.origin) throw new GatekeeperError(`${what} would leave ${session.origin}`, "source-denied");
   let response: Response;
   try {
-    response = await session.fetcher(url, { ...init, redirect: "manual", headers: { Accept: "*/*", "User-Agent": "open-data.pt", ...init.headers } });
+    response = await session.fetcher(url, { ...init, redirect: "manual", headers: { Accept: "*/*", ...init.headers } });
   } catch (error) {
     throw new GatekeeperError(`${what} request failed: ${error instanceof Error ? error.message : "network failure"}`, "upstream-error");
   }

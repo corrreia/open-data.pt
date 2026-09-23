@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { libraryConfig, readBoundedResponse } from "#/index";
 import { feedsOf } from "#/tests/catalog";
+import { USER_AGENT } from "#/publisher-client";
 import { parliamentDirectoryLink, parliamentDocument, parliamentDocumentLink, PARLIAMENT_HTML_BYTES } from "#/publishers/assembleia-da-republica/parliament/parliament";
 
 const saved = process.env.PARLIAMENT_DIRECTORY_SAMPLES === "1";
@@ -39,7 +40,7 @@ describe.skipIf(!live)("Parliament live public-directory HTML only", () => {
       const response = await fetch(url, {
         redirect: "manual",
         signal: AbortSignal.timeout(30_000),
-        headers: { Accept: "text/html", "User-Agent": "open-data.pt (+https://open-data.pt)" },
+        headers: { Accept: "text/html", "User-Agent": USER_AGENT },
       });
       expect(response.status).toBe(200);
       return new TextDecoder().decode(await readBoundedResponse(response, PARLIAMENT_HTML_BYTES, "public directory HTML"));

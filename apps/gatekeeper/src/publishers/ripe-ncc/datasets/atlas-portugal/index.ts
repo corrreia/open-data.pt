@@ -12,8 +12,8 @@ import type { DatasetDefinition } from "#/catalog/define";
  * RIPE NCC databases "may only be used, reproduced and made available to third
  * parties upon prior written authorisation from the RIPE NCC". No Creative
  * Commons grant exists for probe metadata or measurement results. Do not
- * auto-install for public republication without that permission, exactly as for
- * RIPEstat.
+ * auto-install for public republication without that permission. RIPE NCC's
+ * answer for RIPEstat did not cover Atlas; see docs/publishers/ripe-ncc.md.
  */
 export const DATASET: DatasetDefinition = {
   title: "RIPE Atlas in Portugal",
@@ -21,4 +21,6 @@ export const DATASET: DatasetDefinition = {
   licence: "ripe-atlas-terms",
   attribution: "RIPE NCC, RIPE Atlas and its probe hosts",
   topics: ["telecom"],
+  // Held until RIPE NCC authorises republishing Atlas data in writing.
+  enabled: false,
 };

@@ -1,7 +1,7 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
 import type { CatalogDescription } from "@open-data-pt/contract";
 
-import { CATALOG, FEEDS, RUNNABLE, datasetEnabled, publisherInputs } from "./catalog";
+import { CATALOG, FEEDS, RUNNABLE, datasetEnabled, publisherInputs, runtimeOf } from "./catalog";
 import {
   buildLibrary,
   collectNormalized,
@@ -57,7 +57,7 @@ export function gatekeeper<E extends object>(libraries: readonly Library[]) {
     async collect(request: CollectionRequest): Promise<CollectionResult> {
       const feed = RUNNABLE.get(request.feed.slug);
       if (!feed) return { kind: "failure", code: "invalid-config", retryable: false };
-      return collectNormalized(request, feedCollector(feed, request.resolved.config, this.libraries()));
+      return collectNormalized(request, feedCollector(feed, request.resolved.config, this.libraries(), runtimeOf(feed.slug)));
     }
 
     /** Every feed of a publisher we may republish that a carried library reads; a held publisher's code ships, and installs nothing. */

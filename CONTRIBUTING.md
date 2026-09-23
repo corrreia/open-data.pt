@@ -108,9 +108,16 @@ import type { PublisherDefinition } from "#/catalog/define";
 export const PUBLISHER: PublisherDefinition = {
   name: "Câmara Municipal do Porto",
   url: "https://www.cm-porto.pt/",
+  sources: ["dadosabertos.cm-porto.pt"],
   logo: "svg",
 };
 ```
+
+`url` is their website, for people. `sources` are the hosts their data is read from, which are often
+not the website: every request their feeds make goes through a client that reaches only these hosts
+(a redirect elsewhere is refused), names open-data.pt in its `User-Agent`, and adds any query
+parameters the publisher asked for — `{ host: "stat.ripe.net", query: { sourceapp: "open-data.pt" } }`.
+A library never sets its own `User-Agent`.
 
 and at least one dataset. Who made the data, never the portal it was read from: dados.gov.pt
 carries ten publishers and is none of them. Their mark is optional: `logo.svg` or `logo.png` beside
@@ -123,8 +130,8 @@ stay, and nothing of theirs is polled or served.
 ### A new source on a format we already read
 
 The publisher's folder and the dataset file above, and nothing in the format. A format fetches
-only the hosts its publishers' feeds name: the Worker gathers them from the folders, so the host in
-the feed's `config` is the allowlist entry.
+only the hosts its publishers declare in `sources`: the Worker gathers them from the folders, so a
+new host is one entry there — including the host a portal's download link redirects to.
 
 If the format cannot read their data as it is — a file laid out in a way only this publisher lays
 it out — their translator goes in their folder too, and their feed file calls it:
@@ -137,7 +144,7 @@ A library folder inside its publisher's, `apps/gatekeeper/src/publishers/<publis
 
 ### A new format
 
-The same, under `formats/<format>/`, taking the hosts its publishers' feeds name (`publishers.hosts`, the second argument of its deployment's `library`) rather than a fixed origin.
+The same, under `formats/<format>/`, taking the hosts its publishers declare (`publishers.hosts`, the second argument of its deployment's `library`) rather than a fixed origin.
 
 ## What a Worker sends
 

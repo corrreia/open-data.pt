@@ -105,7 +105,7 @@ export const LICENCES = {
   "ripe-ncc-terms": {
     name: "RIPEstat Service Terms and Conditions",
     url: "https://www.ripe.net/about-us/legal/ripestat-service-terms-and-conditions",
-    summary: "RIPEstat data may not be repackaged, compiled or redistributed without permission, which is why the source is held.",
+    summary: "RIPEstat data may not be repackaged, compiled or redistributed without permission. RIPE NCC gave open-data.pt that permission on 23 September 2026.",
   },
   "ripe-atlas-terms": {
     name: "RIPE Atlas Service Terms and Conditions",

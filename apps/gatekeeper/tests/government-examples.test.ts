@@ -8,7 +8,8 @@ import { readFixture } from "./support";
 const tagged = (topic: Topic): ExampleFeed[] => INSTALLED.filter((example) => datasetOf(example).topics.includes(topic));
 const GOVERNMENT_EXAMPLES = tagged("government");
 const CITIES_EXAMPLES = tagged("cities");
-const TELECOM_EXAMPLES = tagged("telecom");
+/** Telecom statistics from INE; the RIPE NCC network feeds share the tag and are held to their own tests. */
+const TELECOM_EXAMPLES = tagged("telecom").filter((example) => example.config.source === "ine");
 const government = feedsOf("udata").filter((example) => datasetOf(example).topics.includes("government"));
 
 async function normalized(example: ExampleFeed, observedAt: string) {

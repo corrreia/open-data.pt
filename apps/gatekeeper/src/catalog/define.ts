@@ -1,6 +1,7 @@
 import type { ExampleFeed, SourceConfig } from "@open-data-pt/contract";
 
 import type { FeedFunctions, LibraryDeployment, RunnableFeed } from "#/library";
+import type { PublisherSources } from "#/publisher-client";
 
 import type { Licence } from "./licences";
 import type { Topic } from "./topics";
@@ -24,8 +25,15 @@ import type { Topic } from "./topics";
 export interface PublisherDefinition {
   /** The name as a heading shows it: an acronym and what it stands for, or the operator's name. */
   name: string;
-  /** Their own site, not the portal the data was read from. */
+  /** Their own site, for people: often not where their data is read from. */
   url?: string;
+  /**
+   * Where their data is read from: the only hosts their feeds may reach. Each
+   * feed's `fetch` is a client bound to these, which names open-data.pt in
+   * every request and adds anything the publisher asked of us, such as a query
+   * parameter; a request or a redirect anywhere else is refused.
+   */
+  sources: PublisherSources;
   /** Their mark's extension, when `logo.svg` or `logo.png` sits in the folder. Absent, their initials stand in for it. */
   logo?: "svg" | "png";
   /**
@@ -65,6 +73,12 @@ export function defineFeed<E, C, M extends object = never>(library: LibraryDeplo
 /** One publisher's body of data, and the feeds that read it. */
 export interface DatasetDefinition {
   title: string;
+  /**
+   * Whether we may republish this dataset. Absent means we may. `false` holds
+   * it alone out of the catalog, for a publisher whose permission covers some
+   * of what they publish, with a comment saying what we are waiting for.
+   */
+  enabled?: boolean;
   description: string;
   /** The terms the publisher states for it, or `source-terms` when they state none. */
   licence: Licence;

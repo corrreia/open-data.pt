@@ -1,6 +1,7 @@
-import type { CatalogDescription, ExampleFeed, SourceConfig } from "@open-data-pt/contract";
+import type { CatalogDescription, ExampleFeed } from "@open-data-pt/contract";
 
-import type { PublisherInputs, RunnableFeed } from "#/library";
+import type { FeedRuntime, PublisherInputs, RunnableFeed } from "#/library";
+import { sourceHosts, type PublisherSources } from "#/publisher-client";
 
 import { PUBLISHER_FOLDERS } from "./folders.generated";
 import { LICENCES } from "./licences";
@@ -48,7 +49,7 @@ export function publisherEnabled(id: string): boolean {
 /** Whether a dataset's feeds may be installed: every one but those of a held publisher. */
 export function datasetEnabled(id: string): boolean {
   const dataset = DATASETS.get(id);
-  return dataset !== undefined && publisherEnabled(dataset.publisher);
+  return dataset !== undefined && dataset.enabled !== false && publisherEnabled(dataset.publisher);
 }
 
 /** Every feed file, by slug: the functions the Worker runs when the kernel asks for a feed's collection. */
@@ -70,21 +71,29 @@ export const CATALOG: CatalogDescription = {
   datasets: [...DATASETS].filter(([id]) => datasetEnabled(id)).map(([id, { feeds: _feeds, topics, ...dataset }]) => ({ id, ...dataset, topics: [...topics] })),
 };
 
-/** The hosts a feed's configuration names: its `host`, and the host of any URL it carries. */
-function hostsNamed(config: SourceConfig): string[] {
-  return Object.entries(config).flatMap(([key, value]) => {
-    if (key === "host") return [value];
-    return /^https?:\/\//.test(value) ? [new URL(value).hostname] : [];
-  });
-}
-
 /**
  * What the publisher folders bring one library: the configurations of every
- * feed that reads through it, and the hosts they name — the only ones it may
- * fetch, so a new publisher on a shared format never edits the format.
+ * feed that reads through it, and the hosts their publishers declare as
+ * sources — the only ones it may fetch, so a new publisher on a shared format
+ * never edits the format.
  */
 export function publisherInputs(source: string): PublisherInputs {
-  const configs = FEEDS.filter((feed) => feed.config.source === source).map((feed) => feed.config);
-  const hosts = new Set(configs.flatMap(hostsNamed));
-  return { configs, hosts: [...hosts].toSorted() };
+  const feeds = FEEDS.filter((feed) => feed.config.source === source);
+  const hosts = new Set(feeds.flatMap((feed) => sourceHosts(sourcesOf(feed.slug))));
+  return { configs: feeds.map((feed) => feed.config), hosts: [...hosts].toSorted() };
+}
+
+/** The publisher whose folder each feed is written in, by slug. */
+const PUBLISHER_OF: ReadonlyMap<string, string> = new Map([...DATASETS.values()].flatMap((dataset) => dataset.feeds.map((feed) => [feed.slug, dataset.publisher] as const)));
+
+/** The hosts a feed may reach, and what its publisher asked every request to carry: its publisher's declared sources. */
+export function sourcesOf(slug: string): PublisherSources {
+  const publisher = PUBLISHERS.get(PUBLISHER_OF.get(slug) ?? "");
+  if (!publisher) throw new Error(`No publisher folder holds ${slug}`);
+  return publisher.sources;
+}
+
+/** What a feed runs on in the Worker: its publisher's client. Tests add their own fetcher and clock to the same. */
+export function runtimeOf(slug: string): FeedRuntime {
+  return { sources: sourcesOf(slug) };
 }

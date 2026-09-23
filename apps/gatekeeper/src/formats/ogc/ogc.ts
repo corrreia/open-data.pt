@@ -966,11 +966,9 @@ async function requestPage(url: URL, headers: Headers, config: ValidatedConfig, 
 }
 
 async function request(url: URL, headers: Headers, config: ValidatedConfig, hosts: ReadonlySet<string>, fetcher: Fetcher): Promise<Response> {
-  const identified = new Headers(headers);
-  identified.set("User-Agent", "open-data.pt/1.0 (+https://open-data.pt)");
   let target = url;
   for (let hop = 0; ; hop += 1) {
-    const response = await fetcher(target, { headers: identified, redirect: "manual" });
+    const response = await fetcher(target, { headers, redirect: "manual" });
     if (response.status >= 400)
       console.warn(
         JSON.stringify({

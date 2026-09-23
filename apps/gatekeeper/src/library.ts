@@ -15,6 +15,7 @@ import {
   type TransformContext,
   type TransformResult,
 } from "./index";
+import { publisherClient, type PublisherSources } from "./publisher-client";
 
 /**
  * The Gatekeeper Worker is wiring. It carries every library, hands each its
@@ -233,6 +234,8 @@ export async function resolveLibraryFeed(config: SourceConfig, libraries: Gateke
 export interface FeedRuntime {
   fetcher?: typeof fetch;
   now?: () => Date;
+  /** The publisher's declared sources, which bind the feed's fetch; the Worker always passes them (`runtimeOf`). */
+  sources?: PublisherSources;
 }
 
 /**
@@ -241,7 +244,8 @@ export interface FeedRuntime {
  * contributes the identity rule and what the Worker gave it.
  */
 export function feedCollector(feed: RunnableFeed, config: SourceConfig, libraries: GatekeeperLibraries, runtime: FeedRuntime = {}): NormalizedCollector {
-  const fetcher = runtime.fetcher ?? ((input: RequestInfo | URL, init?: RequestInit) => fetch(input, init));
+  const base = runtime.fetcher ?? ((input: RequestInfo | URL, init?: RequestInit) => fetch(input, init));
+  const fetcher = runtime.sources ? publisherClient(runtime.sources, base) : base;
   const now = runtime.now ?? (() => new Date());
   const { library, rest } = route(config, libraries);
   const transform = feed.transform;

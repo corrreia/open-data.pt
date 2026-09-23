@@ -17,7 +17,7 @@ import { isNormalizedFrame } from "../packages/contract/src/validation";
 import { readFrames } from "../apps/kernel/src/frames";
 import { MAX_RECORD_BYTES } from "../apps/kernel/src/blob-budget";
 import { jsonAs } from "./support";
-import { RUNNABLE } from "@open-data-pt/gatekeeper/catalog";
+import { RUNNABLE, runtimeOf } from "@open-data-pt/gatekeeper/catalog";
 import { CARRIED, carriedLibraries, datasetOf, feedsOf } from "../apps/gatekeeper/tests/catalog";
 
 /**
@@ -83,7 +83,7 @@ describe.skipIf(cases.length === 0)("live examples", () => {
       const request = liveRequest(example, resolved);
       const feed = RUNNABLE.get(example.slug);
       if (!feed) throw new Error(`No feed file defines ${example.slug}`);
-      const result = await collectNormalized(request, feedCollector(feed, resolved.config, libraries));
+      const result = await collectNormalized(request, feedCollector(feed, resolved.config, libraries, runtimeOf(example.slug)));
       if (result.kind !== "batch") throw new Error(`${example.slug} returned ${JSON.stringify(result)}`);
       const counts = new Map<string, number>();
       const scope = {

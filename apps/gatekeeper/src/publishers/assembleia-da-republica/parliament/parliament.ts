@@ -140,7 +140,7 @@ export async function collectParliamentFeed(config: SourceConfig, state: JsonObj
   const folder = await htmlPage(directory, fetcher);
   const url = parliamentDocumentLink(folder, document);
   const previous = state?.resource === document.filename ? sourceValidator(state) : undefined;
-  const headers = new Headers({ Accept: "application/json, text/plain, application/octet-stream;q=0.9, */*;q=0.1", "User-Agent": "open-data.pt (+https://open-data.pt)" });
+  const headers = new Headers({ Accept: "application/json, text/plain, application/octet-stream;q=0.9, */*;q=0.1" });
   if (previous?.etag) headers.set("If-None-Match", previous.etag);
   if (previous?.lastModified) headers.set("If-Modified-Since", previous.lastModified);
   const response = await request(url, headers, fetcher);
@@ -182,7 +182,7 @@ export async function collectParliamentFeed(config: SourceConfig, state: JsonObj
 }
 
 async function htmlPage(url: URL, fetcher: typeof fetch): Promise<string> {
-  const response = await request(url, new Headers({ Accept: "text/html", "User-Agent": "open-data.pt (+https://open-data.pt)" }), fetcher);
+  const response = await request(url, new Headers({ Accept: "text/html" }), fetcher);
   if (!response.ok) throw upstreamError(response);
   return new TextDecoder().decode(await readBoundedResponse(response, PARLIAMENT_HTML_BYTES, "Parliament public directory"));
 }

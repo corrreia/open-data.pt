@@ -3,9 +3,8 @@ import type { PublisherDefinition } from "#/catalog/define";
 export const PUBLISHER: PublisherDefinition = {
   name: "RIPE NCC",
   url: "https://www.ripe.net/",
+  sources: [{ host: "stat.ripe.net", query: { sourceapp: "open-data.pt" } }, "atlas.ripe.net"],
   logo: "svg",
-  // Held: the RIPEstat and RIPE Atlas service terms (Articles 3.3 and 3.5) bar re-packaging and redistributing
-  // their data, and Atlas adds that third parties need prior written authorisation. Keyless access is not
-  // permission. Asked, awaiting an answer. https://www.ripe.net/about-us/legal/terms-of-service/
-  enabled: false,
+  // RIPEstat is read with RIPE NCC's permission, and with the `sourceapp` they asked for; RIPE Atlas is still
+  // held, on its dataset. See docs/publishers/ripe-ncc.md.
 };

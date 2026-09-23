@@ -9,7 +9,7 @@ import {
   type NormalizedCollector,
   type ResolvedFeed,
 } from "@open-data-pt/gatekeeper";
-import { DATASETS, FEEDS, RUNNABLE, datasetEnabled, publisherInputs, type CatalogEntry } from "@open-data-pt/gatekeeper/catalog";
+import { DATASETS, FEEDS, RUNNABLE, datasetEnabled, publisherInputs, type CatalogEntry, runtimeOf } from "@open-data-pt/gatekeeper/catalog";
 import { LIBRARIES, library } from "@open-data-pt/gatekeeper/libraries";
 
 /** Every library the Gatekeeper Worker carries, as `libraries.ts` lists them. */
@@ -53,5 +53,5 @@ export async function feedCollection(
   const source = feed.config.source ?? "";
   const libraries = carriedLibraries(source, extra);
   const resolved = await resolveLibraryFeed(feed.config, libraries);
-  return { resolved, collector: feedCollector(feed, resolved.config, libraries, runtime) };
+  return { resolved, collector: feedCollector(feed, resolved.config, libraries, { ...runtimeOf(slug), ...runtime }) };
 }

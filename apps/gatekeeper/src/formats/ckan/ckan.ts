@@ -385,7 +385,6 @@ export class CkanSource {
   private async fetchAllowed(url: URL, init: RequestInit): Promise<Response> {
     validateResourceUrl(url.toString(), this.allowedHosts);
     const headers = new Headers(init.headers);
-    headers.set("User-Agent", "open-data.pt/1.0 (+https://open-data.pt)");
     let unreachable: GatekeeperError | undefined;
     for (let attempt = 1; attempt <= FETCH_ATTEMPTS; attempt += 1) {
       if (attempt > 1) await delay(retryDelayMs(attempt));
