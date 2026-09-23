@@ -117,7 +117,9 @@ export const PUBLISHER: PublisherDefinition = {
 not the website: every request their feeds make goes through a client that reaches only these hosts
 (a redirect elsewhere is refused), names open-data.pt in its `User-Agent`, and adds any query
 parameters the publisher asked for — `{ host: "stat.ripe.net", query: { sourceapp: "open-data.pt" } }`.
-A library never sets its own `User-Agent`.
+A host that answers slowly takes `minIntervalSeconds`, the least time between two requests to it from
+every feed at once; `userAgent` replaces our name for one host, with a comment saying why. A library
+never sets its own `User-Agent`.
 
 and at least one dataset. Who made the data, never the portal it was read from: dados.gov.pt
 carries ten publishers and is none of them. Their mark is optional: `logo.svg` or `logo.png` beside

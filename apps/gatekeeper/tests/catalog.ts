@@ -53,5 +53,9 @@ export async function feedCollection(
   const source = feed.config.source ?? "";
   const libraries = carriedLibraries(source, extra);
   const resolved = await resolveLibraryFeed(feed.config, libraries);
-  return { resolved, collector: feedCollector(feed, resolved.config, libraries, { ...runtimeOf(slug), ...runtime }) };
+  // Fixtures answer at once, so a host's interval would only slow the test: every other rule of its sources holds.
+  const fixture: FeedRuntime = {};
+  const sources = runtimeOf(slug).sources;
+  if (sources) fixture.sources = sources.map((each) => (each instanceof Object ? { ...each, minIntervalSeconds: 0 } : each));
+  return { resolved, collector: feedCollector(feed, resolved.config, libraries, { ...fixture, ...runtime }) };
 }

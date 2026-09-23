@@ -31,6 +31,10 @@ No credentials. SNIRH has no API: the `snirh` library reads what its own pages r
 - **The bulletins** are `coresXML.php` (monthly precipitation), `dadosxml.php` (groundwater state) and
   `tabelageral.php` (reservoir storage by basin). They are the data behind retired Flash pages, and
   still current.
+- **Blocked by name, 22 September 2026.** Since about 12:30 UTC that day, SNIRH answers 403 to any
+  request whose User-Agent contains `open-data.pt`, and to nothing else. It began about three hours
+  into the first history walk, which sent tens of thousands of slow exports, several at once. SNIRH
+  is now read at most once every five seconds (`minIntervalSeconds` in APA's `index.ts`).
 
 ## Quirks
 

@@ -10,11 +10,19 @@ export const USER_AGENT = "open-data.pt/1.0 (+https://open-data.pt)";
 /** Redirects one request may follow before it is refused: enough for a portal's download link, not for a loop. */
 const MAX_REDIRECTS = 5;
 
-/** One server a publisher's data is read from, and anything they asked every request to it to carry. */
+/** One server a publisher's data is read from, and how it asks to be read. */
 export interface PublisherSource {
   host: string;
   /** Query parameters the publisher asked for, such as RIPEstat's `sourceapp`. */
   query?: { readonly [name: string]: string };
+  /**
+   * The least time between two requests to this host, from every feed this
+   * Worker runs at once: for a server that answers slowly, or has asked us to
+   * go gently.
+   */
+  minIntervalSeconds?: number;
+  /** What to name ourselves to this host instead of `USER_AGENT`, with a comment saying why. */
+  userAgent?: string;
 }
 
 /**
@@ -22,6 +30,32 @@ export interface PublisherSource {
  * often not their website. A host alone, or a host with what they asked of us.
  */
 export type PublisherSources = readonly (string | PublisherSource)[];
+
+/** How every request to one host is made. */
+interface HostRules {
+  query: { readonly [name: string]: string };
+  intervalMs: number;
+  userAgent: string;
+}
+
+/**
+ * When the last request to each host was let go, shared by every client in
+ * this isolate, so two feeds of one publisher running at once still keep to
+ * its interval.
+ */
+const TURNS = new Map<string, Promise<number>>();
+
+/** Waits until `intervalMs` has passed since the last request to `host` was let go, then takes the turn. */
+async function takeTurn(host: string, intervalMs: number): Promise<void> {
+  if (intervalMs <= 0) return;
+  const turn = (TURNS.get(host) ?? Promise.resolve(0)).then(async (last) => {
+    const wait = last + intervalMs - Date.now();
+    if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+    return Date.now();
+  });
+  TURNS.set(host, turn);
+  await turn;
+}
 
 /** Every host a publisher's sources name. */
 export function sourceHosts(sources: PublisherSources): string[] {
@@ -31,27 +65,43 @@ export function sourceHosts(sources: PublisherSources): string[] {
 /**
  * The fetch a publisher's feeds are handed. It reaches only the hosts the
  * publisher declares — a redirect elsewhere is refused, not followed — names
- * open-data.pt in every request, and adds what the publisher asked every
- * request to carry. A caller that asks for `redirect: "manual"` handles the
+ * open-data.pt in every request unless a host says otherwise, keeps to each
+ * host's interval, and adds what the publisher asked every request to carry. A caller that asks for `redirect: "manual"` handles the
  * redirect itself, and its next request comes back through here.
  */
 export function publisherClient(sources: PublisherSources, fetcher: typeof fetch): typeof fetch {
-  const allowed = new Map(sources.map((source) => (source instanceof Object ? [source.host, source.query ?? {}] : [source, {}])));
+  const allowed = new Map<string, HostRules>(
+    sources.map((source) =>
+      source instanceof Object
+        ? [source.host, { query: source.query ?? {}, intervalMs: (source.minIntervalSeconds ?? 0) * 1000, userAgent: source.userAgent ?? USER_AGENT }]
+        : [source, { query: {}, intervalMs: 0, userAgent: USER_AGENT }],
+    ),
+  );
+  const rulesOf = (url: URL): HostRules => {
+    const rules = allowed.get(url.hostname);
+    if (!rules) throw new GatekeeperError(`${url.hostname} is not one of this publisher's sources`, "source-denied");
+    return rules;
+  };
   const prepare = (target: URL): URL => {
-    const query = allowed.get(target.hostname);
-    if (!query) throw new GatekeeperError(`${target.hostname} is not one of this publisher's sources`, "source-denied");
     const url = new URL(target);
-    for (const [name, value] of Object.entries(query)) if (!url.searchParams.has(name)) url.searchParams.set(name, value);
+    for (const [name, value] of Object.entries(rulesOf(url).query)) if (!url.searchParams.has(name)) url.searchParams.set(name, value);
     return url;
+  };
+  /** One request to one host, on that host's terms: its interval, and the name it knows us by. */
+  const send = async (url: URL, request: RequestInit): Promise<Response> => {
+    const rules = rulesOf(url);
+    const headers = new Headers(request.headers);
+    headers.set("User-Agent", rules.userAgent);
+    await takeTurn(url.hostname, rules.intervalMs);
+    return fetcher(url, { ...request, headers });
   };
   return async (input, init) => {
     let url = prepare(new URL(input instanceof Request ? input.url : input instanceof URL ? input.href : input));
     const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined));
-    headers.set("User-Agent", USER_AGENT);
-    if (init?.redirect === "manual") return fetcher(url, { ...init, headers });
+    if (init?.redirect === "manual") return send(url, { ...init, headers });
     let request: RequestInit = { ...init, headers, redirect: "manual" };
     for (let redirects = 0; ; redirects += 1) {
-      const response = await fetcher(url, request);
+      const response = await send(url, request);
       const location = response.status >= 300 && response.status < 400 ? response.headers.get("Location") : null;
       if (!location) return response;
       if (redirects === MAX_REDIRECTS) throw new GatekeeperError(`More than ${MAX_REDIRECTS} redirects from ${url.hostname}`, "upstream-error");

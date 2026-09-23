@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { GatekeeperError } from "#/index";
 import { USER_AGENT, publisherClient } from "#/publisher-client";
 
@@ -72,5 +72,44 @@ describe("a publisher's client", () => {
   it("stops a redirect loop", async () => {
     const { fetcher } = recorder({ "https://dados.gov.pt/a": "https://dados.gov.pt/a" });
     await expect(publisherClient(["dados.gov.pt"], fetcher)("https://dados.gov.pt/a")).rejects.toThrow(/redirects/);
+  });
+
+  it("names us as a host asks, where it asks for another name", async () => {
+    const { seen, fetcher } = recorder();
+    const client = publisherClient([{ host: "slow.example.pt", userAgent: "another name" }, "fast.example.pt"], fetcher);
+    await client("https://slow.example.pt/a");
+    await client("https://fast.example.pt/b");
+    expect(seen.map((request) => request.userAgent)).toEqual(["another name", USER_AGENT]);
+  });
+
+  describe("a host's interval", () => {
+    afterEach(() => vi.useRealTimers());
+
+    it("spaces requests to it, from every client at once, and leaves other hosts alone", async () => {
+      vi.useFakeTimers();
+      const started: Array<[string, number]> = [];
+      const fetcher: typeof fetch = async (input) => {
+        started.push([new URL(input instanceof Request ? input.url : input.toString()).hostname, Date.now()]);
+        return new Response("ok");
+      };
+      const sources = [{ host: "interval.example.pt", minIntervalSeconds: 5 }, "free.example.pt"];
+      const first = publisherClient(sources, fetcher);
+      const second = publisherClient(sources, fetcher);
+      const t0 = Date.now();
+      const requests = Promise.all([
+        first("https://interval.example.pt/1"),
+        second("https://interval.example.pt/2"),
+        first("https://interval.example.pt/3"),
+        second("https://free.example.pt/4"),
+      ]);
+      await vi.advanceTimersByTimeAsync(20_000);
+      await requests;
+      expect(started.map(([host, at]) => [host, at - t0])).toEqual([
+        ["free.example.pt", 0],
+        ["interval.example.pt", 0],
+        ["interval.example.pt", 5_000],
+        ["interval.example.pt", 10_000],
+      ]);
+    });
   });
 });
