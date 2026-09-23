@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { NORMALIZED_PROTOCOL, collectNormalized, resolveFeed, runTransformer, type CollectionRequest, type JsonObject } from "@open-data-pt/gatekeeper";
+import { feedCollection } from "./catalog";
 import {
   MYINFO_FEEDS,
   MYINFO_ORIGIN,
@@ -271,12 +272,9 @@ describe("MYINFO Gatekeeper", () => {
     });
   });
 
-  it("produces a complete normalized stream: header, one frame per row, completion with matching counts", async () => {
+  it("produces a complete normalized stream through the feed's own file: header, one frame per row, completion with matching counts", async () => {
     const { fetcher } = portal(page);
-    const transformer = new MyInfoTransformer();
-    const resolve = (config: Record<string, string>) =>
-      resolveFeed(config, { library: "myinfo", kinds: Object.values(MYINFO_FEEDS), validate: (value) => validateMyInfoFeedConfig(value, OPERATORS) });
-    const resolved = await resolve(NETWORK);
+    const { resolved, collector } = await feedCollection("barraqueiro-oeste-network-feed", { fetcher });
     const request: CollectionRequest = {
       protocol: NORMALIZED_PROTOCOL,
       collectionId: "acq_test",
@@ -288,12 +286,7 @@ describe("MYINFO Gatekeeper", () => {
       deadline: new Date(Date.now() + 60_000).toISOString(),
       observedAt: "2026-09-18T08:00:00.000Z",
     };
-    const result = await collectNormalized(request, {
-      normalizer: { id: transformer.id, version: transformer.version },
-      resolve,
-      source: () => collectMyInfoFeed(resolved.config, undefined, MYINFO_ORIGIN, OPERATORS, fetcher),
-      normalize: { kind: "buffered", transform: (bytes, context) => runTransformer(transformer, bytes, context) },
-    });
+    const result = await collectNormalized(request, collector);
     if (result.kind !== "batch") throw new Error(`Expected a batch, got ${result.kind}`);
     const frames = (await new Response(result.stream).text())
       .trim()

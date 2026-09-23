@@ -1,9 +1,10 @@
-import type { FeedDefinition, SourceConfig } from "#/index";
-import { MEBIBYTE, WEEK, boundedReportingPeriodFeed } from "#/formats/opendatasoft/feeds";
+import { MEBIBYTE, MONTH, WEEK, boundedReportingPeriodPolicy } from "#/formats/opendatasoft/feeds";
 import { PUBLISHER } from "./index";
 
-const HOST = "transparencia.sns.gov.pt";
+/** SNS Transparência's Opendatasoft portal, which every SNS feed reads. */
+export const SNS_HOST = "transparencia.sns.gov.pt";
 
+/** A dataset with one row per hospital and month. */
 export const SNS_MONTHLY_SERIES = {
   name: "SNS monthly series snapshot",
   version: 1,
@@ -15,7 +16,8 @@ export const SNS_MONTHLY_SERIES = {
   },
 } as const;
 
-const SNS_DAILY_SERIES = {
+/** A dataset published day by day, collected twice a day. */
+export const SNS_DAILY_SERIES = {
   name: "SNS daily series snapshot",
   version: 1,
   collection: {
@@ -26,30 +28,11 @@ const SNS_DAILY_SERIES = {
   },
 } as const;
 
-/** An SNS dataset published day by day, collected twice a day. */
-export function snsDaily(slug: string, portalDataset: string, orderBy: string, limit: string, series?: string): FeedDefinition {
-  // Named numeric fields make the dataset a time series; without them it is a table.
-  const config: FeedDefinition["config"] = { source: "opendatasoft", host: HOST, dataset: portalDataset, orderBy, limit };
-  if (series) config.series = series;
-  return {
-    slug,
-    config,
-    policy: SNS_DAILY_SERIES,
-    staleAfterSeconds: 172_800,
-  };
-}
+/** A bounded window of reporting periods, read once a day. */
+export const SNS_DAILY_PERIODS = boundedReportingPeriodPolicy(PUBLISHER.name, 86_400);
 
-/** An SNS dataset with one row per hospital and month. */
-export function snsMonthly(slug: string, portalDataset: string, limit: string): FeedDefinition {
-  return {
-    slug,
-    config: { source: "opendatasoft", host: HOST, dataset: portalDataset, orderBy: "tempo DESC,instituicao", limit },
-    policy: SNS_MONTHLY_SERIES,
-    staleAfterSeconds: 1_209_600,
-  };
-}
+/** A bounded window of reporting periods, read once a week. */
+export const SNS_WEEKLY_PERIODS = boundedReportingPeriodPolicy(PUBLISHER.name, WEEK);
 
-/** An SNS dataset read a bounded window of reporting periods at a time. */
-export function health(slug: string, query: SourceConfig, cadenceSeconds = WEEK): FeedDefinition {
-  return boundedReportingPeriodFeed(slug, HOST, PUBLISHER.name, query, cadenceSeconds);
-}
+/** A bounded window of reporting periods, read once a month. */
+export const SNS_MONTHLY_PERIODS = boundedReportingPeriodPolicy(PUBLISHER.name, MONTH);

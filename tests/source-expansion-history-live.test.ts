@@ -1,23 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { NORMALIZED_PROTOCOL, collectNormalized, libraryConfig, type CollectionRequest, type ExampleFeed, type NormalizedCollector } from "@open-data-pt/gatekeeper";
-import { opendatasoftCollector } from "@open-data-pt/gatekeeper/formats/opendatasoft";
-import { ineCollector } from "../apps/gatekeeper/src/publishers/ine/ine";
+import { NORMALIZED_PROTOCOL, collectNormalized, type CollectionRequest, type ExampleFeed, type NormalizedCollector, type ResolvedFeed } from "@open-data-pt/gatekeeper";
 import { readFrames } from "../apps/kernel/src/frames";
 import { MAX_RECORD_BYTES } from "../apps/kernel/src/blob-budget";
-import { feedsOf } from "./catalog";
+import { feedCollection, feedsOf } from "./catalog";
 
 const selected = process.env.LIVE_HISTORY_EXPANSION?.split(",") ?? [];
 const examples = [...feedsOf("opendatasoft"), ...feedsOf("ine")].filter((example) => selected.includes(example.slug));
 
-function sourceCollector(example: ExampleFeed): NormalizedCollector {
-  const config = libraryConfig(example.config);
-  return example.config.source === "ine"
-    ? ineCollector({ config, apiOrigin: "https://www.ine.pt", fetcher: fetch })
-    : opendatasoftCollector({ config, hosts: example.config.host!, fetcher: fetch });
+/** Every feed runs through its own file. */
+function sourceCollection(example: ExampleFeed): Promise<{ resolved: ResolvedFeed; collector: NormalizedCollector }> {
+  return feedCollection(example.slug, { fetcher: fetch });
 }
 
-async function request(example: ExampleFeed): Promise<CollectionRequest> {
-  const collector = sourceCollector(example);
+async function request(example: ExampleFeed, resolved: ResolvedFeed): Promise<CollectionRequest> {
   const policy = example.policy.collection;
   const outputBytes = policy.maxOutputBytes ?? Math.max(1_048_576, Math.min(16 * 1_048_576, policy.maxBytes * 4));
   const recordBytes = Math.min(policy.maxRecordBytes ?? 256 * 1024, MAX_RECORD_BYTES);
@@ -25,7 +20,7 @@ async function request(example: ExampleFeed): Promise<CollectionRequest> {
     protocol: NORMALIZED_PROTOCOL,
     collectionId: `history-probe-${example.slug}`,
     feed: { id: "probe", slug: example.slug, title: example.title, description: example.description },
-    resolved: await collector.resolve(libraryConfig(example.config)),
+    resolved,
     feedEpoch: "probe",
     mode: { kind: "live" },
     limits: {
@@ -46,8 +41,8 @@ describe.skipIf(examples.length === 0)("new source automatic-history smoke check
   it.each(examples)(
     "walks one older slice of $slug",
     async (example) => {
-      const collector = sourceCollector(example);
-      const live = await request(example);
+      const { resolved, collector } = await sourceCollection(example);
+      const live = await request(example, resolved);
       expect(live.resolved.history, "Only explicitly history-capable feeds should be selected").toBeDefined();
       let oldest: string | undefined;
       const first = await collectNormalized(live, collector);

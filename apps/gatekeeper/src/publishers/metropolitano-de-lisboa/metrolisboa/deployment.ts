@@ -1,5 +1,5 @@
 import type { LibraryDeployment } from "#/index";
-import { metrolisboaCollector } from "./collector";
+import { resolveMetrolisboaFeed, type MetrolisboaContext } from "./collector";
 import { METRO_FEEDS } from "./metrolisboa";
 
 interface MetrolisboaEnv {
@@ -10,7 +10,7 @@ interface MetrolisboaEnv {
   readonly ML_CONSUMER_SECRET?: string;
 }
 
-export const METROLISBOA_DEPLOYMENT: LibraryDeployment<MetrolisboaEnv> = {
+export const METROLISBOA_DEPLOYMENT: LibraryDeployment<MetrolisboaEnv, MetrolisboaContext> = {
   source: "metrolisboa",
   name: "Metro Lisboa",
   // Where the EstadoServicoML gateway answers: our own proxy hostname. Metro's port 8243 sends an
@@ -21,12 +21,7 @@ export const METROLISBOA_DEPLOYMENT: LibraryDeployment<MetrolisboaEnv> = {
   secrets: ["ML_CONSUMER_KEY", "ML_CONSUMER_SECRET"],
   library: (env) => ({
     kinds: Object.values(METRO_FEEDS),
-    collector: (config) =>
-      metrolisboaCollector({
-        config,
-        apiOrigin: env.METROLISBOA_API_ORIGIN,
-        credentials: { key: env.ML_CONSUMER_KEY, secret: env.ML_CONSUMER_SECRET },
-        fetcher: (input, init) => fetch(input, init),
-      }),
+    resolve: resolveMetrolisboaFeed,
+    context: { apiOrigin: env.METROLISBOA_API_ORIGIN, credentials: { key: env.ML_CONSUMER_KEY, secret: env.ML_CONSUMER_SECRET } },
   }),
 };

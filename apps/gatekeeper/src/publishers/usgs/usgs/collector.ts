@@ -1,34 +1,18 @@
-import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
-import { USGS_FEEDS, collectUsgsFeed, validateUsgsFeedConfig } from "./usgs";
+import { resolveFeed, type ResolvedFeed, type SourceConfig } from "#/index";
+import { USGS_FEEDS, validateUsgsFeedConfig } from "./usgs";
 import { UsgsTransformer } from "./transform";
 
-export interface UsgsCollectorOptions {
-  config: SourceConfig;
+/** What a USGS feed's functions are handed when they run: the one origin they may read. */
+export interface UsgsContext {
   apiOrigin: string;
-  fetcher: typeof fetch;
-  now?: () => Date;
 }
 
-const transformer = new UsgsTransformer();
+/** The translator from the USGS catalog's GeoJSON into earthquake records; every USGS feed uses it. */
+export const USGS_TRANSFORMER = new UsgsTransformer();
+
+/** The normalizer a USGS feed's collection is stamped with: the translator's name and version. */
+export const USGS_NORMALIZER = { id: USGS_TRANSFORMER.id, version: USGS_TRANSFORMER.version };
 
 export function resolveUsgsFeed(config: SourceConfig): Promise<ResolvedFeed> {
   return resolveFeed(config, { library: "usgs", kinds: USGS_FEEDS, validate: validateUsgsFeedConfig });
-}
-
-export function usgsCollector(options: UsgsCollectorOptions): NormalizedCollector {
-  return {
-    normalizer: { id: transformer.id, version: transformer.version },
-    resolve: resolveUsgsFeed,
-    source: (state, mode, signal) => {
-      if (mode.kind === "history") throw new Error("USGS history is not exposed by this rolling-window feed");
-      return collectUsgsFeed(
-        options.config,
-        sourceValidator(state),
-        options.apiOrigin,
-        (input, init) => options.fetcher(input, { ...init, signal }),
-        options.now?.() ?? new Date(),
-      );
-    },
-    normalize: { kind: "buffered", transform: (bytes, context) => runTransformer(transformer, bytes, context) },
-  };
 }

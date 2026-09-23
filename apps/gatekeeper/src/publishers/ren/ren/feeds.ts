@@ -1,14 +1,23 @@
-import type { FeedDefinition } from "#/catalog/define";
-import type { RenServiceName } from "./ren";
+/** REN completes an electricity quarter-hour only twice an hour, so a faster cadence can never see a new point. */
+export const REN_ELECTRICITY_POLICY = {
+  name: "REN intraday chart data",
+  version: 3,
+  collection: {
+    cadenceSeconds: 1_800,
+    timeoutSeconds: 30,
+    maxBytes: 2 * 1024 * 1024,
+    historyMode: "changes",
+  },
+} as const;
 
-/** One REN chart service, read at its dataset's policy and marked stale after an hour. */
-export function renChartFeed(service: RenServiceName, policy: FeedDefinition["policy"], title: string, description: string): FeedDefinition {
-  return {
-    slug: `ren-${service}-feed`,
-    title,
-    description,
-    config: { source: "ren", service },
-    policy,
-    staleAfterSeconds: 3600,
-  };
-}
+/** The gas charts gain one point an hour. */
+export const REN_GAS_POLICY = {
+  name: "REN gas hourly chart data",
+  version: 1,
+  collection: {
+    cadenceSeconds: 3_600,
+    timeoutSeconds: 30,
+    maxBytes: 2 * 1024 * 1024,
+    historyMode: "changes",
+  },
+} as const;

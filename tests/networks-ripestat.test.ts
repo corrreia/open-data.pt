@@ -1,12 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { collectNormalized, libraryConfig, type JsonObject, type SourceConfig } from "../apps/gatekeeper/src/index";
+import { collectNormalized, feedCollector, libraryConfig, type JsonObject, type NormalizedCollector, type SourceConfig } from "../apps/gatekeeper/src/index";
+import { RUNNABLE } from "@open-data-pt/gatekeeper/catalog";
 import { collectRipestatFeed, RIPESTAT_MAX_BYTES, RIPESTAT_ORIGIN, validateRipestatFeedConfig } from "../apps/gatekeeper/src/publishers/ripe-ncc/ripestat/ripestat";
 import { RipestatTransformer } from "../apps/gatekeeper/src/publishers/ripe-ncc/ripestat/transform";
-import { ripestatCollector } from "../apps/gatekeeper/src/publishers/ripe-ncc/ripestat/collector";
 import { networkBytes, networkContext, networkFixture, networkFrames, networkRequest, networkRows, object } from "./networks-support";
-import { datasetOf, feedsOf } from "./catalog";
+import { carriedLibraries, datasetOf, feedsOf } from "./catalog";
 
 const STATUS = { feed: "routing-status", asn: "64496" };
+
+/** A routing-status feed file, run for an AS no feed reads. */
+function routingStatus(fetcher: typeof fetch): NormalizedCollector {
+  const feed = RUNNABLE.get("ripe-meo-as3243-routing-feed");
+  if (!feed) throw new Error("No feed file reads a routing status");
+  return feedCollector(feed, { ...STATUS, source: "ripestat" }, carriedLibraries("ripestat"), { fetcher });
+}
 const RESOURCES = { feed: "country-resources", country: "PT" };
 const ROUTING = { feed: "country-routing", country: "PT", days: "3" };
 const NOW = new Date("2026-09-16T12:00:00Z");
@@ -50,7 +57,7 @@ describe("RIPEstat capabilities and boundaries", () => {
     const asns = feedsOf("ripestat")
       .filter((example) => example.config.asn)
       .map((example) => example.config.asn);
-    expect(asns).toEqual(["3243", "2860", "12353", "20879", "15457"]);
+    expect(asns.toSorted()).toEqual(["12353", "15457", "20879", "2860", "3243"]);
     expect(asns).not.toContain("12542"); // This is NOS, not the research brief's proposed NOWO.
     for (const example of feedsOf("ripestat")) {
       expect(() => validateRipestatFeedConfig(libraryConfig(example.config))).not.toThrow();
@@ -231,12 +238,12 @@ describe("RIPEstat normalized data", () => {
   });
 
   it("emits protocol-v4 frames and converts HTTP-200 API failures to typed failures", async () => {
-    const collector = ripestatCollector({ config: STATUS, apiOrigin: RIPESTAT_ORIGIN, fetcher: async () => Response.json(networkFixture("ripestat-status")) });
-    const request = await networkRequest(collector, STATUS);
+    const collector = routingStatus(async () => Response.json(networkFixture("ripestat-status")));
+    const request = await networkRequest(collector, { ...STATUS, source: "ripestat" });
     const frames = await networkFrames(await collectNormalized(request, collector));
     expect(frames.map((frame) => frame.type)).toEqual(["header", "record", "complete"]);
     expect(frames.at(-1)).toMatchObject({ counts: { records: 1, points: 0 }, quality: { acceptedRecords: 1, rejectedRecords: 0 } });
-    const failed = ripestatCollector({ config: STATUS, apiOrigin: RIPESTAT_ORIGIN, fetcher: async () => Response.json({ status: "error", status_code: 500, data: {} }) });
-    expect(await collectNormalized(await networkRequest(failed, STATUS), failed)).toMatchObject({ kind: "failure", code: "invalid-response" });
+    const failed = routingStatus(async () => Response.json({ status: "error", status_code: 500, data: {} }));
+    expect(await collectNormalized(await networkRequest(failed, { ...STATUS, source: "ripestat" }), failed)).toMatchObject({ kind: "failure", code: "invalid-response" });
   });
 });

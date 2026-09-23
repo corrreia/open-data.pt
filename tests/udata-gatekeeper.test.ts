@@ -1,4 +1,4 @@
-import { publisherInputs } from "@open-data-pt/gatekeeper/catalog";
+import { RUNNABLE } from "@open-data-pt/gatekeeper/catalog";
 import { describe, expect, it, vi } from "vitest";
 import {
   GatekeeperError,
@@ -9,10 +9,12 @@ import {
   type CollectionRequest,
   type CollectionResult,
   type JsonObject,
+  feedCollector,
   libraryConfig,
+  resolveLibraryFeed,
 } from "@open-data-pt/gatekeeper";
-import { UdataSource, chooseTransformer, resolveUdataFeed, udataCollector, validateUdataFeedConfig } from "../apps/gatekeeper/src/formats/udata";
-import { feedsOf } from "./catalog";
+import { UdataSource, chooseTransformer, resolveUdataFeed, validateUdataFeedConfig } from "../apps/gatekeeper/src/formats/udata";
+import { carriedLibraries, feedsOf } from "./catalog";
 
 const payload = {
   id: "dataset-1",
@@ -41,10 +43,13 @@ const config = {
 };
 
 const UDATA_HOSTS = "dados.gov.pt";
+const LIBRARIES = carriedLibraries("udata");
+/** A tabular feed's own functions, run here against a configuration no feed has. */
+const TABULAR_FEED = RUNNABLE.get("justice-facilities-feed")!;
 
-/** One collection through the library's own collector, with the test's fetch. */
+/** One collection through a tabular feed's own functions, with the test's fetch. */
 function collect(fetcher: typeof fetch, request: CollectionRequest): Promise<CollectionResult> {
-  return collectNormalized(request, udataCollector({ config, hosts: UDATA_HOSTS, fetcher }));
+  return collectNormalized(request, feedCollector(TABULAR_FEED, { ...config, source: "udata" }, LIBRARIES, { fetcher }));
 }
 
 async function request(overrides: Partial<CollectionRequest> = {}): Promise<CollectionRequest> {
@@ -52,7 +57,7 @@ async function request(overrides: Partial<CollectionRequest> = {}): Promise<Coll
     protocol: NORMALIZED_PROTOCOL,
     collectionId: "batch_1",
     feed: { id: "feed_1", slug: "population-feed", title: "Population", description: "Population by municipality" },
-    resolved: await resolveUdataFeed(config, new Set([UDATA_HOSTS])),
+    resolved: await resolveLibraryFeed({ ...config, source: "udata" }, LIBRARIES),
     feedEpoch: "epoch-1",
     mode: { kind: "live" },
     limits: { sourceBytes: 1024 * 1024, outputBytes: 4 * 1024 * 1024, frameBytes: 1024 * 1024, recordBytes: 256 * 1024, records: 1_000, products: 4 },
@@ -207,7 +212,8 @@ describe("UdataSource", () => {
     for (const example of feedsOf("udata")) {
       const validated = validateUdataFeedConfig(libraryConfig(example.config), new Set([UDATA_HOSTS]));
       expect(validated.baseUrl, example.slug).toBe("https://dados.gov.pt");
-      expect(() => chooseTransformer(validated, publisherInputs("udata").transformers), example.slug).not.toThrow();
+      // A feed that names its publisher's own translator calls it from its file; every other one reads as a table.
+      if (!validated.transformer) expect(() => chooseTransformer(validated), example.slug).not.toThrow();
     }
   });
 });
@@ -250,7 +256,7 @@ describe("uData collection", () => {
       .mockResolvedValueOnce(Response.json(payload))
       .mockResolvedValueOnce(new Response(null, { status: 304 }));
     const base = await request();
-    const selected = chooseTransformer(config, publisherInputs("udata").transformers);
+    const selected = chooseTransformer(config);
     const result = await collect(fetcher, {
       ...base,
       checkpoint: {

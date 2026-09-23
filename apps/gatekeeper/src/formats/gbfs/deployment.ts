@@ -1,13 +1,17 @@
 import type { LibraryDeployment } from "#/index";
-import { gbfsCollector } from "./collector";
+import { resolveGbfsFeed, type GbfsContext } from "./collector";
 import { GBFS_FEEDS } from "./gbfs";
 
-export const GBFS_DEPLOYMENT: LibraryDeployment<object> = {
+export const GBFS_DEPLOYMENT: LibraryDeployment<object, GbfsContext> = {
   source: "gbfs",
   name: "GBFS bike-share feeds",
   vars: {},
-  library: (_env, publishers) => ({
-    kinds: Object.values(GBFS_FEEDS),
-    collector: (config) => gbfsCollector({ config, hosts: publishers.hosts.join(","), fetcher: (input, init) => fetch(input, init) }),
-  }),
+  library: (_env, publishers) => {
+    const hosts = publishers.hosts.join(",");
+    return {
+      kinds: Object.values(GBFS_FEEDS),
+      resolve: (config) => resolveGbfsFeed(config, hosts),
+      context: { hosts },
+    };
+  },
 };

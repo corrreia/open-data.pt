@@ -1,14 +1,17 @@
-import { allowedHosts, resolveFeed, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
-import { OGC_FEEDS, collectOgcFeed, validateOgcFeedConfig } from "./ogc";
+import { resolveFeed, type ResolvedFeed, type SourceConfig } from "#/index";
+import { OGC_FEEDS, validateOgcFeedConfig } from "./ogc";
 import { OgcTransformer } from "./transform";
 
-/** What a Worker hands this library: the feed's configuration, its allowlist, and the fetch it may use. */
-export interface OgcCollectorOptions {
-  config: SourceConfig;
-  /** The hosts its publishers' feeds name, comma-separated: the only ones it may fetch. */
-  hosts: string;
-  fetcher: typeof fetch;
+/** What an OGC API Features feed's functions are handed when they run: the hosts its publishers' feeds name, the only ones it may fetch. */
+export interface OgcContext {
+  hosts: ReadonlySet<string>;
 }
+
+/** The streaming translator from a collection's pages into one table of features; every OGC feed uses it. */
+export const OGC_TRANSFORMER = new OgcTransformer();
+
+/** The normalizer an OGC feed's collection is stamped with: the translator's name and version. */
+export const OGC_NORMALIZER = { id: OGC_TRANSFORMER.id, version: OGC_TRANSFORMER.version };
 
 export function resolveOgcFeed(config: SourceConfig, hosts: ReadonlySet<string>): Promise<ResolvedFeed> {
   return resolveFeed(config, {
@@ -28,22 +31,4 @@ export function resolveOgcFeed(config: SourceConfig, hosts: ReadonlySet<string>)
       return identity;
     },
   });
-}
-
-const transformer = new OgcTransformer();
-
-/** The whole OGC API Features collection: typed source fetch plus the streaming feature normalizer. */
-export function ogcCollector(options: OgcCollectorOptions): NormalizedCollector {
-  const hosts = allowedHosts(options.hosts);
-  return {
-    normalizer: { id: transformer.id, version: transformer.version },
-    resolve: (value) => resolveOgcFeed(value, hosts),
-    source: (state, mode, signal) => {
-      // Neither service publishes anything but its current release: there is no
-      // older slice to walk, so history is never claimed and never attempted.
-      if (mode.kind === "history") throw new Error("OGC API Features history is not supported");
-      return collectOgcFeed(options.config, state, hosts, (input, init) => options.fetcher(input, { ...init, signal }));
-    },
-    normalize: { kind: "streaming", transform: (body, context) => transformer.transform(body, context) },
-  };
 }

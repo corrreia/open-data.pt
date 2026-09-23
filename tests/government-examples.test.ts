@@ -1,8 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { type ExampleFeed, type NormalizedRow, type TransformContext } from "@open-data-pt/contract";
-import { udataCollector } from "@open-data-pt/gatekeeper/formats/udata";
-import { INSTALLED, datasetOf, feedsOf } from "./catalog";
+import { INSTALLED, datasetOf, feedCollection, feedsOf } from "./catalog";
 
 /** Topics are catalog tags now, so these are the installed feeds carrying each tag, whatever Worker reads them. */
 const tagged = (topic: string): ExampleFeed[] => INSTALLED.filter((example) => datasetOf(example).topics.includes(topic));
@@ -13,9 +12,7 @@ const government = feedsOf("udata").filter((example) => datasetOf(example).topic
 
 async function normalized(example: ExampleFeed, observedAt: string) {
   const text = readFileSync(new URL(example.config.format === "csv" ? "./fixtures/cada-opinions.csv" : "./fixtures/government-registry-sample.json", import.meta.url), "utf8");
-  const collector = udataCollector({
-    config: example.config,
-    hosts: "dados.gov.pt",
+  const { resolved, collector } = await feedCollection(example.slug, {
     fetcher: async (input) => {
       const url = new URL(input.toString());
       expect(url.origin).toBe("https://dados.gov.pt");
@@ -25,7 +22,6 @@ async function normalized(example: ExampleFeed, observedAt: string) {
       );
     },
   });
-  const resolved = await collector.resolve(example.config);
   const source = await collector.source(undefined, { kind: "live" }, new AbortController().signal);
   if (source.kind !== "body" || collector.normalize.kind !== "streaming") throw new Error("Expected streaming table");
   const context: TransformContext = {

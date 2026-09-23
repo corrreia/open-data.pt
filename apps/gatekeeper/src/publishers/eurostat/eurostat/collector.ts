@@ -1,29 +1,14 @@
-import { resolveFeed, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
-import { EUROSTAT_FEEDS, collectEurostatDataset, collectEurostatDatasetHistory, validateEurostatFeedConfig } from "./eurostat";
-import { transformEurostatDataset } from "./transform";
+import { resolveFeed, type ResolvedFeed, type SourceConfig } from "#/index";
+import { EUROSTAT_FEEDS, validateEurostatFeedConfig } from "./eurostat";
 
-/** What a Worker hands this library: the feed's configuration, its API origin, and the fetch it may use. */
-export interface EurostatCollectorOptions {
-  config: SourceConfig;
-  /** `EUROSTAT_API_ORIGIN`. */
+/** What a Eurostat feed's functions are handed when they run: the one origin its API answers on. */
+export interface EurostatContext {
   apiOrigin: string;
-  fetcher: typeof fetch;
 }
 
+/** The normalizer a Eurostat feed's collection is stamped with. */
 export const EUROSTAT_NORMALIZER = { id: "eurostat-jsonstat-dataset", version: "3" } as const;
 
 export function resolveEurostatFeed(config: SourceConfig): Promise<ResolvedFeed> {
   return resolveFeed(config, { library: "eurostat", kinds: EUROSTAT_FEEDS, validate: validateEurostatFeedConfig });
-}
-
-export function eurostatCollector(options: EurostatCollectorOptions): NormalizedCollector {
-  return {
-    normalizer: EUROSTAT_NORMALIZER,
-    resolve: (value) => resolveEurostatFeed(value),
-    source: (state, mode, signal) =>
-      mode.kind === "history"
-        ? collectEurostatDatasetHistory(options.config, mode.cursor, options.apiOrigin, (input, init) => options.fetcher(input, { ...init, signal }))
-        : collectEurostatDataset(options.config, sourceValidator(state), options.apiOrigin, (input, init) => options.fetcher(input, { ...init, signal })),
-    normalize: { kind: "buffered", transform: (bytes, context) => transformEurostatDataset(bytes, context) },
-  };
 }

@@ -1,27 +1,18 @@
-import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
-import { ANEPC_FEEDS, collectAnepcFeed, validateAnepcFeedConfig } from "./anepc";
+import { resolveFeed, type ResolvedFeed, type SourceConfig } from "#/index";
+import { ANEPC_FEEDS, validateAnepcFeedConfig } from "./anepc";
 import { AnepcTransformer } from "./transform";
 
-export interface AnepcCollectorOptions {
-  config: SourceConfig;
+/** What an ANEPC feed's functions are handed when they run: the one origin its service answers on. */
+export interface AnepcContext {
   apiOrigin: string;
-  fetcher: typeof fetch;
 }
 
-const transformer = new AnepcTransformer();
+/** The translator from ANEPC's occurrence list into a table of active occurrences. */
+export const ANEPC_TRANSFORMER = new AnepcTransformer();
+
+/** The normalizer an ANEPC feed's collection is stamped with: the translator's name and version. */
+export const ANEPC_NORMALIZER = { id: ANEPC_TRANSFORMER.id, version: ANEPC_TRANSFORMER.version };
 
 export function resolveAnepcFeed(config: SourceConfig): Promise<ResolvedFeed> {
   return resolveFeed(config, { library: "anepc", kinds: ANEPC_FEEDS, validate: validateAnepcFeedConfig });
-}
-
-export function anepcCollector(options: AnepcCollectorOptions): NormalizedCollector {
-  return {
-    normalizer: { id: transformer.id, version: transformer.version },
-    resolve: resolveAnepcFeed,
-    source: (state, mode, signal) => {
-      if (mode.kind === "history") throw new Error("ANEPC exposes only its active snapshot");
-      return collectAnepcFeed(options.config, sourceValidator(state), options.apiOrigin, (input, init) => options.fetcher(input, { ...init, signal }));
-    },
-    normalize: { kind: "buffered", transform: (bytes, context) => runTransformer(transformer, bytes, context) },
-  };
 }

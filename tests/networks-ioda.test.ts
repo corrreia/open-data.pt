@@ -2,9 +2,8 @@ import { describe, expect, it } from "vitest";
 import { collectNormalized, libraryConfig, type JsonObject, type SourceConfig } from "../apps/gatekeeper/src/index";
 import { IODA_HOST, IODA_MAX_BYTES, collectIodaFeed, iodaUrl, validateIodaFeedConfig } from "../apps/gatekeeper/src/publishers/ioda/ioda/ioda";
 import { IodaTransformer } from "../apps/gatekeeper/src/publishers/ioda/ioda/transform";
-import { iodaCollector } from "../apps/gatekeeper/src/publishers/ioda/ioda/collector";
 import { networkContext, networkFixture, networkFrames, networkRequest, object } from "./networks-support";
-import { datasetOf, feedsOf } from "./catalog";
+import { datasetOf, feedCollection, feedsOf } from "./catalog";
 
 const EVENTS: SourceConfig = { feed: "outage-events", entityType: "country", entityCode: "PT", days: "7" };
 const ALERTS: SourceConfig = { feed: "outage-alerts", entityType: "country", entityCode: "PT", days: "7" };
@@ -198,7 +197,11 @@ describe("IODA products", () => {
 describe("IODA examples", () => {
   it("ships eight Portugal-scoped examples with cadences its own clocks justify", () => {
     expect(feedsOf("ioda")).toHaveLength(8);
-    expect(feedsOf("ioda").map((example) => example.config.entityCode)).toEqual(["PT", "PT", "3243", "2860", "12353", "20879", "15457", "PT"]);
+    expect(
+      feedsOf("ioda")
+        .map((example) => example.config.entityCode)
+        .toSorted(),
+    ).toEqual(["12353", "15457", "20879", "2860", "3243", "PT", "PT", "PT"]);
     for (const example of feedsOf("ioda")) {
       expect(() => validateIodaFeedConfig(libraryConfig(example.config))).not.toThrow();
       expect(datasetOf(example).publisher).toBe("ioda");
@@ -210,8 +213,11 @@ describe("IODA examples", () => {
   });
 
   it("frames a whole collection the way the kernel reads it", async () => {
-    const collector = iodaCollector({ config: ASN_SIGNALS, hosts: IODA_HOST, fetcher: async () => Response.json(networkFixture("ioda-signals-asn")), now: () => NOW });
-    const request = await networkRequest(collector, ASN_SIGNALS);
+    const { resolved, collector } = await feedCollection("ioda-meo-as3243-internet-signals-feed", {
+      fetcher: async () => Response.json(networkFixture("ioda-signals-asn")),
+      now: () => NOW,
+    });
+    const request = await networkRequest(collector, resolved.config);
     const frames = await networkFrames(await collectNormalized(request, collector));
     const header = frames[0];
     if (header?.type !== "header") throw new Error("No header");

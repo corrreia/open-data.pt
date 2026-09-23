@@ -1,8 +1,8 @@
-import type { FeedDefinition, SourceConfig } from "#/index";
-import { MEBIBYTE, WEEK, boundedReportingPeriodFeed } from "#/formats/opendatasoft/feeds";
+import { MEBIBYTE, MONTH, WEEK, boundedReportingPeriodPolicy } from "#/formats/opendatasoft/feeds";
 import { PUBLISHER } from "./index";
 
-const HOST = "e-redes.opendatasoft.com";
+/** E-REDES's Opendatasoft portal, which every E-REDES feed reads. */
+export const E_REDES_HOST = "e-redes.opendatasoft.com";
 
 export const E_REDES_PERIODIC_SERIES = {
   name: "E-REDES periodic series subset",
@@ -26,28 +26,8 @@ export const E_REDES_QUARTER_HOUR_SERIES = {
   },
 } as const;
 
-/** The part of an E-REDES feed configuration that differs between datasets. */
-interface ERedesQuery {
-  /** The dataset id on the E-REDES portal. */
-  portalDataset: string;
-  orderBy: string;
-  limit: string;
-  where?: string;
-  /** Numeric fields to publish as series; the dataset is then not published as a table. */
-  series?: string;
-}
+/** A bounded window of reporting periods, read once a week. */
+export const E_REDES_WEEKLY_PERIODS = boundedReportingPeriodPolicy(PUBLISHER.name, WEEK);
 
-export function eRedes(slug: string, query: ERedesQuery, policy: FeedDefinition["policy"], staleAfterSeconds: number): FeedDefinition {
-  const { portalDataset, ...rest } = query;
-  return {
-    slug,
-    config: { source: "opendatasoft", host: HOST, dataset: portalDataset, ...rest },
-    policy,
-    staleAfterSeconds,
-  };
-}
-
-/** An E-REDES dataset read a bounded window of reporting periods at a time. */
-export function energy(slug: string, query: SourceConfig, cadenceSeconds = WEEK): FeedDefinition {
-  return boundedReportingPeriodFeed(slug, HOST, PUBLISHER.name, query, cadenceSeconds);
-}
+/** A bounded window of reporting periods, read once a month. */
+export const E_REDES_MONTHLY_PERIODS = boundedReportingPeriodPolicy(PUBLISHER.name, MONTH);

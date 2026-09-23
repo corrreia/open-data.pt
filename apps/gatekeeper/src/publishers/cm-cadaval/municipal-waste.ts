@@ -140,3 +140,6 @@ function slug(value: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 }
+
+/** Cadaval's waste collection file needs its own translator; its feed file calls it. */
+export const MUNICIPAL_WASTE_TRANSFORMER = new MunicipalWasteTransformer();

@@ -1,31 +1,23 @@
-import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
-import { SNIT_FEEDS, collectSnitFeed, validateSnitFeedConfig } from "./snit";
+import { resolveFeed, type ResolvedFeed, type SourceConfig } from "#/index";
+import { SNIT_FEEDS, validateSnitFeedConfig } from "./snit";
 import { SnitTransformer } from "./transform";
 
-/** What the Worker hands this library: the feed's configuration, the one origin it may read, and its fetch. */
-export interface SnitCollectorOptions {
-  config: SourceConfig;
+/**
+ * What a SNIT feed's functions are handed when they run: the one origin they
+ * may read. The register answers with what is in force today and nothing else;
+ * the history it does hold — the acts behind each instrument — comes back in
+ * every answer, so there is no older slice to walk and no feed has a backfill.
+ */
+export interface SnitContext {
   apiOrigin: string;
-  fetcher: typeof fetch;
 }
 
-const transformer = new SnitTransformer();
+/** The translator from the register's answer into instruments and acts; every SNIT feed uses it. */
+export const SNIT_TRANSFORMER = new SnitTransformer();
+
+/** The normalizer a SNIT feed's collection is stamped with: the translator's name and version. */
+export const SNIT_NORMALIZER = { id: SNIT_TRANSFORMER.id, version: SNIT_TRANSFORMER.version };
 
 export function resolveSnitFeed(config: SourceConfig): Promise<ResolvedFeed> {
   return resolveFeed(config, { library: "snit", kinds: SNIT_FEEDS, validate: validateSnitFeedConfig });
-}
-
-export function snitCollector(options: SnitCollectorOptions): NormalizedCollector {
-  return {
-    normalizer: { id: transformer.id, version: transformer.version },
-    resolve: resolveSnitFeed,
-    source: (state, mode, signal) => {
-      // The register answers with what is in force today and nothing else; the
-      // history it does hold — the acts behind each instrument — comes back in
-      // every answer, so there is no older slice to walk.
-      if (mode.kind === "history") throw new Error("SNIT publishes no older edition of its register");
-      return collectSnitFeed(options.config, sourceValidator(state), options.apiOrigin, (input, init) => options.fetcher(input, { ...init, signal }));
-    },
-    normalize: { kind: "buffered", transform: (bytes, context) => runTransformer(transformer, bytes, context) },
-  };
 }

@@ -1,15 +1,19 @@
+import { RUNNABLE, publisherInputs } from "@open-data-pt/gatekeeper/catalog";
 import { describe, expect, it, vi } from "vitest";
 import {
   GatekeeperError,
   NORMALIZED_PROTOCOL,
+  buildLibrary,
   collectNormalized,
+  feedCollector,
+  type GatekeeperLibraries,
   type CollectionRequest,
   type CollectionResult,
   type JsonObject,
   type SourceFetch,
 } from "@open-data-pt/gatekeeper";
 import { CKAN_LIMITS, CkanSource } from "../apps/gatekeeper/src/formats/ckan/ckan";
-import { ckanCollector } from "../apps/gatekeeper/src/formats/ckan";
+import { CKAN_DEPLOYMENT } from "../apps/gatekeeper/src/formats/ckan";
 
 const RESOURCE_ID = "418c7837-95ee-4943-be22-3d9d09e5b4e9";
 const RESOURCE_URL = "https://opendata.porto.digital/dataset/example/resource/418c7837-95ee-4943-be22-3d9d09e5b4e9/download/data.csv";
@@ -40,6 +44,10 @@ function packageResponse(overrides: JsonObject = {}, packageOverrides: JsonObjec
 }
 
 const CKAN_HOSTS = "opendata.porto.digital";
+
+/** The CKAN library as the Worker builds it, allowed the test portal's host, and a feed file whose functions run a configuration no feed has. */
+const LIBRARIES: GatekeeperLibraries = new Map([["ckan", buildLibrary(CKAN_DEPLOYMENT, {}, { ...publisherInputs("ckan"), hosts: [CKAN_HOSTS] })]]);
+const PARKING = RUNNABLE.get("porto-municipal-parking-feed")!;
 
 function source(fetcher: typeof fetch): CkanSource {
   return new CkanSource(new Set([CKAN_HOSTS]), fetcher);
@@ -328,8 +336,8 @@ describe("CKAN Gatekeeper", () => {
 
 describe("CKAN collection through the shared collector", () => {
   async function collect(fetcher: typeof fetch, checkpointEtag?: string): Promise<CollectionResult> {
-    const collector = ckanCollector({ config, hosts: CKAN_HOSTS, fetcher });
-    const resolved = await collector.resolve(config);
+    const collector = feedCollector(PARKING, { ...config, source: "ckan" }, LIBRARIES, { fetcher });
+    const resolved = await collector.resolve({ ...config, source: "ckan" });
     const request: CollectionRequest = {
       protocol: NORMALIZED_PROTOCOL,
       collectionId: "collection_1",

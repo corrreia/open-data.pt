@@ -10,5 +10,5 @@ export {
   nasaPowerUrl,
   validateNasaPowerFeedConfig,
 } from "./nasapower";
-export { nasaPowerCollector, resolveNasaPowerFeed, type NasaPowerCollectorOptions } from "./collector";
+export { NASA_POWER_NORMALIZER, NASA_POWER_TRANSFORMER, resolveNasaPowerFeed, type NasaPowerContext } from "./collector";
 export { NasaPowerTransformer } from "./transform";

@@ -1,5 +1,15 @@
-import { buildLibrary, type DatasetDefinition, type ExampleFeed, type GatekeeperLibraries, type Library } from "@open-data-pt/gatekeeper";
-import { DATASETS, FEEDS, datasetEnabled, publisherInputs } from "@open-data-pt/gatekeeper/catalog";
+import {
+  buildLibrary,
+  feedCollector,
+  resolveLibraryFeed,
+  type ExampleFeed,
+  type FeedRuntime,
+  type GatekeeperLibraries,
+  type Library,
+  type NormalizedCollector,
+  type ResolvedFeed,
+} from "@open-data-pt/gatekeeper";
+import { DATASETS, FEEDS, RUNNABLE, datasetEnabled, publisherInputs, type CatalogEntry } from "@open-data-pt/gatekeeper/catalog";
 import { LIBRARIES, library } from "@open-data-pt/gatekeeper/libraries";
 
 /** Every library the Gatekeeper Worker carries, as `libraries.ts` lists them. */
@@ -22,8 +32,26 @@ export function carriedLibraries(name: string, extra: Record<string, string | un
 }
 
 /** What the publisher folders say about the dataset a feed reads part of: its publisher, its terms, its topics. */
-export function datasetOf(feed: ExampleFeed): DatasetDefinition & { publisher: string } {
+export function datasetOf(feed: ExampleFeed): CatalogEntry {
   const dataset = DATASETS.get(feed.dataset);
   if (!dataset) throw new Error(`${feed.slug} names an unknown dataset: ${feed.dataset}`);
   return dataset;
+}
+
+/**
+ * One feed's collection, run the way the Worker runs it — its identity worked
+ * out by its library, then its own functions — against a test's fetcher, so no
+ * test reaches the network.
+ */
+export async function feedCollection(
+  slug: string,
+  runtime: FeedRuntime = {},
+  extra: Record<string, string | undefined> = {},
+): Promise<{ resolved: ResolvedFeed; collector: NormalizedCollector }> {
+  const feed = RUNNABLE.get(slug);
+  if (!feed) throw new Error(`No feed file defines ${slug}`);
+  const source = feed.config.source ?? "";
+  const libraries = carriedLibraries(source, extra);
+  const resolved = await resolveLibraryFeed(feed.config, libraries);
+  return { resolved, collector: feedCollector(feed, resolved.config, libraries, runtime) };
 }

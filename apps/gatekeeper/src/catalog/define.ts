@@ -1,6 +1,6 @@
-import type { ExampleFeed } from "@open-data-pt/contract";
+import type { ExampleFeed, SourceConfig } from "@open-data-pt/contract";
 
-import type { StreamingTransformer } from "#/library";
+import type { FeedFunctions, LibraryDeployment, RunnableFeed } from "#/library";
 
 import type { Licence } from "./licences";
 import type { Topic } from "./topics";
@@ -10,9 +10,10 @@ import type { Topic } from "./topics";
  * `src/publishers/`, named for their key: its `index.ts` exports `PUBLISHER`,
  * its logo sits beside it as `logo.svg` or `logo.png`, the code that reads their
  * own API (when they have one) is a library folder beside that, and every
- * dataset of theirs is one file under `datasets/`, exporting `DATASET`. A
- * publisher whose data a shared format cannot read as it is brings its own
- * translator in `transformers.ts`, exporting `TRANSFORMERS`.
+ * dataset of theirs is a folder under `datasets/`: its `index.ts` exports
+ * `DATASET`, and every other file in it is one feed, exporting `FEED`.
+ * A publisher whose data a shared format cannot read as it is keeps its own
+ * translator in their folder, and their feed file calls it.
  *
  * Nothing here repeats what the folders already say: a publisher's key is its
  * folder's name, a dataset's key is its publisher's key and its file's name,
@@ -36,8 +37,30 @@ export interface PublisherDefinition {
   enabled?: boolean;
 }
 
-/** One way a part of a dataset is read: which library, what configuration, how often. */
-export type FeedDefinition = Omit<ExampleFeed, "dataset">;
+/** How often a feed runs, how long it may take, how much it may read, and whether its changes are history. */
+export type FeedPolicy = ExampleFeed["policy"];
+
+/**
+ * One feed, in its own file beside its dataset's `index.ts`: what it is, how
+ * often it runs, and the functions that read it — `fetch`, `backfill` when the
+ * source keeps history, and `transform` — each calling whatever shared code it
+ * needs. `config` is what the feed's identity and history hang on: it never
+ * changes once merged. It carries no `source`; `defineFeed` takes the library.
+ */
+export interface FeedDefinition<C, M extends object = never> extends Omit<ExampleFeed, "dataset" | "config">, FeedFunctions<C, M> {
+  config: SourceConfig;
+}
+
+/**
+ * A feed file's export, defined against the library whose shared code it
+ * calls: that library works out its identity, and hands its functions what the
+ * Worker gave it (`context.library`).
+ */
+export function defineFeed<E, C, M extends object = never>(library: LibraryDeployment<E, C>, feed: FeedDefinition<C, M>): RunnableFeed {
+  // SAFETY: a feed's transform only ever receives the metadata its own fetch returned (`feedCollector`), so erasing
+  // `M` here, to let one list hold every feed, loses nothing the Worker relies on.
+  return { ...feed, config: { source: library.source, ...feed.config } } as RunnableFeed;
+}
 
 /** One publisher's body of data, and the feeds that read it. */
 export interface DatasetDefinition {
@@ -49,19 +72,4 @@ export interface DatasetDefinition {
   attribution?: string;
   /** What the catalog groups and filters by. */
   topics: readonly Topic[];
-  /**
-   * The feeds that read it. Two feeds belong to one dataset when they describe
-   * the same things, by the same identifiers, under the same terms. A feed that
-   * is the whole of its dataset carries no title or description of its own.
-   */
-  feeds: readonly FeedDefinition[];
-}
-
-/**
- * Translators a publisher brings for their own data: by the library that
- * applies them, then by the name a feed's `transformer` configures. A name is
- * the publisher's to choose and must not clash with another publisher's.
- */
-export interface PublisherTransformers {
-  readonly [library: string]: { readonly [name: string]: StreamingTransformer };
 }

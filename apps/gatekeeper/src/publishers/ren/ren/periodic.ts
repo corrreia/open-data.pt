@@ -8,13 +8,10 @@ import {
   isJsonString,
   lisbonDay,
   readBoundedJson,
-  resolveFeed,
   retryAfterSeconds,
-  sourceValidator,
   streamNdjson,
   type FeedKindDescription,
   type JsonValue,
-  type NormalizedCollector,
   type NormalizedRow,
   type ProductFinalization,
   type SourceConfig,
@@ -79,18 +76,8 @@ export function validateRenPeriodicConfig(config: SourceConfig): SourceConfig {
   return result;
 }
 
-/** Dated endpoints exist, but their history boundary/exhaustion is not documented. */
-export function renPeriodicCollector(options: RenPeriodicOptions): NormalizedCollector {
-  return {
-    normalizer: { id: "ren-periodic-data", version: "1" },
-    resolve: (config) => resolveFeed(config, { library: "ren", kinds: REN_PERIODIC_FEEDS, validate: validateRenPeriodicConfig }),
-    source: (state, mode, signal) => {
-      if (mode.kind !== "live") throw new GatekeeperError("REN periodic arbitrary history is not declared", "invalid-config");
-      return collectRenPeriodic(options, sourceValidator(state), signal);
-    },
-    normalize: { kind: "streaming", transform: transformRenPeriodic },
-  };
-}
+/** The normalizer a periodic feed's collection is stamped with. Dated endpoints exist, but their history boundary and exhaustion are not documented, so no periodic feed walks back. */
+export const REN_PERIODIC_NORMALIZER = { id: "ren-periodic-data", version: "1" };
 
 function validDay(day: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return false;
@@ -207,7 +194,8 @@ function measure(key: string, value: JsonValue | undefined, unit: string): Perio
   return { key, value, unit };
 }
 
-function transformRenPeriodic(body: ReadableStream<Uint8Array>, context: TransformContext): StreamingTransform {
+/** The periodic NDJSON document, one line per reporting period, into one series per measure. */
+export function transformRenPeriodic(body: ReadableStream<Uint8Array>, context: TransformContext): StreamingTransform {
   let accepted = 0;
   let watermark: string | undefined;
   const service = context.feed.config.service;

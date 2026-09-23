@@ -1,5 +1,5 @@
 /** Card4B's MYINFO portals, one deployment shared by many bus operators, read once for every feed that needs them. */
-export { myInfoCollector, myInfoOperators, resolveMyInfoFeed, type MyInfoCollectorOptions } from "./collector";
+export { MYINFO_NORMALIZER, MYINFO_TRANSFORMER, myInfoOperators, resolveMyInfoFeed, type MyInfoContext } from "./collector";
 export {
   MYINFO_FEEDS,
   MYINFO_MAX_BYTES,

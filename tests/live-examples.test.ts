@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   NORMALIZED_PROTOCOL,
   collectNormalized,
-  libraryCollector,
+  feedCollector,
   resolveLibraryFeed,
   type CollectionRequest,
   type ExampleFeed,
@@ -17,6 +17,7 @@ import { isNormalizedFrame } from "../packages/contract/src/validation";
 import { readFrames } from "../apps/kernel/src/frames";
 import { MAX_RECORD_BYTES } from "../apps/kernel/src/blob-budget";
 import { jsonAs } from "./support";
+import { RUNNABLE } from "@open-data-pt/gatekeeper/catalog";
 import { CARRIED, carriedLibraries, feedsOf } from "./catalog";
 
 /**
@@ -78,7 +79,9 @@ describe.skipIf(cases.length === 0)("live examples", () => {
     async ({ example, libraries }) => {
       const resolved = await resolveLibraryFeed(example.config, libraries);
       const request = liveRequest(example, resolved);
-      const result = await collectNormalized(request, libraryCollector(resolved.config, libraries));
+      const feed = RUNNABLE.get(example.slug);
+      if (!feed) throw new Error(`No feed file defines ${example.slug}`);
+      const result = await collectNormalized(request, feedCollector(feed, resolved.config, libraries));
       if (result.kind !== "batch") throw new Error(`${example.slug} returned ${JSON.stringify(result)}`);
       const counts = new Map<string, number>();
       const scope = {

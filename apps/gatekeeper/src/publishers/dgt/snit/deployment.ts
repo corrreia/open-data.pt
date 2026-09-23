@@ -1,8 +1,8 @@
 import type { LibraryDeployment } from "#/index";
-import { snitCollector } from "./collector";
+import { resolveSnitFeed, type SnitContext } from "./collector";
 import { SNIT_API_ORIGIN, SNIT_FEEDS } from "./snit";
 
-export const SNIT_DEPLOYMENT: LibraryDeployment<{ readonly SNIT_API_ORIGIN: string }> = {
+export const SNIT_DEPLOYMENT: LibraryDeployment<{ readonly SNIT_API_ORIGIN: string }, SnitContext> = {
   source: "snit",
   name: "SNIT territorial management instruments",
   vars: { SNIT_API_ORIGIN },
@@ -12,6 +12,7 @@ export const SNIT_DEPLOYMENT: LibraryDeployment<{ readonly SNIT_API_ORIGIN: stri
   cpuMs: 120_000,
   library: (env) => ({
     kinds: Object.values(SNIT_FEEDS),
-    collector: (config) => snitCollector({ config, apiOrigin: env.SNIT_API_ORIGIN, fetcher: (input, init) => fetch(input, init) }),
+    resolve: resolveSnitFeed,
+    context: { apiOrigin: env.SNIT_API_ORIGIN },
   }),
 };

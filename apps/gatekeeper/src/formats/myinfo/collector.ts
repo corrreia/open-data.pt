@@ -1,27 +1,22 @@
-import { resolveFeed, runTransformer, sourceValidator, type NormalizedCollector, type ResolvedFeed, type SourceConfig } from "#/index";
-import { MYINFO_FEEDS, collectMyInfoFeed, validateMyInfoFeedConfig } from "./myinfo";
+import { resolveFeed, type ResolvedFeed, type SourceConfig } from "#/index";
+import { MYINFO_FEEDS, validateMyInfoFeedConfig } from "./myinfo";
 import { MyInfoTransformer } from "./transform";
 
-/** What a Worker hands this library: the feed's configuration, the portal origin, the operators it may read, and the fetch it may use. */
-export interface MyInfoCollectorOptions {
-  config: SourceConfig;
-  /** `MYINFO_ORIGIN`. */
+/** What a MYINFO feed's functions are handed when they run: the portal's origin, and the operators the publisher folders read. */
+export interface MyInfoContext {
   apiOrigin: string;
-  /** `MYINFO_OPERATORS`, comma-separated portal folder names. */
-  operators: string;
-  fetcher: typeof fetch;
+  operators: ReadonlySet<string>;
 }
 
-const transformer = new MyInfoTransformer();
+/** The translator from an operator's portal pages into stops, lines and departures; every MYINFO feed uses it. */
+export const MYINFO_TRANSFORMER = new MyInfoTransformer();
 
-/** The operator names a Worker allows, kept in the spelling their portal paths use. */
-export function myInfoOperators(value: string): ReadonlySet<string> {
-  return new Set(
-    value
-      .split(",")
-      .map((operator) => operator.trim())
-      .filter((operator) => operator !== ""),
-  );
+/** The normalizer a MYINFO feed's collection is stamped with: the translator's name and version. */
+export const MYINFO_NORMALIZER = { id: MYINFO_TRANSFORMER.id, version: MYINFO_TRANSFORMER.version };
+
+/** The operator folder names the publisher folders' feeds name, in the spelling their portal paths use. */
+export function myInfoOperators(configs: readonly SourceConfig[]): ReadonlySet<string> {
+  return new Set(configs.flatMap((config) => (config.operator ? [config.operator] : [])));
 }
 
 export function resolveMyInfoFeed(config: SourceConfig, operators: ReadonlySet<string>): Promise<ResolvedFeed> {
@@ -30,17 +25,4 @@ export function resolveMyInfoFeed(config: SourceConfig, operators: ReadonlySet<s
     kinds: Object.values(MYINFO_FEEDS),
     validate: (value) => validateMyInfoFeedConfig(value, operators),
   });
-}
-
-export function myInfoCollector(options: MyInfoCollectorOptions): NormalizedCollector {
-  const operators = myInfoOperators(options.operators);
-  return {
-    normalizer: { id: transformer.id, version: transformer.version },
-    resolve: (value) => resolveMyInfoFeed(value, operators),
-    source: (state, mode, signal) => {
-      if (mode.kind === "history") throw new Error("MYINFO portals publish no historical timetables");
-      return collectMyInfoFeed(options.config, sourceValidator(state), options.apiOrigin, operators, (input, init) => options.fetcher(input, { ...init, signal }));
-    },
-    normalize: { kind: "buffered", transform: (bytes, context) => runTransformer(transformer, bytes, context) },
-  };
 }

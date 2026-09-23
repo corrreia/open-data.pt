@@ -7,12 +7,12 @@
  */
 export { LICENCES, isLicence, type Licence, type LicenceDescription } from "./catalog/licences";
 export { TOPICS, isTopic, type Topic } from "./catalog/topics";
-export type { DatasetDefinition, FeedDefinition, PublisherDefinition } from "./catalog/define";
+export { defineFeed, type DatasetDefinition, type FeedDefinition, type FeedPolicy, type PublisherDefinition } from "./catalog/define";
 export * from "@open-data-pt/contract";
 export {
   SOURCE_KEY,
   buildLibrary,
-  libraryCollector,
+  feedCollector,
   libraryConfig,
   libraryFeedKinds,
   resolveLibraryFeed,
@@ -20,7 +20,13 @@ export {
   type GatekeeperLibrary,
   type Library,
   type LibraryDeployment,
+  type Described,
+  type FeedContext,
+  type FeedFunctions,
+  type FeedRuntime,
+  type FeedTransform,
   type PublisherInputs,
+  type RunnableFeed,
   type StreamingTransformer,
   NO_PUBLISHER_INPUTS,
   type R2BucketDeployment,

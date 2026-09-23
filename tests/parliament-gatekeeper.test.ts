@@ -11,7 +11,7 @@ import {
   type SourceFetch,
   type SourceStaging,
 } from "@open-data-pt/gatekeeper";
-import { PARLIAMENT_NORMALIZER, parliamentCollector, resolveParliamentFeed } from "../apps/gatekeeper/src/publishers/assembleia-da-republica/parliament";
+import { PARLIAMENT_NORMALIZER, resolveParliamentFeed } from "../apps/gatekeeper/src/publishers/assembleia-da-republica/parliament";
 import {
   collectParliamentFeed,
   parliamentDirectoryLink,
@@ -22,7 +22,7 @@ import {
   type ParliamentDocument,
 } from "../apps/gatekeeper/src/publishers/assembleia-da-republica/parliament/parliament";
 import { readFrames } from "../apps/kernel/src/frames";
-import { feedsOf } from "./catalog";
+import { feedCollection, feedsOf } from "./catalog";
 
 const config = { feed: "members", legislature: "XVII" };
 const document = parliamentDocument(config);
@@ -266,11 +266,9 @@ describe("Parliament public-directory source", () => {
     await expect(consume(fetched)).rejects.toMatchObject({ code: "response-too-large" });
   });
 
-  it.each(feedsOf("parliament"))("streams $slug through the complete protocol-v4 collector", async (example) => {
-    const raw = libraryConfig(example.config);
-    const doc = parliamentDocument(raw);
-    const collector = parliamentCollector({ config: raw, fetcher: sourceFetcher(doc) });
-    const resolved = await collector.resolve(raw);
+  it.each(feedsOf("parliament"))("streams $slug through its own feed file and the complete protocol-v4 collector", async (example) => {
+    const doc = parliamentDocument(libraryConfig(example.config));
+    const { resolved, collector } = await feedCollection(example.slug, { fetcher: sourceFetcher(doc) });
     const request: CollectionRequest = {
       protocol: NORMALIZED_PROTOCOL,
       collectionId: `fixture_${doc.feed}`,
@@ -301,7 +299,7 @@ describe("Parliament public-directory source", () => {
     const header = frames[0];
     if (header?.type !== "header") throw new Error("Missing header");
     const checkpoint = header.checkpoint;
-    const again = parliamentCollector({ config: raw, fetcher: sourceFetcher(doc, 304) });
+    const { collector: again } = await feedCollection(example.slug, { fetcher: sourceFetcher(doc, 304) });
     expect(await collectNormalized({ ...request, checkpoint }, again)).toMatchObject({ kind: "unchanged" });
   });
 });

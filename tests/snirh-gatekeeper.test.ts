@@ -23,10 +23,9 @@ import {
   parseReadingsCsv,
   parseStationList,
   resolveSnirhFeed,
-  snirhCollector,
   validateSnirhFeedConfig,
 } from "../apps/gatekeeper/src/publishers/apa/snirh";
-import { feedsOf } from "./catalog";
+import { feedCollection, feedsOf } from "./catalog";
 
 const fixture = (name: string): Uint8Array => new Uint8Array(readFileSync(new URL(`./fixtures/snirh/${name}`, import.meta.url)));
 const text = (name: string): string => new TextDecoder().decode(fixture(name));
@@ -351,10 +350,10 @@ describe("SNIRH groundwater state", () => {
   });
 });
 
-describe("SNIRH through the shared collector", () => {
-  it("frames a live collection and a history slice", async () => {
-    const collector = snirhCollector({ config: LEVELS, apiOrigin: SNIRH_ORIGIN, fetcher: snirh(), now: () => new Date("2026-09-22T02:00:00.000Z") });
-    const live = await collectNormalized(await request(), collector);
+describe("SNIRH through a feed's own file", () => {
+  it("frames a live collection with the feed's fetch, and a history slice with its backfill", async () => {
+    const { resolved, collector } = await feedCollection("snirh-river-levels-feed", { fetcher: snirh(), now: () => new Date("2026-09-22T02:00:00.000Z") });
+    const live = await collectNormalized(await request({ resolved }), collector);
     expect(live.kind).toBe("batch");
     if (live.kind !== "batch") return;
     const frames = (await new Response(live.stream).text())
@@ -370,7 +369,7 @@ describe("SNIRH through the shared collector", () => {
     expect(complete?.type).toBe("complete");
     expect(complete?.counts).toEqual({ records: 0, points: 48 });
 
-    const history = await collectNormalized(await request({ mode: { kind: "history", cursor: { before: "2026-09-21T00:00:00.000Z" } } }), collector);
+    const history = await collectNormalized(await request({ resolved, mode: { kind: "history", cursor: { before: "2026-09-21T00:00:00.000Z" } } }), collector);
     expect(history.kind).toBe("batch");
   });
 });

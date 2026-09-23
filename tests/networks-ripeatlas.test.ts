@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { collectNormalized, libraryConfig, type JsonObject, type JsonValue, type SourceFetch } from "../apps/gatekeeper/src/index";
 import { collectRipeatlasFeed, RIPEATLAS_ORIGIN, RIPEATLAS_PROBE_FIELDS, validateRipeatlasFeedConfig } from "../apps/gatekeeper/src/publishers/ripe-ncc/ripeatlas/ripeatlas";
-import { ripeatlasCollector } from "../apps/gatekeeper/src/publishers/ripe-ncc/ripeatlas/collector";
 import { RipeatlasTransformer } from "../apps/gatekeeper/src/publishers/ripe-ncc/ripeatlas/transform";
 import { networkBytes, networkContext, networkFixture, networkFrames, networkRequest, networkRows } from "./networks-support";
-import { datasetOf, feedsOf } from "./catalog";
+import { datasetOf, feedCollection, feedsOf } from "./catalog";
 
 const PROBES = { feed: "country-probes", country: "PT" };
 const ANCHORS = { feed: "country-anchors", country: "PT" };
@@ -222,8 +221,8 @@ describe("RIPE Atlas probe inventory normalization", () => {
 
   it("emits protocol-v4 frames with one header, its records and its points", async () => {
     const fetcher: typeof fetch = async () => Response.json(page([probe(1), probe(2, 2)]));
-    const collector = ripeatlasCollector({ config: PROBES, apiOrigin: RIPEATLAS_ORIGIN, fetcher });
-    const frames = await networkFrames(await collectNormalized(await networkRequest(collector, PROBES), collector));
+    const { resolved, collector } = await feedCollection("ripe-atlas-portugal-probes-feed", { fetcher });
+    const frames = await networkFrames(await collectNormalized(await networkRequest(collector, resolved.config), collector));
     expect(frames[0]?.type).toBe("header");
     expect(frames.filter((frame) => frame.type === "header")).toHaveLength(1);
     expect(frames.at(-1)).toMatchObject({ counts: { records: 2, points: 4 }, quality: { acceptedRecords: 2, rejectedRecords: 0 } });

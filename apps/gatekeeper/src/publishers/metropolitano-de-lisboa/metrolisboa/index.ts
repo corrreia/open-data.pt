@@ -1,5 +1,5 @@
 /** Metro Lisboa's EstadoServicoML gateway, read once for every feed that needs it. */
-export { metrolisboaCollector, resolveMetrolisboaFeed, type MetrolisboaCollectorOptions } from "./collector";
+export { METROLISBOA_NORMALIZER, METROLISBOA_TRANSFORMER, resolveMetrolisboaFeed, type MetrolisboaContext } from "./collector";
 export {
   METRO_API_PATH,
   METRO_DAY_TYPES,

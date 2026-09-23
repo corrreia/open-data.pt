@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import { datasetOf, feedsOf } from "./catalog";
+import { datasetOf, feedCollection, feedsOf } from "./catalog";
 import {
   GatekeeperError,
   NORMALIZED_PROTOCOL,
@@ -23,7 +23,6 @@ import {
   SnitTransformer,
   collectSnitFeed,
   resolveSnitFeed,
-  snitCollector,
   validateSnitFeedConfig,
 } from "../apps/gatekeeper/src/publishers/dgt/snit";
 
@@ -246,7 +245,8 @@ describe("SNIT normalization", () => {
 
 describe("SNIT through the shared collector", () => {
   it("streams a normalized batch carrying both products", async () => {
-    const result = await collectNormalized(await request(), snitCollector({ config, apiOrigin: SNIT_API_ORIGIN, fetcher: serviceFetcher() }));
+    const { resolved, collector } = await feedCollection("snit-prof-feed", { fetcher: serviceFetcher() });
+    const result = await collectNormalized(await request({ resolved }), collector);
     expect(result.kind).toBe("batch");
     if (result.kind !== "batch") return;
     const frames = (await readText(result.stream))
@@ -266,10 +266,8 @@ describe("SNIT through the shared collector", () => {
   });
 
   it("refuses a history walk, because the register publishes no older edition", async () => {
-    const result = await collectNormalized(
-      await request({ mode: { kind: "history", cursor: { before: "2026-01-01T00:00:00.000Z" } } }),
-      snitCollector({ config, apiOrigin: SNIT_API_ORIGIN, fetcher: serviceFetcher() }),
-    );
+    const { resolved, collector } = await feedCollection("snit-prof-feed", { fetcher: serviceFetcher() });
+    const result = await collectNormalized(await request({ resolved, mode: { kind: "history", cursor: { before: "2026-01-01T00:00:00.000Z" } } }), collector);
     expect(result).toEqual({ kind: "failure", code: "history-unsupported", retryable: false });
   });
 });

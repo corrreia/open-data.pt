@@ -17,5 +17,5 @@ export {
   type SnirhReadingName,
   type SnirhStation,
 } from "./snirh";
-export { snirhCollector, resolveSnirhFeed, type SnirhCollectorOptions } from "./collector";
+export { SNIRH_NORMALIZER, SNIRH_TRANSFORMER, resolveSnirhFeed, type SnirhContext } from "./collector";
 export { SnirhTransformer } from "./transform";

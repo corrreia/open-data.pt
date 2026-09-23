@@ -1,10 +1,9 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { collectNormalized, libraryConfig, NORMALIZED_PROTOCOL, type CollectionRequest, type ExampleFeed } from "@open-data-pt/gatekeeper";
-import { parliamentCollector } from "../apps/gatekeeper/src/publishers/assembleia-da-republica/parliament";
 import { parliamentDocument } from "../apps/gatekeeper/src/publishers/assembleia-da-republica/parliament/parliament";
 import { readFrames } from "../apps/kernel/src/frames";
-import { feedsOf } from "./catalog";
+import { feedCollection, feedsOf } from "./catalog";
 
 // These opt-ins require separate record-processing authorization; they do not override a permission denial.
 const SAMPLE_DIRECTORY = process.env.PARLIAMENT_SAMPLE_DIR;
@@ -17,8 +16,7 @@ const samples = process.env.PARLIAMENT_SAMPLES === "1";
 /** Aggregate-only validation; never copies real personal records into repository fixtures or logs. */
 async function collect(example: ExampleFeed, fetcher: typeof fetch, mode: "saved-research" | "live"): Promise<void> {
   const config = libraryConfig(example.config);
-  const collector = parliamentCollector({ config, fetcher });
-  const resolved = await collector.resolve(config);
+  const { resolved, collector } = await feedCollection(example.slug, { fetcher });
   const policy = example.policy.collection;
   const request: CollectionRequest = {
     protocol: NORMALIZED_PROTOCOL,

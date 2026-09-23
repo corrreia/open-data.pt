@@ -1,4 +1,4 @@
 export { RIPEATLAS_FEEDS, validateRipeatlasFeedConfig, collectRipeatlasFeed } from "./ripeatlas";
 export { RipeatlasTransformer } from "./transform";
-export { ripeatlasCollector, type RipeatlasCollectorOptions } from "./collector";
+export { RIPEATLAS_NORMALIZER, RIPEATLAS_TRANSFORMER, resolveRipeatlasFeed, type RipeatlasContext } from "./collector";
 export { RIPEATLAS_DEPLOYMENT } from "./deployment";

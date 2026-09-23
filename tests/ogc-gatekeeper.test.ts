@@ -1,31 +1,51 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import { datasetOf, feedsOf } from "./catalog";
+import { carriedLibraries, datasetOf, feedsOf } from "./catalog";
+import { RUNNABLE } from "@open-data-pt/gatekeeper/catalog";
 import {
   GatekeeperError,
   NORMALIZED_PROTOCOL,
   collectNormalized,
+  feedCollector,
   isJsonNumber,
   isJsonObject,
   isJsonString,
   libraryConfig,
   parseJson,
+  resolveLibraryFeed,
   type CollectionRequest,
   type JsonObject,
   type JsonValue,
+  type NormalizedCollector,
+  type ResolvedFeed,
   type SourceBody,
+  type SourceConfig,
   type SourceFetch,
 } from "@open-data-pt/gatekeeper";
-import { OgcTransformer, collectOgcFeed, itemsUrl, ogcCollector, resolveOgcFeed, validateOgcFeedConfig } from "../apps/gatekeeper/src/formats/ogc";
+import { OgcTransformer, collectOgcFeed, itemsUrl, resolveOgcFeed, validateOgcFeedConfig } from "../apps/gatekeeper/src/formats/ogc";
 import { boundingBox } from "../apps/gatekeeper/src/formats/ogc/geometry";
 
 const DGT_HOST = "ogcapi.dgterritorio.gov.pt";
 const AZORES_HOST = "ambiente.azores.gov.pt";
 const LNEG_HOST = "ogcapi.lneg.pt";
 const hosts = new Set([DGT_HOST, AZORES_HOST, LNEG_HOST]);
-const allowedHosts = [...hosts].join(",");
 
 const config = { host: DGT_HOST, collection: "municipios", geometry: "skip", pageSize: "1000", maxPages: "5" };
+
+/**
+ * A DGT layer's own feed file, run on a configuration no feed has: the way the
+ * Worker runs an OGC feed, through its functions and its library's identity.
+ */
+function ogcCollector(feedConfig: SourceConfig, fetcher: typeof fetch): NormalizedCollector {
+  const feed = RUNNABLE.get("dgt-caop-municipios-feed");
+  if (!feed) throw new Error("dgt-caop-municipios-feed is not defined");
+  return feedCollector(feed, { ...feedConfig, source: "ogc" }, carriedLibraries("ogc"), { fetcher });
+}
+
+/** A configuration resolved the way the Worker resolves it, routing key and all, which is what a collection request carries. */
+function resolveThroughLibrary(feedConfig: SourceConfig): Promise<ResolvedFeed> {
+  return resolveLibraryFeed({ ...feedConfig, source: "ogc" }, carriedLibraries("ogc"));
+}
 
 function fixture(name: string): JsonValue {
   return parseJson(readFileSync(new URL(`./fixtures/ogc/${name}`, import.meta.url), "utf8"));
@@ -134,7 +154,7 @@ async function request(overrides: Partial<CollectionRequest> = {}): Promise<Coll
     protocol: NORMALIZED_PROTOCOL,
     collectionId: "collection_1",
     feed: { id: "feed_1", slug: "dgt-caop-municipios-feed", title: "Municipalities", description: "test feed" },
-    resolved: await resolveOgcFeed(config, hosts),
+    resolved: await resolveThroughLibrary(config),
     feedEpoch: "epoch-1",
     mode: { kind: "live" },
     limits: { sourceBytes: 4_194_304, outputBytes: 4_194_304, frameBytes: 262_144, recordBytes: 262_144, records: 10_000, products: 4 },
@@ -297,7 +317,10 @@ describe("OGC API Features configuration", () => {
     expect(resolved.history).toBeUndefined();
     const result = await collectNormalized(
       await request({ mode: { kind: "history", cursor: { before: "2026-01-01T00:00:00.000Z" } } }),
-      ogcCollector({ config, hosts: allowedHosts, fetcher: serviceFetcher(() => itemsPage({ count: 1, matched: 1 }), 1) }),
+      ogcCollector(
+        config,
+        serviceFetcher(() => itemsPage({ count: 1, matched: 1 }), 1),
+      ),
     );
     expect(result).toEqual({ kind: "failure", code: "history-unsupported", retryable: false });
   });
@@ -1141,7 +1164,10 @@ describe("OGC API Features normalization", () => {
 
 describe("OGC API Features through the shared collector", () => {
   it("frames a complete collection and closes it with its counts", async () => {
-    const collector = ogcCollector({ config, hosts: allowedHosts, fetcher: serviceFetcher(() => municipiosPage, 278) });
+    const collector = ogcCollector(
+      config,
+      serviceFetcher(() => municipiosPage, 278),
+    );
     const result = await collectNormalized(await request(), collector);
     if (result.kind !== "batch") throw new Error(`Expected a batch, got ${result.kind}`);
     const [header, ...rest] = await frames(result.stream);
@@ -1158,7 +1184,7 @@ describe("OGC API Features through the shared collector", () => {
       onRequest: (url) => (url.pathname.endsWith("/items") && url.searchParams.get("resulttype") === null ? new Response(null, { status: 304 }) : undefined),
     });
     const singlePage = { ...config, pageSize: "10" };
-    const resolved = await resolveOgcFeed(singlePage, hosts);
+    const resolved = await resolveThroughLibrary(singlePage);
     const result = await collectNormalized(
       await request({
         resolved,
@@ -1171,15 +1197,18 @@ describe("OGC API Features through the shared collector", () => {
           state: { singlePage: true, validators: { default: { etag: '"one"' } } },
         },
       }),
-      ogcCollector({ config: singlePage, hosts: allowedHosts, fetcher }),
+      ogcCollector(singlePage, fetcher),
     );
     // No conditional request is ever made, so an unchanged answer is a source fault.
     expect(result).toEqual({ kind: "failure", code: "invalid-response", retryable: false });
   });
 
   it("collects again, identically, when its checkpoint is for another normalizer", async () => {
-    const collector = ogcCollector({ config, hosts: allowedHosts, fetcher: serviceFetcher(() => municipiosPage, 278) });
-    const resolved = await resolveOgcFeed(config, hosts);
+    const collector = ogcCollector(
+      config,
+      serviceFetcher(() => municipiosPage, 278),
+    );
+    const resolved = await resolveThroughLibrary(config);
     const result = await collectNormalized(
       await request({
         resolved,
@@ -1198,12 +1227,11 @@ describe("OGC API Features through the shared collector", () => {
   });
 
   it("fails the collection rather than completing a truncated stream", async () => {
-    const collector = ogcCollector({
-      config: { ...config, pageSize: "2" },
-      hosts: allowedHosts,
-      fetcher: serviceFetcher((offset) => itemsPage({ count: 2, matched: 10, first: offset, next: offset + 2, host: "attacker.example" }), 10),
-    });
-    const result = await collectNormalized(await request({ resolved: await resolveOgcFeed({ ...config, pageSize: "2" }, hosts) }), collector);
+    const collector = ogcCollector(
+      { ...config, pageSize: "2" },
+      serviceFetcher((offset) => itemsPage({ count: 2, matched: 10, first: offset, next: offset + 2, host: "attacker.example" }), 10),
+    );
+    const result = await collectNormalized(await request({ resolved: await resolveThroughLibrary({ ...config, pageSize: "2" }) }), collector);
     if (result.kind !== "batch") throw new Error(`Expected a batch, got ${result.kind}`);
     await expect(frames(result.stream)).rejects.toThrow(/attacker\.example/);
   });
@@ -1219,7 +1247,10 @@ describe("OGC API Features through the shared collector", () => {
     const sourceBytes = JSON.stringify(features[0]).length * 2 + 4_096;
     const truncating = await collectNormalized(
       await request({ limits: { sourceBytes, outputBytes: 1_048_576, frameBytes: 262_144, recordBytes: 262_144, records: 1_000, products: 4 } }),
-      ogcCollector({ config, hosts: allowedHosts, fetcher: serviceFetcher(() => wide, 4) }),
+      ogcCollector(
+        config,
+        serviceFetcher(() => wide, 4),
+      ),
     );
     if (truncating.kind !== "batch") throw new Error(`Expected a batch, got ${truncating.kind}`);
     await expect(frames(truncating.stream)).rejects.toThrow(new RegExp(`exceeds ${sourceBytes} bytes`));
@@ -1227,7 +1258,10 @@ describe("OGC API Features through the shared collector", () => {
     // A budget too small for even one feature fails before a header is framed.
     const immediate = await collectNormalized(
       await request({ limits: { sourceBytes: 4_096, outputBytes: 1_048_576, frameBytes: 262_144, recordBytes: 262_144, records: 1_000, products: 4 } }),
-      ogcCollector({ config, hosts: allowedHosts, fetcher: serviceFetcher(() => wide, 4) }),
+      ogcCollector(
+        config,
+        serviceFetcher(() => wide, 4),
+      ),
     );
     expect(immediate).toEqual({ kind: "failure", code: "response-too-large", retryable: false });
   });
@@ -1365,7 +1399,7 @@ describe("OGC final snapshot-boundary regressions", () => {
     if (!nativeFirst) delete first.id;
     delete second.id;
     const fetcher = serviceFetcher(() => ({ type: "FeatureCollection", features: [first, second], numberReturned: 2, numberMatched: 2, links: [] }), 2);
-    const collector = ogcCollector({ config, hosts: allowedHosts, fetcher });
+    const collector = ogcCollector(config, fetcher);
     const result = await collectNormalized(await request(), collector);
     if (result.kind !== "batch") throw new Error("Expected streaming batch");
     await expect(readText(result.stream)).rejects.toThrow("repeats a normalized feature identity");

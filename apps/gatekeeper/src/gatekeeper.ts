@@ -1,11 +1,11 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
 import type { CatalogDescription } from "@open-data-pt/contract";
 
-import { CATALOG, FEEDS, datasetEnabled, publisherInputs } from "./catalog";
+import { CATALOG, FEEDS, RUNNABLE, datasetEnabled, publisherInputs } from "./catalog";
 import {
   buildLibrary,
   collectNormalized,
-  libraryCollector,
+  feedCollector,
   libraryFeedKinds,
   resolveLibraryFeed,
   type CollectionRequest,
@@ -53,8 +53,11 @@ export function gatekeeper<E extends object>(libraries: readonly Library[]) {
       return resolveLibraryFeed(config, this.libraries());
     }
 
+    /** A feed runs the functions its own file defines. A feed no file defines any more was retired, and has nothing to run. */
     async collect(request: CollectionRequest): Promise<CollectionResult> {
-      return collectNormalized(request, libraryCollector(request.resolved.config, this.libraries()));
+      const feed = RUNNABLE.get(request.feed.slug);
+      if (!feed) return { kind: "failure", code: "invalid-config", retryable: false };
+      return collectNormalized(request, feedCollector(feed, request.resolved.config, this.libraries()));
     }
 
     /** Every feed of a publisher we may republish that a carried library reads; a held publisher's code ships, and installs nothing. */

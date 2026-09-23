@@ -1,9 +1,9 @@
-import { publisherInputs } from "@open-data-pt/gatekeeper/catalog";
+import { RUNNABLE } from "@open-data-pt/gatekeeper/catalog";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { CanonicalRecord, CanonicalSchema, ProductDeclaration, SeriesPoint, SourceConfig, TransformContext, TransformQuality } from "@open-data-pt/contract";
 import { libraryConfig } from "@open-data-pt/gatekeeper";
-import { chooseTransformer, transformUdata } from "../apps/gatekeeper/src/formats/udata/transform";
+import { chooseTransformer } from "../apps/gatekeeper/src/formats/udata/transform";
 import { datasetOf, feedsOf } from "./catalog";
 
 const FIXTURE = new Map([
@@ -68,10 +68,13 @@ async function transformExample(slug: string, chunkSize = 7): Promise<Transforme
   const example = feedsOf("udata").find((candidate) => candidate.slug === slug);
   const fixtureName = FIXTURE.get(slug);
   if (!example || !fixtureName) throw new Error(`No example fixture for ${slug}`);
-  const transform = await transformUdata(
+  // Each feed's own transform, as its file defines it: the generic tabular one, or its publisher's.
+  const own = RUNNABLE.get(slug)?.transform;
+  if (!own || !("streaming" in own)) throw new Error(`${slug} defines no streaming transform`);
+  const transform = await own.streaming(
     fixture(fixtureName, chunkSize),
     context(libraryConfig(example.config), example.slug, example.title, example.description ?? datasetOf(example).description),
-    publisherInputs("udata").transformers,
+    undefined,
   );
   const records = new Map<string, CanonicalRecord[]>();
   const points = new Map<string, SeriesPoint[]>();
@@ -97,7 +100,7 @@ describe("uData curated example transformers", () => {
     for (const [slug] of FIXTURE) {
       const example = feedsOf("udata").find((candidate) => candidate.slug === slug);
       expect(example, slug).toBeDefined();
-      expect(chooseTransformer(example!.config, publisherInputs("udata").transformers).id, slug).not.toBe("");
+      expect(RUNNABLE.get(slug)?.transform.normalizer.id, slug).not.toBe("");
       const result = await transformExample(slug);
       expect(result.quality.acceptedRecords, slug).toBeGreaterThan(0);
       expect(result.products.length, slug).toBeGreaterThan(0);
@@ -159,7 +162,7 @@ describe("uData curated example transformers", () => {
 
   it("normalizes the Cadaval decimal-comma workbook into tonne records and monthly points", async () => {
     const example = feedsOf("udata").find((candidate) => candidate.slug === "cadaval-municipal-waste-feed")!;
-    expect(chooseTransformer(libraryConfig(example.config), publisherInputs("udata").transformers)).toMatchObject({ id: "cadaval-municipal-waste-v1", version: "2" });
+    expect(RUNNABLE.get(example.slug)?.transform.normalizer).toEqual({ id: "cadaval-municipal-waste-v1", version: "2" });
     const result = await transformExample("cadaval-municipal-waste-feed", 1);
     expect(result.products[0]?.records[0]?.payload).toMatchObject({
       material: "Plástico / Metal (LER 150102, 150106 e 200139)",

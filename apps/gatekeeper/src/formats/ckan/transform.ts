@@ -91,7 +91,8 @@ interface ColumnCounts {
  * sample and then applied to every row; the schema reported by `finish` adds
  * what later rows showed (nullability, new columns).
  */
-export async function transformCkan(body: ReadableStream<Uint8Array>, context: TransformContext, metadata: CkanResourceMetadata): Promise<StreamingTransform> {
+export async function transformCkan(body: ReadableStream<Uint8Array>, context: TransformContext, metadata: CkanResourceMetadata | undefined): Promise<StreamingTransform> {
+  if (!metadata) throw new Error("CKAN resource metadata did not accompany the source body");
   const series = csvSeriesOptions(context.feed.config);
   if (series) {
     if (metadata.source.kind !== "file" || metadata.source.format !== "csv") throw new Error("CKAN observations require a CSV distribution");

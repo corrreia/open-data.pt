@@ -1,8 +1,11 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
+import { RUNNABLE, publisherInputs } from "@open-data-pt/gatekeeper/catalog";
 import {
   NORMALIZED_PROTOCOL,
+  buildLibrary,
   collectNormalized,
+  feedCollector,
   isJsonObject,
   isJsonString,
   parseJson,
@@ -13,11 +16,16 @@ import {
   type ProductDeclaration,
   type SeriesPoint,
   type StreamingSummary,
+  type GatekeeperLibraries,
   type TransformContext,
 } from "@open-data-pt/gatekeeper";
 import type { CkanResourceMetadata } from "../apps/gatekeeper/src/formats/ckan/ckan";
 import { CKAN_NORMALIZER, CKAN_SAMPLE_ROWS, epsg3763ToWgs84, parsePythonLiteral, transformCkan } from "../apps/gatekeeper/src/formats/ckan/transform";
-import { ckanCollector } from "../apps/gatekeeper/src/formats/ckan";
+import { CKAN_DEPLOYMENT } from "../apps/gatekeeper/src/formats/ckan";
+
+/** The CKAN library as the Worker builds it, allowed the test portal's host, and a feed file whose functions run a configuration no feed has. */
+const LIBRARIES: GatekeeperLibraries = new Map([["ckan", buildLibrary(CKAN_DEPLOYMENT, {}, { ...publisherInputs("ckan"), hosts: ["opendata.porto.digital"] })]]);
+const PARKING = RUNNABLE.get("porto-municipal-parking-feed")!;
 
 const context: TransformContext = {
   feed: {
@@ -511,8 +519,9 @@ describe("CKAN streaming through the shared collector", () => {
       const limit = Number(url.searchParams.get("limit"));
       return Response.json({ success: true, result: { fields, records: limit === 0 ? [] : records, total: records.length } });
     });
-    const collector = ckanCollector({ config: { host: "opendata.porto.digital", dataset: "sensor-readings", resource: resourceId }, hosts: "opendata.porto.digital", fetcher });
-    const resolved = await collector.resolve({ host: "opendata.porto.digital", dataset: "sensor-readings", resource: resourceId });
+    const config = { source: "ckan", host: "opendata.porto.digital", dataset: "sensor-readings", resource: resourceId };
+    const collector = feedCollector(PARKING, config, LIBRARIES, { fetcher });
+    const resolved = await collector.resolve(config);
     const request: CollectionRequest = {
       protocol: NORMALIZED_PROTOCOL,
       collectionId: "collection_1",

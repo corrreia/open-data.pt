@@ -1,5 +1,5 @@
 /** OGC API — Features collections, parsed once for every feed that reads one. */
-export { ogcCollector, resolveOgcFeed, type OgcCollectorOptions } from "./collector";
+export { OGC_NORMALIZER, OGC_TRANSFORMER, resolveOgcFeed, type OgcContext } from "./collector";
 export {
   MAX_METADATA_BYTES,
   OGC_FEEDS,

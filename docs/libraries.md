@@ -76,11 +76,14 @@ and everything about them is in it:
   ten publishers and is none of them. A publisher read through two libraries is one publisher, with
   one folder and one page.
 - **`logo.svg` or `logo.png`** — their mark, optional; see [the publishers README](../apps/gatekeeper/src/publishers/README.md).
-- **`datasets/<name>.ts`** — one publisher's body of data and the feeds that read it. The dataset says
-  what the data is, its terms and its topics; a feed says only how a part of it is read and how often.
-  Two feeds are the same dataset when they describe the same things, by the same identifiers, under
-  the same terms. The key is the folder and the file, `<publisher>-<name>`, and never changes.
-- **`<library>/`** — the code that reads their own API, when they have one.
+- **`datasets/<name>/`** — one publisher's body of data: `index.ts` says what it is, its terms and its
+  topics, and every other file is one feed, with the functions that read it — `fetch` for the live
+  read, `backfill` for the history walk when the source keeps one, and `transform` — each calling
+  shared code. Two feeds are the same dataset when they describe the same things, by the same
+  identifiers, under the same terms. The key is the folder and the dataset's name,
+  `<publisher>-<name>`, and never changes.
+- **`<library>/`** — shared code for their own API, when they have one: how a feed's identity is worked
+  out, what its feeds are handed when they run, and the fetching and translating their files call.
 
 Two keyed lists every dataset names, in [`apps/gatekeeper/src/catalog/`](../apps/gatekeeper/src/catalog/):
 

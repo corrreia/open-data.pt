@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { DATASETS, PUBLISHERS } from "@open-data-pt/gatekeeper/catalog";
+import { DATASETS, FEEDS, PUBLISHERS, RUNNABLE } from "@open-data-pt/gatekeeper/catalog";
 import { INDEX_PATH, catalogIndex } from "../tools/catalog-index";
 
 const PUBLISHER_ROOT = new URL("../apps/gatekeeper/src/publishers/", import.meta.url);
@@ -21,11 +21,19 @@ describe("the publisher folders", () => {
     expect(folders.toSorted()).toEqual([...PUBLISHERS.keys()].toSorted());
   });
 
-  it("key each dataset by its publisher's folder and its own file", () => {
+  it("key each dataset by its publisher's folder and its own", () => {
     for (const [id, dataset] of DATASETS) {
       expect(id.startsWith(`${dataset.publisher}-`), id).toBe(true);
       const file = id.slice(dataset.publisher.length + 1);
-      expect(existsSync(new URL(`${dataset.publisher}/datasets/${file}.ts`, PUBLISHER_ROOT)), id).toBe(true);
+      expect(existsSync(new URL(`${dataset.publisher}/datasets/${file}/index.ts`, PUBLISHER_ROOT)), id).toBe(true);
     }
+  });
+
+  it("define every feed in its own file, with the functions that read it", () => {
+    for (const [slug, feed] of RUNNABLE) {
+      expect(feed.fetch, slug).toBeInstanceOf(Function);
+      expect("buffered" in feed.transform || "streaming" in feed.transform, slug).toBe(true);
+    }
+    expect(RUNNABLE.size).toBe(FEEDS.length);
   });
 });

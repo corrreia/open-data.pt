@@ -2,20 +2,19 @@ import type { SourceConfig, StreamingTransform, StreamingTransformer, TransformC
 import { TabularTransformer } from "./tabular";
 
 /** The one translator this library ships: any CSV or JSON table, read generically. */
-const TABULAR = new TabularTransformer();
+export const TABULAR = new TabularTransformer();
 
 /**
- * Pick the translator for a uData feed. `config.transformer` names one: the
- * generic `tabular`, or one a publisher brings in their own folder for data
- * that needs it. Otherwise tabular formats get the generic translator.
+ * The generic translator for a uData feed that names none of its own: tabular
+ * formats get the tabular translator. A feed whose data needs a publisher's own
+ * translator calls it from its file, and names it in `config.transformer`.
  * Raw-only documents, media, and coverages are intentionally unsupported.
  */
-export function chooseTransformer(config: SourceConfig, publishers: ReadonlyMap<string, StreamingTransformer> = new Map()): StreamingTransformer {
+export function chooseTransformer(config: SourceConfig): StreamingTransformer {
   const named = config.transformer;
   if (named) {
-    const transformer = named === "tabular" ? TABULAR : publishers.get(named);
-    if (!transformer) throw new Error(`Unknown uData transformer: ${named}`);
-    return transformer;
+    if (named !== "tabular") throw new Error(`The ${named} translator is its publisher's, called from its feed file`);
+    return TABULAR;
   }
   const format = config.format?.toLowerCase();
   const kind = config.feed ?? "distribution";
@@ -23,10 +22,6 @@ export function chooseTransformer(config: SourceConfig, publishers: ReadonlyMap<
   throw new Error("This source is not a normalized tabular product");
 }
 
-export function transformUdata(
-  body: ReadableStream<Uint8Array>,
-  context: TransformContext,
-  publishers: ReadonlyMap<string, StreamingTransformer> = new Map(),
-): Promise<StreamingTransform> {
-  return chooseTransformer(context.feed.config, publishers).transform(body, context);
+export function transformUdata(body: ReadableStream<Uint8Array>, context: TransformContext): Promise<StreamingTransform> {
+  return chooseTransformer(context.feed.config).transform(body, context);
 }

@@ -1,5 +1,5 @@
 import { r2Staging, type LibraryDeployment } from "#/index";
-import { parliamentCollector, type ParliamentCollectorOptions } from "./collector";
+import { resolveParliamentFeed, type ParliamentContext } from "./collector";
 import { PARLIAMENT_FEEDS } from "./parliament";
 
 interface ParliamentEnv {
@@ -7,7 +7,7 @@ interface ParliamentEnv {
   readonly PARLIAMENT_STAGING?: R2Bucket;
 }
 
-export const PARLIAMENT_DEPLOYMENT: LibraryDeployment<ParliamentEnv> = {
+export const PARLIAMENT_DEPLOYMENT: LibraryDeployment<ParliamentEnv, ParliamentContext> = {
   source: "parliament",
   name: "Assembleia da República",
   vars: {},
@@ -19,10 +19,7 @@ export const PARLIAMENT_DEPLOYMENT: LibraryDeployment<ParliamentEnv> = {
   cpuMs: 120_000,
   library: (env) => ({
     kinds: Object.values(PARLIAMENT_FEEDS),
-    collector: (config) => {
-      const options: ParliamentCollectorOptions = { config, fetcher: (input, init) => fetch(input, init) };
-      if (env.PARLIAMENT_STAGING) options.staging = r2Staging(env.PARLIAMENT_STAGING);
-      return parliamentCollector(options);
-    },
+    resolve: resolveParliamentFeed,
+    context: { staging: env.PARLIAMENT_STAGING ? r2Staging(env.PARLIAMENT_STAGING) : undefined },
   }),
 };

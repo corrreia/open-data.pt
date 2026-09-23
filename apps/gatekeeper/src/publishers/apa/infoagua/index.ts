@@ -9,5 +9,5 @@ export {
   validateInfoaguaFeedConfig,
   type InfoaguaDocument,
 } from "./infoagua";
-export { infoaguaCollector, resolveInfoaguaFeed, type InfoaguaCollectorOptions } from "./collector";
+export { INFOAGUA_NORMALIZER, INFOAGUA_TRANSFORMER, resolveInfoaguaFeed, type InfoaguaContext } from "./collector";
 export { InfoaguaTransformer } from "./transform";

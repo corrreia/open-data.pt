@@ -17,11 +17,10 @@ import {
   InfoaguaTransformer,
   assignedJson,
   collectInfoaguaFeed,
-  infoaguaCollector,
   resolveInfoaguaFeed,
   validateInfoaguaFeedConfig,
 } from "../apps/gatekeeper/src/publishers/apa/infoagua";
-import { feedsOf } from "./catalog";
+import { feedCollection, feedsOf } from "./catalog";
 
 const page = (name: string): string => readFileSync(new URL(`./fixtures/infoagua/${name}`, import.meta.url), "utf8");
 const FLOODS = { feed: "flood-alerts" };
@@ -151,16 +150,16 @@ describe("InfoÁgua drought index", () => {
   });
 });
 
-describe("InfoÁgua through the shared collector", () => {
+describe("InfoÁgua through a feed's own file", () => {
   it("refuses a history walk", async () => {
-    const collector = infoaguaCollector({ config: FLOODS, apiOrigin: INFOAGUA_ORIGIN, fetcher: infoagua() });
-    const result = await collectNormalized(await request({ mode: { kind: "history", cursor: { before: "2026-01-01T00:00:00.000Z" } } }), collector);
+    const { resolved, collector } = await feedCollection("infoagua-flood-alerts-feed", { fetcher: infoagua() });
+    const result = await collectNormalized(await request({ resolved, mode: { kind: "history", cursor: { before: "2026-01-01T00:00:00.000Z" } } }), collector);
     expect(result).toEqual({ kind: "failure", code: "history-unsupported", retryable: false });
   });
 
   it("frames a live collection", async () => {
-    const collector = infoaguaCollector({ config: FLOODS, apiOrigin: INFOAGUA_ORIGIN, fetcher: infoagua() });
-    const result = await collectNormalized(await request(), collector);
+    const { resolved, collector } = await feedCollection("infoagua-flood-alerts-feed", { fetcher: infoagua() });
+    const result = await collectNormalized(await request({ resolved }), collector);
     expect(result.kind).toBe("batch");
     if (result.kind !== "batch") return;
     const frames = (await new Response(result.stream).text()).trim().split("\n");

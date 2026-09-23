@@ -1,5 +1,6 @@
 /** REN's Data Hub, read once for every feed that needs it. */
-export { renCollector, resolveRenFeed, type RenCollectorOptions } from "./collector";
+export { REN_NORMALIZER, REN_TRANSFORMER, resolveRenFeed, type RenContext } from "./collector";
+export { REN_PERIODIC_NORMALIZER, collectRenPeriodic, transformRenPeriodic } from "./periodic";
 export {
   REN_FEEDS,
   REN_HISTORY_SLICE_SECONDS,

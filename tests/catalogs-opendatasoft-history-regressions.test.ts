@@ -3,7 +3,10 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   NORMALIZED_PROTOCOL,
+  NO_PUBLISHER_INPUTS,
+  buildLibrary,
   collectNormalized,
+  feedCollector,
   isJsonObject,
   isNormalizedFrame,
   libraryConfig,
@@ -14,9 +17,14 @@ import {
   type NormalizedRow,
   type SourceConfig,
 } from "../apps/gatekeeper/src/index";
-import { opendatasoftCollector } from "../apps/gatekeeper/src/formats/opendatasoft/collector";
+import { RUNNABLE } from "@open-data-pt/gatekeeper/catalog";
+import { OPENDATASOFT_DEPLOYMENT } from "../apps/gatekeeper/src/formats/opendatasoft/deployment";
 import { MAX_HISTORY_NORMALIZED_ROWS, OpendatasoftSource } from "../apps/gatekeeper/src/formats/opendatasoft/opendatasoft";
 import { OpendatasoftTransformer } from "../apps/gatekeeper/src/formats/opendatasoft/transform";
+
+/** A feed that walks history, whose own functions run here against a synthetic portal no feed names. */
+const HISTORY_FEED = RUNNABLE.get("e-redes-national-consumption-feed")!;
+const LIBRARIES = new Map([["opendatasoft", buildLibrary(OPENDATASOFT_DEPLOYMENT, {}, { ...NO_PUBLISHER_INPUTS, hosts: ["example.test"] })]]);
 
 function fixture(name: string): JsonObject {
   const value = parseJson(readFileSync(new URL(`./fixtures/catalogs-expansion/${name}.json`, import.meta.url), "utf8"));
@@ -66,8 +74,8 @@ describe("Opendatasoft measure-expanded history bounds", () => {
         }
         return Response.json(metadata);
       };
-      const collector = opendatasoftCollector({ config, hosts: "example.test", fetcher });
-      const resolved = await collector.resolve(config);
+      const collector = feedCollector(HISTORY_FEED, { ...config, source: "opendatasoft" }, LIBRARIES, { fetcher });
+      const resolved = await collector.resolve({ ...config, source: "opendatasoft" });
       const unique = new Set<string>();
       let before = "2023-01-01T00:00:00.000Z";
       let exhausted = false;

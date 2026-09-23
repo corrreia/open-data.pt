@@ -1,5 +1,3 @@
-import type { FeedDefinition } from "#/catalog/define";
-
 export const DAY_SECONDS = 86_400;
 
 export const REALTIME_POLICY = {
@@ -34,26 +32,3 @@ export const REFERENCE_POLICY = {
     historyMode: "changes",
   },
 } as const;
-
-/**
- * The slow half of a system, beside the feed of the same name: the station
- * slug keeps its history, and this one carries what the status feed used to
- * re-download on every collection.
- */
-export function referenceFeed(
-  statusSlug: string,
-  operator: string,
-  place: string,
-  url: string,
-  language: string,
-  policy: FeedDefinition["policy"] = REFERENCE_POLICY,
-): FeedDefinition {
-  return {
-    slug: `${statusSlug}-reference`,
-    title: `${operator} stations and system information in ${place}`,
-    description: `Where every ${operator} station in ${place} is, what it is called, how much it holds, and who operates the system.`,
-    config: { source: "gbfs", url, language, feed: "reference" },
-    policy,
-    staleAfterSeconds: 2 * DAY_SECONDS,
-  };
-}

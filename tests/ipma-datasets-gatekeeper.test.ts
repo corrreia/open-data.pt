@@ -2,8 +2,9 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { NORMALIZED_PROTOCOL, collectNormalized, isNormalizedFrame, parseJson, type CollectionRequest, type NormalizedRow, type TransformContext } from "@open-data-pt/gatekeeper";
 import { collectIpmaFeed, IPMA_FEEDS, validateIpmaFeedConfig } from "../apps/gatekeeper/src/publishers/ipma/ipma/ipma";
-import { ipmaCollector, resolveIpmaFeed } from "../apps/gatekeeper/src/publishers/ipma/ipma/collector";
+import { resolveIpmaFeed } from "../apps/gatekeeper/src/publishers/ipma/ipma/collector";
 import { IpmaDatasetTransformer, type IpmaDatasetFeed } from "../apps/gatekeeper/src/publishers/ipma/ipma/datasets";
+import { feedCollection } from "./catalog";
 
 const transformer = new IpmaDatasetTransformer();
 const ORIGIN = "https://api.ipma.pt";
@@ -153,8 +154,8 @@ describe("IPMA published datasets", () => {
   });
 
   it("passes the normalized protocol and keeps arbitrary history unsupported", async () => {
-    const req = await request("municipal-precipitation");
-    const collector = ipmaCollector({ config: { feed: "municipal-precipitation" }, apiOrigin: ORIGIN, fetcher: async () => new Response(fixture("ipma-municipal-rain.csv")) });
+    const { resolved, collector } = await feedCollection("ipma-municipal-precipitation-feed", { fetcher: async () => new Response(fixture("ipma-municipal-rain.csv")) });
+    const req = { ...(await request("municipal-precipitation")), resolved };
     const result = await collectNormalized(req, collector);
     if (result.kind !== "batch") throw new Error(`Expected batch, got ${result.kind}`);
     const lines = (await new Response(result.stream).text()).trim().split("\n");
@@ -167,9 +168,9 @@ describe("IPMA published datasets", () => {
   });
 
   it("fails the byte stream without a completion frame if the kernel output budget is exhausted", async () => {
-    const req = await request("municipal-precipitation");
+    const { resolved, collector } = await feedCollection("ipma-municipal-precipitation-feed", { fetcher: async () => new Response(fixture("ipma-municipal-rain.csv")) });
+    const req = { ...(await request("municipal-precipitation")), resolved };
     req.limits = { ...req.limits, records: 1 };
-    const collector = ipmaCollector({ config: { feed: "municipal-precipitation" }, apiOrigin: ORIGIN, fetcher: async () => new Response(fixture("ipma-municipal-rain.csv")) });
     const result = await collectNormalized(req, collector);
     if (result.kind !== "batch") throw new Error("Expected stream");
     await expect(new Response(result.stream).text()).rejects.toThrow("exceeds 1 rows");

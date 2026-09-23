@@ -1,12 +1,16 @@
-import type { LibraryDeployment } from "#/index";
-import { UDATA_FEEDS, udataCollector } from "./collector";
+import { allowedHosts, type LibraryDeployment } from "#/index";
+import { UDATA_FEEDS, resolveUdataFeed, type UdataContext } from "./collector";
 
-export const UDATA_DEPLOYMENT: LibraryDeployment<object> = {
+export const UDATA_DEPLOYMENT: LibraryDeployment<object, UdataContext> = {
   source: "udata",
   name: "uData portals",
   vars: {},
-  library: (_env, publishers) => ({
-    kinds: Object.values(UDATA_FEEDS),
-    collector: (config) => udataCollector({ config, hosts: publishers.hosts.join(","), transformers: publishers.transformers, fetcher: (input, init) => fetch(input, init) }),
-  }),
+  library: (_env, publishers) => {
+    const hosts = allowedHosts(publishers.hosts.join(","));
+    return {
+      kinds: Object.values(UDATA_FEEDS),
+      resolve: (config) => resolveUdataFeed(config, hosts),
+      context: { hosts },
+    };
+  },
 };

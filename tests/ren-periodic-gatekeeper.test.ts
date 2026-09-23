@@ -1,11 +1,23 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import { NORMALIZED_PROTOCOL, collectNormalized, isNormalizedFrame, parseJson, type CollectionRequest, type NormalizedRow, type TransformContext } from "@open-data-pt/gatekeeper";
-import { renCollector, resolveRenFeed } from "../apps/gatekeeper/src/publishers/ren/ren/collector";
+import {
+  NORMALIZED_PROTOCOL,
+  collectNormalized,
+  feedCollector,
+  isNormalizedFrame,
+  parseJson,
+  resolveLibraryFeed,
+  type CollectionRequest,
+  type NormalizedRow,
+  type RunnableFeed,
+  type TransformContext,
+} from "@open-data-pt/gatekeeper";
+import { RUNNABLE } from "@open-data-pt/gatekeeper/catalog";
+import { resolveRenFeed } from "../apps/gatekeeper/src/publishers/ren/ren/collector";
+import { carriedLibraries } from "./catalog";
 import {
   REN_PERIODIC_ORIGIN,
   REN_PERIODIC_FEEDS,
-  renPeriodicCollector,
   collectRenPeriodic,
   validateRenPeriodicConfig,
   type RenPeriodicService,
@@ -13,6 +25,13 @@ import {
 
 const fixture = (name: string) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf8");
 const NOW = new Date("2026-09-16T12:00:00Z");
+
+/** The feed file that reads one periodic service, to run with a configuration no feed has. */
+function periodicFeed(service: RenPeriodicService): RunnableFeed {
+  const feed = RUNNABLE.get(`ren-${service}-feed`);
+  if (!feed) throw new Error(`No feed file reads ${service}`);
+  return feed;
+}
 
 function context(service: RenPeriodicService, observedAt: string): TransformContext {
   return {
@@ -22,9 +41,7 @@ function context(service: RenPeriodicService, observedAt: string): TransformCont
 }
 
 async function normalized(service: RenPeriodicService, observedAt = NOW.toISOString()) {
-  const collector = renPeriodicCollector({
-    config: { service, day: "2026-09-14" },
-    apiOrigin: REN_PERIODIC_ORIGIN,
+  const collector = feedCollector(periodicFeed(service), { service, day: "2026-09-14", source: "ren" }, carriedLibraries("ren"), {
     fetcher: async () => new Response(fixture(service === "installed-capacity" ? "ren-installed-capacity.json" : "ren-daily-storage.json")),
     now: () => NOW,
   });
@@ -165,9 +182,9 @@ describe("REN periodic public API", () => {
     await expect(collectRenPeriodic({ ...options, apiOrigin: "https://evil.example" }, undefined)).rejects.toMatchObject({ code: "source-denied" });
   });
 
-  it("routes through the existing REN library and emits valid normalized frames", async () => {
-    const config = { service: "gas-storage", day: "2026-09-14" };
-    const resolved = await resolveRenFeed(config);
+  it("runs through a periodic feed's own file and emits valid normalized frames", async () => {
+    const libraries = carriedLibraries("ren");
+    const resolved = await resolveLibraryFeed({ service: "gas-storage", day: "2026-09-14", source: "ren" }, libraries);
     const request: CollectionRequest = {
       protocol: NORMALIZED_PROTOCOL,
       collectionId: "ren-periodic",
@@ -179,12 +196,7 @@ describe("REN periodic public API", () => {
       deadline: new Date(Date.now() + 30_000).toISOString(),
       limits: { sourceBytes: 100_000, outputBytes: 100_000, frameBytes: 50_000, recordBytes: 20_000, products: 10, records: 1000 },
     };
-    const collector = renCollector({
-      config,
-      apiOrigin: "https://datahub.ren.pt",
-      dataApiOrigin: REN_PERIODIC_ORIGIN,
-      fetcher: async () => new Response(fixture("ren-daily-storage.json")),
-    });
+    const collector = feedCollector(periodicFeed("gas-storage"), resolved.config, libraries, { fetcher: async () => new Response(fixture("ren-daily-storage.json")) });
     const result = await collectNormalized(request, collector);
     if (result.kind !== "batch") throw new Error(`Expected batch, got ${result.kind}`);
     const lines = (await new Response(result.stream).text()).trim().split("\n");

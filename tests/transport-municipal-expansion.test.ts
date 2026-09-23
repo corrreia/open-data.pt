@@ -17,11 +17,11 @@ import {
   type StreamingSummary,
   type TransformContext,
 } from "@open-data-pt/gatekeeper";
-import { ckanCollector, CkanSource, validateCkanFeedConfig } from "../apps/gatekeeper/src/formats/ckan";
+import { CkanSource, validateCkanFeedConfig } from "../apps/gatekeeper/src/formats/ckan";
 import { transformCkan, type CkanResourceMetadata } from "../apps/gatekeeper/src/formats/ckan";
-import { gtfsCollector, transformGtfs } from "../apps/gatekeeper/src/formats/gtfs";
+import { transformGtfs } from "../apps/gatekeeper/src/formats/gtfs";
 import { GtfsCsvReader } from "../apps/gatekeeper/src/formats/gtfs/csv";
-import { feedsOf } from "./catalog";
+import { feedCollection, feedsOf } from "./catalog";
 
 const HOSTS = new Set(["dadosabertos.cm-agueda.pt", "oeirasinterativa.oeiras.pt"]);
 const OEIRAS = example("oeiras-hourly-environment-feed");
@@ -101,17 +101,13 @@ describe("Portuguese transport expansion", () => {
   it.each(GTFS)("normalizes the recorded $slug schedule through one-byte ZIP chunks", async (recorded) => {
     const entry = feedsOf("gtfs").find((entry) => entry.slug === recorded.slug);
     if (!entry) throw new Error("Missing GTFS example");
-    const config = libraryConfig(entry.config);
-    const collector = gtfsCollector({
-      config,
-      hosts: new URL(text(recorded.source)).hostname,
+    const { resolved, collector } = await feedCollection(entry.slug, {
       fetcher: async (_input, init) => {
         // IIS on Fertagus negotiates application/x-zip-compressed, otherwise HTTP 406.
         expect(new Headers(init?.headers).get("accept")).toContain("application/x-zip-compressed");
         return new Response(zip(object(recorded.files)));
       },
     });
-    const resolved = await collector.resolve(config);
     expect(resolved.config.url).toBe(recorded.source);
     const fetched = await collector.source(undefined, { kind: "live" }, new AbortController().signal);
     if (fetched.kind !== "body") throw new Error("Expected GTFS archive");
@@ -216,9 +212,8 @@ describe("CKAN monthly discovery and explicit CSV observations", () => {
       expect(() => source.validateConfig({ ...MONTHLY_CONFIG, ...extra })).toThrow();
     const reference = { host: "dadosabertos.cm-agueda.pt", dataset: "cotas-de-cheia" };
     expect(validateCkanFeedConfig(reference, HOSTS)).toEqual(reference);
-    const collector = ckanCollector({ config: MONTHLY_CONFIG, hosts: [...HOSTS].join(","), fetcher: fetch });
-    const resolved = await collector.resolve(MONTHLY_CONFIG);
-    expect(resolved.kind).toBe("observations");
+    const { resolved } = await feedCollection(OEIRAS.slug);
+    expect(resolved.kind).toBe("ckan:observations");
     expect(resolved.semantics.domainSubject).toBe("observation");
   });
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CanonicalRecord, ProductBuild, UnstampedResult } from "@open-data-pt/gatekeeper";
-import { myInfoCollector, myInfoOperators } from "../apps/gatekeeper/src/formats/myinfo/collector";
+import { myInfoOperators } from "../apps/gatekeeper/src/formats/myinfo/collector";
+import { feedCollection } from "./catalog";
 import type { MyInfoDocument } from "../apps/gatekeeper/src/formats/myinfo/myinfo";
 import { MyInfoTransformer } from "../apps/gatekeeper/src/formats/myinfo/transform";
 
@@ -151,22 +152,20 @@ describe("MYINFO transformer", () => {
 });
 
 describe("MYINFO collector", () => {
-  it("reads the operators a Worker allows, ignoring blanks and spacing", () => {
-    expect([...myInfoOperators(" BarraqueiroOeste , mare ,, ")]).toEqual(["BarraqueiroOeste", "mare"]);
+  it("reads exactly the operators the publisher folders' feeds name, each once", () => {
+    const configs = [{ source: "myinfo", operator: "BarraqueiroOeste" }, { source: "myinfo", operator: "mare" }, { source: "myinfo", operator: "mare" }, { source: "myinfo" }];
+    expect([...myInfoOperators(configs)]).toEqual(["BarraqueiroOeste", "mare"]);
   });
 
-  it("claims no history, because the portals publish none", async () => {
-    const collector = myInfoCollector({
-      config: { feed: "network", operator: "mare" },
-      apiOrigin: "https://myinfo.4cloud.pt",
-      operators: "mare",
+  it("claims no history, because the portals publish none: no MYINFO feed file defines a backfill", async () => {
+    const { collector } = await feedCollection("mare-network-feed", {
       fetcher: () => {
         throw new Error("no request expected");
       },
     });
     expect(collector.normalizer).toEqual({ id: "myinfo-portal", version: "1" });
     await expect(async () => collector.source(undefined, { kind: "history", cursor: { before: "2026-01-01T00:00:00.000Z" } }, new AbortController().signal)).rejects.toThrow(
-      /no historical timetables/,
+      /keeps no history/,
     );
   });
 });

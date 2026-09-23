@@ -1,18 +1,7 @@
 import { appendFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import {
-  NORMALIZED_PROTOCOL,
-  collectNormalized,
-  isNormalizedFrame,
-  libraryConfig,
-  parseJson,
-  type CollectionRequest,
-  type ExampleFeed,
-  type NormalizedFrame,
-} from "../apps/gatekeeper/src/index";
-import { opendatasoftCollector } from "../apps/gatekeeper/src/formats/opendatasoft/collector";
-import { bpstatCollector } from "../apps/gatekeeper/src/publishers/banco-de-portugal/bpstat/collector";
-import { feedsOf } from "./catalog";
+import { NORMALIZED_PROTOCOL, collectNormalized, isNormalizedFrame, parseJson, type CollectionRequest, type ExampleFeed, type NormalizedFrame } from "../apps/gatekeeper/src/index";
+import { feedCollection, feedsOf } from "./catalog";
 
 // Opt in to precisely the new catalog feeds; no production writes or topic wiring is required.
 const selected = (process.env.LIVE_CATALOGS ?? "").split(",");
@@ -25,17 +14,12 @@ describe("catalog expansion live collection", () => {
     it.skipIf(!selected.includes(example.slug) && !selected.includes(example.config.source ?? ""))(
       example.slug,
       async () => {
-        const config = libraryConfig(example.config);
         let requests = 0;
         const fetcher: typeof fetch = (input, init) => {
           requests += 1;
           return fetch(input, init);
         };
-        const collector =
-          example.config.source === "opendatasoft"
-            ? opendatasoftCollector({ config, hosts: "e-redes.opendatasoft.com,transparencia.sns.gov.pt", fetcher })
-            : bpstatCollector({ config, apiOrigin: "https://bpstat.bportugal.pt", fetcher });
-        const resolved = await collector.resolve(config);
+        const { resolved, collector } = await feedCollection(example.slug, { fetcher });
         const result = await collectNormalized(request(example, resolved), collector);
         if (result.kind !== "batch") throw new Error(JSON.stringify(result));
         const bytes = new Uint8Array(await new Response(result.stream).arrayBuffer());
@@ -73,7 +57,7 @@ describe("catalog expansion live collection", () => {
             keys.add(key);
           }
         }
-        if (config.lastN) expect(Math.max(...seriesCounts.values())).toBeLessThanOrEqual(Number(config.lastN));
+        if (example.config.lastN) expect(Math.max(...seriesCounts.values())).toBeLessThanOrEqual(Number(example.config.lastN));
         const measurement = JSON.stringify({
           slug: example.slug,
           requests,

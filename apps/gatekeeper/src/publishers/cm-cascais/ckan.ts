@@ -1,4 +1,5 @@
-import type { FeedDefinition } from "#/catalog/define";
+/** Cascais's CKAN portal, where every GeoCascais layer is exported nightly. */
+export const CASCAIS_HOST = "dadosabertos.cascais.pt";
 
 export const CASCAIS_DAILY_REFERENCE = {
   name: "Cascais CKAN daily reference snapshot",
@@ -10,13 +11,3 @@ export const CASCAIS_DAILY_REFERENCE = {
     historyMode: "changes",
   },
 } as const;
-
-/** One GeoJSON resource from the Cascais open data portal, collected daily. */
-export function cascaisFeed(slug: string, portalDataset: string, resource: string): FeedDefinition {
-  return {
-    slug,
-    config: { source: "ckan", host: "dadosabertos.cascais.pt", dataset: portalDataset, resource },
-    policy: CASCAIS_DAILY_REFERENCE,
-    staleAfterSeconds: 172_800,
-  };
-}

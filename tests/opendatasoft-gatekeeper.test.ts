@@ -17,12 +17,13 @@ import {
   type SourceConfig,
   type SourceFetch,
   type TransformContext,
+  feedCollector,
   libraryConfig,
 } from "@open-data-pt/gatekeeper";
+import { RUNNABLE } from "@open-data-pt/gatekeeper/catalog";
 import { MAX_HISTORY_DOCUMENT_BYTES, MAX_HISTORY_RECORDS, OPENDATASOFT_FEEDS, OpendatasoftSource } from "../apps/gatekeeper/src/formats/opendatasoft/opendatasoft";
-import { feedsOf } from "./catalog";
+import { carriedLibraries, feedsOf } from "./catalog";
 import { OpendatasoftTransformer, seriesSlug } from "../apps/gatekeeper/src/formats/opendatasoft/transform";
-import { opendatasoftCollector } from "../apps/gatekeeper/src/formats/opendatasoft";
 import { isProductSlug } from "../packages/contract/src/validation";
 
 const metadata = {
@@ -90,8 +91,11 @@ function source(fetcher: typeof fetch): OpendatasoftSource {
   return new OpendatasoftSource(allowedHosts, fetcher);
 }
 
+/** A feed that walks history, whose own functions run here against configurations no feed has. */
+const HISTORY_FEED = RUNNABLE.get("e-redes-national-consumption-feed")!;
+
 function odsCollector(config: SourceConfig, fetcher: typeof fetch): NormalizedCollector {
-  return opendatasoftCollector({ config, hosts: ODS_HOSTS, fetcher });
+  return feedCollector(HISTORY_FEED, { ...config, source: "opendatasoft" }, carriedLibraries("opendatasoft"), { fetcher });
 }
 
 function bodyOf(fetched: SourceFetch): SourceBody {
@@ -119,7 +123,7 @@ async function transformed(fetched: SourceFetch): Promise<{ records: CanonicalRe
 const LIVE_CONFIG: SourceConfig = { host: "e-redes.opendatasoft.com", dataset: "sample-dataset", limit: "10" };
 
 async function request(config: SourceConfig, fetcher: typeof fetch, mode: CollectionRequest["mode"], sourceBytes = 1024 * 1024): Promise<CollectionRequest> {
-  const resolved: ResolvedFeed = await odsCollector(config, fetcher).resolve(config);
+  const resolved: ResolvedFeed = await odsCollector(config, fetcher).resolve({ ...config, source: "opendatasoft" });
   return {
     protocol: NORMALIZED_PROTOCOL,
     collectionId: "batch_ods",

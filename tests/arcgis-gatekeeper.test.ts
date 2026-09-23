@@ -11,13 +11,15 @@ import {
   type JsonValue,
   type SourceBody,
   type SourceFetch,
+  feedCollector,
   libraryConfig,
+  resolveLibraryFeed,
 } from "@open-data-pt/gatekeeper";
-import { MAX_METADATA_BYTES, arcgisCollector, collectArcgisFeed, resolveArcgisFeed, validateArcgisFeedConfig } from "../apps/gatekeeper/src/formats/arcgis";
-import { feedsOf } from "./catalog";
+import { RUNNABLE } from "@open-data-pt/gatekeeper/catalog";
+import { MAX_METADATA_BYTES, collectArcgisFeed, validateArcgisFeedConfig } from "../apps/gatekeeper/src/formats/arcgis";
+import { carriedLibraries, feedsOf } from "./catalog";
 
-const allowedHosts = "services.arcgis.com";
-const hosts = new Set([allowedHosts]);
+const hosts = new Set(["services.arcgis.com"]);
 const config = {
   host: "services.arcgis.com",
   service: "account/arcgis/rest/services/Useful_Layer/FeatureServer",
@@ -53,6 +55,13 @@ const metadata = {
     },
   ],
 };
+
+/** A Lisboa layer's feed, run on the test's layer: every ArcGIS feed's functions are the same, only its configuration differs. */
+function layerCollector(fetcher: typeof fetch) {
+  const feed = RUNNABLE.get("lisbon-parishes-feed");
+  if (!feed) throw new Error("No feed file defines lisbon-parishes-feed");
+  return feedCollector(feed, { ...config, source: "arcgis" }, carriedLibraries("arcgis"), { fetcher });
+}
 
 /** A GeoJSON page of consecutive object IDs; the transfer flag sits where some servers put it. */
 function page(first: number, count: number, exceededTransferLimit: boolean): JsonObject {
@@ -106,7 +115,7 @@ async function request(overrides: Partial<CollectionRequest> = {}): Promise<Coll
     protocol: NORMALIZED_PROTOCOL,
     collectionId: "collection_1",
     feed: { id: "feed_1", slug: "useful-layer-feed", title: "Useful layer", description: "test feed" },
-    resolved: await resolveArcgisFeed(config, hosts),
+    resolved: await resolveLibraryFeed({ ...config, source: "arcgis" }, carriedLibraries("arcgis")),
     feedEpoch: "epoch-1",
     mode: { kind: "live" },
     limits: { sourceBytes: 1_048_576, outputBytes: 1_048_576, frameBytes: 65_536, recordBytes: 65_536, records: 100, products: 4 },
@@ -192,10 +201,7 @@ describe("ArcGIS Gatekeeper", () => {
   it("answers a request on another protocol release with a passing failure, not a permanent one", async () => {
     // During a deploy the kernel and this Gatekeeper differ for a minute; a permanent failure would cool the feed down for hours.
     // SAFETY: an older release's protocol string is exactly what this test needs to send through the typed request.
-    const result = await collectNormalized(
-      await request({ protocol: "open-data-normalized/3" as typeof NORMALIZED_PROTOCOL }),
-      arcgisCollector({ config, hosts: allowedHosts, fetcher: layerFetcher(3) }),
-    );
+    const result = await collectNormalized(await request({ protocol: "open-data-normalized/3" as typeof NORMALIZED_PROTOCOL }), layerCollector(layerFetcher(3)));
     expect(result).toEqual({ kind: "failure", code: "protocol-mismatch", retryable: true, retryAfterSeconds: 60 });
   });
 
@@ -261,7 +267,7 @@ describe("ArcGIS Gatekeeper", () => {
 describe("ArcGIS collection through the shared collector", () => {
   it("streams header, records and a finalized schema from the paged layer", async () => {
     const req = await request();
-    const result = await collectNormalized(req, arcgisCollector({ config, hosts: allowedHosts, fetcher: layerFetcher(3) }));
+    const result = await collectNormalized(req, layerCollector(layerFetcher(3)));
     if (result.kind !== "batch") throw new Error(`Expected a batch, got ${JSON.stringify(result)}`);
     const [header, ...rest] = await frames(result.stream);
     const complete = rest.at(-1);
@@ -304,7 +310,7 @@ describe("ArcGIS collection through the shared collector", () => {
           state: { validators: { default: { etag: revision.etag } } },
         },
       },
-      arcgisCollector({ config, hosts: allowedHosts, fetcher: layerFetcher(3) }),
+      layerCollector(layerFetcher(3)),
     );
     expect(unchanged).toMatchObject({ kind: "unchanged", checkpoint: { state: { validators: { default: revision } } } });
   });
@@ -312,7 +318,7 @@ describe("ArcGIS collection through the shared collector", () => {
   it("fails when the streamed layer exceeds the source byte budget", async () => {
     const result = await collectNormalized(
       await request({ limits: { sourceBytes: 64, outputBytes: 1_048_576, frameBytes: 65_536, recordBytes: 65_536, records: 100, products: 4 } }),
-      arcgisCollector({ config, hosts: allowedHosts, fetcher: layerFetcher(3) }),
+      layerCollector(layerFetcher(3)),
     );
     expect(result).toEqual({ kind: "failure", code: "response-too-large", retryable: false });
   });

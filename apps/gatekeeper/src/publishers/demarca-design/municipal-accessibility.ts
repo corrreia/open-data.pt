@@ -93,3 +93,6 @@ function normalizeLabel(value: string | undefined): string | null {
   const normalized = value?.trim().toLowerCase();
   return normalized || null;
 }
+
+/** DEMARCA's accessibility survey needs its own translator; its feed file calls it. */
+export const MUNICIPAL_ACCESSIBILITY_TRANSFORMER = new MunicipalAccessibilityTransformer();

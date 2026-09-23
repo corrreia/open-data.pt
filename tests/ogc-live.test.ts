@@ -1,13 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { feedsOf } from "./catalog";
-import { NORMALIZED_PROTOCOL, collectNormalized, isJsonObject, libraryConfig, parseJson, type CollectionRequest, type JsonObject } from "@open-data-pt/gatekeeper";
-import { ogcCollector, resolveOgcFeed } from "../apps/gatekeeper/src/formats/ogc";
+import { feedCollection, feedsOf } from "./catalog";
+import { NORMALIZED_PROTOCOL, collectNormalized, isJsonObject, parseJson, type CollectionRequest, type JsonObject } from "@open-data-pt/gatekeeper";
 
 const wanted = (process.env.LIVE_OGC ?? "")
   .split(",")
   .map((slug) => slug.trim())
   .filter(Boolean);
-const hosts = "ogcapi.dgterritorio.gov.pt,ambiente.azores.gov.pt,ogcapi.lneg.pt";
 
 async function readFrames(stream: ReadableStream<Uint8Array>): Promise<JsonObject[]> {
   const reader = stream.getReader();
@@ -33,8 +31,7 @@ describe.runIf(wanted.length > 0)("OGC live collection", () => {
   it.each(chosen)(
     "collects $slug from its real service",
     async (example) => {
-      const config = libraryConfig(example.config);
-      const resolved = await resolveOgcFeed(config, new Set(hosts.split(",")));
+      const { resolved, collector } = await feedCollection(example.slug, { fetcher: (input, init) => fetch(input, init) });
       const request: CollectionRequest = {
         protocol: NORMALIZED_PROTOCOL,
         collectionId: `live_${example.slug}`,
@@ -53,7 +50,7 @@ describe.runIf(wanted.length > 0)("OGC live collection", () => {
         deadline: new Date(Date.now() + example.policy.collection.timeoutSeconds * 1000).toISOString(),
         observedAt: new Date().toISOString(),
       };
-      const result = await collectNormalized(request, ogcCollector({ config, hosts, fetcher: (input, init) => fetch(input, init) }));
+      const result = await collectNormalized(request, collector);
       if (result.kind !== "batch") throw new Error(`${example.slug}: ${JSON.stringify(result)}`);
       const frames = await readFrames(result.stream);
       const header = frames[0];

@@ -1,30 +1,18 @@
-import { resolveFeed, type NormalizedCollector, type SourceConfig } from "#/index";
-import { collectRipestatFeed, RIPESTAT_FEEDS, validateRipestatFeedConfig } from "./ripestat";
+import { resolveFeed, type ResolvedFeed, type SourceConfig } from "#/index";
+import { RIPESTAT_FEEDS, validateRipestatFeedConfig } from "./ripestat";
 import { RipestatTransformer } from "./transform";
 
-export interface RipestatCollectorOptions {
-  config: SourceConfig;
-  /** RIPESTAT_API_ORIGIN; only https://stat.ripe.net is accepted. */
+/** What a RIPEstat feed's functions are handed when they run: `RIPESTAT_API_ORIGIN`; only https://stat.ripe.net is accepted. */
+export interface RipestatContext {
   apiOrigin: string;
-  fetcher: typeof fetch;
-  /** Request-window clock only, never an observation timestamp. */
-  now?: () => Date;
 }
 
-export function ripestatCollector(options: RipestatCollectorOptions): NormalizedCollector {
-  const transformer = new RipestatTransformer();
-  return {
-    normalizer: { id: transformer.id, version: transformer.version },
-    resolve: (config) => resolveFeed(config, { library: "ripestat", kinds: RIPESTAT_FEEDS, validate: validateRipestatFeedConfig }),
-    source: (state, mode, signal) =>
-      collectRipestatFeed(
-        options.config,
-        state,
-        options.apiOrigin,
-        (input, init) => options.fetcher(input, { ...init, signal: init?.signal ? AbortSignal.any([signal, init.signal]) : signal }),
-        mode,
-        options.now?.() ?? new Date(),
-      ),
-    normalize: { kind: "streaming", transform: (body, context) => transformer.transform(body, context) },
-  };
+/** The streaming translator from RIPEstat's data calls into products; every RIPEstat feed uses it. */
+export const RIPESTAT_TRANSFORMER = new RipestatTransformer();
+
+/** The normalizer a RIPEstat feed's collection is stamped with: the translator's name and version. */
+export const RIPESTAT_NORMALIZER = { id: RIPESTAT_TRANSFORMER.id, version: RIPESTAT_TRANSFORMER.version };
+
+export function resolveRipestatFeed(config: SourceConfig): Promise<ResolvedFeed> {
+  return resolveFeed(config, { library: "ripestat", kinds: RIPESTAT_FEEDS, validate: validateRipestatFeedConfig });
 }

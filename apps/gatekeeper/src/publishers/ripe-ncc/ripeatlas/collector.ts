@@ -1,26 +1,18 @@
-import { resolveFeed, type NormalizedCollector, type SourceConfig } from "#/index";
-import { collectRipeatlasFeed, RIPEATLAS_FEEDS, validateRipeatlasFeedConfig } from "./ripeatlas";
+import { resolveFeed, type ResolvedFeed, type SourceConfig } from "#/index";
+import { RIPEATLAS_FEEDS, validateRipeatlasFeedConfig } from "./ripeatlas";
 import { RipeatlasTransformer } from "./transform";
 
-export interface RipeatlasCollectorOptions {
-  config: SourceConfig;
-  /** RIPEATLAS_API_ORIGIN; only https://atlas.ripe.net is accepted. */
+/** What a RIPE Atlas feed's functions are handed when they run: `RIPEATLAS_API_ORIGIN`; only https://atlas.ripe.net is accepted. */
+export interface RipeatlasContext {
   apiOrigin: string;
-  fetcher: typeof fetch;
 }
 
-export function ripeatlasCollector(options: RipeatlasCollectorOptions): NormalizedCollector {
-  const transformer = new RipeatlasTransformer();
-  return {
-    normalizer: { id: transformer.id, version: transformer.version },
-    resolve: (config) => resolveFeed(config, { library: "ripeatlas", kinds: RIPEATLAS_FEEDS, validate: validateRipeatlasFeedConfig }),
-    source: (_state, mode, signal) =>
-      collectRipeatlasFeed(
-        options.config,
-        options.apiOrigin,
-        (input, init) => options.fetcher(input, { ...init, signal: init?.signal ? AbortSignal.any([signal, init.signal]) : signal }),
-        mode,
-      ),
-    normalize: { kind: "streaming", transform: (body, context) => transformer.transform(body, context) },
-  };
+/** The streaming translator from RIPE Atlas's probe and anchor lists into records; every RIPE Atlas feed uses it. */
+export const RIPEATLAS_TRANSFORMER = new RipeatlasTransformer();
+
+/** The normalizer a RIPE Atlas feed's collection is stamped with: the translator's name and version. */
+export const RIPEATLAS_NORMALIZER = { id: RIPEATLAS_TRANSFORMER.id, version: RIPEATLAS_TRANSFORMER.version };
+
+export function resolveRipeatlasFeed(config: SourceConfig): Promise<ResolvedFeed> {
+  return resolveFeed(config, { library: "ripeatlas", kinds: RIPEATLAS_FEEDS, validate: validateRipeatlasFeedConfig });
 }

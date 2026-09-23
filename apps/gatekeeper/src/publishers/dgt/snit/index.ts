@@ -13,5 +13,5 @@ export {
   type SnitInstrumentType,
   type SnitType,
 } from "./snit";
-export { snitCollector, resolveSnitFeed, type SnitCollectorOptions } from "./collector";
+export { SNIT_NORMALIZER, SNIT_TRANSFORMER, resolveSnitFeed, type SnitContext } from "./collector";
 export { SnitTransformer } from "./transform";

@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { collectNormalized, libraryConfig, type JsonObject, type SourceFetch } from "../apps/gatekeeper/src/index";
 import { collectPeeringdbFeed, PEERINGDB_ORIGIN, PEERINGDB_PUBLIC_FIELDS, validatePeeringdbFeedConfig } from "../apps/gatekeeper/src/publishers/peeringdb/peeringdb/peeringdb";
-import { peeringdbCollector } from "../apps/gatekeeper/src/publishers/peeringdb/peeringdb/collector";
 import { PeeringdbTransformer } from "../apps/gatekeeper/src/publishers/peeringdb/peeringdb/transform";
 import { networkBytes, networkContext, networkFixture, networkFrames, networkRequest, networkRows, object } from "./networks-support";
-import { datasetOf, feedsOf } from "./catalog";
+import { datasetOf, feedCollection, feedsOf } from "./catalog";
 
 const CONFIG = { feed: "exchanges", country: "PT" };
 const transformer = new PeeringdbTransformer();
@@ -75,9 +74,7 @@ describe("PeeringDB source boundaries", () => {
   });
 
   it("does not accept a first-page 304 as proof of an unchanged directory", async () => {
-    const collector = peeringdbCollector({
-      config: CONFIG,
-      apiOrigin: PEERINGDB_ORIGIN,
+    const { collector } = await feedCollection("peeringdb-portugal-exchanges-feed", {
       fetcher: async (_input, init) => {
         expect(new Headers(init?.headers).has("if-none-match")).toBe(false);
         return new Response(null, { status: 304 });
@@ -157,8 +154,8 @@ describe("PeeringDB public directory normalization", () => {
   it("emits protocol-v4 record frames and completion without any repeated series product", async () => {
     let request = 0;
     const fetcher: typeof fetch = async () => Response.json({ data: request++ === 0 ? [exchange(1)] : [], meta: {} });
-    const collector = peeringdbCollector({ config: CONFIG, apiOrigin: PEERINGDB_ORIGIN, fetcher });
-    const frames = await networkFrames(await collectNormalized(await networkRequest(collector, CONFIG), collector));
+    const { resolved, collector } = await feedCollection("peeringdb-portugal-exchanges-feed", { fetcher });
+    const frames = await networkFrames(await collectNormalized(await networkRequest(collector, resolved.config), collector));
     expect(frames.map((frame) => frame.type)).toEqual(["header", "record", "complete"]);
     expect(frames.at(-1)).toMatchObject({ counts: { records: 1, points: 0 }, quality: { acceptedRecords: 1, rejectedRecords: 0 } });
   });

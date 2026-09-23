@@ -1,6 +1,3 @@
-import type { FeedDefinition } from "#/catalog/define";
-import { MEBIBYTE, WEEK, measuredCollection, type LayerSize } from "#/formats/ogc/feeds";
-
 export const DGT_HOST = "ogcapi.dgterritorio.gov.pt";
 
 /*
@@ -44,35 +41,19 @@ export const DGT_HOST = "ogcapi.dgterritorio.gov.pt";
  * files, not more code.
  */
 
-/**
- * One layer of the SRUP — the public-utility easements and restrictions in
- * force on the mainland. Every layer carries the same register columns, so what
- * differs between them is which collection is read, how much of it there is,
- * and what the feed does with its geometry.
- */
-export interface SrupLayer {
-  slug: string;
-  collection: string;
-  /** Read once from the service, and what the dataset's description promises. */
-  features: number;
-  /**
-   * What the feed does with the layer's geometry, decided by reading it: an
-   * outline where no row passes the megabyte a record may hold, a point where
-   * some do — a municipal agricultural reserve reaches eight megabytes — and
-   * nothing at all where the download would dwarf what it buys.
-   */
-  geometry?: "include" | "point";
-  /** The columns worth publishing, where the layer holds one value for the rest of them. */
-  properties?: string;
-  /** What one walk of this layer cost when it was read, which is what its budgets are sized from. */
-  measured: LayerSize;
-}
-
 /*
- * The SRUP layers small enough to publish whole. Four are not read: the fire
- * hazard chart (1,787,684 features), the SGIFR areas and lines (490,437 and
- * 239,863) and the cadastral parcels (1,814,264) are national coverages rather
- * than registers, and no page budget makes them a table.
+ * The SRUP — the public-utility easements and restrictions in force on the
+ * mainland — is read one layer a feed, and every layer carries the same
+ * register columns, so what differs between them is which collection is read,
+ * how much of it there is, and what the feed does with its geometry: an
+ * outline where no row passes the megabyte a record may hold, a point where
+ * some do — a municipal agricultural reserve reaches eight megabytes — and
+ * nothing at all where the download would dwarf what it buys.
+ *
+ * The layers small enough to publish whole. Four are not read: the fire hazard
+ * chart (1,787,684 features), the SGIFR areas and lines (490,437 and 239,863)
+ * and the cadastral parcels (1,814,264) are national coverages rather than
+ * registers, and no page budget makes them a table.
  *
  * `serv_data` is the day the act took effect and `serv_hiperligacao` the act
  * itself, so each row is dated by the source's own clock and carries its proof.
@@ -87,60 +68,26 @@ export interface SrupLayer {
  * handful of rows a year is the shape of a renumbering, not of a change in the
  * law. Nothing here can prevent it; the alternative, a key built from the
  * columns, would collide on the very rows that need telling apart.
- */
-
-/** A page worth asking for: small enough that losing one to a dropped connection is cheap to repeat. */
-const PAGE_TARGET_BYTES = 16 * MEBIBYTE;
-
-/**
- * How many features to ask for at once, from how big this layer's features
- * turned out to be. A register of a few hundred attribute rows still arrives in
- * one request; a road network whose average stretch is a sixth of a megabyte is
+ *
+ * Each layer's page size came from how big its features turned out to be when
+ * it was read: as many as make about sixteen mebibytes, between ten and five
+ * hundred. A register of a few hundred attribute rows still arrives in one
+ * request; a road network whose average stretch is a sixth of a megabyte is
  * asked for a hundred at a time rather than five hundred, because a page that
- * fails is re-read from its offset and a smaller page loses less.
+ * fails is re-read from its offset and a smaller page loses less. The page cap
+ * is the pages the count needs, two more for room, and never under four.
+ *
+ * Every layer is read whole every week, under the "SRUP weekly register"
+ * policy. A restriction changes when an act is published, which happens a
+ * handful of times a year across the whole register, so weekly catches one
+ * within days. What that walk costs is the layer's own business: a register
+ * read as attributes is a few hundred kilobytes, the same register read with
+ * its outlines can be a couple of hundred megabytes, and the budgets come from
+ * having read each one (`measuredCollection`). The service publishes no
+ * validator, so the cost of a run is the walk itself. A feed is stale after two
+ * weeks: an act published the day after a run should not make the feed look
+ * stale before the next one has had a chance to catch it.
  */
-function pageSizeFor(layer: SrupLayer): number {
-  const perFeature = (layer.measured.source * MEBIBYTE) / layer.features;
-  return Math.max(10, Math.min(500, Math.floor(PAGE_TARGET_BYTES / Math.max(perFeature, 1))));
-}
-
-/**
- * A register layer: read whole every week, with room for the pages the count
- * needs. The service publishes no validator, so the cost of a run is the walk
- * itself — which for an attributes-only register is under a second, and for a
- * layer read with its outlines is minutes.
- */
-export function srupFeed(layer: SrupLayer): FeedDefinition {
-  const geometry = layer.geometry ?? "skip";
-  const pageSize = pageSizeFor(layer);
-  const config: FeedDefinition["config"] = {
-    source: "ogc",
-    host: DGT_HOST,
-    collection: layer.collection,
-    geometry,
-    pageSize: String(pageSize),
-    maxPages: String(Math.max(4, Math.ceil(layer.features / pageSize) + 2)),
-  };
-  if (layer.properties) config.properties = layer.properties;
-  return {
-    slug: layer.slug,
-    config,
-    policy: {
-      name: "SRUP weekly register",
-      version: 2,
-      // A restriction changes when an act is published, which happens a handful
-      // of times a year across the whole register, so weekly catches one within
-      // days. What that walk costs is the layer's own business: a register read
-      // as attributes is a few hundred kilobytes, the same register read with
-      // its outlines can be a couple of hundred megabytes, and the budgets come
-      // from having read each one.
-      collection: measuredCollection(layer.measured, WEEK),
-    },
-    // Two weeks: an act published the day after a run should not make the feed
-    // look stale before the next one has had a chance to catch it.
-    staleAfterSeconds: 2 * WEEK,
-  };
-}
 
 /*
  * Every column the CRUS layer holds is asked for, `autor` and `objectid` included.

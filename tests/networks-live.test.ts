@@ -1,23 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { collectNormalized, libraryConfig, type ExampleFeed, type NormalizedCollector } from "../apps/gatekeeper/src/index";
-import { ripestatCollector } from "../apps/gatekeeper/src/publishers/ripe-ncc/ripestat";
-import { peeringdbCollector } from "../apps/gatekeeper/src/publishers/peeringdb/peeringdb";
-import { IODA_HOST, iodaCollector } from "../apps/gatekeeper/src/publishers/ioda/ioda";
-import { ripeatlasCollector } from "../apps/gatekeeper/src/publishers/ripe-ncc/ripeatlas";
+import { collectNormalized } from "../apps/gatekeeper/src/index";
 import { networkFrames, networkRequest } from "./networks-support";
-import { feedsOf } from "./catalog";
+import { feedCollection, feedsOf } from "./catalog";
 
 // Research-only opt-in: each of these publishers restricts republication. These checks do not deploy or store source data.
 const selected = (process.env.LIVE_NETWORKS ?? "").split(",");
-
-function collector(example: ExampleFeed, fetcher: typeof fetch): NormalizedCollector {
-  const config = libraryConfig(example.config);
-  if (example.config.source === "ioda") return iodaCollector({ config, hosts: IODA_HOST, fetcher });
-  if (example.config.source === "ripeatlas") return ripeatlasCollector({ config, apiOrigin: "https://atlas.ripe.net", fetcher });
-  return example.config.source === "ripestat"
-    ? ripestatCollector({ config, apiOrigin: "https://stat.ripe.net", fetcher })
-    : peeringdbCollector({ config, apiOrigin: "https://www.peeringdb.com", fetcher });
-}
 
 describe("internet infrastructure live research", () => {
   for (const example of ["ripestat", "peeringdb", "ioda", "ripeatlas"].flatMap((name) => feedsOf(name))) {
@@ -26,18 +13,20 @@ describe("internet infrastructure live research", () => {
       async () => {
         let requests = 0;
         let detail = "";
-        const adapter = collector(example, async (input, init) => {
-          requests += 1;
-          try {
-            const response = await fetch(input, init);
-            if (!response.ok) detail = `HTTP ${response.status}`;
-            return response;
-          } catch (error) {
-            detail = error instanceof Error ? `${error.message}; ${error.cause instanceof Error ? error.cause.message : String(error.cause)}` : String(error);
-            throw error;
-          }
+        const { resolved, collector: adapter } = await feedCollection(example.slug, {
+          fetcher: async (input, init) => {
+            requests += 1;
+            try {
+              const response = await fetch(input, init);
+              if (!response.ok) detail = `HTTP ${response.status}`;
+              return response;
+            } catch (error) {
+              detail = error instanceof Error ? `${error.message}; ${error.cause instanceof Error ? error.cause.message : String(error.cause)}` : String(error);
+              throw error;
+            }
+          },
         });
-        const request = await networkRequest(adapter, libraryConfig(example.config));
+        const request = await networkRequest(adapter, resolved.config);
         request.feed = { id: example.slug, slug: example.slug, title: example.title, description: example.description };
         request.observedAt = new Date().toISOString();
         const result = await collectNormalized(request, adapter);
@@ -67,8 +56,8 @@ describe("internet infrastructure live research", () => {
     "RIPEstat source-supported historical window",
     async () => {
       const example = feedsOf("ripestat").find((item) => item.config.feed === "country-routing")!;
-      const adapter = collector(example, (input, init) => fetch(input, init));
-      const request = await networkRequest(adapter, libraryConfig(example.config));
+      const { resolved, collector: adapter } = await feedCollection(example.slug, { fetcher: (input, init) => fetch(input, init) });
+      const request = await networkRequest(adapter, resolved.config);
       const now = new Date();
       const before = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) - 30 * 86_400_000).toISOString();
       request.mode = { kind: "history", cursor: { before } };
