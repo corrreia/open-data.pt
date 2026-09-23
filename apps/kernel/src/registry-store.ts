@@ -1,8 +1,8 @@
-import { NormalizedInputError, isProductSlug } from "@open-data-pt/gatekeeper-shared";
-import type { CollectionPolicyDefinition, FeedSemantics, JsonObject, ResolvedFeed, ServingPolicyDefinition, SourceConfig } from "@open-data-pt/gatekeeper-shared";
+import { NormalizedInputError, isProductSlug } from "@open-data-pt/contract";
+import type { CollectionPolicyDefinition, FeedSemantics, JsonObject, ResolvedFeed, SourceConfig } from "@open-data-pt/contract";
 import type { ManifestChunk } from "./chunks";
 import { feedDefinition, type Acquisition, type Feed, type FeedPolicy, type FeedStatus, type ProductIndexEntry, type ProductSummary } from "./feed-model";
-import { dropAllTables, userTables } from "./sqlite-reset";
+import { dropAllTables, userTables, type SqlExec } from "./sqlite-reset";
 
 /**
  * SQLite inside the Registry Durable Object: feed definitions, policies, a
@@ -13,7 +13,7 @@ export const REGISTRY_SCHEMA_VERSION = 201;
 const ACTIVITY_KEEP = 5_000;
 
 export class RegistryStore {
-  constructor(private readonly sql: SqlStorage) {}
+  constructor(private readonly sql: SqlExec) {}
 
   /** A different schema version resets the Registry; the one terminology cleanup below preserves the current schema's data in place. */
   migrate(): void {
@@ -76,7 +76,8 @@ export class RegistryStore {
       policy.name,
       policy.version,
       JSON.stringify(policy.collection),
-      JSON.stringify(policy.serving),
+      // A policy states no terms any more: those are the dataset's word. The column stays so a live Registry needs no migration.
+      "{}",
       policy.createdAt,
     );
   }
@@ -383,8 +384,6 @@ function mapPolicy(row: PolicyRow): FeedPolicy {
     version: row.version,
     // SAFETY: collection_json is written from a validated collection policy.
     collection: JSON.parse(row.collection_json) as CollectionPolicyDefinition,
-    // SAFETY: serving_json is written from a validated serving policy.
-    serving: JSON.parse(row.serving_json) as ServingPolicyDefinition,
     createdAt: row.created_at,
   };
 }

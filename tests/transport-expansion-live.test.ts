@@ -1,18 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { collectNormalized, libraryConfig, NORMALIZED_PROTOCOL, type CollectionRequest, type ExampleFeed, type NormalizedCollector } from "@open-data-pt/gatekeeper-shared";
-import { CKAN_EXAMPLES, ckanCollector } from "../packages/gatekeeper-shared/src/formats/ckan";
-import { GBFS_EXAMPLES, gbfsCollector } from "../packages/gatekeeper-shared/src/formats/gbfs";
-import { GTFS_EXAMPLES, gtfsCollector } from "../packages/gatekeeper-shared/src/formats/gtfs";
+import { collectNormalized, NORMALIZED_PROTOCOL, type CollectionRequest, type ExampleFeed } from "@open-data-pt/gatekeeper";
 import { readFrames } from "../apps/kernel/src/frames";
+import { datasetOf, feedCollection, feedsOf } from "../apps/gatekeeper/tests/catalog";
 
 const GTFS_SLUGS = new Set(["cp-gtfs-feed", "fertagus-gtfs-feed", "tub-braga-gtfs-feed", "tcb-barreiro-gtfs-feed", "horarios-do-funchal-gtfs-feed"]);
-const GTFS_HOSTS = "publico.cp.pt,www.fertagus.pt,www.tub.pt,backend.tcbarreiro.pt,www.horariosdofunchal.pt";
 const BIRD_SLUGS = new Set(["bird-porto", "bird-cascais", "bird-matosinhos"]);
-const CKAN_HOSTS = "dadosabertos.cm-agueda.pt,oeirasinterativa.oeiras.pt";
 const examples = [
-  ...GTFS_EXAMPLES.filter((example) => GTFS_SLUGS.has(example.slug)),
-  ...GBFS_EXAMPLES.filter((example) => BIRD_SLUGS.has(example.slug)),
-  ...CKAN_EXAMPLES.filter((example) => example.slug.startsWith("agueda-") || example.slug === "oeiras-hourly-environment-feed"),
+  ...feedsOf("gtfs").filter((example) => GTFS_SLUGS.has(example.slug)),
+  ...feedsOf("gbfs").filter((example) => BIRD_SLUGS.has(example.slug)),
+  ...feedsOf("ckan").filter((example) => example.slug.startsWith("agueda-") || example.slug === "oeiras-hourly-environment-feed"),
 ];
 const selected =
   process.env.LIVE_TRANSPORT_EXPANSION?.split(",")
@@ -24,7 +20,6 @@ describe.skipIf(selected.length === 0)("live transport and municipal expansion",
   it.each(examples.filter((example) => selected.includes("all") || selected.includes(example.slug)))(
     "collects $slug within its actual policy",
     async (example) => {
-      const config = libraryConfig(example.config);
       let sourceBytes = 0;
       const fetcher: typeof fetch = async (input, init) => {
         const response = await fetch(input, init);
@@ -41,13 +36,7 @@ describe.skipIf(selected.length === 0)("live transport and municipal expansion",
           { status: response.status, headers: response.headers },
         );
       };
-      const collector: NormalizedCollector =
-        example.config.source === "gtfs"
-          ? gtfsCollector({ config, hosts: GTFS_HOSTS, fetcher })
-          : example.config.source === "gbfs"
-            ? gbfsCollector({ config, hosts: "mds.bird.co", fetcher })
-            : ckanCollector({ config, hosts: CKAN_HOSTS, fetcher });
-      const resolved = await collector.resolve(config);
+      const { resolved, collector } = await feedCollection(example.slug, { fetcher });
       const request = requestFor(example, resolved);
       const result = await collectNormalized(request, collector);
       if (result.kind !== "batch") throw new Error(JSON.stringify(result));
@@ -98,7 +87,7 @@ function requestFor(example: ExampleFeed, resolved: CollectionRequest["resolved"
   return {
     protocol: NORMALIZED_PROTOCOL,
     collectionId: `live_${example.slug}`,
-    feed: { id: "fixture", slug: example.slug, title: example.title, description: example.description },
+    feed: { id: "fixture", slug: example.slug, title: example.title ?? datasetOf(example).title, description: example.description ?? datasetOf(example).description },
     resolved,
     feedEpoch: "live",
     observedAt: new Date().toISOString(),

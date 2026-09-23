@@ -1,4 +1,4 @@
-import { NormalizedInputError, type CanonicalRecord, type JsonObject } from "@open-data-pt/gatekeeper-shared";
+import { NormalizedInputError, type CanonicalRecord, type JsonObject } from "@open-data-pt/contract";
 
 import { digest, stableStringify } from "./hash";
 import type { ChangeItem } from "./object-store";

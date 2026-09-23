@@ -127,9 +127,9 @@ async function sitemap(origin: string, host: SiteHost): Promise<Document> {
   const datasets = await readCatalog(host);
   const entries: Array<{ loc: string; lastmod?: string }> = SITEMAP_PAGES.map((path) => ({ loc: `${origin}${path}` }));
   const publishers = new Map<string, string>();
-  for (const { feed, products } of datasets) {
+  for (const { dataset, products } of datasets) {
     for (const item of products) {
-      const page = publisherPage(feed.publisher.id);
+      const page = publisherPage(dataset.publisher.id);
       if ((publishers.get(page) ?? "") < item.updatedAt) publishers.set(page, item.updatedAt);
     }
   }

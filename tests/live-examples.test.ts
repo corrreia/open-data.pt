@@ -5,48 +5,48 @@ import { describe, expect, it } from "vitest";
 import {
   NORMALIZED_PROTOCOL,
   collectNormalized,
-  libraryCollector,
+  feedCollector,
   resolveLibraryFeed,
   type CollectionRequest,
   type ExampleFeed,
   type GatekeeperLibraries,
   type JsonObject,
   type ResolvedFeed,
-} from "@open-data-pt/gatekeeper-shared";
-import { ANEPC_API_ORIGIN, ANEPC_DEPLOYMENT, ANEPC_EXAMPLES } from "../packages/gatekeeper-shared/src/sources/anepc";
-import { isNormalizedFrame } from "../packages/gatekeeper-shared/src/normalized-validation";
+} from "@open-data-pt/gatekeeper";
+import { isNormalizedFrame } from "../packages/contract/src/validation";
 import { readFrames } from "../apps/kernel/src/frames";
 import { MAX_RECORD_BYTES } from "../apps/kernel/src/blob-budget";
 import { jsonAs } from "./support";
-import { CARRIED, carriedLibraries } from "./catalog";
+import { RUNNABLE, runtimeOf } from "@open-data-pt/gatekeeper/catalog";
+import { CARRIED, carriedLibraries, datasetOf, feedsOf } from "../apps/gatekeeper/tests/catalog";
 
 /**
  * Collects curated examples from their real sources, the way the kernel
  * would, and reads the output through the kernel's own frame validation.
  * Opt-in because it calls public services: set LIVE_EXAMPLES to "all" or to
- * a comma-separated list of example slugs.
+ * a comma-separated list of example slugs and publisher keys, a publisher's
+ * key meaning every feed of their datasets (`LIVE_EXAMPLES=apa`).
  */
 const SELECTED =
   process.env.LIVE_EXAMPLES?.split(",")
-    .map((slug) => slug.trim())
+    .map((selection) => selection.trim())
     .filter(Boolean) ?? [];
+
+/** Whether LIVE_EXAMPLES asks for this feed: every feed, the feed by its slug, or every feed of its publisher. */
+function selected(example: ExampleFeed): boolean {
+  return SELECTED.includes("all") || SELECTED.includes(example.slug) || SELECTED.includes(datasetOf(example).publisher);
+}
 const MIB = 1024 * 1024;
 
 /** The wiring the Worker deploys, from the same declarations and vars, with the real fetch. */
-const LIBRARIES: Array<{ libraries: GatekeeperLibraries; examples: readonly ExampleFeed[] }> = [
-  ...CARRIED.map((library) => ({
-    libraries: carriedLibraries(library.deployment.source, {
-      ML_CONSUMER_KEY: process.env.ML_CONSUMER_KEY,
-      ML_CONSUMER_SECRET: process.env.ML_CONSUMER_SECRET,
-      NASA_FIRMS_MAP_KEY: process.env.NASA_FIRMS_MAP_KEY,
-    }),
-    examples: library.examples,
-  })),
-  {
-    libraries: new Map([["anepc", ANEPC_DEPLOYMENT.library({ ANEPC_API_ORIGIN })]]),
-    examples: ANEPC_EXAMPLES,
-  },
-];
+const LIBRARIES: Array<{ libraries: GatekeeperLibraries; examples: readonly ExampleFeed[] }> = CARRIED.map((library) => ({
+  libraries: carriedLibraries(library.deployment.source, {
+    ML_CONSUMER_KEY: process.env.ML_CONSUMER_KEY,
+    ML_CONSUMER_SECRET: process.env.ML_CONSUMER_SECRET,
+    NASA_FIRMS_MAP_KEY: process.env.NASA_FIRMS_MAP_KEY,
+  }),
+  examples: feedsOf(library.deployment.source),
+}));
 
 /** The request the kernel builds for a live collection under this example's policy. */
 function liveRequest(example: ExampleFeed, resolved: ResolvedFeed): CollectionRequest {
@@ -56,7 +56,7 @@ function liveRequest(example: ExampleFeed, resolved: ResolvedFeed): CollectionRe
   return {
     protocol: NORMALIZED_PROTOCOL,
     collectionId: `live_${example.slug}`,
-    feed: { id: "feed_live", slug: example.slug, title: example.title, description: example.description },
+    feed: { id: "feed_live", slug: example.slug, title: example.title ?? datasetOf(example).title, description: example.description ?? datasetOf(example).description },
     resolved,
     feedEpoch: "live",
     mode: { kind: "live" },
@@ -73,11 +73,7 @@ function liveRequest(example: ExampleFeed, resolved: ResolvedFeed): CollectionRe
   };
 }
 
-const cases = LIBRARIES.flatMap((library) =>
-  library.examples
-    .filter((example) => SELECTED.includes("all") || SELECTED.includes(example.slug))
-    .map((example) => ({ slug: example.slug, example, libraries: library.libraries })),
-);
+const cases = LIBRARIES.flatMap((library) => library.examples.filter(selected).map((example) => ({ slug: example.slug, example, libraries: library.libraries })));
 
 describe.skipIf(cases.length === 0)("live examples", () => {
   it.each(cases)(
@@ -85,7 +81,9 @@ describe.skipIf(cases.length === 0)("live examples", () => {
     async ({ example, libraries }) => {
       const resolved = await resolveLibraryFeed(example.config, libraries);
       const request = liveRequest(example, resolved);
-      const result = await collectNormalized(request, libraryCollector(resolved.config, libraries));
+      const feed = RUNNABLE.get(example.slug);
+      if (!feed) throw new Error(`No feed file defines ${example.slug}`);
+      const result = await collectNormalized(request, feedCollector(feed, resolved.config, libraries, runtimeOf(example.slug)));
       if (result.kind !== "batch") throw new Error(`${example.slug} returned ${JSON.stringify(result)}`);
       const counts = new Map<string, number>();
       const scope = {

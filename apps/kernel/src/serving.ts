@@ -1,21 +1,12 @@
-import {
-  asObject,
-  asString,
-  isJsonArray,
-  isJsonNumber,
-  isJsonObject,
-  type CanonicalField,
-  type CanonicalSchema,
-  type JsonObject,
-  type JsonValue,
-} from "@open-data-pt/gatekeeper-shared";
+import type { Product as ApiProduct } from "@open-data-pt/api";
+import { asObject, asString, isJsonArray, isJsonNumber, isJsonObject, type CanonicalField, type CanonicalSchema, type JsonObject, type JsonValue } from "@open-data-pt/contract";
 
 import type { ChunkObject } from "./chunks";
 import type { ProductDetail, ProductView } from "./coordinators";
 import { NotFoundError } from "./errors";
-import type { Feed, FeedPolicy } from "./feed-model";
+import type { Feed } from "./feed-model";
 import type { ChangesWindow, ObjectStore, SeriesChangesWindow, SeriesWindow } from "./object-store";
-import { licenceRef, publisherRef } from "./vocabulary";
+import type { Vocabulary } from "./vocabulary";
 
 /** One equality filter on a string, category or identifier field. */
 export interface FieldFilter {
@@ -239,18 +230,17 @@ export class Serving {
     });
   }
 
-  async dcatCatalog(origin: string, feeds: Feed[], policies: FeedPolicy[]) {
+  async dcatCatalog(origin: string, feeds: Feed[], vocabulary: Vocabulary) {
     // DCAT wants a licence as a URI when it has one; a publisher's own terms, or none stated, are named instead.
     const dcatLicence = (key: string) => {
-      const licence = licenceRef(key);
+      const licence = vocabulary.licenceRef(key);
       return licence.url ?? licence.name;
     };
     const dcatPublisher = (key: string) => {
-      const publisher = publisherRef(key, origin);
+      const publisher = vocabulary.publisherRef(key, origin);
       return { "@type": "foaf:Agent", "foaf:name": publisher.name, "foaf:homepage": publisher.url, "foaf:depiction": publisher.logo };
     };
     const products = await this.listProducts();
-    const policiesById = new Map(policies.map((policy) => [policy.id, policy]));
     return {
       "@context": { dcat: "http://www.w3.org/ns/dcat#", dct: "http://purl.org/dc/terms/", prov: "http://www.w3.org/ns/prov#", foaf: "http://xmlns.com/foaf/0.1/" },
       "@id": `${origin}/api/catalog.dcat.json`,
@@ -258,7 +248,7 @@ export class Serving {
       "dct:title": "open-data.pt products",
       "dcat:dataset": products.map((product) => {
         const feed = feeds.find((candidate) => candidate.id === product.feedId);
-        const policy = feed ? policiesById.get(feed.policyId) : undefined;
+        const dataset = feed ? vocabulary.dataset(feed.dataset) : undefined;
         const endpoint = product.role === "time-series" ? "series" : "records";
         return {
           "@id": `${origin}/api/products/${encodeURIComponent(product.slug)}`,
@@ -266,9 +256,9 @@ export class Serving {
           "dct:title": product.title,
           "dct:description": product.description,
           "dct:modified": product.updatedAt,
-          "dct:license": policy ? dcatLicence(policy.serving.licence) : undefined,
-          "dct:publisher": feed ? dcatPublisher(feed.publisher) : undefined,
-          "dcat:keyword": feed?.topics?.length ? feed.topics : undefined,
+          "dct:license": dataset ? dcatLicence(dataset.licence) : undefined,
+          "dct:publisher": dataset ? dcatPublisher(dataset.publisher) : undefined,
+          "dcat:keyword": dataset?.topics.length ? [...dataset.topics] : undefined,
           "dct:provenance": feed ? `Generated from ${feed.title} through the ${feed.library} library` : undefined,
           "dcat:distribution": [
             { "@type": "dcat:Distribution", "dct:format": "application/json", "dcat:accessURL": `${origin}/api/products/${encodeURIComponent(product.slug)}/${endpoint}` },
@@ -394,7 +384,7 @@ function asGeometry(value: JsonValue | undefined): JsonObject | undefined {
   return isJsonArray(members) ? candidate : undefined;
 }
 
-export function publicProduct(entry: ProductView) {
+export function publicProduct(entry: ProductView): ApiProduct {
   return {
     id: entry.id,
     slug: entry.slug,

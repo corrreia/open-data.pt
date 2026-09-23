@@ -1,0 +1,10 @@
+{
+  "name": "@open-data-pt/contract",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./data": "./src/data.ts"
+  }
+}

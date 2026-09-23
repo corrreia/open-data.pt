@@ -166,7 +166,7 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
         {[...publisher.datasets]
           .sort((a, b) => emptyLast(a, b) || a.title.localeCompare(b.title))
           .map((dataset) => (
-            <DatasetCard key={dataset.feed.id} dataset={dataset} showPublisher={false} />
+            <DatasetCard key={dataset.id} dataset={dataset} showPublisher={false} />
           ))}
       </section>
     </>

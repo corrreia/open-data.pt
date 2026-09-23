@@ -1,156 +1,110 @@
-// Logos for the analytics page's clients, AI assistants and referrers, served from /client-icons/ (see its README).
+// Logos for the analytics page's clients, referrers and MCP clients. The build writes each one this map names from its npm icon set to /client-icons/ (see apps/site/icons.ts).
 
-/** Icons with a separate file for a dark background, where the plain one is black. */
-const ON_DARK = new Set(["amazon", "anthropic", "apple", "deno", "github", "grok", "ollama", "openai", "x"]);
-/** Black logos with no dark variant: inverted on a dark background. */
-const INVERT_ON_DARK = new Set(["rust"]);
+/** An icon as `<set>:<name>`: Iconify's `logos` (in colour) and `simple-icons` (single-colour), or `lobe`, LobeHub's AI brands. */
+export type IconId = `${"logos" | "simple-icons" | "lobe"}:${string}`;
 
-/** A client as the kernel names it (apps/kernel/src/analytics.ts), or an AI assistant as a referrer. */
-const BY_NAME = new Map([
-  // Browsers
-  ["Chrome", "google-chrome"],
-  ["Edge", "microsoft-edge"],
-  ["Firefox", "firefox"],
-  ["Safari", "safari"],
-  ["Opera", "opera"],
-  ["Samsung Internet", "samsung-internet"],
-  ["Headless Chrome", "google-chrome"],
-  ["Lighthouse", "google-chrome"],
-  // AI agents
-  ["ChatGPT-User", "chatgpt"],
-  ["OAI-SearchBot", "openai"],
-  ["GPTBot", "openai"],
-  ["Claude-User", "claude-ai"],
-  ["Claude-SearchBot", "claude-ai"],
-  ["Claude Code", "claude-ai"],
-  ["ClaudeBot", "anthropic"],
-  ["Anthropic", "anthropic"],
-  ["Perplexity-User", "perplexity"],
-  ["PerplexityBot", "perplexity"],
-  ["MistralAI-User", "mistral-ai"],
-  ["Google-CloudVertexBot", "google-gemini"],
-  ["Meta-ExternalAgent", "meta"],
-  ["Meta-ExternalFetcher", "meta"],
-  ["DuckAssistBot", "duckduckgo"],
-  ["Amazonbot", "amazon"],
-  // Crawlers, link previews and monitors
-  ["Googlebot", "google"],
-  ["Google-InspectionTool", "google"],
-  ["Google Ads", "google"],
-  ["Bingbot", "microsoft-bing"],
-  ["YandexBot", "yandex"],
-  ["Baiduspider", "baidu"],
-  ["DuckDuckBot", "duckduckgo"],
-  ["Applebot", "apple"],
-  ["PetalBot", "huawei"],
-  ["Facebook", "facebook"],
-  ["Twitterbot", "x"],
-  ["LinkedInBot", "linkedin"],
-  ["WhatsApp", "whatsapp"],
-  ["Telegram", "telegram"],
-  ["Discord", "discord"],
-  ["Slack", "slack"],
-  ["Reddit", "reddit"],
-  ["UptimeRobot", "uptimerobot"],
-  ["Pingdom", "pingdom"],
-  // Scripts
-  ["Python requests", "python"],
-  ["Python httpx", "python"],
-  ["Python aiohttp", "python"],
-  ["Python urllib", "python"],
-  ["Scrapy", "python"],
-  ["Node.js fetch", "nodejs"],
-  ["Node.js undici", "nodejs"],
-  ["node-fetch", "nodejs"],
-  ["axios", "nodejs"],
-  ["Deno", "deno"],
-  ["Go net/http", "golang"],
-  ["OkHttp", "java"],
-  ["Apache HttpClient", "java"],
-  ["Java", "java"],
-  ["Dart", "dart"],
-  ["Rust reqwest", "rust"],
-  ["R", "r"],
-  ["PowerShell", "powershell"],
-  ["PHP Guzzle", "php"],
-  ["Ruby", "ruby"],
-  ["Postman", "postman"],
-  // AI assistants as referrers
-  ["ChatGPT", "chatgpt"],
-  ["Claude", "claude-ai"],
-  ["Perplexity", "perplexity"],
-  ["Gemini", "google-gemini"],
-  ["Copilot", "microsoft-copilot"],
-  ["Grok", "grok"],
-  ["DeepSeek", "deepseek"],
-  ["Meta AI", "meta"],
-  ["Mistral", "mistral-ai"],
-  ["Kimi", "kimi-ai"],
-  ["Qwen", "qwen"],
-  ["DuckDuckGo AI", "duckduckgo"],
-]);
-
-/** Referrers by host: the site's own domain and its subdomains, any country's Google or Yandex. */
-const BY_HOST: ReadonlyArray<readonly [RegExp, string]> = [
-  [/(^|\.)google\.[a-z.]+$/, "google"],
-  [/(^|\.)bing\.com$/, "microsoft-bing"],
-  [/(^|\.)duckduckgo\.com$/, "duckduckgo"],
-  [/(^|\.)yandex\.[a-z.]+$/, "yandex"],
-  [/(^|\.)baidu\.com$/, "baidu"],
-  [/(^|\.)github\.(com|io)$/, "github"],
-  [/(^|\.)reddit\.com$/, "reddit"],
-  [/(^|\.)(linkedin\.com|lnkd\.in)$/, "linkedin"],
-  [/(^|\.)(x\.com|t\.co|twitter\.com)$/, "x"],
-  [/(^|\.)facebook\.com$/, "facebook"],
-  [/^news\.ycombinator\.com$/, "hacker-news"],
-  [/(^|\.)(t\.me|telegram\.org)$/, "telegram"],
-  [/(^|\.)discord\.(com|gg)$/, "discord"],
-  [/(^|\.)slack\.com$/, "slack"],
-  [/(^|\.)whatsapp\.com$/, "whatsapp"],
-];
-
-/** MCP clients name themselves freely ("claude-ai", "Visual Studio Code", "cursor-vscode"); matched by a word in the name. */
-const BY_MCP_CLIENT: ReadonlyArray<readonly [RegExp, string]> = [
-  [/claude/i, "claude-ai"],
-  [/chatgpt|openai/i, "chatgpt"],
-  [/gemini/i, "google-gemini"],
-  [/copilot/i, "microsoft-copilot"],
-  [/vscode|visual studio code/i, "vscode"],
-  [/mistral|le ?chat/i, "mistral-ai"],
-  [/perplexity/i, "perplexity"],
-  [/n8n/i, "n8n"],
-  [/ollama/i, "ollama"],
-];
-
-/** Where to draw an icon from: its file, and whether it needs inverting on a dark background. */
-export interface IconFile {
+/** Where to draw a logo from, and whether it is single-colour, drawn as a mask in the text's colour so it shows on a dark background too. */
+export interface BrandIcon {
   src: string;
-  invert: boolean;
+  mono: boolean;
 }
 
-function file(slug: string | undefined, dark: boolean): IconFile | undefined {
-  if (!slug) return undefined;
-  const variant = dark && ON_DARK.has(slug) ? `${slug}-on-dark` : slug;
-  return { src: `/client-icons/${variant}.svg`, invert: dark && INVERT_ON_DARK.has(slug) };
+/**
+ * A logo by a word in the name the analytics give a client ("GPTBot"), a
+ * referrer ("Microsoft Teams") or an MCP client ("claude-code"). First match
+ * wins, so a product comes before its maker: Gemini before Google, Copilot and
+ * Teams before Microsoft. Black logos come from a single-colour set.
+ */
+const BRANDS: ReadonlyArray<readonly [RegExp, IconId]> = [
+  // AI assistants, agents and crawlers
+  [/claude/i, "lobe:claude-color"],
+  [/anthropic/i, "lobe:anthropic"],
+  [/gpt|openai|oai-/i, "lobe:openai"],
+  [/gemini|vertex/i, "lobe:gemini-color"],
+  [/copilot/i, "lobe:copilot-color"],
+  [/perplexity|pplx/i, "lobe:perplexity-color"],
+  [/mistral|le ?chat/i, "lobe:mistral-color"],
+  [/deepseek/i, "lobe:deepseek-color"],
+  [/qwen/i, "lobe:qwen-color"],
+  [/kimi|moonshot/i, "lobe:kimi-color"],
+  [/grok/i, "lobe:grok"],
+  [/cohere/i, "lobe:cohere-color"],
+  [/^meta\b|meta-external/i, "lobe:meta-color"],
+  [/bytespider|bytedance/i, "lobe:bytedance-color"],
+  [/pangu|petalbot|huawei/i, "lobe:huawei-color"],
+  [/chatglm|zhipu/i, "lobe:zhipu-color"],
+  [/^yibot/i, "lobe:yi-color"],
+  [/ai2bot/i, "lobe:ai2-color"],
+  [/amazon|amzn/i, "lobe:aws-color"],
+  [/^poe$/i, "lobe:poe-color"],
+  [/phind/i, "lobe:phind"],
+  [/ollama/i, "lobe:ollama"],
+  [/cursor/i, "lobe:cursor"],
+  [/n8n/i, "logos:n8n-icon"],
+  [/vscode|visual studio code/i, "logos:visual-studio-code"],
+  // Browsers
+  [/^edge$/i, "logos:microsoft-edge"],
+  [/^opera$/i, "logos:opera"],
+  [/firefox/i, "logos:firefox"],
+  [/^safari$/i, "logos:safari"],
+  [/chrome|lighthouse/i, "logos:chrome"],
+  // Search engines, social sites, mail and monitors
+  [/teams/i, "logos:microsoft-teams"],
+  [/bing/i, "lobe:bing-color"],
+  [/outlook|microsoft/i, "logos:microsoft-icon"],
+  [/gmail/i, "logos:google-gmail"],
+  [/google/i, "logos:google-icon"],
+  [/duck/i, "logos:duckduckgo"],
+  [/yandex/i, "lobe:yandex"],
+  [/baidu/i, "lobe:baidu-color"],
+  [/apple/i, "simple-icons:apple"],
+  [/brave/i, "logos:brave"],
+  [/kagi/i, "lobe:kagi"],
+  [/ecosia/i, "simple-icons:ecosia"],
+  [/facebook/i, "logos:facebook"],
+  [/^x$|twitterbot/i, "simple-icons:x"],
+  [/linkedin/i, "logos:linkedin-icon"],
+  [/reddit/i, "logos:reddit-icon"],
+  [/hacker news/i, "logos:ycombinator"],
+  [/github/i, "lobe:github"],
+  [/telegram/i, "logos:telegram"],
+  [/discord/i, "logos:discord-icon"],
+  [/slack/i, "logos:slack-icon"],
+  [/whatsapp/i, "logos:whatsapp-icon"],
+  [/bluesky/i, "logos:bluesky"],
+  [/mastodon/i, "logos:mastodon-icon"],
+  [/pingdom/i, "logos:pingdom"],
+  [/uptime-kuma/i, "simple-icons:uptimekuma"],
+  // Scripts
+  [/python|scrapy/i, "logos:python"],
+  [/^axios$/i, "logos:axios"],
+  [/node/i, "logos:nodejs-icon"],
+  [/^deno$/i, "simple-icons:deno"],
+  [/^bun$/i, "logos:bun"],
+  [/^go\b/i, "logos:go"],
+  [/^java$|okhttp|^apache/i, "logos:java"],
+  [/^dart$/i, "logos:dart"],
+  [/rust/i, "simple-icons:rust"],
+  [/^r$/i, "logos:r-lang"],
+  [/php/i, "logos:php"],
+  [/^ruby$/i, "logos:ruby"],
+  [/postman/i, "logos:postman-icon"],
+  [/insomnia/i, "logos:insomnia"],
+  [/curl/i, "simple-icons:curl"],
+];
+
+/** The logo for a client's, a referrer's or an MCP client's name, if it has one. */
+export function brandIcon(name: string): BrandIcon | undefined {
+  const id = BRANDS.find(([pattern]) => pattern.test(name))?.[1];
+  return id ? { src: `/client-icons/${iconFile(id)}`, mono: !id.startsWith("logos:") && !id.endsWith("-color") } : undefined;
 }
 
-/** A client, crawler or AI assistant by the name the analytics give it. */
-export function clientIcon(name: string, dark: boolean): IconFile | undefined {
-  return file(BY_NAME.get(name), dark);
+/** The file an icon is written to. */
+export function iconFile(id: IconId): string {
+  return `${id.replace(":", "-")}.svg`;
 }
 
-/** A referrer: an AI assistant's name, or the linking site's host. */
-export function referrerIcon(referrer: string, dark: boolean): IconFile | undefined {
-  return file(BY_NAME.get(referrer) ?? BY_HOST.find(([pattern]) => pattern.test(referrer))?.[1], dark);
-}
-
-/** An MCP client by the name it gave on initialize. */
-export function mcpClientIcon(client: string, dark: boolean): IconFile | undefined {
-  return file(BY_MCP_CLIENT.find(([pattern]) => pattern.test(client))?.[1], dark);
-}
-
-/** Every icon file the map can name, for the test that holds each to a file in public/client-icons. */
-export function iconFiles(): string[] {
-  const slugs = new Set([...BY_NAME.values(), ...BY_HOST.map(([, slug]) => slug), ...BY_MCP_CLIENT.map(([, slug]) => slug)]);
-  return [...slugs].flatMap((slug) => (ON_DARK.has(slug) ? [`${slug}.svg`, `${slug}-on-dark.svg`] : [`${slug}.svg`]));
+/** Every icon the map names, for the build that writes them and the test that holds each to its set. */
+export function iconIds(): IconId[] {
+  return [...new Set(BRANDS.map(([, id]) => id))];
 }

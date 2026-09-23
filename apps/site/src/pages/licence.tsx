@@ -135,7 +135,7 @@ function LicencePage({ licence }: { licence: Licence }) {
         {[...licence.datasets]
           .sort((a, b) => emptyLast(a, b) || a.publisher.name.localeCompare(b.publisher.name) || a.title.localeCompare(b.title))
           .map((dataset) => (
-            <DatasetCard key={dataset.feed.id} dataset={dataset} />
+            <DatasetCard key={dataset.id} dataset={dataset} />
           ))}
       </section>
     </>

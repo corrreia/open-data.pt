@@ -66,9 +66,9 @@ export function DatasetCard({ dataset, showPublisher = true }: { dataset: Datase
               dataset.title
             )}
           </h3>
-          {dataset.feed.description ? (
-            <p className="line-clamp-2 max-w-[36rem] text-sm text-kumo-subtle" title={dataset.feed.description}>
-              {dataset.feed.description}
+          {dataset.description ? (
+            <p className="line-clamp-2 max-w-[36rem] text-sm text-kumo-subtle" title={dataset.description}>
+              {dataset.description}
             </p>
           ) : null}
         </div>

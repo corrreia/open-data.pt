@@ -10,7 +10,7 @@ import {
   type CollectionRequest,
   type NormalizedFrame,
   type NormalizedProductHeader,
-} from "@open-data-pt/gatekeeper-shared";
+} from "@open-data-pt/contract";
 
 import { CollectionDeadline } from "./collection-deadline";
 

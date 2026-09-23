@@ -5,7 +5,7 @@ large XML and JSON documents; we read seven of them.
 
 ## Source
 
-The `parliament` library (`packages/gatekeeper-shared/src/sources/parliament/`), one feed per
+The `parliament` library (`apps/gatekeeper/src/publishers/assembleia-da-republica/parliament/`), one feed per
 document, all under the `parlamento-dados-abertos` licence and attributed
 "Assembleia da República — Dados Abertos":
 

@@ -1,4 +1,4 @@
-import { asObject, asArray, asNumber, asString, isJsonObject, parseJson, type JsonObject } from "@open-data-pt/gatekeeper-shared";
+import { asObject, asArray, asNumber, asString, isJsonObject, parseJson, type JsonObject } from "@open-data-pt/contract";
 
 /**
  * Internal R2 SQL client used only by typed, bounded HTTP handlers and the

@@ -1,4 +1,4 @@
-import type { FeedGatekeeper } from "@open-data-pt/gatekeeper-shared";
+import type { FeedGatekeeper } from "@open-data-pt/contract";
 
 /** The Gatekeeper Worker behind the kernel's one service binding, which Wrangler types as a plain Fetcher. */
 export function gatekeeperOf(env: Env): Service<FeedGatekeeper> {

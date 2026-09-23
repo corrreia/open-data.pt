@@ -5,7 +5,7 @@ import { ErrorNote } from "../common";
 import { DataTable, type Column } from "../DataTable";
 import { apiGet, productPath } from "../../lib/api";
 import { fmt, humanize } from "../../lib/format";
-import type { Field, JsonRecord, Page, Product } from "../../lib/types";
+import type { CursorPage, Field, JsonRecord, Product } from "../../lib/types";
 import { Cell, isText, sortValue } from "./cells";
 import { RecordDialog } from "./RecordDialog";
 
@@ -70,7 +70,7 @@ export function RecordsView({ product, refreshKey }: { product: Product; refresh
   const rows = loaded.rows;
 
   const fetchAll = useCallback(() => apiGet<{ data: JsonRecord[] }>(productPath(product.slug, "/records/all")).then((body) => body.data), [product.slug]);
-  const fetchPreview = useCallback(() => apiGet<Page<JsonRecord>>(productPath(product.slug, `/records?limit=${PREVIEW}`)).then((page) => page.data), [product.slug]);
+  const fetchPreview = useCallback(() => apiGet<CursorPage<JsonRecord>>(productPath(product.slug, `/records?limit=${PREVIEW}`)).then((page) => page.data), [product.slug]);
 
   // On arrival, and again whenever a new version is published.
   useEffect(() => {

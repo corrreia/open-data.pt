@@ -33,7 +33,7 @@ Each Worker runs in its own `wrangler dev` session — they find each other over
 as [Wrangler's multi-Worker guide](https://developers.cloudflare.com/workers/local-development/multi-workers/)
 describes — because a command with two `--config` flags treats the first as the primary Worker and
 gives it the command line's flags, so `--var GATEKEEPER_LIBRARIES` never reached the Gatekeeper. It
-cannot travel in `packages/gatekeeper/.dev.vars` either: that Worker declares `secrets.required`, and
+cannot travel in `apps/gatekeeper/.dev.vars` either: that Worker declares `secrets.required`, and
 Wrangler then [loads only those keys](https://developers.cloudflare.com/workers/wrangler/configuration/#secrets-configuration-property)
 from the file. `.dev.vars` is for the secrets a source needs, and `pnpm dev` never writes it.
 
@@ -59,18 +59,21 @@ pnpm deploy:dry-run
 
 Oxfmt owns formatting (`pnpm format`), and the repository lints with vendored anti-slop rules: no
 runtime `typeof`, no widening anonymous types, a `SAFETY:` comment before every type assertion, no
-module mocking. Unit tests use fixtures under `tests/fixtures/` and never touch the network.
+module mocking. A test sits beside what it tests — in its publisher's library, its format, or its
+app's `tests/` — replays the fixtures in the `fixtures/` folder beside it, and never touches the
+network. `pnpm test:publisher <key>` runs one publisher's tests and the checks every feed is held to.
 
-Before a pull request, collect your example from the source it actually names:
+Before a pull request, collect your feeds from the sources they actually name:
 
 ```bash
+pnpm test:publisher apa --live
 LIVE_EXAMPLES=porto-bicycle-racks-feed pnpm exec vitest run tests/live-examples.test.ts --maxWorkers=1
 ```
 
 A scale benchmark runs on demand, and consumption measurements are read-only:
 
 ```bash
-SCALE_ROWS=1000000 npx vitest run tests/scale.test.ts
+SCALE_ROWS=1000000 npx vitest run apps/kernel/tests/scale.test.ts
 node tools/usage-report.ts --days 7
 ```
 

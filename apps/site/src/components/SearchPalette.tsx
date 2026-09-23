@@ -70,8 +70,7 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
           ) : (
             <TableIcon />
           ),
-        haystack:
-          `${dataset.title} ${label} ${product.title} ${product.slug} ${dataset.publisher.name} ${dataset.topics.join(" ")} ${dataset.feed.description}`.toLocaleLowerCase(),
+        haystack: `${dataset.title} ${label} ${product.title} ${product.slug} ${dataset.publisher.name} ${dataset.topics.join(" ")} ${dataset.description}`.toLocaleLowerCase(),
       })),
     );
     const publisherItems: SearchItem[] = buildPublishers(datasets).map((publisher) => ({

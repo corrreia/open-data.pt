@@ -6,10 +6,10 @@
  * product, publisher or topic gets that one's own title and description, from
  * the same API the page reads in the browser.
  */
-import type { JsonObject, JsonValue } from "@open-data-pt/gatekeeper-shared";
+import { UNSTATED_LICENCE, type JsonObject, type JsonValue } from "@open-data-pt/contract";
 import type { SiteHost } from "./discovery";
-import { UNSTATED_LICENCE } from "@open-data-pt/gatekeeper-shared";
-import { every, pagePath, read, readIfFound, topicLabel, type CatalogFeed, type CatalogProduct, type Term } from "./markdown";
+import type { Feed as CatalogFeed, Product as CatalogProduct, Term } from "@open-data-pt/api";
+import { every, pagePath, read, readIfFound, topicLabel } from "./markdown";
 
 const SITE_NAME = "open-data.pt";
 /** What the home page's preview says, rather than the bare site name. */
@@ -93,12 +93,12 @@ async function namedBy(path: string, value: string, host: SiteHost, canonical: s
     const product = await readIfFound<CatalogProduct>(host, `/api/products/${encodeURIComponent(value)}`);
     if (!product) return undefined;
     const feed = (await readIfFound<{ data: CatalogFeed }>(host, `/api/feeds/${encodeURIComponent(product.feedId)}`))?.data;
-    const source = feed ? `From ${feed.publisher.name}, as free JSON with no key.` : "";
+    const source = feed ? `From ${feed.dataset.publisher.name}, as free JSON with no key.` : "";
     return { heading: product.title, description: [product.description?.trim(), source].filter(Boolean).join(" "), dataset: dataset(product, feed, canonical) };
   }
   const feeds = (await read<{ data: CatalogFeed[] }>(host, "/api/feeds")).data;
   if (path === "/publisher/") {
-    const name = feeds.find((feed) => feed.publisher.id === value)?.publisher.name;
+    const name = feeds.find((feed) => feed.dataset.publisher.id === value)?.dataset.publisher.name;
     if (!name) return undefined;
     return { heading: name, description: `Public data that ${name} publishes, collected by open-data.pt and served as free JSON with no key.` };
   }
@@ -108,7 +108,7 @@ async function namedBy(path: string, value: string, host: SiteHost, canonical: s
     if (!name) return undefined;
     return { heading: name, description: `Every dataset open-data.pt serves under ${name}, as its publisher states it, with its API links.` };
   }
-  if (!feeds.some((feed) => feed.topics?.includes(value))) return undefined;
+  if (!feeds.some((feed) => feed.dataset.topics.includes(value))) return undefined;
   const label = topicLabel(value);
   return {
     heading: `${label} datasets`,
@@ -147,11 +147,13 @@ function dataset(product: CatalogProduct, feed: CatalogFeed | undefined, canonic
     distribution: downloads,
     variableMeasured: variables,
   };
-  if (feed)
-    data.creator = feed.publisher.url ? { "@type": "Organization", name: feed.publisher.name, url: feed.publisher.url } : { "@type": "Organization", name: feed.publisher.name };
-  if (feed?.topics?.length) data.keywords = feed.topics.map(topicLabel);
+  if (feed) {
+    const { publisher } = feed.dataset;
+    data.creator = publisher.url ? { "@type": "Organization", name: publisher.name, url: publisher.url } : { "@type": "Organization", name: publisher.name };
+  }
+  if (feed?.dataset.topics.length) data.keywords = feed.dataset.topics.map(topicLabel);
   if (feed?.sourceUrl && /^https?:\/\//.test(feed.sourceUrl)) data.isBasedOn = feed.sourceUrl;
-  const licence = licenceOf(product.licence);
+  const licence = licenceOf(product.licence ?? undefined);
   if (licence) data.license = licence;
   return data;
 }
@@ -161,7 +163,7 @@ function datasetDescription(product: CatalogProduct, feed: CatalogFeed | undefin
   const about = product.description?.trim() || product.title;
   const sentence = /[.!?]$/.test(about) ? about : `${about}.`;
   const collected = product.cadenceSeconds ? `, collected ${every(product.cadenceSeconds)}` : "";
-  return clip(`${sentence} Published by ${feed?.publisher.name ?? "its source"}${collected} by open-data.pt and served as free JSON with no key.`, MAX_DATASET_DESCRIPTION);
+  return clip(`${sentence} Published by ${feed?.dataset.publisher.name ?? "its source"}${collected} by open-data.pt and served as free JSON with no key.`, MAX_DATASET_DESCRIPTION);
 }
 
 /** A licence with a canonical text is linked; a publisher's own terms are named; none stated means none in the markup. */

@@ -1,5 +1,18 @@
+/** The rows a statement returned, read the one way the stores read them. */
+export interface SqlRows<T> {
+  toArray(): T[];
+}
+
+/**
+ * The part of a Durable Object's `SqlStorage` the stores use: run a statement and read its rows. The stores take
+ * this rather than the whole `SqlStorage`, so a test can hand them a real SQLite engine behind the same call.
+ */
+export interface SqlExec {
+  exec<T extends Record<string, SqlStorageValue>>(query: string, ...bindings: SqlStorageValue[]): SqlRows<T>;
+}
+
 /** Tables a Durable Object created itself, leaving out SQLite's and Cloudflare's internal ones. */
-export function userTables(sql: SqlStorage): string[] {
+export function userTables(sql: SqlExec): string[] {
   return sql
     .exec<{ name: string }>(`SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT GLOB 'sqlite_*' AND name NOT GLOB '_cf_*' AND name != '__miniflare_do_name'`)
     .toArray()
@@ -13,7 +26,7 @@ export function userTables(sql: SqlStorage): string[] {
  * are dropped in passes: one a remaining child still references waits for the
  * next pass, after that child is gone.
  */
-export function dropAllTables(sql: SqlStorage): void {
+export function dropAllTables(sql: SqlExec): void {
   let remaining = userTables(sql);
   while (remaining.length > 0) {
     const blocked: string[] = [];

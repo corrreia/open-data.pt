@@ -10,54 +10,143 @@ per-source notes under [`docs/publishers/`](docs/publishers/) and [`docs/feeds/`
 ## Where code lives
 
 ```
-packages/gatekeeper-shared/src/
-  formats/<format>/     arcgis  ckan  opendatasoft  gtfs  gbfs  udata  ogc  wfs
-  sources/<name>/       carris  metrolisboa  ipma  dgeg  ine  ren  omie  bpstat  eurostat  parliament  myinfo  firms
-                        nasapower  usgs  anepc  ioda  ripeatlas  ripestat  peeringdb
-  libraries.ts          the libraries the Gatekeeper Worker carries
-packages/gatekeeper/    the Gatekeeper Worker: every listed library behind one private RPC binding
-apps/kernel/            storage, history, the API and the site
+apps/gatekeeper/src/
+  publishers/<publisher>/   one folder per publisher: everything about them in one place
+    index.ts                who they are (name, site, whether we may republish them)
+    logo.svg | logo.png     their mark, when we have one
+    datasets/<name>/        one folder per dataset
+      index.ts              what it is, its terms and topics
+      <feed>.ts             one file per feed: how often it runs, and its own fetch, backfill and transform
+    <library>/              shared code for their own API, when they have one (carris, ipma, snirh, …)
+  formats/<format>/         shared code for the standards many publishers use: arcgis  ckan  gbfs  gtfs
+                            myinfo  ngsi  ogc  opendatasoft  udata  wfs
+  catalog/                  the licences and topics every dataset names, and the folder index
+  libraries.ts              the libraries the Worker carries
+apps/kernel/                storage, history and the API; serves the site
+apps/site/                  the site, built into the kernel's static assets
+packages/contract/          what the two Workers say to each other: the RPC (the catalog included),
+                            the normalized stream, JSON helpers and validation
+packages/api/               what the API sends: the wire shapes the kernel builds and the site reads
+packages/lisbon/            Europe/Lisbon wall-clock arithmetic
 ```
 
-1. **A library per format.** Anything with a standard — GTFS, GBFS, ArcGIS, CKAN, Opendatasoft, uData, OGC API Features, WFS — is parsed once, under `formats/`. A Worker never contains parsing.
-2. **A library per bespoke source,** under `sources/`: Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, MYINFO, NASA FIRMS, NASA POWER, USGS, ANEPC, IODA, RIPE Atlas, RIPEstat, PeeringDB.
-3. **One Worker, every library.** A library is how the data is read, never what it is about or who publishes it: topics overlap — a city Wi-Fi map is `cities` and `telecom` — and a publisher may be read two ways, so neither is a code boundary. Each library's `deployment.ts` declares its name, its vars with their values, and any secrets, buckets and CPU limit; `libraries.ts` lists the libraries the Worker carries, and a library under a publication hold is not listed. Topics (`TOPICS` in `packages/gatekeeper-shared/src/topics.ts`) and the publisher are labels on a feed, shown on the site.
+1. **Shared code per format.** Anything with a standard — GTFS, GBFS, ArcGIS, CKAN, Opendatasoft, uData, OGC API Features, WFS — is parsed once, under `formats/`, and every feed that reads it calls that code from its own file.
+2. **Shared code per bespoke source, in its publisher's folder:** `publishers/carris-metropolitana/carris/`, `publishers/apa/snirh/`, `publishers/ripe-ncc/ripestat/`. A source that carries many publishers — MYINFO, one platform behind a dozen bus operators — is a format.
+3. **One Worker, every library.** A library is how the data is read, never what it is about or who publishes it: topics overlap — a city Wi-Fi map is `cities` and `telecom` — and a publisher may be read two ways, so neither is a code boundary. Each library's `deployment.ts` declares its name, its vars with their values, and any secrets, buckets and CPU limit; `libraries.ts` lists the libraries the Worker carries, every one of them. Topics (`TOPICS` in `apps/gatekeeper/src/catalog/topics.ts`) and the publisher are labels on a dataset, shown on the site.
 4. **Feed slugs never change.** A feed's ID derives from its slug, so a feed keeps its history wherever it runs. Renaming a slug throws that history away.
 
 A library exports its feed-kind table, `validate<Name>FeedConfig`, `collect<Name>Feed`, its transformer, its examples array, `<name>Collector(options)`, and `<NAME>_DEPLOYMENT` from `deployment.ts` — what the Worker needs to carry it. Every example configuration carries `source: "<library>"`, which is what routes it inside the Worker; the library never sees that key.
 
-## The four kinds of contribution
+## The kinds of contribution
 
 ### A new dataset from a source we already read
 
-One entry in that library's `examples.ts`. Nothing else.
+A folder in the publisher's folder, `apps/gatekeeper/src/publishers/<publisher>/datasets/<name>/`,
+with an `index.ts` saying what the dataset is and one file per feed saying how it is read. Then
+`pnpm catalog`, which adds them to the index the Worker imports. Nothing else.
 
 ```ts
-{
-  slug: "porto-bicycle-racks-feed",          // never changes once merged
-  title: "Porto bicycle racks",
-  description: "Public bicycle parking published by Câmara Municipal do Porto.",
-  config: { source: "ckan", host: "opendata.porto.digital", dataset: "estacionamento-bicicletas" },
-  policy: { name: "…", version: 1, collection: { …cadence, timeout, maxBytes, historyMode }, serving: { licence: "cc0-1.0", attribution: "Câmara Municipal do Porto via dadosabertos.cm-porto.pt" } },
+// apps/gatekeeper/src/publishers/boa-viagem/datasets/network/index.ts
+export const DATASET: DatasetDefinition = {
+  title: "Boa Viagem stops and lines",
+  description: "Every bus stop Boa Viagem serves north of Lisbon, with its position, and every line and direction it runs.",
+  licence: "source-terms",
+  attribution: "Boa Viagem via myinfo.4cloud.pt",
+  topics: ["mobility"],
+};
+
+// apps/gatekeeper/src/publishers/boa-viagem/datasets/network/network.ts
+export const FEED = defineFeed(MYINFO_DEPLOYMENT, {
+  slug: "boa-viagem-network-feed", // never changes once merged
+  config: { feed: "network", operator: "BoaViagem" },
+  policy: MYINFO_NETWORK_POLICY,
   staleAfterSeconds: 172_800,
-  publisher: "cm-porto",
-  topics: ["cities", "mobility"],
-}
+  /** Once a day: the operator's portal page, which carries its whole stop network inline. */
+  fetch: ({ config, validator, library, fetch }) => collectMyInfoFeed(config, validator, library.apiOrigin, library.operators, fetch),
+  /** The portal's answer, as MYINFO lays it out, into stops and lines. */
+  transform: { normalizer: MYINFO_NORMALIZER, buffered: (bytes, context) => runTransformer(MYINFO_TRANSFORMER, bytes, context) },
+});
 ```
 
-`source` decides which library reads it. The rest are keys of the three catalog vocabularies in `packages/gatekeeper-shared/src/`: `topics` are browsing tags, any number of them, each a key of `TOPICS`; `publisher` is a key of `PUBLISHERS`, who made the data, never the portal it was read from; `licence` is a key of `LICENCES`, the terms the publisher states, or `source-terms` when it states none. A publisher or licence the vocabulary lacks is one new entry there — name, and its site or licence text when there is one — and a test rejects a key outside the list and an entry no example uses. A publisher may also carry their mark: the logo file goes under `apps/site/public/publishers/` named for their key, `logo` names its extension, and `apps/site/public/publishers/README.md` says where a usable one comes from and what shape it has to be. A publisher without one is shown their initials instead, so a missing logo never looks like a broken page.
+A feed file is the whole story of that feed. `fetch` is the live read the kernel runs every
+`policy.collection.cadenceSeconds`; `backfill`, when the source keeps history, walks back one older
+slice at a time; `transform` turns what was fetched into products. Each calls whatever shared code
+it needs — `formats/<format>/` for a standard, `publishers/<publisher>/<library>/` for the
+publisher's own API — and gets what the Worker holds (an origin, allowed hosts, a secret) as
+`library`. `defineFeed` names the library whose shared code the feed uses: that library works out
+the feed's identity from its `config`, which is what its history hangs on, so neither `slug` nor
+`config` changes once merged. A feed file is named for its slug, without `-feed` and without the
+publisher's key: `network.ts`, `river-levels.ts`.
+
+Inside the Gatekeeper, an import that leaves its own folder starts at `src/`: `#/index`,
+`#/catalog/define`, `#/formats/wfs/index`. That is Node's subpath imports (`"imports"` in
+`apps/gatekeeper/package.json`), which TypeScript, Wrangler's bundler and Vitest all read. An
+import of a sibling in the same folder stays relative.
+
+The dataset's key is its publisher's folder and its own: `boa-viagem-network`. It never changes once
+merged — it addresses the dataset's page — so neither does the folder's name.
+
+A **dataset** is one publisher's body of data; a **feed** is one way a part of it is read. Two feeds
+belong to the same dataset when they describe the same things, by the same identifiers, under the
+same terms: Carris's stops, vehicles, alerts and GTFS are one dataset, while IPMA's forecasts and
+its earthquakes share nothing and are two. A feed of a dataset read by several feeds says what it is
+within it (`title`, `description`); a feed that is the whole of its dataset says nothing the dataset
+already says, and a test holds both.
+
+`source` decides which library reads the feed. `licence` is a key of `LICENCES`
+(`apps/gatekeeper/src/catalog/licences.ts`): the terms the publisher states, or `source-terms` when
+they state none. `topics` are keys of `TOPICS`, as many as fit. A licence or topic the vocabulary
+lacks is one new entry there, and a test rejects one nothing uses.
+
+### A new publisher
+
+A folder named for their key, `apps/gatekeeper/src/publishers/<publisher>/`, with an `index.ts`:
+
+```ts
+import type { PublisherDefinition } from "#/catalog/define";
+
+export const PUBLISHER: PublisherDefinition = {
+  name: "Câmara Municipal do Porto",
+  url: "https://www.cm-porto.pt/",
+  sources: ["dadosabertos.cm-porto.pt"],
+  logo: "svg",
+};
+```
+
+`url` is their website, for people. `sources` are the hosts their data is read from, which are often
+not the website: every request their feeds make goes through a client that reaches only these hosts
+(a redirect elsewhere is refused), names open-data.pt in its `User-Agent`, and adds any query
+parameters the publisher asked for — `{ host: "stat.ripe.net", query: { sourceapp: "open-data.pt" } }`.
+A host that answers slowly takes `minIntervalSeconds`, the least time between two requests to it from
+every feed at once; `userAgent` replaces our name for one host, with a comment saying why. A library
+never sets its own `User-Agent`.
+
+and at least one dataset. Who made the data, never the portal it was read from: dados.gov.pt
+carries ten publishers and is none of them. Their mark is optional: `logo.svg` or `logo.png` beside
+the `index.ts`, with `logo` naming its extension; [the publishers README](apps/gatekeeper/src/publishers/README.md)
+says where a usable one comes from and what shape it has to be. A publisher without one is shown
+their initials, so a missing logo never looks like a broken page. A publisher we may not republish
+yet carries `enabled: false` and a comment saying what we are waiting for: their folder and code
+stay, and nothing of theirs is polled or served.
 
 ### A new source on a format we already read
 
-The example above, plus its hostname in the library's allowlist var (`CKAN_ALLOWED_HOSTS`, `ARCGIS_ALLOWED_HOSTS`, …) in that library's `deployment.ts`.
+The publisher's folder and the dataset file above, and nothing in the format. A format fetches
+only the hosts its publishers declare in `sources`: the Worker gathers them from the folders, so a
+new host is one entry there — including the host a portal's download link redirects to.
+
+If the format cannot read their data as it is — a file laid out in a way only this publisher lays
+it out — their translator goes in their folder too, and their feed file calls it:
+`publishers/cm-cadaval/municipal-waste.ts` holds Cadaval's, and Cadaval's feed file's `transform`
+calls `MUNICIPAL_WASTE_TRANSFORMER` where every other uData feed calls the generic tabular one.
 
 ### A new bespoke source
 
-A directory under `packages/gatekeeper-shared/src/sources/<name>/`: `<name>.ts` (feed kinds, validation, fetching), `transform.ts` (bytes to products), `examples.ts`, `collector.ts` (the factory), `deployment.ts` (its `<NAME>_API_ORIGIN` var and anything else the Worker must give it), `index.ts` (the barrel), and one line in `libraries.ts`. Fixture tests under `tests/` with saved source responses — no network in unit tests, and no module mocking.
+A library folder inside its publisher's, `apps/gatekeeper/src/publishers/<publisher>/<name>/`: `<name>.ts` (feed kinds, validation, fetching), `transform.ts` (bytes to products), `collector.ts` (how a feed's identity is worked out, what its feeds are handed when they run, and its translator), `deployment.ts` (its `<NAME>_API_ORIGIN` var and anything else the Worker must give it, returning `{ kinds, resolve, context }`), `index.ts` (the barrel), and one line in `libraries.ts`. Its feeds are files in the publisher's dataset folders, like any other, calling this code from their own `fetch`, `backfill` and `transform`. Fixture tests under `tests/` with saved source responses — no network in unit tests, and no module mocking.
 
 ### A new format
 
-The same, under `formats/<format>/`, with an allowlist var rather than a fixed origin.
+The same, under `formats/<format>/`, taking the hosts its publishers declare (`publishers.hosts`, the second argument of its deployment's `library`) rather than a fixed origin.
 
 ## What a Worker sends
 
@@ -78,15 +167,42 @@ pnpm dev all                # every library, every source
 
 The Worker carries only the libraries you name, so the Registry installs only their feeds and polls only their sources, and no local feed runs more often than every half hour. The site is on <http://localhost:8787>. [`docs/development.md`](docs/development.md) says how the selection reaches the Worker, which is less obvious than it looks.
 
-## Testing against the real source
+## Tests
 
-Unit tests use fixtures. Before a pull request, collect your example from the source it actually names:
+A test sits beside what it tests, with the responses it replays in a `fixtures/` folder next to it:
+
+```
+apps/gatekeeper/src/publishers/<publisher>/<library>/tests/   a publisher's own library
+apps/gatekeeper/src/formats/<format>/tests/                    a shared format
+apps/gatekeeper/tests/                                         the Gatekeeper as a whole: every feed's identity, the folder rules
+apps/kernel/tests/                                             the kernel
+apps/site/tests/                                               the site
+tests/                                                         only what runs both Workers together
+```
+
+A fixture is what the source really answered, byte for byte, so formatting never touches a
+`fixtures/` folder. Unit tests never reach the network: inject a fetcher, never mock a module. Tests
+are type-checked like the code (`pnpm typecheck` includes each app's `tsconfig.test.json`). Inside the
+Gatekeeper a test imports its shared helpers as `#/tests/catalog` and `#/tests/support`.
+
+One publisher's tests, with the checks every feed is held to:
 
 ```bash
+pnpm test:publisher apa
+```
+
+## Testing against the real source
+
+Before a pull request, collect your feeds from the source they actually name:
+
+```bash
+pnpm test:publisher apa --live
 LIVE_EXAMPLES=porto-bicycle-racks-feed pnpm exec vitest run tests/live-examples.test.ts --maxWorkers=1
 ```
 
-It resolves and collects exactly the way the deployed Worker does, and reads the result through the kernel's own frame validation. `LIVE_EXAMPLES=all` runs every example; be kind to the sources.
+It resolves and collects exactly the way the deployed Worker does, and reads the result through the
+kernel's own frame validation. `LIVE_EXAMPLES` takes feed slugs, a publisher's key (every feed of
+theirs), or `all`; be kind to the sources.
 
 ## Before you open a pull request
 

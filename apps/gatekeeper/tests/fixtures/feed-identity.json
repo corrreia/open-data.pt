@@ -1,0 +1,1738 @@
+{
+  "agueda-beagueda-stations-feed": {
+    "resourceKey": "ckan:ckan:resource:68a699cae4c54e4cb2efa6dd39613b7dbd91431a34683f70ebfe8da6c6f341aa",
+    "kind": "ckan:resource"
+  },
+  "agueda-charging-locations-feed": {
+    "resourceKey": "ckan:ckan:resource:22f8da58fe7db03068734ac827c4e41e52d206d9cc51687cf99c16b623def58e",
+    "kind": "ckan:resource"
+  },
+  "agueda-electronics-bins-feed": {
+    "resourceKey": "ckan:ckan:resource:5ca37281e247af635dd3298ab1d11aef7903ccf1b9c68688a354f1243e3b4359",
+    "kind": "ckan:resource"
+  },
+  "agueda-flood-marks-feed": {
+    "resourceKey": "ckan:ckan:resource:3cb708ba63980a99ccf1e3f41e8a2ea903b9dbb8c3b920d6851048ddb7d2cbb8",
+    "kind": "ckan:resource"
+  },
+  "agueda-textile-bins-feed": {
+    "resourceKey": "ckan:ckan:resource:6d7cf5f8f0b5fd9de4722cacb8e4de9daf4adb62f283e032883ac3bc40ed4793",
+    "kind": "ckan:resource"
+  },
+  "agueda-waste-bins-feed": {
+    "resourceKey": "ckan:ckan:resource:744caab56fc46e1e960b7f809eba7f38178dd81a09b6aa33d96922ea1c4321bc",
+    "kind": "ckan:resource"
+  },
+  "agueda-waste-operators-feed": {
+    "resourceKey": "ckan:ckan:resource:001a90e1380bd938b8097e20cca0815273329171ec18f3c89e3d46eb8116fb7c",
+    "kind": "ckan:resource"
+  },
+  "anepc-active-occurrences-feed": {
+    "resourceKey": "anepc:anepc:active-occurrences:25b42e8ed9cbca528e8057ab8717bc9c4d1a068a6919540cf2c471e13ebda7ee",
+    "kind": "anepc:active-occurrences"
+  },
+  "apa-air-quality-stations-feed": {
+    "resourceKey": "arcgis:arcgis:layer:e6ec31b69a95520eb46a988cc7f738bdcbb63b859e9ce43d34986e7ce52116f5",
+    "kind": "arcgis:layer"
+  },
+  "apa-bathing-beaches-feed": {
+    "resourceKey": "arcgis:arcgis:layer:26020ce77490598b23896fa2349d9cbcc9ee98e97f2a92e1f0ea5540f3987e80",
+    "kind": "arcgis:layer"
+  },
+  "apa-bathing-waters-feed": {
+    "resourceKey": "arcgis:arcgis:layer:bd8bd352dcd712c2cde1f4e88a8c03c57adc09919c3e6a6dce10e60294dccde4",
+    "kind": "arcgis:layer"
+  },
+  "apa-blue-flag-beaches-feed": {
+    "resourceKey": "arcgis:arcgis:layer:c2ac80737d8b6b52bf7b582532390c9c2702c60e0957ffc7cee72a890bf554cf",
+    "kind": "arcgis:layer"
+  },
+  "apa-emissions-trading-installations-feed": {
+    "resourceKey": "arcgis:arcgis:layer:f257dc8e2fda27ab065c1e15ca56b04c5527e83a39f8c639c5c752fcb81ca286",
+    "kind": "arcgis:layer"
+  },
+  "apa-flood-marks-feed": {
+    "resourceKey": "arcgis:arcgis:layer:ab291a658de48987673c3d2b9525563d933d0c43f8f598e72458a34819417ff6",
+    "kind": "arcgis:layer"
+  },
+  "apa-hydrometric-stations-feed": {
+    "resourceKey": "arcgis:arcgis:layer:c38cc0585dfd2efb5f40d46eb9dee6d514eec63c737b92019fe159b4a7adedbd",
+    "kind": "arcgis:layer"
+  },
+  "apa-meteorological-stations-feed": {
+    "resourceKey": "arcgis:arcgis:layer:9bd008921a09d481d7a4be47af8aca3641f43bc03fd873d3c05495986f7cf227",
+    "kind": "arcgis:layer"
+  },
+  "apa-radnet-stations-feed": {
+    "resourceKey": "arcgis:arcgis:layer:706e1f3fd2b12d92a5c6c478f58fc1031620d28d569f1ffb9b34784577f85c21",
+    "kind": "arcgis:layer"
+  },
+  "apa-seveso-establishments-feed": {
+    "resourceKey": "arcgis:arcgis:layer:1c7a7a2be7de4f933ccab56cd1a096fc7213f895466ca4aaf9b3a4b310e44ce0",
+    "kind": "arcgis:layer"
+  },
+  "barraqueiro-oeste-lisboa-torres-vedras-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:54fb485fbc564d05fd33ef1a26010db74be4b361112cc0644192c97735ba415e",
+    "kind": "myinfo:timetable"
+  },
+  "barraqueiro-oeste-lourinha-torres-vedras-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:f4b3fb4949f388fdc0116cc26519234a44a5c2229227c7d5edd57d9daccc1a8b",
+    "kind": "myinfo:timetable"
+  },
+  "barraqueiro-oeste-network-feed": {
+    "resourceKey": "myinfo:myinfo:network:4a9af14b672fe80cc9c908d737a3a262e2bb89c19abbd951c7c6c31dc9459bbc",
+    "kind": "myinfo:network"
+  },
+  "barraqueiro-oeste-praia-de-santa-cruz-torres-vedras-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:a393794830095cfc353911b8d1e8f58e68e115d48b90d0dfbed6d7b9352c7dc7",
+    "kind": "myinfo:timetable"
+  },
+  "barraqueiro-oeste-torres-vedras-a-dos-cunhados-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:7c09d8637abc05b4bcddf747640b0e5f5af324a01f41e6947afea134a7f154ca",
+    "kind": "myinfo:timetable"
+  },
+  "barraqueiro-oeste-torres-vedras-campelos-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:8e4bbd75e5e6eb1719c3ce83e3a628fc97724e5b7f8e05ff1a17728146d2bd87",
+    "kind": "myinfo:timetable"
+  },
+  "barraqueiro-oeste-torres-vedras-ericeira-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:ba07591308e46b00c86a6cff600522b001f1f3d037c34e42399c64d010ca8d87",
+    "kind": "myinfo:timetable"
+  },
+  "barraqueiro-oeste-torres-vedras-lisboa-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:78cd174712fad27e54f790ee014e1e42ad44f29e88f641248498193149751132",
+    "kind": "myinfo:timetable"
+  },
+  "barraqueiro-oeste-torres-vedras-lourinha-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:8be3a86766f3fd226446075eb2c1afc4316e4433765d66d654120280d9436e03",
+    "kind": "myinfo:timetable"
+  },
+  "barraqueiro-oeste-torres-vedras-praia-de-santa-cruz-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:a25beb92f2362a6e22fdd56891431471d8a75cfd6f6559a1f37a9f62445909a4",
+    "kind": "myinfo:timetable"
+  },
+  "barraqueiro-oeste-torres-vedras-silveira-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:636af3a96277481a9a67fffe4a135a734026774f68b786782d648a4cc248c28a",
+    "kind": "myinfo:timetable"
+  },
+  "barraqueiro-oeste-torres-vedras-turcifal-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:190f38d259aa6616e13938341764632324fba3f1a5d9e652393756d4651aa165",
+    "kind": "myinfo:timetable"
+  },
+  "base-contract-modifications-2026-feed": {
+    "resourceKey": "udata:udata:distribution:16ded979c0f3758a5a94cb5394e6524774ca4ba6aaf4e61960ab572458609628",
+    "kind": "udata:distribution"
+  },
+  "base-procurement-entities-feed": {
+    "resourceKey": "udata:udata:distribution:71bce6bd87cabe6a53e0aea8bb3683f921fcf5a5c80e758ea297b0c922838bff",
+    "kind": "udata:distribution"
+  },
+  "base-procurement-notices-2026-feed": {
+    "resourceKey": "udata:udata:distribution:41f9f900f67d99263e6dd007a2c72ca7828b25d87c30aef505ab767d9e97ac1f",
+    "kind": "udata:distribution"
+  },
+  "bird-braga": {
+    "resourceKey": "gbfs:gbfs:status:3b015915d17798bf74507e20767ffa60c1789e45d3791ebc93ad05cf6cfe46e9",
+    "kind": "gbfs:status"
+  },
+  "bird-braga-reference": {
+    "resourceKey": "gbfs:gbfs:reference:afd8939fde90b6463f7eb47427c29fdf26f3515bf9da46c2fc499d55d20f59d1",
+    "kind": "gbfs:reference"
+  },
+  "bird-cascais": {
+    "resourceKey": "gbfs:gbfs:status:e16637ff0bec354a2ecd15d600dd4903da6a9ca395e54816ae2b46409e83a1c7",
+    "kind": "gbfs:status"
+  },
+  "bird-cascais-reference": {
+    "resourceKey": "gbfs:gbfs:reference:e20a72518d26a87e06432c55859d5c3dd7356972749b630ee2fa5653484c746f",
+    "kind": "gbfs:reference"
+  },
+  "bird-lisbon": {
+    "resourceKey": "gbfs:gbfs:status:8eb85d039fda70662368d35ed3d5cc64a38fb30b196d6e202c2a724e147ac15c",
+    "kind": "gbfs:status"
+  },
+  "bird-lisbon-reference": {
+    "resourceKey": "gbfs:gbfs:reference:fffa457817f4320e1fd8d28aea3a807394a743dc518b1036a6c80831f805bed8",
+    "kind": "gbfs:reference"
+  },
+  "bird-matosinhos": {
+    "resourceKey": "gbfs:gbfs:status:1e3372c91cfb7ad20dea11adad66c13fedf64e6a61a42d2be5df3b163f7e6163",
+    "kind": "gbfs:status"
+  },
+  "bird-matosinhos-reference": {
+    "resourceKey": "gbfs:gbfs:reference:a38d77292866de8667e115bc89abd724292978201bcb1091f390fde42c40db11",
+    "kind": "gbfs:reference"
+  },
+  "bird-porto": {
+    "resourceKey": "gbfs:gbfs:status:4d1f08032e2654922565e92a316a6d974f3840dd6f551e915a111ac1d42cb208",
+    "kind": "gbfs:status"
+  },
+  "bird-porto-reference": {
+    "resourceKey": "gbfs:gbfs:reference:bd644b87bfc95dd8df9628794ca7fb7e7b514f24810fa47e2e8572c91707c76c",
+    "kind": "gbfs:reference"
+  },
+  "boa-viagem-network-feed": {
+    "resourceKey": "myinfo:myinfo:network:b076d8ecf331fa6461326e83a506844087999e51b642edbf59675ebb57578d76",
+    "kind": "myinfo:network"
+  },
+  "bora-viseu": {
+    "resourceKey": "gbfs:gbfs:status:16e9c354f8a46a67878bee4b5704223dc6fc41fe32a862953462011f0e971703",
+    "kind": "gbfs:status"
+  },
+  "bora-viseu-reference": {
+    "resourceKey": "gbfs:gbfs:reference:6864d533a92a7142dbac2b481fc1012b1b2503db5f220d789c640003a1ae5fd0",
+    "kind": "gbfs:reference"
+  },
+  "bpstat-banknotes-issued": {
+    "resourceKey": "bpstat:bpstat:dataset:b41da856b5fb41e551c9b2dc725e56ddcac18f17934a286e816969a2faeb83d2",
+    "kind": "bpstat:dataset"
+  },
+  "bpstat-construction-business-financial-health": {
+    "resourceKey": "bpstat:bpstat:dataset:f193e1e530eac3a835cf945449c94f19176d5cb5a240198c3b9d953d124e0f94",
+    "kind": "bpstat:dataset"
+  },
+  "bpstat-consumer-price-index": {
+    "resourceKey": "bpstat:bpstat:dataset:7dc8278f36082fdfbcabcf542d6cf52c95fe801b519e8d8bcd7b7778d1fc2ec0",
+    "kind": "bpstat:dataset"
+  },
+  "bpstat-ecb-policy-rates": {
+    "resourceKey": "bpstat:bpstat:dataset:3cd2b5a0f5175431ff6eb496dfc173936dbb0c4c1fb826c9147925dcae67cf29",
+    "kind": "bpstat:dataset"
+  },
+  "bpstat-emigrant-deposits-by-region": {
+    "resourceKey": "bpstat:bpstat:dataset:5ae89f1c6d232fa057e15a7389fafc6b84e457fef6e222e720a9bd60a7f53492",
+    "kind": "bpstat:dataset"
+  },
+  "bpstat-employment-and-unemployment": {
+    "resourceKey": "bpstat:bpstat:dataset:44bbf2b25fd2d891ebfe47bd5e21dd84cf414b09e247b934782da559ffd7b9cc",
+    "kind": "bpstat:dataset"
+  },
+  "bpstat-goods-trade-growth": {
+    "resourceKey": "bpstat:bpstat:dataset:cdb3353eaec49da74055ddaa5c1896779e2ad592e43dfd0f3a088c6457546a9f",
+    "kind": "bpstat:dataset"
+  },
+  "bpstat-government-deposit-assets": {
+    "resourceKey": "bpstat:bpstat:dataset:b056c1462110182425fe66136fdea1b10544e287a9f26b1c110565d2083aac39",
+    "kind": "bpstat:dataset"
+  },
+  "bpstat-household-indebtedness": {
+    "resourceKey": "bpstat:bpstat:dataset:3788f8f17300be01b2880019b8033362df90a945f127f25d8303e3402c2dfa11",
+    "kind": "bpstat:dataset"
+  },
+  "bpstat-housing-loan-reference-rates": {
+    "resourceKey": "bpstat:bpstat:dataset:8b481b3dc0d9357a03c2fb0077bcfe6b4adf2c9668b03b8656c0a12b8add30f9",
+    "kind": "bpstat:dataset"
+  },
+  "bpstat-new-car-loan-amount-percentiles": {
+    "resourceKey": "bpstat:bpstat:dataset:ed4a40ec8286a57a47e911cfc75056f3bac327850b93e985a2dd295eb0222317",
+    "kind": "bpstat:dataset"
+  },
+  "bpstat-overdue-household-borrowers-by-region": {
+    "resourceKey": "bpstat:bpstat:dataset:545172d48632e26e1c766bc08ec5717c3b692436281c63aaa71c9dc55fc3ef3b",
+    "kind": "bpstat:dataset"
+  },
+  "bpstat-payment-system-participants": {
+    "resourceKey": "bpstat:bpstat:dataset:19a95bac605dee51303a314d481256ac4569004abdc387b148e8cc890924b0b9",
+    "kind": "bpstat:dataset"
+  },
+  "bpstat-portuguese-treasury-yields": {
+    "resourceKey": "bpstat:bpstat:dataset:fe12ef46f31951f14d8db151da30944fb19dd36e9782776e3d0b297c37d55278",
+    "kind": "bpstat:dataset"
+  },
+  "cada-opinions-2025-feed": {
+    "resourceKey": "udata:udata:distribution:9b07219450b3dd80bf739c6c52a4cae6af36bf6b45b201cbe166bd714470bd9b",
+    "kind": "udata:distribution"
+  },
+  "cadaval-municipal-waste-feed": {
+    "resourceKey": "udata:udata:distribution:7b41c7fb8a23a1cd7e3acb027a94732acf829a2442189ae070c27acb512283a0",
+    "kind": "udata:distribution"
+  },
+  "carris-alerts-feed": {
+    "resourceKey": "carris:carris:alerts:6ef9c0ee3f3de73ab4e3cb09650c2ca4ce4d132d2f6e1f2fce2f4430c829e979",
+    "kind": "carris:alerts"
+  },
+  "carris-lines-feed": {
+    "resourceKey": "carris:carris:lines:9074c2207d4370f0354bf3eaf21c9c6ba7011db61b6bb8a17cf29d96b667217c",
+    "kind": "carris:lines"
+  },
+  "carris-metropolitana-gtfs-feed": {
+    "resourceKey": "gtfs:gtfs:static:b7d0a224bf021bc8aa5a844222a987078e6896da634c0bdc07d4f48ae2d8fc3e",
+    "kind": "gtfs:static"
+  },
+  "carris-routes-feed": {
+    "resourceKey": "carris:carris:routes:44e0f2cae958a56ee4eac70dd854762dd6cdfb8277709f4d3ab0d468a9cd91dd",
+    "kind": "carris:routes"
+  },
+  "carris-stops-feed": {
+    "resourceKey": "carris:carris:stops:4a4f3b0fdcdc28ab03ea802539aa820994f1934cd437371ddae23e23dd8131af",
+    "kind": "carris:stops"
+  },
+  "carris-vehicles-feed": {
+    "resourceKey": "carris:carris:vehicles:fb0545b8aae9c8d7d340949a1613656531ae0e0944c43eec7cd78312525c8de6",
+    "kind": "carris:vehicles"
+  },
+  "cascais-allotments-feed": {
+    "resourceKey": "ckan:ckan:resource:f0af25a1a834b286e4884688e3bf727bf3bfacca1b6935d8f2fef0b021f10bf5",
+    "kind": "ckan:resource"
+  },
+  "cascais-beaches-feed": {
+    "resourceKey": "ckan:ckan:resource:68592b1077374fe7860ee23d981f65dec13b608f81dcbd96a94e0b5f07cef99b",
+    "kind": "ckan:resource"
+  },
+  "cascais-bus-stops-feed": {
+    "resourceKey": "ckan:ckan:resource:fed16186131ae45da6f74f355d6e2c699001a25a3ce288be22dc6404c61c1647",
+    "kind": "ckan:resource"
+  },
+  "cascais-commerce-services-feed": {
+    "resourceKey": "ckan:ckan:resource:2c0c3a1d97fc2d58d8a3fe1472bf0a17a0aa2413169bff46b9121dd801634560",
+    "kind": "ckan:resource"
+  },
+  "cascais-cultural-venues-feed": {
+    "resourceKey": "ckan:ckan:resource:a349da98b96e188670aa1993254a4cfcfce8fd5e49b5bc4435dbd2375635033f",
+    "kind": "ckan:resource"
+  },
+  "cascais-cycle-paths-feed": {
+    "resourceKey": "ckan:ckan:resource:c9320ca527f58668ca589fe5f3e2bff69ac591ab24d2843e940a33811a1e9cec",
+    "kind": "ckan:resource"
+  },
+  "cascais-defibrillators-feed": {
+    "resourceKey": "ckan:ckan:resource:3a571136d9508f8339a5359d3292d95800be9420c690fbf250b8fee9ecd4787b",
+    "kind": "ckan:resource"
+  },
+  "cascais-drinking-fountains-feed": {
+    "resourceKey": "ckan:ckan:resource:c69bd423cc4a9bd553bb7d8dcfe050d8a68385e62eaea2d45d0b29b0b03508f6",
+    "kind": "ckan:resource"
+  },
+  "cascais-fire-infrastructure-feed": {
+    "resourceKey": "ckan:ckan:resource:982f6ee5058df605dfed1cdd4c4c5a23ffd9486d7e9ece501c5d53fc13fbbd5b",
+    "kind": "ckan:resource"
+  },
+  "cascais-fire-stations-feed": {
+    "resourceKey": "ckan:ckan:resource:d00b4eaa6bffe6ea971fc384bac448721c30e75faf8b832920f4d4efc9a8ef9b",
+    "kind": "ckan:resource"
+  },
+  "cascais-forest-fires-feed": {
+    "resourceKey": "ckan:ckan:resource:f5c3823dfa6865fa3b218584ed44dd2ea7df84b70711fa986e3d338140e196a8",
+    "kind": "ckan:resource"
+  },
+  "cascais-green-spaces-feed": {
+    "resourceKey": "ckan:ckan:resource:e72d961d0cd5fbf86e63e9acf7f2406880cda8b8cca671b1346a7be23f64c335",
+    "kind": "ckan:resource"
+  },
+  "cascais-health-facilities-feed": {
+    "resourceKey": "ckan:ckan:resource:3f3c4788aa5fab6498bcdec446e6c7974626f3d40628ba849d3c52733e25cbc8",
+    "kind": "ckan:resource"
+  },
+  "cascais-hotels-feed": {
+    "resourceKey": "ckan:ckan:resource:b4a66f07dd1175e6f0a6955a402f5d8211018cfd66d26b217fec179cd3b1cc6c",
+    "kind": "ckan:resource"
+  },
+  "cascais-markets-feed": {
+    "resourceKey": "ckan:ckan:resource:63687570e245feecc2237e72befc9a890e3a99b56075198f7d56223c03140ad9",
+    "kind": "ckan:resource"
+  },
+  "cascais-municipal-housing-feed": {
+    "resourceKey": "ckan:ckan:resource:21f4dc4060828efc7d4aade899ba1057a2719584355e9c4c957d46f05a774ff0",
+    "kind": "ckan:resource"
+  },
+  "cascais-parking-feed": {
+    "resourceKey": "ckan:ckan:resource:9ff90c608aefade0f030584fb0973c9f62c6708a0eda767ac91c5d5a901dcee9",
+    "kind": "ckan:resource"
+  },
+  "cascais-pharmacies-feed": {
+    "resourceKey": "ckan:ckan:resource:fd85b694f9055fdd374664bf173cee8beaff02c354c9d083cedae824ff889b8a",
+    "kind": "ckan:resource"
+  },
+  "cascais-playgrounds-feed": {
+    "resourceKey": "ckan:ckan:resource:6b95ac6aa010a69e0d9534ec22f69f3574f66d6d1efffa809815ede40fffc88d",
+    "kind": "ckan:resource"
+  },
+  "cascais-public-schools-feed": {
+    "resourceKey": "ckan:ckan:resource:2c31570895084cf89290ccd6279228409524d3697fc062b7e38b9c7eaffa9b1a",
+    "kind": "ckan:resource"
+  },
+  "cascais-rental-kiosks-feed": {
+    "resourceKey": "ckan:ckan:resource:3bbd25205d5fad749c566f828d17f4e9b0f517de2d186166e19de039789cc0b9",
+    "kind": "ckan:resource"
+  },
+  "cascais-shared-mobility-stations-feed": {
+    "resourceKey": "ckan:ckan:resource:36841e4f2bedc0aa4116e00df7eeff8a98bb2b98b381f82991d379a685455102",
+    "kind": "ckan:resource"
+  },
+  "cascais-social-charter-feed": {
+    "resourceKey": "ckan:ckan:resource:5e274f05411b64ebd6cea82a684a6ac064fd895eaa11e4c3ea9479bd6da6c776",
+    "kind": "ckan:resource"
+  },
+  "cascais-sports-facilities-feed": {
+    "resourceKey": "ckan:ckan:resource:0787f675aeab0fa031f1d3d2664a087d18dbf72f0ffd48268691516f3f53447d",
+    "kind": "ckan:resource"
+  },
+  "cascais-street-trees-feed": {
+    "resourceKey": "ckan:ckan:resource:5e3427d8cdd3a1df9bb623c3b19dfb625092490022296b11a82d9ff78a96d933",
+    "kind": "ckan:resource"
+  },
+  "cascais-taxi-ranks-feed": {
+    "resourceKey": "ckan:ckan:resource:2e6cc74bc3c88a2eb2c24e833397ba14fb1ad02aa8530f6dd246dac765376c3b",
+    "kind": "ckan:resource"
+  },
+  "cascais-train-stations-feed": {
+    "resourceKey": "ckan:ckan:resource:8c59067a41e66211276f54e755eb1b35dc3e2e5a70acfe51126b6d7242c71291",
+    "kind": "ckan:resource"
+  },
+  "cascais-tsunami-meeting-points-feed": {
+    "resourceKey": "ckan:ckan:resource:ac901737a907577591f492518db5363fcb9b8064f8df245301ac5f099e99e736",
+    "kind": "ckan:resource"
+  },
+  "cp-gtfs-feed": {
+    "resourceKey": "gtfs:gtfs:static:f45c4b90a69dae77837443bb8513021360e3ad31c524889cb49db2c8f8e55588",
+    "kind": "gtfs:static"
+  },
+  "dgeg-fuel-types": {
+    "resourceKey": "dgeg:dgeg:fuel-types:992b38def4e21cf8a2ecd2fa28905fe5f09d392a462ac6843dbb4ca700b91f3f",
+    "kind": "dgeg:fuel-types"
+  },
+  "dgeg-gasoleo-especial": {
+    "resourceKey": "dgeg:dgeg:fuel-prices:7fa2a057a32eaa31ffe48d2d4146ebbfa4a9f0535427e2284612bbf7b350bd5a",
+    "kind": "dgeg:fuel-prices"
+  },
+  "dgeg-gasoleo-simples": {
+    "resourceKey": "dgeg:dgeg:fuel-prices:7d7a8a977e48ac6895d0b37deb60559d7509f3164c7ecfe1617fd6e5438cee18",
+    "kind": "dgeg:fuel-prices"
+  },
+  "dgeg-gasolina-98": {
+    "resourceKey": "dgeg:dgeg:fuel-prices:2827e2080acc54a0f67da027c93faaa54380754df35c78aab3d1018a39b19307",
+    "kind": "dgeg:fuel-prices"
+  },
+  "dgeg-gasolina-simples-95": {
+    "resourceKey": "dgeg:dgeg:fuel-prices:33afe7cd7604e82e2546efb20d22d359f91924fc8e94112decb142ae9be588c0",
+    "kind": "dgeg:fuel-prices"
+  },
+  "dgeg-gpl-auto": {
+    "resourceKey": "dgeg:dgeg:fuel-prices:f00cfa96565bef45b291c91d84796a3f9cf0013fa44645a5fd6eb3c7921e5a77",
+    "kind": "dgeg:fuel-prices"
+  },
+  "dgt-caop-acores-central-oriental-freguesias-feed": {
+    "resourceKey": "wfs:wfs:reference:aa09dfb5eda531ba11f2c7b1376c068e7af5eefcb4563f89b6df64c1d7defa27",
+    "kind": "wfs:reference"
+  },
+  "dgt-caop-acores-central-oriental-municipios-feed": {
+    "resourceKey": "wfs:wfs:reference:4b3e5d0e45bc1fc8451f24316884978f7e04b0d4ad4e0c15393f17e88948aeaa",
+    "kind": "wfs:reference"
+  },
+  "dgt-caop-acores-ocidental-freguesias-feed": {
+    "resourceKey": "wfs:wfs:reference:f911c2e9b847f0b4a818f83bb87d475759956c3fd9c8f9e52f9f4b5116034c91",
+    "kind": "wfs:reference"
+  },
+  "dgt-caop-acores-ocidental-municipios-feed": {
+    "resourceKey": "wfs:wfs:reference:d7836120359c8c62a4091156cef216bc84a496bf65191c5b9cd954d317a97307",
+    "kind": "wfs:reference"
+  },
+  "dgt-caop-distritos-feed": {
+    "resourceKey": "ogc:ogc:collection:a37e3b01f37992612aa551ae5645e9db0bc67fb6a759907af9de8e60ed76f125",
+    "kind": "ogc:collection"
+  },
+  "dgt-caop-freguesias-feed": {
+    "resourceKey": "ogc:ogc:collection:0e3bc7d15a69f90ccaee667cb90d1fdd808d3d7f7373959853ddfe2076e82b0b",
+    "kind": "ogc:collection"
+  },
+  "dgt-caop-madeira-freguesias-feed": {
+    "resourceKey": "wfs:wfs:reference:0f08e4068af4ef86af936ffe3da30d02fc46c8e175968fb2bbb7d5a217af6856",
+    "kind": "wfs:reference"
+  },
+  "dgt-caop-madeira-municipios-feed": {
+    "resourceKey": "wfs:wfs:reference:fd6a4cc0adc0512c291766817809ed4d9df9a850543d63310091c86e45c1a950",
+    "kind": "wfs:reference"
+  },
+  "dgt-caop-municipios-feed": {
+    "resourceKey": "ogc:ogc:collection:92a4e53676e8432efebcc81f54c2dd98749bbce7f4cc32ec5171e07a4528c7f7",
+    "kind": "ogc:collection"
+  },
+  "dgt-caop-nuts2-feed": {
+    "resourceKey": "ogc:ogc:collection:59b0423bb4b3637f7b04ea9e84ffa934fb6ea4eeb8ea384a1b390b7143de7094",
+    "kind": "ogc:collection"
+  },
+  "dgt-caop-nuts3-feed": {
+    "resourceKey": "ogc:ogc:collection:4207a447f03023d47fa8c15924cc1bd32dbfa424fccc5762e780555add28b776",
+    "kind": "ogc:collection"
+  },
+  "dgt-caop-trocos-feed": {
+    "resourceKey": "ogc:ogc:collection:16776d4da6317c3c466565afef0e1935307876df65e78786dc84644eef703008",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-feed": {
+    "resourceKey": "ogc:ogc:collection:50a4df8f1f881a1bb3758556715079c1c2b4c3e7440205d7fc28efed73c4d690",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-shapes-feed": {
+    "resourceKey": "ogc:ogc:collection:e2c07f60c9ce5fc9f3710f2ceaac12846d1ad0cf79ac6bcf25ace684fa44fb8c",
+    "kind": "ogc:collection"
+  },
+  "dgt-fototeca-index-feed": {
+    "resourceKey": "wfs:wfs:reference:d8def949ffdaec3b2e1afa60c02ceb79eef412c914b6d880dc432980ca4a1589",
+    "kind": "wfs:reference"
+  },
+  "dgt-rgn-rede-gravimetrica-feed": {
+    "resourceKey": "wfs:wfs:reference:0f4ffb14a6982c5e834c280577398f86e5621e196c3fd1cb9050ba260674f806",
+    "kind": "wfs:reference"
+  },
+  "dgt-rgn-rede-maregrafica-feed": {
+    "resourceKey": "wfs:wfs:reference:4de1405378405e408312143aa3a2506ec23c1825b13d4aabaee03a0ac97ed13d",
+    "kind": "wfs:reference"
+  },
+  "dgt-rgn-rede-nivelamento-feed": {
+    "resourceKey": "wfs:wfs:reference:5537934c99892e5312e95fee0472a142e007ba5c084d60e15d305470e2b371dc",
+    "kind": "wfs:reference"
+  },
+  "dgt-rgn-renep-estacoes-feed": {
+    "resourceKey": "wfs:wfs:reference:b6a3043f4bcc8338322fa1055496e303fceb48b4aecb281e62dc8399906adede",
+    "kind": "wfs:reference"
+  },
+  "dgt-rgn-vertices-geodesicos-feed": {
+    "resourceKey": "wfs:wfs:reference:65c061aad36e6c1e9134ca5d4249f78b642303aac00c2131c5035c9ae8163998",
+    "kind": "wfs:reference"
+  },
+  "dgt-serras-cumes-principais-feed": {
+    "resourceKey": "wfs:wfs:reference:a766e7032ff2c960fd785332653d3e0aef03678274c084d5db2ab0a16e7b9223",
+    "kind": "wfs:reference"
+  },
+  "dgt-serras-principais-feed": {
+    "resourceKey": "wfs:wfs:reference:18b4f889fcf5a61c17832d76e27cdfeeebc13429dcd81db10853806a88b54201",
+    "kind": "wfs:reference"
+  },
+  "dgt-serras-toponimicas-feed": {
+    "resourceKey": "wfs:wfs:reference:3a70aad5c89b3a1a21a24641b098c0de7fd5cf9bba7ed4709cb4166ed132ae1b",
+    "kind": "wfs:reference"
+  },
+  "dgt-sgifr-pontos-feed": {
+    "resourceKey": "ogc:ogc:collection:e9588c0824df27606cd363207fbce2d63624a571ee8f7b8766ddb6290ad8313d",
+    "kind": "ogc:collection"
+  },
+  "dgt-srup-aeronautica-feed": {
+    "resourceKey": "ogc:ogc:collection:c5311a2263159bb53a2b7f2c5eb86c64b0661c0ba0758422c40cd4c8c7b08a7d",
+    "kind": "ogc:collection"
+  },
+  "dgt-srup-albufeiras-feed": {
+    "resourceKey": "ogc:ogc:collection:f5f091d4f4cd45ae4877ff893ff6c69ed99c06fbf3de523e2c74f47900a314cd",
+    "kind": "ogc:collection"
+  },
+  "dgt-srup-areas-protegidas-feed": {
+    "resourceKey": "ogc:ogc:collection:2ad66eaa54860ce6dd349c96a6bb51f0c06333c570a3599698bb77f99c62c1ae",
+    "kind": "ogc:collection"
+  },
+  "dgt-srup-arvores-interesse-publico-areas-feed": {
+    "resourceKey": "ogc:ogc:collection:106c3b0972edb096f1b65caf2dd656401c84d1561a38cdf069ba5de5d3e5cbf2",
+    "kind": "ogc:collection"
+  },
+  "dgt-srup-arvores-interesse-publico-pontos-feed": {
+    "resourceKey": "ogc:ogc:collection:9bec1394ea1324aa592937bf89bfb712ff1d13d669dc03cb8c3ddb1f2451eec7",
+    "kind": "ogc:collection"
+  },
+  "dgt-srup-captacoes-aguas-subterraneas-feed": {
+    "resourceKey": "ogc:ogc:collection:cc49160ce150057bb21c8a71619d6099312e32ac3cf71c60714b4059d566bde0",
+    "kind": "ogc:collection"
+  },
+  "dgt-srup-defesa-nacional-feed": {
+    "resourceKey": "ogc:ogc:collection:5a7dbd4015b3483fc3ecfa3da38446498ebaa0172691fd25794570aeaa8352e7",
+    "kind": "ogc:collection"
+  },
+  "dgt-srup-defesa-nacional-zonas-feed": {
+    "resourceKey": "ogc:ogc:collection:08f56f13e090e0142d0cb8944c418f14af0d8165f489e180ce79f62c6f5cc3fd",
+    "kind": "ogc:collection"
+  },
+  "dgt-srup-estacoes-ferroviarias-feed": {
+    "resourceKey": "ogc:ogc:collection:464490397d32e617c6140b37066e4c12af819d72cb32c175f0dc61ee106cbff7",
+    "kind": "ogc:collection"
+  },
+  "dgt-srup-marcos-geodesicos-feed": {
+    "resourceKey": "ogc:ogc:collection:9d5553b63b562de37fe09001662f75becf1b2293d9d037989aa3068f8a506e94",
+    "kind": "ogc:collection"
+  },
+  "dgt-srup-rede-eletrica-feed": {
+    "resourceKey": "ogc:ogc:collection:65dbe256a52041728958577d88366fc39c71f0c6a05ae007d45a70104fa90cd8",
+    "kind": "ogc:collection"
+  },
+  "dgt-srup-rede-ferroviaria-feed": {
+    "resourceKey": "ogc:ogc:collection:a61273830fc1bd28318143bc19039e8caa3d8e3435b13ca10b8a0e8556fc1db0",
+    "kind": "ogc:collection"
+  },
+  "dgt-srup-rede-natura-zec-feed": {
+    "resourceKey": "ogc:ogc:collection:e6f57cf64a72ef314a09106b45bb3552f230f1d7c8fecff820e6669b71aaa33b",
+    "kind": "ogc:collection"
+  },
+  "dgt-srup-rede-natura-zpe-feed": {
+    "resourceKey": "ogc:ogc:collection:d57c8a75f416ae0ba7da10643b207b833a785d5f97c3a58ad84d84964ef15c16",
+    "kind": "ogc:collection"
+  },
+  "dgt-srup-rede-rodoviaria-feed": {
+    "resourceKey": "ogc:ogc:collection:4479ecd3f3c10ca3957706f7917d018a52d1f8931a6b25aa487a2083935090f7",
+    "kind": "ogc:collection"
+  },
+  "dgt-srup-reserva-agricola-feed": {
+    "resourceKey": "ogc:ogc:collection:2af11c69f605f5e793354cde9e9c626fc94af037617392946f22bd6ef3f87472",
+    "kind": "ogc:collection"
+  },
+  "dgt-srup-reserva-ecologica-areas-feed": {
+    "resourceKey": "ogc:ogc:collection:8a93a01b8117b0410aa1c320a5f577093a72c5bd082b72ffbe933c15a0dd41f7",
+    "kind": "ogc:collection"
+  },
+  "dgt-srup-reserva-ecologica-linhas-feed": {
+    "resourceKey": "ogc:ogc:collection:d79c83a53edb2aa85714788b82eb3103540857f1f3c37e0d581bcaf07a74a070",
+    "kind": "ogc:collection"
+  },
+  "e-redes-active-smart-meter-contracts-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:141345cec1f93d0221f7c1318a6826bd56b5055fb1d0ddbaf171be2a287fd7c5",
+    "kind": "opendatasoft:dataset"
+  },
+  "e-redes-consumption-forecast-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:8e82e221d7c77bbfb67cf2690388d796c3004283faf2fc521763bf10778f4516",
+    "kind": "opendatasoft:dataset"
+  },
+  "e-redes-contracts-by-power-band-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:cd82662d2e37dca04ce68000075c0546fbb8358e5cc78e5f66e27dc105bf8500",
+    "kind": "opendatasoft:dataset"
+  },
+  "e-redes-distribution-injection-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:6f031a9d3ec41ba63dfe96d849c9f85d23dfd25d4532741bd3f4fc95fa887a48",
+    "kind": "opendatasoft:dataset"
+  },
+  "e-redes-districts-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:0120193504372ce881aa9ba3a60c34eab4f761900a28ddd53049b717570c826d",
+    "kind": "opendatasoft:dataset"
+  },
+  "e-redes-energy-communities-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:4c1592e0fcd1f87b70a3aa1bbc13d7d127c0afe953010d2fa1b0470948b27025",
+    "kind": "opendatasoft:dataset"
+  },
+  "e-redes-ev-charging-connections-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:a04eb14af75748da15d474ad15cded415b049c6241904a0b1f6b5b9d647383d7",
+    "kind": "opendatasoft:dataset"
+  },
+  "e-redes-ev-grid-connection-requests-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:bb392c5817f5b9c31aff71907aba0dfdcf34c30123c7245f2c463a6366c4a4aa",
+    "kind": "opendatasoft:dataset"
+  },
+  "e-redes-grid-reception-capacity-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:c035ddb16906aaa6647a1d5348da2cbca2fb7b508fbc3f4b289994a7c89ac6de",
+    "kind": "opendatasoft:dataset"
+  },
+  "e-redes-hourly-consumption-lisbon-porto-postcodes-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:85f94bb31036624cfba387c8d44c077ea6471cb0fd68436c429de23c5f3c934a",
+    "kind": "opendatasoft:dataset"
+  },
+  "e-redes-monthly-postal-consumption-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:7ad208544f57478c23237685bde3f6c31204370d1b6728147e10ec88c3790265",
+    "kind": "opendatasoft:dataset"
+  },
+  "e-redes-municipal-contracted-capacity-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:6dac76ecc96e4b75712125f450aa0f0ff6be758eb7689df6518cd3f9f52dd70c",
+    "kind": "opendatasoft:dataset"
+  },
+  "e-redes-municipal-monthly-consumption-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:c4502bffcaf732ca67a1215bb1b0dda2b1cd6f6bd23c7b80dcf5f5a4f517143b",
+    "kind": "opendatasoft:dataset"
+  },
+  "e-redes-municipal-street-lighting-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:1ae0aece40fff330d24ac20792a6ae15c642e5cc4af8d2a2e638ad2e8e5692a8",
+    "kind": "opendatasoft:dataset"
+  },
+  "e-redes-municipal-tariff-consumption-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:230494898e4e6748c3699cbed77d59105eb1e1810dd7508a2f344714a82a0368",
+    "kind": "opendatasoft:dataset"
+  },
+  "e-redes-municipal-transformer-capacity-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:e1246084e0d861d28b9315c35aa9f8024d92c8963ee628f4ff9399ebb8d59ddf",
+    "kind": "opendatasoft:dataset"
+  },
+  "e-redes-national-consumption-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:6370149374ee5f3dd8bb212cf3cb35f085b934170d5753ba08500cfe107de296",
+    "kind": "opendatasoft:dataset"
+  },
+  "e-redes-national-production-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:5b43eb31451b3e08e73f01f60a0dfe3fc834ff7fc1e630baece2e9903b2c1a87",
+    "kind": "opendatasoft:dataset"
+  },
+  "e-redes-scheduled-interruptions-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:5bab93cb1aca1419f8449d8ab0bed84aafad3afdf0680b32549a7662c6b06fce",
+    "kind": "opendatasoft:dataset"
+  },
+  "e-redes-self-consumption-exported-energy-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:30d5ee29d69d046132c4ccbeca5d6a3eef458268a742ed21b865858ff86d813c",
+    "kind": "opendatasoft:dataset"
+  },
+  "e-redes-self-consumption-installations-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:6b3bf3177f8ed6cb6b49067519c966023f191a3538cc54b34449187f8786ea82",
+    "kind": "opendatasoft:dataset"
+  },
+  "e-redes-service-continuity-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:4028c5de8062c6901fbc54d6c78db0e7e28028eaa705d80b8491fe6f6dfb357f",
+    "kind": "opendatasoft:dataset"
+  },
+  "e-redes-substation-load-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:aec38e12c6f0b70e3a4bc26dd336e6dae86c46ecff53f13f0855a67a138fb03e",
+    "kind": "opendatasoft:dataset"
+  },
+  "effis-portugal-recent-burnt-areas-feed": {
+    "resourceKey": "wfs:wfs:events:86e500f5fdd850e3a253a475b7f33302d4c22f09266851120f40ceceb9978e1f",
+    "kind": "wfs:events"
+  },
+  "eurostat-portugal-economic-sentiment": {
+    "resourceKey": "eurostat:eurostat:dataset:6043fff7c00362162d097fd5c8a075084b9ffd5e42d766b6a93f1dc7104eb9ef",
+    "kind": "eurostat:dataset"
+  },
+  "eurostat-portugal-electricity-generation": {
+    "resourceKey": "eurostat:eurostat:dataset:b74d2a8b9acf4a347aa15b53a4b8694e1f58272c89d473bd07fea3c2e4729996",
+    "kind": "eurostat:dataset"
+  },
+  "eurostat-portugal-hicp-annual-rate": {
+    "resourceKey": "eurostat:eurostat:dataset:2e1aedeffceec395acef04607296eebd6920f110188d69eaa4c830eb27726173",
+    "kind": "eurostat:dataset"
+  },
+  "eurostat-portugal-house-price-index": {
+    "resourceKey": "eurostat:eurostat:dataset:06ef30905ba24d27fce0891bc911298c7f427f604c9a2c31814c3c1498497bd1",
+    "kind": "eurostat:dataset"
+  },
+  "eurostat-portugal-industrial-production": {
+    "resourceKey": "eurostat:eurostat:dataset:5f89ef8e8b7eee5a950a7e6d047b8f697556910df9d1d3766b8d18fcac172a19",
+    "kind": "eurostat:dataset"
+  },
+  "eurostat-portugal-long-term-interest-rate": {
+    "resourceKey": "eurostat:eurostat:dataset:5d66d5c28d12d80dfd715b596fc9228f9372e750f0eb6733944bebd3dc56c6f6",
+    "kind": "eurostat:dataset"
+  },
+  "eurostat-portugal-monthly-unemployment": {
+    "resourceKey": "eurostat:eurostat:dataset:c7f78f598353547cfe466d509e63a7fb82e1e86f76a5a41de7003a7424e04b5b",
+    "kind": "eurostat:dataset"
+  },
+  "eurostat-portugal-quarterly-gdp": {
+    "resourceKey": "eurostat:eurostat:dataset:d52c071b7b6109fcd4353eeb6e1910489e9065161b164bee3b90cdd40d62e641",
+    "kind": "eurostat:dataset"
+  },
+  "eurostat-portugal-retail-trade-volume": {
+    "resourceKey": "eurostat:eurostat:dataset:2a0753e0c4c99533d444bb9dbb9e61290dd94ee8bde07cf86e828b0d04b76d9d",
+    "kind": "eurostat:dataset"
+  },
+  "eurostat-portugal-tourism-nights": {
+    "resourceKey": "eurostat:eurostat:dataset:d6bd3139f35bd9174563d534ed7a608dfb97dc41d470e6e91dd8bd21604c9fac",
+    "kind": "eurostat:dataset"
+  },
+  "fertagus-gtfs-feed": {
+    "resourceKey": "gtfs:gtfs:static:d2be0d78dcf3d90df37148f574c6c1d6479657205ac718e56cbec59428b99bcf",
+    "kind": "gtfs:static"
+  },
+  "horarios-do-funchal-gtfs-feed": {
+    "resourceKey": "gtfs:gtfs:static:6f1cde522e2804be81be0e890cf26081a503abb4589f59be5bb81fdbcb87cd2a",
+    "kind": "gtfs:static"
+  },
+  "ine-airport-passengers-embarked": {
+    "resourceKey": "ine:ine:indicator:bcb39e541ff3d02b5c1b7423a95ae37833e8373b02cfffb50cb4f458012c3f06",
+    "kind": "ine:indicator"
+  },
+  "ine-average-monthly-earnings": {
+    "resourceKey": "ine:ine:indicator:2eaa595eedf54886b972770c61abc3bb484ea4c6b6ba6cf95bbdd0f0576eb081",
+    "kind": "ine:indicator"
+  },
+  "ine-broadband-accesses-per-100": {
+    "resourceKey": "ine:ine:indicator:e167033c5d254a48bb7878017f167bb64a4661b0dd034f22ac65f389e4d21af9",
+    "kind": "ine:indicator"
+  },
+  "ine-broadband-data-traffic": {
+    "resourceKey": "ine:ine:indicator:6abc9796c673334393e3a1cd3f1a4f046b504fccffb856c183159d51811737aa",
+    "kind": "ine:indicator"
+  },
+  "ine-consumer-price-index": {
+    "resourceKey": "ine:ine:indicator:ef608844919c76d562afef594f6743e4a95f062c34a2e72715d79d2f1d189f94",
+    "kind": "ine:indicator"
+  },
+  "ine-crime-rate": {
+    "resourceKey": "ine:ine:indicator:122ccaa11429b602c834162e6cc1058c873812d8c499d16903bd79c92070d70c",
+    "kind": "ine:indicator"
+  },
+  "ine-declared-income-per-inhabitant": {
+    "resourceKey": "ine:ine:indicator:f1966f1dfbdca8873e5d23229069b42b68cf5279f8ebf098796c1c21ff8e4dc6",
+    "kind": "ine:indicator"
+  },
+  "ine-employment-rate": {
+    "resourceKey": "ine:ine:indicator:29f20d0696e16dd856045658af907b18c5961b882da9e0f0ae23b9e3023f54cd",
+    "kind": "ine:indicator"
+  },
+  "ine-fixed-broadband-accesses": {
+    "resourceKey": "ine:ine:indicator:102ee39e25bd5a7e66905bf80e9abe0a0a43c396f4a8fc8887aad2e9d28d7f25",
+    "kind": "ine:indicator"
+  },
+  "ine-fixed-broadband-accesses-per-100": {
+    "resourceKey": "ine:ine:indicator:d89a72fb5a1291117f4fbf2375c423d6e64cedeba084ba462aaec18b5f46a7c7",
+    "kind": "ine:indicator"
+  },
+  "ine-fixed-telephone-clients": {
+    "resourceKey": "ine:ine:indicator:92b492d1dabed6f997af3bf3950585d129c9a763349bfc1370bf4052aa7cb3f8",
+    "kind": "ine:indicator"
+  },
+  "ine-heavy-rail-passengers": {
+    "resourceKey": "ine:ine:indicator:2711601206c72f7718bd5ec5bbae1048e1bdea507fe1278eca57cd453e443b3e",
+    "kind": "ine:indicator"
+  },
+  "ine-house-price-index": {
+    "resourceKey": "ine:ine:indicator:8c128d8023e74c4666dc96ab35cccc404950a79b48edb89fe16231d59d11e1e9",
+    "kind": "ine:indicator"
+  },
+  "ine-household-broadband-access": {
+    "resourceKey": "ine:ine:indicator:0dd7b25db51b333e0b6f00fdfbf6f81e13a2d00dd27d7c47ef46269bc9941881",
+    "kind": "ine:indicator"
+  },
+  "ine-household-income-gini": {
+    "resourceKey": "ine:ine:indicator:6dd2ae20074225211bfdbe5e270b16a67095ce0b1c4e80a222bcf86a39b9a9ba",
+    "kind": "ine:indicator"
+  },
+  "ine-household-income-p90-p10": {
+    "resourceKey": "ine:ine:indicator:82017d12820ad059b61aca8d9391a4cfcfa102acbdb3e8daaeeb0dd540fafebc",
+    "kind": "ine:indicator"
+  },
+  "ine-housing-transactions-value": {
+    "resourceKey": "ine:ine:indicator:d580b817e88a4a0061a1a7ab7a7dbdb8209ecb620d6f26dbb751d9f9edfcecc5",
+    "kind": "ine:indicator"
+  },
+  "ine-industrial-production-index": {
+    "resourceKey": "ine:ine:indicator:6fff354f84e91b177137ca82f60c0f9271d606d1861da112f203660b90094ddf",
+    "kind": "ine:indicator"
+  },
+  "ine-live-births": {
+    "resourceKey": "ine:ine:indicator:3949a53bdbfac1484e6b929a7eeeb01394aae845b9d4ae4753c957009e80be96",
+    "kind": "ine:indicator"
+  },
+  "ine-median-bank-valuation": {
+    "resourceKey": "ine:ine:indicator:690bb22fe33a1188f7ff2bc6bd10ad65b1b076d185eb9f79aec22f36f7191a2e",
+    "kind": "ine:indicator"
+  },
+  "ine-median-home-sale-price": {
+    "resourceKey": "ine:ine:indicator:d9db3ee8a5ea2cefbbed1ade8ad50b99c810569430fe2c905ccb47630238d505",
+    "kind": "ine:indicator"
+  },
+  "ine-median-household-income-after-tax": {
+    "resourceKey": "ine:ine:indicator:ccf3d57b4a16d160c25eb106e98c6c28892c392eecfc2c408c48e17277905206",
+    "kind": "ine:indicator"
+  },
+  "ine-resident-population": {
+    "resourceKey": "ine:ine:indicator:03b9e5d2113f0263c06037c86925b1f9c74a73529143602622ad8d9c3d54f71f",
+    "kind": "ine:indicator"
+  },
+  "ine-taxpayer-income-distribution": {
+    "resourceKey": "ine:ine:indicator:d2c97815d6b7e04ee59a4e5f4a65e0be3d3774d1a7299698d4540d0b0566bfd3",
+    "kind": "ine:indicator"
+  },
+  "ine-tourism-overnight-stays": {
+    "resourceKey": "ine:ine:indicator:51d8af2ec0acd3abb036aa2ee4b2402f791f61a7bb805af5b114a65011140478",
+    "kind": "ine:indicator"
+  },
+  "ine-unemployment-rate": {
+    "resourceKey": "ine:ine:indicator:c78b6c6d677cb7f380c1855beb84eda60f3c80e6c7be50fe99404e76ecb7fd01",
+    "kind": "ine:indicator"
+  },
+  "infoagua-drought-index-feed": {
+    "resourceKey": "infoagua:infoagua:drought-index:664fea93f659f9389aa694f990ed6a6b4a4f58628569c8dd86abc6cf9ee293e9",
+    "kind": "infoagua:drought-index"
+  },
+  "infoagua-flood-alerts-feed": {
+    "resourceKey": "infoagua:infoagua:flood-alerts:dab7a00683a491487f7a854ec935fc6927164e1265b93039931d523c26e045f7",
+    "kind": "infoagua:flood-alerts"
+  },
+  "ioda-digi-pt-as20879-internet-signals-feed": {
+    "resourceKey": "ioda:ioda:signals:f6d44019b1b2c9e7ed4fe42fa736c78fb7a5f60eb82bf128caa276eb7bf62c71",
+    "kind": "ioda:signals"
+  },
+  "ioda-meo-as3243-internet-signals-feed": {
+    "resourceKey": "ioda:ioda:signals:66bdfd1837b7ab23ed4211c73259f1d8ea54ce76f91fb88c04f69858be2ac872",
+    "kind": "ioda:signals"
+  },
+  "ioda-nos-as2860-internet-signals-feed": {
+    "resourceKey": "ioda:ioda:signals:1f6e743eaf02821dede804060087a8a3068ee785ad7ad4d27d23aba768e013b9",
+    "kind": "ioda:signals"
+  },
+  "ioda-nos-madeira-as15457-internet-signals-feed": {
+    "resourceKey": "ioda:ioda:signals:343312b3768759fbf67aeb12ed8f29bd0409afbb8eea3093ff731c54cc4dfccb",
+    "kind": "ioda:signals"
+  },
+  "ioda-portugal-internet-outage-alerts-feed": {
+    "resourceKey": "ioda:ioda:outage-alerts:8e55b4cca2ca33eeb87d5133c1acaa7cc2e5446739e4ecdee3e13c099e282197",
+    "kind": "ioda:outage-alerts"
+  },
+  "ioda-portugal-internet-outages-feed": {
+    "resourceKey": "ioda:ioda:outage-events:31d541c43e278cb4dbef5adea5bae88102b17a10291d6823858bfc7d70dd9626",
+    "kind": "ioda:outage-events"
+  },
+  "ioda-portugal-internet-signals-feed": {
+    "resourceKey": "ioda:ioda:signals:4ee0f0464d71a72837bc6efc4a9f0d080c412ccf49847159ec3ec4ad6ae23894",
+    "kind": "ioda:signals"
+  },
+  "ioda-vodafone-as12353-internet-signals-feed": {
+    "resourceKey": "ioda:ioda:signals:5eed0303a038b1b0cc380d4b768acc1408a63e450c3186902afbe9712c25f46d",
+    "kind": "ioda:signals"
+  },
+  "ipma-daily-forecast-feed": {
+    "resourceKey": "ipma:ipma:daily-forecast:f7af22f6fa482f300f46d9c31846ff64f2a88da4d2d68cd2f68203907fd7ad84",
+    "kind": "ipma:daily-forecast"
+  },
+  "ipma-fire-risk-feed": {
+    "resourceKey": "ipma:ipma:fire-risk:f7d7480f663f5bcc7f28235778fc100b37054302550579174bd5071c2ea170c0",
+    "kind": "ipma:fire-risk"
+  },
+  "ipma-municipal-precipitation-feed": {
+    "resourceKey": "ipma:ipma:municipal-precipitation:3e3e5ac8b9c98d3a3cc44de868b5ca735ff4a314fbbf701bc6c4cb540c9a5676",
+    "kind": "ipma:municipal-precipitation"
+  },
+  "ipma-municipal-temperature-feed": {
+    "resourceKey": "ipma:ipma:municipal-temperature:d0c4e891f63735850633590e67350dc14e74dbab4b9ca6cb04c70ad7c8ab12ef",
+    "kind": "ipma:municipal-temperature"
+  },
+  "ipma-sea-forecast-feed": {
+    "resourceKey": "ipma:ipma:sea-forecast:b2f2878ee25234c47fae110d0cffac954f4c42ed1bff3cf2d079cded2eabc7c4",
+    "kind": "ipma:sea-forecast"
+  },
+  "ipma-seismic-feed": {
+    "resourceKey": "ipma:ipma:seismic:0605ad3f781674949b0cf523ea31d4d75bc7434ccc76be8764df4a1b2dddba65",
+    "kind": "ipma:seismic"
+  },
+  "ipma-shellfish-restrictions-feed": {
+    "resourceKey": "ipma:ipma:shellfish-restrictions:2da96864d9aa75c65d297a15ca55ba324b50eb2ce279dfd94aa81e891975c9a8",
+    "kind": "ipma:shellfish-restrictions"
+  },
+  "ipma-station-observations-feed": {
+    "resourceKey": "ipma:ipma:station-observations:f6bec4c9d824ff093a5af825eb450aab74c2ba0f5801f347d1c29840759e3000",
+    "kind": "ipma:station-observations"
+  },
+  "ipma-uv-index-feed": {
+    "resourceKey": "ipma:ipma:uv-index:42b2605ee89e7d18cc0a86a6f547ffefb7129f3cf45bfbccae56c5a6da8f35fb",
+    "kind": "ipma:uv-index"
+  },
+  "ipma-weather-warnings-feed": {
+    "resourceKey": "ipma:ipma:warnings:95ec23ce318e77e691c7787a40b6e06fdedeac7bb738789d2f62d1bfe5bb35e4",
+    "kind": "ipma:warnings"
+  },
+  "justice-facilities-feed": {
+    "resourceKey": "udata:udata:distribution:60632c83af1e751f296806cb2955b985458c4688214db7a9c0820b92990f7884",
+    "kind": "udata:distribution"
+  },
+  "lisboa-ecoilhas-subterraneas-feed": {
+    "resourceKey": "arcgis:arcgis:layer:f23d39c136a7bd3caec220c4a4a775f6dc511a4041301e768a35c6c0b6443366",
+    "kind": "arcgis:layer"
+  },
+  "lisboa-parques-caninos-feed": {
+    "resourceKey": "arcgis:arcgis:layer:dde439c32cef88ca1db247f0c301d8d11ec6e87944b0fe3bc5bd6bae01ae1b56",
+    "kind": "arcgis:layer"
+  },
+  "lisboa-parques-infantis-feed": {
+    "resourceKey": "arcgis:arcgis:layer:72af118ee2d7f2451687b0be0d1d22af7f1d162937a10982ea7761aec083e40d",
+    "kind": "arcgis:layer"
+  },
+  "lisboa-rede-ciclavel-feed": {
+    "resourceKey": "arcgis:arcgis:layer:93cdbffb617cb09bedcbb7be2b15195267bad637e9f59812feb2a69bb149d6ae",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-building-permits-feed": {
+    "resourceKey": "arcgis:arcgis:layer:294ba23c5f8112e2ead6c62183e16e9e481dab3a0cf40ca8ab4ec965c561885d",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-cleaning-depots-feed": {
+    "resourceKey": "arcgis:arcgis:layer:6a19ea3fa822c489867f9b62eb51bae34365eb71dd91b2dfafe5e0e3500d4ab2",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-fire-stations-feed": {
+    "resourceKey": "arcgis:arcgis:layer:2bdf4861f535921601a497087c8141143bf70e48b9278226f47932f3a8f46a1d",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-health-centres-feed": {
+    "resourceKey": "arcgis:arcgis:layer:a1182b6b57b58fa7de05501ce58a09e69ac84068c6471dbdc970423d4acb199d",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-hotels-feed": {
+    "resourceKey": "arcgis:arcgis:layer:f7b972b805919117d054744dc670de391cff4545713a00f90b44cba6bc7b5930",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-libraries-archives-feed": {
+    "resourceKey": "arcgis:arcgis:layer:c7207dfd91ea390986e70fef598e5953a16dac89581ddae3c695999809c1a91b",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-lora-network-feed": {
+    "resourceKey": "arcgis:arcgis:layer:3a9fd7d20038ffdbcc3187f7ce2e743894143094e9b486211f6a09b112b77df9",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-metro-stations-feed": {
+    "resourceKey": "arcgis:arcgis:layer:aeb7922ca1a5c191d347784b631c9e9565f0763fda4c9fa9c0d96837c6cd9fab",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-micromobility-restrictions-feed": {
+    "resourceKey": "arcgis:arcgis:layer:dfc0f5fe3ae51c488b4ed992e6273307cb679b5cb539f936ae26e11f98ff3428",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-museums-feed": {
+    "resourceKey": "arcgis:arcgis:layer:1e969e505c3c99f9c60d259afcef9830d8e22aaff694fa684e948da1f26cb058",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-parishes-feed": {
+    "resourceKey": "arcgis:arcgis:layer:223327bf036cd4739123a96a5b614e455e4bb335d5093f2444c87213da3430ca",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-pharmacies-feed": {
+    "resourceKey": "arcgis:arcgis:layer:58027f52c4d9e3404703459d599a1008f1a235dd4c0f43ebe5b0841c47446b0a",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-primary-schools-feed": {
+    "resourceKey": "arcgis:arcgis:layer:ef423dc069d499e2d0858cb0ee6cf6e7df3448c717ac96cbc03ac3a3907e6e2f",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-psp-police-stations-feed": {
+    "resourceKey": "arcgis:arcgis:layer:1562c1b9b4cd534e621291e84727d79fd2da557ab78557c278fe8d4800a1a122",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-public-hospitals-feed": {
+    "resourceKey": "arcgis:arcgis:layer:c89c7cad6bedebdf37aeecc13f35bac1bfca23edee6085d6daa4a5eb058675f2",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-recycling-points-feed": {
+    "resourceKey": "arcgis:arcgis:layer:a1a49cc54f2f4e698c00f5ad66e67da92b8e65efddb083319cb01f5c95d1e5d3",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-signalised-crossings-feed": {
+    "resourceKey": "arcgis:arcgis:layer:e3bac8a6c20f85dab204966bb6c3f29957c4651c07fa05aab892a63026f83056",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-speed-cameras-feed": {
+    "resourceKey": "arcgis:arcgis:layer:fd5b29fab47a59f9462a88db6734f10b8db0dbdd945abc75f4c1bdd4eb193db9",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-sports-facilities-feed": {
+    "resourceKey": "arcgis:arcgis:layer:c2b75acc3aff31b70358c9f4a904a225f75f5b1550fc5210e0ceebae13410de8",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-temporary-occupations-feed": {
+    "resourceKey": "arcgis:arcgis:layer:09361844bb88a16cd7db9ef2b5630aa7c6042b8b40745d1ad6bbacaea457acbe",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-tree-incidents-feed": {
+    "resourceKey": "arcgis:arcgis:layer:792b99f16c4a3c74a6809de376c897d3f0559f4cc31dd3631a3745c8ea57bf9e",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-tuk-tuk-parking-feed": {
+    "resourceKey": "arcgis:arcgis:layer:02b0fe75d93b8148383e81fbe93913960923215abff196d13434c7bebeff9da6",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-urgent-works-feed": {
+    "resourceKey": "arcgis:arcgis:layer:a5fbad7465af8a0dfedf5708f14edf89d8539f8f7b77ed76e71f52c51b68e678",
+    "kind": "arcgis:layer"
+  },
+  "lisbon-variable-message-signs-feed": {
+    "resourceKey": "arcgis:arcgis:layer:2b300781baa689bdf8415db288f33c8011ba4fad3e23c8c541751aa300ec9f83",
+    "kind": "arcgis:layer"
+  },
+  "lneg-falhas-geologicas-feed": {
+    "resourceKey": "ogc:ogc:collection:3f963a3ffd9326db97deb41e71d28b754506f8a32a08b9d1dd452b0f3afafcba",
+    "kind": "ogc:collection"
+  },
+  "lneg-ocorrencias-minerais-feed": {
+    "resourceKey": "ogc:ogc:collection:a196d31980867f7c74b98169bb9be8710a4ca77227bb545811df0fe28032f4ff",
+    "kind": "ogc:collection"
+  },
+  "lneg-pontos-de-agua-feed": {
+    "resourceKey": "ogc:ogc:collection:a95345d52766bff43ec59841138c33391fc060be5ed49c86db77d9473005217a",
+    "kind": "ogc:collection"
+  },
+  "lneg-sistemas-aquiferos-feed": {
+    "resourceKey": "ogc:ogc:collection:4dabe2e9023a7af2763885541082569b254c60bdffb3defb3f2ee4fef8c3aeeb",
+    "kind": "ogc:collection"
+  },
+  "lneg-sondagens-feed": {
+    "resourceKey": "ogc:ogc:collection:efcd513a9b0765fa21d566881431fdb4dcebc3d08cc57bf695440573a7cefd8e",
+    "kind": "ogc:collection"
+  },
+  "mafra-centros-saude-feed": {
+    "resourceKey": "arcgis:arcgis:layer:61d592dd1cffab01afa4dfc14e79df655f7b03afd4497084c2a2d07df8547420",
+    "kind": "arcgis:layer"
+  },
+  "mafra-ciclovias-feed": {
+    "resourceKey": "arcgis:arcgis:layer:01571c6f9ba3dd57e4bfb8b07df702ad3b55e1e9b66602c6c1699be263d3925e",
+    "kind": "arcgis:layer"
+  },
+  "mafra-circuitos-pedestres-btt-feed": {
+    "resourceKey": "arcgis:arcgis:layer:427cfddd3070d5c75deca7ef181937f4fd41bf4340cb0e19f39ced5431a167e1",
+    "kind": "arcgis:layer"
+  },
+  "mafra-ecopontos-contentores-feed": {
+    "resourceKey": "arcgis:arcgis:layer:ffbfdea1a30d080b2029f4082f7238e52a8e7303288fcb27c1b75e3b201f01bd",
+    "kind": "arcgis:layer"
+  },
+  "mafra-equipamentos-cultura-feed": {
+    "resourceKey": "arcgis:arcgis:layer:e6a105d769dcfcb37023522c7ac71552dadcf66d7d86206a5cf6d30e4f09bb46",
+    "kind": "arcgis:layer"
+  },
+  "mafra-equipamentos-escolares-feed": {
+    "resourceKey": "arcgis:arcgis:layer:915c0350b75cd858ab1553e2a7e6b8fbf0a240ffca71ba9bdcfaaf4c3f00e476",
+    "kind": "arcgis:layer"
+  },
+  "mafra-equipamentos-sociais-feed": {
+    "resourceKey": "arcgis:arcgis:layer:957dfef7ff42d58013c3e032638c3609e0fcf5103cdc3743dea206309121ebe8",
+    "kind": "arcgis:layer"
+  },
+  "mafra-espacos-jogo-recreio-feed": {
+    "resourceKey": "arcgis:arcgis:layer:1690123e31254a0e185d0c2fb63f5c1594bd5c21cfa5644a4852dc16e385b75b",
+    "kind": "arcgis:layer"
+  },
+  "mafra-espacos-verdes-feed": {
+    "resourceKey": "arcgis:arcgis:layer:e68c2609dc1de3422b517b129e4f516aed59186fc801f10bde6526382a813b1a",
+    "kind": "arcgis:layer"
+  },
+  "mafra-estacionamento-bicicletas-feed": {
+    "resourceKey": "arcgis:arcgis:layer:ba0896ecbe555479517842d498b012dd421d0c049087df9fd5ab3a99bec51e18",
+    "kind": "arcgis:layer"
+  },
+  "mafra-farmacias-feed": {
+    "resourceKey": "arcgis:arcgis:layer:0698bcdb27c2848b7de0bdebccd87c1e05e7799239120e4c139a91972459afac",
+    "kind": "arcgis:layer"
+  },
+  "mafra-lugares-mobilidade-reduzida-feed": {
+    "resourceKey": "arcgis:arcgis:layer:332079d29416bf7288fe532b2193dec7cf89649aaddc03ea32caa3263815e84b",
+    "kind": "arcgis:layer"
+  },
+  "mafra-parcometros-feed": {
+    "resourceKey": "arcgis:arcgis:layer:8af31089f85dcb69faf9b51cba18f3a5e91202d7ab4cc258be85648a915ed506",
+    "kind": "arcgis:layer"
+  },
+  "mafra-parques-caninos-feed": {
+    "resourceKey": "arcgis:arcgis:layer:44d7206ade402bec9410a401722345f14ed31476b7344563cecae62722a05fe9",
+    "kind": "arcgis:layer"
+  },
+  "mafra-parques-estacionamento-feed": {
+    "resourceKey": "arcgis:arcgis:layer:136c756d301000317c2c11a3024d959be8725aa8f1c511ee829f924c64426972",
+    "kind": "arcgis:layer"
+  },
+  "mafra-patrimonio-inventario-feed": {
+    "resourceKey": "arcgis:arcgis:layer:634d4c247ca07c741de7c7609b59c955464a0979006468382075253c4c659b50",
+    "kind": "arcgis:layer"
+  },
+  "mafra-postos-carregamento-feed": {
+    "resourceKey": "arcgis:arcgis:layer:d59cd4661eca18d1645df5b5147193e42df62e927c3103f776fd72c759d2bd06",
+    "kind": "arcgis:layer"
+  },
+  "mafra-praias-feed": {
+    "resourceKey": "arcgis:arcgis:layer:983eff71b20d4268fb352d713bfd3fcfbcbe721a246784b5082dcac390a7ecfe",
+    "kind": "arcgis:layer"
+  },
+  "mare-network-feed": {
+    "resourceKey": "myinfo:myinfo:network:0cfe119233f489b6058aa04bdee626471eaadc0e1bbd11670f02e2016a6412eb",
+    "kind": "myinfo:network"
+  },
+  "metro-do-porto-gtfs-feed": {
+    "resourceKey": "gtfs:gtfs:static:a113af14d4555704c0eb69632e915939baa919a28f831377317b8bda80daeb9d",
+    "kind": "gtfs:static"
+  },
+  "metro-lisboa-gtfs-feed": {
+    "resourceKey": "gtfs:gtfs:static:4ab9586c71231521268d3e3e21fc1a704179a5ccc45c2bb904498bbf61a7d5c9",
+    "kind": "gtfs:static"
+  },
+  "metrolisboa-headways-feed": {
+    "resourceKey": "metrolisboa:metrolisboa:headways:74b389ddf8e53901ed55394ab8252bd5eb8f937eef6a26b1d89f9c3b6d700509",
+    "kind": "metrolisboa:headways"
+  },
+  "metrolisboa-line-status-feed": {
+    "resourceKey": "metrolisboa:metrolisboa:line-status:0965d0557092095a6da407a22bbd5c9fa4079045827551db64ed9c064fd2594d",
+    "kind": "metrolisboa:line-status"
+  },
+  "metrolisboa-stations-feed": {
+    "resourceKey": "metrolisboa:metrolisboa:stations:62d403676aeafdf6a79e6b6fce8cdeda25c58d26e6c05a4844dd3059bcce970f",
+    "kind": "metrolisboa:stations"
+  },
+  "metrolisboa-waiting-times-feed": {
+    "resourceKey": "metrolisboa:metrolisboa:waiting-times:b6a40f4bb588a5685feaa845e8f4824d1fdfecac3bceb7dcd2f3a878fb2aa66d",
+    "kind": "metrolisboa:waiting-times"
+  },
+  "municipal-accessibility-feed": {
+    "resourceKey": "udata:udata:distribution:352f0ff481b93d796edf0852108dd524475b199256c196c841f02a52ecce076f",
+    "kind": "udata:distribution"
+  },
+  "municipal-ev-charging-feed": {
+    "resourceKey": "udata:udata:distribution:9d01c28d3875393fc266b2ecbb93c195d8e012ab5a266b0a7d780f75fd7f9c90",
+    "kind": "udata:distribution"
+  },
+  "nasa-firms-azores-thermal-anomalies-feed": {
+    "resourceKey": "firms:firms:hotspots:54607249ed29e63b907be98c7e1714e6d244adde5c4c018e00d38d325d50e951",
+    "kind": "firms:hotspots"
+  },
+  "nasa-firms-madeira-thermal-anomalies-feed": {
+    "resourceKey": "firms:firms:hotspots:bc69d77c1b52630cf3841301527fb9a2da6e716a890338c94e2c57374fe7623a",
+    "kind": "firms:hotspots"
+  },
+  "nasa-firms-mainland-thermal-anomalies-feed": {
+    "resourceKey": "firms:firms:hotspots:3d9f6bd20e6543f0886187aaba688201c79d47bc0ed19be57694268b6d7e9d9c",
+    "kind": "firms:hotspots"
+  },
+  "nasa-power-azores-solar-resource-feed": {
+    "resourceKey": "nasapower:nasapower:daily-region:1b2cbe0dfd2bf8fe93b398da4d0e92f8eef8f02559acc8df5c5e9d49e14f1e42",
+    "kind": "nasapower:daily-region"
+  },
+  "nasa-power-madeira-solar-resource-feed": {
+    "resourceKey": "nasapower:nasapower:daily-region:6e9e539a6eb2335f48d5bfb1372ad125f2ab3f94b7a2e2545e3b23a668caa478",
+    "kind": "nasapower:daily-region"
+  },
+  "nasa-power-mainland-solar-resource-feed": {
+    "resourceKey": "nasapower:nasapower:daily-region:900af3f382fa7491c0e3b28f0ea9cc9659bfed12438faf88c30b5cd6d343b097",
+    "kind": "nasapower:daily-region"
+  },
+  "oeiras-ciclovias-feed": {
+    "resourceKey": "wfs:wfs:reference:a8ade6f9523da229af3313b2044f52810225ee4fe41203a4e2d813ee6c4dc208",
+    "kind": "wfs:reference"
+  },
+  "oeiras-colonias-errantes-feed": {
+    "resourceKey": "wfs:wfs:reference:3cb0d8a4d6ef8e167c690afcb358297835f3489c0715c2ebf627a6a06abdba0e",
+    "kind": "wfs:reference"
+  },
+  "oeiras-condicionalismos-via-publica-feed": {
+    "resourceKey": "wfs:wfs:reference:e8c33db0355a43e7ab63ee7f594ca8e49107b2f281ce8fe9a926ebc16d0ad7d8",
+    "kind": "wfs:reference"
+  },
+  "oeiras-docas-bicicletas-feed": {
+    "resourceKey": "wfs:wfs:reference:aa30bf83bed9a6cd6ed6d74a04d093e3cf592d073cfebffe4ffccb1ffc3a766b",
+    "kind": "wfs:reference"
+  },
+  "oeiras-equipamentos-saude-feed": {
+    "resourceKey": "wfs:wfs:reference:df2193994786526a68412a52ec1b683c632506e9443685ce9b9f67fe686252ae",
+    "kind": "wfs:reference"
+  },
+  "oeiras-espacos-verdes-feed": {
+    "resourceKey": "wfs:wfs:reference:9f324ea7863d6a276a84fab9c60837b6ef7a38cf7624bd4939b62ead8acf0eb3",
+    "kind": "wfs:reference"
+  },
+  "oeiras-estabelecimentos-desocupados-feed": {
+    "resourceKey": "wfs:wfs:reference:c2c2c20781d65440cb74be766c889c709ab1fd390b1ef58283ac28f8cb92e7b8",
+    "kind": "wfs:reference"
+  },
+  "oeiras-hortas-urbanas-feed": {
+    "resourceKey": "wfs:wfs:reference:8e3635e0453c1cc345b3f68b9f5c04b2ffbeac26523f63fccd7ec336a057c8c2",
+    "kind": "wfs:reference"
+  },
+  "oeiras-hourly-environment-feed": {
+    "resourceKey": "ckan:ckan:observations:9da1f2287f317aa4b0f677f6ed6d74c8365c68865f7c4c7d11bc8224887c06d1",
+    "kind": "ckan:observations"
+  },
+  "oeiras-obras-municipais-feed": {
+    "resourceKey": "wfs:wfs:reference:b231e4404b22606a070758f4aeca38ec3553c266ab87b4192b0c39b3aadcfa10",
+    "kind": "wfs:reference"
+  },
+  "oeiras-orcamento-participativo-feed": {
+    "resourceKey": "wfs:wfs:reference:c10229cb33c94d266a1ba08cd506de625b2f954602ecdf7e9059f747ccaa0bb4",
+    "kind": "wfs:reference"
+  },
+  "oeiras-parquimetros-feed": {
+    "resourceKey": "wfs:wfs:reference:5d8f9b68e72ab290210dff78cdb273756708ec9df29a08ea99202118409c2643",
+    "kind": "wfs:reference"
+  },
+  "oeiras-pontos-carregamento-feed": {
+    "resourceKey": "wfs:wfs:reference:de0a8b47c99f4a4f48414ed8848ddd2c4669aee398f8cd72d08ac23970b80ce1",
+    "kind": "wfs:reference"
+  },
+  "oeiras-residuos-indiferenciados-feed": {
+    "resourceKey": "wfs:wfs:reference:e5e8984197831effdb736d489b31577da90734532aaf941cf13443161745f420",
+    "kind": "wfs:reference"
+  },
+  "omie-portuguese-day-ahead-prices-feed": {
+    "resourceKey": "omie:omie:prices:ef8e991c0a7449584710358d38d43eb638541ad8f30565bfeb14c0d9c0dea7d7",
+    "kind": "omie:prices"
+  },
+  "omie-seven-day-day-ahead-prices-feed": {
+    "resourceKey": "omie:omie:prices:c7aae5f88a2fd932b319ce7510df878c0af85c6332b339b2c4079316d4622f74",
+    "kind": "omie:prices"
+  },
+  "parliament-activities-xvii-feed": {
+    "resourceKey": "parliament:parliament:activities:eaf4cb3af4135474adbcc67b859fa29114f0f3011484590239c5687d12c1c7fb",
+    "kind": "parliament:activities"
+  },
+  "parliament-committees-xvii-feed": {
+    "resourceKey": "parliament:parliament:committees:061fd3a617e349db10ac019c62b60e15a4456aa25f8372093d24450c012676b8",
+    "kind": "parliament:committees"
+  },
+  "parliament-diplomas-xvii-feed": {
+    "resourceKey": "parliament:parliament:diplomas:3a5083afe58f629247d5e03cfb8d96a8edd30015020adaac7db7e23429df2ca5",
+    "kind": "parliament:diplomas"
+  },
+  "parliament-initiatives-xvii-feed": {
+    "resourceKey": "parliament:parliament:initiatives:91745f5698f0fcc9956453732f2cff3cb72db7871825cfbf78fe0700219b33bb",
+    "kind": "parliament:initiatives"
+  },
+  "parliament-members-xvii-feed": {
+    "resourceKey": "parliament:parliament:members:b080eebbca051063952061492029222b76d5ac5a633d38808c470111dfabda50",
+    "kind": "parliament:members"
+  },
+  "parliament-petitions-xvii-feed": {
+    "resourceKey": "parliament:parliament:petitions:df8121fd4c3ab553c382c363738a2f70433ee4f8971ca109b3c38b9d2020d45c",
+    "kind": "parliament:petitions"
+  },
+  "parliament-professional-profiles-xvii-feed": {
+    "resourceKey": "parliament:parliament:careers:5cbbe43ed4235bfca3c38594fb1beac236cadcbea4330be07105336b606a8210",
+    "kind": "parliament:careers"
+  },
+  "peeringdb-portugal-exchanges-feed": {
+    "resourceKey": "peeringdb:peeringdb:exchanges:ffbfce247c5caba50abf17f905fbf795dfc40776915d1a5def79bfab07c7cd72",
+    "kind": "peeringdb:exchanges"
+  },
+  "porto-air-quality-feed": {
+    "resourceKey": "ngsi:ngsi:observations:fd4a741d9796998f47c13cf6063fe3562dea16bc82dadf4e5c72681f0ed1c349",
+    "kind": "ngsi:observations"
+  },
+  "porto-cultural-agenda-feed": {
+    "resourceKey": "ckan:ckan:resource:dc64e39da2b6dedd12fedc2a9f3e9c6740cd6a53ad0b184112434f0d646c05df",
+    "kind": "ckan:resource"
+  },
+  "porto-loading-zones-feed": {
+    "resourceKey": "ckan:ckan:resource:b5f23b04d7a1fc278a785b8ff0526cc241e4d1c177ef7b97a75093ae7e40c7a3",
+    "kind": "ckan:resource"
+  },
+  "porto-municipal-parking-feed": {
+    "resourceKey": "ckan:ckan:resource:8b2e5545963281294e4c91fc2d4574d24794b316f4a7974f598933fb8b5ca531",
+    "kind": "ckan:resource"
+  },
+  "porto-municipal-trees-feed": {
+    "resourceKey": "ckan:ckan:resource:f50879971e38cbe52cb0d84694e3f0f96fae58b907ec11d9e91a7b5937135333",
+    "kind": "ckan:resource"
+  },
+  "porto-noise-levels-feed": {
+    "resourceKey": "ngsi:ngsi:observations:a93e98cabe053927fbb23b82ab6f20d79f0137a2c4a174ba1a938403ee6d6588",
+    "kind": "ngsi:observations"
+  },
+  "porto-shared-micromobility-spots-feed": {
+    "resourceKey": "ngsi:ngsi:inventory:4b319163a8fa77d04daa0f5270f7de294aa03a30ac0be5afc44c6f956b418eb8",
+    "kind": "ngsi:inventory"
+  },
+  "porto-stcp-bus-positions-feed": {
+    "resourceKey": "ngsi:ngsi:inventory:3f8f41236e0dcc1f92d5e54aef3545d1de7c30afdf89843a44fefa8389de4078",
+    "kind": "ngsi:inventory"
+  },
+  "portuguese-museums-feed": {
+    "resourceKey": "udata:udata:distribution:200cbfe528123a9f183fff502d29871e855452545794c9a94be44a4260e29714",
+    "kind": "udata:distribution"
+  },
+  "portuguese-parishes-feed": {
+    "resourceKey": "udata:udata:distribution:872739eac94b882f2df984f0979f4fa2beca53031578112f7bfbdb4b2eea9306",
+    "kind": "udata:distribution"
+  },
+  "primary-care-oral-health-referrals-feed": {
+    "resourceKey": "udata:udata:distribution:f53a3600028c4c0185946ba4b4229a1a017f16b53c5a752a996e3779f3b8129b",
+    "kind": "udata:distribution"
+  },
+  "public-libraries-2024-feed": {
+    "resourceKey": "udata:udata:distribution:28da9fc3f2ef57ea010d1490b800f70e45180f0c7d3b81ad60c7c8c7bfd41cc2",
+    "kind": "udata:distribution"
+  },
+  "recognised-startups-feed": {
+    "resourceKey": "udata:udata:distribution:b9b5643426cb6b9f5e1884e6b863a2fcb73ed5a5b901744cc6242481ea21f552",
+    "kind": "udata:distribution"
+  },
+  "ren-gas-consumption-feed": {
+    "resourceKey": "ren:ren:gas-consumption:1a2c233cf12a5a99c95434fe1cf3c82642125c2ba31ecd317871a24b41846055",
+    "kind": "ren:gas-consumption"
+  },
+  "ren-gas-network-balance-feed": {
+    "resourceKey": "ren:ren:gas-network-balance:cfd3482a65356934e0752c893a16246258d7f23b9c2360b6cdb2611150a356aa",
+    "kind": "ren:gas-network-balance"
+  },
+  "ren-gas-storage-feed": {
+    "resourceKey": "ren:ren:gas-storage:f26e28742f6f1753a513703b2274d983a0e35b3f57ab2db520adaad341cad6b6",
+    "kind": "ren:gas-storage"
+  },
+  "ren-installed-capacity-feed": {
+    "resourceKey": "ren:ren:installed-capacity:29c764e660dabc4c1988d684e1ac5eac362f0d296e65c79a316248a803172b31",
+    "kind": "ren:installed-capacity"
+  },
+  "ren-interconnection-exchanges-feed": {
+    "resourceKey": "ren:ren:interconnection-exchanges:f18dfb609ee551c9a11010c0c0a869bb841494845fc6cd33da89333a961ea9f8",
+    "kind": "ren:interconnection-exchanges"
+  },
+  "ren-lng-terminal-balance-feed": {
+    "resourceKey": "ren:ren:lng-terminal-balance:c931ad66bf37b420fee752f7eac6d35daad59c8f6ed49dba1eabe168c227a2da",
+    "kind": "ren:lng-terminal-balance"
+  },
+  "ren-production-breakdown-feed": {
+    "resourceKey": "ren:ren:production-breakdown:93331666619c7446727f20b2784f4ca0d20d6949142e68768ba55d132e6bb68a",
+    "kind": "ren:production-breakdown"
+  },
+  "ren-renewables-share-feed": {
+    "resourceKey": "ren:ren:renewables-share:0e2a57193396fc092a8bfb245e5501df843c54508dcb10dd5bb047a55e58abef",
+    "kind": "ren:renewables-share"
+  },
+  "ribatejana-foros-salvaterra-marinhais-feed": {
+    "resourceKey": "myinfo:myinfo:timetable:58b0e04a2caaa28c1a2c4bf7c8d1f9a975547b7fed72fb63ade2fc6a0cd02a35",
+    "kind": "myinfo:timetable"
+  },
+  "ribatejana-network-feed": {
+    "resourceKey": "myinfo:myinfo:network:448dbda499e57e33f2a1c92dc04327070e56bcc7ac1cca14d19a189979cfd1a8",
+    "kind": "myinfo:network"
+  },
+  "ripe-digi-pt-as20879-routing-feed": {
+    "resourceKey": "ripestat:ripestat:routing-status:22ab79d74a048a2c39d6b370323a2f02982ef774a10db5cf44f40b13873158e7",
+    "kind": "ripestat:routing-status"
+  },
+  "ripe-meo-as3243-routing-feed": {
+    "resourceKey": "ripestat:ripestat:routing-status:5195cf2b0f6ab12bc01c76989144a7c098daa47dea3c0741553c501cb6e8bb6b",
+    "kind": "ripestat:routing-status"
+  },
+  "ripe-nos-as2860-routing-feed": {
+    "resourceKey": "ripestat:ripestat:routing-status:4e7dcf57a26115b921c19007fe13e95a18351480235a38356126cc3e2eb4a4fd",
+    "kind": "ripestat:routing-status"
+  },
+  "ripe-nos-madeira-as15457-routing-feed": {
+    "resourceKey": "ripestat:ripestat:routing-status:facc50f01063b513314b227a6672ba5e2f24d985c13438b7d1cb6b6c0983381d",
+    "kind": "ripestat:routing-status"
+  },
+  "ripe-portugal-internet-resources-feed": {
+    "resourceKey": "ripestat:ripestat:country-resources:a65c576d6c410f1a65b7097f2c64b01c019f0efbb2f01e4aef90ba7a66c50186",
+    "kind": "ripestat:country-resources"
+  },
+  "ripe-portugal-routing-history-feed": {
+    "resourceKey": "ripestat:ripestat:country-routing:83fdbe37d91a4e371334f19a3a0bb68f13d53bc01b8ea599f888979d4eb9f1b5",
+    "kind": "ripestat:country-routing"
+  },
+  "ripe-vodafone-as12353-routing-feed": {
+    "resourceKey": "ripestat:ripestat:routing-status:c161594a3e2e0654176d197d5d0dde825ec758085e2dcf24a0e203b7dae4498b",
+    "kind": "ripestat:routing-status"
+  },
+  "sgifr-apps-aveiro-feed": {
+    "resourceKey": "wfs:wfs:reference:6be9b97bcaa2cfe0f29645c8ed868d557767839351cf0699b06c22ad6002ced3",
+    "kind": "wfs:reference"
+  },
+  "sgifr-apps-beja-feed": {
+    "resourceKey": "wfs:wfs:reference:c8c0376cc9f2b22c3d88c5fbc8fc645357535f27e8d7ede2571dd5956e7237da",
+    "kind": "wfs:reference"
+  },
+  "sgifr-apps-braga-feed": {
+    "resourceKey": "wfs:wfs:reference:4380f7df831b5d0429125df9de2f04cf100983be7a2102996d9e29b651017703",
+    "kind": "wfs:reference"
+  },
+  "sgifr-apps-leiria-feed": {
+    "resourceKey": "wfs:wfs:reference:ed059d0da4ab27fe11130f5160b6932750f3ed4c77bb8b6bf5d744ab8265808b",
+    "kind": "wfs:reference"
+  },
+  "sgifr-apps-lisboa-feed": {
+    "resourceKey": "wfs:wfs:reference:7216876c47f533b9d9e6c583c003ac658e3fe7e77e8bd3cfdc03bacd90f23403",
+    "kind": "wfs:reference"
+  },
+  "sgifr-apps-porto-feed": {
+    "resourceKey": "wfs:wfs:reference:a97976b144e9eb7961bc211586eed67e8ed3732222ab09487ec3f4ae0baf258f",
+    "kind": "wfs:reference"
+  },
+  "sgifr-apps-setubal-feed": {
+    "resourceKey": "wfs:wfs:reference:4593d795a29e2140fddd79d7d791eec143c35fe7ab036a227811a009b6b66ca5",
+    "kind": "wfs:reference"
+  },
+  "sgifr-apps-viseu-feed": {
+    "resourceKey": "wfs:wfs:reference:004b9844ab0057ec31c70da732cdd15d4bf690c776c7e83ff2a0a3b231bdd0a8",
+    "kind": "wfs:reference"
+  },
+  "snirh-air-temperature-feed": {
+    "resourceKey": "snirh:snirh:readings:6d36c81031e53d4c0a2a1670a89ede91f2938c25a840bec0b28fb262117a7297",
+    "kind": "snirh:readings"
+  },
+  "snirh-groundwater-levels-feed": {
+    "resourceKey": "snirh:snirh:readings:6e79ff37e0eb6eeb8122cebfc6003991aa3ab9e5d48d425e452aa43e14d9b00a",
+    "kind": "snirh:readings"
+  },
+  "snirh-groundwater-state-feed": {
+    "resourceKey": "snirh:snirh:groundwater-state:a879ab19090a9eef81554466219eaa16301a4c40972acbe734d056b0b98a40f1",
+    "kind": "snirh:groundwater-state"
+  },
+  "snirh-monthly-precipitation-feed": {
+    "resourceKey": "snirh:snirh:monthly-precipitation:392b1fb56e8b77f80a48e53254386a7d2cc83bbf1040ef82e23600cae8464510",
+    "kind": "snirh:monthly-precipitation"
+  },
+  "snirh-precipitation-feed": {
+    "resourceKey": "snirh:snirh:readings:70d48097bf16f59fc1e39795a2a42cf6cdec48cf8c9811671c35f97fb7f7306c",
+    "kind": "snirh:readings"
+  },
+  "snirh-relative-humidity-feed": {
+    "resourceKey": "snirh:snirh:readings:f083fd3ee418bf654b3157c8384bad8502f3616db8ad7cf6c040f401df6af844",
+    "kind": "snirh:readings"
+  },
+  "snirh-reservoir-basins-feed": {
+    "resourceKey": "snirh:snirh:reservoir-basins:b1cbe0dd65d2cb9386331734b40d40b2d5f013c43b62a12d4a104a5e19db60d7",
+    "kind": "snirh:reservoir-basins"
+  },
+  "snirh-reservoir-levels-feed": {
+    "resourceKey": "snirh:snirh:readings:5c3f5f26a366c91da7be5f9169aeee9a6767230f0f0f2995cc98e6ebbc1e5fa7",
+    "kind": "snirh:readings"
+  },
+  "snirh-reservoir-storage-feed": {
+    "resourceKey": "snirh:snirh:readings:43d5ebb8c1b2446d745cdc92b75a6ba606343c568418e9b5f2af0b2ecf58d600",
+    "kind": "snirh:readings"
+  },
+  "snirh-river-flows-feed": {
+    "resourceKey": "snirh:snirh:readings:45b755ce99224cb1b1cab3bebf839e4d7f77f0076542cb64dc8749ec2a256582",
+    "kind": "snirh:readings"
+  },
+  "snirh-river-levels-feed": {
+    "resourceKey": "snirh:snirh:readings:087064668fbd6a276ea58975507bb0ec43f384fd9789b9a771ded64d762f2a91",
+    "kind": "snirh:readings"
+  },
+  "snirh-wind-speed-feed": {
+    "resourceKey": "snirh:snirh:readings:dd3a0313a8c47b2f63e940c50bc0a560eaf52770cb4a6484c73a3fdb6e6ed06d",
+    "kind": "snirh:readings"
+  },
+  "snit-medidas-preventivas-feed": {
+    "resourceKey": "snit:snit:instruments:35dfa945dabab7616f4823626c1f5c8c492a8d5ee44a0129d25278020d8ada2e",
+    "kind": "snit:instruments"
+  },
+  "snit-paap-feed": {
+    "resourceKey": "snit:snit:instruments:c396bc6779fb00bc5991c236d62856ee633b911c4754f4a4746022a7c6051bc7",
+    "kind": "snit:instruments"
+  },
+  "snit-paqat-feed": {
+    "resourceKey": "snit:snit:instruments:3be5aa8e291a7df84907a160512682bd977227af39612fb6ba4a648b9266a6c9",
+    "kind": "snit:instruments"
+  },
+  "snit-pdm-feed": {
+    "resourceKey": "snit:snit:instruments:57c506f4660734f662e4db168a46385361f7093df2ab66d756df44d7d87dbd8d",
+    "kind": "snit:instruments"
+  },
+  "snit-peap-feed": {
+    "resourceKey": "snit:snit:instruments:b16bd7c83971e9beda3d2d361d77bc075c6b818eb94c9c5cfb88c41d7407b860",
+    "kind": "snit:instruments"
+  },
+  "snit-pfn-feed": {
+    "resourceKey": "snit:snit:instruments:a7093fd32dee86fd3b94554f2e2dcf2bcb25522d4a568aaec17058c9af16fa10",
+    "kind": "snit:instruments"
+  },
+  "snit-pgrh-feed": {
+    "resourceKey": "snit:snit:instruments:17c4564544e4f34cdb501f54c522ece4f9f5252c54ad56f46ea85809aac901a0",
+    "kind": "snit:instruments"
+  },
+  "snit-pgri-feed": {
+    "resourceKey": "snit:snit:instruments:4a1748fcde89e70f6ba53060eed3fea9a579d5805b8529032c7a365d66be52f8",
+    "kind": "snit:instruments"
+  },
+  "snit-piot-feed": {
+    "resourceKey": "snit:snit:instruments:aba823d446a722a17fbab28951ca991156f9da07867cd209bbce0b3c281112f7",
+    "kind": "snit:instruments"
+  },
+  "snit-pna-feed": {
+    "resourceKey": "snit:snit:instruments:613b5dc1d207abfc5f875e9cc2a027f42bef07e61f7ce71aee4dcb2551fa5357",
+    "kind": "snit:instruments"
+  },
+  "snit-pnpot-feed": {
+    "resourceKey": "snit:snit:instruments:271ea70f3a04f42c0f6fff55e7710d51f7360fcaeead16680ec90bb87901c74e",
+    "kind": "snit:instruments"
+  },
+  "snit-poaap-feed": {
+    "resourceKey": "snit:snit:instruments:dcc8a53ffa54ad34dd92b2b78631fc86a5c7220a08bd6c8ffebb7626ecb15351",
+    "kind": "snit:instruments"
+  },
+  "snit-poap-feed": {
+    "resourceKey": "snit:snit:instruments:1634eb569aea154781259e9a0f4294ce33bc02eaf1bac5cacc49618e591d768a",
+    "kind": "snit:instruments"
+  },
+  "snit-poc-feed": {
+    "resourceKey": "snit:snit:instruments:e2a52ea9e89472bb0e74f7219775d693c9b9919dc55ef381bf8013715ad28116",
+    "kind": "snit:instruments"
+  },
+  "snit-pooc-feed": {
+    "resourceKey": "snit:snit:instruments:6e69666b11bb856014b3026c0f511eecb7b78b6b3c4fa272c5fdd9bc491d7d48",
+    "kind": "snit:instruments"
+  },
+  "snit-pp-feed": {
+    "resourceKey": "snit:snit:instruments:36781b0b48c49f5b0ec0d8267b46f2a8e799bc9bc62b89900faf39ba9b448d68",
+    "kind": "snit:instruments"
+  },
+  "snit-prgp-feed": {
+    "resourceKey": "snit:snit:instruments:a3e529127f2934428b103ee340ef8295b9b4db1efffd089259623bde14492cdd",
+    "kind": "snit:instruments"
+  },
+  "snit-prn-feed": {
+    "resourceKey": "snit:snit:instruments:b420a3aa11973c9c1f33b5ae657a44dba4385c9b9b39b131a88af0a1161575df",
+    "kind": "snit:instruments"
+  },
+  "snit-prof-feed": {
+    "resourceKey": "snit:snit:instruments:359342461426cc1b557e2c22a21792c38812f6cbf95c766c8f98e88fc1ff62f7",
+    "kind": "snit:instruments"
+  },
+  "snit-prot-plano-feed": {
+    "resourceKey": "snit:snit:instruments:57e7116a12d90ea1634a54719dabb5c27a2f6309c16a2c326824dab26c61b84b",
+    "kind": "snit:instruments"
+  },
+  "snit-prot-programa-feed": {
+    "resourceKey": "snit:snit:instruments:924bea33995c33656ffebd57ba6fc453e8895dde3c54ffc872f5b2d8d6993534",
+    "kind": "snit:instruments"
+  },
+  "snit-pszaer-feed": {
+    "resourceKey": "snit:snit:instruments:de7ebe6985857642a8ebeb8cbbb28a8dd678ebfd86df573b33ab3ff1f72b8c15",
+    "kind": "snit:instruments"
+  },
+  "snit-pu-feed": {
+    "resourceKey": "snit:snit:instruments:1a066a32f0dc4eae55b4ea289acda8be8008286e4986f2213d8221268f781b0e",
+    "kind": "snit:instruments"
+  },
+  "snit-rede-natura-feed": {
+    "resourceKey": "snit:snit:instruments:aecabc21667a57d88fc9c818ad4b027e2fed5fb43610e6cd3f1d6e0bebff5efa",
+    "kind": "snit:instruments"
+  },
+  "sns-births-and-caesareans-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:23f30e129b608a7a2e93b9aa8571d3b87883f2beab1977327dae800ddd2b865a",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-blood-collection-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:f16909c61bf7b34ecd0bb64d483a7138c043b33ef94ce768676d86a58861a42a",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-cancer-screening-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:dae45d6f1e2c3b5f6ca805a1f15df80ed3963f7215d96038df082c38d90c4af8",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-continuing-care-waiting-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:f60acca18fecc85473cd19582c9160323b752ea69cbd81acdd0c8ca559dc0354",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-daily-death-certificates-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:c24ed61827e3fb5de80deb240156a40fe3f2ace7aa1e196370555adaf7549574",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-dispensed-medicines-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:5a24943e45860001d0a54645672ee153dacfcd5c50ada54da43e33f109a68b70",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-emergency-calls-transferred-sns24-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:219a91dc49153feab71b5bb099c6ed67b093f8a96066ca0a0ef7b67f3c16adef",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-emergency-triage-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:4bc73221c0076fcd96b0b401c5f62671b61257f723a739c7288b24527e997bc5",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-first-consultations-within-target-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:a9cb016606d34a72089a1fccc973fe4e6bbb3840c63a83c8a5ec72fa35f9789d",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-generic-medicine-dispensing-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:b7ccc5d8b79388e56fc29d887468a308b9591644ee85c45c3bb496db2826cb5a",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-health-framework-agreements-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:1f146e09ac0cfa91e07d9aac9e6219797c9e082d788b8ec9ee09b640a1259736",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-health-procurement-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:9f36dbcec077b1c8894a9c306d36463a13e4b41ddb325307d13275263841437c",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-hospital-beds-by-type-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:fefd172b2b1af8287235316326f47f3c47bb6e6ff68a4bb18093552dead2bef7",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-hospital-emergency-attendances-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:fd75ef6caad4b0164857f9d61f77f0c8a2aca9d2e06bf3b1457dcac06b99a88d",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-hospital-occupancy-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:547b42222f7472c282d440f6459cb0b405706117756aa6f68e80a993b6048103",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-icaro-heat-index-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:7555e1d32688a55d57ab199f7e049bcd05ee46d1a03102abb0b1ce8c110bdbe7",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-inem-dispatches-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:c24ad558e21311d9247bf651db5601fbb25df727d5ba5af50602117331ea9900",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-inem-emergency-calls-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:4c350e0b86cba35826f049c63957798f8318efacedadc6626a3021d816c3f99c",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-inem-occurrences-by-priority-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:62014b1c99de256a4dd313cb1557c1d60519405321e18e6b70598a2a40afc2cc",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-legionella-environmental-monitoring-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:c7cdcbe96dd05a83a63a7e7d00cafa5b28a01c025d3bc61190aa3f5a7743368d",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-licensed-public-defibrillator-programmes-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:b917275f3686478ae1ab6d4eb5c8339983b6c0ca963eddfce429ca47f5d5aa2d",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-lvt-hospital-morbidity-mortality-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:af54e13cafddc44e284629c285bf3287a19caff53c099ef3962a5aa758de52dd",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-medical-specialty-training-vacancies-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:4b903494efa54cad876f3489a88bac6f8aec8eeff117b216a821c42ff40f143e",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-medicine-package-prices-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:7474e14a42ce9d97be30f1fa35fc4c219632870137e4691a04a41207545b57c7",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-newborn-screening-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:cd5659b65ec0210bf427f0aa2ee5e9e5b79e6864c50fe782086025642fe611a4",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-poison-information-calls-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:339ee7949d300a9d3f44774f47b89ee27c4ec4ac213203ab07579429cc81c432",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-pregnancy-line-triage-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:4b8e6eb3e553cf26f499f641b9506f9d26cc140ba65378ca23ad489232998523",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-primary-care-consultation-access-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:29fa83f08174eccc53d2fa9b565713043e69eeebba2b486333d931697196de77",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-primary-care-flu-consultations-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:479e14ad77f44c301c817442fbe3cf451e060509a38414c844e85988e9f704e8",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-psychology-consultations-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:1682979fc29fd911c6d3b634c39a48bf171779cc5655f6aac72a0758f1756a86",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-seasonal-flu-vaccination-coverage-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:3c77842be11c89216b8680c123f0bc3a297c99c9a1f35bbaa7fa0551790a39d9",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-sickness-self-declarations-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:2ec9a69bf394dad95104d2d20e4a81ade1eee4f97e999bf4472b893db013e61c",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-supplier-debt-and-arrears-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:8a783c776def65dded415793428024dfe01131ce204952feefe949da1b629940",
+    "kind": "opendatasoft:dataset"
+  },
+  "sns-surgery-waiting-target-feed": {
+    "resourceKey": "opendatasoft:opendatasoft:dataset:7d244f45978c779c584111467b7de0c145e1a702f9cf22dce3e2e17a08eec862",
+    "kind": "opendatasoft:dataset"
+  },
+  "stcp-gtfs-feed": {
+    "resourceKey": "gtfs:gtfs:static:996c60f4153595b693ac859fa99f8ddf4e1d77d6729593d18e10226a95282995",
+    "kind": "gtfs:static"
+  },
+  "tcb-barreiro-gtfs-feed": {
+    "resourceKey": "gtfs:gtfs:static:ab8086160690ce8c5e0d5e3e25647ba8d564c85a28444d409b63d88f59efe5af",
+    "kind": "gtfs:static"
+  },
+  "tub-braga-gtfs-feed": {
+    "resourceKey": "gtfs:gtfs:static:7e30c9a4a5705088b35e9146d9f6a3b370bf57fe37f28b22dda1121dcf011191",
+    "kind": "gtfs:static"
+  },
+  "tubabike-barcelos": {
+    "resourceKey": "gbfs:gbfs:status:9e28582c86dda5e33d9fa17aeffd8a387033079b8e64250c1c404baac88bc626",
+    "kind": "gbfs:status"
+  },
+  "tubabike-barcelos-reference": {
+    "resourceKey": "gbfs:gbfs:reference:33904af4c25fa7403f37b298ee4e968765f968b8d3c1f7ac29ba63d8b8be5a0e",
+    "kind": "gbfs:reference"
+  },
+  "usgs-azores-earthquakes-feed": {
+    "resourceKey": "usgs:usgs:earthquakes:e01c503e1b2834d19aeea17b83bcd121164e044486288a8b843bacff60e8502f",
+    "kind": "usgs:earthquakes"
+  },
+  "usgs-madeira-earthquakes-feed": {
+    "resourceKey": "usgs:usgs:earthquakes:edb27620cd224cf85230b2a0c1fa7e88fc09412f7039514a967a1447078f9bb1",
+    "kind": "usgs:earthquakes"
+  },
+  "usgs-mainland-portugal-earthquakes-feed": {
+    "resourceKey": "usgs:usgs:earthquakes:c2d45fba150623d8acf5807a1042992dabe587f9957dab29ef00a29b75caf0d2",
+    "kind": "usgs:earthquakes"
+  }
+}

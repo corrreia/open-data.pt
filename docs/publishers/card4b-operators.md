@@ -9,7 +9,7 @@ in `publishers.ts`: they made the data, Card4B only hosts it.
 
 ## Source
 
-The `myinfo` library (`packages/gatekeeper-shared/src/sources/myinfo/`), eight feeds of two kinds: one
+The `myinfo` library (`apps/gatekeeper/src/formats/myinfo/`), eight feeds of two kinds: one
 `network` feed per operator — every stop with its position and the lines that call there — and a
 `timetable` feed per origin-and-destination pair worth publishing. An operator's public portal is
 `https://myinfo.4cloud.pt/IP/MotorBusca/<Operator>/`.

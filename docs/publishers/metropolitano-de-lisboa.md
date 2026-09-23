@@ -5,7 +5,7 @@ station reference data, and headways.
 
 ## Source
 
-The `metrolisboa` library (`packages/gatekeeper-shared/src/sources/metrolisboa/`), four feeds:
+The `metrolisboa` library (`apps/gatekeeper/src/publishers/metropolitano-de-lisboa/metrolisboa/`), four feeds:
 
 | Feed                             | Cadence   | History                                                          |
 | -------------------------------- | --------- | ---------------------------------------------------------------- |

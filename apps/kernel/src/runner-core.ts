@@ -9,7 +9,7 @@ import {
   type NormalizedProductHeader,
   type SourceCheckpoint,
   type TransformQuality,
-} from "@open-data-pt/gatekeeper-shared";
+} from "@open-data-pt/contract";
 
 import { chunkIndexFor, chunkListProblem, parseChunkRows, regenerateChunks, servedIdentity, type ChunkSink, type ServingRow } from "./chunks";
 import {
@@ -30,7 +30,7 @@ import type { LakeTable } from "./lake";
 import { keys, WINDOW, type ChangeItem, type ObjectStore } from "./object-store";
 import { BLOB_BYTES, jsonArrays, MAX_RECORD_BYTES, SMALL_PRODUCT_BYTES, utf8Length } from "./blob-budget";
 import { RecentChanges, recordRevision, retractionRevision, type PreparedRecord, type RecordContext } from "./records";
-import { dropAllTables, userTables } from "./sqlite-reset";
+import { dropAllTables, userTables, type SqlExec } from "./sqlite-reset";
 
 /**
  * Everything one FeedRunner Durable Object owns, as plain logic over its
@@ -253,7 +253,7 @@ type Transaction = <T>(body: () => T) => T;
 
 export class RunnerCore {
   constructor(
-    private readonly sql: SqlStorage,
+    private readonly sql: SqlExec,
     private readonly transaction: Transaction,
     private readonly deps: RunnerDeps,
   ) {}

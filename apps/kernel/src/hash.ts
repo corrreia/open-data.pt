@@ -1,4 +1,4 @@
-import { isJsonArray, isJsonObject, type JsonValue } from "@open-data-pt/gatekeeper-shared";
+import { isJsonArray, isJsonObject, type JsonValue } from "@open-data-pt/contract";
 
 /**
  * Fast non-cryptographic hashing for change detection and stable identities.

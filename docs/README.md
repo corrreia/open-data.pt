@@ -28,7 +28,7 @@ not in the code: a login, a proxy, a rate limit, a permission, a habit of the so
 - [`../CONTEXT.md`](../CONTEXT.md) — the domain language: Gatekeeper, library, feed, product, policy, lake, kernel
 - [`../AGENTS.md`](../AGENTS.md) — the same rules, written for coding agents
 - [`../.agents/skills/write-gatekeeper/SKILL.md`](../.agents/skills/write-gatekeeper/SKILL.md) — writing a library, step by step
-- [`../apps/site/public/publishers/README.md`](../apps/site/public/publishers/README.md) — what a usable publisher logo is
+- [`../apps/gatekeeper/src/publishers/README.md`](../apps/gatekeeper/src/publishers/README.md) — what a usable publisher logo is
 
 The site has its own reader-facing documentation: [Start here](https://open-data.pt/start/),
 the [API reference](https://open-data.pt/docs) and the [OpenAPI document](https://open-data.pt/openapi.json).

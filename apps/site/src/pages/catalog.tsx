@@ -29,7 +29,7 @@ const isRole = (value: string): value is Role => ROLE_IDS.has(value);
 const FACETS: Facet[] = [
   { id: "topic", label: "Topic", values: (dataset) => dataset.topics },
   { id: "publisher", label: "Publisher", values: (dataset) => [dataset.publisher.id], collapsed: 8 },
-  { id: "licence", label: "Licence", values: (dataset) => (dataset.licence ? [dataset.licence.id] : []), collapsed: 6 },
+  { id: "licence", label: "Licence", values: (dataset) => [dataset.licence.id], collapsed: 6 },
   { id: "kind", label: "Kind of data", values: (dataset) => dataset.roles },
   { id: "updates", label: "Updates", values: (dataset) => [dataset.updates], order: UPDATES.map((bucket) => bucket.id) },
   { id: "format", label: "How it is published", values: (dataset) => [dataset.format] },
@@ -60,7 +60,7 @@ function Catalog() {
 
   const datasets = useMemo(() => (products.data && feeds.data ? buildDatasets(products.data, feeds.data) : []), [products.data, feeds.data]);
   const publisherNames = useMemo(() => new Map(buildPublishers(datasets).map((publisher) => [publisher.id, publisher.name])), [datasets]);
-  const licenceNames = useMemo(() => new Map(datasets.flatMap((dataset) => (dataset.licence ? [[dataset.licence.id, dataset.licence.name] as const] : []))), [datasets]);
+  const licenceNames = useMemo(() => new Map(datasets.map((dataset) => [dataset.licence.id, dataset.licence.name] as const)), [datasets]);
 
   const nameOf = (facet: FacetId, value: string) => {
     if (facet === "topic") return topicLabel(value);
@@ -86,7 +86,7 @@ function Catalog() {
     if (words.length === 0) return true;
     const haystack = [
       dataset.title,
-      dataset.feed.description,
+      dataset.description,
       dataset.publisher.name,
       dataset.format,
       ...dataset.topics,
@@ -281,13 +281,13 @@ function Catalog() {
                     <Badge variant="secondary">{plural(group.length, "dataset")}</Badge>
                   </div>
                   {group.map((dataset) => (
-                    <DatasetCard key={dataset.feed.id} dataset={dataset} showPublisher={false} />
+                    <DatasetCard key={dataset.id} dataset={dataset} showPublisher={false} />
                   ))}
                 </div>
               ))}
             </div>
           ) : (
-            ordered.map((dataset) => <DatasetCard key={dataset.feed.id} dataset={dataset} />)
+            ordered.map((dataset) => <DatasetCard key={dataset.id} dataset={dataset} />)
           )}
         </section>
       </div>

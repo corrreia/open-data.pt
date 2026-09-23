@@ -137,7 +137,7 @@ function Home() {
             ) : (
               <ul className="divide-y divide-kumo-hairline">
                 {live.slice(0, 6).map((dataset) => (
-                  <li key={dataset.feed.id}>
+                  <li key={dataset.id}>
                     <a href={productHref(dataset.products[0]?.product.slug ?? "")} className="flex items-center gap-3 px-4 py-2.5 text-sm no-underline hover:bg-kumo-tint">
                       <span className="min-w-0 flex-1">
                         <span className="block text-pretty font-medium text-kumo-strong">{dataset.title}</span>
@@ -200,7 +200,7 @@ function Home() {
         </SectionHead>
         <div className="grid gap-3">
           {recent.map((dataset) => (
-            <DatasetCard key={dataset.feed.id} dataset={dataset} />
+            <DatasetCard key={dataset.id} dataset={dataset} />
           ))}
         </div>
       </section>

@@ -14,7 +14,7 @@ import {
   type ProductUpdateMode,
   type SeriesPoint,
   type SourceCheckpoint,
-} from "@open-data-pt/gatekeeper-shared";
+} from "@open-data-pt/contract";
 
 import { BYTES_PER_CODE_UNIT, SMALL_PRODUCT_BYTES, STAGE_BYTES, utf8Length } from "./blob-budget";
 import { buildChunks, chunkListProblem, compareKeys, parseChunkRows, servedIdentity, type ChunkSink, type ServingRow } from "./chunks";

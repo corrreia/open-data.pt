@@ -8,7 +8,10 @@
  * only what was asked for, by what kind of client, from which country, and how
  * it went.
  */
-import { asArray, asNumber, asObject, asString, isJsonObject, parseJson, type JsonObject, type JsonValue } from "@open-data-pt/gatekeeper-shared";
+import { asArray, asNumber, asObject, asString, isJsonObject, parseJson, type JsonObject, type JsonValue } from "@open-data-pt/contract";
+
+import { isbot } from "isbot";
+import { parse as parseReferrer } from "ts-referer-parser";
 
 import { isPage, pagePath } from "./markdown";
 import { NAMING_PARAMETER } from "./page-meta";
@@ -109,62 +112,10 @@ export function subjectOf(surface: Surface, url: URL): string {
 type ClientRule = readonly [pattern: RegExp, kind: ClientKind, name: string];
 
 /**
- * First match wins. AI agents and crawlers come first, because most of them
- * also say "Mozilla" and "Chrome"; browsers come last. The bot lists follow
- * traks (https://github.com/shivamanupadi/traks, MIT).
+ * HTTP libraries and command-line tools: people's scripts. They come before
+ * the bot test, which counts most of them as bots.
  */
-const CLIENT_RULES: readonly ClientRule[] = [
-  // AI assistants fetching for a person, and AI crawlers.
-  [/chatgpt-user/i, "ai-agent", "ChatGPT-User"],
-  [/oai-searchbot/i, "ai-agent", "OAI-SearchBot"],
-  [/gptbot/i, "ai-agent", "GPTBot"],
-  [/claude-user/i, "ai-agent", "Claude-User"],
-  [/claude-searchbot/i, "ai-agent", "Claude-SearchBot"],
-  [/claudebot/i, "ai-agent", "ClaudeBot"],
-  [/claude-code/i, "ai-agent", "Claude Code"],
-  [/anthropic-ai/i, "ai-agent", "Anthropic"],
-  [/perplexity-user/i, "ai-agent", "Perplexity-User"],
-  [/perplexitybot/i, "ai-agent", "PerplexityBot"],
-  [/mistralai-user/i, "ai-agent", "MistralAI-User"],
-  [/google-cloudvertexbot/i, "ai-agent", "Google-CloudVertexBot"],
-  [/meta-externalagent/i, "ai-agent", "Meta-ExternalAgent"],
-  [/meta-externalfetcher/i, "ai-agent", "Meta-ExternalFetcher"],
-  [/duckassistbot/i, "ai-agent", "DuckAssistBot"],
-  [/cohere-ai/i, "ai-agent", "Cohere"],
-  [/amazonbot/i, "ai-agent", "Amazonbot"],
-  [/bytespider/i, "ai-agent", "Bytespider"],
-  [/ccbot/i, "ai-agent", "CCBot"],
-  [/ai2bot/i, "ai-agent", "AI2Bot"],
-  [/youbot/i, "ai-agent", "YouBot"],
-  [/diffbot/i, "ai-agent", "Diffbot"],
-  // Search engines, link previews, SEO tools and monitors.
-  [/googlebot/i, "crawler", "Googlebot"],
-  [/google-inspectiontool/i, "crawler", "Google-InspectionTool"],
-  [/adsbot-google|mediapartners-google/i, "crawler", "Google Ads"],
-  [/bingbot/i, "crawler", "Bingbot"],
-  [/yandex/i, "crawler", "YandexBot"],
-  [/baiduspider/i, "crawler", "Baiduspider"],
-  [/duckduckbot/i, "crawler", "DuckDuckBot"],
-  [/applebot/i, "crawler", "Applebot"],
-  [/petalbot/i, "crawler", "PetalBot"],
-  [/facebookexternalhit|facebookcatalog/i, "crawler", "Facebook"],
-  [/twitterbot/i, "crawler", "Twitterbot"],
-  [/linkedinbot/i, "crawler", "LinkedInBot"],
-  [/whatsapp/i, "crawler", "WhatsApp"],
-  [/telegrambot/i, "crawler", "Telegram"],
-  [/discordbot/i, "crawler", "Discord"],
-  [/slackbot|slack-imgproxy/i, "crawler", "Slack"],
-  [/redditbot/i, "crawler", "Reddit"],
-  [/semrushbot/i, "crawler", "SemrushBot"],
-  [/ahrefsbot/i, "crawler", "AhrefsBot"],
-  [/dotbot/i, "crawler", "DotBot"],
-  [/mj12bot/i, "crawler", "MJ12bot"],
-  [/dataforseobot/i, "crawler", "DataForSeoBot"],
-  [/uptimerobot/i, "crawler", "UptimeRobot"],
-  [/pingdom/i, "crawler", "Pingdom"],
-  [/lighthouse/i, "crawler", "Lighthouse"],
-  [/headlesschrome/i, "crawler", "Headless Chrome"],
-  // HTTP libraries and command-line tools: people's scripts.
+const LIBRARY_RULES: readonly ClientRule[] = [
   [/^curl\//i, "library", "curl"],
   [/^wget\//i, "library", "Wget"],
   [/^httpie\//i, "library", "HTTPie"],
@@ -185,14 +136,17 @@ const CLIENT_RULES: readonly ClientRule[] = [
   [/^java\//i, "library", "Java"],
   [/^dart\//i, "library", "Dart"],
   [/reqwest/i, "library", "Rust reqwest"],
-  [/httr|r-curl|^r \(/i, "library", "R"],
+  [/^httr|r-curl|^r \(/i, "library", "R"],
   [/^libcurl/i, "library", "libcurl"],
   [/powershell/i, "library", "PowerShell"],
   [/guzzlehttp/i, "library", "PHP Guzzle"],
   [/^ruby|faraday/i, "library", "Ruby"],
   [/postmanruntime/i, "library", "Postman"],
   [/^insomnia/i, "library", "Insomnia"],
-  // Browsers: Edge, Opera and Samsung also say Chrome; Chrome also says Safari.
+];
+
+/** Browsers, tried last: Edge, Opera and Samsung also say Chrome; Chrome also says Safari. */
+const BROWSER_RULES: readonly ClientRule[] = [
   [/edg(e|a|ios)?\//i, "browser", "Edge"],
   [/opr\/|opera/i, "browser", "Opera"],
   [/samsungbrowser/i, "browser", "Samsung Internet"],
@@ -201,44 +155,123 @@ const CLIENT_RULES: readonly ClientRule[] = [
   [/safari/i, "browser", "Safari"],
 ];
 
-/** A crawler no rule names: the product token that says so, such as "SomeNewBot/1.2" → "SomeNewBot". */
-const GENERIC_CRAWLER = /([a-z0-9._-]*(?:bot|crawl|spider|slurp)[a-z0-9._-]*)/i;
+/** AI assistants fetching for a person, and AI crawlers, by the maker or product their User-Agent names. */
+const AI_AGENT =
+  /gpt|oai-|openai|claude|anthropic|perplexity|mistral|cohere|deepseek|qwen|grok|kimi|moonshot|pangu|chatglm|yibot|bytespider|ccbot|ai2bot|youbot|diffbot|amazonbot|meta-external|duckassist|vertexbot|gemini|phind|webmcp/i;
+/**
+ * isbot counts every client that is not a browser, a person's own script too.
+ * A crawler also dresses as a browser, calls itself one, or links to its page.
+ */
+const CRAWLER_SIGN = /^mozilla\/|bot|crawl|spider|slurp|https?:\/\//i;
+/** The product token a crawler names itself by. */
+const CRAWLER_WORD = /bot|crawl|spider|slurp|fetch|scan|preview|check|monitor|agent|user/i;
+/** Words browsers and platforms send, which never name a bot. */
+const NOT_A_NAME =
+  /^(mozilla|applewebkit|khtml|like|gecko|compatible|chrome|safari|version|mobile|firefox|windows|win64|wow64|x64|x11|linux|ubuntu|macintosh|intel|android|iphone|ipad|cpu|u|msie|trident|java|en-us|sv1)$/i;
+/** Product tokens whose own spelling reads badly, by their lower case. */
+const PLAIN_NAMES = new Map([
+  ["claude-code", "Claude Code"],
+  ["cohere-ai", "Cohere"],
+  ["anthropic-ai", "Anthropic"],
+  ["facebookexternalhit", "Facebook"],
+  ["facebookcatalog", "Facebook"],
+  ["adsbot-google", "Google Ads"],
+  ["mediapartners-google", "Google Ads"],
+  ["headlesschrome", "Headless Chrome"],
+  ["chrome-lighthouse", "Lighthouse"],
+  ["slackbot-linkexpanding", "Slackbot"],
+  ["slack-imgproxy", "Slackbot"],
+]);
 /** Anything else is named by its first product token. */
 const PRODUCT_TOKEN = /^([a-z0-9][a-z0-9._ -]*?)(?:\/|\s\(|$)/i;
 
-/** What sent a request, from its User-Agent. An empty one is unknown: every browser sends one. */
+/**
+ * What sent a request, from its User-Agent. An empty one is unknown: every
+ * browser sends one. Scripts first, then AI agents, then anything isbot calls
+ * a bot, then browsers, because most bots also say "Mozilla" and "Chrome".
+ */
 export function classifyClient(userAgent: string | null): Client {
   const agent = userAgent?.trim() ?? "";
   if (!agent) return { kind: "unknown", name: "(none)" };
-  for (const [pattern, kind, name] of CLIENT_RULES) if (pattern.test(agent)) return { kind, name };
-  const crawler = GENERIC_CRAWLER.exec(agent)?.[1];
-  if (crawler) return { kind: "crawler", name: clip(crawler) };
+  const rule = LIBRARY_RULES.find(([pattern]) => pattern.test(agent));
+  if (rule) return { kind: rule[1], name: rule[2] };
+  if (AI_AGENT.test(agent)) return { kind: "ai-agent", name: botName(agent, AI_AGENT) };
+  if (isbot(agent) && CRAWLER_SIGN.test(agent)) return { kind: "crawler", name: botName(agent, CRAWLER_WORD) };
+  const browser = BROWSER_RULES.find(([pattern]) => pattern.test(agent));
+  if (browser) return { kind: browser[1], name: browser[2] };
   return { kind: "unknown", name: clip(PRODUCT_TOKEN.exec(agent)?.[1]?.trim() || "(other)") };
 }
 
-type AssistantHosts = readonly [name: string, hosts: readonly string[]];
+/**
+ * A bot's name: the first phrase that says what it is ("ClaudeBot" in
+ * "…compatible; ClaudeBot/1.0; +claudebot@anthropic.com", "Better Uptime
+ * Bot"), else the first after "compatible;", else its first product token that
+ * is not a browser's, else its first phrase. Links and addresses never count.
+ */
+function botName(agent: string, says: RegExp): string {
+  const phrases = agent.split(/[;()]/).map(phraseOf);
+  const compatible = phrases.findIndex((phrase) => /^compatible$/i.test(phrase));
+  const named = phrases.filter((phrase) => phrase && !NOT_A_NAME.test(phrase.split(/[\s,]/)[0] ?? ""));
+  const product = [...agent.matchAll(/([a-z][\w.-]*)\/v?\d/gi)].map((match) => match[1] ?? "").find((word) => !NOT_A_NAME.test(word));
+  const name =
+    named.find((phrase) => says.test(phrase)) ??
+    (compatible >= 0 ? phrases.slice(compatible + 1).find((phrase) => named.includes(phrase)) : undefined) ??
+    product ??
+    named[0] ??
+    "(other)";
+  return clip(PLAIN_NAMES.get(name.toLowerCase()) ?? name);
+}
 
-/** AI assistants as a source of visitors, by the host they link from; after traks' ai-sources. */
-const AI_ASSISTANTS: readonly AssistantHosts[] = [
-  ["ChatGPT", ["chatgpt.com", "chat.openai.com", "openai.com"]],
-  ["Claude", ["claude.ai", "claude.com"]],
-  ["Perplexity", ["perplexity.ai", "pplx.ai"]],
-  ["Gemini", ["gemini.google.com", "bard.google.com", "aistudio.google.com"]],
-  ["Copilot", ["copilot.microsoft.com", "copilot.cloud.microsoft", "m365.cloud.microsoft"]],
-  ["Grok", ["grok.com", "grok.x.ai"]],
-  ["DeepSeek", ["chat.deepseek.com", "deepseek.com"]],
-  ["Meta AI", ["meta.ai"]],
-  ["Mistral", ["chat.mistral.ai", "lechat.mistral.ai", "mistral.ai"]],
-  ["Kimi", ["kimi.com", "kimi.moonshot.cn"]],
-  ["Qwen", ["chat.qwen.ai", "qwen.ai"]],
-  ["Poe", ["poe.com"]],
-  ["Phind", ["phind.com"]],
-  ["You.com", ["you.com"]],
-  ["DuckDuckGo AI", ["duck.ai"]],
+/**
+ * The words of a User-Agent segment, past any browser's product tokens and up
+ * to a link, an address or a version: "Yanga WorldSearch Bot v1.1/beta" →
+ * "Yanga WorldSearch Bot", "Chrome/45.0 Safari/537.36 SWIMGBot" → "SWIMGBot".
+ */
+function phraseOf(segment: string): string {
+  const words: string[] = [];
+  for (const word of segment.trim().split(/\s+/)) {
+    if (!word || word.startsWith("+") || word.includes("://") || word.includes("@")) break;
+    const [product = "", version] = word.split("/");
+    if (version === undefined) {
+      words.push(word);
+      continue;
+    }
+    if (NOT_A_NAME.test(product) && words.length === 0) continue;
+    if (product && !NOT_A_NAME.test(product)) words.push(product);
+    break;
+  }
+  return words
+    .join(" ")
+    .replace(/\s+v?[\d.]+$/i, "")
+    .replace(/^[\s,:-]+|[\s,:-]+$/g, "");
+}
+
+/** Who linked to a page: a source's name, such as Google or Microsoft Teams, and its medium. */
+export interface ReferrerSource {
+  referrer: string;
+  medium: string;
+}
+
+/** Hosts the referrer list (ts-referer-parser) does not name, with their medium. */
+const UNLISTED_SOURCES: ReadonlyArray<readonly [pattern: RegExp, name: string, medium: string]> = [
+  [/(^|\.)teams\.[\w.]*(microsoft\.com|live\.com|office\.net|static\.microsoft)$/, "Microsoft Teams", "social"],
+  [/(^|\.)outlook\.(office|office365|live)\.com$/, "Outlook", "email"],
+  [/(^|\.)m365\.cloud\.microsoft$/, "Microsoft Copilot", "chatbot"],
+  [/^claude\.com$/, "Claude.ai", "chatbot"],
+  [/^pplx\.ai$/, "Perplexity.ai", "chatbot"],
+  [/(^|\.)kimi\.(com|moonshot\.cn)$/, "Kimi", "chatbot"],
+  [/^duck\.ai$/, "Duck.ai", "chatbot"],
+  [/(^|\.)slack\.com$/, "Slack", "social"],
+  [/^t\.me$/, "Telegram", "social"],
+  [/(^|\.)whatsapp\.com$/, "WhatsApp", "social"],
+  [/(^|\.)baidu\.com$/, "Baidu", "search"],
+  [/(^|\.)kagi\.com$/, "Kagi", "search"],
 ];
-const ASSISTANT_BY_HOST = new Map(AI_ASSISTANTS.flatMap(([name, hosts]) => hosts.map((host) => [host, name] as const)));
 
-/** Where a visitor came from: the linking site's host, or the AI assistant's name; empty from this site or with no Referer. */
+/** Sources the referrer list still knows by an old name. */
+const RENAMED_SOURCES = new Map([["Twitter", "X"]]);
+
+/** Where a visitor came from: the linking site's host; empty from this site or with no Referer. */
 export function referrerOf(request: Request, url: URL): string {
   const referer = request.headers.get("Referer");
   if (!referer) return "";
@@ -249,8 +282,22 @@ export function referrerOf(request: Request, url: URL): string {
     return "";
   }
   if (!host || host === url.hostname) return "";
-  const bare = host.replace(/^www\./, "");
-  return ASSISTANT_BY_HOST.get(bare) ?? clip(bare);
+  return clip(host.replace(/^www\./, ""));
+}
+
+/**
+ * A referrer's name and medium (search, social, email, chatbot or unknown).
+ * Named when the report is read, not when it is written, so a source the list
+ * learns to name is named for the whole window. Data points written before
+ * hosts were kept hold an AI assistant's name, which has no dot.
+ */
+export function referrerSource(host: string): ReferrerSource {
+  if (!host.includes(".")) return { referrer: host, medium: "chatbot" };
+  const unlisted = UNLISTED_SOURCES.find(([pattern]) => pattern.test(host));
+  if (unlisted) return { referrer: unlisted[1], medium: unlisted[2] };
+  const parsed = parseReferrer(`https://${host}/`);
+  const name = parsed.referer ?? host;
+  return { referrer: RENAMED_SOURCES.get(name) ?? name, medium: parsed.medium };
 }
 
 /**
@@ -355,7 +402,8 @@ export interface AnalyticsReport {
   routes: Array<{ surface: string; route: string; requests: number; meanMs: number }>;
   subjects: Array<{ surface: string; route: string; subject: string; requests: number }>;
   countries: Array<{ surface: string; country: string; requests: number }>;
-  referrers: Array<{ surface: string; referrer: string; requests: number }>;
+  /** Named by referrerSource, so hosts of one source add up. */
+  referrers: Array<{ surface: string; referrer: string; medium: string; requests: number }>;
   outcomes: Array<{ surface: string; status: string; cache: string; format: string; requests: number }>;
   mcp: Array<{ call: string; client: string; requests: number }>;
 }
@@ -455,7 +503,7 @@ export async function analyticsReport(
     routes: rows("routes").map((row) => ({ surface: text(row, "surface"), route: text(row, "route"), requests: count(row, "requests"), meanMs: Math.round(count(row, "meanMs")) })),
     subjects: rows("subjects").map((row) => ({ surface: text(row, "surface"), route: text(row, "route"), subject: text(row, "subject"), requests: count(row, "requests") })),
     countries: rows("countries").map((row) => ({ surface: text(row, "surface"), country: text(row, "country"), requests: count(row, "requests") })),
-    referrers: rows("referrers").map((row) => ({ surface: text(row, "surface"), referrer: text(row, "referrer"), requests: count(row, "requests") })),
+    referrers: namedReferrers(rows("referrers").map((row) => ({ surface: text(row, "surface"), host: text(row, "referrer"), requests: count(row, "requests") }))),
     outcomes: rows("outcomes").map((row) => ({
       surface: text(row, "surface"),
       status: text(row, "status"),
@@ -493,6 +541,19 @@ async function runAnalyticsQuery(endpoint: string, token: string, sql: string, f
 }
 
 /* ---------- Pieces ---------- */
+
+/** Referrer rows by source name, adding up the hosts one source links from (google.pt and google.com.hk are both Google). */
+function namedReferrers(rows: Array<{ surface: string; host: string; requests: number }>): AnalyticsReport["referrers"] {
+  const named = new Map<string, AnalyticsReport["referrers"][number]>();
+  for (const { surface, host, requests } of rows) {
+    const source = referrerSource(host);
+    const key = `${surface}|${source.referrer}`;
+    const row = named.get(key);
+    if (row) row.requests += requests;
+    else named.set(key, { surface, ...source, requests });
+  }
+  return [...named.values()].sort((a, b) => b.requests - a.requests);
+}
 
 /** ClickHouse quotes 64-bit integers in JSON; read either form. */
 function numeric(value: JsonValue | undefined): number {

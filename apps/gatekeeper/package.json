@@ -1,0 +1,22 @@
+{
+  "name": "@open-data-pt/gatekeeper",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./catalog": "./src/catalog/index.ts",
+    "./gatekeeper": "./src/gatekeeper.ts",
+    "./libraries": "./src/libraries.ts",
+    "./formats/*": "./src/formats/*/index.ts",
+    "./publishers/*": "./src/publishers/*/index.ts"
+  },
+  "dependencies": {
+    "@open-data-pt/contract": "workspace:*",
+    "@open-data-pt/lisbon": "workspace:*"
+  },
+  "imports": {
+    "#/tests/*": "./tests/*.ts",
+    "#/*": "./src/*.ts"
+  }
+}

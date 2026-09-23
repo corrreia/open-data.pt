@@ -5,6 +5,9 @@ export default defineConfig({
     coverage: {
       reporter: ["text", "json", "html"],
     },
-    include: ["tests/**/*.test.ts"],
+    // A test sits beside what it tests: in its app, its format or its publisher's library. The root `tests/`
+    // holds only what runs both Workers together.
+    include: ["apps/**/*.test.ts", "packages/**/*.test.ts", "tests/**/*.test.ts"],
+    exclude: ["**/node_modules/**", "**/dist/**"],
   },
 });
