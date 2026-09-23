@@ -11,6 +11,8 @@ export interface RunnerReport {
   library: string;
   status: FeedStatus;
   acquisitions: Acquisition[];
+  /** The catalog version of the Gatekeeper this runner collects through; absent from one too old to say. */
+  catalogVersion?: string;
 }
 
 export interface RunnerReportReceipt {

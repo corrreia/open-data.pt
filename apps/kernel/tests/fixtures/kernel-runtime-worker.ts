@@ -183,6 +183,12 @@ export class FixtureGatekeeper extends WorkerEntrypoint<Env> implements FeedGate
   async catalog(): Promise<CatalogDescription> {
     return CATALOG;
   }
+
+  /** Changes with the example the test writes, as a real Gatekeeper's does with a release. */
+  async catalogVersion(): Promise<string> {
+    const [example] = await this.exampleFeeds();
+    return `fixture:${example?.title ?? ""}`;
+  }
 }
 
 export { bufferedTransform };

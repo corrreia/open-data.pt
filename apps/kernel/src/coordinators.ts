@@ -11,10 +11,10 @@ import {
 
 import { drainOutbox } from "./engine";
 import { NotFoundError } from "./errors";
-import { cadenceFloorOf, syncStep, withCadenceFloor, type CatalogEntry, type SyncPorts, type SyncProgress, type SyncState } from "./example-sync";
+import { cadenceFloorOf, checkForVersion, syncStep, withCadenceFloor, type CatalogEntry, type SyncPorts, type SyncProgress, type SyncState } from "./example-sync";
 import type { ManifestChunk } from "./chunks";
 import { definitionFingerprint, keepsHistory, policyFingerprint, type Acquisition, type Feed, type FeedPolicy, type ProductIndexEntry, type ProductSummary } from "./feed-model";
-import { gatekeeperOf } from "./gatekeeper";
+import { catalogVersionOf, gatekeeperOf } from "./gatekeeper";
 import { EMPTY_CATALOG, Vocabulary, checkedCatalog, type VocabularyRef } from "./vocabulary";
 import { digest } from "./hash";
 import { PipelinesLake, lakeStreams, type LakeTable } from "./lake";
@@ -246,6 +246,7 @@ export class Registry extends DurableObject<Env> {
   private syncPorts(): SyncPorts {
     return {
       readCatalog: () => this.readCatalog(),
+      catalogVersion: () => catalogVersionOf(this.env),
       feeds: () => this.store.listFeeds().map((feed) => ({ id: feed.id, slug: feed.slug })),
       apply: (library, example) => this.applyExample(library, example),
       retire: (feedId) => this.retireFeed(feedId),
@@ -432,7 +433,10 @@ export class Registry extends DurableObject<Env> {
       this.store.replaceFeedProducts(feedId, entries);
       return report ? ingestRunnerReport(this.store, report, at) : { known: true, backfillPeers: 1 };
     });
-    if (report) this.reportIngested();
+    if (report) {
+      this.reportIngested();
+      this.noticeCatalogVersion(report.catalogVersion);
+    }
     return receipt;
   }
 
@@ -442,7 +446,17 @@ export class Registry extends DurableObject<Env> {
     const receipt = this.ctx.storage.transactionSync(() => ingestRunnerReport(this.store, report, new Date().toISOString()));
     if (!receipt.known && this.syncSettled()) receipt.retire = true;
     this.reportIngested();
+    this.noticeCatalogVersion(report.catalogVersion);
     return receipt;
+  }
+
+  /** A runner heard a Gatekeeper catalog the last check did not read: check it now rather than on schedule. */
+  private noticeCatalogVersion(version: string | undefined): void {
+    const next = checkForVersion(this.store.getState<SyncState>(SYNC_STATE_KEY), version, Date.now());
+    if (!next) return;
+    this.store.setState(SYNC_STATE_KEY, next);
+    console.log(JSON.stringify({ event: "catalog_version_heard", version }));
+    void this.ctx.storage.setAlarm(next.nextCheckAt);
   }
 
   /** Bound the activity mirror: every 200 reports, forget what is older than its newest entries. */
@@ -763,14 +777,18 @@ export class FeedRunner extends DurableObject<Env> {
     else await this.ctx.storage.setAlarm(next);
   }
 
-  private reportFor(feed: Feed): RunnerReport {
-    return { feedId: feed.id, library: feed.library, status: this.core.status(), acquisitions: this.core.listAcquisitions(10) };
+  /** This runner's state, and the catalog version of the Gatekeeper it collects through, which tells the Registry of a release. */
+  private async reportFor(feed: Feed): Promise<RunnerReport> {
+    const report: RunnerReport = { feedId: feed.id, library: feed.library, status: this.core.status(), acquisitions: this.core.listAcquisitions(10) };
+    const version = await catalogVersionOf(this.env);
+    if (version !== undefined) report.catalogVersion = version;
+    return report;
   }
 
   /** Select the feed's products and report this runner's state in one Registry call. */
   private async publishWithReport(entries: ProductIndexEntry[]): Promise<boolean> {
     const feed = this.core.requireFeed();
-    const receipt = await registry(this.env).publishProducts(feed.id, entries, this.reportFor(feed));
+    const receipt = await registry(this.env).publishProducts(feed.id, entries, await this.reportFor(feed));
     if (!receipt.known) return false;
     this.reportsSent += 1;
     this.core.backfillPeers = Math.max(1, receipt.backfillPeers);
@@ -782,7 +800,7 @@ export class FeedRunner extends DurableObject<Env> {
     if (!feed) return;
     let receipt: RunnerReportReceipt;
     try {
-      receipt = await registry(this.env).ingest(this.reportFor(feed));
+      receipt = await registry(this.env).ingest(await this.reportFor(feed));
     } catch (error) {
       // Reports are idempotent and carry the latest acquisitions: the next one repairs whatever this one missed.
       console.warn(JSON.stringify({ event: "registry_report_failed", feedId: feed.id, error: String(error) }));

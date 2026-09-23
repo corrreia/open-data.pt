@@ -363,6 +363,13 @@ export interface FeedGatekeeper extends WorkerEntrypoint {
   collect(request: CollectionRequest): Promise<CollectionResult>;
   exampleFeeds(): Promise<ExampleFeed[]>;
   catalog(): Promise<CatalogDescription>;
+  /**
+   * A digest of everything the three calls above answer: it changes exactly
+   * when a release changes the catalog, the feeds or their kinds, so the
+   * kernel can sync the moment a new Gatekeeper answers instead of on its
+   * schedule. A method of its own, so a kernel that never asks is unaffected.
+   */
+  catalogVersion(): Promise<string>;
 }
 
 export class GatekeeperError extends Error {
