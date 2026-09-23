@@ -69,7 +69,7 @@ const TOOLS: WebMcpTool[] = [
             title: product.title,
             dataset: dataset.title,
             publisher: dataset.publisher.name,
-            licence: dataset.licence?.name ?? null,
+            licence: dataset.licence.name,
             topics: dataset.topics,
             role: product.role,
             rows: product.rowCount,

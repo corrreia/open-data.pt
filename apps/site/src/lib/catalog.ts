@@ -118,7 +118,7 @@ export interface Dataset {
   cadence: number;
   updates: UpdatesBucket;
   roles: Role[];
-  licence: Term | undefined;
+  licence: Term;
   updatedAt: string | undefined;
   rows: number;
   tone: Tone;
@@ -167,7 +167,7 @@ export function buildDatasets(products: Product[], feeds: Feed[]): Dataset[] {
       cadence,
       updates: updatesOf(cadence),
       roles: [...new Set(items.map((product) => product.role))],
-      licence: items.find((product) => product.licence)?.licence ?? undefined,
+      licence: feed.dataset.licence,
       updatedAt: items
         .map((product) => product.updatedAt)
         .filter(Boolean)
@@ -192,7 +192,7 @@ export function buildPublishers(datasets: Dataset[]): Publisher[] {
     const publisher: Publisher = publishers.get(dataset.publisher.id) ?? { ...dataset.publisher, datasets: [], topics: new Map(), hosts: new Map(), licences: new Map() };
     publisher.datasets.push(dataset);
     for (const topic of dataset.topics) publisher.topics.set(topic, (publisher.topics.get(topic) ?? 0) + 1);
-    if (dataset.licence) publisher.licences.set(dataset.licence.id, dataset.licence);
+    publisher.licences.set(dataset.licence.id, dataset.licence);
     const source = openableUrl(dataset.feeds.find((feed) => feed.sourceUrl)?.sourceUrl);
     if (source && !publisher.hosts.has(source.hostname)) publisher.hosts.set(source.hostname, source.href);
     publishers.set(publisher.id, publisher);
@@ -203,7 +203,6 @@ export function buildPublishers(datasets: Dataset[]): Publisher[] {
 export function buildLicences(datasets: Dataset[]): Licence[] {
   const licences = new Map<string, Licence>();
   for (const dataset of datasets) {
-    if (!dataset.licence) continue;
     const licence: Licence = licences.get(dataset.licence.id) ?? { ...dataset.licence, datasets: [], publishers: new Map(), topics: new Map() };
     licence.datasets.push(dataset);
     licence.publishers.set(dataset.publisher.id, dataset.publisher);
