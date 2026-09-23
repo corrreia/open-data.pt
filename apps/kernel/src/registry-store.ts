@@ -35,6 +35,10 @@ export class RegistryStore {
     // One-time terminology cleanup: old definitions called their library `gatekeeperKind`. Rewrite the JSON in place before any feed is read.
     this.exec(`UPDATE feeds SET definition_json = json_remove(json_set(definition_json, '$.library', json_extract(definition_json, '$.gatekeeperKind')), '$.gatekeeperKind')
       WHERE json_type(definition_json, '$.library') IS NULL AND json_type(definition_json, '$.gatekeeperKind') = 'text'`);
+    // A feed installed before feeds named their dataset has none. Its slug stands in until the Gatekeeper's next sync
+    // names the real one: a key the catalog does not know is served as itself, where a missing one served an empty
+    // publisher that no page could draw.
+    this.exec(`UPDATE feeds SET definition_json = json_set(definition_json, '$.dataset', slug) WHERE json_type(definition_json, '$.dataset') IS NULL`);
     this.exec(`CREATE TABLE IF NOT EXISTS feed_status (feed_id TEXT PRIMARY KEY, status_json TEXT NOT NULL, updated_at TEXT NOT NULL)`);
     this.exec(`CREATE TABLE IF NOT EXISTS claims (slug TEXT PRIMARY KEY, feed_id TEXT NOT NULL)`);
     // The chunk list is its own column, last, so product lists never read it.
