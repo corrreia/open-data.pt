@@ -82,6 +82,56 @@ describe("a publisher's client", () => {
     expect(seen.map((request) => request.userAgent)).toEqual(["another name", USER_AGENT]);
   });
 
+  describe("an origin that never answered", () => {
+    afterEach(() => vi.useRealTimers());
+
+    /** A fetcher that answers each request with the next of `answers`: a status, or a failed connection. */
+    function answering(answers: Array<number | "refused">) {
+      const bodies: Array<string | null> = [];
+      const fetcher: typeof fetch = async (_input, init) => {
+        bodies.push(init?.body === undefined || init.body === null ? null : String(init.body));
+        const answer = answers.shift() ?? 200;
+        if (answer === "refused") throw new TypeError("Network connection lost.");
+        return new Response(answer === 522 ? "error code: 522" : "ok", { status: answer });
+      };
+      return { bodies, fetcher };
+    }
+
+    it("repeats a request the edge answered with 522, or whose connection failed, body and all", async () => {
+      vi.useFakeTimers();
+      const { bodies, fetcher } = answering([522, "refused"]);
+      const client = publisherClient(["snirh.apambiente.pt"], fetcher);
+      const response = client("https://snirh.apambiente.pt/index.php", { method: "POST", body: "f_estado=ATIVA", redirect: "manual" });
+      await vi.advanceTimersByTimeAsync(5_000);
+      expect((await response).status).toBe(200);
+      expect(bodies).toEqual(["f_estado=ATIVA", "f_estado=ATIVA", "f_estado=ATIVA"]);
+    });
+
+    it("gives the third attempt's answer or error as it stands", async () => {
+      vi.useFakeTimers();
+      const unreachable = answering([522, 522, 522, 200]);
+      const response = publisherClient(["snirh.apambiente.pt"], unreachable.fetcher)("https://snirh.apambiente.pt/");
+      await vi.advanceTimersByTimeAsync(5_000);
+      expect((await response).status).toBe(522);
+      const refused = answering(["refused", "refused", "refused", 200]);
+      const failed = publisherClient(["snirh.apambiente.pt"], refused.fetcher)("https://snirh.apambiente.pt/");
+      const settled = expect(failed).rejects.toThrow("Network connection lost.");
+      await vi.advanceTimersByTimeAsync(5_000);
+      await settled;
+      expect(refused.bodies).toHaveLength(3);
+    });
+
+    it("does not repeat an answer from the origin, or a request whose body was a stream", async () => {
+      const answered = answering([500]);
+      expect((await publisherClient(["snirh.apambiente.pt"], answered.fetcher)("https://snirh.apambiente.pt/")).status).toBe(500);
+      expect(answered.bodies).toHaveLength(1);
+      const streamed = answering([522]);
+      const body = new ReadableStream<Uint8Array>({ start: (controller) => controller.close() });
+      expect((await publisherClient(["snirh.apambiente.pt"], streamed.fetcher)("https://snirh.apambiente.pt/", { method: "POST", body })).status).toBe(522);
+      expect(streamed.bodies).toHaveLength(1);
+    });
+  });
+
   describe("a host's interval", () => {
     afterEach(() => vi.useRealTimers());
 
