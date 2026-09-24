@@ -8,7 +8,6 @@ import {
   parseJsonBytes,
   readBoundedBytes,
   streamJsonArray,
-  type CanonicalRecord,
   type JsonObject,
   type JsonValue,
   type NormalizedRow,
@@ -31,23 +30,18 @@ const SERIES_SCHEMA = {
     field("dimensions", "json", false),
   ],
 };
-const STATUS_SCHEMA = {
-  fields: [
-    field("asn", "identifier", false),
-    field("snapshotTime", "datetime", false),
-    field("firstSeen", "datetime", true),
-    field("lastSeen", "datetime", true),
-    field("ipv4PeersSeeing", "number", false, "RIS peers"),
-    field("ipv4PeersTotal", "number", false, "RIS peers"),
-    field("ipv6PeersSeeing", "number", false, "RIS peers"),
-    field("ipv6PeersTotal", "number", false, "RIS peers"),
-    field("ipv4Prefixes", "number", false, "prefixes"),
-    field("ipv4Addresses", "number", false, "IPv4 addresses"),
-    field("ipv6Prefixes", "number", false, "prefixes"),
-    field("ipv6Slash48Units", "number", false, "IPv6 /48 subnet equivalents"),
-    field("observedNeighbours", "number", false, "ASNs"),
-  ],
-};
+/** What one AS's routing snapshot counts, one series each. */
+const STATUS_MEASURES = [
+  { key: "ipv4PeersSeeing", unit: "RIS peers", measure: "peers-seeing", ipVersion: "4" },
+  { key: "ipv4PeersTotal", unit: "RIS peers", measure: "peers", ipVersion: "4" },
+  { key: "ipv6PeersSeeing", unit: "RIS peers", measure: "peers-seeing", ipVersion: "6" },
+  { key: "ipv6PeersTotal", unit: "RIS peers", measure: "peers", ipVersion: "6" },
+  { key: "ipv4Prefixes", unit: "prefixes", measure: "announced-prefixes", ipVersion: "4" },
+  { key: "ipv4Addresses", unit: "IPv4 addresses", measure: "announced-addresses", ipVersion: "4" },
+  { key: "ipv6Prefixes", unit: "prefixes", measure: "announced-prefixes", ipVersion: "6" },
+  { key: "ipv6Slash48Units", unit: "IPv6 /48 subnet equivalents", measure: "announced-addresses", ipVersion: "6" },
+  { key: "observedNeighbours", unit: "ASNs", measure: "observed-neighbours", ipVersion: "" },
+] as const;
 
 export class RipestatTransformer {
   readonly id = "ripestat-json";
@@ -94,11 +88,7 @@ async function status(body: ReadableStream<Uint8Array>, context: TransformContex
   const space4 = object(announced.v4);
   const space6 = object(announced.v6);
   const stamp = sourceTime(data.query_time);
-  const payload: JsonObject = {
-    asn: `AS${number}`,
-    snapshotTime: stamp,
-    firstSeen: seenTime(data.first_seen),
-    lastSeen: seenTime(data.last_seen),
+  const counts = {
     ipv4PeersSeeing: count(v4.ris_peers_seeing),
     ipv4PeersTotal: count(v4.total_ris_peers),
     ipv6PeersSeeing: count(v6.ris_peers_seeing),
@@ -108,16 +98,23 @@ async function status(body: ReadableStream<Uint8Array>, context: TransformContex
     ipv6Prefixes: count(space6.prefixes),
     ipv6Slash48Units: count(space6["48s"], false),
     observedNeighbours: count(data.observed_neighbours),
-  };
-  if (Number(payload.ipv4PeersSeeing) > Number(payload.ipv4PeersTotal) || Number(payload.ipv6PeersSeeing) > Number(payload.ipv6PeersTotal))
+  } satisfies { [key in (typeof STATUS_MEASURES)[number]["key"]]: number };
+  if (counts.ipv4PeersSeeing > counts.ipv4PeersTotal || counts.ipv6PeersSeeing > counts.ipv6PeersTotal)
     throw new GatekeeperError("RIPEstat visibility exceeds its peer population", "invalid-response");
-  const product = declaration(context, "routing-status", "record", STATUS_SCHEMA, "current-state", "authoritative-snapshot");
-  product.watermark = stamp;
+  // Each snapshot adds its moment to every series; an earlier one is never withdrawn.
+  const product = declaration(context, "routing-status", "series", SERIES_SCHEMA, "time-series", "delta");
   if (isJsonObject(root) && hasWarnings(root)) product.completeness = "partial";
+  async function* rows(): AsyncGenerator<NormalizedRow> {
+    for (const measure of STATUS_MEASURES) {
+      const dimensions: SeriesPoint["dimensions"] = { measure: measure.measure };
+      if (measure.ipVersion) dimensions.ipVersion = measure.ipVersion;
+      yield { productKey: "routing-status", point: { seriesKey: measure.key, eventTime: stamp, value: counts[measure.key], unit: measure.unit, dimensions } };
+    }
+  }
   return {
     products: [product],
-    rows: oneRecord("routing-status", { entityKey: `AS${number}`, eventTime: stamp, payload }),
-    finish: () => ({ quality: { acceptedRecords: 1, rejectedRecords: 0 } }),
+    rows: rows(),
+    finish: () => ({ quality: { acceptedRecords: STATUS_MEASURES.length, rejectedRecords: 0 }, products: [{ productKey: "routing-status", watermark: stamp }] }),
   };
 }
 
@@ -212,7 +209,8 @@ async function routing(body: ReadableStream<Uint8Array>, context: TransformConte
             for (const measure of ROUTING_MEASURES) {
               const value = stat[measure.field];
               if (value === -1) continue; // Unavailable count sentinel; never a negative prefix/ASN count.
-              const measured = count(value);
+              // A RIS count is the day's mean of RIS's samples, so it is a half on a day it changed (803.5 prefixes on 2025-02-01).
+              const measured = count(value, measure.source !== "RIS");
               const stamp = measure.source === "RIR statistics" ? registrationDate : new Date(time).toISOString();
               if (stamp < from || stamp >= before) continue;
               const key = `${measure.field}|${stamp}`;
@@ -265,14 +263,6 @@ function count(value: JsonValue | undefined, integer = true): number {
   if (!isJsonNumber(value) || !Number.isFinite(value) || value < 0 || (integer && !Number.isSafeInteger(value)))
     throw new GatekeeperError("RIPEstat returned an invalid count", "invalid-response");
   return value;
-}
-
-function seenTime(value: JsonValue | undefined): string | null {
-  return value === undefined || value === null ? null : sourceTime(object(value).time);
-}
-
-async function* oneRecord(productKey: string, record: CanonicalRecord): AsyncGenerator<NormalizedRow> {
-  yield { productKey, record };
 }
 
 function resourceText(kind: string, value: JsonValue): string {

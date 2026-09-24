@@ -39,9 +39,9 @@ export const RIPESTAT_FEEDS = {
   },
   "routing-status": {
     kind: "routing-status",
-    title: "Autonomous-system routing snapshot",
-    description: "RIPE RIS eight-hour routing snapshots for one AS, not first-party customer outages, availability or broadband speeds.",
-    semantics: { domainSubject: "observation", defaultProductRole: "current-state" },
+    title: "Autonomous-system routing counts",
+    description: "RIPE RIS eight-hour routing snapshots for one AS, one series per count, not first-party customer outages, availability or broadband speeds.",
+    semantics: { domainSubject: "observation", defaultProductRole: "time-series" },
   },
 } as const satisfies Record<string, FeedKindDescription>;
 
