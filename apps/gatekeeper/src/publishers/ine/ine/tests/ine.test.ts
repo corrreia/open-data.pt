@@ -267,7 +267,7 @@ describe("INE Gatekeeper", () => {
   });
 
   it("collects one annual history slice with its range, next cursor, and a transform-compatible document", async () => {
-    expect(INE_FEEDS.indicator.history).toEqual({});
+    expect(INE_FEEDS.indicator.history).toEqual({ minSliceSeconds: 20 });
     const periods = annualPeriods(2010, 2023);
     const meta = historyMeta("Anual", periods);
     const fetcher = vi.fn(async (input: URL | RequestInfo) => {

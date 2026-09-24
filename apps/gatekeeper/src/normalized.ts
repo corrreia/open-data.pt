@@ -99,6 +99,8 @@ export async function collectNormalized(request: CollectionRequest, collector: N
   try {
     return await collect(request, collector);
   } catch (error) {
+    // The kernel is told only the failure's code; what the source actually said stays in the Gatekeeper's own log.
+    console.warn(JSON.stringify({ event: "collection_failed", feed: request.feed.slug, mode: request.mode.kind, error: error instanceof Error ? error.message : String(error) }));
     if (error instanceof GatekeeperError) {
       const failure: Extract<CollectionResult, { kind: "failure" }> = { kind: "failure", code: error.code, retryable: error.code === "upstream-error" };
       if (error.retryAfterSeconds !== undefined) failure.retryAfterSeconds = error.retryAfterSeconds;
@@ -325,12 +327,17 @@ function frameStream(
         emit(controller, JSON.stringify(complete));
         phase = "done";
       } catch (error) {
+        // The kernel sees only a stream that broke off; why it did, and how far it got, is said here.
+        console.warn(
+          JSON.stringify({ event: "collection_stream_failed", feed: request.feed.slug, rows: records + points, error: error instanceof Error ? error.message : String(error) }),
+        );
         aborter.abort(error);
         void rows.return?.(undefined);
         controller.error(error);
       }
     },
     cancel(reason) {
+      console.warn(JSON.stringify({ event: "collection_stream_cancelled", feed: request.feed.slug, rows: records + points, reason: String(reason) }));
       aborter.abort(reason);
       void rows.return?.(undefined);
     },

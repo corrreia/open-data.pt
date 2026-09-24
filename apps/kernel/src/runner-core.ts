@@ -1281,8 +1281,9 @@ export class RunnerCore {
       records: backfill.records + history.records,
       failures: 0,
       updatedAt: new Date(now).toISOString(),
-      // Pace per library: several feeds read the same way share one polite rate.
-      nextAt: new Date(now + Math.max(20_000, 6_000 * this.backfillPeers)).toISOString(),
+      // Pace per library: several feeds read the same way share one polite rate; a source that states how often one of
+      // its slices may be read is never read faster than that.
+      nextAt: new Date(now + Math.max(20_000, 6_000 * this.backfillPeers, (this.feed()?.resolved.history?.minSliceSeconds ?? 0) * 1000)).toISOString(),
     };
     delete next.lastError;
     this.setState("backfill", next);

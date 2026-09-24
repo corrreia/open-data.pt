@@ -89,8 +89,11 @@ application usage ledger.
 ## History and backfill
 
 A library with a source-supported history capability uses the same `collect` operation with a history
-cursor. Backfill slices go to the lake only, are paced per source, persist their cursor, keep
-knowledge time distinct from event time, and never change current serving.
+cursor. Backfill slices go to the lake only, persist their cursor, keep knowledge time distinct from
+event time, and never change current serving. They are paced twice: the kernel spaces the slices of
+every feed read by one library (at least 20 seconds, more as more of them walk at once), and never
+reads one feed's slices faster than its feed kind's `history.minSliceSeconds` says the source can take
+— five minutes for SNIRH's station exports, twenty seconds for a statistics API.
 
 Public history is typed and requires bounded UTC intervals (at most 366 days); the endpoints are in
 [the API reference](api.md#history). Queries skip ingest-day partitions before the window whenever

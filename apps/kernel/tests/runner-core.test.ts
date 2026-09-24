@@ -230,6 +230,31 @@ describe("automatic history walk", () => {
     expect(h.core.backfillSummary()).toBeUndefined();
   });
 
+  it("waits between slices as long as the source states one may be read, over its own pacing", async () => {
+    const h = await kernelHarness({ policy: policy({ cadenceSeconds: 7 * 24 * 3600 }), history: { minSliceSeconds: 300 } });
+    h.source.records = [record("a", 1)];
+    await h.collect();
+    h.clock.now += BACKFILL_START_DELAY_MS;
+    const slice = h.core.takeDue()!;
+    expect(slice.trigger).toBe("history");
+    const before = Date.parse(h.core.backfillSummary()!.cursor) - 24 * HOUR;
+    h.source.fetch = async () => ({
+      kind: "body",
+      body: new Uint8Array(0),
+      provenance: { sourceUrl: "https://example.test/things" },
+      completeness: "complete",
+      next: { before: new Date(before).toISOString() },
+    });
+    h.core.markStarted(slice.id, "history-1");
+    await h.run(slice.id);
+    expect(h.core.backfillSummary()?.slices).toBe(1);
+    // Anything due within the next second is taken now, so the last moment still waiting is two seconds short.
+    h.clock.now += 298_000;
+    expect(h.core.takeDue()?.trigger, "the kernel's own twenty seconds are not enough").toBeUndefined();
+    h.clock.now += 2_000;
+    expect(h.core.takeDue()?.trigger).toBe("history");
+  });
+
   it("pauses after repeated transient failures and resumes by itself a day later", async () => {
     const h = await kernelHarness({ policy: policy({ cadenceSeconds: 7 * 24 * 3600 }) });
     h.source.records = [record("a", 1)];

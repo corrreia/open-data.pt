@@ -48,6 +48,8 @@ export const EUROSTAT_FEEDS = {
       // Monthly feeds are the densest common case: 120 periods is ten years.
       // Quarterly feeds use the same point budget (30 years); annual feeds fit
       // their full history in one slice. History responses are capped at 1 MiB.
+      // One request to Eurostat's statistics API a slice, at the kernel's own pace.
+      minSliceSeconds: 20,
     },
   },
 } as const satisfies Record<string, FeedKindDescription>;

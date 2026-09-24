@@ -167,28 +167,33 @@ export const SNIRH_FEEDS = {
     title: "Station readings",
     description: "One parameter of SNIRH's station database, for every station that measures it.",
     semantics: { domainSubject: "observation", defaultProductRole: "time-series" },
-    history: {},
+    // A slice is the station list and a dozen station exports, each a slow query on a small PHP site: its first walk,
+    // a slice every few seconds over ten years, got open-data.pt blocked. One slice every five minutes at most.
+    history: { minSliceSeconds: 300 },
   },
   "monthly-precipitation": {
     kind: "monthly-precipitation",
     title: "Monthly precipitation bulletin",
     description: "Monthly precipitation at the stations of SNIRH's precipitation bulletin, with each station's monthly normal.",
     semantics: { domainSubject: "observation", defaultProductRole: "time-series" },
-    history: { earliest: `${PRECIPITATION_FIRST_MONTH}-01T00:00:00.000Z` },
+    // Twelve monthly bulletins a slice, from the same small site.
+    history: { earliest: `${PRECIPITATION_FIRST_MONTH}-01T00:00:00.000Z`, minSliceSeconds: 60 },
   },
   "reservoir-basins": {
     kind: "reservoir-basins",
     title: "Reservoir storage by river basin",
     description: "End-of-month water stored in the bulletin's reservoirs of each river basin, as a share of their total capacity.",
     semantics: { domainSubject: "observation", defaultProductRole: "time-series" },
-    history: { earliest: `${RESERVOIR_FIRST_HYDROLOGICAL_YEAR}-10-01T00:00:00.000Z` },
+    // One yearly table a slice, from the same small site.
+    history: { earliest: `${RESERVOIR_FIRST_HYDROLOGICAL_YEAR}-10-01T00:00:00.000Z`, minSliceSeconds: 60 },
   },
   "groundwater-state": {
     kind: "groundwater-state",
     title: "Groundwater state by aquifer",
     description: "Each month's groundwater level class of every aquifer in SNIRH's groundwater bulletin.",
     semantics: { domainSubject: "observation", defaultProductRole: "summary" },
-    history: { earliest: `${GROUNDWATER_FIRST_MONTH}-01T00:00:00.000Z` },
+    // Twelve monthly bulletins a slice, from the same small site.
+    history: { earliest: `${GROUNDWATER_FIRST_MONTH}-01T00:00:00.000Z`, minSliceSeconds: 60 },
   },
 } as const satisfies Record<string, FeedKindDescription>;
 

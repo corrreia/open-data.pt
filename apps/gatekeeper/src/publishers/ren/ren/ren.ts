@@ -125,6 +125,8 @@ const REN_CHART_FEEDS: RenFeedCatalogue =
         },
         history: {
           earliest: definition.earliest,
+          // One request to REN's data hub a slice, at the kernel's own pace.
+          minSliceSeconds: 20,
         },
       } satisfies FeedKindDescription,
     ]),

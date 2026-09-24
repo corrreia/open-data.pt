@@ -116,7 +116,7 @@ The RPC is `describe`, `listFeedKinds`, `resolveFeed`, `collect`, `exampleFeeds`
 - Treat `304` as unchanged only when every required component is covered; a compound feed fetches all of them unless independent validators prove all unchanged.
 - A large source with no ETag or Last-Modified can stage its body in an R2 bucket (`r2Staging`) and keep the digest in its checkpoint state: an unchanged digest answers `not-modified`. A staging bucket is a cache, never canonical storage.
 - Keep history exhaustion explicit. Invalid cursors are failures. Never claim a history the upstream does not support.
-- A history walk is paced by the kernel per library; a slow server also gets its host's `minIntervalSeconds`. Count what a full walk sends before shipping one: SNIRH's first, 4-day slices over ten years of hourly readings, got open-data.pt blocked by name.
+- A feed kind with a history declares `history.minSliceSeconds`: the least time between two slices of one feed, which the kernel keeps on top of its own pacing (a test fails without it). Count what one slice sends — the station list and a dozen exports is one SNIRH slice — and how many slices the walk takes, and set it so the whole walk is something the source would not notice: SNIRH's first walk, a slice every few seconds over ten years of hourly readings, got open-data.pt blocked by name. A robust statistics API takes 20; a small site, minutes. A host's `minIntervalSeconds` spaces the requests inside a slice.
 
 ## Normalizing
 
