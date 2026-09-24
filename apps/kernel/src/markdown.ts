@@ -7,10 +7,10 @@ import type { Feed as CatalogFeed, Outage, Product as CatalogProduct, Term } fro
 import type { JsonObject, JsonValue } from "@open-data-pt/contract";
 import type { SiteHost } from "./discovery";
 
-/** One feed as the catalog shows it: what it is, whose, and the tables and series it serves. */
+/** One table or series as the catalog lists it, with the feed it comes from, which gives it its publisher, terms and topics. */
 export interface Listing {
+  product: CatalogProduct;
   feed: CatalogFeed;
-  products: CatalogProduct[];
 }
 
 /** A page's Markdown, and 404 when the page names something that does not exist. */
@@ -95,32 +95,26 @@ export const licencePage = (id: string) => `/licence/?id=${encodeURIComponent(id
 /** A term as a Markdown link when it has a page, its name otherwise. */
 const termLink = (term: Term) => (term.url ? `[${linkText(term.name)}](${term.url})` : linkText(term.name));
 
-/** Every feed something is served from, with its products, by title. */
+/** Every table and series, each with the feed it comes from, by title. */
 export async function readCatalog(host: SiteHost): Promise<Listing[]> {
   const [products, feeds] = await Promise.all([read<{ data: CatalogProduct[] }>(host, "/api/products"), read<{ data: CatalogFeed[] }>(host, "/api/feeds")]);
-  const byFeed = new Map<string, CatalogProduct[]>();
-  for (const item of products.data) {
-    const list = byFeed.get(item.feedId);
-    if (list) list.push(item);
-    else byFeed.set(item.feedId, [item]);
-  }
-  return feeds.data
-    .flatMap((feed) => {
-      const items = byFeed.get(feed.id);
-      return items ? [{ feed, products: items }] : [];
+  const byId = new Map(feeds.data.map((feed) => [feed.id, feed]));
+  return products.data
+    .flatMap((product) => {
+      const feed = byId.get(product.feedId);
+      return feed ? [{ product, feed }] : [];
     })
-    .sort((a, b) => a.feed.title.localeCompare(b.feed.title));
+    .sort((a, b) => a.product.title.localeCompare(b.product.title));
 }
 
 /* ---------- Pages ---------- */
 
 async function home(url: URL, host: SiteHost): Promise<PageText> {
   const { origin } = url;
-  const datasets = await readCatalog(host);
-  const publisherCount = new Set(datasets.map((entry) => entry.feed.publisher.id)).size;
-  const tables = datasets.reduce((sum, dataset) => sum + dataset.products.length, 0);
+  const listings = await readCatalog(host);
+  const publisherCount = new Set(listings.map((entry) => entry.feed.publisher.id)).size;
   const topics = new Map<string, Listing[]>();
-  for (const entry of datasets) {
+  for (const entry of listings) {
     for (const topic of entry.feed.topics) topics.set(topic, [...(topics.get(topic) ?? []), entry]);
   }
   return found([
@@ -128,11 +122,11 @@ async function home(url: URL, host: SiteHost): Promise<PageText> {
     "",
     "Public data from Portugal, in one place. Datasets published by Portuguese institutions and operators, collected from where they publish them and served in one consistent format. Free to use, with no key and no account. Every dataset names its publisher and links back to the source.",
     "",
-    `${plural(datasets.length, "dataset")}, ${plural(tables, "table")} and series, from ${plural(publisherCount, "publisher")}.`,
+    `${plural(listings.length, "table or series", "tables and series")}, from ${plural(publisherCount, "publisher")}.`,
     "",
-    `- [Catalog](${origin}/catalog/): every dataset, with its publisher and its API links`,
+    `- [Catalog](${origin}/catalog/): every table and series, with its publisher and its API links`,
     `- [Publishers](${origin}/publisher/): who publishes the data`,
-    `- [Licences](${origin}/licence/): the terms each dataset is served under`,
+    `- [Licences](${origin}/licence/): the terms each is served under`,
     `- [Use the API](${origin}/start/): free, keyless, read-only JSON, described at ${origin}/openapi.json`,
     `- [Connect an AI assistant](${origin}/start/#mcp): the MCP server at ${origin}/mcp`,
     `- [Status](${origin}/status/): whether every source is being collected`,
@@ -141,33 +135,37 @@ async function home(url: URL, host: SiteHost): Promise<PageText> {
     "",
     ...[...topics.entries()]
       .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]))
-      .map(([topic, items]) => `- [${topicLabel(topic)}](${origin}/catalog/?topic=${encodeURIComponent(topic)}): ${plural(items.length, "dataset")} from ${mainPublishers(items)}`),
+      .map(
+        ([topic, items]) =>
+          `- [${topicLabel(topic)}](${origin}/catalog/?topic=${encodeURIComponent(topic)}): ${plural(items.length, "table or series", "tables and series")} from ${mainPublishers(items)}`,
+      ),
   ]);
 }
 
 async function catalog(url: URL, host: SiteHost): Promise<PageText> {
   const topic = url.searchParams.get("topic") ?? "";
   const words = (url.searchParams.get("q") ?? "").toLocaleLowerCase().split(/\s+/).filter(Boolean);
-  const shown = (await readCatalog(host)).filter(({ feed, products }) => {
+  const shown = (await readCatalog(host)).filter(({ product, feed }) => {
     if (topic && !feed.topics.includes(topic)) return false;
+    // The feed is never shown, but its name is often what someone searches for: "fuel prices" finds the station prices.
     const haystack =
-      `${feed.title} ${feed.publisher.name} ${feed.topics.join(" ")} ${feed.description} ${products.map((item) => `${item.title} ${item.slug}`).join(" ")}`.toLocaleLowerCase();
+      `${product.title} ${product.slug} ${product.description} ${feed.title} ${feed.description} ${feed.publisher.name} ${feed.topics.join(" ")}`.toLocaleLowerCase();
     return words.every((word) => haystack.includes(word));
   });
   const scope = [topic ? `about ${topicLabel(topic).toLocaleLowerCase()}` : "", words.length ? `matching “${words.join(" ")}”` : ""].filter(Boolean).join(" ");
   return found([
     topic ? `# ${topicLabel(topic)}` : "# Catalog",
     "",
-    `${plural(shown.length, "dataset")}${scope ? ` ${scope}` : ""}, each collected from its publisher. Every table and series links to its page and to its JSON in the API.`,
+    `${plural(shown.length, "table or series", "tables and series")}${scope ? ` ${scope}` : ""}, each collected from its publisher, with a link to its page and to its JSON in the API.`,
     "",
     ...shown.flatMap((entry) => listingSection(url.origin, entry)),
   ]);
 }
 
-/** The datasets under each value of one vocabulary, by key, with the term as the first dataset states it. */
-function groupBy(datasets: Listing[], termOf: (entry: Listing) => Term | undefined): Map<string, { term: Term; items: Listing[] }> {
+/** The tables and series under each value of one vocabulary, by key, with the term as the first one states it. */
+function groupBy(listings: Listing[], termOf: (entry: Listing) => Term | undefined): Map<string, { term: Term; items: Listing[] }> {
   const groups = new Map<string, { term: Term; items: Listing[] }>();
-  for (const entry of datasets) {
+  for (const entry of listings) {
     const term = termOf(entry);
     if (!term) continue;
     const group = groups.get(term.id) ?? { term, items: [] };
@@ -189,7 +187,7 @@ async function publishers(url: URL, host: SiteHost): Promise<PageText> {
     return found([
       `# ${name}`,
       "",
-      `${plural(own.items.length, "dataset")} that ${name} publishes, collected from where it publishes them. open-data.pt republishes them; ${name} owns the data.${own.term.url ? ` Its site: ${own.term.url}` : ""}`,
+      `${plural(own.items.length, "table or series", "tables and series")} that ${name} publishes, collected from where it publishes them. open-data.pt republishes them; ${name} owns the data.${own.term.url ? ` Its site: ${own.term.url}` : ""}`,
       "",
       ...own.items.flatMap((entry) => listingSection(origin, entry)),
     ]);
@@ -203,7 +201,7 @@ async function publishers(url: URL, host: SiteHost): Promise<PageText> {
       .sort((a, b) => b.items.length - a.items.length || a.term.name.localeCompare(b.term.name))
       .map(({ term, items }) => {
         const topics = [...new Set(items.flatMap((entry) => entry.feed.topics))].map(topicLabel).join(", ");
-        return `- [${linkText(term.name)}](${origin}${publisherPage(term.id)}): ${plural(items.length, "dataset")}${topics ? ` · ${topics}` : ""}`;
+        return `- [${linkText(term.name)}](${origin}${publisherPage(term.id)}): ${plural(items.length, "table or series", "tables and series")}${topics ? ` · ${topics}` : ""}`;
       }),
   ]);
 }
@@ -220,9 +218,9 @@ async function licences(url: URL, host: SiteHost): Promise<PageText> {
     return found([
       `# ${name}`,
       "",
-      own.term.description ?? `${plural(own.items.length, "dataset")} served under ${name}${text ? ` (${text})` : ""}.`,
+      own.term.description ?? `${plural(own.items.length, "table or series", "tables and series")} served under ${name}${text ? ` (${text})` : ""}.`,
       "",
-      `${plural(own.items.length, "dataset")} from ${publishers.join(", ")}. The terms are the publisher's; cite the publisher, not open-data.pt.`,
+      `${plural(own.items.length, "table or series", "tables and series")} from ${publishers.join(", ")}. The terms are the publisher's; cite the publisher, not open-data.pt.`,
       "",
       ...own.items.flatMap((entry) => listingSection(origin, entry)),
     ]);
@@ -230,13 +228,13 @@ async function licences(url: URL, host: SiteHost): Promise<PageText> {
   return found([
     "# Licences",
     "",
-    "The terms each dataset is served under, as its publisher states them. Where a publisher states none, its own terms apply.",
+    "The terms each table and series is served under, as its publisher states them. Where a publisher states none, its own terms apply.",
     "",
     ...[...groups.values()]
       .sort((a, b) => b.items.length - a.items.length || a.term.name.localeCompare(b.term.name))
       .map(({ term, items }) => {
         const publishers = new Set(items.map((entry) => entry.feed.publisher.id)).size;
-        return `- [${linkText(term.name)}](${origin}${licencePage(term.id)}): ${plural(items.length, "dataset")} from ${plural(publishers, "publisher")}`;
+        return `- [${linkText(term.name)}](${origin}${licencePage(term.id)}): ${plural(items.length, "table or series", "tables and series")} from ${plural(publishers, "publisher")}`;
       }),
   ]);
 }
@@ -493,25 +491,30 @@ async function aup(): Promise<PageText> {
 
 /* ---------- Pieces ---------- */
 
-function listingSection(origin: string, { feed, products }: Listing): string[] {
-  const facts = [feed.publisher.name, ...feed.topics.map(topicLabel), feed.cadenceSeconds ? `collected ${every(feed.cadenceSeconds)}` : "", through(feed)]
+function listingSection(origin: string, { product, feed }: Listing): string[] {
+  const facts = [
+    feed.publisher.name,
+    (ROLE_LABEL.get(product.role) ?? product.role).split(":")[0],
+    plural(product.rowCount, product.role === "time-series" ? "point" : "row"),
+    ...feed.topics.map(topicLabel),
+    product.cadenceSeconds ? `collected ${every(product.cadenceSeconds)}` : "",
+    through(feed),
+    `updated ${product.updatedAt}`,
+  ]
     .filter(Boolean)
     .join(" · ");
   return [
-    `## ${feed.title}`,
+    `## [${linkText(product.title)}](${origin}${productPage(product.slug)})`,
     "",
     facts,
     "",
-    ...(feed.description ? [feed.description.trim(), ""] : []),
-    ...products.map(
-      (item) =>
-        `- [${linkText(item.title)}](${origin}${productPage(item.slug)}): ${(ROLE_LABEL.get(item.role) ?? item.role).split(":")[0]}, ${plural(item.rowCount, "row")}, updated ${item.updatedAt}. JSON: ${origin}/api/products/${encodeURIComponent(item.slug)}`,
-    ),
+    ...(product.description ? [product.description.trim(), ""] : []),
+    `JSON: ${origin}/api/products/${encodeURIComponent(product.slug)}`,
     "",
   ];
 }
 
-/** The three publishers with the most datasets among these. */
+/** The three publishers with the most tables and series among these. */
 function mainPublishers(listings: Listing[]): string {
   const counts = new Map<string, number>();
   for (const entry of listings) counts.set(entry.feed.publisher.name, (counts.get(entry.feed.publisher.name) ?? 0) + 1);
@@ -534,7 +537,7 @@ export function every(seconds: number): string {
 }
 
 export const topicLabel = (topic: string) => topic.charAt(0).toLocaleUpperCase() + topic.slice(1).replaceAll("-", " ");
-const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
+const plural = (count: number, word: string, many = `${word}s`) => `${count} ${count === 1 ? word : many}`;
 /** Text for inside a link's brackets. */
 const linkText = (text: string) => text.replace(/[[\]\\]/g, "\\$&");
 /** Text for a table cell: one line, pipes escaped, long values cut. */

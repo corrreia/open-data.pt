@@ -72,7 +72,7 @@ export const ROLE_ICON = {
   summary: SigmaIcon,
 } satisfies { [role in Role]: Icon };
 
-const ROLE_COLOR = {
+export const ROLE_COLOR = {
   reference: "var(--color-series-1)",
   "current-state": "var(--color-series-2)",
   "event-log": "var(--color-series-3)",

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { collectNormalized, libraryConfig, NORMALIZED_PROTOCOL, type CollectionRequest, type ExampleFeed, type NormalizedFrame } from "@open-data-pt/gatekeeper";
+import { collectNormalized, libraryConfig, NORMALIZED_PROTOCOL, type CollectionRequest, type ExampleFeed, type NormalizedFrame, feedNormalizer } from "@open-data-pt/gatekeeper";
 import { PARLIAMENT_NORMALIZER } from "../apps/gatekeeper/src/publishers/assembleia-da-republica/parliament/index";
 import { parliamentDocument, type ParliamentDocument } from "../apps/gatekeeper/src/publishers/assembleia-da-republica/parliament/parliament";
 import { feedCollection, feedsOf } from "../apps/gatekeeper/tests/catalog";
@@ -80,7 +80,7 @@ describe("Parliament frames as the kernel reads them", () => {
       deadline: request.deadline,
     }))
       frames.push(frame);
-    expect(frames[0]).toMatchObject({ type: "header", protocol: NORMALIZED_PROTOCOL, normalizer: PARLIAMENT_NORMALIZER });
+    expect(frames[0]).toMatchObject({ type: "header", protocol: NORMALIZED_PROTOCOL, normalizer: feedNormalizer(PARLIAMENT_NORMALIZER) });
     expect(frames.at(-1)).toMatchObject({ type: "complete", quality: { rejectedRecords: 0 } });
     expect(frames.filter((frame) => frame.type === "record").length).toBeGreaterThan(0);
     expect(JSON.stringify(frames)).not.toContain("c3ludGhldGljLXBhdGg");

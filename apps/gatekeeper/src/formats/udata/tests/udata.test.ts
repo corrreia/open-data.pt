@@ -12,6 +12,7 @@ import {
   feedCollector,
   libraryConfig,
   resolveLibraryFeed,
+  feedNormalizer,
 } from "#/index";
 import { UdataSource, chooseTransformer, resolveUdataFeed, validateUdataFeedConfig } from "#/formats/udata/index";
 import { carriedLibraries, feedsOf } from "#/tests/catalog";
@@ -231,7 +232,7 @@ describe("uData collection", () => {
     expect(header).toMatchObject({
       type: "header",
       protocol: NORMALIZED_PROTOCOL,
-      normalizer: { id: "tabular-v2", version: "5" },
+      normalizer: feedNormalizer({ id: "tabular-v2", version: "5" }),
       provenance: { sourceUrl: "https://publisher.example/data.csv", sourcePublishedAt: "2026-08-24T20:14:58.444Z" },
       checkpoint: { state: { resource: "resource-1", validators: { default: { etag: '"v2"' } } } },
       products: [{ productKey: "records", suggestedSlug: "population", completeness: "complete" }],
@@ -264,7 +265,7 @@ describe("uData collection", () => {
         resourceKey: base.resolved.resourceKey,
         configHash: base.resolved.configHash,
         feedEpoch: base.feedEpoch,
-        normalizer: { id: selected.id, version: selected.version },
+        normalizer: feedNormalizer(selected),
         state: { resource: "resource-1", validators: { default: { etag: '"v1"' } } },
       },
     });

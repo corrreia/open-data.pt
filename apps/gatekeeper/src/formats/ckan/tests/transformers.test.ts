@@ -18,6 +18,7 @@ import {
   type StreamingSummary,
   type GatekeeperLibraries,
   type TransformContext,
+  feedNormalizer,
 } from "#/index";
 import type { CkanResourceMetadata } from "#/formats/ckan/ckan";
 import { CKAN_NORMALIZER, CKAN_SAMPLE_ROWS, epsg3763ToWgs84, parsePythonLiteral, transformCkan } from "#/formats/ckan/transform";
@@ -536,13 +537,16 @@ describe("CKAN streaming through the shared collector", () => {
 
     expect(frames[0]).toMatchObject({
       type: "header",
-      normalizer: { id: "ckan-resource", version: "6" },
+      normalizer: feedNormalizer({ id: "ckan-resource", version: "6" }),
       provenance: {
         sourceUrl: `https://opendata.porto.digital/api/3/action/datastore_search?resource_id=${resourceId}&limit=2&offset=0`,
         sourcePublishedAt: "2026-09-07T12:00:00.000Z",
       },
       products: [{ productKey: "records", suggestedSlug: "porto-sensors", completeness: "complete" }],
-      checkpoint: { normalizer: { id: "ckan-resource", version: "6" }, state: { validators: { default: { etag: `"ckan:6:${resourceId}:2026-09-07T12:00:00.000Z"` } } } },
+      checkpoint: {
+        normalizer: feedNormalizer({ id: "ckan-resource", version: "6" }),
+        state: { validators: { default: { etag: `"ckan:6:${resourceId}:2026-09-07T12:00:00.000Z"` } } },
+      },
     });
     expect(frames.filter((frame) => isJsonObject(frame) && frame.type === "record")).toHaveLength(2);
     expect(frames.filter((frame) => isJsonObject(frame) && frame.type === "point")).toHaveLength(0);

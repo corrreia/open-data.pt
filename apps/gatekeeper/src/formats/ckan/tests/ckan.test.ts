@@ -11,6 +11,7 @@ import {
   type CollectionResult,
   type JsonObject,
   type SourceFetch,
+  feedNormalizer,
 } from "#/index";
 import { CKAN_LIMITS, CkanSource } from "#/formats/ckan/ckan";
 import { CKAN_DEPLOYMENT } from "#/formats/ckan/index";
@@ -355,7 +356,7 @@ describe("CKAN collection through the shared collector", () => {
         resourceKey: resolved.resourceKey,
         configHash: resolved.configHash,
         feedEpoch: "epoch-1",
-        normalizer: { id: "ckan-resource", version: "6" },
+        normalizer: feedNormalizer({ id: "ckan-resource", version: "6" }),
         state: { validators: { default: { etag: checkpointEtag } } },
       };
     }

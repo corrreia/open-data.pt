@@ -95,38 +95,35 @@ export function freshness(product: Product, feed: Feed | undefined): Freshness {
   return { tone: "ok", label: "Current" };
 }
 
-export interface LabelledProduct {
-  product: Product;
-  label: string;
-}
-
 /**
- * One feed as the site shows it: a card of its own, which the site calls a
- * dataset because that is the reader's word (and DCAT's) for it.
+ * One table or series as the catalog lists it: what it is, whose it is and
+ * under what terms, how often it changes, and how fresh it is. The feed it
+ * comes from is how it is collected, which the catalog never shows: a feed's
+ * terms and topics are every one of its products'.
  */
-export interface Dataset {
-  /** The feed's ID. */
+export interface Listing {
+  /** The product's slug: its page and its API address. */
   id: string;
+  product: Product;
   feed: Feed;
   title: string;
   description: string;
   publisher: Term;
   topics: string[];
+  licence: Term;
   format: string;
+  role: Role;
   cadence: number;
   updates: UpdatesBucket;
-  roles: Role[];
-  licence: Term;
   updatedAt: string | undefined;
   rows: number;
   tone: Tone;
-  /** Every table is empty because the source currently lists nothing; it is still collected. */
+  /** Empty because the source currently lists nothing; it is still collected. */
   empty: boolean;
-  products: LabelledProduct[];
 }
 
 export interface Publisher extends Term {
-  datasets: Dataset[];
+  listings: Listing[];
   topics: Map<string, number>;
   hosts: Map<string, string>;
   licences: Map<string, Term>;
@@ -134,139 +131,87 @@ export interface Publisher extends Term {
 
 /** One licence and everything served under it. */
 export interface Licence extends Term {
-  datasets: Dataset[];
+  listings: Listing[];
   publishers: Map<string, Term>;
   topics: Map<string, number>;
 }
 
-/** Every feed that serves something, with everything it serves. */
-export function buildDatasets(products: Product[], feeds: Feed[]): Dataset[] {
-  const byFeed = new Map<string, Product[]>();
-  for (const product of products) byFeed.set(product.feedId, [...(byFeed.get(product.feedId) ?? []), product]);
-  return feeds.flatMap((feed): Dataset[] => {
-    const items = byFeed.get(feed.id);
-    if (!items) return [];
-    const cadence = Math.min(...items.map((product) => product.cadenceSeconds ?? Number.POSITIVE_INFINITY));
-    const tones = items.map((product) => freshness(product, feed).tone);
+/** Every table and series with the feed it comes from, which gives it its publisher, terms and topics. */
+export function buildListings(products: Product[], feeds: Feed[]): Listing[] {
+  const byId = new Map(feeds.map((feed) => [feed.id, feed]));
+  return products.flatMap((product): Listing[] => {
+    const feed = byId.get(product.feedId);
+    if (!feed) return [];
+    const cadence = product.cadenceSeconds ?? Number.POSITIVE_INFINITY;
     return [
       {
-        id: feed.id,
+        id: product.slug,
+        product,
         feed,
-        title: feed.title,
-        description: feed.description,
+        title: product.title,
+        description: product.description,
         publisher: feed.publisher,
         topics: feed.topics,
+        licence: feed.licence,
         format: formatOf(feed),
+        role: product.role,
         cadence,
         updates: updatesOf(cadence),
-        roles: [...new Set(items.map((product) => product.role))],
-        licence: feed.licence,
-        updatedAt: items
-          .map((product) => product.updatedAt)
-          .filter(Boolean)
-          .sort()
-          .at(-1),
-        rows: items.reduce((sum, product) => sum + (product.rowCount ?? 0), 0),
-        tone: tones.includes("bad") ? "bad" : tones.includes("warn") ? "warn" : "ok",
-        empty: items.every((product) => product.rowCount === 0),
-        // Empty tables go last, keeping the source's order otherwise.
-        products: labelled(feed, items).sort((a, b) => Number(a.product.rowCount === 0) - Number(b.product.rowCount === 0)),
+        updatedAt: product.updatedAt || undefined,
+        rows: product.rowCount ?? 0,
+        tone: freshness(product, feed).tone,
+        empty: product.rowCount === 0,
       },
     ];
   });
 }
 
-/** Datasets the source currently leaves empty sort after the rest, whatever the order. */
-export const emptyLast = (a: Dataset, b: Dataset) => Number(a.empty) - Number(b.empty);
+/** Tables and series the source currently leaves empty sort after the rest, whatever the order. */
+export const emptyLast = (a: Listing, b: Listing) => Number(a.empty) - Number(b.empty);
 
-export function buildPublishers(datasets: Dataset[]): Publisher[] {
+export function buildPublishers(listings: Listing[]): Publisher[] {
   const publishers = new Map<string, Publisher>();
-  for (const dataset of datasets) {
-    const publisher: Publisher = publishers.get(dataset.publisher.id) ?? { ...dataset.publisher, datasets: [], topics: new Map(), hosts: new Map(), licences: new Map() };
-    publisher.datasets.push(dataset);
-    for (const topic of dataset.topics) publisher.topics.set(topic, (publisher.topics.get(topic) ?? 0) + 1);
-    publisher.licences.set(dataset.licence.id, dataset.licence);
-    const source = openableUrl(dataset.feed.sourceUrl);
+  for (const listing of listings) {
+    const publisher: Publisher = publishers.get(listing.publisher.id) ?? { ...listing.publisher, listings: [], topics: new Map(), hosts: new Map(), licences: new Map() };
+    publisher.listings.push(listing);
+    for (const topic of listing.topics) publisher.topics.set(topic, (publisher.topics.get(topic) ?? 0) + 1);
+    publisher.licences.set(listing.licence.id, listing.licence);
+    const source = openableUrl(listing.feed.sourceUrl);
     if (source && !publisher.hosts.has(source.hostname)) publisher.hosts.set(source.hostname, source.href);
     publishers.set(publisher.id, publisher);
   }
-  return [...publishers.values()].sort((a, b) => b.datasets.length - a.datasets.length || a.name.localeCompare(b.name));
+  return [...publishers.values()].sort((a, b) => b.listings.length - a.listings.length || a.name.localeCompare(b.name));
 }
 
-export function buildLicences(datasets: Dataset[]): Licence[] {
+export function buildLicences(listings: Listing[]): Licence[] {
   const licences = new Map<string, Licence>();
-  for (const dataset of datasets) {
-    const licence: Licence = licences.get(dataset.licence.id) ?? { ...dataset.licence, datasets: [], publishers: new Map(), topics: new Map() };
-    licence.datasets.push(dataset);
-    licence.publishers.set(dataset.publisher.id, dataset.publisher);
-    for (const topic of dataset.topics) licence.topics.set(topic, (licence.topics.get(topic) ?? 0) + 1);
+  for (const listing of listings) {
+    const licence: Licence = licences.get(listing.licence.id) ?? { ...listing.licence, listings: [], publishers: new Map(), topics: new Map() };
+    licence.listings.push(listing);
+    licence.publishers.set(listing.publisher.id, listing.publisher);
+    for (const topic of listing.topics) licence.topics.set(topic, (licence.topics.get(topic) ?? 0) + 1);
     licences.set(licence.id, licence);
   }
-  return [...licences.values()].sort((a, b) => b.datasets.length - a.datasets.length || a.name.localeCompare(b.name));
+  return [...licences.values()].sort((a, b) => b.listings.length - a.listings.length || a.name.localeCompare(b.name));
 }
 
-export const productCount = (datasets: Dataset[]) => datasets.reduce((sum, dataset) => sum + dataset.products.length, 0);
 export const topicsOf = (group: { topics: Map<string, number> }) => [...group.topics.entries()].sort((a, b) => b[1] - a[1]).map(([topic]) => topicLabel(topic));
 
-/* ---------- Product labels inside a dataset ---------- */
-
-const ROLE_ORDER: Role[] = ["current-state", "time-series", "event-log", "reference", "summary"];
-const ROLE_FALLBACK = { reference: "All records", "current-state": "Current records", "event-log": "Events", "time-series": "Series", summary: "Summary" } satisfies {
-  [role in Role]: string;
-};
-/** Units that say nothing about what a series measures. */
-const EMPTY_UNIT = /^(unknown|value|unknown-source-unit|não aplicável.*|not applicable.*|-)$/i;
-
-function fallbackLabel(product: Product) {
-  if (product.role !== "time-series") return ROLE_FALLBACK[product.role];
-  const unit = product.schema.fields.find((field) => field.id === "value")?.unit?.trim();
-  return unit && !EMPTY_UNIT.test(unit) ? unit : ROLE_FALLBACK[product.role];
-}
-
-/** Short labels: strip the prefix sources put on every derived series; the dataset's own name falls back to the role. */
-function labelled(feed: Feed, products: Product[]): LabelledProduct[] {
-  const titles = products.map((product) => product.title);
-  const prefix = sharedPrefix(titles);
-  const head = prefix.replace(SEPARATOR_END, "");
-  return products
-    .map((product) => {
-      let label = product.title;
-      if (prefix && product.title.startsWith(prefix) && product.title.length > prefix.length) label = capitalize(product.title.slice(prefix.length));
-      else if (head && product.title === head && products.length > 1) label = fallbackLabel(product);
-      else if (product.title === feed.title || product.title.length > 90 || titles.filter((title) => title === product.title).length > 1) label = fallbackLabel(product);
-      return { product, label };
-    })
-    .sort((a, b) => ROLE_ORDER.indexOf(a.product.role) - ROLE_ORDER.indexOf(b.product.role) || a.label.localeCompare(b.label));
-}
-
 /**
- * The words every product of a dataset repeats, with the punctuation that ends them: "Parliament
- * XVII: " before committees, sittings and attendance. Dropping it is what keeps a row of products to
- * one line each without cutting anything off — the card already carries the dataset's own title, and
- * each row's tooltip carries the product's. Sources separate the prefix in several ways, so each is
- * tried in turn and the first one every title shares wins.
+ * A title without the publisher's name, for where their name is already the
+ * heading: "Carris Metropolitana lines" under Carris Metropolitana is "Lines".
+ * The short form of a name ("DGEG" of "DGEG · Direção-Geral de Energia e
+ * Geologia") counts too.
  */
-const SEPARATORS = [" — ", " – ", ": ", " · ", " - "] as const;
-const SEPARATOR_END = /(\s[—–·-]\s|:\s)$/u;
-
-function sharedPrefix(titles: string[]) {
-  if (titles.length < 2) return "";
-  for (const separator of SEPARATORS) {
-    // A title without the separator counts as its own head, so a product named after the whole
-    // dataset still shares it and falls back to its role below.
-    const heads = titles.map((title) => (title.includes(separator) ? title.slice(0, title.indexOf(separator)) : title));
-    const head = heads.find((_, index) => titles[index]?.includes(separator));
-    if (head === undefined || head.length < 3) continue;
-    if (!heads.every((each) => each === head)) continue;
-    return `${head}${separator}`;
+export function withoutPublisher(listing: Listing): string {
+  const names = [listing.publisher.name, listing.publisher.name.split(" · ")[0] ?? ""].filter((name) => name.length > 1);
+  for (const name of names) {
+    if (listing.title.toLocaleLowerCase("pt-PT").startsWith(`${name.toLocaleLowerCase("pt-PT")} `)) {
+      const rest = listing.title.slice(name.length + 1);
+      return `${rest.slice(0, 1).toLocaleUpperCase("pt-PT")}${rest.slice(1)}`;
+    }
   }
-  return "";
-}
-
-/** A label that lost its prefix starts mid-sentence: "committee meetings" reads as a fragment. */
-function capitalize(label: string) {
-  const first = label.slice(0, 1);
-  return first.toLocaleUpperCase("pt-PT") === first ? label : `${first.toLocaleUpperCase("pt-PT")}${label.slice(1)}`;
+  return listing.title;
 }
 
 /* ---------- Shared reads ---------- */

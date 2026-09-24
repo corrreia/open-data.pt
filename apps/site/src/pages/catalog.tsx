@@ -1,12 +1,12 @@
 import { Badge, Button, Checkbox, Collapsible, Empty, InputGroup, Select } from "@cloudflare/kumo";
 import { FunnelSimpleIcon, MagnifyingGlassIcon, XIcon } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState } from "react";
-import { DatasetCard } from "../components/DatasetCard";
+import { ListingRows } from "../components/ListingRows";
 import { PublisherMark } from "../components/PublisherMark";
 import { ErrorNote, PageHead, Placeholder } from "../components/common";
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
-import { ROLE, UPDATES, buildDatasets, buildPublishers, fetchFeeds, fetchProducts, productCount, publisherHref, topicLabel, type Dataset, emptyLast } from "../lib/catalog";
+import { ROLE, UPDATES, buildListings, buildPublishers, fetchFeeds, fetchProducts, publisherHref, topicLabel, type Listing, emptyLast } from "../lib/catalog";
 import { fmt, plural } from "../lib/format";
 import { useQuery } from "../lib/query";
 import type { Role } from "../lib/types";
@@ -17,7 +17,7 @@ type SortOrder = "publisher" | "recent" | "name";
 interface Facet {
   id: FacetId;
   label: string;
-  values: (dataset: Dataset) => string[];
+  values: (listing: Listing) => string[];
   /** Show the first few; the rest behind "Show all". */
   collapsed?: number;
   order?: string[];
@@ -27,12 +27,12 @@ const ROLE_IDS = new Set<string>(Object.keys(ROLE));
 const isRole = (value: string): value is Role => ROLE_IDS.has(value);
 
 const FACETS: Facet[] = [
-  { id: "topic", label: "Topic", values: (dataset) => dataset.topics },
-  { id: "publisher", label: "Publisher", values: (dataset) => [dataset.publisher.id], collapsed: 8 },
-  { id: "licence", label: "Licence", values: (dataset) => [dataset.licence.id], collapsed: 6 },
-  { id: "kind", label: "Kind of data", values: (dataset) => dataset.roles },
-  { id: "updates", label: "Updates", values: (dataset) => [dataset.updates], order: UPDATES.map((bucket) => bucket.id) },
-  { id: "format", label: "How it is published", values: (dataset) => [dataset.format] },
+  { id: "topic", label: "Topic", values: (listing) => listing.topics },
+  { id: "publisher", label: "Publisher", values: (listing) => [listing.publisher.id], collapsed: 8 },
+  { id: "licence", label: "Licence", values: (listing) => [listing.licence.id], collapsed: 6 },
+  { id: "kind", label: "Kind of data", values: (listing) => [listing.role] },
+  { id: "updates", label: "Updates", values: (listing) => [listing.updates], order: UPDATES.map((bucket) => bucket.id) },
+  { id: "format", label: "How it is published", values: (listing) => [listing.format] },
 ];
 
 const SORTS = { publisher: "Grouped by publisher", recent: "Recently updated first", name: "By name" };
@@ -58,9 +58,9 @@ function Catalog() {
   const [expanded, setExpanded] = useState<Set<FacetId>>(new Set());
   const [filtersOpen, setFiltersOpen] = useState(() => window.matchMedia("(min-width: 64rem)").matches);
 
-  const datasets = useMemo(() => (products.data && feeds.data ? buildDatasets(products.data, feeds.data) : []), [products.data, feeds.data]);
-  const publisherNames = useMemo(() => new Map(buildPublishers(datasets).map((publisher) => [publisher.id, publisher.name])), [datasets]);
-  const licenceNames = useMemo(() => new Map(datasets.map((dataset) => [dataset.licence.id, dataset.licence.name] as const)), [datasets]);
+  const listings = useMemo(() => (products.data && feeds.data ? buildListings(products.data, feeds.data) : []), [products.data, feeds.data]);
+  const publisherNames = useMemo(() => new Map(buildPublishers(listings).map((publisher) => [publisher.id, publisher.name])), [listings]);
+  const licenceNames = useMemo(() => new Map(listings.map((listing) => [listing.licence.id, listing.licence.name] as const)), [listings]);
 
   const nameOf = (facet: FacetId, value: string) => {
     if (facet === "topic") return topicLabel(value);
@@ -82,29 +82,32 @@ function Catalog() {
   }, [q, sort, selected]);
 
   const words = q.toLocaleLowerCase().split(/\s+/).filter(Boolean);
-  const matchesQuery = (dataset: Dataset) => {
+  const matchesQuery = (listing: Listing) => {
     if (words.length === 0) return true;
+    // The feed is never shown, but its name is often what someone searches for: "fuel prices" finds the station prices.
     const haystack = [
-      dataset.title,
-      dataset.description,
-      dataset.publisher.name,
-      dataset.format,
-      ...dataset.topics,
-      ...dataset.products.flatMap(({ product, label }) => [product.title, product.slug, label]),
+      listing.title,
+      listing.description,
+      listing.id,
+      listing.feed.title,
+      listing.feed.description,
+      listing.publisher.name,
+      listing.format,
+      ...listing.topics.map(topicLabel),
     ]
       .join(" ")
       .toLocaleLowerCase();
     return words.every((word) => haystack.includes(word));
   };
-  const matchesFacets = (dataset: Dataset, except?: FacetId) =>
+  const matchesFacets = (listing: Listing, except?: FacetId) =>
     FACETS.every((facet) => {
       if (facet.id === except) return true;
       const chosen = selected.get(facet.id) ?? [];
-      return chosen.length === 0 || facet.values(dataset).some((value) => chosen.includes(value));
+      return chosen.length === 0 || facet.values(listing).some((value) => chosen.includes(value));
     });
 
-  const searched = datasets.filter(matchesQuery);
-  const visible = searched.filter((dataset) => matchesFacets(dataset));
+  const searched = listings.filter(matchesQuery);
+  const visible = searched.filter((listing) => matchesFacets(listing));
 
   const choose = (facet: FacetId, values: string[]) => setSelected((current) => new Map(current).set(facet, values));
   const clearAll = () => {
@@ -113,22 +116,22 @@ function Catalog() {
   };
   const active = FACETS.flatMap((facet) => (selected.get(facet.id) ?? []).map((value) => ({ facet: facet.id, value })));
 
-  const byOrder = (a: Dataset, b: Dataset) =>
+  const byOrder = (a: Listing, b: Listing) =>
     sort === "recent"
       ? (b.updatedAt ?? "").localeCompare(a.updatedAt ?? "")
       : sort === "name"
         ? a.title.localeCompare(b.title)
         : a.publisher.name.localeCompare(b.publisher.name) || a.title.localeCompare(b.title);
   const ordered = [...visible].sort((a, b) => emptyLast(a, b) || byOrder(a, b));
-  const groups = new Map<string, Dataset[]>();
-  if (sort === "publisher") for (const dataset of ordered) groups.set(dataset.publisher.id, [...(groups.get(dataset.publisher.id) ?? []), dataset]);
+  const groups = new Map<string, Listing[]>();
+  if (sort === "publisher") for (const listing of ordered) groups.set(listing.publisher.id, [...(groups.get(listing.publisher.id) ?? []), listing]);
 
   const facetPanel = (
     <div className="grid gap-6">
       {FACETS.map((facet) => {
-        const pool = searched.filter((dataset) => matchesFacets(dataset, facet.id));
+        const pool = searched.filter((listing) => matchesFacets(listing, facet.id));
         const counts = new Map<string, number>();
-        for (const dataset of pool) for (const value of facet.values(dataset)) counts.set(value, (counts.get(value) ?? 0) + 1);
+        for (const listing of pool) for (const value of facet.values(listing)) counts.set(value, (counts.get(value) ?? 0) + 1);
         const chosen = selected.get(facet.id) ?? [];
         for (const value of chosen) if (!counts.has(value)) counts.set(value, 0);
         let options = [...counts.entries()].sort(
@@ -170,7 +173,8 @@ function Catalog() {
   return (
     <Shell section="catalog">
       <PageHead eyebrow="Catalog" title="Every dataset, and who publishes it">
-        Filter by topic, publisher, kind of data, how often it changes, or how the publisher shares it. Each dataset keeps its publisher’s licence and links back to their source.
+        Filter by topic, publisher, kind of data, how often it changes, or how the publisher shares it. Every table and series keeps its publisher’s licence and links back to their
+        source.
       </PageHead>
 
       <div className="grid items-start gap-8 lg:grid-cols-[15.5rem_minmax(0,1fr)]">
@@ -184,7 +188,7 @@ function Catalog() {
           </Collapsible.Root>
         </aside>
 
-        <section aria-label="Datasets" className="grid min-w-0 gap-4">
+        <section aria-label="Tables and series" className="grid min-w-0 gap-4">
           <div className="flex flex-wrap items-center gap-3">
             <div className="min-w-0 flex-1 basis-72">
               <InputGroup>
@@ -194,8 +198,8 @@ function Catalog() {
                 <InputGroup.Input
                   value={q}
                   onChange={(event) => setQ(event.target.value)}
-                  placeholder="Search datasets, publishers, tables…"
-                  aria-label="Search datasets"
+                  placeholder="Search tables, series and publishers…"
+                  aria-label="Search the catalog"
                   autoFocus={Boolean(initial.q)}
                 />
               </InputGroup>
@@ -214,11 +218,11 @@ function Catalog() {
 
           <div className="flex min-h-8 flex-wrap items-center gap-2">
             <p className="text-sm text-kumo-subtle" role="status" aria-live="polite">
-              {datasets.length === 0
+              {listings.length === 0
                 ? products.error || feeds.error
                   ? ""
                   : "Loading the catalog…"
-                : `${plural(visible.length, "dataset")} · ${fmt.int(productCount(visible))} tables and series${visible.length !== datasets.length ? `, of ${fmt.int(datasets.length)}` : ""}`}
+                : `${plural(visible.length, "table or series", "tables and series")}${visible.length !== listings.length ? `, of ${fmt.int(listings.length)}` : ""}`}
             </p>
             {active.map((item) => (
               <Button
@@ -252,8 +256,8 @@ function Catalog() {
               void feeds.refetch();
             }}
           />
-          {datasets.length === 0 && !products.error && !feeds.error ? <Placeholder rows={4} label="Loading the catalog" /> : null}
-          {datasets.length > 0 && visible.length === 0 ? (
+          {listings.length === 0 && !products.error && !feeds.error ? <Placeholder rows={4} label="Loading the catalog" /> : null}
+          {listings.length > 0 && visible.length === 0 ? (
             <Empty
               icon={<MagnifyingGlassIcon size={40} className="text-kumo-inactive" />}
               title="Nothing matches"
@@ -278,16 +282,14 @@ function Catalog() {
                         {group[0]?.publisher.name ?? id}
                       </a>
                     </h2>
-                    <Badge variant="secondary">{plural(group.length, "dataset")}</Badge>
+                    <Badge variant="secondary">{plural(group.length, "table or series", "tables and series")}</Badge>
                   </div>
-                  {group.map((dataset) => (
-                    <DatasetCard key={dataset.id} dataset={dataset} showPublisher={false} />
-                  ))}
+                  <ListingRows listings={group} underPublisher />
                 </div>
               ))}
             </div>
           ) : (
-            ordered.map((dataset) => <DatasetCard key={dataset.id} dataset={dataset} />)
+            <ListingRows listings={ordered} />
           )}
         </section>
       </div>

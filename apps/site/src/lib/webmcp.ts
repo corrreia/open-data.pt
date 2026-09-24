@@ -3,7 +3,7 @@
 // public API the pages do.
 
 import { apiGet, productHref, productPath } from "./api";
-import { buildDatasets, fetchFeeds, fetchProducts } from "./catalog";
+import { buildListings, fetchFeeds, fetchProducts, topicLabel } from "./catalog";
 import type { JsonRecord, JsonValue, Product } from "./types";
 
 interface WebMcpTool {
@@ -59,25 +59,22 @@ const TOOLS: WebMcpTool[] = [
       const words = text(input.query).toLocaleLowerCase().split(/\s+/).filter(Boolean);
       const [products, feeds] = await Promise.all([fetchProducts(), fetchFeeds()]);
       const results: JsonValue[] = [];
-      for (const dataset of buildDatasets(products, feeds)) {
-        for (const { product, label } of dataset.products) {
-          const haystack =
-            `${dataset.title} ${label} ${product.title} ${product.slug} ${dataset.publisher.name} ${dataset.topics.join(" ")} ${dataset.description}`.toLocaleLowerCase();
-          if (!words.every((word) => haystack.includes(word))) continue;
-          results.push({
-            slug: product.slug,
-            title: product.title,
-            dataset: dataset.title,
-            publisher: dataset.publisher.name,
-            licence: dataset.licence.name,
-            topics: dataset.topics,
-            role: product.role,
-            rows: product.rowCount,
-            updatedAt: product.updatedAt,
-            page: absolute(productHref(product.slug)),
-            api: absolute(productPath(product.slug)),
-          });
-        }
+      for (const { product, feed, title, description, publisher, licence, topics } of buildListings(products, feeds)) {
+        const haystack = `${title} ${product.slug} ${feed.title} ${feed.description} ${publisher.name} ${topics.map(topicLabel).join(" ")} ${description}`.toLocaleLowerCase();
+        if (!words.every((word) => haystack.includes(word))) continue;
+        results.push({
+          slug: product.slug,
+          title,
+          description,
+          publisher: publisher.name,
+          licence: licence.name,
+          topics,
+          role: product.role,
+          rows: product.rowCount,
+          updatedAt: product.updatedAt,
+          page: absolute(productHref(product.slug)),
+          api: absolute(productPath(product.slug)),
+        });
       }
       return { total: results.length, results: results.slice(0, count(input.limit, 10, MAX_RESULTS)) };
     },
