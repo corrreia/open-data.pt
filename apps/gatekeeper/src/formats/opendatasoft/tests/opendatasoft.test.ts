@@ -19,6 +19,7 @@ import {
   type TransformContext,
   feedCollector,
   libraryConfig,
+  feedNormalizer,
 } from "#/index";
 import { RUNNABLE } from "#/catalog/index";
 import { MAX_HISTORY_DOCUMENT_BYTES, MAX_HISTORY_RECORDS, OPENDATASOFT_FEEDS, OpendatasoftSource } from "#/formats/opendatasoft/opendatasoft";
@@ -637,7 +638,7 @@ describe("Opendatasoft through the shared collector", () => {
       sourcePublishedAt: "2026-09-07T11:00:51.432Z",
     });
     expect(header.completeness).toBe("complete");
-    expect(header.normalizer).toEqual({ id: "opendatasoft-explore-v2.1", version: "6" });
+    expect(header.normalizer).toEqual(feedNormalizer({ id: "opendatasoft-explore-v2.1", version: "6" }));
     expect(header.products.map((product) => [product.productKey, product.completeness])).toEqual([["records", "complete"]]);
     expect(header.checkpoint.state).toMatchObject({ validators: { default: { etag: expect.stringMatching(/^"ods-/) } } });
     expect(rest.filter((frame) => frame.type === "record").map((frame) => frame.type === "record" && frame.value.entityKey)).toEqual(["a", "b"]);

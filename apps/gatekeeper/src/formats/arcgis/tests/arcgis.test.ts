@@ -14,6 +14,7 @@ import {
   feedCollector,
   libraryConfig,
   resolveLibraryFeed,
+  feedNormalizer,
 } from "#/index";
 import { RUNNABLE } from "#/catalog/index";
 import { MAX_METADATA_BYTES, collectArcgisFeed, validateArcgisFeedConfig } from "#/formats/arcgis/index";
@@ -274,7 +275,7 @@ describe("ArcGIS collection through the shared collector", () => {
 
     expect(header).toMatchObject({
       type: "header",
-      normalizer: { id: "arcgis-rest-layer", version: "2" },
+      normalizer: feedNormalizer({ id: "arcgis-rest-layer", version: "2" }),
       provenance: { sourceUrl: layerUrl, sourcePublishedAt: "2026-09-04T08:12:10.839Z" },
       products: [{ productKey: "features", suggestedSlug: "useful-layer", kind: "record", completeness: "complete" }],
       checkpoint: { state: { validators: { default: revision } } },
@@ -306,7 +307,7 @@ describe("ArcGIS collection through the shared collector", () => {
           resourceKey: req.resolved.resourceKey,
           configHash: req.resolved.configHash,
           feedEpoch: req.feedEpoch,
-          normalizer: { id: "arcgis-rest-layer", version: "2" },
+          normalizer: feedNormalizer({ id: "arcgis-rest-layer", version: "2" }),
           state: { validators: { default: { etag: revision.etag } } },
         },
       },

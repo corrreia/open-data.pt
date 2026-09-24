@@ -249,12 +249,38 @@ export interface FeedRuntime {
  * the live read, `backfill` for a history slice, and `transform`. Its library
  * contributes the identity rule and what the Worker gave it.
  */
+/**
+ * A feed that publishes one product names it the way the feed is named: its
+ * own title and description, written for a reader, rather than what the
+ * source calls the file ("Praia", "Dados geográficos em formato GeoJSON").
+ * A feed of several products leaves each its own name, which is what tells
+ * them apart.
+ */
+function namedAsFeed<P extends { title: string; description: string }>(products: P[], context: TransformContext): P[] {
+  const [only] = products;
+  return products.length === 1 && only ? [{ ...only, title: context.feed.title, description: context.feed.description }] : products;
+}
+
+/**
+ * Marks the normalizer of every feed since products were named by their feed,
+ * so a checkpoint from before is not this collection's: every feed reads its
+ * source once more, whatever its validators say, and its product takes its
+ * name. The next change to how every feed normalizes replaces it.
+ */
+const NORMALIZATION = "named-by-feed";
+
+/** The normalizer a feed's collections run under: its transform's, marked with how every feed now normalizes. */
+export function feedNormalizer(normalizer: NormalizedCollector["normalizer"]): NormalizedCollector["normalizer"] {
+  return { id: normalizer.id, version: `${normalizer.version}+${NORMALIZATION}` };
+}
+
 export function feedCollector(feed: RunnableFeed, config: SourceConfig, libraries: GatekeeperLibraries, runtime: FeedRuntime = {}): NormalizedCollector {
   const base = runtime.fetcher ?? ((input: RequestInfo | URL, init?: RequestInit) => fetch(input, init));
   const fetcher = runtime.sources ? publisherClient(runtime.sources, base) : base;
   const now = runtime.now ?? (() => new Date());
   const { library, rest } = route(config, libraries);
   const transform = feed.transform;
+  const normalizer = feedNormalizer(transform.normalizer);
   const withoutRoutingKey = (context: TransformContext): TransformContext => ({ ...context, feed: { ...context.feed, config: rest } });
   // What this collection's fetch described its body with, for this collection's transform only.
   let metadata: object | undefined;
@@ -269,7 +295,7 @@ export function feedCollector(feed: RunnableFeed, config: SourceConfig, librarie
   // SAFETY: the metadata was returned by this feed's own fetch, whose type its transform was written against (`defineFeed`).
   const described = () => metadata as never;
   return {
-    normalizer: transform.normalizer,
+    normalizer,
     resolve: (value) => resolveLibraryFeed(value, libraries),
     source: async (state, mode, signal) => {
       const context: FeedContext<never> = {
@@ -290,7 +316,19 @@ export function feedCollector(feed: RunnableFeed, config: SourceConfig, librarie
     },
     normalize:
       "streaming" in transform
-        ? { kind: "streaming", transform: (body, context) => transform.streaming(body, withoutRoutingKey(context), described()) }
-        : { kind: "buffered", transform: (bytes, context) => transform.buffered(bytes, withoutRoutingKey(context), described()) },
+        ? {
+            kind: "streaming",
+            transform: async (body, context) => {
+              const result = await transform.streaming(body, withoutRoutingKey(context), described());
+              return { products: namedAsFeed(result.products, context), rows: result.rows, finish: () => result.finish() };
+            },
+          }
+        : {
+            kind: "buffered",
+            transform: async (bytes, context) => {
+              const result = await transform.buffered(bytes, withoutRoutingKey(context), described());
+              return { ...result, transformer: feedNormalizer(result.transformer), products: namedAsFeed(result.products, context) };
+            },
+          },
   };
 }

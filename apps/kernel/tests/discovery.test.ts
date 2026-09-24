@@ -221,8 +221,8 @@ describe("agent discovery", () => {
     expect(answer.headers.get("Vary")).toBe("Accept");
     const text = await answer.text();
     expect(text).toMatch(/^# open-data\.pt\n/);
-    expect(text).toContain("2 datasets, 2 tables and series, from 2 publishers.");
-    expect(text).toContain(`- [Energy](${ORIGIN}/catalog/?topic=energy): 2 datasets from`);
+    expect(text).toContain("2 tables and series, from 2 publishers.");
+    expect(text).toContain(`- [Energy](${ORIGIN}/catalog/?topic=energy): 2 tables and series from`);
 
     const html = await get("/", { Accept: BROWSER });
     expect(html.headers.get("Content-Type")).toBe("text/html");
@@ -267,11 +267,18 @@ describe("agent discovery", () => {
     expect(html).not.toContain("90 days");
   });
 
+  it("lists each table and series on its own, never grouped by the feed it comes from", async () => {
+    const text = (await markdown("/catalog/")).text;
+    expect(text).toContain(`## [Station prices](${ORIGIN}/product/?slug=fuel-stations)`);
+    expect(text).toContain(`JSON: ${ORIGIN}/api/products/fuel-stations`);
+    expect(text).not.toContain("## Fuel prices");
+  });
+
   it("gives the other pages in Markdown too", async () => {
-    expect((await markdown("/catalog/?topic=energy")).text).toContain("# Energy\n\n2 datasets about energy");
+    expect((await markdown("/catalog/?topic=energy")).text).toContain("# Energy\n\n2 tables and series about energy");
     expect((await markdown("/publisher/?id=ren")).text).toContain("# REN\n");
     expect((await markdown("/publisher/?id=nobody")).status).toBe(404);
-    expect((await markdown("/licence/")).text).toContain(`- [CC BY 4.0](${ORIGIN}/licence/?id=cc-by-4.0): 1 dataset from 1 publisher`);
+    expect((await markdown("/licence/")).text).toContain(`- [CC BY 4.0](${ORIGIN}/licence/?id=cc-by-4.0): 1 table or series from 1 publisher`);
     expect((await markdown("/licence/?id=cc-by-4.0")).text).toContain("# CC BY 4.0\n");
     expect((await markdown("/licence/?id=nobody")).status).toBe(404);
     expect((await markdown("/status/")).text).toContain("- **Electricity consumption**: not collected since 2026-09-15T08:00:00.000Z, 3 failed attempts (cause: source)");

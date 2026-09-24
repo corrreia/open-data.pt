@@ -16,13 +16,13 @@ import {
   UsersThreeIcon,
 } from "@phosphor-icons/react";
 import { useMemo, type ReactNode } from "react";
-import { DatasetCard } from "../components/DatasetCard";
+import { ListingRows } from "../components/ListingRows";
 import { Eyebrow, RelativeTime, SectionHead, StatTile } from "../components/common";
 import { mountPage } from "../components/mount";
 import { PublisherMark } from "../components/PublisherMark";
 import { Shell } from "../components/Shell";
 import { apiGet, productHref } from "../lib/api";
-import { buildDatasets, buildPublishers, fetchFeeds, fetchProducts, productCount, publisherHref, topicLabel, type Dataset, emptyLast } from "../lib/catalog";
+import { buildListings, buildPublishers, fetchFeeds, fetchProducts, publisherHref, topicLabel, type Listing, emptyLast } from "../lib/catalog";
 import { fmt, plural } from "../lib/format";
 import { useQuery } from "../lib/query";
 import type { OutagesResponse } from "../lib/types";
@@ -41,38 +41,38 @@ const TOPIC_ICON = new Map<string, ReactNode>([
   ["telecom", <BroadcastIcon size={22} />],
 ]);
 
-const newest = (a: Dataset, b: Dataset) => (b.updatedAt ?? "").localeCompare(a.updatedAt ?? "");
+const newest = (a: Listing, b: Listing) => (b.updatedAt ?? "").localeCompare(a.updatedAt ?? "");
 
 function Home() {
   const products = useQuery("products", fetchProducts);
   const feeds = useQuery("feeds", fetchFeeds);
   const outages = useQuery("outages:1", () => apiGet<OutagesResponse>("/api/outages?days=1"), { staleMs: 60_000, refreshMs: 60_000 });
 
-  const datasets = useMemo(() => (products.data && feeds.data ? buildDatasets(products.data, feeds.data) : []), [products.data, feeds.data]);
-  const publishers = useMemo(() => buildPublishers(datasets), [datasets]);
-  const live = useMemo(() => datasets.filter((dataset) => dataset.updates === "live").sort((a, b) => emptyLast(a, b) || newest(a, b)), [datasets]);
+  const listings = useMemo(() => (products.data && feeds.data ? buildListings(products.data, feeds.data) : []), [products.data, feeds.data]);
+  const publishers = useMemo(() => buildPublishers(listings), [listings]);
+  const live = useMemo(() => listings.filter((listing) => listing.updates === "live").sort((a, b) => emptyLast(a, b) || newest(a, b)), [listings]);
   const recent = useMemo(
     () =>
-      datasets
-        .filter((dataset) => dataset.updates !== "live")
+      listings
+        .filter((listing) => listing.updates !== "live")
         .sort((a, b) => emptyLast(a, b) || newest(a, b))
-        .slice(0, 6),
-    [datasets],
+        .slice(0, 8),
+    [listings],
   );
   const failing = outages.data?.data.filter((outage) => !outage.endedAt && outage.feedId).length;
 
   const topics = useMemo(() => {
-    const counts = new Map<string, { datasets: number; publishers: Map<string, number> }>();
-    for (const dataset of datasets) {
-      for (const topic of dataset.topics) {
-        const entry = counts.get(topic) ?? { datasets: 0, publishers: new Map<string, number>() };
-        entry.datasets += 1;
-        entry.publishers.set(dataset.publisher.name, (entry.publishers.get(dataset.publisher.name) ?? 0) + 1);
+    const counts = new Map<string, { listings: number; publishers: Map<string, number> }>();
+    for (const listing of listings) {
+      for (const topic of listing.topics) {
+        const entry = counts.get(topic) ?? { listings: 0, publishers: new Map<string, number>() };
+        entry.listings += 1;
+        entry.publishers.set(listing.publisher.name, (entry.publishers.get(listing.publisher.name) ?? 0) + 1);
         counts.set(topic, entry);
       }
     }
-    return [...counts.entries()].sort((a, b) => b[1].datasets - a[1].datasets || a[0].localeCompare(b[0]));
-  }, [datasets]);
+    return [...counts.entries()].sort((a, b) => b[1].listings - a[1].listings || a[0].localeCompare(b[0]));
+  }, [listings]);
 
   return (
     <Shell section="home">
@@ -126,7 +126,7 @@ function Home() {
               Right now
             </span>
             <a href="/status/" className="text-xs text-kumo-subtle hover:text-kumo-strong">
-              {failing === undefined ? "Checking collection…" : failing === 0 ? "Every dataset collecting" : `${plural(failing, "dataset")} not collecting`}
+              {failing === undefined ? "Checking collection…" : failing === 0 ? "Everything collecting" : `${plural(failing, "source")} not collecting`}
             </a>
           </LayerCard.Secondary>
           <LayerCard.Primary className="p-0">
@@ -136,16 +136,16 @@ function Home() {
               </div>
             ) : (
               <ul className="divide-y divide-kumo-hairline">
-                {live.slice(0, 6).map((dataset) => (
-                  <li key={dataset.id}>
-                    <a href={productHref(dataset.products[0]?.product.slug ?? "")} className="flex items-center gap-3 px-4 py-2.5 text-sm no-underline hover:bg-kumo-tint">
+                {live.slice(0, 6).map((listing) => (
+                  <li key={listing.id}>
+                    <a href={productHref(listing.id)} className="flex items-center gap-3 px-4 py-2.5 text-sm no-underline hover:bg-kumo-tint">
                       <span className="min-w-0 flex-1">
-                        <span className="block text-pretty font-medium text-kumo-strong">{dataset.title}</span>
+                        <span className="block text-pretty font-medium text-kumo-strong">{listing.title}</span>
                         <span className="block text-xs text-kumo-subtle">
-                          {dataset.publisher.name} · {fmt.every(dataset.cadence)}
+                          {listing.publisher.name} · {fmt.every(listing.cadence)}
                         </span>
                       </span>
-                      <RelativeTime value={dataset.updatedAt} className="shrink-0 font-mono text-xs text-kumo-subtle" />
+                      <RelativeTime value={listing.updatedAt} className="shrink-0 font-mono text-xs text-kumo-subtle" />
                     </a>
                   </li>
                 ))}
@@ -156,7 +156,7 @@ function Home() {
       </section>
 
       <section aria-label="At a glance" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatTile label="Datasets" value={datasets.length ? fmt.int(datasets.length) : "—"} note={`${fmt.int(productCount(datasets))} tables and series`} />
+        <StatTile label="Tables and series" value={listings.length ? fmt.int(listings.length) : "—"} note={`from ${plural(publishers.length, "publisher")}`} />
         <StatTile label="Publishers" value={publishers.length ? fmt.int(publishers.length) : "—"} note="institutions and operators" />
         <StatTile label="Near real time" value={live.length ? fmt.int(live.length) : "—"} note="collected several times an hour" />
         <StatTile
@@ -167,7 +167,7 @@ function Home() {
               {failing === undefined ? "—" : failing === 0 ? "All collecting" : `${fmt.int(failing)} not collecting`}
             </a>
           }
-          note={failing === 0 ? "every dataset is being collected" : "see the status page"}
+          note={failing === 0 ? "everything is being collected" : "see the status page"}
         />
       </section>
 
@@ -183,7 +183,7 @@ function Home() {
                     <ArrowRightIcon size={16} className="text-kumo-subtle transition-transform group-hover:translate-x-0.5" />
                   </span>
                   <span className="font-display text-xl text-kumo-strong">{topicLabel(topic)}</span>
-                  <span className="font-mono text-xs text-kumo-subtle">{plural(entry.datasets, "dataset")}</span>
+                  <span className="font-mono text-xs text-kumo-subtle">{plural(entry.listings, "table or series", "tables and series")}</span>
                   <TopicPublishers publishers={entry.publishers} />
                 </LayerCard.Primary>
               </LayerCard>
@@ -193,16 +193,12 @@ function Home() {
       </section>
 
       <section aria-labelledby="recent-title">
-        {/* The live datasets are the panel at the top of this page; these are the rest, newest first,
-            so nobody reads the same six datasets twice on one page. */}
+        {/* What changes several times an hour is the panel at the top of this page; these are the rest,
+            newest first, so nobody reads the same rows twice on one page. */}
         <SectionHead eyebrow="Recently updated" title="New from the publishers" id="recent-title">
-          Datasets whose publisher released new or changed data most recently. What changes several times an hour is at the top of this page.
+          Tables and series whose publisher released new or changed data most recently. What changes several times an hour is at the top of this page.
         </SectionHead>
-        <div className="grid gap-3">
-          {recent.map((dataset) => (
-            <DatasetCard key={dataset.id} dataset={dataset} />
-          ))}
-        </div>
+        <ListingRows listings={recent} />
       </section>
 
       <section aria-labelledby="publishers-title">
@@ -220,7 +216,7 @@ function Home() {
               >
                 <PublisherMark publisher={publisher} size={18} className="rounded-md" />
                 {publisher.name}
-                <Badge variant="secondary">{publisher.datasets.length}</Badge>
+                <Badge variant="secondary">{publisher.listings.length}</Badge>
               </a>
             </li>
           ))}

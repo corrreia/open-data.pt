@@ -2,7 +2,7 @@ import { CommandPalette } from "@cloudflare/kumo";
 import { BookOpenIcon, BuildingsIcon, ChartLineIcon, CompassIcon, DatabaseIcon, HandHeartIcon, HeartbeatIcon, MapPinIcon, TableIcon, ScalesIcon } from "@phosphor-icons/react";
 import { useMemo, useState, type ReactNode } from "react";
 import { productHref } from "../lib/api";
-import { buildDatasets, buildPublishers, fetchFeeds, fetchProducts, publisherHref } from "../lib/catalog";
+import { buildListings, buildPublishers, fetchFeeds, fetchProducts, publisherHref, topicLabel } from "../lib/catalog";
 import { useQuery } from "../lib/query";
 
 interface SearchItem {
@@ -54,34 +54,32 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
   const failed = products.error ?? feeds.error;
 
   const index = useMemo(() => {
-    if (!products.data || !feeds.data) return { datasets: [], publishers: [] };
-    const datasets = buildDatasets(products.data, feeds.data);
-    const datasetItems: SearchItem[] = datasets.flatMap((dataset) =>
-      dataset.products.map(({ product, label }) => ({
-        id: product.slug,
-        title: dataset.products.length > 1 ? `${dataset.title} · ${label}` : dataset.title,
-        detail: dataset.publisher.name,
-        href: productHref(product.slug),
-        icon:
-          product.role === "time-series" ? (
-            <ChartLineIcon />
-          ) : product.schema.fields.some((field) => field.type === "geometry" || field.type === "latitude") ? (
-            <MapPinIcon />
-          ) : (
-            <TableIcon />
-          ),
-        haystack: `${dataset.title} ${label} ${product.title} ${product.slug} ${dataset.publisher.name} ${dataset.topics.join(" ")} ${dataset.description}`.toLocaleLowerCase(),
-      })),
-    );
-    const publisherItems: SearchItem[] = buildPublishers(datasets).map((publisher) => ({
+    if (!products.data || !feeds.data) return { listings: [], publishers: [] };
+    const listings = buildListings(products.data, feeds.data);
+    const listingItems: SearchItem[] = listings.map(({ product, title, description, publisher, topics }) => ({
+      id: product.slug,
+      title,
+      detail: publisher.name,
+      href: productHref(product.slug),
+      icon:
+        product.role === "time-series" ? (
+          <ChartLineIcon />
+        ) : product.schema.fields.some((field) => field.type === "geometry" || field.type === "latitude") ? (
+          <MapPinIcon />
+        ) : (
+          <TableIcon />
+        ),
+      haystack: `${title} ${product.slug} ${publisher.name} ${topics.map(topicLabel).join(" ")} ${description}`.toLocaleLowerCase(),
+    }));
+    const publisherItems: SearchItem[] = buildPublishers(listings).map((publisher) => ({
       id: `publisher-${publisher.id}`,
       title: publisher.name,
-      detail: `${publisher.datasets.length} ${publisher.datasets.length === 1 ? "dataset" : "datasets"}`,
+      detail: `${publisher.listings.length} ${publisher.listings.length === 1 ? "table or series" : "tables and series"}`,
       href: publisherHref(publisher.id),
       icon: <BuildingsIcon />,
       haystack: publisher.name.toLocaleLowerCase(),
     }));
-    return { datasets: datasetItems, publishers: publisherItems };
+    return { listings: listingItems, publishers: publisherItems };
   }, [products.data, feeds.data]);
 
   const groups = useMemo<SearchGroup[]>(() => {
@@ -89,7 +87,7 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
     const matches = (item: SearchItem) => words.every((word) => item.haystack.includes(word) || item.title.toLocaleLowerCase().includes(word));
     const pick = (items: SearchItem[]) => (words.length ? items.filter(matches) : items).slice(0, PER_GROUP);
     return [
-      { id: "datasets", label: "Datasets", items: pick(index.datasets) },
+      { id: "listings", label: "Tables and series", items: pick(index.listings) },
       { id: "publishers", label: "Publishers", items: pick(index.publishers) },
       { id: "pages", label: "Pages", items: pick(PAGES) },
     ].filter((group) => group.items.length > 0);

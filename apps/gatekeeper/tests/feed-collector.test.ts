@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { feedCollector, type GatekeeperLibraries, type RunnableFeed, type SourceFetch } from "@open-data-pt/gatekeeper";
+import { feedCollector, feedNormalizer, type GatekeeperLibraries, type ProductBuild, type RunnableFeed, type SourceFetch, type TransformContext } from "@open-data-pt/gatekeeper";
 
 const BODY: SourceFetch = { kind: "body", body: new Uint8Array(), provenance: { sourceUrl: "https://example.test/" }, completeness: "complete" };
 
@@ -74,5 +74,62 @@ describe("a feed's fetch, as the Worker hands it", () => {
       observedAt: "2026-09-23T00:00:00.000Z",
     });
     expect(received).toEqual({ title: "Described" });
+  });
+
+  describe("what a feed's products are called", () => {
+    const CONTEXT: TransformContext = {
+      feed: {
+        slug: "fixture-feed",
+        title: "Cascais beaches",
+        description: "Beaches in Cascais with their location and facilities.",
+        config: { source: "fixture" },
+        semantics: { domainSubject: "reference", defaultProductRole: "reference" },
+      },
+      observedAt: "2026-09-24T00:00:00.000Z",
+    };
+    const product = (productKey: string, title: string): ProductBuild => ({
+      productKey,
+      slug: productKey,
+      title,
+      description: "Dados geográficos em formato GeoJSON (WGS84)",
+      role: "reference",
+      kind: "record",
+      schema: { fields: [] },
+      updateMode: "authoritative-snapshot",
+      completeness: "complete",
+      records: [],
+    });
+    const collected = (products: ProductBuild[]) => {
+      const runnable: RunnableFeed = {
+        ...feed(async () => BODY),
+        transform: {
+          normalizer: { id: "fixture", version: "1" },
+          buffered: () => ({ transformer: { id: "fixture", version: "1" }, products, quality: { acceptedRecords: 0, rejectedRecords: 0 } }),
+        },
+      };
+      return feedCollector(runnable, { source: "fixture" }, LIBRARIES);
+    };
+
+    it("names a feed's only product as the feed is named, not as the source names its file", async () => {
+      const collector = collected([product("records", "Praia")]);
+      if (collector.normalize.kind !== "buffered") throw new Error("expected a buffered transform");
+      const result = await collector.normalize.transform(new Uint8Array(), CONTEXT);
+      expect(result.products.map(({ title, description }) => ({ title, description }))).toEqual([
+        { title: "Cascais beaches", description: "Beaches in Cascais with their location and facilities." },
+      ]);
+    });
+
+    it("leaves each of several products its own name, which is what tells them apart", async () => {
+      const collector = collected([product("stations", "Station prices"), product("medians", "Median price by municipality")]);
+      if (collector.normalize.kind !== "buffered") throw new Error("expected a buffered transform");
+      const result = await collector.normalize.transform(new Uint8Array(), CONTEXT);
+      expect(result.products.map((each) => each.title)).toEqual(["Station prices", "Median price by municipality"]);
+    });
+
+    it("runs under a normalizer marked for it, so a checkpoint from before is not this collection's", () => {
+      const collector = collected([]);
+      expect(collector.normalizer).toEqual(feedNormalizer({ id: "fixture", version: "1" }));
+      expect(collector.normalizer.version).not.toBe("1");
+    });
   });
 });

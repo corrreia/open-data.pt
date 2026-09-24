@@ -13,6 +13,7 @@ export {
   SOURCE_KEY,
   buildLibrary,
   feedCollector,
+  feedNormalizer,
   libraryConfig,
   libraryFeedKinds,
   resolveLibraryFeed,

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { feedNormalizer } from "#/index";
 import type { CanonicalRecord, ProductBuild, UnstampedResult } from "#/index";
 import { myInfoOperators } from "#/formats/myinfo/collector";
 import { feedCollection } from "#/tests/catalog";
@@ -163,7 +164,7 @@ describe("MYINFO collector", () => {
         throw new Error("no request expected");
       },
     });
-    expect(collector.normalizer).toEqual({ id: "myinfo-portal", version: "1" });
+    expect(collector.normalizer).toEqual(feedNormalizer({ id: "myinfo-portal", version: "1" }));
     await expect(async () => collector.source(undefined, { kind: "history", cursor: { before: "2026-01-01T00:00:00.000Z" } }, new AbortController().signal)).rejects.toThrow(
       /keeps no history/,
     );
