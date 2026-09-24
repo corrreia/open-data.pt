@@ -1,5 +1,7 @@
 import { MEBIBYTE, MONTH, WEEK, boundedReportingPeriodPolicy } from "#/formats/opendatasoft/feeds";
-import { PUBLISHER } from "./index";
+
+/** The name their policies are called by: the kernel keeps a policy by its name, so this never changes. */
+const POLICY_NAME = "E-REDES";
 
 /** E-REDES's Opendatasoft portal, which every E-REDES feed reads. */
 export const E_REDES_HOST = "e-redes.opendatasoft.com";
@@ -27,7 +29,7 @@ export const E_REDES_QUARTER_HOUR_SERIES = {
 } as const;
 
 /** A bounded window of reporting periods, read once a week. */
-export const E_REDES_WEEKLY_PERIODS = boundedReportingPeriodPolicy(PUBLISHER.name, WEEK);
+export const E_REDES_WEEKLY_PERIODS = boundedReportingPeriodPolicy(POLICY_NAME, WEEK);
 
 /** A bounded window of reporting periods, read once a month. */
-export const E_REDES_MONTHLY_PERIODS = boundedReportingPeriodPolicy(PUBLISHER.name, MONTH);
+export const E_REDES_MONTHLY_PERIODS = boundedReportingPeriodPolicy(POLICY_NAME, MONTH);

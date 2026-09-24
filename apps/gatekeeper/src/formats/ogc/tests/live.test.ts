@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { datasetOf, feedCollection, feedsOf } from "#/tests/catalog";
+import { feedCollection, feedsOf } from "#/tests/catalog";
 import { NORMALIZED_PROTOCOL, collectNormalized, isJsonObject, parseJson, type CollectionRequest, type JsonObject } from "#/index";
 
 const wanted = (process.env.LIVE_OGC ?? "")
@@ -35,7 +35,7 @@ describe.runIf(wanted.length > 0)("OGC live collection", () => {
       const request: CollectionRequest = {
         protocol: NORMALIZED_PROTOCOL,
         collectionId: `live_${example.slug}`,
-        feed: { id: "feed_live", slug: example.slug, title: example.title ?? datasetOf(example).title, description: example.description ?? datasetOf(example).description },
+        feed: { id: "feed_live", slug: example.slug, title: example.title, description: example.description },
         resolved,
         feedEpoch: "epoch-live",
         mode: { kind: "live" },

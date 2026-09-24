@@ -248,7 +248,6 @@ export class Serving {
       "dct:title": "open-data.pt products",
       "dcat:dataset": products.map((product) => {
         const feed = feeds.find((candidate) => candidate.id === product.feedId);
-        const dataset = feed ? vocabulary.dataset(feed.dataset) : undefined;
         const endpoint = product.role === "time-series" ? "series" : "records";
         return {
           "@id": `${origin}/api/products/${encodeURIComponent(product.slug)}`,
@@ -256,9 +255,9 @@ export class Serving {
           "dct:title": product.title,
           "dct:description": product.description,
           "dct:modified": product.updatedAt,
-          "dct:license": dataset ? dcatLicence(dataset.licence) : undefined,
-          "dct:publisher": dataset ? dcatPublisher(dataset.publisher) : undefined,
-          "dcat:keyword": dataset?.topics.length ? [...dataset.topics] : undefined,
+          "dct:license": feed ? dcatLicence(feed.licence) : undefined,
+          "dct:publisher": feed ? dcatPublisher(feed.publisher) : undefined,
+          "dcat:keyword": feed?.topics.length ? [...feed.topics] : undefined,
           "dct:provenance": feed ? `Generated from ${feed.title} through the ${feed.library} library` : undefined,
           "dcat:distribution": [
             { "@type": "dcat:Distribution", "dct:format": "application/json", "dcat:accessURL": `${origin}/api/products/${encodeURIComponent(product.slug)}/${endpoint}` },

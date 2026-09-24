@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createTestHarness } from "wrangler";
 import type { Acquisition, Feed } from "../src/feed-model";
 import { openApiDocument } from "../src/openapi";
+import type { JsonObject } from "@open-data-pt/contract";
 import { jsonBody } from "./support";
 
 // Isolated local Workers: the real kernel, a real Workflow executor, Durable Objects and R2; no production config and no operator.
@@ -155,22 +156,17 @@ describe("a kernel nobody operates", () => {
     expect((await server.fetch("/api/usage")).status).toBe(404);
   }, 180_000);
 
-  it("serves the catalog its Gatekeeper declared, and a product under its dataset's terms", async () => {
-    const datasets = await jsonBody<{ data: Array<{ id: string }> }>(await server.fetch("/test/api/datasets"));
-    expect(datasets.data).toEqual([
-      {
-        id: "fixture-dataset",
-        title: "Fixture dataset",
-        description: "What the runtime test reads",
-        publisher: { id: "fixture-publisher", name: "Fixture Publisher", url: "https://example.test/", logo: expect.stringMatching(/\/publishers\/fixture-publisher\.svg$/) },
-        licence: { id: "cc-by-4.0", name: "CC BY 4.0", url: "https://creativecommons.org/licenses/by/4.0/", description: "Reuse with credit." },
-        topics: ["economy"],
-        attribution: "Fixture Publisher",
-      },
-    ]);
-    expect((await server.fetch("/test/api/datasets/ine-consumer-price-index")).status).toBe(404);
-    const feed = await jsonBody<{ data: { dataset: { id: string; publisher: { name: string } } } }>(await server.fetch(`/test/api/feeds/${feedId}`));
-    expect(feed.data.dataset).toMatchObject({ id: "fixture-dataset", publisher: { name: "Fixture Publisher" } });
+  it("serves each feed with its publisher and terms expanded from the catalog its Gatekeeper declared, and a product under its feed's terms", async () => {
+    const feed = await jsonBody<{ data: JsonObject }>(await server.fetch(`/test/api/feeds/${feedId}`));
+    expect(feed.data).toMatchObject({
+      publisher: { id: "fixture-publisher", name: "Fixture Publisher", url: "https://example.test/", logo: expect.stringMatching(/\/publishers\/fixture-publisher\.svg$/) },
+      licence: { id: "cc-by-4.0", name: "CC BY 4.0", url: "https://creativecommons.org/licenses/by/4.0/", description: "Reuse with credit." },
+      topics: ["economy"],
+      attribution: "Fixture Publisher",
+    });
+    expect(feed.data).not.toHaveProperty("dataset");
+    // Datasets are gone: nothing answers where they were.
+    expect((await server.fetch("/test/api/datasets")).status).toBe(404);
     const product = await jsonBody<{ licence: { id: string } | null; attribution: string | null }>(await server.fetch("/test/api/products/fixture-things"));
     expect(product).toMatchObject({ licence: { id: "cc-by-4.0" }, attribution: "Fixture Publisher" });
   }, 60_000);

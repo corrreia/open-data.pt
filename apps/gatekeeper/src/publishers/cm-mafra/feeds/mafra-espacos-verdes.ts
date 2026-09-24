@@ -1,0 +1,23 @@
+import { defineFeed } from "#/catalog/define";
+import { ARCGIS_DEPLOYMENT, ARCGIS_NORMALIZER, ARCGIS_TRANSFORMER, collectArcgisFeed } from "#/formats/arcgis/index";
+import { MAFRA_POLICY } from "#/publishers/cm-mafra/arcgis";
+
+export const FEED = defineFeed(ARCGIS_DEPLOYMENT, {
+  slug: "mafra-espacos-verdes-feed",
+  title: "Mafra green spaces",
+  description: "Green spaces in Mafra with their code, the place and locality they lie in, the space they belong to, and the parish.",
+  licence: "source-terms",
+  attribution: "Município de Mafra — Dados Abertos",
+  topics: ["cities", "environment"],
+  config: {
+    host: "geomafra.cm-mafra.pt",
+    service: "arcgisext/rest/services/Dados_Abertos/DadosAbertos_Amb_Espacos_Verdes/FeatureServer",
+    layer: "3",
+  },
+  policy: MAFRA_POLICY,
+  staleAfterSeconds: 172_800,
+  /** Once a day: layer 3 of the DadosAbertos_Amb_Espacos_Verdes FeatureServer on geomafra.cm-mafra.pt — its metadata, then, when it has moved, every feature page by page. */
+  fetch: ({ config, validator, library, fetch }) => collectArcgisFeed(config, validator, library.hosts, fetch),
+  /** The layer's GeoJSON pages, streamed, into one record per feature with the layer's own schema. */
+  transform: { normalizer: ARCGIS_NORMALIZER, streaming: (body, context) => ARCGIS_TRANSFORMER.transform(body, context) },
+});

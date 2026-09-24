@@ -4,7 +4,7 @@ import { RUNNABLE } from "#/catalog/index";
 import { collectRipestatFeed, RIPESTAT_MAX_BYTES, RIPESTAT_ORIGIN, validateRipestatFeedConfig } from "#/publishers/ripe-ncc/ripestat/ripestat";
 import { RipestatTransformer } from "#/publishers/ripe-ncc/ripestat/transform";
 import { networkBytes, networkContext, networkFixture, networkFrames, networkRequest, networkRows, object } from "#/tests/networks-support";
-import { carriedLibraries, datasetOf, feedsOf } from "#/tests/catalog";
+import { carriedLibraries, feedsOf } from "#/tests/catalog";
 
 /** A saved response beside this test, by its name under `fixtures/`. */
 function fixture(name: string): JsonObject {
@@ -66,8 +66,8 @@ describe("RIPEstat capabilities and boundaries", () => {
     expect(asns).not.toContain("12542"); // This is NOS, not the research brief's proposed NOWO.
     for (const example of feedsOf("ripestat")) {
       expect(() => validateRipestatFeedConfig(libraryConfig(example.config))).not.toThrow();
-      expect(datasetOf(example).licence).toBe("ripe-ncc-terms");
-      expect(datasetOf(example).publisher).toBe("ripe-ncc");
+      expect(example.licence).toBe("ripe-ncc-terms");
+      expect(example.publisher).toBe("ripe-ncc");
       expect(example.policy.collection.cadenceSeconds).toBe(example.config.asn ? 28_800 : 86_400);
     }
   });

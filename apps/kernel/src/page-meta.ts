@@ -93,12 +93,12 @@ async function namedBy(path: string, value: string, host: SiteHost, canonical: s
     const product = await readIfFound<CatalogProduct>(host, `/api/products/${encodeURIComponent(value)}`);
     if (!product) return undefined;
     const feed = (await readIfFound<{ data: CatalogFeed }>(host, `/api/feeds/${encodeURIComponent(product.feedId)}`))?.data;
-    const source = feed ? `From ${feed.dataset.publisher.name}, as free JSON with no key.` : "";
+    const source = feed ? `From ${feed.publisher.name}, as free JSON with no key.` : "";
     return { heading: product.title, description: [product.description?.trim(), source].filter(Boolean).join(" "), dataset: dataset(product, feed, canonical) };
   }
   const feeds = (await read<{ data: CatalogFeed[] }>(host, "/api/feeds")).data;
   if (path === "/publisher/") {
-    const name = feeds.find((feed) => feed.dataset.publisher.id === value)?.dataset.publisher.name;
+    const name = feeds.find((feed) => feed.publisher.id === value)?.publisher.name;
     if (!name) return undefined;
     return { heading: name, description: `Public data that ${name} publishes, collected by open-data.pt and served as free JSON with no key.` };
   }
@@ -108,7 +108,7 @@ async function namedBy(path: string, value: string, host: SiteHost, canonical: s
     if (!name) return undefined;
     return { heading: name, description: `Every dataset open-data.pt serves under ${name}, as its publisher states it, with its API links.` };
   }
-  if (!feeds.some((feed) => feed.dataset.topics.includes(value))) return undefined;
+  if (!feeds.some((feed) => feed.topics.includes(value))) return undefined;
   const label = topicLabel(value);
   return {
     heading: `${label} datasets`,
@@ -148,10 +148,10 @@ function dataset(product: CatalogProduct, feed: CatalogFeed | undefined, canonic
     variableMeasured: variables,
   };
   if (feed) {
-    const { publisher } = feed.dataset;
+    const { publisher } = feed;
     data.creator = publisher.url ? { "@type": "Organization", name: publisher.name, url: publisher.url } : { "@type": "Organization", name: publisher.name };
   }
-  if (feed?.dataset.topics.length) data.keywords = feed.dataset.topics.map(topicLabel);
+  if (feed?.topics.length) data.keywords = feed.topics.map(topicLabel);
   if (feed?.sourceUrl && /^https?:\/\//.test(feed.sourceUrl)) data.isBasedOn = feed.sourceUrl;
   const licence = licenceOf(product.licence ?? undefined);
   if (licence) data.license = licence;
@@ -163,7 +163,7 @@ function datasetDescription(product: CatalogProduct, feed: CatalogFeed | undefin
   const about = product.description?.trim() || product.title;
   const sentence = /[.!?]$/.test(about) ? about : `${about}.`;
   const collected = product.cadenceSeconds ? `, collected ${every(product.cadenceSeconds)}` : "";
-  return clip(`${sentence} Published by ${feed?.dataset.publisher.name ?? "its source"}${collected} by open-data.pt and served as free JSON with no key.`, MAX_DATASET_DESCRIPTION);
+  return clip(`${sentence} Published by ${feed?.publisher.name ?? "its source"}${collected} by open-data.pt and served as free JSON with no key.`, MAX_DATASET_DESCRIPTION);
 }
 
 /** A licence with a canonical text is linked; a publisher's own terms are named; none stated means none in the markup. */

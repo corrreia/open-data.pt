@@ -9,6 +9,10 @@ const LIBRARIES: GatekeeperLibraries = new Map([["fixture", { kinds: [], resolve
 function feed(fetchOf: RunnableFeed["fetch"]): RunnableFeed {
   return {
     slug: "fixture-feed",
+    title: "Fixture",
+    description: "A feed the test reads",
+    licence: "source-terms",
+    topics: ["society"],
     config: { source: "fixture" },
     policy: { name: "Fixture", version: 1, collection: { cadenceSeconds: 60, timeoutSeconds: 30, maxBytes: 1024, historyMode: "latest" } },
     staleAfterSeconds: 120,

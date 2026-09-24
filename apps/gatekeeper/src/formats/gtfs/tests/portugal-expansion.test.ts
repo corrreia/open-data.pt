@@ -13,7 +13,7 @@ import {
 } from "#/index";
 import { transformGtfs } from "#/formats/gtfs/index";
 import { GtfsCsvReader } from "#/formats/gtfs/csv";
-import { datasetOf, feedCollection, feedsOf } from "#/tests/catalog";
+import { feedCollection, feedsOf } from "#/tests/catalog";
 import { readFixture } from "#/tests/support";
 
 const GTFS = array(parseJson(readFixture(new URL("./fixtures/portugal-expansion.json", import.meta.url)))).map(object);
@@ -49,8 +49,8 @@ function context(entry: ExampleFeed, observedAt = "2026-09-15T00:00:00Z"): Trans
     observedAt,
     feed: {
       slug: entry.slug,
-      title: entry.title ?? datasetOf(entry).title,
-      description: entry.description ?? datasetOf(entry).description,
+      title: entry.title,
+      description: entry.description,
       config: libraryConfig(entry.config),
       semantics: { domainSubject: "reference", defaultProductRole: "reference" },
     },

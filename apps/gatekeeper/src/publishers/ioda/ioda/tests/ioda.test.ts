@@ -3,7 +3,7 @@ import { collectNormalized, libraryConfig, type JsonObject, type SourceConfig } 
 import { IODA_HOST, IODA_MAX_BYTES, collectIodaFeed, iodaUrl, validateIodaFeedConfig } from "#/publishers/ioda/ioda/ioda";
 import { IodaTransformer } from "#/publishers/ioda/ioda/transform";
 import { networkContext, networkFixture, networkFrames, networkRequest, object } from "#/tests/networks-support";
-import { datasetOf, feedCollection, feedsOf } from "#/tests/catalog";
+import { feedCollection, feedsOf } from "#/tests/catalog";
 
 /** A saved response beside this test, by its name under `fixtures/`. */
 function fixture(name: string): JsonObject {
@@ -209,9 +209,9 @@ describe("IODA examples", () => {
     ).toEqual(["12353", "15457", "20879", "2860", "3243", "PT", "PT", "PT"]);
     for (const example of feedsOf("ioda")) {
       expect(() => validateIodaFeedConfig(libraryConfig(example.config))).not.toThrow();
-      expect(datasetOf(example).publisher).toBe("ioda");
-      expect(datasetOf(example).topics).toEqual(["telecom"]);
-      expect(datasetOf(example).licence).toBe("ioda-all-rights-reserved");
+      expect(example.publisher).toBe("ioda");
+      expect(example.topics).toEqual(["telecom"]);
+      expect(example.licence).toBe("ioda-all-rights-reserved");
       expect(example.policy.collection.cadenceSeconds).toBe(example.config.feed === "signals" ? 3600 : 900);
       expect(example.staleAfterSeconds).toBe(example.policy.collection.cadenceSeconds * 3);
     }

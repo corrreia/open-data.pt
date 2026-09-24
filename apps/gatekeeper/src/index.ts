@@ -7,7 +7,7 @@
  */
 export { LICENCES, isLicence, type Licence, type LicenceDescription } from "./catalog/licences";
 export { TOPICS, isTopic, type Topic } from "./catalog/topics";
-export { defineFeed, type DatasetDefinition, type FeedDefinition, type FeedPolicy, type PublisherDefinition } from "./catalog/define";
+export { defineFeed, type FeedDefinition, type FeedPolicy, type PublisherDefinition } from "./catalog/define";
 export * from "@open-data-pt/contract";
 export {
   SOURCE_KEY,

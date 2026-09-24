@@ -1,7 +1,7 @@
 import { readFixture } from "#/tests/support";
 import { describe, expect, it } from "vitest";
 import { isJsonObject, libraryConfig, parseJson, type ExampleFeed, type JsonObject, type JsonValue, type SourceConfig, type TransformContext } from "#/index";
-import { datasetOf, feedsOf } from "#/tests/catalog";
+import { feedsOf } from "#/tests/catalog";
 import { collectBpstatDataset, validateBpstatFeedConfig } from "#/publishers/banco-de-portugal/bpstat/bpstat";
 import { transformBpstatDataset } from "#/publishers/banco-de-portugal/bpstat/transform";
 
@@ -19,8 +19,8 @@ function context(example: ExampleFeed, observedAt = "2026-09-16T00:00:00Z"): Tra
   return {
     feed: {
       slug: example.slug,
-      title: example.title ?? datasetOf(example).title,
-      description: example.description ?? datasetOf(example).description,
+      title: example.title,
+      description: example.description,
       config: { ...libraryConfig(example.config), lastN: "2" },
       semantics: { domainSubject: "observation", defaultProductRole: "time-series" },
     },

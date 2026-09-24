@@ -73,22 +73,11 @@ export default class RuntimeTestWorker extends KernelWorker {
   }
 }
 
-/** The catalog the fixture Gatekeeper declares: the one dataset its example reads, and whose it is. */
+/** The vocabularies the fixture Gatekeeper declares: its example's publisher, licence and topic. */
 const CATALOG: CatalogDescription = {
   publishers: [{ id: "fixture-publisher", name: "Fixture Publisher", url: "https://example.test/", logo: "svg" }],
   licences: [{ id: "cc-by-4.0", name: "CC BY 4.0", url: "https://creativecommons.org/licenses/by/4.0/", summary: "Reuse with credit." }],
   topics: [{ id: "economy", name: "Economy" }],
-  datasets: [
-    {
-      id: "fixture-dataset",
-      title: "Fixture dataset",
-      description: "What the runtime test reads",
-      publisher: "fixture-publisher",
-      licence: "cc-by-4.0",
-      attribution: "Fixture Publisher",
-      topics: ["economy"],
-    },
-  ],
 };
 
 const KIND: FeedKindDescription = {
@@ -174,7 +163,10 @@ export class FixtureGatekeeper extends WorkerEntrypoint<Env> implements FeedGate
         description: "Runtime fixture",
         config: { source: "fixture", feed: "things" },
         staleAfterSeconds: 3600,
-        dataset: "fixture-dataset",
+        publisher: "fixture-publisher",
+        licence: "cc-by-4.0",
+        attribution: "Fixture Publisher",
+        topics: ["economy"],
         policy: { name: "Fixture", version: 1, collection: { cadenceSeconds: 3600, timeoutSeconds: 30, maxBytes: 1024 * 1024, historyMode: "changes" } },
       },
     ];

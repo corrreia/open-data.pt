@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { collectNormalized } from "#/index";
 import { networkFrames, networkRequest } from "#/tests/networks-support";
-import { datasetOf, feedCollection, feedsOf } from "#/tests/catalog";
+import { feedCollection, feedsOf } from "#/tests/catalog";
 
 // Research-only opt-in: PeeringDB restricts republication. This check does not deploy or store source data.
 const selected = (process.env.LIVE_NETWORKS ?? "").split(",");
@@ -30,8 +30,8 @@ describe("PeeringDB live research", () => {
         request.feed = {
           id: example.slug,
           slug: example.slug,
-          title: example.title ?? datasetOf(example).title,
-          description: example.description ?? datasetOf(example).description,
+          title: example.title,
+          description: example.description,
         };
         request.observedAt = new Date().toISOString();
         const result = await collectNormalized(request, adapter);

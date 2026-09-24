@@ -3,7 +3,7 @@ import { collectNormalized, libraryConfig, type JsonObject, type SourceFetch } f
 import { collectPeeringdbFeed, PEERINGDB_ORIGIN, PEERINGDB_PUBLIC_FIELDS, validatePeeringdbFeedConfig } from "#/publishers/peeringdb/peeringdb/peeringdb";
 import { PeeringdbTransformer } from "#/publishers/peeringdb/peeringdb/transform";
 import { networkBytes, networkContext, networkFixture, networkFrames, networkRequest, networkRows, object } from "#/tests/networks-support";
-import { datasetOf, feedCollection, feedsOf } from "#/tests/catalog";
+import { feedCollection, feedsOf } from "#/tests/catalog";
 
 /** A saved response beside this test, by its name under `fixtures/`. */
 function fixture(name: string): JsonObject {
@@ -40,7 +40,7 @@ describe("PeeringDB source boundaries", () => {
     const example = feedsOf("peeringdb")[0]!;
     expect(validatePeeringdbFeedConfig(libraryConfig(example.config))).toEqual(CONFIG);
     expect(example.policy.collection.cadenceSeconds).toBe(604_800);
-    expect(datasetOf(example).licence).toBe("peeringdb-aup");
+    expect(example.licence).toBe("peeringdb-aup");
   });
 
   it("requests only non-contact fields and drains short pages until an explicit empty page", async () => {

@@ -18,7 +18,7 @@ import {
 } from "#/index";
 import { CkanSource, validateCkanFeedConfig } from "#/formats/ckan/index";
 import { transformCkan, type CkanResourceMetadata } from "#/formats/ckan/index";
-import { datasetOf, feedCollection, feedsOf } from "#/tests/catalog";
+import { feedCollection, feedsOf } from "#/tests/catalog";
 
 const HOSTS = new Set(["dadosabertos.cm-agueda.pt", "oeirasinterativa.oeiras.pt"]);
 const OEIRAS = example("oeiras-hourly-environment-feed");
@@ -69,8 +69,8 @@ function context(entry: ExampleFeed, observedAt = "2026-09-15T00:00:00Z"): Trans
     observedAt,
     feed: {
       slug: entry.slug,
-      title: entry.title ?? datasetOf(entry).title,
-      description: entry.description ?? datasetOf(entry).description,
+      title: entry.title,
+      description: entry.description,
       config: libraryConfig(entry.config),
       semantics: { domainSubject: "reference", defaultProductRole: "reference" },
     },

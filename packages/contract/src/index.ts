@@ -7,7 +7,7 @@ import type { CanonicalRecord, CanonicalSchema, Completeness, ProductFinalizatio
  * The contract between the kernel and the Gatekeeper: the private RPC, the
  * normalized stream it answers with. The kernel depends on this package and
  * never on the Gatekeeper; nothing here fetches or parses a source. The catalog
- * — publishers, datasets, licences, topics — is the Gatekeeper's to declare, in
+ * — publishers, their feeds, licences, topics — is the Gatekeeper's to declare, in
  * its publisher folders; this package only says what shape it crosses RPC in.
  */
 export {
@@ -204,7 +204,7 @@ export interface CollectionPolicyDefinition {
 /**
  * Who made the data, as the Gatekeeper's publisher folders declare them. Only
  * the publishers whose data may be republished cross RPC: one held for
- * permission is not in the catalog, and neither are its datasets or feeds.
+ * permission is not in the catalog, and neither are its feeds.
  */
 export interface CatalogPublisher {
   id: string;
@@ -215,7 +215,7 @@ export interface CatalogPublisher {
   logo?: "svg" | "png";
 }
 
-/** A set of terms a dataset is served under, one key per set, as the publisher states them. */
+/** A set of terms a feed is served under, one key per set, as the publisher states them. */
 export interface CatalogLicence {
   id: string;
   /** Short enough for a badge. */
@@ -232,27 +232,15 @@ export interface CatalogTopic {
   name: string;
 }
 
-/** One publisher's body of data, which one or more feeds read. */
-export interface CatalogDataset {
-  id: string;
-  title: string;
-  description: string;
-  /** A publisher's `id`. */
-  publisher: string;
-  /** A licence's `id`, or `source-terms` when the publisher states none. */
-  licence: string;
-  /** How the publisher asks to be credited, when they say. */
-  attribution?: string;
-  /** Topic `id`s. */
-  topics: string[];
-}
-
-/** Everything the catalog names, as the Gatekeeper declares it; the kernel stores it and serves it expanded. */
+/**
+ * The vocabularies the feeds name, as the Gatekeeper declares them; the kernel
+ * stores them and serves every feed's keys expanded. The feeds themselves are
+ * `exampleFeeds()`.
+ */
 export interface CatalogDescription {
   publishers: CatalogPublisher[];
   licences: CatalogLicence[];
   topics: CatalogTopic[];
-  datasets: CatalogDataset[];
 }
 
 /** The licence key for data whose publisher states no reuse terms: not a licence, so no markup names one. */
@@ -265,11 +253,16 @@ export const UNSTATED_LICENCE = "source-terms";
  */
 export interface ExampleFeed {
   slug: string;
-  /** The dataset this feed reads part of, a key of `DATASETS`. */
-  dataset: string;
-  /** What this feed is within its dataset. Absent when the feed is the whole of it, and the dataset's own title and description stand. */
-  title?: string;
-  description?: string;
+  /** The key of the publisher whose folder declares it: who made the data, never the portal it was read from. */
+  publisher: string;
+  title: string;
+  description: string;
+  /** The terms the publisher states for it: a licence's `id`, or `source-terms` when they state none. */
+  licence: string;
+  /** How the publisher asks to be credited, when they say. */
+  attribution?: string;
+  /** Topic `id`s: what the catalog groups and filters by. */
+  topics: string[];
   config: SourceConfig;
   policy: { name: string; version: number; collection: CollectionPolicyDefinition };
   staleAfterSeconds: number;

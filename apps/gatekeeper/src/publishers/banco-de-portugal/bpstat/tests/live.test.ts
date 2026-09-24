@@ -1,7 +1,7 @@
 import { appendFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { NORMALIZED_PROTOCOL, collectNormalized, isJsonObject, isNormalizedFrame, parseJson, type CollectionRequest, type ExampleFeed, type NormalizedFrame } from "#/index";
-import { datasetOf, feedCollection, feedsOf } from "#/tests/catalog";
+import { feedCollection, feedsOf } from "#/tests/catalog";
 
 // Opt in by slug or with `bpstat`; no production writes are made.
 const selected = (process.env.LIVE_CATALOGS ?? "").split(",");
@@ -79,7 +79,7 @@ function request(example: ExampleFeed, resolved: CollectionRequest["resolved"]):
   return {
     protocol: NORMALIZED_PROTOCOL,
     collectionId: `live-${example.slug}`,
-    feed: { id: example.slug, slug: example.slug, title: example.title ?? datasetOf(example).title, description: example.description ?? datasetOf(example).description },
+    feed: { id: example.slug, slug: example.slug, title: example.title, description: example.description },
     resolved,
     feedEpoch: "catalog-probe",
     mode: { kind: "live" },

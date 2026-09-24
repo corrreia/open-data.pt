@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFixture } from "#/tests/support";
-import { datasetOf, feedsOf } from "#/tests/catalog";
+import { feedsOf } from "#/tests/catalog";
 import { isJsonObject, libraryConfig, parseJson, toByteStream, type JsonObject, type JsonValue, type NormalizedRow, type SourceConfig, type SourceFetch } from "#/index";
 import { OpendatasoftSource, validateOpendatasoftFeedConfig } from "#/formats/opendatasoft/opendatasoft";
 import { resolveOpendatasoftFeed } from "#/formats/opendatasoft/collector";
@@ -66,7 +66,7 @@ async function body(fetched: SourceFetch): Promise<JsonValue> {
 describe("Opendatasoft catalog expansion", () => {
   it("adds all eleven E-REDES and seventeen SNS candidates without duplicate feeds", () => {
     expect(CATALOG_EXAMPLES).toHaveLength(28);
-    expect(CATALOG_EXAMPLES.filter((example) => datasetOf(example).publisher === "e-redes")).toHaveLength(11);
+    expect(CATALOG_EXAMPLES.filter((example) => example.publisher === "e-redes")).toHaveLength(11);
     expect(OPENDATASOFT_EXAMPLES).toHaveLength(57);
     expect(new Set(OPENDATASOFT_EXAMPLES.map((example) => example.slug)).size).toBe(57);
     expect(new Set(OPENDATASOFT_EXAMPLES.map((example) => `${example.config.host}/${example.config.dataset}`)).size).toBe(57);
@@ -134,7 +134,7 @@ describe("Opendatasoft catalog expansion", () => {
     await expect(transform({ ...BASE, timeField: "date", dimensions: "code", series: "energy" }, document)).rejects.toThrow("revision order is unknown");
     const example = CATALOG_EXAMPLES.find((item) => item.slug === "sns-lvt-hospital-morbidity-mortality-feed")!;
     expect(example.config.series).toBeUndefined();
-    expect(example.description ?? datasetOf(example).description).toContain("conflicting unlabelled revisions");
+    expect(example.description).toContain("conflicting unlabelled revisions");
     expect(example.config.groupBy).toBe(example.config.idFields);
   });
 

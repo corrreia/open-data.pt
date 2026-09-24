@@ -1,12 +1,10 @@
-import type { Dataset as DatasetRef, Term } from "@open-data-pt/api";
+import type { Term } from "@open-data-pt/api";
 import {
   NormalizedInputError,
-  UNSTATED_LICENCE,
   isJsonArray,
   isJsonObject,
   isJsonString,
   parseJson,
-  type CatalogDataset,
   type CatalogDescription,
   type CatalogLicence,
   type CatalogPublisher,
@@ -19,7 +17,23 @@ import {
 export type VocabularyRef = Term;
 
 /** What the Registry holds before the Gatekeeper has first answered: every key is served as itself. */
-export const EMPTY_CATALOG: CatalogDescription = { publishers: [], licences: [], topics: [], datasets: [] };
+export const EMPTY_CATALOG: CatalogDescription = { publishers: [], licences: [], topics: [] };
+
+/** What a feed says about itself that the catalog expands: whose it is, under what terms, and what it is about. */
+export interface FeedTermKeys {
+  publisher: string;
+  licence: string;
+  topics: readonly string[];
+  attribution?: string;
+}
+
+/** A feed's keys, expanded for a reader. */
+export interface FeedTerms {
+  publisher: Term;
+  licence: Term;
+  topics: string[];
+  attribution?: string;
+}
 
 /**
  * The catalog the Gatekeeper declared, as the kernel expands it for a reader.
@@ -30,17 +44,12 @@ export const EMPTY_CATALOG: CatalogDescription = { publishers: [], licences: [],
 export class Vocabulary {
   private readonly publishers: Map<string, CatalogPublisher>;
   private readonly licences: Map<string, CatalogLicence>;
-  private readonly datasets: Map<string, CatalogDataset>;
+  private readonly topics: Set<string>;
 
   constructor(catalog: CatalogDescription) {
     this.publishers = new Map(catalog.publishers.map((publisher) => [publisher.id, publisher]));
     this.licences = new Map(catalog.licences.map((licence) => [licence.id, licence]));
-    this.datasets = new Map(catalog.datasets.map((dataset) => [dataset.id, dataset]));
-  }
-
-  /** A dataset as the Gatekeeper declared it, or `undefined` when the catalog does not name it. */
-  dataset(id: string): CatalogDataset | undefined {
-    return this.datasets.get(id);
+    this.topics = new Set(catalog.topics.map((topic) => topic.id));
   }
 
   publisherRef(id: string, origin: string): VocabularyRef {
@@ -58,37 +67,31 @@ export class Vocabulary {
     return known.url !== undefined ? { id, name: known.name, url: known.url, description: known.summary } : { id, name: known.name, description: known.summary };
   }
 
-  /**
-   * A dataset key, expanded for a reader: what the data is, who published it and
-   * under what terms. A key the catalog no longer knows is served as itself,
-   * the way an unknown publisher is, so one renamed entry never empties a page.
-   */
-  datasetRef(id: string, origin: string): DatasetRef {
-    const known = this.datasets.get(id);
-    if (!known) return { id, title: id, publisher: this.publisherRef(id, origin), licence: this.licenceRef(UNSTATED_LICENCE), topics: [] };
-    const ref: DatasetRef = {
-      id,
-      title: known.title,
-      description: known.description,
-      publisher: this.publisherRef(known.publisher, origin),
-      licence: this.licenceRef(known.licence),
-      topics: [...known.topics],
-    };
-    if (known.attribution !== undefined) ref.attribution = known.attribution;
-    return ref;
+  /** A feed's publisher and licence expanded, with its topics and attribution as it states them. */
+  feedTerms(feed: FeedTermKeys, origin: string): FeedTerms {
+    const terms: FeedTerms = { publisher: this.publisherRef(feed.publisher, origin), licence: this.licenceRef(feed.licence), topics: [...feed.topics] };
+    if (feed.attribution !== undefined) terms.attribution = feed.attribution;
+    return terms;
   }
 
-  /** Every dataset, expanded: what `/api/datasets` serves. */
-  datasetRefs(origin: string): DatasetRef[] {
-    return [...this.datasets.keys()].map((id) => this.datasetRef(id, origin));
+  /**
+   * The first key a feed names that this catalog does not declare, as the
+   * sentence an error would say; `undefined` when it names only declared ones.
+   * The Gatekeeper's word crosses RPC as plain strings, so a key outside its
+   * catalog is a mistake, never a new entry.
+   */
+  unknownKey(feed: FeedTermKeys): string | undefined {
+    if (!this.publishers.has(feed.publisher)) return `an unknown publisher: ${feed.publisher}`;
+    if (!this.licences.has(feed.licence)) return `an unknown licence: ${feed.licence}`;
+    const topic = feed.topics.find((key) => !this.topics.has(key));
+    return topic === undefined ? undefined : `an unknown topic: ${topic}`;
   }
 }
 
 /**
  * The Gatekeeper's catalog, checked at the door: it crosses RPC as plain
- * strings, so every entry is rebuilt from its known fields, and a dataset that
- * names a publisher, licence or topic the catalog does not declare is a
- * mistake that refuses the whole answer rather than a new entry.
+ * strings, so every entry is rebuilt from its known fields, and one that is
+ * malformed refuses the whole answer.
  */
 export function checkedCatalog(value: CatalogDescription): CatalogDescription {
   let parsed: JsonValue;
@@ -116,28 +119,7 @@ export function checkedCatalog(value: CatalogDescription): CatalogDescription {
     return licence;
   });
   const topics = entries(parsed.topics, "topic", (entry, id): CatalogTopic => ({ id, name: required(entry, "name", `topic ${id}`) }));
-  const known = { publisher: new Set(publishers.map(({ id }) => id)), licence: new Set(licences.map(({ id }) => id)), topic: new Set(topics.map(({ id }) => id)) };
-  const datasets = entries(parsed.datasets, "dataset", (entry, id): CatalogDataset => {
-    const subject = `dataset ${id}`;
-    const topicKeys = entry.topics;
-    if (!isJsonArray(topicKeys) || !topicKeys.every(isJsonString)) throw new NormalizedInputError(`Gatekeeper catalog: ${subject} has no list of topics`);
-    const dataset: CatalogDataset = {
-      id,
-      title: required(entry, "title", subject),
-      description: required(entry, "description", subject),
-      publisher: required(entry, "publisher", subject),
-      licence: required(entry, "licence", subject),
-      topics: [...topicKeys],
-    };
-    const attribution = optional(entry, "attribution", subject);
-    if (attribution !== undefined) dataset.attribution = attribution;
-    if (!known.publisher.has(dataset.publisher)) throw new NormalizedInputError(`Gatekeeper catalog: ${subject} names an unknown publisher: ${dataset.publisher}`);
-    if (!known.licence.has(dataset.licence)) throw new NormalizedInputError(`Gatekeeper catalog: ${subject} names an unknown licence: ${dataset.licence}`);
-    const unknownTopic = dataset.topics.find((topic) => !known.topic.has(topic));
-    if (unknownTopic !== undefined) throw new NormalizedInputError(`Gatekeeper catalog: ${subject} names an unknown topic: ${unknownTopic}`);
-    return dataset;
-  });
-  return { publishers, licences, topics, datasets };
+  return { publishers, licences, topics };
 }
 
 /** One list of the catalog, each entry an object with a unique non-empty `id`. */

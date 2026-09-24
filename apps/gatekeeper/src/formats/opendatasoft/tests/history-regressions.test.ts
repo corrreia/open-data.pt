@@ -1,4 +1,4 @@
-import { datasetOf, feedsOf } from "#/tests/catalog";
+import { feedsOf } from "#/tests/catalog";
 import { describe, expect, it } from "vitest";
 import { readFixture } from "#/tests/support";
 import {
@@ -209,14 +209,14 @@ describe("Historical medical-training record ambiguity", () => {
     expect(example.config.series).toBeUndefined();
     expect(example.config.idFields).toBe("registo");
     expect(example.config.windowPeriods).toBe("3");
-    expect(example.description ?? datasetOf(example).description).toContain("cohort or revision label");
+    expect(example.description).toContain("cohort or revision label");
     const document = { ...fixture("vagas-formacao-especializada-internato"), records: fixture("medical-training-2022-records").records };
     const body = new TextEncoder().encode(JSON.stringify(document));
     const result = await new OpendatasoftTransformer().transform(toByteStream(body), {
       feed: {
         slug: example.slug,
-        title: example.title ?? datasetOf(example).title,
-        description: example.description ?? datasetOf(example).description,
+        title: example.title,
+        description: example.description,
         config: libraryConfig(example.config),
         semantics: { domainSubject: "observation", defaultProductRole: "current-state" },
       },

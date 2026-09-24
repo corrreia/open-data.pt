@@ -73,22 +73,35 @@ describe("schema reset", () => {
     expect(database.prepare("SELECT library FROM backfills WHERE feed_id = 'feed_1'").get()).toEqual({ library: "fixture" });
   });
 
-  it("gives a feed installed before feeds named their dataset its slug as one, until a sync names the real one", () => {
+  it("gives each feed its dataset's publisher and terms from the catalog stored with it, and forgets the dataset", () => {
     const database = new DatabaseSync(":memory:");
     const store = new RegistryStore(sqliteStorage(database));
     store.migrate();
+    const stored = {
+      publishers: [{ id: "ine", name: "INE" }],
+      licences: [{ id: "cc-by-4.0", name: "CC BY 4.0", summary: "Reuse with credit." }],
+      topics: [{ id: "economy", name: "Economy" }],
+      datasets: [{ id: "ine-prices", title: "Prices", description: "CPI", publisher: "ine", licence: "cc-by-4.0", attribution: "Statistics Portugal", topics: ["economy"] }],
+    };
+    database.prepare("INSERT INTO registry_state (key, value_json) VALUES ('catalog', ?)").run(JSON.stringify(stored));
     database.exec(`
       INSERT INTO policies (id, name, version, collection_json, serving_json, created_at)
       VALUES ('policy_1', 'Fixture', 1, '{}', '{}', '2026-09-18T00:00:00.000Z');
       INSERT INTO feeds (id, slug, definition_json, policy_id, enabled, title)
-      VALUES ('feed_1', 'things', '{"id":"feed_1","slug":"things","library":"fixture"}', 'policy_1', 1, 'Things'),
-             ('feed_2', 'others', '{"id":"feed_2","slug":"others","library":"fixture","dataset":"fixture-others"}', 'policy_1', 1, 'Others');
+      VALUES ('feed_1', 'prices', '{"id":"feed_1","slug":"prices","library":"ine","dataset":"ine-prices"}', 'policy_1', 1, 'Prices'),
+             ('feed_2', 'things', '{"id":"feed_2","slug":"things","library":"fixture"}', 'policy_1', 1, 'Things'),
+             ('feed_3', 'moved', '{"id":"feed_3","slug":"moved","library":"fixture","publisher":"ine","licence":"cc-by-4.0","topics":[]}', 'policy_1', 1, 'Moved');
     `);
 
     store.migrate();
 
-    expect(store.getFeed("feed_1")).toMatchObject({ dataset: "things" });
-    expect(store.getFeed("feed_2")).toMatchObject({ dataset: "fixture-others" });
+    expect(store.getFeed("feed_1")).toMatchObject({ publisher: "ine", licence: "cc-by-4.0", topics: ["economy"], attribution: "Statistics Portugal" });
+    expect(store.getFeed("feed_1")).not.toHaveProperty("dataset");
+    // One installed before datasets is its own publisher, with no stated licence, until the next sync names them.
+    expect(store.getFeed("feed_2")).toMatchObject({ publisher: "things", licence: "source-terms", topics: [] });
+    expect(store.getFeed("feed_2")).not.toHaveProperty("attribution");
+    // One that already names its publisher is left alone.
+    expect(store.getFeed("feed_3")).toMatchObject({ publisher: "ine", licence: "cc-by-4.0", topics: [] });
   });
 
   it("renames an existing runner's feed library before its first read", () => {

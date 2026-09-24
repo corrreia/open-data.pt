@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { readFixtureBytes } from "#/tests/support";
 import type { CanonicalRecord, CanonicalSchema, ProductDeclaration, SeriesPoint, SourceConfig, TransformContext, TransformQuality } from "@open-data-pt/contract";
 import { libraryConfig } from "#/index";
-import { datasetOf, feedsOf } from "#/tests/catalog";
+import { feedsOf } from "#/tests/catalog";
 
 const FIXTURE = new Map<string, string>([
   ["justice-facilities-feed", "justice-facilities.csv"],
@@ -64,11 +64,7 @@ async function transformExample(slug: string, chunkSize = 7): Promise<Transforme
   // Each feed's own transform, as its file defines it: the generic tabular one, or its publisher's.
   const own = RUNNABLE.get(slug)?.transform;
   if (!own || !("streaming" in own)) throw new Error(`${slug} defines no streaming transform`);
-  const transform = await own.streaming(
-    fixture(fixtureName, chunkSize),
-    context(libraryConfig(example.config), example.slug, example.title ?? datasetOf(example).title, example.description ?? datasetOf(example).description),
-    undefined,
-  );
+  const transform = await own.streaming(fixture(fixtureName, chunkSize), context(libraryConfig(example.config), example.slug, example.title, example.description), undefined);
   const records = new Map<string, CanonicalRecord[]>();
   const points = new Map<string, SeriesPoint[]>();
   for await (const row of transform.rows) {
