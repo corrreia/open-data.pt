@@ -337,7 +337,7 @@ async function status(url: URL, host: SiteHost): Promise<PageText> {
     ...(ended.length === 0
       ? ["None."]
       : [
-          "| Source | From | To | Cause | Failed attempts |",
+          "| Feed | From | To | Cause | Failed attempts |",
           "| --- | --- | --- | --- | --- |",
           ...ended.map((outage) => `| ${cell(titleOf(outage))} | ${outage.startedAt} | ${outage.endedAt ?? ""} | ${outage.cause} | ${outage.failures} |`),
         ]),
@@ -421,7 +421,7 @@ async function operations(url: URL, host: SiteHost): Promise<PageText> {
     "",
     `Every feed open-data.pt collects: who publishes it, how often it is collected, and how its last collection went. Each run is at ${url.origin}/api/acquisitions.`,
     "",
-    "| Source | Publisher | Collected | Last success | Last run | Next run |",
+    "| Feed | Publisher | Collected | Last success | Last run | Next run |",
     "| --- | --- | --- | --- | --- | --- |",
     ...feeds.map((feed) => {
       const failures = feed.consecutiveFailures ? `, ${plural(feed.consecutiveFailures, "failure")} in a row` : "";
