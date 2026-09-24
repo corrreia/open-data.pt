@@ -274,6 +274,27 @@ describe("collection engine: series and history", () => {
   });
 });
 
+describe("collection engine: a product that changes kind", () => {
+  it("lets go of a table's rows and change window once it is a series, and deletes them", async () => {
+    const h = await kernelHarness();
+    await baseline(h, 3);
+    const table = h.entry();
+    const tableKeys = [...(table?.chunks ?? []).map((chunk) => chunk.key), table?.changesKey ?? ""];
+    expect(tableKeys).toHaveLength(2);
+    expect(tableKeys.every((key) => key !== "" && h.snapshots.objects.has(key))).toBe(true);
+    h.source.kind = "series";
+    h.source.seriesProduct = "things";
+    h.source.points = [{ seriesKey: "temp", eventTime: "2026-09-10T01:00:00.000Z", value: 10, unit: "C", dimensions: {} }];
+    expect((await h.collect()).status).toBe("succeeded");
+    expect(h.entry()).toMatchObject({ kind: "series", role: "time-series", chunks: null, changesKey: null, rowCount: 1 });
+    expect(h.entry()?.seriesKey).toBeTruthy();
+    expect(await h.served()).toEqual([]);
+    h.clock.now += 2 * 60 * 60_000;
+    await h.core.collectGarbage();
+    expect(tableKeys.some((key) => h.snapshots.objects.has(key))).toBe(false);
+  });
+});
+
 describe("collection engine: history per product and fewer round trips", () => {
   const changeWindows = (h: KernelHarness) => h.snapshots.putKeys.filter((key) => key.includes("/changes/")).length;
 
