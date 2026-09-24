@@ -272,6 +272,7 @@ describe("Parliament streaming normalization", () => {
     const placeholder = Object.fromEntries(Object.keys(object(data[0])).map((key) => [key, null]));
     const result = await run("petitions", [...data, placeholder]);
     expect(result.records.get("petitions")).toHaveLength(data.length);
+    await expect(run("petitions", [...data, {}])).rejects.toThrow("legislature");
     object(data[0]).PetLeg = "XVI";
     await expect(run("petitions", data)).rejects.toThrow("legislature");
   });
