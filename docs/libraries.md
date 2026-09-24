@@ -98,7 +98,7 @@ nothing uses, and a publisher with no feed, fail the tests.
 ## Writing one
 
 [`../CONTRIBUTING.md`](../CONTRIBUTING.md) walks through each kind of contribution, and
-[`../.agents/skills/write-gatekeeper/SKILL.md`](../.agents/skills/write-gatekeeper/SKILL.md) is the
+[`../.agents/skills/write-publisher/SKILL.md`](../.agents/skills/write-publisher/SKILL.md) is the
 same for coding agents. A library exports its feed-kind table, its validator, its collect function,
 its transformer, a collector factory, and the deployment declaration that says what the Worker must
 give it. Which feeds it reads is the publishers' word, in their feed files.

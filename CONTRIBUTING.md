@@ -110,7 +110,7 @@ export const PUBLISHER: PublisherDefinition = {
   url: "https://www.cm-porto.pt/",
   sources: ["dadosabertos.cm-porto.pt"],
   logo: "svg",
-  feeds: [culturalAgenda, loadingZones /* … */],
+  feeds: [portoCulturalAgenda, portoLoadingZones /* … */],
 };
 ```
 
