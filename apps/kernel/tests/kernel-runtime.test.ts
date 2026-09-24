@@ -120,9 +120,12 @@ describe("a kernel nobody operates", () => {
       { key: "c", name: "Gamma" },
     ]);
     let seen = await knownIds();
+    const epoch = (await runnerFeed())?.feedEpoch;
     await renameExample("Fixture things, renamed");
     expect(await settled((item) => !seen.has(item.id))).toMatchObject({ status: "succeeded", revisions: 1 });
     expect((await feeds()).filter((feed) => feed.slug === "fixture-things")).toMatchObject([{ id: feedId, title: "Fixture things, renamed" }]);
+    // A renamed feed renames its only product, so its next collection reads the source whole: a new epoch, the same ID.
+    expect((await runnerFeed())?.feedEpoch).not.toBe(epoch);
     expect((await records()).find((row) => row.id === "b")?.name).toBe("Beta 2");
     const changesResponse = await server.fetch("/api/products/fixture-things/changes");
     // The fixture runs hourly, so the edge keeps its current data for five minutes; the cadence header stays internal.

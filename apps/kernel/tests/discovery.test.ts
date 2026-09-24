@@ -272,6 +272,8 @@ describe("agent discovery", () => {
     expect(text).toContain(`## [Station prices](${ORIGIN}/product/?slug=fuel-stations)`);
     expect(text).toContain(`JSON: ${ORIGIN}/api/products/fuel-stations`);
     expect(text).not.toContain("## Fuel prices");
+    // The feed is never shown, but searching its name finds its tables.
+    expect((await markdown("/catalog/?q=fuel%20prices")).text).toContain(`## [Station prices](${ORIGIN}/product/?slug=fuel-stations)`);
   });
 
   it("gives the other pages in Markdown too", async () => {

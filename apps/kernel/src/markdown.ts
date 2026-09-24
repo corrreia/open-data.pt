@@ -147,7 +147,9 @@ async function catalog(url: URL, host: SiteHost): Promise<PageText> {
   const words = (url.searchParams.get("q") ?? "").toLocaleLowerCase().split(/\s+/).filter(Boolean);
   const shown = (await readCatalog(host)).filter(({ product, feed }) => {
     if (topic && !feed.topics.includes(topic)) return false;
-    const haystack = `${product.title} ${product.slug} ${product.description} ${feed.publisher.name} ${feed.topics.join(" ")}`.toLocaleLowerCase();
+    // The feed is never shown, but its name is often what someone searches for: "fuel prices" finds the station prices.
+    const haystack =
+      `${product.title} ${product.slug} ${product.description} ${feed.title} ${feed.description} ${feed.publisher.name} ${feed.topics.join(" ")}`.toLocaleLowerCase();
     return words.every((word) => haystack.includes(word));
   });
   const scope = [topic ? `about ${topicLabel(topic).toLocaleLowerCase()}` : "", words.length ? `matching “${words.join(" ")}”` : ""].filter(Boolean).join(" ");
@@ -493,7 +495,7 @@ function listingSection(origin: string, { product, feed }: Listing): string[] {
   const facts = [
     feed.publisher.name,
     (ROLE_LABEL.get(product.role) ?? product.role).split(":")[0],
-    plural(product.rowCount, "row"),
+    plural(product.rowCount, product.role === "time-series" ? "point" : "row"),
     ...feed.topics.map(topicLabel),
     product.cadenceSeconds ? `collected ${every(product.cadenceSeconds)}` : "",
     through(feed),

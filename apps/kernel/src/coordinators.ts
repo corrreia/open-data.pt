@@ -359,7 +359,9 @@ export class Registry extends DurableObject<Env> {
       semantics: resolved.semantics,
       resolved,
       enabled: true,
-      feedEpoch: sameSemantics ? existing.feedEpoch : now,
+      // A feed of one product names it as the feed is named, so a new name is a new product name: the next collection
+      // reads the source whole rather than trusting a checkpoint from under the old one.
+      feedEpoch: sameSemantics && existing.title === input.title && existing.description === input.description ? existing.feedEpoch : now,
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     };

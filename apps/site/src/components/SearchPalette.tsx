@@ -56,7 +56,7 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
   const index = useMemo(() => {
     if (!products.data || !feeds.data) return { listings: [], publishers: [] };
     const listings = buildListings(products.data, feeds.data);
-    const listingItems: SearchItem[] = listings.map(({ product, title, description, publisher, topics }) => ({
+    const listingItems: SearchItem[] = listings.map(({ product, feed, title, description, publisher, topics }) => ({
       id: product.slug,
       title,
       detail: publisher.name,
@@ -69,7 +69,7 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
         ) : (
           <TableIcon />
         ),
-      haystack: `${title} ${product.slug} ${publisher.name} ${topics.map(topicLabel).join(" ")} ${description}`.toLocaleLowerCase(),
+      haystack: `${title} ${product.slug} ${feed.title} ${feed.description} ${publisher.name} ${topics.map(topicLabel).join(" ")} ${description}`.toLocaleLowerCase(),
     }));
     const publisherItems: SearchItem[] = buildPublishers(listings).map((publisher) => ({
       id: `publisher-${publisher.id}`,

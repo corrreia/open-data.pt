@@ -59,8 +59,8 @@ const TOOLS: WebMcpTool[] = [
       const words = text(input.query).toLocaleLowerCase().split(/\s+/).filter(Boolean);
       const [products, feeds] = await Promise.all([fetchProducts(), fetchFeeds()]);
       const results: JsonValue[] = [];
-      for (const { product, title, description, publisher, licence, topics } of buildListings(products, feeds)) {
-        const haystack = `${title} ${product.slug} ${publisher.name} ${topics.map(topicLabel).join(" ")} ${description}`.toLocaleLowerCase();
+      for (const { product, feed, title, description, publisher, licence, topics } of buildListings(products, feeds)) {
+        const haystack = `${title} ${product.slug} ${feed.title} ${feed.description} ${publisher.name} ${topics.map(topicLabel).join(" ")} ${description}`.toLocaleLowerCase();
         if (!words.every((word) => haystack.includes(word))) continue;
         results.push({
           slug: product.slug,
