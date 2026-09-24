@@ -75,7 +75,7 @@ describe("hourly status history", () => {
     expect(result.uptime).toBe(0);
   });
 
-  it("shows partial publisher impact rather than claiming all datasets are unavailable", () => {
+  it("shows partial publisher impact rather than claiming all its sources are unavailable", () => {
     const result = measureStatus(
       [
         { label: "Failing", outages: [outage(START, HOUR.end)] },
@@ -114,7 +114,7 @@ describe("hourly status history", () => {
     expect(result.uptime).toBeNull();
   });
 
-  it("counts separate datasets even when their display names match", () => {
+  it("counts separate sources even when their display names match", () => {
     const result = measureStatus(
       [
         { label: "Same title", outages: [outage(START)] },
