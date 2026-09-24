@@ -2,14 +2,16 @@ import { defineFeed } from "#/catalog/define";
 import { ARCGIS_DEPLOYMENT, ARCGIS_NORMALIZER, ARCGIS_TRANSFORMER, collectArcgisFeed } from "#/formats/arcgis/index";
 import { LISBON_POLICY } from "#/publishers/cm-lisboa/arcgis";
 
-// The permits layer is about 12,000 parcel outlines, roughly 13 MB of GeoJSON.
+// The permits layer grows every month: 14,737 parcel outlines in September 2026, about 16 MB of GeoJSON and 19 MB
+// normalized, past the 16 MB the kernel allows an output that states no cap of its own.
 const LISBON_PERMITS_POLICY = {
   ...LISBON_POLICY,
   name: "ArcGIS daily large reference layer",
   collection: {
     ...LISBON_POLICY.collection,
     timeoutSeconds: 180,
-    maxBytes: 24 * 1024 * 1024,
+    maxBytes: 32 * 1024 * 1024,
+    maxOutputBytes: 48 * 1024 * 1024,
   },
 };
 

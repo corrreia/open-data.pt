@@ -384,6 +384,9 @@ function mainRow(item: JsonObject, feed: ParliamentFeed, legislature: string): B
       return { key: "professional-profiles", record: record(identifier(item.CadId, "professional profile id"), payload) };
     }
     case "petitions": {
+      // Parliament's export leaves a row with every field null where a petition was withdrawn from it: nothing to
+      // name or date, so it is no petition, and it must not fail the 230 real ones beside it. An empty object is no such row.
+      if (Object.keys(item).length > 0 && Object.values(item).every((value) => value === null)) return undefined;
       requireLegislature(item.PetLeg, legislature);
       const key = identifier(item.PetId, "petition id");
       const entered = sourceDate(item.PetDataEntrada);

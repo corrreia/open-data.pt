@@ -267,6 +267,16 @@ describe("Parliament streaming normalization", () => {
     await expect(run("petitions", [null])).rejects.toThrow("not an object");
   });
 
+  it("skips the all-null row Parliament's export leaves for a withdrawn petition, and still fails a real one from another legislature", async () => {
+    const data = array(fixture("petitions"));
+    const placeholder = Object.fromEntries(Object.keys(object(data[0])).map((key) => [key, null]));
+    const result = await run("petitions", [...data, placeholder]);
+    expect(result.records.get("petitions")).toHaveLength(data.length);
+    await expect(run("petitions", [...data, {}])).rejects.toThrow("legislature");
+    object(data[0]).PetLeg = "XVI";
+    await expect(run("petitions", data)).rejects.toThrow("legislature");
+  });
+
   it("fails malformed source dates and truncated documents rather than completing an authoritative snapshot", async () => {
     const data = array(fixture("petitions"));
     object(data[0]).PetDataEntrada = "2026-02-30";
