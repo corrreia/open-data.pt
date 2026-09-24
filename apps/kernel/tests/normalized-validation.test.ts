@@ -62,12 +62,18 @@ describe("resolved feed validation", () => {
     semantics: { domainSubject: "event", defaultProductRole: "event-log" },
   };
   it("accepts the exact bounded descriptor", () => expect(() => assertResolvedFeed(valid)).not.toThrow());
+  it("accepts a history capability that states how often a slice may be read", () =>
+    expect(() => assertResolvedFeed({ ...valid, history: { earliest: "2020-01-01T00:00:00.000Z", minSliceSeconds: 300 } })).not.toThrow());
   it.each([
     { ...valid, configHash: "not-a-digest" },
     { ...valid, config: { feed: "events", nested: {} } },
     { ...valid, extra: true },
     { ...valid, semantics: { ...valid.semantics, domainSubject: "sometimes" } },
     { ...valid, history: { earliest: "yesterday" } },
+    { ...valid, history: { minSliceSeconds: 0 } },
+    { ...valid, history: { minSliceSeconds: 1.5 } },
+    { ...valid, history: { minSliceSeconds: "300" } },
+    { ...valid, history: { cadence: 300 } },
   ])("rejects malformed descriptor %j", (value) => {
     const untrusted: unknown = value;
     // SAFETY: the descriptor arrives over RPC typed as a ResolvedFeed; the validator is what finds it is not one.

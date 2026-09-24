@@ -110,7 +110,14 @@ export function assertResolvedFeed(value: ResolvedFeed): void {
     throw new NormalizedInputError("Gatekeeper returned invalid feed semantics");
   }
   if (parsed.history !== undefined) {
-    if (!isJsonObject(parsed.history) || !onlyKeys(parsed.history, ["earliest"]) || (parsed.history.earliest !== undefined && !isTimestamp(parsed.history.earliest)))
+    const history = parsed.history;
+    const pace = isJsonObject(history) ? asNumber(history.minSliceSeconds) : undefined;
+    if (
+      !isJsonObject(history) ||
+      !onlyKeys(history, ["earliest", "minSliceSeconds"]) ||
+      (history.earliest !== undefined && !isTimestamp(history.earliest)) ||
+      (history.minSliceSeconds !== undefined && (pace === undefined || !Number.isSafeInteger(pace) || pace < 1 || pace > 86_400))
+    )
       throw new NormalizedInputError("Gatekeeper returned an invalid history capability");
   }
 }

@@ -69,7 +69,8 @@ export const OPENDATASOFT_FEEDS = {
     },
     // The concrete span is precision-dependent (7 days, 365 days, or 10
     // calendar years); this is the conservative minimum advertised statically.
-    history: {},
+    // One export request a slice, to a hosted Opendatasoft portal built for it.
+    history: { minSliceSeconds: 20 },
   },
 } as const satisfies Record<string, FeedKindDescription>;
 

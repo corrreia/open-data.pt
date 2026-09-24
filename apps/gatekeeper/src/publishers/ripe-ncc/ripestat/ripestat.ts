@@ -34,7 +34,8 @@ export const RIPESTAT_FEEDS = {
     title: "Country internet routing observations",
     description: "Bounded daily Portuguese RIS prefix/ASN observations and RIR registered-ASN counts, using source dates and availability boundaries.",
     semantics: { domainSubject: "observation", defaultProductRole: "time-series" },
-    history: { earliest: "2004-01-01T00:00:00.000Z" },
+    // One RIPEstat request a slice, which RIPE NCC answered is no burden for them.
+    history: { earliest: "2004-01-01T00:00:00.000Z", minSliceSeconds: 20 },
   },
   "routing-status": {
     kind: "routing-status",

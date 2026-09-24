@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { resolveLibraryFeed } from "@open-data-pt/gatekeeper";
-import { FEEDS } from "@open-data-pt/gatekeeper/catalog";
+import { FEEDS, RUNNABLE } from "@open-data-pt/gatekeeper/catalog";
 import { carriedLibraries } from "./catalog";
 
 /**
@@ -32,5 +32,15 @@ describe("every example's resolved identity", () => {
     }
     const text = `${JSON.stringify(Object.fromEntries(Object.entries(identities).toSorted(([a], [b]) => a.localeCompare(b))), null, 2)}\n`;
     await expect(text).toMatchFileSnapshot("./fixtures/feed-identity.json");
+  }, 60_000);
+
+  it("paces every history walk: a feed with a backfill states how often one slice of it may be read", async () => {
+    const unpaced: string[] = [];
+    for (const feed of FEEDS) {
+      if (!RUNNABLE.get(feed.slug)?.backfill) continue;
+      const resolved = await resolveLibraryFeed(feed.config, carriedLibraries(feed.config.source ?? "", {}, offline));
+      if (resolved.history?.minSliceSeconds === undefined) unpaced.push(`${feed.slug} (${resolved.kind})`);
+    }
+    expect(unpaced).toEqual([]);
   }, 60_000);
 });

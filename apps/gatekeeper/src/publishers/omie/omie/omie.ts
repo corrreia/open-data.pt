@@ -33,6 +33,8 @@ export const OMIE_FEEDS = {
       // Seven reports stay around 20-80 KB and at most 1,400 points, well below
       // the 1 MiB policy cap while avoiding an overly chatty one-day walk.
       earliest: OMIE_HISTORY_EARLIEST,
+      // Seven small daily files a slice, from a static file server.
+      minSliceSeconds: 20,
     },
     semantics: {
       domainSubject: "observation",

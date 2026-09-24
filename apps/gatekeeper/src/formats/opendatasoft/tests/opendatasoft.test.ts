@@ -149,7 +149,7 @@ async function frames(result: CollectionResult): Promise<NormalizedFrame[]> {
 describe("Opendatasoft Gatekeeper", () => {
   it("ships example feeds whose configurations and policies all validate", () => {
     const instance = source(fetch);
-    expect(OPENDATASOFT_FEEDS.dataset.history).toEqual({});
+    expect(OPENDATASOFT_FEEDS.dataset.history).toEqual({ minSliceSeconds: 20 });
     const examples = feedsOf("opendatasoft");
     expect(examples).toHaveLength(57);
     for (const example of examples) {

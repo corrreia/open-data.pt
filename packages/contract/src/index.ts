@@ -106,6 +106,13 @@ export interface FeedSemantics {
 export interface HistoryCapability {
   /** Earliest event time the source holds, ISO 8601, when the source states it. */
   earliest?: string;
+  /**
+   * The least time between two history slices of one feed, which the kernel
+   * keeps on top of its own pacing: what the source can take when a slice
+   * costs it many requests or slow queries. A walk sends its whole history
+   * one slice at a time, so this is what decides how hard it is read.
+   */
+  minSliceSeconds?: number;
 }
 
 export interface FeedKindDescription {

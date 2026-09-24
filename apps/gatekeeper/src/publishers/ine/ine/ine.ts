@@ -49,7 +49,8 @@ export const INE_FEEDS = {
     },
     // The period span and earliest date vary by indicator and are discovered
     // from Dim1 metadata, so only the common cursor mode can be declared here.
-    history: {},
+    // One request to INE's statistics API a slice, at the kernel's own pace.
+    history: { minSliceSeconds: 20 },
   },
 } as const satisfies Record<string, FeedKindDescription>;
 

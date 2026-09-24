@@ -305,7 +305,7 @@ describe("Eurostat Gatekeeper", () => {
 
 describe("Eurostat history", () => {
   it("declares history and returns a transformable monthly slice with its next cursor", async () => {
-    expect(EUROSTAT_FEEDS.dataset.history).toEqual({});
+    expect(EUROSTAT_FEEDS.dataset.history).toEqual({ minSliceSeconds: 20 });
     const document = historyDataset(["2014-01", "2023-12"], { "0": 9.1, "1": 6.4 });
     const sourceBytes = JSON.stringify(document, null, 2);
     const expectedUrl =
