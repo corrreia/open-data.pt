@@ -9,11 +9,13 @@ The words this repository uses, and what each one means here. How they fit toget
 
 The one trusted Worker that carries every library — `arcgis`, `ckan`, `gtfs`, `ine`, `parliament`, … — reached over private RPC. It validates configuration, accesses allowlisted upstream resources, parses and normalizes source data, and returns a bounded versioned normalized stream. It owns source identity, clocks, validators, pagination, coverage, and source-supported history. It owns no canonical storage or publication state.
 
-The Worker is wiring: every listed library, built from the vars each declares and the secrets and buckets the Worker binds, and every library's example feeds. Format and source code are libraries; the Worker is only their deployment unit. A feed's `source` key names its library, and that is what routes it. Topics and the publisher are labels on a feed, not code boundaries: topics overlap, and a publisher may be read through more than one library.
+The Worker is wiring: every listed library, built from the vars each declares and the secrets and buckets the Worker binds, and every feed every publisher folder lists. Format and source code are libraries; the Worker is only their deployment unit. A feed's `source` key names its library, and that is what routes it. Topics and the publisher are labels on a feed, not code boundaries: topics overlap, and a publisher may be read through more than one library.
+
+Its RPC answers `describe`, `listFeedKinds`, `resolveFeed`, `collect`, `exampleFeeds` (every feed of a publisher we may republish), `catalog` (the publishers, licences and topics those feeds name) and `catalogVersion` (a digest of the three, which tells the kernel a release has changed them).
 
 ## Library
 
-The code that reads one thing, under `packages/gatekeeper-shared/src`. A format library under `formats/` parses anything with a standard (ArcGIS, CKAN, Opendatasoft, GTFS, GBFS, uData, OGC API Features, WFS); a source library under `sources/` reads one bespoke API (Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, MYINFO, NASA FIRMS, NASA POWER, USGS, ANEPC, IODA, RIPE Atlas, RIPEstat, PeeringDB, SNIT). Each exports its feed-kind table, its validator, its collect function, its transformer, its examples array, a collector factory, and a deployment declaration (`deployment.ts`) saying what the Worker must give it. `libraries.ts` lists the ones the Worker carries; a library under a publication hold is not listed. A feed's configuration names its library in `source`; that key routes the feed inside the Worker, and the library never sees it.
+The shared code that reads one thing. A format library under `apps/gatekeeper/src/formats/` parses anything with a standard (ArcGIS, CKAN, Opendatasoft, GTFS, GBFS, uData, OGC API Features, WFS, NGSI, MYINFO); a publisher's own library, in their folder beside their feeds, reads one bespoke API (Carris, Metro Lisboa, IPMA, DGEG, INE, REN, OMIE, BPstat, Eurostat, Parliament, NASA FIRMS, NASA POWER, USGS, ANEPC, IODA, RIPEstat, PeeringDB, SNIRH, InfoÁgua, SNIT). Each exports its feed kinds, how a feed's identity is worked out, what its feeds are handed when they run, the fetching and translating its feed files call, and a deployment declaration (`deployment.ts`) saying what the Worker must give it. `libraries.ts` lists every one the Worker carries. A feed's configuration names its library in `source`; that key routes the feed inside the Worker, and the library never sees it.
 
 ## Source
 
@@ -31,23 +33,31 @@ One capability a library declares: what its facts are about, what role its produ
 
 One repeatable collection definition: library, canonical resolved source configuration/resource identity, feed semantics, policy, and semantic feed epoch. Administrative edits do not rotate the epoch.
 
+A feed is a file under its publisher's `feeds/`, listed in their `index.ts`: its slug, what it is (`title`, `description`), the terms it is served under (`licence`, `attribution`), its `topics`, its configuration and policy, and its own `fetch`, `backfill` and `transform`. Its slug is its identity and never changes. The site shows each feed as a dataset, the reader's word for it, and DCAT's.
+
 ## Publisher
 
-Where the data comes from: the body that stands behind it, one key of `PUBLISHERS` per institution or operator.
+Where the data comes from: the body that stands behind it, one folder under `apps/gatekeeper/src/publishers/` per institution or operator, named for their key. Its `index.ts` says who they are, which hosts their data is read from (`sources`), and lists every feed of theirs.
 
 A site that only carries what others put on it is a shelf, not a publisher. dados.gov.pt holds ten publishers and is none of them, and the Card4B portal holds a dozen bus operators' timetables without being any of them: name whoever put the data there.
 
 A body that curates what it serves and answers for it is the publisher, even where it did not draw every line itself. The Carta do Regime de Uso do Solo is DGT's, though it is each municipality's plan that DGT redrew into a national classification — the layer names both roles in separate columns, `Autor` and `Fonte`, and the publisher is the author. SNS Transparência is the health service publishing its own data, though ACSS, INEM, INSA and nine more each produced a part of it.
 
-Carris Metropolitana is one publisher read through two libraries. A feed names its publisher by key, and the API serves it expanded (`id`, `name`, `url`).
+Carris Metropolitana is one publisher read through two libraries. A feed's publisher is the folder it is written in, and the API serves it expanded (`id`, `name`, `url`, `logo`).
+
+A publisher we may not republish yet carries `enabled: false`: their code ships, and none of their feeds is installed.
+
+## Publisher client
+
+The `fetch` every feed of a publisher is handed. It reaches only the hosts in their `sources`, refusing any other and any redirect to one; names open-data.pt in its `User-Agent` unless a host says otherwise; adds the query parameters the publisher asked for; and keeps a host's `minIntervalSeconds` between requests from every feed at once.
 
 ## Licence
 
-The terms a product is served under, one key of `LICENCES` per set of terms, as the publisher states them: a licence with a canonical text carries its URL, a publisher's own terms carry their name, and `source-terms` says the publisher states none. A policy names its licence by key; the API serves it expanded (`id`, `name`, optional canonical `url`, and a description), and the site groups every dataset under it.
+The terms a product is served under, one key of `LICENCES` per set of terms, as the publisher states them: a licence with a canonical text carries its URL, a publisher's own terms carry their name, and `source-terms` says the publisher states none. A feed names its licence by key; the API serves it expanded (`id`, `name`, optional canonical `url`, and a description) on the feed and on each of its products, and the site groups every feed under it.
 
 ## Policy
 
-Versioned limits and rules for collection, history mode (`changes` or `latest`) and the products it leaves out, licence, and attribution. A product keeps history when its policy keeps changes and does not name it in `withoutHistory`; nothing else decides it. Retry counts and the history backlog budget are the kernel's, the same for every feed.
+Versioned limits and rules for collection: cadence, timeout, size, and history mode (`changes` or `latest`) with the products it leaves out. The terms a feed is served under are the feed's, not its policy's. A product keeps history when its policy keeps changes and does not name it in `withoutHistory`; nothing else decides it. Retry counts and the history backlog budget are the kernel's, the same for every feed.
 
 ## Collection
 
@@ -111,7 +121,7 @@ What a reader needs that the code does not say. Reasoning about one line lives i
 `docs/` holds what spans files: [`architecture.md`](docs/architecture.md),
 [`libraries.md`](docs/libraries.md), [`api.md`](docs/api.md) and [`development.md`](docs/development.md).
 A page under [`docs/publishers/`](docs/publishers/) or [`docs/feeds/`](docs/feeds/) is written only when
-reading a source takes knowledge a reader of `examples.ts` would not guess — a credential, a proxy, a
+reading a source takes knowledge a reader of its feed files would not guess — a credential, a proxy, a
 permission, a cap, a habit of the source. Most publishers and feeds need none, and a page that only
 repeats the configuration is a page that will go stale.
 
@@ -120,7 +130,7 @@ repeats the configuration is a page that will go stale.
 ## Further reading
 
 - [`docs/architecture.md`](docs/architecture.md) — the Gatekeeper, collection, storage, history and backfill
-- [`docs/libraries.md`](docs/libraries.md) — every library, the publication holds, and the three catalog vocabularies
+- [`docs/libraries.md`](docs/libraries.md) — every library, the publishers held back, and the catalog vocabularies
 - [`docs/api.md`](docs/api.md) — the endpoints these terms are visible through
 - [`docs/publishers/`](docs/publishers/) and [`docs/feeds/`](docs/feeds/) — notes on individual publishers and feeds
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to add one of these things

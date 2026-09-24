@@ -60,7 +60,9 @@ beforeAll(async () => {
       policyId: policy,
       enabled: false,
       staleAfterSeconds: 60,
-      dataset: "ine-consumer-price-index",
+      publisher: "ine",
+      licence: "cc-by-4.0",
+      topics: ["economy"],
       createdAt: "2026-09-01T00:00:00.000Z",
       updatedAt: "2026-09-01T00:00:00.000Z",
     };

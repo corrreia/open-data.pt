@@ -1,9 +1,9 @@
 # Feeds
 
 A **feed** is one repeatable collection: a library, a resolved source configuration, a policy, and a
-slug that never changes. Everything the platform collects is described by an example feed in its
-publisher's dataset files, `apps/gatekeeper/src/publishers/<publisher>/datasets/`; the Registry installs them and keeps them in sync, so adding a dataset is
-adding an entry there.
+slug that never changes. Everything the platform collects is a feed file in its publisher's folder,
+`apps/gatekeeper/src/publishers/<publisher>/feeds/`, listed in their `index.ts`; the Registry installs
+them and keeps them in sync, so adding a feed is adding a file there.
 
 This folder holds notes on individual feeds whose configuration needs explaining beyond the comment
 next to it. Most feeds need none: [`../../CONTRIBUTING.md`](../../CONTRIBUTING.md) covers how to add

@@ -1,7 +1,7 @@
 import { jsonAs } from "#/tests/support";
 import { describe, expect, it, vi } from "vitest";
 import { GBFS_MAX_BYTES, collectGbfsFeed, validateGbfsFeedConfig } from "#/formats/gbfs/gbfs";
-import { datasetOf, feedsOf } from "#/tests/catalog";
+import { feedsOf } from "#/tests/catalog";
 
 import type { JsonObject, JsonValue, SourceBody, SourceFetch } from "@open-data-pt/contract";
 import { libraryConfig } from "#/index";
@@ -201,10 +201,10 @@ describe("GBFS Gatekeeper", () => {
   it("ships every working additional Portuguese system", () => {
     expect(newExamples.map((example) => example.slug)).toEqual(["bird-cascais", "bird-matosinhos", "bird-porto", "tubabike-barcelos"]);
     expect(feedsOf("gbfs").some((example) => example.slug === "bird-braga")).toBe(true);
-    expect(newExamples.every((example) => example.policy.collection.cadenceSeconds === (datasetOf(example).publisher === "bird" ? 300 : 600))).toBe(true);
+    expect(newExamples.every((example) => example.policy.collection.cadenceSeconds === (example.publisher === "bird" ? 300 : 600))).toBe(true);
     expect(
       newExamples
-        .filter((example) => datasetOf(example).publisher === "bird")
+        .filter((example) => example.publisher === "bird")
         .every((example) => example.policy.collection.withoutHistory?.includes("vehicles") && example.policy.collection.withoutHistory.includes("stations")),
     ).toBe(true);
   });

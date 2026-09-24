@@ -1,4 +1,4 @@
-import { NormalizedInputError, isProductSlug } from "@open-data-pt/contract";
+import { NormalizedInputError, UNSTATED_LICENCE, asArrayOrEmpty, asObject, asString, asStringList, isProductSlug, parseJson } from "@open-data-pt/contract";
 import type { CollectionPolicyDefinition, FeedSemantics, JsonObject, ResolvedFeed, SourceConfig } from "@open-data-pt/contract";
 import type { ManifestChunk } from "./chunks";
 import { feedDefinition, type Acquisition, type Feed, type FeedPolicy, type FeedStatus, type ProductIndexEntry, type ProductSummary } from "./feed-model";
@@ -35,10 +35,7 @@ export class RegistryStore {
     // One-time terminology cleanup: old definitions called their library `gatekeeperKind`. Rewrite the JSON in place before any feed is read.
     this.exec(`UPDATE feeds SET definition_json = json_remove(json_set(definition_json, '$.library', json_extract(definition_json, '$.gatekeeperKind')), '$.gatekeeperKind')
       WHERE json_type(definition_json, '$.library') IS NULL AND json_type(definition_json, '$.gatekeeperKind') = 'text'`);
-    // A feed installed before feeds named their dataset has none. Its slug stands in until the Gatekeeper's next sync
-    // names the real one: a key the catalog does not know is served as itself, where a missing one served an empty
-    // publisher that no page could draw.
-    this.exec(`UPDATE feeds SET definition_json = json_set(definition_json, '$.dataset', slug) WHERE json_type(definition_json, '$.dataset') IS NULL`);
+    this.foldDatasetsIntoFeeds();
     this.exec(`CREATE TABLE IF NOT EXISTS feed_status (feed_id TEXT PRIMARY KEY, status_json TEXT NOT NULL, updated_at TEXT NOT NULL)`);
     this.exec(`CREATE TABLE IF NOT EXISTS claims (slug TEXT PRIMARY KEY, feed_id TEXT NOT NULL)`);
     // The chunk list is its own column, last, so product lists never read it.
@@ -99,6 +96,40 @@ export class RegistryStore {
 
   listPolicies(): FeedPolicy[] {
     return this.rows<PolicyRow>(`SELECT * FROM policies ORDER BY name, version`).map(mapPolicy);
+  }
+
+  /**
+   * One-time cleanup: a feed installed while feeds belonged to datasets names a
+   * dataset instead of its own publisher and terms. The catalog stored then
+   * still says whose each dataset was and under what terms, so each feed takes
+   * its dataset's and the key goes. A feed that catalog does not place — one
+   * installed before datasets — is served as its own publisher, with no stated
+   * licence, until the Gatekeeper's next sync names the real ones.
+   */
+  private foldDatasetsIntoFeeds(): void {
+    const rows = this.rows<{ id: string; slug: string; definition_json: string }>(
+      `SELECT id, slug, definition_json FROM feeds WHERE json_type(definition_json, '$.publisher') IS NULL`,
+    );
+    if (rows.length === 0) return;
+    const stored = this.rows<{ value_json: string }>(`SELECT value_json FROM registry_state WHERE key = 'catalog'`)[0];
+    const datasets = new Map<string, JsonObject>();
+    for (const entry of asArrayOrEmpty(asObject(parseJson(stored?.value_json ?? "{}"))?.datasets)) {
+      const dataset = asObject(entry);
+      const id = asString(dataset?.id);
+      if (dataset && id) datasets.set(id, dataset);
+    }
+    for (const row of rows) {
+      const { dataset: key, ...definition } = asObject(parseJson(row.definition_json)) ?? {};
+      const dataset = datasets.get(asString(key) ?? "");
+      const terms: JsonObject = {
+        publisher: asString(dataset?.publisher) ?? asString(key) ?? row.slug,
+        licence: asString(dataset?.licence) ?? UNSTATED_LICENCE,
+        topics: asStringList(dataset?.topics) ?? [],
+      };
+      const attribution = asString(dataset?.attribution);
+      if (attribution !== undefined) terms.attribution = attribution;
+      this.exec(`UPDATE feeds SET definition_json = ? WHERE id = ?`, JSON.stringify({ ...definition, ...terms }), row.id);
+    }
   }
 
   /* ---------- Feeds ---------- */

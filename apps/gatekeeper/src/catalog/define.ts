@@ -9,16 +9,15 @@ import type { Topic } from "./topics";
 /*
  * What a publisher folder declares. A publisher is a folder under
  * `src/publishers/`, named for their key: its `index.ts` exports `PUBLISHER`,
- * its logo sits beside it as `logo.svg` or `logo.png`, the code that reads their
- * own API (when they have one) is a library folder beside that, and every
- * dataset of theirs is a folder under `datasets/`: its `index.ts` exports
- * `DATASET`, and every other file in it is one feed, exporting `FEED`.
- * A publisher whose data a shared format cannot read as it is keeps its own
- * translator in their folder, and their feed file calls it.
+ * which lists every feed of theirs; each feed is a file under `feeds/`,
+ * exporting `FEED`; their logo sits beside the `index.ts` as `logo.svg` or
+ * `logo.png`; and the code that reads their own API, when they have one, is a
+ * library folder beside that. A publisher whose data a shared format cannot
+ * read as it is keeps its own translator in their folder, and their feed file
+ * calls it.
  *
  * Nothing here repeats what the folders already say: a publisher's key is its
- * folder's name, a dataset's key is its publisher's key and its file's name,
- * and a feed's dataset is the file it is written in.
+ * folder's name, and a feed's publisher is the folder it is written in.
  */
 
 /** Who made the data: never the portal it was read from. */
@@ -38,25 +37,32 @@ export interface PublisherDefinition {
   logo?: "svg" | "png";
   /**
    * Whether we may republish what they publish. Absent means we may. `false`
-   * holds every dataset and feed of theirs out of the catalog, so nothing of
-   * theirs is polled or served, while their folder and their code stay and a
-   * comment says what we are waiting for. Lifting a hold is one word.
+   * holds every feed of theirs out of the catalog, so nothing of theirs is
+   * polled or served, while their folder and their code stay and a comment
+   * says what we are waiting for. Lifting a hold is one word.
    */
   enabled?: boolean;
+  /** Every feed of theirs, each imported from its file under `feeds/`, in the order their page lists them. */
+  feeds: readonly RunnableFeed[];
 }
 
 /** How often a feed runs, how long it may take, how much it may read, and whether its changes are history. */
 export type FeedPolicy = ExampleFeed["policy"];
 
 /**
- * One feed, in its own file beside its dataset's `index.ts`: what it is, how
- * often it runs, and the functions that read it — `fetch`, `backfill` when the
- * source keeps history, and `transform` — each calling whatever shared code it
- * needs. `config` is what the feed's identity and history hang on: it never
- * changes once merged. It carries no `source`; `defineFeed` takes the library.
+ * One feed, in its own file under its publisher's `feeds/`: what it is, under
+ * what terms, how often it runs, and the functions that read it — `fetch`,
+ * `backfill` when the source keeps history, and `transform` — each calling
+ * whatever shared code it needs. `config` is what the feed's identity and
+ * history hang on: it never changes once merged. It carries no `source`;
+ * `defineFeed` takes the library.
  */
-export interface FeedDefinition<C, M extends object = never> extends Omit<ExampleFeed, "dataset" | "config">, FeedFunctions<C, M> {
+export interface FeedDefinition<C, M extends object = never> extends Omit<ExampleFeed, "publisher" | "config" | "licence" | "topics">, FeedFunctions<C, M> {
   config: SourceConfig;
+  /** The terms the publisher states for it, or `source-terms` when they state none. */
+  licence: Licence;
+  /** What the catalog groups and filters by. */
+  topics: readonly Topic[];
 }
 
 /**
@@ -68,16 +74,4 @@ export function defineFeed<E, C, M extends object = never>(library: LibraryDeplo
   // SAFETY: a feed's transform only ever receives the metadata its own fetch returned (`feedCollector`), so erasing
   // `M` here, to let one list hold every feed, loses nothing the Worker relies on.
   return { ...feed, config: { source: library.source, ...feed.config } } as RunnableFeed;
-}
-
-/** One publisher's body of data, and the feeds that read it. */
-export interface DatasetDefinition {
-  title: string;
-  description: string;
-  /** The terms the publisher states for it, or `source-terms` when they state none. */
-  licence: Licence;
-  /** How the publisher asks to be credited, when they say. */
-  attribution?: string;
-  /** What the catalog groups and filters by. */
-  topics: readonly Topic[];
 }

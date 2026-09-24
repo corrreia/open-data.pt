@@ -23,7 +23,9 @@ function example(slug: string, title = slug): ExampleFeed {
     description: "Fixture",
     config: { source: slug[0] === "a" ? "alpha" : "beta", feed: slug },
     staleAfterSeconds: 3600,
-    dataset: "ine-consumer-price-index",
+    publisher: "ine",
+    licence: "cc-by-4.0",
+    topics: ["economy"],
     policy: { name: "Fixture", version: 1, collection: { cadenceSeconds: 3600, timeoutSeconds: 30, maxBytes: 1024, historyMode: "changes" } },
   };
 }

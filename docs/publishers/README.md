@@ -7,7 +7,7 @@ is at [open-data.pt/publisher/](https://open-data.pt/publisher/).
 
 This folder is for the knowledge that does not fit in the code: how a publisher's source is reached,
 what had to be arranged with them, and what to expect when it breaks. **Most publishers need no page.**
-Write one when reading their data takes something a reader of their dataset files would not guess — a
+Write one when reading their data takes something a reader of their feed files would not guess — a
 credential, a proxy, an unusual cadence, a permission, a known habit of the source.
 
 ## Pages

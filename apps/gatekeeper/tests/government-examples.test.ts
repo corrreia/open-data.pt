@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { type ExampleFeed, type NormalizedRow, type TransformContext } from "@open-data-pt/contract";
 import { type Topic } from "@open-data-pt/gatekeeper";
-import { INSTALLED, datasetOf, feedCollection, feedsOf } from "./catalog";
+import { INSTALLED, feedCollection, feedsOf } from "./catalog";
 import { readFixture } from "./support";
 
 /** Topics are catalog tags now, so these are the installed feeds carrying each tag, whatever Worker reads them. */
-const tagged = (topic: Topic): ExampleFeed[] => INSTALLED.filter((example) => datasetOf(example).topics.includes(topic));
+const tagged = (topic: Topic): ExampleFeed[] => INSTALLED.filter((example) => example.topics.includes(topic));
 const GOVERNMENT_EXAMPLES = tagged("government");
 const CITIES_EXAMPLES = tagged("cities");
 /** Telecom statistics from INE; the RIPE NCC network feeds share the tag and are held to their own tests. */
 const TELECOM_EXAMPLES = tagged("telecom").filter((example) => example.config.source === "ine");
-const government = feedsOf("udata").filter((example) => datasetOf(example).topics.includes("government"));
+const government = feedsOf("udata").filter((example) => example.topics.includes("government"));
 
 async function normalized(example: ExampleFeed, observedAt: string) {
   const text = readFixture(new URL(example.config.format === "csv" ? "./fixtures/cada-opinions.csv" : "./fixtures/government-registry-sample.json", import.meta.url));
@@ -30,8 +30,8 @@ async function normalized(example: ExampleFeed, observedAt: string) {
     observedAt,
     feed: {
       slug: example.slug,
-      title: example.title ?? datasetOf(example).title,
-      description: example.description ?? datasetOf(example).description,
+      title: example.title,
+      description: example.description,
       config: resolved.config,
       semantics: resolved.semantics,
     },
@@ -52,7 +52,7 @@ describe("government distribution examples", () => {
     }
     expect(government.find((example) => example.slug === "base-procurement-entities-feed")?.policy.collection.cadenceSeconds).toBe(30 * 86_400);
     const startups = government.find((example) => example.slug === "recognised-startups-feed");
-    expect(startups && datasetOf(startups).licence).toBe("source-terms");
+    expect(startups && startups.licence).toBe("source-terms");
   });
 
   it.each(government)("normalizes $slug as one table without acquisition-time churn", async (example) => {
@@ -67,12 +67,12 @@ describe("government distribution examples", () => {
   });
 
   it("uses keyless government telecom statistics without claiming live coverage", () => {
-    const telecom = feedsOf("ine").filter((example) => datasetOf(example).topics.includes("telecom"));
+    const telecom = feedsOf("ine").filter((example) => example.topics.includes("telecom"));
     expect(telecom).toHaveLength(6);
     expect(TELECOM_EXAMPLES.map((example) => example.slug).toSorted()).toEqual(telecom.map((example) => example.slug).toSorted());
     for (const example of telecom) {
       expect(example.policy.collection.cadenceSeconds).toBe(30 * 86_400);
-      expect(datasetOf(example).licence).toBe("cc-by-4.0");
+      expect(example.licence).toBe("cc-by-4.0");
       expect(example.config.indicator).not.toBe("0006853");
     }
   });

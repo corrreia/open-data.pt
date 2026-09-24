@@ -177,7 +177,9 @@ export async function kernelHarness(options: HarnessOptions = {}): Promise<Kerne
     policyId: feedPolicy.id,
     enabled: true,
     staleAfterSeconds: 7200,
-    dataset: "ine-consumer-price-index",
+    publisher: "ine",
+    licence: "cc-by-4.0",
+    topics: ["economy"],
     createdAt: "2026-09-10T00:00:00.000Z",
     updatedAt: "2026-09-10T00:00:00.000Z",
   };

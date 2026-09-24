@@ -58,7 +58,9 @@ async function registry() {
     policyId: "policy_1",
     enabled: true,
     staleAfterSeconds: 60,
-    dataset: "ine-consumer-price-index",
+    publisher: "ine",
+    licence: "cc-by-4.0",
+    topics: ["economy"],
     createdAt: "2026-09-10T00:00:00.000Z",
     updatedAt: "2026-09-10T00:00:00.000Z",
   });

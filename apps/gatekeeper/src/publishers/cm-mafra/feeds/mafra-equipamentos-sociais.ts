@@ -1,0 +1,23 @@
+import { defineFeed } from "#/catalog/define";
+import { ARCGIS_DEPLOYMENT, ARCGIS_NORMALIZER, ARCGIS_TRANSFORMER, collectArcgisFeed } from "#/formats/arcgis/index";
+import { MAFRA_POLICY } from "#/publishers/cm-mafra/arcgis";
+
+export const FEED = defineFeed(ARCGIS_DEPLOYMENT, {
+  slug: "mafra-equipamentos-sociais-feed",
+  title: "Mafra social facilities",
+  description: "Social facilities in Mafra with their address and parish, their legal nature, the services each offers and the capacity it holds.",
+  licence: "source-terms",
+  attribution: "Município de Mafra — Dados Abertos",
+  topics: ["cities", "society"],
+  config: {
+    host: "geomafra.cm-mafra.pt",
+    service: "arcgisext/rest/services/Dados_Abertos/DadosAbertos_ASocial_Equipamentos_Sociais/FeatureServer",
+    layer: "1",
+  },
+  policy: MAFRA_POLICY,
+  staleAfterSeconds: 172_800,
+  /** Once a day: layer 1 of the DadosAbertos_ASocial_Equipamentos_Sociais FeatureServer on geomafra.cm-mafra.pt — its metadata, then, when it has moved, every feature page by page. */
+  fetch: ({ config, validator, library, fetch }) => collectArcgisFeed(config, validator, library.hosts, fetch),
+  /** The layer's GeoJSON pages, streamed, into one record per feature with the layer's own schema. */
+  transform: { normalizer: ARCGIS_NORMALIZER, streaming: (body, context) => ARCGIS_TRANSFORMER.transform(body, context) },
+});

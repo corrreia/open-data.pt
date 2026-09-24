@@ -75,8 +75,14 @@ export interface Feed extends FeedStatus {
   policyId: string;
   enabled: boolean;
   staleAfterSeconds: number;
-  /** The dataset this feed reads part of, a key of the catalog the Gatekeeper declares; who published it and under what terms is the dataset's word, not the feed's. */
-  dataset: string;
+  /** Who made the data: a key of the publishers the Gatekeeper's catalog declares. */
+  publisher: string;
+  /** The terms it is served under: a key of the catalog's licences, or `source-terms` when the publisher states none. */
+  licence: string;
+  /** Topic keys of the catalog. */
+  topics: string[];
+  /** How the publisher asks to be credited, when they say. */
+  attribution?: string;
   createdAt: string;
   updatedAt: string;
 }

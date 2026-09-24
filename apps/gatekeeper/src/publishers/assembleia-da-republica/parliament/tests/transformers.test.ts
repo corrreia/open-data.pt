@@ -14,7 +14,7 @@ import {
 } from "#/index";
 import { transformParliament } from "#/publishers/assembleia-da-republica/parliament/index";
 import { PARLIAMENT_ELEMENT_BYTES } from "#/publishers/assembleia-da-republica/parliament/transform";
-import { feedsOf, datasetOf } from "#/tests/catalog";
+import { feedsOf } from "#/tests/catalog";
 
 function fixture(feed: string): JsonValue {
   return parseJson(readFixture(new URL(`./fixtures/${feed}.json`, import.meta.url)));
@@ -49,8 +49,8 @@ function context(feed: string, observedAt = "2026-09-15T00:00:00Z"): TransformCo
     observedAt,
     feed: {
       slug: example.slug,
-      title: example.title ?? datasetOf(example).title,
-      description: example.description ?? datasetOf(example).description,
+      title: example.title,
+      description: example.description,
       config: libraryConfig(example.config),
       semantics: { domainSubject: "reference", defaultProductRole: "reference" },
     },

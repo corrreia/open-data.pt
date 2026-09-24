@@ -1,4 +1,5 @@
 import type { PublisherDefinition } from "#/catalog/define";
+import { FEED as portugalExchanges } from "./feeds/portugal-exchanges";
 
 export const PUBLISHER: PublisherDefinition = {
   name: "PeeringDB",
@@ -8,4 +9,5 @@ export const PUBLISHER: PublisherDefinition = {
   // Held: PeeringDB's acceptable-use policy requires permission for reproduction and bulk sharing outside its
   // approved operational uses. Asked, awaiting an answer. https://www.peeringdb.com/aup
   enabled: false,
+  feeds: [portugalExchanges],
 };

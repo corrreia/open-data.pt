@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { collectNormalized, NORMALIZED_PROTOCOL, type CollectionRequest, type ExampleFeed } from "@open-data-pt/gatekeeper";
 import { readFrames } from "../apps/kernel/src/frames";
-import { datasetOf, feedCollection, feedsOf } from "../apps/gatekeeper/tests/catalog";
+import { feedCollection, feedsOf } from "../apps/gatekeeper/tests/catalog";
 
 const GTFS_SLUGS = new Set(["cp-gtfs-feed", "fertagus-gtfs-feed", "tub-braga-gtfs-feed", "tcb-barreiro-gtfs-feed", "horarios-do-funchal-gtfs-feed"]);
 const BIRD_SLUGS = new Set(["bird-porto", "bird-cascais", "bird-matosinhos"]);
@@ -87,7 +87,7 @@ function requestFor(example: ExampleFeed, resolved: CollectionRequest["resolved"
   return {
     protocol: NORMALIZED_PROTOCOL,
     collectionId: `live_${example.slug}`,
-    feed: { id: "fixture", slug: example.slug, title: example.title ?? datasetOf(example).title, description: example.description ?? datasetOf(example).description },
+    feed: { id: "fixture", slug: example.slug, title: example.title, description: example.description },
     resolved,
     feedEpoch: "live",
     observedAt: new Date().toISOString(),

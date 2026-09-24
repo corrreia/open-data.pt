@@ -18,7 +18,7 @@ import { readFrames } from "../apps/kernel/src/frames";
 import { MAX_RECORD_BYTES } from "../apps/kernel/src/blob-budget";
 import { jsonAs } from "./support";
 import { RUNNABLE, runtimeOf } from "@open-data-pt/gatekeeper/catalog";
-import { CARRIED, carriedLibraries, datasetOf, feedsOf } from "../apps/gatekeeper/tests/catalog";
+import { CARRIED, carriedLibraries, feedsOf } from "../apps/gatekeeper/tests/catalog";
 
 /**
  * Collects curated examples from their real sources, the way the kernel
@@ -34,7 +34,7 @@ const SELECTED =
 
 /** Whether LIVE_EXAMPLES asks for this feed: every feed, the feed by its slug, or every feed of its publisher. */
 function selected(example: ExampleFeed): boolean {
-  return SELECTED.includes("all") || SELECTED.includes(example.slug) || SELECTED.includes(datasetOf(example).publisher);
+  return SELECTED.includes("all") || SELECTED.includes(example.slug) || SELECTED.includes(example.publisher);
 }
 const MIB = 1024 * 1024;
 
@@ -56,7 +56,7 @@ function liveRequest(example: ExampleFeed, resolved: ResolvedFeed): CollectionRe
   return {
     protocol: NORMALIZED_PROTOCOL,
     collectionId: `live_${example.slug}`,
-    feed: { id: "feed_live", slug: example.slug, title: example.title ?? datasetOf(example).title, description: example.description ?? datasetOf(example).description },
+    feed: { id: "feed_live", slug: example.slug, title: example.title, description: example.description },
     resolved,
     feedEpoch: "live",
     mode: { kind: "live" },

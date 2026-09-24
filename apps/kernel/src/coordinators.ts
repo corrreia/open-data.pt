@@ -46,7 +46,7 @@ export type { SyncProgress } from "./example-sync";
 export const REGISTRY_ROOM = "main";
 
 const SYNC_STATE_KEY = "example-sync";
-/** The catalog the Gatekeeper last declared: its publishers, licences, topics and datasets. */
+/** The catalog the Gatekeeper last declared: its publishers, licences and topics. */
 const CATALOG_STATE_KEY = "catalog";
 const AUDIT_DUE_KEY = "lake-audit-due";
 /** History its Workflow has not delivered after this long is drained by the runner's alarm. */
@@ -65,7 +65,10 @@ interface FeedInput {
   config: SourceConfig;
   policyId: string;
   staleAfterSeconds: number;
-  dataset: string;
+  publisher: string;
+  licence: string;
+  topics: string[];
+  attribution?: string;
 }
 
 /**
@@ -260,7 +263,7 @@ export class Registry extends DurableObject<Env> {
    * The Gatekeeper's examples and feed kinds, grouped by the library each
    * example names in `source`, so a change to one library's kinds re-resolves
    * that library's feeds and no other's. Its catalog is stored on the way, so
-   * the examples are applied against the datasets it declared with them. A
+   * the examples are applied against the vocabularies it declared with them. A
    * Gatekeeper that does not answer, or lists nothing, is broken rather than emptied.
    */
   private async readCatalog(): Promise<CatalogEntry[] | undefined> {
@@ -269,7 +272,7 @@ export class Registry extends DurableObject<Env> {
       const [examples, kinds, declared] = await Promise.all([gatekeeper.exampleFeeds(), gatekeeper.listFeedKinds(), gatekeeper.catalog()]);
       if (examples.length === 0) throw new Error("The Gatekeeper listed no examples");
       const description = checkedCatalog(declared);
-      if (description.datasets.length === 0) throw new Error("The Gatekeeper declared no datasets");
+      if (description.publishers.length === 0) throw new Error("The Gatekeeper declared no publishers");
       this.storeCatalog(description);
       const catalog = new Map<string, CatalogEntry>();
       for (const example of examples) {
@@ -286,7 +289,7 @@ export class Registry extends DurableObject<Env> {
     }
   }
 
-  /** Every publisher, licence, topic and dataset the Gatekeeper last declared; empty until it first answers. */
+  /** Every publisher, licence and topic the Gatekeeper last declared; empty until it first answers. */
   catalog(): CatalogDescription {
     return this.store.getState<CatalogDescription>(CATALOG_STATE_KEY) ?? EMPTY_CATALOG;
   }
@@ -306,9 +309,8 @@ export class Registry extends DurableObject<Env> {
   private async applyExample(library: string, raw: ExampleFeed): Promise<void> {
     // A local session polls politely: `pnpm dev` sets a floor under every cadence, and a deployment sets none.
     const example = withCadenceFloor(raw, cadenceFloorOf(this.env.DEV_MIN_CADENCE_SECONDS));
-    // The Gatekeeper's word crosses RPC as plain strings; a key outside its catalog is a mistake, never a new entry.
-    const dataset = this.vocabulary().dataset(example.dataset);
-    if (!dataset) throw new NormalizedInputError(`${example.slug} names an unknown dataset: ${example.dataset}`);
+    const unknown = this.vocabulary().unknownKey(example);
+    if (unknown !== undefined) throw new NormalizedInputError(`${example.slug} names ${unknown}`);
     // A policy is its name and version; the id is only the row's handle. One installed under an earlier Worker's
     // name keeps its id, so moving a feed between Workers never collides with the row it already uses.
     const current = this.store.getPolicyByName(example.policy.name, example.policy.version);
@@ -317,15 +319,17 @@ export class Registry extends DurableObject<Env> {
     if (!current || policyFingerprint(current) !== policyFingerprint(policy)) this.store.upsertPolicy(policy);
     const input: FeedInput = {
       slug: example.slug,
-      // A feed that is the whole of its dataset is called what the dataset is called.
-      title: example.title ?? dataset.title,
-      description: example.description ?? dataset.description,
+      title: example.title,
+      description: example.description,
       library,
       config: example.config,
       policyId,
       staleAfterSeconds: example.staleAfterSeconds,
-      dataset: example.dataset,
+      publisher: example.publisher,
+      licence: example.licence,
+      topics: [...example.topics],
     };
+    if (example.attribution !== undefined) input.attribution = example.attribution;
     await this.installFeed(input);
   }
 
@@ -527,15 +531,14 @@ function productView(entry: ProductSummary, feed: Feed | undefined, policy: Feed
   const lastSuccess = feed?.lastSuccessAt ? Date.parse(feed.lastSuccessAt) : Date.parse(entry.updatedAt);
   const staleAfterSeconds = feed?.staleAfterSeconds ?? 86_400;
   const history = policy !== undefined && keepsHistory(policy, entry.productKey);
-  const terms = feed ? vocabulary.dataset(feed.dataset) : undefined;
   return {
     ...entry,
     stale: lastSuccess + staleAfterSeconds * 1000 < Date.now(),
     exposeHistory: history,
     historyMode: history ? "changes" : "latest",
-    // A product is served under its dataset's terms: one feed of a dataset cannot claim other terms than its siblings.
-    licence: terms ? vocabulary.licenceRef(terms.licence) : null,
-    attribution: terms?.attribution ?? null,
+    // A product is served under its feed's terms.
+    licence: feed ? vocabulary.licenceRef(feed.licence) : null,
+    attribution: feed?.attribution ?? null,
     staleAfterSeconds,
     cadenceSeconds: policy?.collection.cadenceSeconds ?? 86_400,
   };

@@ -27,7 +27,7 @@ not in the code: a login, a proxy, a rate limit, a permission, a habit of the so
 - [`../CONTRIBUTING.md`](../CONTRIBUTING.md) — adding a dataset, a source or a format, and the checks before a pull request
 - [`../CONTEXT.md`](../CONTEXT.md) — the domain language: Gatekeeper, library, feed, product, policy, lake, kernel
 - [`../AGENTS.md`](../AGENTS.md) — the same rules, written for coding agents
-- [`../.agents/skills/write-gatekeeper/SKILL.md`](../.agents/skills/write-gatekeeper/SKILL.md) — writing a library, step by step
+- [`../.agents/skills/write-publisher/SKILL.md`](../.agents/skills/write-publisher/SKILL.md) — adding a publisher, a feed or a library, step by step
 - [`../apps/gatekeeper/src/publishers/README.md`](../apps/gatekeeper/src/publishers/README.md) — what a usable publisher logo is
 
 The site has its own reader-facing documentation: [Start here](https://open-data.pt/start/),

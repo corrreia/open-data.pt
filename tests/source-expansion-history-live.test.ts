@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { NORMALIZED_PROTOCOL, collectNormalized, type CollectionRequest, type ExampleFeed, type NormalizedCollector, type ResolvedFeed } from "@open-data-pt/gatekeeper";
 import { readFrames } from "../apps/kernel/src/frames";
 import { MAX_RECORD_BYTES } from "../apps/kernel/src/blob-budget";
-import { datasetOf, feedCollection, feedsOf } from "../apps/gatekeeper/tests/catalog";
+import { feedCollection, feedsOf } from "../apps/gatekeeper/tests/catalog";
 
 const selected = process.env.LIVE_HISTORY_EXPANSION?.split(",") ?? [];
 const examples = [...feedsOf("opendatasoft"), ...feedsOf("ine")].filter((example) => selected.includes(example.slug));
@@ -19,7 +19,7 @@ async function request(example: ExampleFeed, resolved: ResolvedFeed): Promise<Co
   return {
     protocol: NORMALIZED_PROTOCOL,
     collectionId: `history-probe-${example.slug}`,
-    feed: { id: "probe", slug: example.slug, title: example.title ?? datasetOf(example).title, description: example.description ?? datasetOf(example).description },
+    feed: { id: "probe", slug: example.slug, title: example.title, description: example.description },
     resolved,
     feedEpoch: "probe",
     mode: { kind: "live" },

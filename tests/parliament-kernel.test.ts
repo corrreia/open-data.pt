@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { collectNormalized, libraryConfig, NORMALIZED_PROTOCOL, type CollectionRequest, type ExampleFeed, type NormalizedFrame } from "@open-data-pt/gatekeeper";
 import { PARLIAMENT_NORMALIZER } from "../apps/gatekeeper/src/publishers/assembleia-da-republica/parliament/index";
 import { parliamentDocument, type ParliamentDocument } from "../apps/gatekeeper/src/publishers/assembleia-da-republica/parliament/parliament";
-import { datasetOf, feedCollection, feedsOf } from "../apps/gatekeeper/tests/catalog";
+import { feedCollection, feedsOf } from "../apps/gatekeeper/tests/catalog";
 import { readFixture } from "../apps/gatekeeper/tests/support";
 import { readFrames } from "../apps/kernel/src/frames";
 
@@ -60,7 +60,7 @@ describe("Parliament frames as the kernel reads them", () => {
     const request: CollectionRequest = {
       protocol: NORMALIZED_PROTOCOL,
       collectionId: `fixture_${doc.feed}`,
-      feed: { id: "fixture", slug: example.slug, title: example.title ?? datasetOf(example).title, description: example.description ?? datasetOf(example).description },
+      feed: { id: "fixture", slug: example.slug, title: example.title, description: example.description },
       resolved,
       feedEpoch: "fixture",
       observedAt: "2026-09-15T00:00:00Z",
@@ -108,7 +108,7 @@ async function collect(example: ExampleFeed, fetcher: typeof fetch, mode: "saved
   const request: CollectionRequest = {
     protocol: NORMALIZED_PROTOCOL,
     collectionId: `${mode}_${config.feed}`,
-    feed: { id: "validation", slug: example.slug, title: example.title ?? datasetOf(example).title, description: example.description ?? datasetOf(example).description },
+    feed: { id: "validation", slug: example.slug, title: example.title, description: example.description },
     resolved,
     feedEpoch: "validation",
     mode: { kind: "live" },

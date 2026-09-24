@@ -9,7 +9,7 @@ import {
   type NormalizedCollector,
   type ResolvedFeed,
 } from "@open-data-pt/gatekeeper";
-import { DATASETS, FEEDS, RUNNABLE, datasetEnabled, publisherInputs, type CatalogEntry, runtimeOf } from "@open-data-pt/gatekeeper/catalog";
+import { FEEDS, RUNNABLE, feedEnabled, publisherInputs, runtimeOf } from "@open-data-pt/gatekeeper/catalog";
 import { LIBRARIES, library } from "@open-data-pt/gatekeeper/libraries";
 
 /** Every library the Gatekeeper Worker carries, as `libraries.ts` lists them. */
@@ -24,7 +24,7 @@ export function feedsOf(name: string): ExampleFeed[] {
 }
 
 /** Every feed the Registry installs: every feed a carried library reads, less the publishers held for permission. */
-export const INSTALLED: ExampleFeed[] = FEEDS.filter((feed) => CARRIED_NAMES.includes(feed.config.source ?? "") && datasetEnabled(feed.dataset));
+export const INSTALLED: ExampleFeed[] = FEEDS.filter((feed) => CARRIED_NAMES.includes(feed.config.source ?? "") && feedEnabled(feed));
 
 /**
  * One library built the way the Worker builds it: its declared vars, whatever
@@ -33,13 +33,6 @@ export const INSTALLED: ExampleFeed[] = FEEDS.filter((feed) => CARRIED_NAMES.inc
  */
 export function carriedLibraries(name: string, extra: Record<string, string | undefined> = {}, fetcher?: typeof fetch): GatekeeperLibraries {
   return new Map([[name, buildLibrary(library(name).deployment, extra, publisherInputs(name), fetcher)]]);
-}
-
-/** What the publisher folders say about the dataset a feed reads part of: its publisher, its terms, its topics. */
-export function datasetOf(feed: ExampleFeed): CatalogEntry {
-  const dataset = DATASETS.get(feed.dataset);
-  if (!dataset) throw new Error(`${feed.slug} names an unknown dataset: ${feed.dataset}`);
-  return dataset;
 }
 
 /**

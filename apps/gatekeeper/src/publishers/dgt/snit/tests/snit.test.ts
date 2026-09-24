@@ -1,6 +1,6 @@
 import { readFixture } from "#/tests/support";
 import { describe, expect, it, vi } from "vitest";
-import { datasetOf, feedCollection, feedsOf } from "#/tests/catalog";
+import { feedCollection, feedsOf } from "#/tests/catalog";
 import {
   GatekeeperError,
   NORMALIZED_PROTOCOL,
@@ -268,7 +268,7 @@ describe("SNIT examples", () => {
   it("ships one feed per kind of instrument the register holds", () => {
     expect(feedsOf("snit")).toHaveLength(Object.keys(SNIT_TYPES).length);
     expect(new Set(feedsOf("snit").map((example) => example.slug)).size).toBe(feedsOf("snit").length);
-    expect(feedsOf("snit").every((example) => example.config.source === "snit" && datasetOf(example).publisher === "dgt")).toBe(true);
+    expect(feedsOf("snit").every((example) => example.config.source === "snit" && example.publisher === "dgt")).toBe(true);
   });
 
   it("polls the register weekly at most, and gives the slow types room to answer", () => {
@@ -282,8 +282,8 @@ describe("SNIT examples", () => {
 
   it("serves the register under the licence DGT states for it", () => {
     for (const example of feedsOf("snit")) {
-      expect(datasetOf(example).licence).toBe("cc-by");
-      expect(datasetOf(example).attribution ?? "").not.toBe("");
+      expect(example.licence).toBe("cc-by");
+      expect(example.attribution ?? "").not.toBe("");
     }
   });
 });

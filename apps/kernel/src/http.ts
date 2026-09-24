@@ -111,20 +111,7 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
       }
     }
 
-    /* ---------- Datasets: what the catalog holds, whose it is and under what terms ---------- */
-    if (url.pathname === "/api/datasets") {
-      return json({ data: new Vocabulary(await registry().catalog()).datasetRefs(url.origin) });
-    }
-    const datasetMatch = url.pathname.match(/^\/api\/datasets\/([^/]+)$/);
-    if (datasetMatch?.[1]) {
-      const id = decodeURIComponent(datasetMatch[1]);
-      const vocabulary = new Vocabulary(await registry().catalog());
-      if (!vocabulary.dataset(id))
-        return problem(404, "Dataset not found", `open-data.pt serves no dataset called “${id}”. Every dataset is listed at ${url.origin}/api/datasets.`);
-      return json({ data: vocabulary.datasetRef(id, url.origin) });
-    }
-
-    /* ---------- Feeds: which part of a dataset each one reads, and how its collection is going ---------- */
+    /* ---------- Feeds: what each one reads, whose it is and under what terms, and how its collection is going ---------- */
     if (url.pathname === "/api/feeds") {
       const reg = registry();
       const [feeds, policies, catalog] = await Promise.all([reg.listFeeds(), reg.listPolicies(), reg.catalog()]);
@@ -564,7 +551,10 @@ function publicFeed(feed: Feed, cadenceSeconds: number | undefined, vocabulary: 
     library: _library,
     semantics: _semantics,
     config,
-    dataset,
+    publisher,
+    licence,
+    topics,
+    attribution,
     cooldownUntil: _cooldown,
     lastError: _error,
     historyBacklog: _backlog,
@@ -572,7 +562,8 @@ function publicFeed(feed: Feed, cadenceSeconds: number | undefined, vocabulary: 
     ...publicValue
   } = feed;
   const source = config.source ?? "";
-  return { ...publicValue, dataset: vocabulary.datasetRef(dataset, origin), format: STANDARD_FORMATS.has(source) ? source : "own-api", cadenceSeconds: cadenceSeconds ?? null };
+  const terms = vocabulary.feedTerms(attribution === undefined ? { publisher, licence, topics } : { publisher, licence, topics, attribution }, origin);
+  return { ...publicValue, ...terms, format: STANDARD_FORMATS.has(source) ? source : "own-api", cadenceSeconds: cadenceSeconds ?? null };
 }
 
 /* ---------- Record filters ---------- */

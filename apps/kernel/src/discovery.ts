@@ -124,17 +124,17 @@ async function serve(request: Request, document: Document): Promise<Response> {
 
 /** Every page worth finding: the site's own, then each publisher and product the API lists now. */
 async function sitemap(origin: string, host: SiteHost): Promise<Document> {
-  const datasets = await readCatalog(host);
+  const listings = await readCatalog(host);
   const entries: Array<{ loc: string; lastmod?: string }> = SITEMAP_PAGES.map((path) => ({ loc: `${origin}${path}` }));
   const publishers = new Map<string, string>();
-  for (const { dataset, products } of datasets) {
+  for (const { feed, products } of listings) {
     for (const item of products) {
-      const page = publisherPage(dataset.publisher.id);
+      const page = publisherPage(feed.publisher.id);
       if ((publishers.get(page) ?? "") < item.updatedAt) publishers.set(page, item.updatedAt);
     }
   }
   for (const [page, lastmod] of publishers) entries.push({ loc: `${origin}${page}`, lastmod });
-  for (const { products } of datasets) for (const item of products) entries.push({ loc: `${origin}${productPage(item.slug)}`, lastmod: item.updatedAt });
+  for (const { products } of listings) for (const item of products) entries.push({ loc: `${origin}${productPage(item.slug)}`, lastmod: item.updatedAt });
   const body = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',

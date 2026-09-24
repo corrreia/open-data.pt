@@ -66,41 +66,39 @@ tag to be a known catalog topic, and nothing of a held publisher's to be install
 A successful source request is not proof of a reuse licence, and a successful dry-run is not a
 deployment.
 
-## Publishers, datasets and the vocabularies they name
+## Publishers, their feeds and the vocabularies they name
 
 Every publisher is a folder, [`apps/gatekeeper/src/publishers/<publisher>/`](../apps/gatekeeper/src/publishers/),
 and everything about them is in it:
 
 - **`index.ts`** — who they are: never the portal the data was read from, since dados.gov.pt carries
   ten publishers and is none of them. A publisher read through two libraries is one publisher, with
-  one folder and one page.
+  one folder and one page. It lists every feed of theirs, in the order their page shows them.
 - **`logo.svg` or `logo.png`** — their mark, optional; see [the publishers README](../apps/gatekeeper/src/publishers/README.md).
-- **`datasets/<name>/`** — one publisher's body of data: `index.ts` says what it is, its terms and its
-  topics, and every other file is one feed, with the functions that read it — `fetch` for the live
-  read, `backfill` for the history walk when the source keeps one, and `transform` — each calling
-  shared code. Two feeds are the same dataset when they describe the same things, by the same
-  identifiers, under the same terms. The key is the folder and the dataset's name,
-  `<publisher>-<name>`, and never changes.
+- **`feeds/<name>.ts`** — one feed each: what it is, its terms and topics, and the functions that read
+  it — `fetch` for the live read, `backfill` for the history walk when the source keeps one, and
+  `transform` — each calling shared code. Its slug is its identity and never changes.
 - **`<library>/`** — shared code for their own API, when they have one: how a feed's identity is worked
   out, what its feeds are handed when they run, and the fetching and translating their files call.
 
-Two keyed lists every dataset names, in [`apps/gatekeeper/src/catalog/`](../apps/gatekeeper/src/catalog/):
+Two keyed lists every feed names, in [`apps/gatekeeper/src/catalog/`](../apps/gatekeeper/src/catalog/):
 
-- **`topics.ts`** — browsing tags. A dataset carries as many as it likes: `cities`, `culture`, `economy`,
+- **`topics.ts`** — browsing tags. A feed carries as many as it likes: `cities`, `culture`, `economy`,
   `energy`, `environment`, `government`, `health`, `mobility`, `society`, `telecom`, `weather`.
-- **`licences.ts`** — the terms a dataset is served under, as its publisher states them, or
+- **`licences.ts`** — the terms a feed is served under, as its publisher states them, or
   `source-terms` when they state none. A licence spelled three ways is one licence.
 
-The Worker's bundler cannot list a directory, so `pnpm catalog` writes the folders down in
-`catalog/folders.generated.ts`, and a test fails when it is stale. The Gatekeeper hands the catalog
-to the kernel over RPC; the kernel stores it and serves it expanded, each vocabulary entry as
-`{ id, name, url?, description? }` and each dataset at `/api/datasets`. A licence or topic nothing
-uses, a publisher with no dataset, and a dataset no feed reads all fail the tests.
+The Worker's bundler cannot list a directory, so `pnpm catalog` writes the publisher folders down in
+`catalog/folders.generated.ts`, and a test fails when it is stale; each publisher lists its own
+feeds, and a test fails when a feed file is missing from that list. The Gatekeeper hands the
+vocabularies and the feeds to the kernel over RPC; the kernel stores them and serves each feed with
+its publisher and licence expanded, as `{ id, name, url?, description? }`. A licence or topic
+nothing uses, and a publisher with no feed, fail the tests.
 
 ## Writing one
 
 [`../CONTRIBUTING.md`](../CONTRIBUTING.md) walks through each kind of contribution, and
-[`../.agents/skills/write-gatekeeper/SKILL.md`](../.agents/skills/write-gatekeeper/SKILL.md) is the
+[`../.agents/skills/write-publisher/SKILL.md`](../.agents/skills/write-publisher/SKILL.md) is the
 same for coding agents. A library exports its feed-kind table, its validator, its collect function,
 its transformer, a collector factory, and the deployment declaration that says what the Worker must
-give it. Which feeds it reads is the publishers' word, in their dataset files.
+give it. Which feeds it reads is the publishers' word, in their feed files.

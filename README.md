@@ -58,8 +58,9 @@ testing and deployment.
 
 ## Contributing
 
-Adding a dataset from a source already read is one entry in a library's `examples.ts`; a new source on
-a known format is that entry plus a hostname. [CONTRIBUTING.md](CONTRIBUTING.md) walks through all four
+Adding a dataset from a source already read is one feed file in the publisher's folder and a line in
+their `index.ts`; a new source on a known format is that plus the publisher's folder, with the hosts
+their data is read from. [CONTRIBUTING.md](CONTRIBUTING.md) walks through all four
 kinds of contribution. Pull requests welcome; deploys and secrets are the owner's.
 
 Something broken or missing? The issue templates cover

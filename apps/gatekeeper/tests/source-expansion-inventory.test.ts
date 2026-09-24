@@ -1,7 +1,7 @@
 import { writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { asStringList, parseJson, type ExampleFeed } from "@open-data-pt/contract";
-import { CARRIED, datasetOf, feedsOf } from "./catalog";
+import { CARRIED, feedsOf } from "./catalog";
 import { readFixture } from "./support";
 
 interface LibraryExamples {
@@ -32,9 +32,9 @@ describe("source expansion inventory", () => {
     const additions = libraries.flatMap(({ library, examples }) => examples.filter((example) => !baseline.has(example.slug)).map((example) => ({ library, ...example })));
     for (const example of additions) {
       expect(example.config.source).toBeTruthy();
-      expect(datasetOf(example).publisher).toBeTruthy();
-      expect(datasetOf(example).attribution).toBeTruthy();
-      expect(datasetOf(example).licence).toBeTruthy();
+      expect(example.publisher).toBeTruthy();
+      expect(example.attribution).toBeTruthy();
+      expect(example.licence).toBeTruthy();
       expect(Number.isSafeInteger(example.policy.collection.cadenceSeconds)).toBe(true);
       expect(example.policy.collection.cadenceSeconds).toBeGreaterThanOrEqual(60);
       expect(example.policy.collection.maxBytes).toBeGreaterThan(0);

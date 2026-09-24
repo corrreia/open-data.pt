@@ -3,8 +3,8 @@ import { basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { LICENCES, TOPICS, isLicence, isTopic, type ExampleFeed } from "@open-data-pt/gatekeeper";
-import { DATASETS, FEEDS, PUBLISHERS, datasetEnabled, publisherEnabled } from "@open-data-pt/gatekeeper/catalog";
-import { CARRIED_NAMES, INSTALLED, datasetOf } from "./catalog";
+import { FEEDS, PUBLISHERS, feedEnabled, publisherEnabled } from "@open-data-pt/gatekeeper/catalog";
+import { CARRIED_NAMES, INSTALLED } from "./catalog";
 
 /**
  * Every library directory on disk: each format, and each publisher's own
@@ -107,45 +107,43 @@ describe("libraries and the Worker that carries them", () => {
     ]);
   });
 
-  it("tags every dataset, held or not, with catalog topics and nothing else", () => {
-    const strays = [...DATASETS]
-      .filter(([, dataset]) => dataset.topics.length === 0 || dataset.topics.some((topic) => !isTopic(topic)))
-      .map(([id, dataset]) => `${id} (${dataset.topics.join(", ")})`);
+  it("tags every feed, held or not, with catalog topics and nothing else", () => {
+    const strays = FEEDS.filter((feed) => feed.topics.length === 0 || feed.topics.some((topic) => !isTopic(topic))).map((feed) => `${feed.slug} (${feed.topics.join(", ")})`);
     expect(strays).toEqual([]);
   });
 
-  it("gives every publisher a dataset and every dataset a feed, and names only licences the vocabulary knows, each used", () => {
+  it("gives every publisher a feed, and names only licences the vocabulary knows, each used", () => {
     expect(
-      [...PUBLISHERS.keys()].filter((id) => ![...DATASETS.values()].some((dataset) => dataset.publisher === id)),
-      "publishers with no dataset",
+      [...PUBLISHERS].filter(([, publisher]) => publisher.feeds.length === 0).map(([id]) => id),
+      "publishers with no feed",
     ).toEqual([]);
     expect(
-      [...DATASETS].filter(([, dataset]) => dataset.feeds.length === 0).map(([id]) => id),
-      "datasets no feed reads",
+      FEEDS.filter((feed) => !isLicence(feed.licence)).map((feed) => feed.slug),
+      "feeds naming a licence outside the vocabulary",
     ).toEqual([]);
-    expect(
-      [...DATASETS].filter(([, dataset]) => !isLicence(dataset.licence)).map(([id]) => id),
-      "datasets naming a licence outside the vocabulary",
-    ).toEqual([]);
-    const licences = new Set<string>([...DATASETS.values()].map((dataset) => dataset.licence));
+    const licences = new Set<string>(FEEDS.map((feed) => feed.licence));
     expect(
       Object.keys(LICENCES).filter((key) => !licences.has(key)),
-      "licences no dataset names",
+      "licences no feed names",
     ).toEqual([]);
-    const topics = new Set<string>([...DATASETS.values()].flatMap((dataset) => dataset.topics));
+    const topics = new Set<string>(FEEDS.flatMap((feed) => feed.topics));
     expect(
       Object.keys(TOPICS).filter((key) => !topics.has(key)),
-      "topics no dataset names",
+      "topics no feed names",
     ).toEqual([]);
   });
 
-  it("names what a feed is only when its dataset has others to tell it from", () => {
-    const wrong = [...DATASETS].flatMap(([id, dataset]) =>
-      dataset.feeds
-        .filter((feed) => dataset.feeds.length > 1 !== (feed.title !== undefined && feed.description !== undefined))
-        .map((feed) => `${id}: ${feed.slug} ${dataset.feeds.length > 1 ? "needs its own title and description" : "repeats its dataset's"}`),
-    );
-    expect(wrong).toEqual([]);
+  it("gives every feed a title and a description of its own, no two feeds of a publisher alike", () => {
+    expect(FEEDS.filter((feed) => feed.title.trim() === "" || feed.description.trim() === "").map((feed) => feed.slug)).toEqual([]);
+    const seen = new Map<string, string>();
+    const repeated: string[] = [];
+    for (const feed of FEEDS) {
+      const key = `${feed.publisher}: ${feed.title}`;
+      const other = seen.get(key);
+      if (other) repeated.push(`${other} and ${feed.slug} are both "${feed.title}"`);
+      seen.set(key, feed.slug);
+    }
+    expect(repeated).toEqual([]);
   });
 
   it("carries every library directory, each once", () => {
@@ -162,7 +160,7 @@ describe("libraries and the Worker that carries them", () => {
   });
 
   it("installs every feed of an enabled publisher, each once", () => {
-    const offered = FEEDS.filter((feed) => datasetEnabled(feed.dataset))
+    const offered = FEEDS.filter((feed) => feedEnabled(feed))
       .map((feed) => feed.slug)
       .toSorted();
     expect(DEPLOYED.map((example) => example.slug).toSorted()).toEqual(offered);
@@ -171,9 +169,9 @@ describe("libraries and the Worker that carries them", () => {
   it("installs nothing from a publisher held for permission", () => {
     const held = [...PUBLISHERS.keys()].filter((key) => !publisherEnabled(key));
     expect(held.length, "no publisher is held, so nothing proves a hold works").toBeGreaterThan(0);
-    expect(DEPLOYED.filter((example) => held.includes(datasetOf(example).publisher)).map((example) => example.slug)).toEqual([]);
+    expect(DEPLOYED.filter((example) => held.includes(example.publisher)).map((example) => example.slug)).toEqual([]);
     // The libraries that read them still ship: a hold is about whose data we serve, not about what code exists.
-    const readingHeld = [...feedsByLibrary()].filter(([, examples]) => examples.some((example) => held.includes(datasetOf(example).publisher))).map(([name]) => name);
+    const readingHeld = [...feedsByLibrary()].filter(([, examples]) => examples.some((example) => held.includes(example.publisher))).map(([name]) => name);
     expect(
       readingHeld.filter((name) => !CARRIED_NAMES.includes(name)),
       "a library that reads a held publisher but is not carried",

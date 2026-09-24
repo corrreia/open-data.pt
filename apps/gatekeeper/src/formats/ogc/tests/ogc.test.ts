@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { readFixture } from "#/tests/support";
-import { carriedLibraries, datasetOf, feedsOf } from "#/tests/catalog";
+import { carriedLibraries, feedsOf } from "#/tests/catalog";
 import { RUNNABLE } from "#/catalog/index";
 import {
   GatekeeperError,
@@ -1321,7 +1321,7 @@ describe("OGC API Features examples", () => {
     for (const example of feedsOf("ogc")) {
       if ((example.config.geometry ?? "include") === "skip") continue;
       // The words are the dataset's when the feed is the whole of it.
-      expect(example.description ?? datasetOf(example).description, example.slug).not.toMatch(/attributes only|without boundary outlines/i);
+      expect(example.description, example.slug).not.toMatch(/attributes only|without boundary outlines/i);
     }
   });
 
@@ -1333,8 +1333,8 @@ describe("OGC API Features examples", () => {
   // site and on its dados.gov.pt records.
   it("serves the CAOP under the licence DGT states", () => {
     for (const example of feedsOf("ogc")) {
-      expect(datasetOf(example).licence).toBe("cc-by-4.0");
-      expect(datasetOf(example).attribution ?? "").not.toBe("");
+      expect(example.licence).toBe("cc-by-4.0");
+      expect(example.attribution ?? "").not.toBe("");
     }
   });
 
@@ -1371,7 +1371,7 @@ describe("OGC API Features examples", () => {
 
   it("asks for at least as many pages as the collection it promises needs", () => {
     for (const example of feedsOf("ogc")) {
-      const promised = /([\d,]{2,})\s/.exec(example.description ?? datasetOf(example).description)?.[1];
+      const promised = /([\d,]{2,})\s/.exec(example.description)?.[1];
       if (promised === undefined) continue;
       const features = Number(promised.replaceAll(",", ""));
       const room = Number(example.config.maxPages ?? "0") * Number(example.config.pageSize ?? "0");

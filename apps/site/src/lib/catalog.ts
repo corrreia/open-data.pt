@@ -95,21 +95,19 @@ export function freshness(product: Product, feed: Feed | undefined): Freshness {
   return { tone: "ok", label: "Current" };
 }
 
-/** The feed a product came from, for the freshness its own collection decides. */
-function feedOf(feeds: Feed[], product: Product): Feed | undefined {
-  return feeds.find((feed) => feed.id === product.feedId);
-}
-
 export interface LabelledProduct {
   product: Product;
   label: string;
 }
 
+/**
+ * One feed as the site shows it: a card of its own, which the site calls a
+ * dataset because that is the reader's word (and DCAT's) for it.
+ */
 export interface Dataset {
-  /** The dataset's key: what its page is addressed by. */
+  /** The feed's ID. */
   id: string;
-  /** The feeds that read it, the one that last succeeded first. */
-  feeds: Feed[];
+  feed: Feed;
   title: string;
   description: string;
   publisher: Term;
@@ -141,46 +139,41 @@ export interface Licence extends Term {
   topics: Map<string, number>;
 }
 
-/** One dataset, with every feed that reads part of it and everything those feeds serve. */
+/** Every feed that serves something, with everything it serves. */
 export function buildDatasets(products: Product[], feeds: Feed[]): Dataset[] {
   const byFeed = new Map<string, Product[]>();
   for (const product of products) byFeed.set(product.feedId, [...(byFeed.get(product.feedId) ?? []), product]);
-  const grouped = new Map<string, Feed[]>();
-  for (const feed of feeds) {
-    if (!byFeed.has(feed.id)) continue;
-    grouped.set(feed.dataset.id, [...(grouped.get(feed.dataset.id) ?? []), feed]);
-  }
-  const datasets: Dataset[] = [];
-  for (const [id, members] of grouped) {
-    const feed = members[0]!;
-    const items = members.flatMap((member) => byFeed.get(member.id) ?? []);
+  return feeds.flatMap((feed): Dataset[] => {
+    const items = byFeed.get(feed.id);
+    if (!items) return [];
     const cadence = Math.min(...items.map((product) => product.cadenceSeconds ?? Number.POSITIVE_INFINITY));
-    const tones = items.map((product) => freshness(product, feedOf(members, product)).tone);
-    datasets.push({
-      id,
-      feeds: members,
-      title: feed.dataset.title,
-      description: feed.dataset.description ?? feed.description,
-      publisher: feed.dataset.publisher,
-      topics: feed.dataset.topics,
-      format: formatOf(feed),
-      cadence,
-      updates: updatesOf(cadence),
-      roles: [...new Set(items.map((product) => product.role))],
-      licence: feed.dataset.licence,
-      updatedAt: items
-        .map((product) => product.updatedAt)
-        .filter(Boolean)
-        .sort()
-        .at(-1),
-      rows: items.reduce((sum, product) => sum + (product.rowCount ?? 0), 0),
-      tone: tones.includes("bad") ? "bad" : tones.includes("warn") ? "warn" : "ok",
-      empty: items.every((product) => product.rowCount === 0),
-      // Empty tables go last within a dataset, keeping the source's order otherwise.
-      products: labelled(feed, items).sort((a, b) => Number(a.product.rowCount === 0) - Number(b.product.rowCount === 0)),
-    });
-  }
-  return datasets;
+    const tones = items.map((product) => freshness(product, feed).tone);
+    return [
+      {
+        id: feed.id,
+        feed,
+        title: feed.title,
+        description: feed.description,
+        publisher: feed.publisher,
+        topics: feed.topics,
+        format: formatOf(feed),
+        cadence,
+        updates: updatesOf(cadence),
+        roles: [...new Set(items.map((product) => product.role))],
+        licence: feed.licence,
+        updatedAt: items
+          .map((product) => product.updatedAt)
+          .filter(Boolean)
+          .sort()
+          .at(-1),
+        rows: items.reduce((sum, product) => sum + (product.rowCount ?? 0), 0),
+        tone: tones.includes("bad") ? "bad" : tones.includes("warn") ? "warn" : "ok",
+        empty: items.every((product) => product.rowCount === 0),
+        // Empty tables go last, keeping the source's order otherwise.
+        products: labelled(feed, items).sort((a, b) => Number(a.product.rowCount === 0) - Number(b.product.rowCount === 0)),
+      },
+    ];
+  });
 }
 
 /** Datasets the source currently leaves empty sort after the rest, whatever the order. */
@@ -193,7 +186,7 @@ export function buildPublishers(datasets: Dataset[]): Publisher[] {
     publisher.datasets.push(dataset);
     for (const topic of dataset.topics) publisher.topics.set(topic, (publisher.topics.get(topic) ?? 0) + 1);
     publisher.licences.set(dataset.licence.id, dataset.licence);
-    const source = openableUrl(dataset.feeds.find((feed) => feed.sourceUrl)?.sourceUrl);
+    const source = openableUrl(dataset.feed.sourceUrl);
     if (source && !publisher.hosts.has(source.hostname)) publisher.hosts.set(source.hostname, source.href);
     publishers.set(publisher.id, publisher);
   }

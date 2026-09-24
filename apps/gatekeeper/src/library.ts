@@ -86,7 +86,8 @@ export interface FeedFunctions<C, M extends object = never> {
 }
 
 /** A feed as the Worker runs it: what the kernel is told about it, and its own functions, whatever their library and metadata. */
-export interface RunnableFeed extends Omit<ExampleFeed, "dataset"> {
+export interface RunnableFeed extends Omit<ExampleFeed, "publisher" | "topics"> {
+  topics: readonly string[];
   fetch: (context: FeedContext<never>) => Promise<SourceFetch | Described<object>>;
   backfill?: (context: FeedContext<never>, cursor: HistoryCursor) => Promise<SourceFetch | Described<object>>;
   transform: FeedTransform;
