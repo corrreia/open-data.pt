@@ -31,9 +31,9 @@ One capability a library declares: what its facts are about, what role its produ
 
 ## Feed
 
-One repeatable collection definition: library, canonical resolved source configuration/resource identity, feed semantics, policy, and semantic feed epoch. Administrative edits do not rotate the epoch.
+One repeatable collection definition: library, canonical resolved source configuration/resource identity, feed semantics, policy, and semantic feed epoch. Administrative edits do not rotate the epoch, except its title and description: a feed of one product names it as the feed is named, so a new name makes the next collection read its source whole.
 
-A feed is a file under its publisher's `feeds/`, listed in their `index.ts`: its slug, what it is (`title`, `description`), the terms it is served under (`licence`, `attribution`), its `topics`, its configuration and policy, and its own `fetch`, `backfill` and `transform`. Its slug is its identity and never changes. The site shows each feed as a dataset, the reader's word for it, and DCAT's.
+A feed is a file under its publisher's `feeds/`, listed in their `index.ts`: its slug, what it is (`title`, `description`), the terms it is served under (`licence`, `attribution`), its `topics`, its configuration and policy, and its own `fetch`, `backfill` and `transform`. Its slug is its identity and never changes. A feed is how data is collected, never shown: the site lists each of its products, every table and series on its own, and a feed of one product names it as the feed is named.
 
 ## Publisher
 

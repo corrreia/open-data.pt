@@ -257,7 +257,6 @@ async function product(url: URL, host: SiteHost): Promise<PageText> {
   const geographic = fields.some((field) => field.type === "geometry" || field.type === "latitude");
   const facts: Array<[string, string | undefined]> = [
     ["Publisher", feed && `[${linkText(feed.publisher.name)}](${origin}${publisherPage(feed.publisher.id)})`],
-    ["Dataset", feed?.title],
     ["Kind", ROLE_LABEL.get(item.role) ?? item.role],
     ["Rows", String(item.rowCount)],
     ["Updated", item.stale ? `${item.updatedAt} (late: the last collection is older than expected)` : item.updatedAt],
@@ -338,7 +337,7 @@ async function status(url: URL, host: SiteHost): Promise<PageText> {
     ...(ended.length === 0
       ? ["None."]
       : [
-          "| Dataset | From | To | Cause | Failed attempts |",
+          "| Source | From | To | Cause | Failed attempts |",
           "| --- | --- | --- | --- | --- |",
           ...ended.map((outage) => `| ${cell(titleOf(outage))} | ${outage.startedAt} | ${outage.endedAt ?? ""} | ${outage.cause} | ${outage.failures} |`),
         ]),
@@ -422,7 +421,7 @@ async function operations(url: URL, host: SiteHost): Promise<PageText> {
     "",
     `Every feed open-data.pt collects: who publishes it, how often it is collected, and how its last collection went. Each run is at ${url.origin}/api/acquisitions.`,
     "",
-    "| Dataset | Publisher | Collected | Last success | Last run | Next run |",
+    "| Source | Publisher | Collected | Last success | Last run | Next run |",
     "| --- | --- | --- | --- | --- | --- |",
     ...feeds.map((feed) => {
       const failures = feed.consecutiveFailures ? `, ${plural(feed.consecutiveFailures, "failure")} in a row` : "";
@@ -439,11 +438,11 @@ async function contribute(): Promise<PageText> {
   return found([
     "# Contribute",
     "",
-    "open-data.pt is open source. Anyone can suggest a source or report one that broke, and a new dataset from a source we already read is often a single entry of code.",
+    "open-data.pt is open source. Anyone can suggest a source or report one that broke, and a new dataset from a source we already read is often a single feed file.",
     "",
     `- **Suggest a source** (no code): ${REPOSITORY}/issues/new?template=suggest-source.yml`,
     `- **Report a broken source** (no code): ${REPOSITORY}/issues/new?template=broken-source.yml`,
-    `- **Add a dataset** (one entry of TypeScript): ${CONTRIBUTING}#a-new-dataset-from-a-source-we-already-read`,
+    `- **Add a dataset** (one feed file of TypeScript): ${CONTRIBUTING}#a-new-feed-from-a-source-we-already-read`,
     `- **Add a source or a format** (TypeScript, with tests): ${CONTRIBUTING}#a-new-bespoke-source`,
     "",
     `The code is at ${REPOSITORY}, under the MIT licence. The data is not: it belongs to its publishers, under their licences. The maintainer reviews and deploys; a pull request never needs secrets or access to Cloudflare.`,

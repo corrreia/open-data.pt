@@ -81,7 +81,7 @@ function hourLabel(bar: Bar): string {
 function hourSummary(bar: Bar): string {
   if (bar.level === "none") return "No tracked collection history";
   if (bar.level === "ok") return "No recorded collection issues during tracked time";
-  return `${bar.affected} of ${bar.trackedMembers} tracked datasets affected, up to ${fmt.duration(bar.longest)} in this hour`;
+  return `${bar.affected} of ${bar.trackedMembers} tracked sources affected, up to ${fmt.duration(bar.longest)} in this hour`;
 }
 
 interface BarNotes {
@@ -351,7 +351,7 @@ function StatusPage() {
         <>
           <section aria-labelledby="platform-title">
             <SectionHead eyebrow="Platform" title="Collection on open-data.pt" id="platform-title">
-              Whether this site was running its collections at all. When it stops, every dataset stops updating.
+              Whether this site was running its collections at all. When it stops, nothing updates.
             </SectionHead>
             <LayerCard>
               <LayerCard.Primary className="grid gap-3">
@@ -396,7 +396,7 @@ function StatusPage() {
                           </button>
                           <a
                             href={publisherHref(row.slug)}
-                            aria-label={`${row.name}’s datasets`}
+                            aria-label={`${row.name}’s tables and series`}
                             className="grid size-6 place-items-center rounded text-kumo-subtle hover:text-kumo-strong"
                           >
                             <ArrowSquareOutIcon size={14} aria-hidden="true" />
@@ -512,7 +512,7 @@ interface Model {
   lastAttempt: string | undefined;
 }
 
-/** `counted` are the feeds the catalog counts as datasets, so both of the banner's numbers come from one set. */
+/** `counted` are the sources the catalog serves something from, so both of the banner's numbers come from one set. */
 function StateBanner({ model, now, counted }: { model: Model; now: number; counted: Feed[] }) {
   const failing = counted.filter(model.openOf);
   if (model.lastAttempt && now - Date.parse(model.lastAttempt) > STALL_MS) {
@@ -521,7 +521,7 @@ function StateBanner({ model, now, counted }: { model: Model; now: number; count
         variant="error"
         icon={<WarningCircleIcon weight="fill" />}
         title="Collection seems to have stopped."
-        description={`No dataset has been collected since ${fmt.dateTime(model.lastAttempt)}. Data already published stays available.`}
+        description={`Nothing has been collected since ${fmt.dateTime(model.lastAttempt)}. Data already published stays available.`}
       />
     );
   }
@@ -531,7 +531,7 @@ function StateBanner({ model, now, counted }: { model: Model; now: number; count
       <Banner
         variant="alert"
         icon={<WarningIcon weight="fill" />}
-        title={`${fmt.int(failing.length)} of ${fmt.int(counted.length)} datasets ${failing.length === 1 ? "is" : "are"} not being collected right now.`}
+        title={`${fmt.int(failing.length)} of ${fmt.int(counted.length)} sources ${failing.length === 1 ? "is" : "are"} not being collected right now.`}
         description={`Affected: ${publishers.join(", ")}. Their last published data stays available and collection retries by itself.`}
       />
     );
@@ -540,7 +540,7 @@ function StateBanner({ model, now, counted }: { model: Model; now: number; count
     <div className="flex items-start gap-3 rounded-xl bg-kumo-success-tint px-4 py-3.5 ring-1 ring-kumo-success/25">
       <CheckCircleIcon weight="fill" size={22} className="mt-0.5 shrink-0 text-kumo-success" />
       <div className="grid gap-0.5">
-        <p className="font-display text-xl text-kumo-success">All {fmt.int(counted.length)} datasets are being collected.</p>
+        <p className="font-display text-xl text-kumo-success">All {fmt.int(counted.length)} sources are being collected.</p>
         <p className="text-sm text-kumo-subtle">Every source answered its last collection.</p>
       </div>
     </div>
@@ -637,7 +637,7 @@ function Incidents({
                         )}
                       </>
                     ) : (
-                      "All datasets"
+                      "All sources"
                     )}
                   </p>
                   <p className="text-sm text-kumo-subtle">
