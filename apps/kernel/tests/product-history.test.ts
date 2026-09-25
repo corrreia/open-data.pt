@@ -94,7 +94,8 @@ beforeAll(async () => {
       watermark: null,
       rowCount: 0,
       chunks: null,
-      changesKey: null,
+      // Both siblings hold a change window: the left-out one's is left from before its policy left it out.
+      changesKey: slug === "left-out-events" || slug === "kept-events" ? `changes/${slug}.json` : null,
       seriesKey: null,
       seriesChangesKey: null,
       updatedAt: "2026-09-05T00:00:00.000Z",
@@ -188,10 +189,10 @@ describe("typed product history owner isolation", () => {
   });
 
   it("decides history per product: one its policy leaves out has none, a sibling on the same feed keeps it", async () => {
-    const leftOut = await jsonBody<{ exposeHistory: boolean; historyMode: string }>(await server.fetch("/api/products/left-out-events"));
-    expect(leftOut).toMatchObject({ exposeHistory: false, historyMode: "latest" });
-    const kept = await jsonBody<{ exposeHistory: boolean; historyMode: string }>(await server.fetch("/api/products/kept-events"));
-    expect(kept).toMatchObject({ exposeHistory: true, historyMode: "changes" });
+    const leftOut = await jsonBody<{ exposeHistory: boolean; historyMode: string; hasChanges: boolean }>(await server.fetch("/api/products/left-out-events"));
+    expect(leftOut).toMatchObject({ exposeHistory: false, historyMode: "latest", hasChanges: false });
+    const kept = await jsonBody<{ exposeHistory: boolean; historyMode: string; hasChanges: boolean }>(await server.fetch("/api/products/kept-events"));
+    expect(kept).toMatchObject({ exposeHistory: true, historyMode: "changes", hasChanges: true });
   });
 });
 
