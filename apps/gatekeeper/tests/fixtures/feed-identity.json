@@ -463,8 +463,1116 @@
     "resourceKey": "ogc:ogc:collection:50a4df8f1f881a1bb3758556715079c1c2b4c3e7440205d7fc28efed73c4d690",
     "kind": "ogc:collection"
   },
-  "dgt-crus-shapes-feed": {
-    "resourceKey": "ogc:ogc:collection:e2c07f60c9ce5fc9f3710f2ceaac12846d1ad0cf79ac6bcf25ace684fa44fb8c",
+  "dgt-crus-parcels-abrantes-feed": {
+    "resourceKey": "ogc:ogc:collection:51df3d2825d4d2f4bd03bd8c032a943f7dfc292d959ef7844f6d459af37bd498",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-agueda-feed": {
+    "resourceKey": "ogc:ogc:collection:d7f763a253c56f6e3058271e213d09bf2aa232aab07ffa93519f46b0bcbcb26a",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-aguiar-da-beira-feed": {
+    "resourceKey": "ogc:ogc:collection:268eac709761e501f583cf1031dd3555feb8114222d2a054fe0fe732e99179ad",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-alandroal-feed": {
+    "resourceKey": "ogc:ogc:collection:0419723b82e111f723d807e0a160180547cd5ad9729b1de2fda1e0a9f001d0df",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-albergaria-a-velha-feed": {
+    "resourceKey": "ogc:ogc:collection:c7735307d6eea12cc116a094e9442d50c9c411666e65b72d5e049d78c37ec4b5",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-albufeira-feed": {
+    "resourceKey": "ogc:ogc:collection:2e951345a15e9b8db5cb9764fff3ff687f44efb18e9387941dd6ca09f78bf0d2",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-alcacer-do-sal-feed": {
+    "resourceKey": "ogc:ogc:collection:bc06a8f255304f5cc399a841139b462fa92f35ea5ee66841613ca937e9a55f27",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-alcanena-feed": {
+    "resourceKey": "ogc:ogc:collection:551cc06ebde91dcf74c1324c131928d628fde8e9c1e603744cee2e4e21bb8b72",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-alcobaca-feed": {
+    "resourceKey": "ogc:ogc:collection:0650d8236d60a71672218f5561a06b548a383f8d13c667c6e49b3291ff2e26ec",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-alcochete-feed": {
+    "resourceKey": "ogc:ogc:collection:84c5b1997fed090e50d4d248fa79a424bd0312c2083cb9f9b3795243abe19a59",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-alcoutim-feed": {
+    "resourceKey": "ogc:ogc:collection:161b9c6e843f13e206eada20b86232524a4b6ba59ccedfad8fbfbaf1c26438ba",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-alenquer-feed": {
+    "resourceKey": "ogc:ogc:collection:8c2a1a48d2998561a18d4c1f2a8262bdf71066fa8afb951fbf49d73a0deca0f8",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-alfandega-da-fe-feed": {
+    "resourceKey": "ogc:ogc:collection:229e28f2e9d8b564870d5a63d352252bde94aa8dae3d5bd6f5563af94e383b1b",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-alijo-feed": {
+    "resourceKey": "ogc:ogc:collection:6b6e3f64d9c30c245ed10b7fb6c394736052b5d54167adbd347039a1b466b057",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-aljezur-feed": {
+    "resourceKey": "ogc:ogc:collection:1777e9b08bc552bc097850469d01d54d0d4cd8f52240b9fd4e7cd286e90fa7cd",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-aljustrel-feed": {
+    "resourceKey": "ogc:ogc:collection:a545053bddbd842135220a784e036dae4c849ba24f3904307b5e4491dc273bb3",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-almada-feed": {
+    "resourceKey": "ogc:ogc:collection:58de43a6d42092b6d9a53706c9110103aa3aeb607f60f26e1ec788938dff3887",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-almeida-feed": {
+    "resourceKey": "ogc:ogc:collection:62e1b70c0add0c1f08338e02b2048320e11f581e8a423bbf94f7f8ffd7fd7624",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-almeirim-feed": {
+    "resourceKey": "ogc:ogc:collection:9f15a2ff4f0d75a01fce19ab1ac9011096588c6ce1b244cc01d8a12d01ccc86f",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-almodovar-feed": {
+    "resourceKey": "ogc:ogc:collection:ffbf0195fa707b3825e1dd04da5ca0b1d05003fc84f2e32646e7f1960180cca4",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-alpiarca-feed": {
+    "resourceKey": "ogc:ogc:collection:16f565a936aa12c128d69b1cbd617b210e23aedddab07d83c23c9a05429e1d48",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-alter-do-chao-feed": {
+    "resourceKey": "ogc:ogc:collection:0ec663f257face30dbb0d60c73fac278983e5acff8a15c40fccc411ae693bf1b",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-alvaiazere-feed": {
+    "resourceKey": "ogc:ogc:collection:1805d32bd7e47f41050596e25a264544ca3b8657192d6f9b9a85666d751a98b4",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-alvito-feed": {
+    "resourceKey": "ogc:ogc:collection:1c0f414632aab02acb38fc1e56b54683dce1b995293b36fffdbaacc04df133b3",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-amadora-feed": {
+    "resourceKey": "ogc:ogc:collection:4d0d1eb713deda8570274d37b30d1804adb5cc4bd7a6e8863c3614ace5f7bd6e",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-amarante-feed": {
+    "resourceKey": "ogc:ogc:collection:e9f194063bc8a4d770bfe4b25bb5c0c17f4f04b3c67b78cb8522be6601311a06",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-amares-feed": {
+    "resourceKey": "ogc:ogc:collection:6918c66dfddcb3f529a619d42d23362d482f5cbf9776d32570eca4641afcab2d",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-anadia-feed": {
+    "resourceKey": "ogc:ogc:collection:a0d7f1b7def5e62f5221814b6266f475cc5a2223621c016f25c8f25151ca639d",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-ansiao-feed": {
+    "resourceKey": "ogc:ogc:collection:c39e445c3ae92dfcf405b720204ad0d9125738f7ce32dd79c7973ce96d035d3d",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-arcos-de-valdevez-feed": {
+    "resourceKey": "ogc:ogc:collection:5faa076828c8204fd49234c1866f16010f81ce26c458805dc49d652599a7b16b",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-arganil-feed": {
+    "resourceKey": "ogc:ogc:collection:2656fca37be47b8ffe1e5e6a182c1a58b6619f099f94f9dcbf93c97de46b7ce9",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-armamar-feed": {
+    "resourceKey": "ogc:ogc:collection:4e37f8ed97a774b6db35b4eebe24ab2ef1339a980741eb601d7b71cc2737f3c6",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-arouca-feed": {
+    "resourceKey": "ogc:ogc:collection:24cfb83338c13e26970a2401c343ff2d1aff3949dbf744308567a28b4fd9b0ce",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-arraiolos-feed": {
+    "resourceKey": "ogc:ogc:collection:929ba3f27c27d1e2fd8c54251028f859cfc177c4f3e45b7555435ba26f147cda",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-arronches-feed": {
+    "resourceKey": "ogc:ogc:collection:8b77f81180982a9872742a3c32859be97e87f8fb7458606d50a7930f427a2132",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-arruda-dos-vinhos-feed": {
+    "resourceKey": "ogc:ogc:collection:b03d0afe73a0cf38c4d067fbb83caba42f8dbe3cfc04742bfd3e4930c9536a3e",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-aveiro-feed": {
+    "resourceKey": "ogc:ogc:collection:877ba729931c833e03fc98d40d5486c7b685e1e1e60ec11dbc71f60a9fac6f45",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-avis-feed": {
+    "resourceKey": "ogc:ogc:collection:c11019ecf1689f68cb68950f66d6e6e3040d1c5c934d63b364dbfc303aa9cc4c",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-azambuja-feed": {
+    "resourceKey": "ogc:ogc:collection:ef0cff9b35714e87af37dc82d64dce788b6f665d956db54dedba52b77167576d",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-baiao-feed": {
+    "resourceKey": "ogc:ogc:collection:ce63ad2b4ca609158ae7d6bdf7dcadf55f95004ca5d287d6afd5be7b47cba0e2",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-barcelos-feed": {
+    "resourceKey": "ogc:ogc:collection:cddefbd5ea63432c5710b705fda95ccb7b5ee5641bb57a20405e1fd68b299f4a",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-barrancos-feed": {
+    "resourceKey": "ogc:ogc:collection:db2afa8d0ce0ccb99508ed607ed5ced8260319d20eb73350cd9d80004ac867f6",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-barreiro-feed": {
+    "resourceKey": "ogc:ogc:collection:3cb90951946a8b569a5cbb4ab4b8130d1247c083b88a9b016eb5baa8006ad49c",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-batalha-feed": {
+    "resourceKey": "ogc:ogc:collection:15e98a3f2553bd84dffc0b84ff405770c0d00f4940346613024d4490ea4eae87",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-beja-feed": {
+    "resourceKey": "ogc:ogc:collection:12dde5e22f4c93d4a4e9ad0bf67e8c1273034bba4516dc84eab409ddbf5678ad",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-belmonte-feed": {
+    "resourceKey": "ogc:ogc:collection:ba6ef2715d27103dc49ae369a0a3052d9542b0e78de5c253f8ca52730da75c22",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-benavente-feed": {
+    "resourceKey": "ogc:ogc:collection:c26bb5e8ea2a5c4a6d412d82a6010acb5b3f92d1944dd27a08f8fb778931169f",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-bombarral-feed": {
+    "resourceKey": "ogc:ogc:collection:6e086b71eb387d88abcf40423a751b12bd23140aa9a3bd2eaa39f06aa264fd2e",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-borba-feed": {
+    "resourceKey": "ogc:ogc:collection:bb2f6339d50d55bd5215e551bf82a89b2fb27ba94ad3036d67cfa5b3d55d7c40",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-boticas-feed": {
+    "resourceKey": "ogc:ogc:collection:ace1e69899803d955dea7020d3912c8bf19fa25975f5cbf497d7b417d6a9865b",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-braga-feed": {
+    "resourceKey": "ogc:ogc:collection:a66fb1bf6f25f3f6e85c92ae660e0225a88b8f743e3122afbc54cb40c0020833",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-braganca-feed": {
+    "resourceKey": "ogc:ogc:collection:fba7239eb864512b55909f9e2a135d4a2183c0e965245b160b96b0d16f127079",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-cabeceiras-de-basto-feed": {
+    "resourceKey": "ogc:ogc:collection:a918c0af98702923f1e0a0e0d0fdbc8a245d8b9f186079393fa6647ffeb1bc15",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-cadaval-feed": {
+    "resourceKey": "ogc:ogc:collection:5d0d4391f3bcd906dc4417d5b6a8019435a3f91a918730c177324592a378affb",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-caldas-da-rainha-feed": {
+    "resourceKey": "ogc:ogc:collection:10c109a1b9d910e0805846db52571022aab75cf54f7ac16a7df0eabdee66485c",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-caminha-feed": {
+    "resourceKey": "ogc:ogc:collection:99b89760d689735dbddec5f89bf84ac1f57a9d876a483d1ef40032ab20ca9a81",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-campo-maior-feed": {
+    "resourceKey": "ogc:ogc:collection:d7f29e471bc41345f2bddf2c34402f484dc3b332fffb51782f347a92d76a3dc4",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-cantanhede-feed": {
+    "resourceKey": "ogc:ogc:collection:ea2161a3c001eab0d9114b9650ae4c0a17c14038e8fa4d82eafe083bf463916b",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-carrazeda-de-ansiaes-feed": {
+    "resourceKey": "ogc:ogc:collection:b1f9015eeb8eeeb1654e5955ad33aa2c451bb97b266f01aa471331599f53b8b7",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-carregal-do-sal-feed": {
+    "resourceKey": "ogc:ogc:collection:163fcf1947b6e725f8a30b90ff94403f7fdcb255400b9be0a2e4514defb8ba6f",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-cartaxo-feed": {
+    "resourceKey": "ogc:ogc:collection:0382bfb0962f97aea70ed3f1c52132a3119aacd7e64ea04516a1075d3967e8ea",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-cascais-feed": {
+    "resourceKey": "ogc:ogc:collection:84d992bd7ddc7931bc3b6247e5aad25e582ff3f762d908027d869dd741ed16f6",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-castanheira-de-pera-feed": {
+    "resourceKey": "ogc:ogc:collection:a6b9fe22f8fa54c3814e3a1598de84fae595540672d9402be2d507b647d99648",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-castelo-branco-feed": {
+    "resourceKey": "ogc:ogc:collection:3fa7475880dae06def660bbe6a26f56fee6ae7e5845b1d2e2cc8878ad894a569",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-castelo-de-paiva-feed": {
+    "resourceKey": "ogc:ogc:collection:e2425f3208a41163e83ba10777567c88a5aa1e265e22ac89edbda790a0478645",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-castelo-de-vide-feed": {
+    "resourceKey": "ogc:ogc:collection:b1e98347de145f6c6f81dbb1924a248b097614897717c12a61741a0a7b7b0185",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-castro-daire-feed": {
+    "resourceKey": "ogc:ogc:collection:f857a2faaf7f81cb4ec9c161dbd80d1a758c364e2390c8f4a9abc2e8201687ed",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-castro-marim-feed": {
+    "resourceKey": "ogc:ogc:collection:b1ad1760eadadb45544912c461ed6d10f984cdef057107ea285fb4c799e82dd1",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-castro-verde-feed": {
+    "resourceKey": "ogc:ogc:collection:e4b19f011c68f584a1e79e87ca6e6385b2b5c474b20679e2710806b7db1bc37f",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-celorico-da-beira-feed": {
+    "resourceKey": "ogc:ogc:collection:8d29e25b474f42da529c865f0cb280c3712857c0e87955e028446eeeb8837dd3",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-celorico-de-basto-feed": {
+    "resourceKey": "ogc:ogc:collection:380f46ae2f187f6cf63c559c2154bf7b3ecc6af098ff81d66277683377c1d5ce",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-chamusca-feed": {
+    "resourceKey": "ogc:ogc:collection:b1c3dd29b34fa350593280a2921ca7b3198274f19bf4bf22e4c65e08351fa663",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-chaves-feed": {
+    "resourceKey": "ogc:ogc:collection:a41a7c7f59e722d942649fa78db076990a7218282a9a50ebd78c57836838ee45",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-cinfaes-feed": {
+    "resourceKey": "ogc:ogc:collection:1e5efab6b54be371471f2464b9ff0b067dff264fdee3352422f87fb560868b09",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-coimbra-feed": {
+    "resourceKey": "ogc:ogc:collection:4840902c9ef04488d1083e068115fe670dc5a47e396ef69e207dfe4c7f60eba4",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-condeixa-a-nova-feed": {
+    "resourceKey": "ogc:ogc:collection:df85bbc509196ec4c3fcdd77f9870702295684a56b188111e5262db24e1bfd2a",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-constancia-feed": {
+    "resourceKey": "ogc:ogc:collection:13d32149176dfa4e5ac05dead7a4418a4a83889dc910cf2819a49dfa121daf04",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-coruche-feed": {
+    "resourceKey": "ogc:ogc:collection:a793dedd690e2496e6d946f4a357cc05400b38267d915938e5dc61e1717e0d73",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-covilha-feed": {
+    "resourceKey": "ogc:ogc:collection:7190d589881cadc6cf4d2b048c5ce3eb6400e4a21073a2290c3b47ddf5d71a54",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-crato-feed": {
+    "resourceKey": "ogc:ogc:collection:568999b5af8cd5be6e0a4fcdedfc82a0055fe3054918a33d514fc62d3c5f0dbd",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-cuba-feed": {
+    "resourceKey": "ogc:ogc:collection:4fe6f04674d3ebccfca7ef994e0d51437d5b9a6b741e9e213578ec3d6e5b43e0",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-elvas-feed": {
+    "resourceKey": "ogc:ogc:collection:ef0aeed8f910ee4e85b3d479a24d3d63d091d7158d453ff8057a8321a4d383ba",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-entroncamento-feed": {
+    "resourceKey": "ogc:ogc:collection:8d9dec113c01a70f91c980e14ec097ff0d54d7ba759ff78b55148bc8a0ee46b2",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-espinho-feed": {
+    "resourceKey": "ogc:ogc:collection:91baf7995f3cc8f01a7badb601d75396a7f9eeafd453cb42e41374e43ce4b85f",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-esposende-feed": {
+    "resourceKey": "ogc:ogc:collection:cb179602b1b4f0d8be7370b0c3d980a70b9fd9d6e8354d54547fdd0eb716b129",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-estarreja-feed": {
+    "resourceKey": "ogc:ogc:collection:ed2a9f2d85070ce629e23ab5f02c0f1188ea681248ea1d59916d86cfb109428b",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-estremoz-feed": {
+    "resourceKey": "ogc:ogc:collection:7d542cd4691c82f2987ab85850054510b789a522e3233020e30b8a702d50ebff",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-evora-feed": {
+    "resourceKey": "ogc:ogc:collection:c2a0231cbdb1631d4d752eb27e2eaeccf07f432c0c32a4dfc2c4837cec5611ff",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-fafe-feed": {
+    "resourceKey": "ogc:ogc:collection:d78811b001a1b6c66a977e63b16a5885c210ace4ce0c6a94e68dfc5515cea6a3",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-faro-feed": {
+    "resourceKey": "ogc:ogc:collection:a871d65fb6e4530c6419fdee15d01cb0e2cb6e79607de8980b95f29e56e65652",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-felgueiras-feed": {
+    "resourceKey": "ogc:ogc:collection:e2821cce51e154bca220fb906074852ea01836ae7f0204bb8db7d14720fca3e3",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-ferreira-do-alentejo-feed": {
+    "resourceKey": "ogc:ogc:collection:f6fec000353e7c55b769d82e3ea686cc237a3e2f4e537544dafd571207b6d303",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-ferreira-do-zezere-feed": {
+    "resourceKey": "ogc:ogc:collection:557a50ff621ab09550558fcee16820b4df1d1dc5fc3ac383e324723ec317ce58",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-figueira-da-foz-feed": {
+    "resourceKey": "ogc:ogc:collection:353f139ab1370eb203c786e67f417d91158cd73c2a663cd722353c02fef3ffcb",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-figueira-de-castelo-rodrigo-feed": {
+    "resourceKey": "ogc:ogc:collection:5006ad606004b87351b82164ee0550101f4de20eb9b4b5305c216bcf6e481a7d",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-figueiro-dos-vinhos-feed": {
+    "resourceKey": "ogc:ogc:collection:74808fa9f4c2d466ccb990ec29d434f478d9de966129a22f23909e606e3b4713",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-fornos-de-algodres-feed": {
+    "resourceKey": "ogc:ogc:collection:8eac0ddd84d1ac65bfe75597cc87d4298d390e69af612266fe83cd596c5e3ddd",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-freixo-de-espada-a-cinta-feed": {
+    "resourceKey": "ogc:ogc:collection:b08258e4db4a1d6ec7cdf7205d3457b70d22be62ad0c5c566d7c8950ee20d643",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-fronteira-feed": {
+    "resourceKey": "ogc:ogc:collection:d9d0867268623624dfa34071c1db00fa0971cbdcb3c0ebb1bea427687a1ab69d",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-fundao-feed": {
+    "resourceKey": "ogc:ogc:collection:6c1aed9e49cac9c6385302f0a05a636e3792b4527318dced97c40586cef7bb2b",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-gaviao-feed": {
+    "resourceKey": "ogc:ogc:collection:82671094c71daab563065a308db138467b7dfc677eae7efe302809c841f49e1c",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-gois-feed": {
+    "resourceKey": "ogc:ogc:collection:32f56306acd9fa63895cad889bb63b6f87e51ed5cb4915fb49055ad550778efd",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-golega-feed": {
+    "resourceKey": "ogc:ogc:collection:2034c7c3823ec1a750938c6ec59ffa97aa881d906221abff1e722b411fbe6800",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-gondomar-feed": {
+    "resourceKey": "ogc:ogc:collection:07c503dad9704db3d6e93dcc63f8bc21ddce7a51745f55ef8c2cfedf925b2239",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-gouveia-feed": {
+    "resourceKey": "ogc:ogc:collection:6ceb1c3c87bc4e59688a113b5325e4f92fc5969fba01a7dbf5da8b8780ecb72f",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-grandola-feed": {
+    "resourceKey": "ogc:ogc:collection:9a5fa6188bfc89def3741b1a3a76fb66ba8c54d96c336b32d32712990e89b0de",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-guarda-feed": {
+    "resourceKey": "ogc:ogc:collection:94bdbaa512a01edef16ae15f510c2173f80f8ea32445ae2a8e2fcf3b069cc067",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-guimaraes-feed": {
+    "resourceKey": "ogc:ogc:collection:6dec320a0636d70833828f6c309f6d1b8c9b063f91a676ca3830f64148ad41ad",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-idanha-a-nova-feed": {
+    "resourceKey": "ogc:ogc:collection:fe7eac0eb42eebcbd9feab030b7416da79aeb555f36588780ad3b4f01c6137ca",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-ilhavo-feed": {
+    "resourceKey": "ogc:ogc:collection:d9dd229696e7a54d1cf92daabde722df6e135f323de0922473c53b56fc5073d3",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-lagoa-feed": {
+    "resourceKey": "ogc:ogc:collection:64e385a83202222b3429055da17bab964ded0d4b5e795a5d73c66b70d64e772f",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-lagos-feed": {
+    "resourceKey": "ogc:ogc:collection:574b96f17fff56bbe4fd42fed4e4c762fda1543c2a43f9a8849c19b1a002ec0b",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-lamego-feed": {
+    "resourceKey": "ogc:ogc:collection:e14ab27e55688eca87dc4b81bd79862117dd5a3af80a82525291568f553cb65d",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-leiria-feed": {
+    "resourceKey": "ogc:ogc:collection:796f46eee9052a2a149bfd2286876b281482d58ec4550bf67aea5f44bbf5d4ab",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-lisboa-feed": {
+    "resourceKey": "ogc:ogc:collection:b736a60cc7f7eea8dbb5bce88ccad5f148d251289e74dfebaf1e68defdfec181",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-loule-feed": {
+    "resourceKey": "ogc:ogc:collection:9a31665d842ddca65c7dcfa4b9193087137359c6b14493d4e0dbf3230db85674",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-loures-feed": {
+    "resourceKey": "ogc:ogc:collection:3e54e4ddfcf53a094ac4d42111310d672f0f806698c1385ae2849b81de036cfb",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-lourinha-feed": {
+    "resourceKey": "ogc:ogc:collection:88ff5aa199c9e4ef943ff6f28ced0c55d4eeb14f0353dd4a1e83c32940791cd9",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-lousa-feed": {
+    "resourceKey": "ogc:ogc:collection:b240ee907c34c32887472d7dc0d2567c2aa517a9c6ab09af56ffad796b1d15f3",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-lousada-feed": {
+    "resourceKey": "ogc:ogc:collection:a3bab1292cb0d878e6930a9ba8d321e6c42113d01673f051beb436dd839b7cbb",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-macao-feed": {
+    "resourceKey": "ogc:ogc:collection:c53a229b96ba7c4f56803837815d54891d8695b18517d7af812c658667d824ae",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-macedo-de-cavaleiros-feed": {
+    "resourceKey": "ogc:ogc:collection:d62b81b5adc9e0ee68c1344d5898078ee5eae1db8f4723834daac261fc073e40",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-mafra-feed": {
+    "resourceKey": "ogc:ogc:collection:1fe181924809d3f3e36f3a79699ae75f33a3e796da64e28f8d409a8839ac0f26",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-maia-feed": {
+    "resourceKey": "ogc:ogc:collection:7dc1999fcc56aefa2492c59d165b93c811c7d780887ea5eec9c7dd6fe836c6de",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-mangualde-feed": {
+    "resourceKey": "ogc:ogc:collection:32c0365dfb9d2303e61ec5e3d9364d25f33bb8e7fa34c340f074a2355e1cd6ff",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-manteigas-feed": {
+    "resourceKey": "ogc:ogc:collection:7d5d9655b4812d70ea5845852efe91e3534df5dd347cfe3a3c79dcdf5946a1b2",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-marco-de-canaveses-feed": {
+    "resourceKey": "ogc:ogc:collection:587b19e4ab661cf4f8562fa21767c47141764976c20f88e72085287d89e5106f",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-marinha-grande-feed": {
+    "resourceKey": "ogc:ogc:collection:0495b80da1a0d67af67ca19fd561b45e25077254c101776485aacfd2a8e78b28",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-marvao-feed": {
+    "resourceKey": "ogc:ogc:collection:1a02d4b9d67493b3522722dce8d7df39a48105d11411e5e8e8010a8b1fd904dc",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-matosinhos-feed": {
+    "resourceKey": "ogc:ogc:collection:d62c0a52dcadf33a2d82a895d0be49d310ed898cb921d082ea7ecdd9db723e76",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-mealhada-feed": {
+    "resourceKey": "ogc:ogc:collection:a69e5f98893d811acf683caaa329dc03da0ba3c0190f49422a75b2d17b03acd8",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-meda-feed": {
+    "resourceKey": "ogc:ogc:collection:a7d166255ced37b5379751a81b9ee953f645766fef23f5e024798a38e369f7fd",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-melgaco-feed": {
+    "resourceKey": "ogc:ogc:collection:349fd37a0f56b1ff853b9e341c7c5b36c6fd823d03616d2f0d2bef988715db1e",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-mertola-feed": {
+    "resourceKey": "ogc:ogc:collection:e8a1e7ad0571306566c83a3c553247ade4d71422d6de6c7c16a34895529c59c8",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-mesao-frio-feed": {
+    "resourceKey": "ogc:ogc:collection:b3922ef819760a40ff088d72cf57ae4e87f3702ccc47c198baf2d793fafc66e8",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-mira-feed": {
+    "resourceKey": "ogc:ogc:collection:b11dd286d6cc5816a88f0f0723812d0b5cbcbce2e850381f6ac7f36f7bb93e48",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-miranda-do-corvo-feed": {
+    "resourceKey": "ogc:ogc:collection:8fe785cc5a36c62091c2ac06e13535ae3debf5e2077bb61dec5aed69b54b4446",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-miranda-do-douro-feed": {
+    "resourceKey": "ogc:ogc:collection:f0b22b6fa899d8bb94b65d75eb07015c7fd815ee80ca55a3fb1364653968ddca",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-mirandela-feed": {
+    "resourceKey": "ogc:ogc:collection:cbf8f9cf3955e0f570d19430f6253b6232eb4a7224236237fcdbdb1b44ac8781",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-mogadouro-feed": {
+    "resourceKey": "ogc:ogc:collection:bc07e732e7041c82445b683a29e5a4ab7d6b10ae2d2169ab0cac2590e106d939",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-moimenta-da-beira-feed": {
+    "resourceKey": "ogc:ogc:collection:d6cb6e1a5671a0cd913a6258928fc1c96e5f17720d2659144dae7ce4d4de9ea0",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-moita-feed": {
+    "resourceKey": "ogc:ogc:collection:2ec9444006a3588e0271a037a1952859ff1e2d1f0c229b94c10728c8f80b6dc4",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-moncao-feed": {
+    "resourceKey": "ogc:ogc:collection:96007a6704a60f5327ffee251e92f71d7d1e2bb608c8c5744dbf7a098dac5138",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-monchique-feed": {
+    "resourceKey": "ogc:ogc:collection:953946f9178699f8f0daea3742a0e91dca81692d61a074a4aa0636edf98f77d7",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-mondim-de-basto-feed": {
+    "resourceKey": "ogc:ogc:collection:f88e8824f31cda5180c9c4c2d7f99fe82ea1427176b434197ad51e52f749d812",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-monforte-feed": {
+    "resourceKey": "ogc:ogc:collection:e57acf217335129d075549ced04b27a88f2042e77733c7198bfac5d122ed4a4e",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-montalegre-feed": {
+    "resourceKey": "ogc:ogc:collection:9f198ab9e4cd38100e02a83c9d26ec195684a146e0b574e450d5a273cf7f7450",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-montemor-o-novo-feed": {
+    "resourceKey": "ogc:ogc:collection:84a7944a47f12d6e8e8b0e334346855e640ce961c975850d69af2aff4f7cf3c1",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-montemor-o-velho-feed": {
+    "resourceKey": "ogc:ogc:collection:503f034a9febbf79ac547cd5e8bfc57e8547765503dfa8ace8cec94712f534c0",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-montijo-feed": {
+    "resourceKey": "ogc:ogc:collection:ab59bbcb78e34505b2b62d2d147fa8f40d8119be801f6282af2bf66ab6b04a24",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-mora-feed": {
+    "resourceKey": "ogc:ogc:collection:2fc48221e5c8d754a36a09d4c3a0a2ba7188e5ec4372bbeabeabc1a3295ac6d3",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-mortagua-feed": {
+    "resourceKey": "ogc:ogc:collection:8315df571a0538a4b7016e9853e4f378de5fa7e40e0a29ff0e7d3e5e58b2e30d",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-moura-feed": {
+    "resourceKey": "ogc:ogc:collection:7822e1141ecb22464cc344e396356315d6b49442daee4aa6c6a0bc74fd45f3db",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-mourao-feed": {
+    "resourceKey": "ogc:ogc:collection:0eafc7b8533e5be4174bb94e432fb35d2ecad2751d8ab468a3b7461d6364d866",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-murca-feed": {
+    "resourceKey": "ogc:ogc:collection:06c1d5886dab3a0221191e9c3a22cbd32a4536c71840ebafe6f075ee3d2970af",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-murtosa-feed": {
+    "resourceKey": "ogc:ogc:collection:185b269be233cf51d9aa0e284ca1c48804bfa670eaa819510672ed1c00af3fa0",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-nazare-feed": {
+    "resourceKey": "ogc:ogc:collection:6e4a4cefe5a07348fce452b3c82f1f266532b41ecd2dfd79b9d3171e23552e2e",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-nelas-feed": {
+    "resourceKey": "ogc:ogc:collection:2b663c5d5926f6dcbcba9ab6c6a2a985e793c71777a7bfb4dbe952c41a9a0caf",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-nisa-feed": {
+    "resourceKey": "ogc:ogc:collection:a7769aecaf090466b92681160d76d4c2031518c474b26aafd76ec71b46172143",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-obidos-feed": {
+    "resourceKey": "ogc:ogc:collection:20d427595a85861f7d2f3e86e1e49d11262d4f47be2eb416a5a04b059cd7a27f",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-odemira-feed": {
+    "resourceKey": "ogc:ogc:collection:c4fb941a9b65f1df633d52be2a49fd23c642b821bf467443d083458bc7205b97",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-odivelas-feed": {
+    "resourceKey": "ogc:ogc:collection:4f76f8e8b6208d9fcc8f7d0d2178b31e663b14e86ac9a9424667e12d0d71a0bd",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-oeiras-feed": {
+    "resourceKey": "ogc:ogc:collection:0b403372fdb25a5a4aa53b946766ad4faf1803bbfdcfb20f836e8ae991a9f6a5",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-oleiros-feed": {
+    "resourceKey": "ogc:ogc:collection:cf63d17256032061fd5fc26f3b065852f4d539fa6e1f1353e6ed2616acffd661",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-olhao-feed": {
+    "resourceKey": "ogc:ogc:collection:6fcc873208a7f94e145fbe976ac8919b3493743d3bb09c7eee91bdb7a43ac174",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-oliveira-de-azemeis-feed": {
+    "resourceKey": "ogc:ogc:collection:7a59b790ae706dc88d98e627fc4373af950f244998fe4460b8e12dbaa10fa40f",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-oliveira-de-frades-feed": {
+    "resourceKey": "ogc:ogc:collection:177df161abb187a36514d50ddf2db869b3ff111e3cb3e847bdbda182fc3a30d4",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-oliveira-do-bairro-feed": {
+    "resourceKey": "ogc:ogc:collection:016b5e21fadf331a1a6f43fbd26488174af2d9a6579fd8861fedccaab96afc3d",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-oliveira-do-hospital-feed": {
+    "resourceKey": "ogc:ogc:collection:76b901a8567a3bef2acc4ea2281a741f534487253b47abd71d2268292bc6229f",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-ourem-feed": {
+    "resourceKey": "ogc:ogc:collection:113cecfeaf57f84f9046913ac8f06c4986acc6c689dcd68fdb2e8906ac93a445",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-ourique-feed": {
+    "resourceKey": "ogc:ogc:collection:995627ce56fbe9b32fb821b28798486b804155e904419e46824c409d43ded058",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-ovar-feed": {
+    "resourceKey": "ogc:ogc:collection:538d60cb1ac81ea82c8c429615d0f0652eb5060f9118f6d8621b608c1421de92",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-pacos-de-ferreira-feed": {
+    "resourceKey": "ogc:ogc:collection:590dcd9c782f970d562c3e6237f5153a33cce1a2a01f64d5736ee686dbb7d75a",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-palmela-feed": {
+    "resourceKey": "ogc:ogc:collection:38ccc3ffe769d6a6900c2993637c9492169fdac0b76811f267ef600c9a5ce737",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-pampilhosa-da-serra-feed": {
+    "resourceKey": "ogc:ogc:collection:044272ac9f25a8202b492b9fefb6abcd0c0b643a25938e97e840859a92ff80d1",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-paredes-de-coura-feed": {
+    "resourceKey": "ogc:ogc:collection:4379c9c5a8694207e5ce24667b60c68f31fc50e4ca46559706c968e375347b1d",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-paredes-feed": {
+    "resourceKey": "ogc:ogc:collection:4d235e0115c20998226ae66e07011735cf8bdb6614232137aeaa53da564518ae",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-pedrogao-grande-feed": {
+    "resourceKey": "ogc:ogc:collection:d3b8f90b549c40901d1d5c9c48804fe1fa21f2a6a2c663f62faf4f73fc73cda1",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-penacova-feed": {
+    "resourceKey": "ogc:ogc:collection:08a290c7e98780dae120646297d4e97e10b8fe38be6e0b477d538ccd17f3cc3d",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-penafiel-feed": {
+    "resourceKey": "ogc:ogc:collection:95e2eb5c431c1a4363c17098bfcbb263cffcfe250445c98e10d319cb33d1d74e",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-penalva-do-castelo-feed": {
+    "resourceKey": "ogc:ogc:collection:528a40ba1fbf20ff647a26fdadf308199359267101c856a0ac6a471621dd6600",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-penamacor-feed": {
+    "resourceKey": "ogc:ogc:collection:73229286ff2351f5001b0bce2bb2d9b402800af975bf0b7d1d50b7bd9c639c29",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-penedono-feed": {
+    "resourceKey": "ogc:ogc:collection:3b2fdef55808a7de3f4fcbdaa6b623fcd2a305fc7d3509fd2294bbbce7db60b9",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-penela-feed": {
+    "resourceKey": "ogc:ogc:collection:4ec6ed1ec0250593d0b3da55a5c17a6c5be9dfb475b1f98fa10ef1d1bc2d2832",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-peniche-feed": {
+    "resourceKey": "ogc:ogc:collection:f1e7f74f0c7d4c678f38cdc5760f12af73349dbce918b186e51ea4d4d36c0f20",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-peso-da-regua-feed": {
+    "resourceKey": "ogc:ogc:collection:f7931e00462763f88838fdbd0d7988e785beb467d2834b11510ca97f697b8a9e",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-pinhel-feed": {
+    "resourceKey": "ogc:ogc:collection:938dd61f28d1495604a90fc5da8b137f28181c182713351526df348724462002",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-pombal-feed": {
+    "resourceKey": "ogc:ogc:collection:0d75ab1a37721a251889e72f81dd8d674f39f71dbbcb26fd9d07791b0e9507fe",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-ponte-da-barca-feed": {
+    "resourceKey": "ogc:ogc:collection:114536fea9f316cd33eb7f92da261be16b76f83cb9de7d9703f28997bfdea49a",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-ponte-de-lima-feed": {
+    "resourceKey": "ogc:ogc:collection:89d680d9d9ae321b806f0d0fd3f6c09b5b0166252d5d9a5d6b55da41938aeabb",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-ponte-de-sor-feed": {
+    "resourceKey": "ogc:ogc:collection:0ca49288bbf16f9af28b1a16bb1bc57a71fe5b0aba8f581a233437634d1a4829",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-portalegre-feed": {
+    "resourceKey": "ogc:ogc:collection:30cdd8e112f2a28d3c38fc9ccf57d9f9a2b7887ddadd0d8626884a804b2cffc9",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-portel-feed": {
+    "resourceKey": "ogc:ogc:collection:4cb5d0e538a7329da607683190a342076ac91e95619015dfd7ba719450709e17",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-portimao-feed": {
+    "resourceKey": "ogc:ogc:collection:5b42cd40da82227384120656ad2d13bc94cae190b4e690a23a38e682b2507280",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-porto-de-mos-feed": {
+    "resourceKey": "ogc:ogc:collection:f31183322097a8a2efc9014f845930cc5dcbe151c9e45c19e441ab1c002e857f",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-porto-feed": {
+    "resourceKey": "ogc:ogc:collection:a91ea8817ff90c5698e913746dfd9382f1fb260db201a2dcac6a702ebbeea0b4",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-povoa-de-lanhoso-feed": {
+    "resourceKey": "ogc:ogc:collection:8ce1826d8d0a817a8fe233b01699b3ed601d7953b8758bd4fe0747844af116b3",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-povoa-de-varzim-feed": {
+    "resourceKey": "ogc:ogc:collection:a999335eb4037d8ef8e1d3e87f7e205272fd359fd9d6d6b8b75b9339554b805a",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-proenca-a-nova-feed": {
+    "resourceKey": "ogc:ogc:collection:8df93fb9548db991f9d648cf3e1aa3379f92977a3c6528554df2ddc94c1b3a94",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-redondo-feed": {
+    "resourceKey": "ogc:ogc:collection:5a040cc7c0a4f69785427efa73a2d83a027a1ef02271101e80d9129098f7b34b",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-reguengos-de-monsaraz-feed": {
+    "resourceKey": "ogc:ogc:collection:e4076912b11835cc4aee33cb6bca0c64959dd6092dfbe60d8ba763992e1a1c30",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-resende-feed": {
+    "resourceKey": "ogc:ogc:collection:687f90f1ae1daa1e16a5e1137a35bf9ddd6da06d431926ed63340c5ff576bf26",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-ribeira-de-pena-feed": {
+    "resourceKey": "ogc:ogc:collection:1c5ffc3908f93ae5afc7c5bc55e5848f41573f6fe043d878e0852cee11da7a91",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-rio-maior-feed": {
+    "resourceKey": "ogc:ogc:collection:df87bff1e8a5201e252c68d459f9aa96c85dd459502e9bd1e7e65901beab3663",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-sabrosa-feed": {
+    "resourceKey": "ogc:ogc:collection:80d7731fa4e1e6acf2481274d03e177854dfdd3a56b0052b26d583e533e467b5",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-sabugal-feed": {
+    "resourceKey": "ogc:ogc:collection:889aa0a3ef5e3850b05fa10d153e90554c8467702a8cb22960f222c63f9647ff",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-salvaterra-de-magos-feed": {
+    "resourceKey": "ogc:ogc:collection:3a99a2a7f00d5d7695d6cb054a5b8fda13a4b5d2601bf7f25be96307afd2f12b",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-santa-comba-dao-feed": {
+    "resourceKey": "ogc:ogc:collection:5b2d5d7381217c70ec9cc07bfedd9bcfa860c516b7bc052ddff8b38eda07b241",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-santa-maria-da-feira-feed": {
+    "resourceKey": "ogc:ogc:collection:7b6dfb1196276236de7ce746e68521948ffa5b768f6caa33841a35fce047a382",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-santa-marta-de-penaguiao-feed": {
+    "resourceKey": "ogc:ogc:collection:6cd9943626409b8ea6b6249b93087c3ee8d421b9bbe16f8bbaf2b3ccad8e7480",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-santarem-feed": {
+    "resourceKey": "ogc:ogc:collection:9196d03e8034b0fea361579d1f2b457c3caefc998e84091f80119f62219d1214",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-santiago-do-cacem-feed": {
+    "resourceKey": "ogc:ogc:collection:b312c3b03bab942c7cdbe53958793ed549b9083b73d0a443c5174d0055324e8a",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-santo-tirso-feed": {
+    "resourceKey": "ogc:ogc:collection:d178ca9ae5948bbf0e07e503fbde0014404fd927667936e22377f58882f93070",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-sao-bras-de-alportel-feed": {
+    "resourceKey": "ogc:ogc:collection:519634d7adb1275a97c4fb2a4b2314c64d4bab2df089c359a23a92c570980a5f",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-sao-joao-da-madeira-feed": {
+    "resourceKey": "ogc:ogc:collection:6f04a028f1cc434188181d2d7afc1a84b70e0cdaa61ea0d1c8b7a65f9cf31107",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-sao-joao-da-pesqueira-feed": {
+    "resourceKey": "ogc:ogc:collection:540250bfd83053d373da0c8eb28270ac0c44e3cb412ec2d5c8012e1fda788c63",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-sao-pedro-do-sul-feed": {
+    "resourceKey": "ogc:ogc:collection:d0c36e65d157599c68a384482521d825cb1caaf4f44f39e2a1665ddfe4acb6cb",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-sardoal-feed": {
+    "resourceKey": "ogc:ogc:collection:e47979112aaf4acbad10a27eb03e5160731659ba6144e3c9dde947cbb9317d99",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-satao-feed": {
+    "resourceKey": "ogc:ogc:collection:4dd953023f68225ac049064a3274ac0d9ed4393fb6f0311971003f5c8b4d136d",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-seia-feed": {
+    "resourceKey": "ogc:ogc:collection:fecc5fb682afaf7193e0423b4ab7bbd3a600664d616f05966df19527809c266c",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-seixal-feed": {
+    "resourceKey": "ogc:ogc:collection:963b9e3a1917fa868a22f756850d6e0f6ffc1932e4da635b8ad0cbefd32683f6",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-sernancelhe-feed": {
+    "resourceKey": "ogc:ogc:collection:6034fdb021e3857a7f2cc1171c1e6b269373395f6ccdc185c3893ac186269328",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-serpa-feed": {
+    "resourceKey": "ogc:ogc:collection:31ee58cab6870dbb9342fc969f6908620a6e3b14dd839f45412e18cab3287b89",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-serta-feed": {
+    "resourceKey": "ogc:ogc:collection:2c52d334488550eb88ddebdb72f53540b4ee84422b0f9868bc675e03070d6efd",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-sesimbra-feed": {
+    "resourceKey": "ogc:ogc:collection:68be5d96608abb6ba1b13139aa04cc346d22a2cef296927d1a674c04de9f8145",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-setubal-feed": {
+    "resourceKey": "ogc:ogc:collection:03cd8a8a35712707341017c68a466402ddcf68e0207f997af97ec2cb71c1f882",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-sever-do-vouga-feed": {
+    "resourceKey": "ogc:ogc:collection:95b62fcc522d5510608c5019980a407fd43d48651d9347267b46ff975d7ec402",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-silves-feed": {
+    "resourceKey": "ogc:ogc:collection:de6343f6e09c68a7e1b937f370d3cda504ab70a3b69cafe9b26924600652e037",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-sines-feed": {
+    "resourceKey": "ogc:ogc:collection:0206549693cc0ef6331ff9dbd6c09958a3482ef2f364d6e0190645432c79f1a7",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-sintra-feed": {
+    "resourceKey": "ogc:ogc:collection:e32cb86ee348261432364739c149c4d020b7be123ef66b7f693e3828ceaa3c2d",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-sobral-de-monte-agraco-feed": {
+    "resourceKey": "ogc:ogc:collection:2e6ea8d57b8abcfe322eff246ea9457ede69ad06183b3ff5f62fdbb2bcfb350b",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-soure-feed": {
+    "resourceKey": "ogc:ogc:collection:8afc4bcd3042987f1d826d7d20c6230023ead1359a8371992d59cacd96e44bba",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-sousel-feed": {
+    "resourceKey": "ogc:ogc:collection:06c32be07105bedfe5023f31fabf4fe773fd3839d9a4f093362e4b54557ea2b9",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-tabua-feed": {
+    "resourceKey": "ogc:ogc:collection:1da0c829ff0179d3d7f00dc5697dae3f9b82322694037a6bc090ff4e81f10f82",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-tabuaco-feed": {
+    "resourceKey": "ogc:ogc:collection:cc26629e81a51cc7dd540d5ee1f637ce3a434d6d8dadb25c11912dfe97e409e0",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-tarouca-feed": {
+    "resourceKey": "ogc:ogc:collection:da8defa1279d4fcc21dfcdbc513293edaad114212e9421ad72c63c3fa5bfac97",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-tavira-feed": {
+    "resourceKey": "ogc:ogc:collection:b9914577ac4b16f32cd87fb19e688882a277de25274fcba9d326ac1525dd3c4c",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-terras-de-bouro-feed": {
+    "resourceKey": "ogc:ogc:collection:6405acd98ecdb4ec4e703955ac9991fc332b29eab5494f26eb38407a0e67ebd3",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-tomar-feed": {
+    "resourceKey": "ogc:ogc:collection:1ade121100680586765a742d1e5acae919f5d27a23049eabe2e42dc9e3cec0ea",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-tondela-feed": {
+    "resourceKey": "ogc:ogc:collection:ae77856dcc200190d89d042761fbe1470179f4e6f8ba7580aeb5d78f467eaa83",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-torre-de-moncorvo-feed": {
+    "resourceKey": "ogc:ogc:collection:8ccc60384bd1d286265202811d41a274b3a45716d18946e565cfacbba53bdae6",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-torres-novas-feed": {
+    "resourceKey": "ogc:ogc:collection:06c0060f755a4b6710bb2b54fa6fef3e06dda6934e6265e6f9b8a25d74dec044",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-torres-vedras-feed": {
+    "resourceKey": "ogc:ogc:collection:543258fb8b6e615495daee16292734405480c7add545d38d5f8b01a800681417",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-trancoso-feed": {
+    "resourceKey": "ogc:ogc:collection:4f2143a51bb76a673d9031a4d67a162d315a84f386eadd060a90c2fbcf24e29d",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-trofa-feed": {
+    "resourceKey": "ogc:ogc:collection:e8791529fa60b4adfc04a821bbb5bf04541ea18046d68ac168f7bdd170c26a81",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vagos-feed": {
+    "resourceKey": "ogc:ogc:collection:d5108c2fbf97c561f06746c1a35f0cd96bbed696ea0a47f8f826d32400792401",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vale-de-cambra-feed": {
+    "resourceKey": "ogc:ogc:collection:0e895d5c15e8833b94b755e7aa899c572cf5eb5692f9a75ccb913acfc5299f6b",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-valenca-feed": {
+    "resourceKey": "ogc:ogc:collection:e53b0918de332d1271ffc616a0a192bc75439e8b5b68ea467be1ddb3cec44681",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-valongo-feed": {
+    "resourceKey": "ogc:ogc:collection:a3e38f03a2f9538dfb04626b8b85d5bfe14a939673db0e5b610ac5fd1c92569a",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-valpacos-feed": {
+    "resourceKey": "ogc:ogc:collection:5b829327f8bf8cf31339194c59a9886d21cf364227eb9bf174fa765628fc6c51",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vendas-novas-feed": {
+    "resourceKey": "ogc:ogc:collection:93b479b9655aa449dbae6ffc6206ef244c7c888b569084c53ad84bcb41a2b03c",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-viana-do-alentejo-feed": {
+    "resourceKey": "ogc:ogc:collection:d53b43fe2c5cc3074cddf976ba0e870106c6d76e4643465258a5cbaebfc7e185",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-viana-do-castelo-feed": {
+    "resourceKey": "ogc:ogc:collection:3b0a2c5c77bcf1de9430c1efd63a54d8eda888ead6f5796f82b3a4fd69166d5c",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vidigueira-feed": {
+    "resourceKey": "ogc:ogc:collection:db021d287f24ffcf8c1f5ba86be1a030d9494e26e335a0a5352b17598c5223b9",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vieira-do-minho-feed": {
+    "resourceKey": "ogc:ogc:collection:3460cafcf6459c32e76bc5c60fb4b8cb3a07df973c3e78355124ee9fb3da703b",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vila-de-rei-feed": {
+    "resourceKey": "ogc:ogc:collection:8fb21050694efe0238ab2a7d45e80f2ea5ec9013a620f9c10a7bb094eaf968e2",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vila-do-bispo-feed": {
+    "resourceKey": "ogc:ogc:collection:2b29db57083aad62c9c67a6c611b036208709cb2b603248e26915f0d013b90d2",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vila-do-conde-feed": {
+    "resourceKey": "ogc:ogc:collection:56aa287716b743f6743931c153e52eb7f2b7cbcb2610e857c3fe2e053b5d898b",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vila-flor-feed": {
+    "resourceKey": "ogc:ogc:collection:7f51b1d0728b255dd1456dc7d3731ec57f9fda0c4fc8a6b745827916a9967cfb",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vila-franca-de-xira-feed": {
+    "resourceKey": "ogc:ogc:collection:bf70d72a60b9f231113f203841992fd0f368f43ae30e53bfd1c7b01be10ce22c",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vila-nova-da-barquinha-feed": {
+    "resourceKey": "ogc:ogc:collection:2d311694fd7ad73341d461a60a83c268ad0d4c4b3328315d776822428f6038a2",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vila-nova-de-cerveira-feed": {
+    "resourceKey": "ogc:ogc:collection:6b9179476f2681acfece87143afb280564f45c95940c0a53f277dc10393e8c80",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vila-nova-de-famalicao-feed": {
+    "resourceKey": "ogc:ogc:collection:791d14ab9f34c5cd68c31061e9a56aa15ed7e86dc9eb2bce484fbf150bd0df44",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vila-nova-de-foz-coa-feed": {
+    "resourceKey": "ogc:ogc:collection:fc84214a87c5c3cecc7abdb83a62462597e3442a89ee021857ccc656a3c74685",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vila-nova-de-gaia-feed": {
+    "resourceKey": "ogc:ogc:collection:7f0977bb35762188ac590fd17217578ec4a1d73a5297fb4fcb2ab461b078ccdb",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vila-nova-de-paiva-feed": {
+    "resourceKey": "ogc:ogc:collection:bb84acf86e9af567e4e22a4822ecc4b402bea171270fec304b226396e6ec3ea2",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vila-nova-de-poiares-feed": {
+    "resourceKey": "ogc:ogc:collection:be0144f87bc0df3d0095b7310c09cb861f2bcba8e6811f439d703a18cec930bb",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vila-pouca-de-aguiar-feed": {
+    "resourceKey": "ogc:ogc:collection:cb93e25984aa58bd87eb45be7233be24dd8f61c50b75a5c59c497eb83b2bcf78",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vila-real-de-santo-antonio-feed": {
+    "resourceKey": "ogc:ogc:collection:0441fe1457d89ff35afad4f5051244b10b85fa9f555e0892b0fb1cd23ba0ad7f",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vila-real-feed": {
+    "resourceKey": "ogc:ogc:collection:4e96cf1a638d70c699101d748faae2e04074f66b9ccf2d1b7504bd8929a415d8",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vila-velha-de-rodao-feed": {
+    "resourceKey": "ogc:ogc:collection:30b6d286f7c5a8236390a3a72fcfba52cee0fa4965bfa4e2558b5631ce3b86f8",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vila-verde-feed": {
+    "resourceKey": "ogc:ogc:collection:09ada16739466b38e1e9d20117ef2875a7d269cc0a6ea68d85d061caeff52325",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vila-vicosa-feed": {
+    "resourceKey": "ogc:ogc:collection:f93c879e7590597697b8f6728dfb10e0b1ca9e7f1ec236797aab931629b6b11b",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vimioso-feed": {
+    "resourceKey": "ogc:ogc:collection:3afe964c0ea1a143d99c017ed22ae42b37bd8fd9d09aadffa1834cae88e44f38",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vinhais-feed": {
+    "resourceKey": "ogc:ogc:collection:643cae431d6b3aff88ef03826d4773b9d39938aa45efa2e89088140b4852764e",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-viseu-feed": {
+    "resourceKey": "ogc:ogc:collection:a826219918eb2e347ae191d2a1a4f6f7d674ce4e1b76161e8a832438fc84b3be",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vizela-feed": {
+    "resourceKey": "ogc:ogc:collection:31cacb9806e047dab5b11107c3db03b26e64e0f8c097148b00fcdd8f5a49f8e2",
+    "kind": "ogc:collection"
+  },
+  "dgt-crus-parcels-vouzela-feed": {
+    "resourceKey": "ogc:ogc:collection:3b0bf63ae4de70f24d7538417977823de5fc22ec09e38a8a785da5453cf68343",
     "kind": "ogc:collection"
   },
   "dgt-fototeca-index-feed": {
