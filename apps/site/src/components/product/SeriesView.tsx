@@ -324,7 +324,7 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
       <Empty icon={<ChartLineIcon size={40} className="text-kumo-inactive" />} title="No points yet" description="Series points appear after the first successful collection." />
     );
 
-  const oldest = points.map((point) => point.eventTime).sort()[0];
+  const oldest = shown.flatMap((each) => each.points.map((point) => point.eventTime)).sort()[0];
   const coverage = summary.data?.coverage;
   // A span reaching well before the product's history is labelled from where its history begins.
   const firstStart = lines
@@ -336,8 +336,8 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
     if (!timeWindow)
       return snapshot
         ? `Latest value of the ${Math.min(BARS, bars.length)} largest series`
-        : series.length > CHARTED
-          ? `${CHARTED} of ${fmt.int(series.length)} series drawn; the table has all of them`
+        : shown.length > CHARTED
+          ? `${CHARTED} of ${fmt.int(shown.length)} series drawn; the table has all of them`
           : "Hover for values";
     if (summary.error) return `Could not load this span: ${summary.error.message}`;
     if (!coverage) return "";
