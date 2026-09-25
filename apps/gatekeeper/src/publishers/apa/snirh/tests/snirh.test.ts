@@ -242,6 +242,21 @@ describe("SNIRH live readings", () => {
     await expect(collectSnirhFeed(LEVELS, undefined, SNIRH_ORIGIN, fetcher, new Date())).rejects.toMatchObject({ code });
   });
 
+  it("logs who refused a request, and what their page said", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const refused = () => new Response("<html><body><h1>403 Forbidden</h1>\n<p>Request blocked.</p></body></html>", { status: 403, headers: { Server: "Apache" } });
+    const fetcher = snirh({ onRequest: (url) => (url.pathname === "/index.php" ? refused() : undefined) });
+    await expect(collectSnirhFeed(LEVELS, undefined, SNIRH_ORIGIN, fetcher, new Date())).rejects.toThrow("SNIRH station filter returned HTTP 403");
+    expect(JSON.parse(String(warn.mock.calls.at(-1)?.[0]))).toMatchObject({
+      source: "snirh",
+      path: "/index.php",
+      status: 403,
+      server: "Apache",
+      page: "403 Forbidden Request blocked.",
+    });
+    warn.mockRestore();
+  });
+
   it("fails when the filter opens no session", async () => {
     const fetcher = snirh({ onRequest: (url) => (url.pathname === "/index.php" ? new Response("<html></html>") : undefined) });
     await expect(collectSnirhFeed(LEVELS, undefined, SNIRH_ORIGIN, fetcher, new Date())).rejects.toMatchObject({ code: "invalid-response" });

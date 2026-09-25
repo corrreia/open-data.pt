@@ -22,6 +22,7 @@ const DAY = 86_400_000;
 interface Series {
   key: string;
   label: string;
+  unit: string;
   points: SeriesPoint[];
   latest: SeriesPoint | undefined;
 }
@@ -191,6 +192,7 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
   const [opened, setOpened] = useState<{ row: JsonRecord; title: string } | null>(null);
   const [picking, setPicking] = useState(false);
   const [picked, setPicked] = useState<DateRange | undefined>();
+  const [pickedUnit, setPickedUnit] = useState<string | undefined>();
   const timeWindow = useMemo(() => windowOf(span), [span]);
 
   useEffect(() => {
@@ -204,29 +206,37 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
     return [...groups.entries()].map(([key, group]) => {
       const ordered = group.filter((point) => point.value !== null).sort((a, b) => a.eventTime.localeCompare(b.eventTime));
       const first = group[0];
-      return { key, label: first ? seriesLabel(first) : key, points: ordered, latest: ordered.at(-1) };
+      return { key, label: first ? seriesLabel(first) : key, unit: first?.unit ?? "", points: ordered, latest: ordered.at(-1) };
     });
   }, [current.data]);
 
-  const unit = points.find((point) => point.unit)?.unit ?? "";
+  // Series in different units share no axis: the chart draws one unit at a time, the one most series use first.
+  const units = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const each of series) counts.set(each.unit, (counts.get(each.unit) ?? 0) + 1);
+    return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([each]) => each);
+  }, [series]);
+  const mixed = units.length > 1;
+  const unit = (pickedUnit !== undefined && units.includes(pickedUnit) ? pickedUnit : units[0]) ?? "";
+  const shown = useMemo(() => (mixed ? series.filter((each) => each.unit === unit) : series), [series, mixed, unit]);
   const palette = dark ? SERIES_COLORS.dark : SERIES_COLORS.light;
   // A series with one or two points is a snapshot: compare the latest values instead of drawing flat lines.
-  const snapshot = series.length > 0 && series.every((each) => each.points.length <= 2);
+  const snapshot = shown.length > 0 && shown.every((each) => each.points.length <= 2);
   const charted = useMemo(
-    () => [...series].sort((a, b) => b.points.length - a.points.length || Math.abs(b.latest?.value ?? 0) - Math.abs(a.latest?.value ?? 0)).slice(0, CHARTED),
-    [series],
+    () => [...shown].sort((a, b) => b.points.length - a.points.length || Math.abs(b.latest?.value ?? 0) - Math.abs(a.latest?.value ?? 0)).slice(0, CHARTED),
+    [shown],
   );
   const bars = useMemo(
     () =>
-      [...series]
+      [...shown]
         .filter((each) => each.latest)
         .sort((a, b) => (b.latest?.value ?? 0) - (a.latest?.value ?? 0))
         .slice(0, BARS),
-    [series],
+    [shown],
   );
 
   // A span names the series the live chart draws; a product with few series gets every one.
-  const summaryKeys = series.length > CHARTED ? charted.map((each) => each.key) : [];
+  const summaryKeys = mixed || series.length > CHARTED ? charted.map((each) => each.key) : [];
   const summaryPath = timeWindow ? productPath(product.slug, `/series/summary?${summaryQuery(timeWindow, summaryKeys)}`) : null;
   const summary = useQuery(summaryPath, () => apiGet<SeriesSummary>(summaryPath ?? ""));
   const lineKeys = useMemo(
@@ -282,10 +292,11 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
     () => [
       { key: "series", header: "Series", cell: (point) => seriesLabel(point), sort: (point) => seriesLabel(point) },
       { key: "eventTime", header: "Event time", cell: (point) => fmt.dateTime(point.eventTime), sort: (point) => point.eventTime, mono: true },
-      { key: "value", header: `Value${unit ? ` (${unit})` : ""}`, cell: (point) => fmt.cell(point.value, "number"), sort: (point) => point.value, align: "end" },
+      { key: "value", header: mixed ? "Value" : `Value${unit ? ` (${unit})` : ""}`, cell: (point) => fmt.cell(point.value, "number"), sort: (point) => point.value, align: "end" },
+      ...(mixed ? [{ key: "unit", header: "Unit", cell: (point: SeriesPoint) => point.unit, sort: (point: SeriesPoint) => point.unit }] : []),
       { key: "observedAt", header: "Observed", cell: (point) => <RelativeTime value={point.observedAt} />, sort: (point) => point.observedAt, mono: true },
     ],
-    [unit],
+    [unit, mixed],
   );
   const resolution = summary.data?.resolution ?? "hour";
   const summaryColumns = useMemo<Column<SummaryRow>[]>(
@@ -313,7 +324,7 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
       <Empty icon={<ChartLineIcon size={40} className="text-kumo-inactive" />} title="No points yet" description="Series points appear after the first successful collection." />
     );
 
-  const oldest = points.map((point) => point.eventTime).sort()[0];
+  const oldest = shown.flatMap((each) => each.points.map((point) => point.eventTime)).sort()[0];
   const coverage = summary.data?.coverage;
   // A span reaching well before the product's history is labelled from where its history begins.
   const firstStart = lines
@@ -325,8 +336,8 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
     if (!timeWindow)
       return snapshot
         ? `Latest value of the ${Math.min(BARS, bars.length)} largest series`
-        : series.length > CHARTED
-          ? `${CHARTED} of ${fmt.int(series.length)} series drawn; the table has all of them`
+        : shown.length > CHARTED
+          ? `${CHARTED} of ${fmt.int(shown.length)} series drawn; the table has all of them`
           : "Hover for values";
     if (summary.error) return `Could not load this span: ${summary.error.message}`;
     if (!coverage) return "";
@@ -379,12 +390,22 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
         </div>
       ) : null}
 
+      {mixed ? (
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Unit">
+          {units.map((each) => (
+            <Button key={each} size="sm" variant={each === unit ? "primary" : "secondary"} aria-pressed={each === unit} onClick={() => setPickedUnit(each)}>
+              {each || "No unit"}
+            </Button>
+          ))}
+        </div>
+      ) : null}
+
       <LayerCard>
         <LayerCard.Secondary className="flex flex-wrap items-center justify-between gap-2 text-xs">
           <span>
             {timeWindow
               ? `${summary.data ? RESOLUTION_LABEL[summary.data.resolution] : "Loading"} · ${shownFrom ? periodLabel(shownFrom, resolution === "month" ? "month" : "day") : dayLabel(timeWindow.from)} – ${dayLabel(Date.parse(timeWindow.to) - 1)}${unit ? ` · ${unit}` : ""}`
-              : `${unit || "Value"} · ${fmt.int(points.length)} points in ${fmt.int(series.length)} series${oldest ? ` · since ${fmt.date(oldest)}` : ""}`}
+              : `${unit || "Value"} · ${fmt.int(shown.reduce((total, each) => total + each.points.length, 0))} points in ${fmt.int(shown.length)} series${oldest ? ` · since ${fmt.date(oldest)}` : ""}`}
           </span>
           <span className="text-kumo-subtle">{coverageNote}</span>
         </LayerCard.Secondary>

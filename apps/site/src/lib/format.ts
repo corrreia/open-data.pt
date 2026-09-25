@@ -121,11 +121,15 @@ export function isRecord(value: JsonValue): value is { [key: string]: JsonValue 
 }
 
 export function humanize(value: string) {
-  return value
-    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
-    .replace(/[_-]+/g, " ")
-    .replace(/\bid\b/gi, "ID")
-    .replace(/^./, (c) => c.toUpperCase());
+  return (
+    value
+      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+      .replace(/[_-]+/g, " ")
+      // Whole words only, and a letter with an accent is part of a word: "éip" keeps its "ip".
+      .replace(/(?<![\p{L}\p{N}])id(?![\p{L}\p{N}])/giu, "ID")
+      .replace(/(?<![\p{L}\p{N}])ip(?![\p{L}\p{N}])/giu, "IP")
+      .replace(/^./, (c) => c.toUpperCase())
+  );
 }
 
 export const plural = (count: number, one: string, many = `${one}s`) => `${fmt.int(count)} ${count === 1 ? one : many}`;

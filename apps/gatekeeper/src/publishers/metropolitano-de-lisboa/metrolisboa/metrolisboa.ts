@@ -4,6 +4,7 @@ import {
   isJsonArray,
   isJsonObject,
   isJsonString,
+  lisbonOffsetMinutes,
   readBoundedJson,
   retryAfterSeconds,
   type FeedKindDescription,
@@ -116,11 +117,12 @@ export async function collectMetroFeed(
   apiOrigin: string,
   credentials: MetroCredentials,
   fetcher: typeof fetch,
+  now: Date = new Date(),
 ): Promise<SourceFetch> {
   const feed = feedName(validateMetroFeedConfig(config));
   const origin = metroApiOrigin(apiOrigin);
   const token = await accessToken(credentials, fetcher);
-  const read = (path: string): Promise<JsonValue> => fetchResposta(origin, path, token, fetcher);
+  const read = (path: string, emptyCode?: string): Promise<JsonValue> => fetchResposta(origin, path, token, fetcher, emptyCode);
 
   let document: MetroDocument;
   let primary: string;
@@ -135,7 +137,9 @@ export async function collectMetroFeed(
     case "waiting-times": {
       // A compound source: the platforms and the destination names their rows refer to, read together every time.
       primary = "tempoEspera/Estacao/todos";
-      const waiting = listOf(await read(primary), primary);
+      // Once the network has closed for the night, the gateway answers code 404 for the waiting times instead of an
+      // empty list. That is no train to wait for; the same code while trains run is still a failure.
+      const waiting = listOf(await read(primary, metroClosed(now) ? "404" : undefined), primary);
       const destinations = listOf(await read("infoDestinos/todos"), "infoDestinos/todos");
       document = { feed, waiting, destinations };
       break;
@@ -203,8 +207,20 @@ async function accessToken(credentials: MetroCredentials, fetcher: typeof fetch)
   return token;
 }
 
-/** One API answer's `resposta`, after checking the transport, the size and the answer's own `codigo`. */
-async function fetchResposta(origin: string, path: string, token: string, fetcher: typeof fetch): Promise<JsonValue> {
+/**
+ * Whether the network is closed at `now`: trains run from 06:30 to 01:00, Lisbon time. A few minutes either side
+ * count as open, so a last or first train's waiting times are never taken for none.
+ */
+export function metroClosed(now: Date): boolean {
+  const minutes = (((now.getTime() / 60_000 + lisbonOffsetMinutes(now.getTime())) % 1440) + 1440) % 1440;
+  return minutes >= 60 + 10 && minutes < 6 * 60 + 30 - 10;
+}
+
+/**
+ * One API answer's `resposta`, after checking the transport, the size and the answer's own `codigo`. An answer
+ * whose code is `emptyCode` is an empty list.
+ */
+async function fetchResposta(origin: string, path: string, token: string, fetcher: typeof fetch, emptyCode?: string): Promise<JsonValue> {
   const url = new URL(`${METRO_API_PATH}/${path}`, origin);
   const response = await fetcher(url, {
     redirect: "manual",
@@ -212,6 +228,7 @@ async function fetchResposta(origin: string, path: string, token: string, fetche
   });
   if (!response.ok) throw upstreamError(`Metro Lisboa returned HTTP ${response.status} for ${path}`, response);
   const value = await readBoundedJson(response, RESPONSE_MAX_BYTES, `Metro Lisboa answer for ${path}`);
+  if (emptyCode !== undefined && isJsonObject(value) && value.codigo === emptyCode) return [];
   if (!isJsonObject(value) || !Object.hasOwn(value, "resposta")) throw unexpectedAnswer(path);
   if (value.codigo !== "200") {
     throw new GatekeeperError(`Metro Lisboa answered code ${String(value.codigo)} for ${path}`, "upstream-error");

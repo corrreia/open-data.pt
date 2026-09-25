@@ -17,8 +17,8 @@ export const FEED = defineFeed(METROLISBOA_DEPLOYMENT, {
     collection: { cadenceSeconds: 60, timeoutSeconds: 20, maxBytes: 512 * 1024, historyMode: "latest" },
   },
   staleAfterSeconds: 180,
-  /** Every minute: the next trains at every platform, from the EstadoServicoML gateway with a fresh access token. */
-  fetch: ({ config, validator, library, fetch }) => collectMetroFeed(config, validator, library.apiOrigin, library.credentials, fetch),
+  /** Every minute: the next trains at every platform, from the EstadoServicoML gateway with a fresh access token; none while the network is closed. */
+  fetch: ({ config, validator, library, fetch, now }) => collectMetroFeed(config, validator, library.apiOrigin, library.credentials, fetch, now()),
   /** The gateway's answers, as one collection document, into waiting-times. */
   transform: { normalizer: METROLISBOA_NORMALIZER, buffered: (bytes, context) => runTransformer(METROLISBOA_TRANSFORMER, bytes, context) },
 });

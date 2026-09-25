@@ -7,6 +7,7 @@ import {
   METRO_TOKEN_URL,
   collectMetroFeed,
   metroApiOrigin,
+  metroClosed,
   validateMetroFeedConfig,
 } from "#/publishers/metropolitano-de-lisboa/metrolisboa/metrolisboa";
 import { MetroLisboaTransformer } from "#/publishers/metropolitano-de-lisboa/metrolisboa/transform";
@@ -118,6 +119,35 @@ describe("Metro Lisboa Gatekeeper", () => {
     const renamed = fixture("destinations").replace("Reboleira", "Reboleira Nova");
     const changed = await collectMetroFeed({ feed: "waiting-times" }, first.validator, ORIGIN, CREDENTIALS, metro({ ...answers, "infoDestinos/todos": ok(renamed) }).fetcher);
     expect(changed.kind).toBe("body");
+  });
+
+  it("knows the network is closed from 01:00 to 06:30 in Lisbon, with a margin either side, in summer and in winter", () => {
+    expect(metroClosed(new Date("2026-09-25T02:00:00Z"))).toBe(true); // 03:00 WEST
+    expect(metroClosed(new Date("2026-09-25T00:05:00Z"))).toBe(false); // 01:05, the last trains
+    expect(metroClosed(new Date("2026-09-25T05:25:00Z"))).toBe(false); // 06:25, the first trains
+    expect(metroClosed(new Date("2026-09-25T09:00:00Z"))).toBe(false);
+    expect(metroClosed(new Date("2026-01-15T01:30:00Z"))).toBe(true); // 01:30 WET
+    expect(metroClosed(new Date("2026-01-15T00:30:00Z"))).toBe(false); // 00:30 WET
+  });
+
+  it("takes code 404 for the waiting times as none while the network is closed, and as a failure while it runs", async () => {
+    const answers = { "tempoEspera/Estacao/todos": ok('{"resposta":"sem dados","codigo":"404"}'), "infoDestinos/todos": ok(fixture("destinations")) };
+    const night = await collectMetroFeed({ feed: "waiting-times" }, undefined, ORIGIN, CREDENTIALS, metro(answers).fetcher, new Date("2026-09-25T02:00:00Z"));
+    if (night.kind !== "body" || !(night.body instanceof Uint8Array)) throw new Error("Expected a body in bytes");
+    expect(jsonAs<JsonObject>(night.body).waiting).toEqual([]);
+    await expect(collectMetroFeed({ feed: "waiting-times" }, undefined, ORIGIN, CREDENTIALS, metro(answers).fetcher, new Date("2026-09-25T09:00:00Z"))).rejects.toMatchObject({
+      code: "upstream-error",
+    });
+    // An API that is down is down at night too: only the answer "code 404" means no trains.
+    const closed = new Date("2026-09-25T02:00:00Z");
+    for (const down of [() => new Response("down", { status: 503 }), ok('{"resposta":"erro","codigo":"500"}'), () => new Response("not here", { status: 404 })]) {
+      const fetcher = metro({ ...answers, "tempoEspera/Estacao/todos": down }).fetcher;
+      await expect(collectMetroFeed({ feed: "waiting-times" }, undefined, ORIGIN, CREDENTIALS, fetcher, closed)).rejects.toMatchObject({ code: "upstream-error" });
+    }
+    const stations = { "infoEstacao/todos": ok('{"resposta":"sem dados","codigo":"404"}') };
+    await expect(collectMetroFeed({ feed: "stations" }, undefined, ORIGIN, CREDENTIALS, metro(stations).fetcher, new Date("2026-09-25T02:00:00Z"))).rejects.toMatchObject({
+      code: "upstream-error",
+    });
   });
 
   it("reads all eight headway tables, and fails as a whole when one of them does", async () => {

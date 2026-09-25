@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fmt } from "../src/lib/format";
+import { fmt, humanize } from "../src/lib/format";
 
 /**
  * A source's own field holds whatever the source put in it. A value that looks like a timestamp and
@@ -19,5 +19,15 @@ describe("times a source wrote badly", () => {
     expect(fmt.dateTime(undefined)).toBe("—");
     expect(fmt.dateTime("")).toBe("—");
     expect(fmt.date(null)).toBe("—");
+  });
+});
+
+describe("field names made readable", () => {
+  it("spells ID and IP in capitals as whole words only, where a letter with an accent is part of a word", () => {
+    expect(humanize("ipVersion")).toBe("IP Version");
+    expect(humanize("station_id")).toBe("Station ID");
+    expect(humanize("éip")).toBe("Éip");
+    expect(humanize("tipo")).toBe("Tipo");
+    expect(humanize("zip")).toBe("Zip");
   });
 });
