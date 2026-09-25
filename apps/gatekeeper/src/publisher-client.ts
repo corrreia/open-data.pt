@@ -71,6 +71,25 @@ async function takeTurn(host: string, intervalMs: number): Promise<void> {
   await turn;
 }
 
+/**
+ * An answer that refused or failed a request, for the logs: a feed's failure
+ * names only its code, and the status, the server and whether a Cloudflare in
+ * front of the source challenged us (`cf-mitigated`) say who refused and how.
+ */
+function logStatus(url: URL, response: Response): void {
+  console.warn(
+    JSON.stringify({
+      event: "source_http_status",
+      host: url.hostname,
+      path: url.pathname,
+      status: response.status,
+      server: response.headers.get("server"),
+      mitigated: response.headers.get("cf-mitigated"),
+      contentType: response.headers.get("content-type"),
+    }),
+  );
+}
+
 /** Every host a publisher's sources name. */
 export function sourceHosts(sources: PublisherSources): string[] {
   return sources.map((source) => (source instanceof Object ? source.host : source));
@@ -118,7 +137,10 @@ export function publisherClient(sources: PublisherSources, fetcher: typeof fetch
       const last = attempt === attempts || request.signal?.aborted === true;
       try {
         const response = await fetcher(url, { ...request, headers });
-        if (last || !ORIGIN_UNREACHABLE.has(response.status)) return response;
+        if (last || !ORIGIN_UNREACHABLE.has(response.status)) {
+          if (response.status >= 400) logStatus(url, response);
+          return response;
+        }
         await response.body?.cancel().catch(() => undefined);
       } catch (error) {
         // A refused, reset or timed out connection: the origin was never reached.

@@ -14,12 +14,13 @@ credential, a proxy, an unusual cadence, a permission, a known habit of the sour
 
 | Publisher                                             | Why it has a page                                                              |
 | ----------------------------------------------------- | ------------------------------------------------------------------------------ |
-| [Metropolitano de Lisboa](metropolitano-de-lisboa.md) | OAuth credentials, and a proxy hostname their TLS chain forces on us           |
+| [Metropolitano de Lisboa](metropolitano-de-lisboa.md) | OAuth credentials, a proxy their TLS chain forces on us, and code 404 at night |
 | [Assembleia da República](assembleia-da-republica.md) | 93 MB documents with no validators, staged in R2 and compared by hash          |
 | [Carris Metropolitana](carris-metropolitana.md)       | Read through two libraries, and positions that must not become history         |
 | [The Card4B MYINFO operators](card4b-operators.md)    | Four publishers on one shared platform, allowlisted by folder                  |
 | [APA](apa.md)                                         | Read through three libraries split so no value repeats, and a site with no API |
 | [RIPE NCC](ripe-ncc.md)                               | Permission to republish RIPEstat, and a `sourceapp` they asked for             |
+| [Banco de Portugal](banco-de-portugal.md)             | Behind their own Cloudflare, and paced so the morning burst is spread out      |
 
 ## Writing one
 

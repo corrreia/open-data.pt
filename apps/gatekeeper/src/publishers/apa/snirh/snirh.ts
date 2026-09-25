@@ -565,8 +565,8 @@ async function request(url: URL, session: Session, what: string, init: RequestIn
   }
   if (response.status >= 300 && response.status < 400) throw new GatekeeperError(`${what} redirected`, "source-denied");
   if (!response.ok) {
-    // Who refused, and in what words: SNIRH refuses a share of the requests from Cloudflare, and the page says which
-    // of its layers did.
+    // In what words: SNIRH refuses a share of the requests from Cloudflare, and its page says which of its layers did.
+    // The client has already logged the status and the server.
     const text = await readBoundedResponse(response, 16 * 1024, what)
       .then((bytes) => new TextDecoder().decode(bytes))
       .catch(() => "");
@@ -576,12 +576,10 @@ async function request(url: URL, session: Session, what: string, init: RequestIn
       .trim();
     console.warn(
       JSON.stringify({
-        event: "source_http_status",
+        event: "source_refusal_page",
         source: "snirh",
         path: url.pathname,
         status: response.status,
-        server: response.headers.get("server"),
-        contentType: response.headers.get("content-type"),
         page: page.slice(0, 200),
       }),
     );

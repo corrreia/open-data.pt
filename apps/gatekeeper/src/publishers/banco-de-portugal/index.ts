@@ -17,7 +17,14 @@ import { FEED as portugueseTreasuryYields } from "./feeds/portuguese-treasury-yi
 export const PUBLISHER: PublisherDefinition = {
   name: "Banco de Portugal",
   url: "https://www.bportugal.pt/",
-  sources: ["bpstat.bportugal.pt"],
+  sources: [
+    {
+      host: "bpstat.bportugal.pt",
+      // BPstat sits behind its own Cloudflare, and all fourteen feeds run together each morning; the consumer price
+      // index alone reads nine pages. A second apart, that burst stays under what a rate limit there would refuse.
+      minIntervalSeconds: 1,
+    },
+  ],
   logo: "png",
   feeds: [
     banknotesIssued,
