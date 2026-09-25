@@ -1,6 +1,7 @@
 import type { JsonValue } from "./types";
 
-const isNumber = (value: JsonValue | undefined): value is number => Number.isFinite(value);
+/** A finite number as written, never one coerced from a string, null or anything else. */
+export const isNumber = (value: JsonValue | undefined): value is number => Number.isFinite(value);
 
 // Built once: constructing an Intl formatter costs far more than using one, and a page with
 // hundreds of ticking relative times formats each of them every second.
