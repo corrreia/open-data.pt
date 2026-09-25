@@ -739,7 +739,7 @@ export class RunnerCore {
         next.lastSuccessAt = at;
         if (input.sourceUrl) next.sourceUrl = input.sourceUrl;
         next.cooldowns = 0;
-        next.nextRunAt = new Date(now + policy.collection.cadenceSeconds * 1000).toISOString();
+        next.nextRunAt = nextRunAfter(this.requireFeed().id, now, policy.collection.cadenceSeconds);
       }
       this.setRuntime(next);
       if (!history) this.maybeStartBackfill();
@@ -775,7 +775,7 @@ export class RunnerCore {
         consecutiveFailures: 0,
         consecutiveInterruptions: 0,
         cooldowns: 0,
-        nextRunAt: new Date(now + policy.collection.cadenceSeconds * 1000).toISOString(),
+        nextRunAt: nextRunAfter(this.requireFeed().id, now, policy.collection.cadenceSeconds),
       };
       delete next.runningAcquisitionId;
       delete next.watchdogAt;
@@ -1464,6 +1464,24 @@ export function declareProducts(existing: ProductPlan[], headers: NormalizedProd
 }
 
 /** Every serving object an entry references: its chunks and its windows. */
+const DAY_MS = 86_400_000;
+
+/**
+ * When a feed that succeeded at `now` runs next. A feed read daily or less
+ * often runs at a time of day of its own, drawn from its identity, the first
+ * time it comes round once its cadence has passed: never sooner, and never
+ * more than a day later. Feeds installed together, or a publisher's feeds that
+ * all first ran one morning, would otherwise keep running together, every day
+ * or every month, against the same server.
+ */
+export function nextRunAfter(feedId: string, now: number, cadenceSeconds: number): string {
+  const due = now + cadenceSeconds * 1000;
+  if (cadenceSeconds * 1000 < DAY_MS) return new Date(due).toISOString();
+  const phase = Number.parseInt(digest(`phase:${feedId}`).slice(0, 8), 16) % DAY_MS;
+  const at = Math.floor(due / DAY_MS) * DAY_MS + phase;
+  return new Date(at < due ? at + DAY_MS : at).toISOString();
+}
+
 function objectKeysOf(entry: ProductIndexEntry): string[] {
   const found = (entry.chunks ?? []).map((chunk) => chunk.key);
   for (const key of [entry.changesKey, entry.seriesKey, entry.seriesChangesKey]) if (key) found.push(key);
