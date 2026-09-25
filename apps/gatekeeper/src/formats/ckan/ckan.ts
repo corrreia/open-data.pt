@@ -54,21 +54,6 @@ export const CKAN_LIMITS = {
 /** Largest single DataStore record; the table itself streams, unbounded by memory. */
 const DATASTORE_RECORD_BYTES = 4 * 1024 * 1024;
 
-/**
- * Attempts of one idempotent CKAN GET, the first included. Águeda's
- * self-hosted origin refuses a share of the connections Cloudflare opens to
- * it, and the edge reports that as a 522 after about nineteen seconds; three
- * attempts and their short pauses stay inside the ninety second collection
- * timeout those feeds allow.
- */
-const FETCH_ATTEMPTS = 3;
-
-/** Pause before the second attempt; the third waits twice as long. Each adds as much again in jitter. */
-const RETRY_BASE_MS = 250;
-
-/** Cloudflare edge statuses that mean the origin never answered: nothing was read, so the GET can be repeated. */
-const ORIGIN_UNREACHABLE = new Set([522, 523, 524]);
-
 const DATASET_PATTERN = /^[a-z0-9_-]+$/;
 const RESOURCE_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SUPPORTED_FORMATS = new Set(["csv", "json", "geojson"]);
@@ -375,46 +360,22 @@ export class CkanSource {
     return { records: stream.elements[Symbol.asyncIterator](), envelope: stream.envelope, count: 0 };
   }
 
-  /**
-   * One allowlisted GET, repeated while the origin never answers. A CKAN
-   * read is idempotent and nothing has been consumed when the connection
-   * fails or the edge gives up on the origin, so the same request can simply
-   * be made again. The last attempt's answer is returned as it stands, which
-   * leaves the caller to report it as a retryable upstream error.
-   */
+  /** One allowlisted GET. The publisher's client repeats it while the origin never answers. */
   private async fetchAllowed(url: URL, init: RequestInit): Promise<Response> {
     validateResourceUrl(url.toString(), this.allowedHosts);
-    const headers = new Headers(init.headers);
-    let unreachable: GatekeeperError | undefined;
-    for (let attempt = 1; attempt <= FETCH_ATTEMPTS; attempt += 1) {
-      if (attempt > 1) await delay(retryDelayMs(attempt));
-      let response: Response;
-      try {
-        response = await this.fetcher(url, { ...init, headers, redirect: "manual" });
-      } catch (error) {
-        // A refused, reset or timed out connection: the origin was never reached.
-        unreachable = new GatekeeperError(`CKAN request to ${url.hostname} failed: ${error instanceof Error ? error.message : "unknown error"}`, "upstream-error");
-        continue;
-      }
-      if (response.status >= 400) logSourceStatus(url, response);
-      if (ORIGIN_UNREACHABLE.has(response.status) && attempt < FETCH_ATTEMPTS) continue;
-      if (response.status >= 300 && response.status < 400 && response.status !== 304) {
-        throw new GatekeeperError(`CKAN redirect from ${url.hostname} was refused`, "source-denied");
-      }
-      return response;
+    let response: Response;
+    try {
+      response = await this.fetcher(url, { ...init, headers: new Headers(init.headers), redirect: "manual" });
+    } catch (error) {
+      // A refused, reset or timed out connection: the origin was never reached.
+      throw new GatekeeperError(`CKAN request to ${url.hostname} failed: ${error instanceof Error ? error.message : "unknown error"}`, "upstream-error");
     }
-    throw unreachable ?? new GatekeeperError(`CKAN origin ${url.hostname} did not answer`, "upstream-error");
+    if (response.status >= 400) logSourceStatus(url, response);
+    if (response.status >= 300 && response.status < 400 && response.status !== 304) {
+      throw new GatekeeperError(`CKAN redirect from ${url.hostname} was refused`, "source-denied");
+    }
+    return response;
   }
-}
-
-/** Half the pause is fixed and half is random, so retries from many feeds do not arrive together. */
-function retryDelayMs(attempt: number): number {
-  const base = RETRY_BASE_MS * 2 ** (attempt - 2);
-  return base + Math.random() * base;
-}
-
-function delay(milliseconds: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
 function logSourceStatus(url: URL, response: Response): void {

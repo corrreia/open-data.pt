@@ -17,7 +17,9 @@ export const FEED = defineFeed(OPENDATASOFT_DEPLOYMENT, {
     timeField: "datahora",
     period: "hour",
     windowPeriods: "168",
-    where: "codigo_postal IN ('1000','4000')",
+    // Where the clocks went forward on 26 March 2023, the export carries a row for 01:00, an hour Lisbon skipped, beside
+    // the real 02:00 one at the same instant: about a quarter of that hour, so a stray quarter-hour, not an hour of its own.
+    where: "codigo_postal IN ('1000','4000') AND NOT (dt_consumo = date'2023-03-26' AND hr_consumo = '01:00')",
     select: "datahora,codigo_postal,consumo",
     orderBy: "datahora DESC,codigo_postal",
     dimensions: "codigo_postal",

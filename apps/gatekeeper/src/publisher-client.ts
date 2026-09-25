@@ -10,6 +10,20 @@ export const USER_AGENT = "open-data.pt/1.0 (+https://open-data.pt)";
 /** Redirects one request may follow before it is refused: enough for a portal's download link, not for a loop. */
 const MAX_REDIRECTS = 5;
 
+/**
+ * Attempts of one request whose origin never answered, the first included.
+ * Some publishers' own servers (SNIRH, Águeda's CKAN) refuse a share of the
+ * connections Cloudflare opens to them, and the edge reports that as a 522
+ * after about nineteen seconds.
+ */
+const ATTEMPTS = 3;
+
+/** Pause before the second attempt; the third waits twice as long. Each adds as much again in jitter, so retries from many feeds do not arrive together. */
+const RETRY_BASE_MS = 250;
+
+/** Cloudflare edge statuses that mean the origin never answered: nothing was read, so the request can be made again. */
+const ORIGIN_UNREACHABLE = new Set([522, 523, 524]);
+
 /** One server a publisher's data is read from, and how it asks to be read. */
 export interface PublisherSource {
   host: string;
@@ -66,8 +80,10 @@ export function sourceHosts(sources: PublisherSources): string[] {
  * The fetch a publisher's feeds are handed. It reaches only the hosts the
  * publisher declares — a redirect elsewhere is refused, not followed — names
  * open-data.pt in every request unless a host says otherwise, keeps to each
- * host's interval, and adds what the publisher asked every request to carry. A caller that asks for `redirect: "manual"` handles the
- * redirect itself, and its next request comes back through here.
+ * host's interval, adds what the publisher asked every request to carry, and
+ * repeats a request whose origin never answered. A caller that asks for
+ * `redirect: "manual"` handles the redirect itself, and its next request comes
+ * back through here.
  */
 export function publisherClient(sources: PublisherSources, fetcher: typeof fetch): typeof fetch {
   const allowed = new Map<string, HostRules>(
@@ -87,13 +103,30 @@ export function publisherClient(sources: PublisherSources, fetcher: typeof fetch
     for (const [name, value] of Object.entries(rulesOf(url).query)) if (!url.searchParams.has(name)) url.searchParams.set(name, value);
     return url;
   };
-  /** One request to one host, on that host's terms: its interval, and the name it knows us by. */
+  /**
+   * One request to one host, on that host's terms: its interval, and the name
+   * it knows us by. Made again while the origin never answers, when its body
+   * can be sent twice; the last attempt's answer or error stands.
+   */
   const send = async (url: URL, request: RequestInit): Promise<Response> => {
     const rules = rulesOf(url);
     const headers = new Headers(request.headers);
     headers.set("User-Agent", rules.userAgent);
-    await takeTurn(url.hostname, rules.intervalMs);
-    return fetcher(url, { ...request, headers });
+    const attempts = request.body instanceof ReadableStream ? 1 : ATTEMPTS;
+    for (let attempt = 1; ; attempt += 1) {
+      await takeTurn(url.hostname, rules.intervalMs);
+      const last = attempt === attempts || request.signal?.aborted === true;
+      try {
+        const response = await fetcher(url, { ...request, headers });
+        if (last || !ORIGIN_UNREACHABLE.has(response.status)) return response;
+        await response.body?.cancel().catch(() => undefined);
+      } catch (error) {
+        // A refused, reset or timed out connection: the origin was never reached.
+        if (last || request.signal?.aborted === true) throw error;
+      }
+      const pause = RETRY_BASE_MS * 2 ** (attempt - 1);
+      await new Promise((resolve) => setTimeout(resolve, pause + Math.random() * pause));
+    }
   };
   return async (input, init) => {
     let url = prepare(new URL(input instanceof Request ? input.url : input instanceof URL ? input.href : input));

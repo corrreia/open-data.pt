@@ -58,6 +58,8 @@ export interface FixtureSource {
   rejected: number;
   updateMode: ProductUpdateMode;
   kind: "record" | "series";
+  /** The series product's key and slug: "readings" unless a test turns the "things" table into a series. */
+  seriesProduct?: string;
   /** Stream rows lazily from this generator instead of `records` (scale runs). */
   generate?: () => Iterable<CanonicalRecord>;
   fetch?: () => Promise<SourceFetch>;
@@ -278,8 +280,8 @@ function fixtureTransform(source: FixtureSource): StreamingTransform {
           completeness: "complete" as const,
         }
       : {
-          productKey: "readings",
-          slug: "readings",
+          productKey: source.seriesProduct ?? "readings",
+          slug: source.seriesProduct ?? "readings",
           title: "Readings",
           description: "Fixture series",
           role: "time-series" as const,

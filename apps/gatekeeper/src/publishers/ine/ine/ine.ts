@@ -417,24 +417,20 @@ function conditionalHeaders(checkpoint: SourceValidator | undefined): Headers {
   return headers;
 }
 
+/** One INE request. The publisher's client repeats a connection that never reached INE; this repeats INE's empty answers. */
 async function upstreamFetch(fetcher: typeof fetch, url: URL, headers: Headers): Promise<Response> {
-  let lastError: Error | undefined;
   for (let attempt = 0; attempt < 3; attempt += 1) {
+    let response: Response;
     try {
-      const response = await fetcher(url, { headers });
-      // INE intermittently answers 200 with an explicitly empty body. It is a
-      // transient upstream failure, not a valid empty indicator response.
-      if (response.ok && response.headers.get("content-length") === "0") {
-        lastError = new Error("empty successful response");
-        continue;
-      }
-      return response;
+      response = await fetcher(url, { headers });
     } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
+      throw new GatekeeperError(`INE request failed: ${error instanceof Error ? error.message : "network failure"}`, "upstream-error");
     }
+    // INE intermittently answers 200 with an explicitly empty body. It is a
+    // transient upstream failure, not a valid empty indicator response.
+    if (!response.ok || response.headers.get("content-length") !== "0") return response;
   }
-  const detail = lastError ? `: ${lastError.message}` : "";
-  throw new GatekeeperError(`INE request failed after 3 attempts${detail}`, "upstream-error");
+  throw new GatekeeperError("INE answered empty 3 times", "upstream-error");
 }
 
 function requireSuccessfulResponse(response: Response, resource: string): void {

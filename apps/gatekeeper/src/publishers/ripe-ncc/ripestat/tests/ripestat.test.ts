@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { collectNormalized, feedCollector, libraryConfig, type JsonObject, type NormalizedCollector, type SourceConfig } from "#/index";
+import { collectNormalized, feedCollector, isJsonArray, libraryConfig, type JsonObject, type NormalizedCollector, type SourceConfig } from "#/index";
 import { RUNNABLE } from "#/catalog/index";
 import { collectRipestatFeed, RIPESTAT_MAX_BYTES, RIPESTAT_ORIGIN, validateRipestatFeedConfig } from "#/publishers/ripe-ncc/ripestat/ripestat";
 import { RipestatTransformer } from "#/publishers/ripe-ncc/ripestat/transform";
@@ -161,16 +161,34 @@ describe("RIPEstat normalized data", () => {
     expect(first.products).toHaveLength(1);
   });
 
-  it("uses RIS snapshot time and real IPv6 /48 units without claiming customer outages", async () => {
+  it("counts each RIS snapshot into one series per measure, dated by the snapshot, without claiming customer outages", async () => {
     const document = fixture("status");
     const first = await transform(STATUS, document);
     document.time = "2040-01-01T00:00:00";
     document.query_id = "another";
     expect(await transform(STATUS, document, "2040-01-01T00:00:00Z")).toEqual(first);
-    expect(first.rows[0]?.record).toMatchObject({ entityKey: "AS64496", eventTime: "2026-09-15T16:00:00.000Z", payload: { ipv4Addresses: 256, ipv6Slash48Units: 0.00390625 } });
-    expect(first.products[0]?.schema.fields.find((field) => field.id === "ipv6Slash48Units")?.unit).toBe("IPv6 /48 subnet equivalents");
-    expect(first.rows[0]?.record?.payload).not.toHaveProperty("outage");
-    expect(first.products[0]?.kind).toBe("record");
+    const points = first.rows.flatMap((row) => (row.point ? [row.point] : []));
+    expect(points.map((point) => point.seriesKey)).toEqual([
+      "ipv4PeersSeeing",
+      "ipv4PeersTotal",
+      "ipv6PeersSeeing",
+      "ipv6PeersTotal",
+      "ipv4Prefixes",
+      "ipv4Addresses",
+      "ipv6Prefixes",
+      "ipv6Slash48Units",
+      "observedNeighbours",
+    ]);
+    expect(points.every((point) => point.eventTime === "2026-09-15T16:00:00.000Z")).toBe(true);
+    expect(points.find((point) => point.seriesKey === "ipv4Addresses")).toMatchObject({
+      value: 256,
+      unit: "IPv4 addresses",
+      dimensions: { measure: "announced-addresses", ipVersion: "4" },
+    });
+    expect(points.find((point) => point.seriesKey === "ipv6Slash48Units")).toMatchObject({ value: 0.00390625, unit: "IPv6 /48 subnet equivalents" });
+    expect(points.find((point) => point.seriesKey === "observedNeighbours")?.dimensions).toEqual({ measure: "observed-neighbours" });
+    expect(first.products[0]).toMatchObject({ kind: "series", role: "time-series", updateMode: "delta" });
+    expect(first.summary.products).toEqual([{ productKey: "routing-status", watermark: "2026-09-15T16:00:00.000Z" }]);
   });
 
   it("dates routing points by source daily intervals and registrations by stats_date only", async () => {
@@ -183,6 +201,18 @@ describe("RIPEstat normalized data", () => {
     expect(new Set(points.map((point) => point.unit))).toEqual(new Set(["prefixes", "ASNs"]));
     expect(points.some((point) => point.seriesKey.endsWith("prefixes_stats"))).toBe(false);
     expect(result.products[0]?.updateMode).toBe("source-window");
+  });
+
+  it("keeps a RIS daily mean that falls on a half, and still rejects a fractional registration count", async () => {
+    const root = fixture("routing");
+    const stats = object(root.data).stats;
+    const first = object(isJsonArray(stats) ? stats[0] : undefined);
+    first.v4_prefixes_ris = 803.5;
+    const result = await transform(ROUTING, root);
+    const points = result.rows.flatMap((row) => (row.point ? [row.point] : []));
+    expect(points.find((point) => point.seriesKey === "v4_prefixes_ris" && point.eventTime === "2026-09-13T00:00:00.000Z")?.value).toBe(803.5);
+    first.asns_stats = 3.5;
+    await expect(transform(ROUTING, root)).rejects.toThrow("invalid count");
   });
 
   it("excludes the endpoint's inclusive upper boundary from the exclusive serving/history window", async () => {
@@ -246,8 +276,8 @@ describe("RIPEstat normalized data", () => {
     const collector = routingStatus(async () => Response.json(fixture("status")));
     const request = await networkRequest(collector, { ...STATUS, source: "ripestat" });
     const frames = await networkFrames(await collectNormalized(request, collector));
-    expect(frames.map((frame) => frame.type)).toEqual(["header", "record", "complete"]);
-    expect(frames.at(-1)).toMatchObject({ counts: { records: 1, points: 0 }, quality: { acceptedRecords: 1, rejectedRecords: 0 } });
+    expect(frames.map((frame) => frame.type)).toEqual(["header", ...Array.from({ length: 9 }, () => "point"), "complete"]);
+    expect(frames.at(-1)).toMatchObject({ counts: { records: 0, points: 9 }, quality: { acceptedRecords: 9, rejectedRecords: 0 } });
     const failed = routingStatus(async () => Response.json({ status: "error", status_code: 500, data: {} }));
     expect(await collectNormalized(await networkRequest(failed, { ...STATUS, source: "ripestat" }), failed)).toMatchObject({ kind: "failure", code: "invalid-response" });
   });

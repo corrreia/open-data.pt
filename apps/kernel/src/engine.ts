@@ -441,11 +441,12 @@ function nextEntry(base: WorkerBase, rules: ProductRules, changed: boolean): Pro
     currentAcquisitionId: changed ? plan.acquisitionId : (previous?.currentAcquisitionId ?? plan.acquisitionId),
     watermark,
     rowCount: previous?.rowCount ?? 0,
-    chunks: previous?.chunks ?? null,
-    // A product that stopped keeping history lets go of its change windows, and the runner deletes them.
-    changesKey: keepsChangeWindow(base) ? (previous?.changesKey ?? null) : null,
-    seriesKey: previous?.seriesKey ?? null,
-    seriesChangesKey: keepsChangeWindow(base) ? (previous?.seriesChangesKey ?? null) : null,
+    // A product that became a series lets go of its rows, one that became a table of its points, and one that stopped
+    // keeping history of its change windows; the runner deletes what no entry references any more.
+    chunks: header.kind === "series" ? null : (previous?.chunks ?? null),
+    changesKey: header.kind === "record" && keepsChangeWindow(base) ? (previous?.changesKey ?? null) : null,
+    seriesKey: header.kind === "series" ? (previous?.seriesKey ?? null) : null,
+    seriesChangesKey: header.kind === "series" && keepsChangeWindow(base) ? (previous?.seriesChangesKey ?? null) : null,
     updatedAt: changed ? plan.observedAt : (previous?.updatedAt ?? plan.observedAt),
     createdAt: previous?.createdAt ?? plan.observedAt,
   };
