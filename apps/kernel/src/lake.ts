@@ -43,6 +43,13 @@ export function lakeStreams(env: Env): LakeBindings {
 }
 
 const MAX_SEND_ROWS = 1000;
+/**
+ * Pipelines refuses a single message over 1 MB ("Individual message must not
+ * exceed 1 MB"; the limits page names only the 5 MB request). A record may be up
+ * to MAX_RECORD_BYTES and its row carries more around it, so a row is fitted to
+ * this, with room for how the binding frames it.
+ */
+export const LAKE_ROW_BYTES = 900_000;
 /** Pipelines accepts at most 5 MB per ingestion request; keep JSON framing overhead below it. */
 const MAX_SEND_BYTES = 4_900_000;
 
@@ -65,15 +72,56 @@ export class PipelinesLake implements LakeSink {
       chunk = [];
       bytes = 2;
     };
-    for (const row of rows) {
+    for (const original of rows) {
+      const row = fitLakeRow(original, table);
+      if (!row) continue;
       const rowBytes = encoder.encode(JSON.stringify(row)).byteLength + (chunk.length > 0 ? 1 : 0);
-      if (rowBytes + 2 > MAX_SEND_BYTES) throw new NormalizedInputError(`One lake row exceeds the ${MAX_SEND_BYTES} byte request budget`);
       if (chunk.length >= MAX_SEND_ROWS || bytes + rowBytes > MAX_SEND_BYTES) await flush();
       chunk.push(row);
       bytes += rowBytes;
     }
     await flush();
   }
+}
+
+/**
+ * A row the lake will take. A record history row over LAKE_ROW_BYTES keeps its
+ * revision and every field that fits: its largest payload values (a boundary's
+ * geometry, usually) are left out, largest first, and named under `_omitted`
+ * with the payload's size, so the history says what it does not hold. A row
+ * that still does not fit, whose payload has an `_omitted` of its own, or a
+ * point, is left out of the lake altogether: one
+ * row the lake refuses must never hold back the rest. Either is logged.
+ */
+export function fitLakeRow(row: JsonObject, table: LakeTable): JsonObject | undefined {
+  const encoder = new TextEncoder();
+  const size = (value: JsonValue) => encoder.encode(JSON.stringify(value)).byteLength;
+  const bytes = size(row);
+  if (bytes <= LAKE_ROW_BYTES) return row;
+  const payload = row.payload;
+  // A payload with its own `_omitted` has no room to name what was left out without losing that field.
+  if (table === "records" && isJsonObject(payload) && !Object.hasOwn(payload, "_omitted")) {
+    const fields = Object.entries(payload)
+      .map(([name, value]) => ({ name, bytes: size(value ?? null) }))
+      .sort((a, b) => b.bytes - a.bytes);
+    const kept: JsonObject = { ...payload };
+    const omitted: string[] = [];
+    let remaining = bytes;
+    for (const field of fields) {
+      if (remaining <= LAKE_ROW_BYTES - 200) break;
+      delete kept[field.name];
+      omitted.push(field.name);
+      remaining -= field.bytes;
+    }
+    kept._omitted = { fields: omitted, bytes: size(payload) };
+    const fitted: JsonObject = { ...row, payload: kept };
+    if (size(fitted) <= LAKE_ROW_BYTES) {
+      console.warn(JSON.stringify({ event: "lake_row_fitted", product: row.product_slug, entity: row.entity_key, bytes, omitted }));
+      return fitted;
+    }
+  }
+  console.error(JSON.stringify({ event: "lake_row_left_out", table, product: row.product_slug, revision: row.revision_id, bytes }));
+  return undefined;
 }
 
 /** Reject a row the stream schema would refuse before it is accepted into the outbox. */

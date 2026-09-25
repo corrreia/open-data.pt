@@ -20,7 +20,8 @@ import { WFS_FEATURE_ID } from "./wfs";
 
 export class WfsTransformer {
   readonly id = "ogc-wfs-geojson";
-  readonly version = "1";
+  // 2: a layer read for its attributes alone no longer declares an empty geometry, latitude and longitude.
+  readonly version = "2";
 
   transform(bytes: Uint8Array, context: TransformContext): UnstampedResult {
     const config = transformConfig(context.feed.config);
@@ -28,15 +29,27 @@ export class WfsTransformer {
     if (!isJsonObject(root) || root.type !== "FeatureCollection" || !Array.isArray(root.features))
       throw new GatekeeperError("WFS artifact is not a GeoJSON feature collection", "invalid-response");
     const profiles = profile(root.features, config);
-    const schema = schemaOf(profiles);
-    const records: CanonicalRecord[] = [];
+    const accepted: Array<{ record: CanonicalRecord; geometry: JsonObject | null }> = [];
     let watermark: string | undefined;
     for (const candidate of root.features) {
       const record = featureRecord(candidate, config, profiles);
       if (!record) continue;
-      records.push(record);
+      accepted.push({ record, geometry: isJsonObject(candidate) && isJsonObject(candidate.geometry) ? candidate.geometry : null });
       if (record.sourcePublishedAt && (!watermark || record.sourcePublishedAt > watermark)) watermark = record.sourcePublishedAt;
     }
+    // A layer read for its attributes alone (`propertyNames` without the geometry) has no outline to serve. Only the
+    // features that became records count: a rejected one's outline is not this product's.
+    const located = accepted.some((each) => each.geometry !== null);
+    if (located) {
+      for (const { record, geometry } of accepted) {
+        const centre = geometryCentre(geometry);
+        record.payload.geometry = geometry;
+        record.payload.latitude = centre?.[1] ?? null;
+        record.payload.longitude = centre?.[0] ?? null;
+      }
+    }
+    const schema = schemaOf(profiles, located);
+    const records = accepted.map((each) => each.record);
     const reference = config.feed === "reference";
     const product: ProductBuild = {
       productKey: "features",
@@ -92,13 +105,14 @@ function inferType(name: string, values: JsonValue[], numberFields: ReadonlySet<
   return "json";
 }
 
-function schemaOf(profiles: Profile[]): CanonicalSchema {
+function schemaOf(profiles: Profile[], located: boolean): CanonicalSchema {
   const fields: CanonicalField[] = profiles.map((item) => ({ id: item.field, name: item.field, type: item.type, nullable: item.nullable }));
-  fields.push(
-    { id: "geometry", name: "geometry", type: "geometry", nullable: true },
-    { id: "latitude", name: "latitude", type: "latitude", nullable: true },
-    { id: "longitude", name: "longitude", type: "longitude", nullable: true },
-  );
+  if (located)
+    fields.push(
+      { id: "geometry", name: "geometry", type: "geometry", nullable: true },
+      { id: "latitude", name: "latitude", type: "latitude", nullable: true },
+      { id: "longitude", name: "longitude", type: "longitude", nullable: true },
+    );
   return { fields };
 }
 
@@ -118,11 +132,6 @@ function featureRecord(value: JsonValue | undefined, config: SourceConfig, profi
   if ((!isJsonString(key) && !isJsonNumber(key)) || String(key) === "") return undefined;
   const payload: JsonObject = {};
   for (const item of profiles) payload[item.field] = canonical(properties[item.field], item.type);
-  const geometry = isJsonObject(value.geometry) ? value.geometry : null;
-  const centre = geometryCentre(geometry);
-  payload.geometry = geometry;
-  payload.latitude = centre?.[1] ?? null;
-  payload.longitude = centre?.[0] ?? null;
   // A reference feature is identified, not dated: it carries no event time to keep.
   if (config.feed === "reference") return { entityKey: String(key), payload };
   const eventTime = sourceDate(properties[config.eventTimeField ?? ""]);

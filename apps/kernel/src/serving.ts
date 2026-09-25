@@ -405,7 +405,8 @@ export function publicProduct(entry: ProductView): ApiProduct {
     exposeHistory: entry.exposeHistory,
     licence: entry.licence,
     attribution: entry.attribution,
-    hasChanges: Boolean(entry.changesKey),
+    // A change window left from before the product stopped keeping history is not served: `/changes` answers 404.
+    hasChanges: entry.exposeHistory && Boolean(entry.changesKey),
     hasSeries: Boolean(entry.seriesKey),
     updatedAt: entry.updatedAt,
   };

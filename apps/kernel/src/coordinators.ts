@@ -708,8 +708,14 @@ export class FeedRunner extends DurableObject<Env> {
       if (overdue) ended = await this.checkExecutor(overdue);
       // The Workflow delivers what it commits. History still waiting after ten minutes (its executor died, or a retried
       // step found the work done) triggers a drain here, which then sends everything committed.
-      if (!this.core.runtime().runningAcquisitionId && this.core.hasUndeliveredHistory(new Date(Date.now() - LEFTOVER_HISTORY_AFTER_MS).toISOString()))
-        ended = (await this.drainLeftoverHistory()) > 0 || ended;
+      // History that will not go never holds back the next collection: it is retried on its own schedule.
+      if (!this.core.runtime().runningAcquisitionId && this.core.hasUndeliveredHistory(new Date(Date.now() - LEFTOVER_HISTORY_AFTER_MS).toISOString())) {
+        try {
+          ended = (await this.drainLeftoverHistory()) > 0 || ended;
+        } catch (error) {
+          console.error(JSON.stringify({ event: "leftover_history_failed", feedId: this.core.feed()?.id, error: String(error) }));
+        }
+      }
       const due = this.core.takeDue();
       if (due) ended = !(await this.start(due)) || ended;
       await this.core.collectGarbage();

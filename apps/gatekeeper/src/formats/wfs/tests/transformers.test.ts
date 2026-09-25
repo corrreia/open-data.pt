@@ -84,10 +84,24 @@ describe("WFS normalizer", () => {
       entityKey: "0104_1",
       // The source's own wording is kept verbatim, including where a column named for
       // one article carries the text of another: `art_60` here reads "Artigo 61.º".
-      payload: { municipio: "Arouca", art_60: "Aplicam-se condicionamentos do Artigo 61.º", geometry: null },
+      payload: { municipio: "Arouca", art_60: "Aplicam-se condicionamentos do Artigo 61.º" },
     });
+    // Read for its attributes alone: no feature carries an outline, so there is no geometry, latitude or longitude to declare.
+    expect(product?.records?.[0]?.payload).not.toHaveProperty("geometry");
+    expect(product?.schema.fields.map((field) => field.id)).not.toContain("geometry");
+    expect(product?.schema.fields.map((field) => field.id)).not.toContain("latitude");
     expect(product?.records?.[0]?.eventTime).toBeUndefined();
     expect(result.quality).toMatchObject({ acceptedRecords: 3, rejectedRecords: 0 });
+  });
+
+  it("takes an outline only from features that become records", () => {
+    const collection = JSON.parse(readFixture(new URL("./fixtures/sgifr-apps-subregionais.json", import.meta.url)));
+    // A feature with no identifier is rejected; its outline must not make the layer look located.
+    collection.features.push({ type: "Feature", geometry: { type: "Point", coordinates: [-8.6, 40.6] }, properties: { municipio: "Aveiro" } });
+    const config = { feed: "reference", host: "api.sgifr.gov.pt", path: "/v1/wfs/AGIF/apps-subregionais", typeName: "apps:apps_adaptacao_subregional", idField: "id" };
+    const result = new WfsTransformer().transform(new TextEncoder().encode(JSON.stringify(collection)), context("sgifr-apps-subregionais-feed", config, "feature", "reference"));
+    expect(result.quality).toMatchObject({ acceptedRecords: 3, rejectedRecords: 1 });
+    expect(result.products[0]?.schema.fields.map((field) => field.id)).not.toContain("geometry");
   });
 
   it("names a reference feature by the service's own identity when the layer holds no identifier", () => {
