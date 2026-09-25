@@ -8,7 +8,7 @@ import { apiGet, productPath } from "../../lib/api";
 import { NO_VALUE_COLORS, SERIES_COLORS } from "../../lib/palette";
 import { fmt, humanize, isRecord } from "../../lib/format";
 import { useQuery } from "../../lib/query";
-import type { Feature, FeatureCollection, Field, Geometry, JsonRecord, Product } from "../../lib/types";
+import type { Feature, FeatureCollection, Field, Geometry, JsonRecord, JsonValue, Product } from "../../lib/types";
 import { isText } from "./cells";
 
 /*
@@ -71,12 +71,30 @@ function toGeoJson(geometry: Geometry): GeoJSON.Geometry | null {
   return { type: geometry.type, coordinates: geometry.coordinates } as GeoJSON.Geometry;
 }
 
-/** A single position, when the feature is one point. */
-function pointOf(feature: Feature): [number, number] | null {
-  if (feature.geometry.type !== "Point" || !Array.isArray(feature.geometry.coordinates)) return null;
-  const [lng, lat] = feature.geometry.coordinates.map(Number);
+/** One `[lng, lat]` pair as the map's `[lat, lng]`, when it is a usable position. */
+function positionOf(coordinates: JsonValue | undefined): [number, number] | null {
+  if (!Array.isArray(coordinates)) return null;
+  const [lng, lat] = coordinates.map(Number);
   return lat !== undefined && lng !== undefined && Number.isFinite(lat) && Number.isFinite(lng) ? [lat, lng] : null;
 }
+
+/**
+ * The positions of a feature that is points: one for a Point, each of a
+ * MultiPoint's (many registers write every point as a MultiPoint of one).
+ * Null for anything else, which is drawn as a line or an area.
+ */
+function pointsOf(feature: Feature): Array<[number, number]> | null {
+  const { type, coordinates } = feature.geometry;
+  if (type === "Point") {
+    const position = positionOf(coordinates);
+    return position ? [position] : null;
+  }
+  if (type !== "MultiPoint" || !Array.isArray(coordinates)) return null;
+  const positions = coordinates.map(positionOf).filter((position): position is [number, number] => position !== null);
+  return positions.length > 0 ? positions : null;
+}
+
+const isPoints = (feature: Feature) => feature.geometry.type === "Point" || feature.geometry.type === "MultiPoint";
 
 // Wide enough for a species name or an address on one line; longer values wrap inside it.
 const POPUP = { minWidth: 240, maxWidth: 360 } satisfies L.PopupOptions;
@@ -370,18 +388,20 @@ export default function MapView({ product, refreshKey }: { product: Product; ref
     let east = -180;
     features.forEach((feature, index) => {
       const category = categoryOf(feature);
-      const position = pointOf(feature);
-      if (position) {
-        const [lat, lng] = position;
-        const id = String(feature.id ?? index);
-        const [fromLat, fromLng] = previous.get(id) ?? position;
-        if (fromLat !== lat || fromLng !== lng) moved = true;
-        next.set(id, position);
-        plotted.push({ index, lat, lng, fromLat, fromLng, category });
-        south = Math.min(south, lat);
-        north = Math.max(north, lat);
-        west = Math.min(west, lng);
-        east = Math.max(east, lng);
+      const positions = pointsOf(feature);
+      if (positions) {
+        positions.forEach((position, part) => {
+          const [lat, lng] = position;
+          const id = `${String(feature.id ?? index)}#${part}`;
+          const [fromLat, fromLng] = previous.get(id) ?? position;
+          if (fromLat !== lat || fromLng !== lng) moved = true;
+          next.set(id, position);
+          plotted.push({ index, lat, lng, fromLat, fromLng, category });
+          south = Math.min(south, lat);
+          north = Math.max(north, lat);
+          west = Math.min(west, lng);
+          east = Math.max(east, lng);
+        });
         return;
       }
       const geometry = toGeoJson(feature.geometry);
@@ -399,7 +419,12 @@ export default function MapView({ product, refreshKey }: { product: Product; ref
         const feature = features[index];
         return colorOf(feature ? categoryOf(feature) : "all");
       };
-      const areaLayer = L.geoJSON(outlines, { style: (outline) => outlineStyle(colorAt(Number(outline?.properties?.index))), bubblingMouseEvents: false });
+      const areaLayer = L.geoJSON(outlines, {
+        style: (outline) => outlineStyle(colorAt(Number(outline?.properties?.index))),
+        // A point inside a collection of other shapes is drawn as a dot: Leaflet's default is a marker image this build does not ship.
+        pointToLayer: (outline: GeoJSON.Feature, at) => L.circleMarker(at, { ...outlineStyle(colorAt(Number(outline.properties?.index))), radius: 4, fillOpacity: 0.8 }),
+        bubblingMouseEvents: false,
+      });
       areaLayer.on("click", (event: L.LeafletMouseEvent) => {
         const feature = features[Number(event.propagatedFrom?.feature?.properties?.index)];
         if (feature) L.popup(POPUP).setLatLng(event.latlng).setContent(popupHtml(feature.properties)).openOn(map);
@@ -421,7 +446,7 @@ export default function MapView({ product, refreshKey }: { product: Product; ref
     }
   }, [features, field, dark, hidden]);
 
-  const outlines = features.filter((feature) => feature.geometry.type !== "Point").length;
+  const outlines = features.filter((feature) => !isPoints(feature)).length;
   const newest = features.reduce((latest, feature) => {
     const time = feature.properties._time;
     const event = time && isRecord(time) ? time.event : undefined;
