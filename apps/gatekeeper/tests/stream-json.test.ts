@@ -157,6 +157,31 @@ describe("streamJsonArray", () => {
     expect(fits.elements).toEqual(["x".repeat(40)]);
   });
 
+  it("bounds an element by what it holds, not by the indentation it was sent with", async () => {
+    const outline = {
+      type: "MultiPolygon",
+      name: "Herdade  do   Monte",
+      coordinates: [
+        [
+          [
+            [-7.1234567, 39.1234567],
+            [-7.2, 39.2],
+          ],
+        ],
+      ],
+    };
+    const pretty = JSON.stringify({ features: [outline] }, null, 8);
+    const compact = JSON.stringify(outline).length;
+    // Five times the element's size as sent, well inside it once its whitespace is left out.
+    expect(pretty.length).toBeGreaterThan(compact * 3);
+    for (const sizes of ["one", "whole"] as const) {
+      const read = await collect(textStream(pretty, sizes), ["features"], { maxElementBytes: compact + 8 });
+      // Spaces inside a string are the string's own, and stay.
+      expect(read.elements).toEqual([outline]);
+    }
+    await expect(collect(textStream(pretty, "one"), ["features"], { maxElementBytes: compact - 8 })).rejects.toMatchObject({ code: "response-too-large" });
+  });
+
   it("rejects truncated and malformed documents", async () => {
     for (const text of [
       '{"features": [1, 2',

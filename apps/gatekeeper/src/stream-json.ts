@@ -172,6 +172,11 @@ class BoundedBytes {
     this.length += size;
   }
 
+  /** The last byte held, if any. */
+  last(): number | undefined {
+    return this.length > 0 ? this.bytes[this.length - 1] : undefined;
+  }
+
   text(): string {
     return decoder.decode(this.bytes.subarray(0, this.length));
   }
@@ -258,6 +263,17 @@ class ArrayScanner {
       }
 
       if (this.phase === "inside") {
+        // Whitespace between an element's tokens is left out of its buffer: a pretty-printing service sends outlines at
+        // four times their size, and an element is bounded by what it holds, not by how it was indented.
+        // Between two scalars (`[1 2]`) whitespace is what keeps them apart, so one space stays there.
+        if (this.elementOpen && isWhitespace(byte)) {
+          this.element.append(chunk, elementStart, index);
+          while (index + 1 < chunk.byteLength && isWhitespace(chunk[index + 1]!)) index += 1;
+          const last = this.element.last();
+          if (last !== undefined && isScalarByte(last)) this.element.append(SPACE, 0, 1);
+          elementStart = index + 1;
+          continue;
+        }
         if (this.innerDepth > 0) {
           if (byte === QUOTE) this.inString = true;
           else if (byte === OPEN_BRACE || byte === OPEN_BRACKET) this.innerDepth += 1;
@@ -391,6 +407,13 @@ class ArrayScanner {
     }
   }
 }
+
+/** A byte that ends a number or a literal (`true`, `false`, `null`): what whitespace may be keeping from the next one. */
+function isScalarByte(byte: number): boolean {
+  return (byte >= 0x30 && byte <= 0x39) || (byte >= 0x61 && byte <= 0x7a) || (byte >= 0x41 && byte <= 0x5a) || byte === 0x2e || byte === 0x2b || byte === 0x2d;
+}
+
+const SPACE = new Uint8Array([0x20]);
 
 function isWhitespace(byte: number): boolean {
   return byte === 0x20 || byte === 0x0a || byte === 0x0d || byte === 0x09;
