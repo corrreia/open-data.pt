@@ -20,4 +20,4 @@ the one paginated dataset, failed every run in production as `upstream-error`. T
 succeeds from outside Cloudflare, and the other thirteen feeds kept succeeding. The host is paced at
 one request a second (`minIntervalSeconds` in their `index.ts`) so that burst is spread out. Every
 refused answer is now logged as `source_http_status`, with `cf-mitigated` when their Cloudflare
-challenged us, which will say whether the pace was the fix.
+challenged us: refusals the client then repeats included. That will say whether the pace was the fix.
