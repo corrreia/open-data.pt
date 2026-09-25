@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ErrorNote, RelativeTime, useDarkMode } from "../common";
 import { apiGet, productPath } from "../../lib/api";
 import { NO_VALUE_COLORS, SERIES_COLORS } from "../../lib/palette";
-import { fmt, humanize, isRecord } from "../../lib/format";
+import { fmt, humanize, isNumber, isRecord } from "../../lib/format";
 import { useQuery } from "../../lib/query";
 import type { Feature, FeatureCollection, Field, Geometry, JsonRecord, JsonValue, Product } from "../../lib/types";
 import { isText } from "./cells";
@@ -74,8 +74,9 @@ function toGeoJson(geometry: Geometry): GeoJSON.Geometry | null {
 /** One `[lng, lat]` pair as the map's `[lat, lng]`, when it is a usable position. */
 function positionOf(coordinates: JsonValue | undefined): [number, number] | null {
   if (!Array.isArray(coordinates)) return null;
-  const [lng, lat] = coordinates.map(Number);
-  return lat !== undefined && lng !== undefined && Number.isFinite(lat) && Number.isFinite(lng) ? [lat, lng] : null;
+  // Only numbers as written: `Number(null)` and `Number("")` would put a point at 0,0.
+  const [lng, lat] = coordinates;
+  return isNumber(lat) && isNumber(lng) ? [lat, lng] : null;
 }
 
 /**
