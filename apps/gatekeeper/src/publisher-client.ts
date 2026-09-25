@@ -137,10 +137,9 @@ export function publisherClient(sources: PublisherSources, fetcher: typeof fetch
       const last = attempt === attempts || request.signal?.aborted === true;
       try {
         const response = await fetcher(url, { ...request, headers });
-        if (last || !ORIGIN_UNREACHABLE.has(response.status)) {
-          if (response.status >= 400) logStatus(url, response);
-          return response;
-        }
+        // Every refusal, the ones repeated below included: how often an origin never answers is itself the finding.
+        if (response.status >= 400) logStatus(url, response);
+        if (last || !ORIGIN_UNREACHABLE.has(response.status)) return response;
         await response.body?.cancel().catch(() => undefined);
       } catch (error) {
         // A refused, reset or timed out connection: the origin was never reached.

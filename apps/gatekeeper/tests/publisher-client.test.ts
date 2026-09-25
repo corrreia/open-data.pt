@@ -83,7 +83,10 @@ describe("a publisher's client", () => {
   });
 
   describe("an origin that never answered", () => {
-    afterEach(() => vi.useRealTimers());
+    afterEach(() => {
+      vi.useRealTimers();
+      vi.restoreAllMocks();
+    });
 
     /** A fetcher that answers each request with the next of `answers`: a status, or a failed connection. */
     function answering(answers: Array<number | "refused">) {
@@ -97,14 +100,16 @@ describe("a publisher's client", () => {
       return { bodies, fetcher };
     }
 
-    it("repeats a request the edge answered with 522, or whose connection failed, body and all", async () => {
+    it("repeats a request the edge answered with 522, or whose connection failed, body and all, and logs the 522", async () => {
       vi.useFakeTimers();
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const { bodies, fetcher } = answering([522, "refused"]);
       const client = publisherClient(["snirh.apambiente.pt"], fetcher);
       const response = client("https://snirh.apambiente.pt/index.php", { method: "POST", body: "f_estado=ATIVA", redirect: "manual" });
       await vi.advanceTimersByTimeAsync(5_000);
       expect((await response).status).toBe(200);
       expect(bodies).toEqual(["f_estado=ATIVA", "f_estado=ATIVA", "f_estado=ATIVA"]);
+      expect(warn.mock.calls.map((call) => JSON.parse(String(call[0])).status)).toEqual([522]);
     });
 
     it("gives the third attempt's answer or error as it stands", async () => {
