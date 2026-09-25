@@ -370,27 +370,11 @@ export class CkanSource {
       // A refused, reset or timed out connection: the origin was never reached.
       throw new GatekeeperError(`CKAN request to ${url.hostname} failed: ${error instanceof Error ? error.message : "unknown error"}`, "upstream-error");
     }
-    if (response.status >= 400) logSourceStatus(url, response);
     if (response.status >= 300 && response.status < 400 && response.status !== 304) {
       throw new GatekeeperError(`CKAN redirect from ${url.hostname} was refused`, "source-denied");
     }
     return response;
   }
-}
-
-function logSourceStatus(url: URL, response: Response): void {
-  console.warn(
-    JSON.stringify({
-      event: "source_http_status",
-      source: "ckan",
-      host: url.hostname,
-      path: url.pathname,
-      status: response.status,
-      server: response.headers.get("server"),
-      mitigation: response.headers.get("cf-mitigated"),
-      contentType: response.headers.get("content-type"),
-    }),
-  );
 }
 
 function actionUrl(origin: string, action: "datastore_search" | "package_show", parameters: Record<string, string>): URL {

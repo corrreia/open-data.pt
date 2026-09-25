@@ -132,6 +132,28 @@ describe("a publisher's client", () => {
     });
   });
 
+  it("logs an answer that refused or failed a request, with who gave it, and nothing for one that succeeded", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const fetcher: typeof fetch = async (input) =>
+      String(input).endsWith("/refused")
+        ? new Response("blocked", { status: 403, headers: { Server: "cloudflare", "cf-mitigated": "challenge", "Content-Type": "text/html" } })
+        : new Response("ok");
+    const client = publisherClient(["bpstat.bportugal.pt"], fetcher);
+    await client("https://bpstat.bportugal.pt/data/ok");
+    expect(warn).not.toHaveBeenCalled();
+    expect((await client("https://bpstat.bportugal.pt/data/refused")).status).toBe(403);
+    expect(JSON.parse(String(warn.mock.calls[0]?.[0]))).toEqual({
+      event: "source_http_status",
+      host: "bpstat.bportugal.pt",
+      path: "/data/refused",
+      status: 403,
+      server: "cloudflare",
+      mitigated: "challenge",
+      contentType: "text/html",
+    });
+    warn.mockRestore();
+  });
+
   describe("a host's interval", () => {
     afterEach(() => vi.useRealTimers());
 
