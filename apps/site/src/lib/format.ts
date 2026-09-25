@@ -125,6 +125,7 @@ export function humanize(value: string) {
     .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
     .replace(/[_-]+/g, " ")
     .replace(/\bid\b/gi, "ID")
+    .replace(/\bip\b/gi, "IP")
     .replace(/^./, (c) => c.toUpperCase());
 }
 
