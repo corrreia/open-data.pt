@@ -25,7 +25,7 @@ export const FEED = defineFeed(OGC_DEPLOYMENT, {
   },
   staleAfterSeconds: 2 * MONTH,
   /** Once a month: the siorminp-mineral-occurrences collection walked page by page from LNEG's OGC API, every feature with its geometry. */
-  fetch: ({ config, state, library, fetch }) => collectOgcFeed(config, state, library.hosts, fetch),
+  fetch: ({ config, library, fetch }) => collectOgcFeed(config, library.hosts, fetch),
   /** The service's pages, streamed, into one table of the collection's features. */
   transform: { normalizer: OGC_NORMALIZER, streaming: (body, context) => OGC_TRANSFORMER.transform(body, context) },
 });

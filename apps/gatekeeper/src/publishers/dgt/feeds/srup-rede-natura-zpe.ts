@@ -26,7 +26,7 @@ export const FEED = defineFeed(OGC_DEPLOYMENT, {
   },
   staleAfterSeconds: 2 * WEEK,
   /** Every week: the srup_zpe layer walked page by page from DGT's OGC API, every feature with its outline. */
-  fetch: ({ config, state, library, fetch }) => collectOgcFeed(config, state, library.hosts, fetch),
+  fetch: ({ config, library, fetch }) => collectOgcFeed(config, library.hosts, fetch),
   /** The service's pages, streamed, into one table of the layer's features. */
   transform: { normalizer: OGC_NORMALIZER, streaming: (body, context) => OGC_TRANSFORMER.transform(body, context) },
 });

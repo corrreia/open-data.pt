@@ -285,7 +285,7 @@ describe("OGC API Features configuration", () => {
     const filtered = { ...config, collection: "crus", filterField: "municipio", filterValue: "LISBOA" };
     expect(itemsUrl(filtered).toString()).toBe(`https://${DGT_HOST}/collections/crus/items?f=json&limit=1000&skipGeometry=true&municipio=LISBOA`);
     const fetcher = serviceFetcher(() => itemsPage({ count: 1, matched: 1, collection: "crus" }), 1, { collection: { id: "crus", itemType: "feature", title: "CRUS" } });
-    await readDocument(await collectOgcFeed(filtered, undefined, hosts, fetcher));
+    await readDocument(await collectOgcFeed(filtered, hosts, fetcher));
     // The count query decides completeness, so it must be cut the same way the
     // pages are: counting the whole collection would call the subset partial.
     const hits = fetcher.mock.calls.map((call) => new URL(String(call[0]))).find((url) => url.searchParams.get("resulttype") === "hits");
@@ -329,7 +329,7 @@ describe("OGC API Features configuration", () => {
 describe("OGC API Features collection", () => {
   it("walks pages the service links, rebuilding every URL from its offset", async () => {
     const fetcher = serviceFetcher((offset) => itemsPage({ count: offset < 4 ? 2 : 1, matched: 5, first: offset, next: offset + 2 <= 4 ? offset + 2 : undefined }), 5);
-    const fetched = await collectOgcFeed({ ...config, pageSize: "2", maxPages: "5" }, undefined, hosts, fetcher);
+    const fetched = await collectOgcFeed({ ...config, pageSize: "2", maxPages: "5" }, hosts, fetcher);
     const document = await readDocument(fetched);
     expect(featureIds(document)).toEqual(["m0", "m1", "m2", "m3", "m4"]);
     expect(bodyOf(fetched).completeness).toBe("complete");
@@ -343,7 +343,7 @@ describe("OGC API Features collection", () => {
 
   it("stops at the page cap and says the snapshot is partial before any feature is read", async () => {
     const fetcher = serviceFetcher((offset) => itemsPage({ count: 2, matched: 100, first: offset, next: offset + 2 }), 100);
-    const fetched = await collectOgcFeed({ ...config, pageSize: "2", maxPages: "3" }, undefined, hosts, fetcher);
+    const fetched = await collectOgcFeed({ ...config, pageSize: "2", maxPages: "3" }, hosts, fetcher);
     expect(bodyOf(fetched).completeness).toBe("partial");
     expect(featureIds(await readDocument(fetched))).toHaveLength(6);
   });
@@ -356,7 +356,7 @@ describe("OGC API Features collection", () => {
       if (url.searchParams.get("resulttype") === "hits") return new Response("no", { status: 400 });
       return Response.json(itemsPage({ count: 2, matched: 2 }));
     });
-    const fetched = await collectOgcFeed(config, undefined, hosts, fetcher);
+    const fetched = await collectOgcFeed(config, hosts, fetcher);
     expect(bodyOf(fetched).completeness).toBe("unknown");
   });
 
@@ -369,18 +369,18 @@ describe("OGC API Features collection", () => {
       if (url.searchParams.get("resulttype") === "hits") return Response.json(itemsPage({ count: 2, matched: 2 }));
       return Response.json(itemsPage({ count: 2, matched: 2 }));
     });
-    expect(bodyOf(await collectOgcFeed(config, undefined, hosts, fetcher)).completeness).toBe("unknown");
+    expect(bodyOf(await collectOgcFeed(config, hosts, fetcher)).completeness).toBe("unknown");
   });
 
   it("refuses a next link that points at another host", async () => {
     const fetcher = serviceFetcher(() => itemsPage({ count: 2, matched: 10, next: 2, host: "attacker.example" }), 10);
-    const fetched = await collectOgcFeed({ ...config, pageSize: "2" }, undefined, hosts, fetcher);
+    const fetched = await collectOgcFeed({ ...config, pageSize: "2" }, hosts, fetcher);
     await expect(readDocument(fetched)).rejects.toThrow(/attacker\.example/);
   });
 
   it("refuses a next link that points at another resource on the same host", async () => {
     const fetcher = serviceFetcher(() => itemsPage({ count: 2, matched: 10, next: 2, collection: "crus" }), 10);
-    const fetched = await collectOgcFeed({ ...config, pageSize: "2" }, undefined, hosts, fetcher);
+    const fetched = await collectOgcFeed({ ...config, pageSize: "2" }, hosts, fetcher);
     await expect(readDocument(fetched)).rejects.toThrow(/another resource/);
   });
 
@@ -393,25 +393,25 @@ describe("OGC API Features collection", () => {
     const page = itemsPage({ count: 2, matched: 10 });
     page.links = [{ rel: "next", href }];
     const fetcher = serviceFetcher(() => page, 10);
-    const fetched = await collectOgcFeed({ ...config, pageSize: "2" }, undefined, hosts, fetcher);
+    const fetched = await collectOgcFeed({ ...config, pageSize: "2" }, hosts, fetcher);
     await expect(readDocument(fetched)).rejects.toThrow(GatekeeperError);
   });
 
   it("refuses a next link whose offset does not move forwards", async () => {
     const fetcher = serviceFetcher(() => itemsPage({ count: 2, matched: 10, next: 0 }), 10);
-    const fetched = await collectOgcFeed({ ...config, pageSize: "2" }, undefined, hosts, fetcher);
+    const fetched = await collectOgcFeed({ ...config, pageSize: "2" }, hosts, fetcher);
     await expect(readDocument(fetched)).rejects.toThrow(/did not move forwards/);
   });
 
   it("refuses an empty page that still promises another", async () => {
     const fetcher = serviceFetcher((offset) => itemsPage({ count: offset === 0 ? 2 : 0, matched: 10, first: offset, next: offset + 2 }), 10);
-    const fetched = await collectOgcFeed({ ...config, pageSize: "2" }, undefined, hosts, fetcher);
+    const fetched = await collectOgcFeed({ ...config, pageSize: "2" }, hosts, fetcher);
     await expect(readDocument(fetched)).rejects.toThrow(/after returning no features/);
   });
 
   it("refuses a page whose stated count disagrees with what it carried", async () => {
     const fetcher = serviceFetcher(() => itemsPage({ count: 2, returned: 5, matched: 10, next: 2 }), 10);
-    const fetched = await collectOgcFeed({ ...config, pageSize: "2" }, undefined, hosts, fetcher);
+    const fetched = await collectOgcFeed({ ...config, pageSize: "2" }, hosts, fetcher);
     await expect(readDocument(fetched)).rejects.toThrow(/reported 5 features and returned 2/);
   });
 
@@ -426,7 +426,7 @@ describe("OGC API Features collection", () => {
         return undefined;
       },
     });
-    expect(featureIds(await readDocument(await collectOgcFeed(config, undefined, hosts, fetcher)))).toEqual(["m0"]);
+    expect(featureIds(await readDocument(await collectOgcFeed(config, hosts, fetcher)))).toEqual(["m0"]);
   });
 
   it.each([
@@ -441,7 +441,7 @@ describe("OGC API Features collection", () => {
     const fetcher = serviceFetcher(() => itemsPage({ count: 1, matched: 1 }), 1, {
       onRequest: (url) => (url.pathname.endsWith("/items") && url.searchParams.get("resulttype") === null ? new Response(null, { status: 302, headers: { location } }) : undefined),
     });
-    await expect(collectOgcFeed(config, undefined, hosts, fetcher)).rejects.toThrow(GatekeeperError);
+    await expect(collectOgcFeed(config, hosts, fetcher)).rejects.toThrow(GatekeeperError);
   });
 
   it("stops after a few redirects rather than following a loop", async () => {
@@ -451,7 +451,7 @@ describe("OGC API Features collection", () => {
           ? new Response(null, { status: 302, headers: { location: `https://${DGT_HOST}/collections/municipios/items?f=json&hop=${Math.random()}` } })
           : undefined,
     });
-    await expect(collectOgcFeed(config, undefined, hosts, fetcher)).rejects.toThrow(/redirected too many times/);
+    await expect(collectOgcFeed(config, hosts, fetcher)).rejects.toThrow(/redirected too many times/);
   });
 
   it("refuses features in a coordinate reference system that is not WGS 84", async () => {
@@ -461,26 +461,26 @@ describe("OGC API Features collection", () => {
           ? Response.json(itemsPage({ count: 1, matched: 1 }), { headers: { "content-crs": "<http://www.opengis.net/def/crs/EPSG/0/3763>" } })
           : undefined,
     });
-    await expect(collectOgcFeed({ ...config, geometry: "include" }, undefined, hosts, fetcher)).rejects.toThrow(/not WGS 84/);
+    await expect(collectOgcFeed({ ...config, geometry: "include" }, hosts, fetcher)).rejects.toThrow(/not WGS 84/);
   });
 
   it("refuses a collection that holds something other than features", async () => {
     const fetcher = serviceFetcher(() => itemsPage({ count: 1, matched: 1 }), 1, {
       collection: { id: "municipios", itemType: "record", title: "Records" },
     });
-    await expect(collectOgcFeed(config, undefined, hosts, fetcher)).rejects.toThrow(/not features/);
+    await expect(collectOgcFeed(config, hosts, fetcher)).rejects.toThrow(/not features/);
   });
 
   it("refuses a service that answered with a different collection", async () => {
     const fetcher = serviceFetcher(() => itemsPage({ count: 1, matched: 1 }), 1, {
       collection: { id: "crus", itemType: "feature", title: "Land use" },
     });
-    await expect(collectOgcFeed(config, undefined, hosts, fetcher)).rejects.toThrow(/returned collection crus/);
+    await expect(collectOgcFeed(config, hosts, fetcher)).rejects.toThrow(/returned collection crus/);
   });
 
   it("turns an upstream failure into a retryable error carrying its Retry-After", async () => {
     const fetcher = vi.fn(async () => new Response("slow down", { status: 429, headers: { "retry-after": "42" } }));
-    await expect(collectOgcFeed(config, undefined, hosts, fetcher)).rejects.toMatchObject({
+    await expect(collectOgcFeed(config, hosts, fetcher)).rejects.toMatchObject({
       code: "upstream-error",
       retryAfterSeconds: 42,
     });
@@ -490,7 +490,7 @@ describe("OGC API Features collection", () => {
     const fetcher = serviceFetcher(() => itemsPage({ count: 1, matched: 1 }), 1, {
       onRequest: (url) => (url.pathname.endsWith("/schema") ? new Response("not found", { status: 404 }) : undefined),
     });
-    const document = await readDocument(await collectOgcFeed(config, undefined, hosts, fetcher));
+    const document = await readDocument(await collectOgcFeed(config, hosts, fetcher));
     expect(isJsonObject(document.ogc) && document.ogc.schema).toBeUndefined();
   });
 });
@@ -506,13 +506,7 @@ describe("OGC API Features freshness", () => {
         return undefined;
       },
     });
-    // Even handed a checkpoint that looks like a usable validator, nothing is sent.
-    const fetched = await collectOgcFeed(
-      { ...config, pageSize: "2" },
-      { singlePage: true, validators: { default: { etag: '"page-one"', lastModified: "Mon, 07 Sep 2026 16:44:09 GMT" } } },
-      hosts,
-      fetcher,
-    );
+    const fetched = await collectOgcFeed({ ...config, pageSize: "2" }, hosts, fetcher);
     expect(fetched.kind).toBe("body");
     expect(conditional).toEqual([]);
     expect(featureIds(await readDocument(fetched))).toEqual(["m0", "m1", "m2", "m3"]);
@@ -525,21 +519,20 @@ describe("OGC API Features freshness", () => {
           ? Response.json(itemsPage({ count: 2, matched: 2 }), { headers: { etag: '"page-one"' } })
           : undefined,
     });
-    expect(bodyOf(await collectOgcFeed({ ...config, pageSize: "10" }, undefined, hosts, fetcher)).state).toEqual({});
+    expect(bodyOf(await collectOgcFeed({ ...config, pageSize: "10" }, hosts, fetcher)).state).toEqual({});
   });
 
   it("refuses a 304, which it never asked for", async () => {
     const fetcher = serviceFetcher(() => itemsPage({ count: 1, matched: 1 }), 1, {
       onRequest: (url) => (url.pathname.endsWith("/items") && url.searchParams.get("resulttype") === null ? new Response(null, { status: 304 }) : undefined),
     });
-    await expect(collectOgcFeed(config, undefined, hosts, fetcher)).rejects.toThrow(/304 to an unconditional request/);
+    await expect(collectOgcFeed(config, hosts, fetcher)).rejects.toThrow(/304 to an unconditional request/);
   });
 
   it("collects the same document twice from the same source, with no clock of its own", async () => {
     const first = await readDocument(
       await collectOgcFeed(
         config,
-        undefined,
         hosts,
         serviceFetcher(() => municipiosPage, 278),
       ),
@@ -547,7 +540,6 @@ describe("OGC API Features freshness", () => {
     const second = await readDocument(
       await collectOgcFeed(
         config,
-        undefined,
         hosts,
         serviceFetcher(() => municipiosPage, 278),
       ),
@@ -560,138 +552,12 @@ describe("OGC API Features freshness", () => {
     const fetched = bodyOf(
       await collectOgcFeed(
         config,
-        undefined,
         hosts,
         serviceFetcher(() => municipiosPage, 278),
       ),
     );
     expect(fetched.provenance.sourcePublishedAt).toBeUndefined();
     expect(fetched.provenance.sourceUrl).toBe(`https://${DGT_HOST}/collections/municipios/items?f=json&limit=1000&skipGeometry=true`);
-  });
-});
-
-describe("OGC API Features sharded reads", () => {
-  const sharded = {
-    host: DGT_HOST,
-    collection: "crus",
-    geometry: "include",
-    shardField: "dtcc",
-    shardSource: "municipios",
-    shardSourceField: "dtmn",
-    shardsPerRun: "2",
-    pageSize: "10",
-    maxPages: "5",
-  };
-
-  /** The listing collection, then one page per shard the run asks for. */
-  function shardFetcher(codes: string[], counts: Record<string, number> = {}) {
-    return vi.fn(async (input: RequestInfo | URL) => {
-      const url = new URL(input.toString());
-      if (url.pathname.endsWith("/schema")) return Response.json(municipiosSchema);
-      if (url.pathname.includes("/municipios/items")) {
-        if (url.searchParams.get("resulttype") === "hits") {
-          return Response.json({ type: "FeatureCollection", features: [], numberReturned: 0, numberMatched: codes.length, links: [] });
-        }
-        // The listing is handed over a page at a time, so a reader that stops
-        // after the first page is missing shards rather than failing.
-        const size = Number(url.searchParams.get("limit") ?? "1000");
-        const from = Number(url.searchParams.get("offset") ?? "0");
-        const slice = codes.slice(from, from + size);
-        const links = from + size < codes.length ? [{ rel: "next", href: `https://${DGT_HOST}/collections/municipios/items?f=json&limit=${size}&offset=${from + size}` }] : [];
-        return Response.json({
-          type: "FeatureCollection",
-          features: slice.map((code, index) => ({ type: "Feature", id: from + index, properties: { dtmn: code }, geometry: null })),
-          numberReturned: slice.length,
-          numberMatched: codes.length,
-          links,
-        });
-      }
-      if (!url.pathname.endsWith("/items")) return Response.json({ id: "crus", itemType: "feature", title: "CRUS" });
-      const code = url.searchParams.get("dtcc") ?? "";
-      const count = counts[code] ?? 1;
-      if (url.searchParams.get("resulttype") === "hits") {
-        return Response.json({ type: "FeatureCollection", features: [], numberReturned: 0, numberMatched: count, links: [] });
-      }
-      return Response.json({
-        type: "FeatureCollection",
-        features: Array.from({ length: count }, (_, index) => ({ ...feature(index), id: `${code}-${index}` })),
-        numberReturned: count,
-        numberMatched: count,
-        links: [],
-      });
-    });
-  }
-
-  it("takes the next shards after where the last run stopped, and says where it got to", async () => {
-    const fetcher = shardFetcher(["0101", "0102", "0103"]);
-    const first = await collectOgcFeed(sharded, undefined, hosts, fetcher);
-    expect(featureIds(await readDocument(first))).toEqual(["0101-0", "0102-0"]);
-    expect(bodyOf(first).state).toMatchObject({ cursor: 2, shards: 3, covered: ["0101", "0102"] });
-
-    const second = await collectOgcFeed(sharded, bodyOf(first).state, hosts, shardFetcher(["0101", "0102", "0103"]));
-    // The list is worked round in turn, so the third shard comes next and the
-    // rotation wraps back to the first.
-    expect(featureIds(await readDocument(second))).toEqual(["0103-0", "0101-0"]);
-  });
-
-  it("is always a part of the collection, so nothing is retracted for being unasked", async () => {
-    const fetched = await collectOgcFeed(sharded, undefined, hosts, shardFetcher(["0101", "0102"]));
-    expect(bodyOf(fetched).completeness).toBe("partial");
-  });
-
-  it("reads the shard values from the collection that lists them", async () => {
-    const fetcher = shardFetcher(["0101", "0102"]);
-    await readDocument(await collectOgcFeed(sharded, undefined, hosts, fetcher));
-    const listing = fetcher.mock.calls
-      .map((call) => new URL(String(call[0])))
-      .find((url) => url.pathname.includes("/municipios/items") && url.searchParams.get("resulttype") !== "hits");
-    expect(listing?.searchParams.get("properties")).toBe("dtmn");
-    // The parcels are asked for by that value, not by the name beside it.
-    const asked = fetcher.mock.calls.map((call) => new URL(String(call[0])).searchParams.get("dtcc")).filter((value) => value !== null);
-    expect(new Set(asked)).toEqual(new Set(["0101", "0102"]));
-  });
-
-  it("reads a shard listing that runs past one page, so no shard is left unread", async () => {
-    // Twelve values at four to a page: a reader that took the first page alone
-    // would never ask for the last eight municipalities at all.
-    const codes = ["0101", "0102", "0103", "0104", "0105", "0106", "0107", "0108", "0109", "0110", "0111", "0112"];
-    const fetcher = shardFetcher(codes);
-    const fetched = await collectOgcFeed({ ...sharded, shardsPerRun: "12" }, { cursor: 8, shards: 12, covered: [] }, hosts, fetcher);
-    // Starting at the ninth, the rotation must reach values that only a later page carries.
-    expect(featureIds(await readDocument(fetched))).toContain("0112-0");
-    expect(bodyOf(fetched).state).toMatchObject({ shards: 12 });
-  });
-
-  it("starts again when the list of shards has shrunk under the cursor", async () => {
-    const fetched = await collectOgcFeed(sharded, { cursor: 99, shards: 100, covered: [] }, hosts, shardFetcher(["0101", "0102"]));
-    expect(featureIds(await readDocument(fetched))).toEqual(["0101-0", "0102-0"]);
-  });
-
-  it("walks a shard that runs to several pages, whole", async () => {
-    const fetcher = shardFetcher(["0101"], { "0101": 25 });
-    const document = await readDocument(await collectOgcFeed({ ...sharded, shardsPerRun: "1" }, undefined, hosts, fetcher));
-    expect(featureIds(document)).toHaveLength(25);
-  });
-
-  it.each([
-    ["a shard field that names a query parameter", { ...sharded, shardField: "limit" }],
-    ["a shard listing without the field holding its values", { ...sharded, shardSourceField: "" }],
-    ["a shard read that also cuts by a fixed value", { ...sharded, filterField: "municipio", filterValue: "LISBOA" }],
-  ])("refuses %s", (_label, candidate) => {
-    expect(() => validateOgcFeedConfig(candidate, hosts)).toThrow(GatekeeperError);
-  });
-
-  it("reads the same resource whether or not it is sharded, and says the configuration differs", async () => {
-    // Sharding is how much of a collection one run reads, not which collection
-    // it is — the same distinction page size already draws. What it must not do
-    // is quietly reuse a checkpoint: the configuration hash differs, and that is
-    // what decides whether the shard cursor from an unsharded run is handed back.
-    const whole = { host: DGT_HOST, collection: "crus", geometry: "include", pageSize: "10", maxPages: "5" };
-    const inShards = { ...whole, shardField: "dtcc", shardSource: "municipios", shardSourceField: "dtmn", shardsPerRun: "2" };
-    const one = await resolveOgcFeed(whole, hosts);
-    const other = await resolveOgcFeed(inShards, hosts);
-    expect(other.resourceKey).toBe(one.resourceKey);
-    expect(other.configHash).not.toBe(one.configHash);
   });
 });
 
@@ -707,7 +573,7 @@ describe("OGC API Features page retries", () => {
         return attempts === 1 ? new Response("", { status: 502 }) : undefined;
       },
     });
-    const document = await readDocument(await collectOgcFeed({ ...config, pageSize: "2", maxPages: "5" }, undefined, hosts, fetcher, async () => undefined));
+    const document = await readDocument(await collectOgcFeed({ ...config, pageSize: "2", maxPages: "5" }, hosts, fetcher, async () => undefined));
     expect(featureIds(document)).toEqual(["m0", "m1", "m2", "m3"]);
     expect(attempts).toBe(2);
   });
@@ -723,7 +589,7 @@ describe("OGC API Features page retries", () => {
       }
       return answers(input, init);
     });
-    const document = await readDocument(await collectOgcFeed({ ...config, pageSize: "2", maxPages: "5" }, undefined, hosts, fetcher, async () => undefined));
+    const document = await readDocument(await collectOgcFeed({ ...config, pageSize: "2", maxPages: "5" }, hosts, fetcher, async () => undefined));
     expect(featureIds(document)).toEqual(["m0", "m1", "m2", "m3"]);
     expect(attempts).toBe(2);
   });
@@ -737,7 +603,7 @@ describe("OGC API Features page retries", () => {
         return new Response(null, { status: 302, headers: { location: "https://attacker.example/collections/municipios/items" } });
       },
     });
-    await expect(readDocument(await collectOgcFeed({ ...config, pageSize: "1", maxPages: "5" }, undefined, hosts, fetcher, async () => undefined))).rejects.toThrow(/not allowed/);
+    await expect(readDocument(await collectOgcFeed({ ...config, pageSize: "1", maxPages: "5" }, hosts, fetcher, async () => undefined))).rejects.toThrow(/not allowed/);
     expect(attempts).toBe(1);
   });
 
@@ -745,7 +611,7 @@ describe("OGC API Features page retries", () => {
     const fetcher = serviceFetcher((offset) => itemsPage({ count: 2, matched: 4, first: offset, next: offset === 0 ? 2 : undefined }), 4, {
       onRequest: (url) => (url.searchParams.get("offset") === "2" ? new Response("", { status: 502 }) : undefined),
     });
-    await expect(readDocument(await collectOgcFeed({ ...config, pageSize: "2", maxPages: "5" }, undefined, hosts, fetcher, async () => undefined))).rejects.toThrow(/HTTP 502/);
+    await expect(readDocument(await collectOgcFeed({ ...config, pageSize: "2", maxPages: "5" }, hosts, fetcher, async () => undefined))).rejects.toThrow(/HTTP 502/);
   });
 
   it("does not retry a refusal the service means, such as one it will repeat", async () => {
@@ -757,7 +623,7 @@ describe("OGC API Features page retries", () => {
         return new Response("", { status: 404 });
       },
     });
-    await expect(collectOgcFeed(config, undefined, hosts, fetcher, async () => undefined)).rejects.toThrow(/HTTP 404/);
+    await expect(collectOgcFeed(config, hosts, fetcher, async () => undefined)).rejects.toThrow(/HTTP 404/);
     expect(attempts).toBe(1);
   });
 });
@@ -767,7 +633,7 @@ describe("OGC API Features membership safety", () => {
     // Counted 2, serves 4: silently cutting to 2 would publish a complete
     // snapshot that is missing members it never saw.
     const fetcher = serviceFetcher(() => itemsPage({ count: 4, matched: 4 }), 2);
-    const fetched = await collectOgcFeed({ ...config, pageSize: "10" }, undefined, hosts, fetcher);
+    const fetched = await collectOgcFeed({ ...config, pageSize: "10" }, hosts, fetcher);
     expect(bodyOf(fetched).completeness).toBe("complete");
     await expect(readDocument(fetched)).rejects.toThrow(/more features than the 2 it counted/);
   });
@@ -778,7 +644,7 @@ describe("OGC API Features membership safety", () => {
     // Six features counted, room for six, but a seventh page is still offered:
     // the count cannot be trusted, so the promised complete membership fails.
     const fetcher = serviceFetcher((offset) => itemsPage({ count: 2, matched: 6, first: offset, next: offset + 2 }), 6);
-    const fetched = await collectOgcFeed({ ...config, pageSize: "2", maxPages: "3" }, undefined, hosts, fetcher);
+    const fetched = await collectOgcFeed({ ...config, pageSize: "2", maxPages: "3" }, hosts, fetcher);
     await expect(readDocument(fetched)).rejects.toThrow(/more pages than the count it reported allows/);
   });
 
@@ -788,7 +654,7 @@ describe("OGC API Features membership safety", () => {
     // its page size does this, and a walk that called it a violation collected
     // nothing at all.
     const fetcher = serviceFetcher((offset) => itemsPage({ count: offset < 24 ? 12 : 0, matched: 24, first: offset, next: offset + 12 <= 24 ? offset + 12 : undefined }), 24);
-    const fetched = await collectOgcFeed({ ...config, pageSize: "12", maxPages: "4" }, undefined, hosts, fetcher);
+    const fetched = await collectOgcFeed({ ...config, pageSize: "12", maxPages: "4" }, hosts, fetcher);
     expect(bodyOf(fetched).completeness).toBe("complete");
     expect(featureIds(await readDocument(fetched))).toHaveLength(24);
   });
@@ -797,13 +663,13 @@ describe("OGC API Features membership safety", () => {
     // The same shape, except the page past the count is not empty: the
     // collection grew while it was being read, and that must not pass as whole.
     const fetcher = serviceFetcher((offset) => itemsPage({ count: 12, matched: 24, first: offset, next: offset + 12 }), 36);
-    const fetched = await collectOgcFeed({ ...config, pageSize: "12", maxPages: "4" }, undefined, hosts, fetcher);
+    const fetched = await collectOgcFeed({ ...config, pageSize: "12", maxPages: "4" }, hosts, fetcher);
     await expect(readDocument(fetched)).rejects.toThrow(/the collection changed while it was being read/);
   });
 
   it("still stops cleanly at an explicit cap, which was declared partial up front", async () => {
     const fetcher = serviceFetcher((offset) => itemsPage({ count: 2, matched: 100, first: offset, next: offset + 2 }), 100);
-    const fetched = await collectOgcFeed({ ...config, pageSize: "2", maxPages: "3" }, undefined, hosts, fetcher);
+    const fetched = await collectOgcFeed({ ...config, pageSize: "2", maxPages: "3" }, hosts, fetcher);
     expect(bodyOf(fetched).completeness).toBe("partial");
     expect(featureIds(await readDocument(fetched))).toHaveLength(6);
   });
@@ -811,14 +677,14 @@ describe("OGC API Features membership safety", () => {
   it("validates the last page's envelope, not only the pages before it", async () => {
     // The final page lies about its count; nothing follows it to force the check.
     const fetcher = serviceFetcher(() => itemsPage({ count: 2, returned: 9, matched: 2 }), 2);
-    const fetched = await collectOgcFeed({ ...config, pageSize: "10" }, undefined, hosts, fetcher);
+    const fetched = await collectOgcFeed({ ...config, pageSize: "10" }, hosts, fetcher);
     await expect(readDocument(fetched)).rejects.toThrow(/reported 9 features and returned 2/);
   });
 
   it("refuses a feature repeated across pages, which would mask a dropped member", async () => {
     // Both pages serve m0 and m1: the count reaches 4 while two members are missing.
     const fetcher = serviceFetcher((offset) => itemsPage({ count: 2, matched: 4, first: 0, next: offset === 0 ? 2 : undefined }), 4);
-    const fetched = await collectOgcFeed({ ...config, pageSize: "2" }, undefined, hosts, fetcher);
+    const fetched = await collectOgcFeed({ ...config, pageSize: "2" }, hosts, fetcher);
     await expect(readDocument(fetched)).rejects.toThrow(/returned feature m0 more than once/);
   });
 
@@ -826,7 +692,7 @@ describe("OGC API Features membership safety", () => {
     // Short of its own count is survivable: the product is marked partial, so
     // the kernel cannot retract the members that did not arrive.
     const fetcher = serviceFetcher(() => itemsPage({ count: 2, matched: 2 }), 4);
-    const fetched = await collectOgcFeed({ ...config, pageSize: "10" }, undefined, hosts, fetcher);
+    const fetched = await collectOgcFeed({ ...config, pageSize: "10" }, hosts, fetcher);
     const text = await readText(bodyOf(fetched).body);
     const transform = await new OgcTransformer().transform(chunked(text, text.length), transformContext);
     for await (const _row of transform.rows) {
@@ -839,7 +705,7 @@ describe("OGC API Features membership safety", () => {
 describe("OGC API Features coordinate reference systems", () => {
   it("asks for CRS84 by name when it will publish geometry", async () => {
     const fetcher = serviceFetcher(() => itemsPage({ count: 1, matched: 1 }), 1);
-    await readDocument(await collectOgcFeed({ ...config, geometry: "include" }, undefined, hosts, fetcher));
+    await readDocument(await collectOgcFeed({ ...config, geometry: "include" }, hosts, fetcher));
     const items = fetcher.mock.calls.map((call) => new URL(String(call[0]))).filter((url) => url.pathname.endsWith("/items") && url.searchParams.get("resulttype") === null);
     expect(items.length).toBeGreaterThan(0);
     expect(items.every((url) => url.searchParams.get("crs") === "http://www.opengis.net/def/crs/OGC/1.3/CRS84")).toBe(true);
@@ -853,7 +719,7 @@ describe("OGC API Features coordinate reference systems", () => {
           ? Response.json(itemsPage({ count: 1, matched: 1 }), { headers: { "content-crs": "<http://www.opengis.net/def/crs/EPSG/0/4258>" } })
           : undefined,
     });
-    await expect(collectOgcFeed({ ...config, geometry: "include" }, undefined, hosts, fetcher)).rejects.toThrow(/not WGS 84/);
+    await expect(collectOgcFeed({ ...config, geometry: "include" }, hosts, fetcher)).rejects.toThrow(/not WGS 84/);
   });
 
   it("ignores the response CRS of an attributes-only feed, which publishes no coordinates", async () => {
@@ -864,7 +730,7 @@ describe("OGC API Features coordinate reference systems", () => {
           ? Response.json(itemsPage({ count: 1, matched: 1 }), { headers: { "content-crs": "<http://www.opengis.net/def/crs/EPSG/0/3763>" } })
           : undefined,
     });
-    expect(featureIds(await readDocument(await collectOgcFeed(config, undefined, hosts, fetcher)))).toEqual(["m0"]);
+    expect(featureIds(await readDocument(await collectOgcFeed(config, hosts, fetcher)))).toEqual(["m0"]);
   });
 
   it("refuses a geometry collection that advertises no readable CRS, and accepts an attributes-only one", async () => {
@@ -872,14 +738,12 @@ describe("OGC API Features coordinate reference systems", () => {
     await expect(
       collectOgcFeed(
         { ...config, geometry: "include" },
-        undefined,
         hosts,
         serviceFetcher(() => itemsPage({ count: 1, matched: 1 }), 1, { collection: onlyPortuguese }),
       ),
     ).rejects.toThrow(/advertises no WGS 84/);
     const attributesOnly = await collectOgcFeed(
       config,
-      undefined,
       hosts,
       serviceFetcher(() => itemsPage({ count: 1, matched: 1 }), 1, { collection: onlyPortuguese }),
     );
@@ -961,7 +825,6 @@ describe("OGC API Features normalization", () => {
   it("publishes each municipality once, with the properties the service typed", async () => {
     const fetched = await collectOgcFeed(
       config,
-      undefined,
       hosts,
       serviceFetcher(() => municipiosPage, 278),
     );
@@ -984,7 +847,7 @@ describe("OGC API Features normalization", () => {
     const azores = { host: AZORES_HOST, basePath: "idea-api", collection: "Lagoas", geometry: "include", pageSize: "100", maxPages: "6" };
     const lagoasCollection = { id: "Lagoas", itemType: "feature", title: "Lagoas - Região Autónoma dos Açores", description: "Lagoas existentes nas ilhas dos Açores." };
     const fetcher = serviceFetcher(() => lagoasPage, 97, { collection: lagoasCollection, schema: { type: "object", properties: {} } });
-    const fetched = await collectOgcFeed(azores, undefined, hosts, fetcher);
+    const fetched = await collectOgcFeed(azores, hosts, fetcher);
     const { rows } = await normalize(fetched);
     expect(rows).toHaveLength(2);
     for (const payload of rows) {
@@ -1000,8 +863,8 @@ describe("OGC API Features normalization", () => {
   it("normalizes a real station inventory identically whether fed whole or one byte at a time", async () => {
     const azores = { host: AZORES_HOST, basePath: "idea-api", collection: "RedeMonitorizacao_QualidadeAr", geometry: "include", pageSize: "500", maxPages: "4" };
     const fetcher = () => serviceFetcher(() => airStations, 4, { collection: airCollection, schema: airSchema });
-    const whole = await normalize(await collectOgcFeed(azores, undefined, hosts, fetcher()));
-    const byByte = await normalize(await collectOgcFeed(azores, undefined, hosts, fetcher()), 1);
+    const whole = await normalize(await collectOgcFeed(azores, hosts, fetcher()));
+    const byByte = await normalize(await collectOgcFeed(azores, hosts, fetcher()), 1);
     expect(byByte.rows).toEqual(whole.rows);
     expect(whole.rows).toHaveLength(4);
     expect(whole.transform.finish().quality).toEqual({ acceptedRecords: 4, rejectedRecords: 0 });
@@ -1010,7 +873,6 @@ describe("OGC API Features normalization", () => {
   it("refines a declared string into a category only once every feature was seen", async () => {
     const fetched = await collectOgcFeed(
       config,
-      undefined,
       hosts,
       serviceFetcher(() => municipiosPage, 278),
     );
@@ -1032,7 +894,6 @@ describe("OGC API Features normalization", () => {
     }
     const fetched = await collectOgcFeed(
       { ...config, geometry: "include" },
-      undefined,
       hosts,
       serviceFetcher(() => page, 2),
     );
@@ -1049,7 +910,6 @@ describe("OGC API Features normalization", () => {
     if (isJsonObject(only) && isJsonObject(only.properties)) only.properties.latitude = "38,7";
     const fetched = await collectOgcFeed(
       { ...config, geometry: "include" },
-      undefined,
       hosts,
       serviceFetcher(() => page, 1),
     );
@@ -1088,7 +948,6 @@ describe("OGC API Features normalization", () => {
     if (isJsonObject(second)) delete second.id;
     const fetched = await collectOgcFeed(
       { ...config, geometry: "include" },
-      undefined,
       hosts,
       serviceFetcher(() => page, 2, { schema: { type: "object", properties: {} } }),
     );
@@ -1104,7 +963,6 @@ describe("OGC API Features normalization", () => {
     if (isJsonObject(second)) delete second.id;
     const fetched = await collectOgcFeed(
       { ...config, geometry: "include" },
-      undefined,
       hosts,
       serviceFetcher(() => page, 2, { schema: { type: "object", properties: {} } }),
     );
@@ -1123,7 +981,6 @@ describe("OGC API Features normalization", () => {
     if (isJsonObject(first) && isJsonObject(first.properties)) first.properties.notes = "\u3042".repeat(400_000);
     const fetched = await collectOgcFeed(
       { ...config, geometry: "include" },
-      undefined,
       hosts,
       serviceFetcher(() => page, 2),
     );
@@ -1145,7 +1002,6 @@ describe("OGC API Features normalization", () => {
     if (isJsonObject(first) && isJsonObject(first.properties)) first.properties.notes = "x".repeat(1_100_000);
     const fetched = await collectOgcFeed(
       { ...config, geometry: "include" },
-      undefined,
       hosts,
       serviceFetcher(() => page, 2),
     );
@@ -1270,13 +1126,11 @@ describe("OGC API Features examples", () => {
   it("ships every curated collection under its own slug, each naming its own library", () => {
     expect(feedsOf("ogc").every((example) => example.config.source === "ogc")).toBe(true);
     expect(new Set(feedsOf("ogc").map((example) => example.slug)).size).toBe(feedsOf("ogc").length);
-    // Six CAOP tables, eighteen SRUP registers plus the SGIFR points, and one
-    // feed per municipality whose land-use regime DGT has published nationally.
+    // Six CAOP tables, eighteen SRUP registers plus the SGIFR points, the
+    // land-use table whole, and its boundaries one feed per mainland municipality.
     expect(feedsOf("ogc").filter((example) => example.slug.startsWith("dgt-caop-"))).toHaveLength(6);
     expect(feedsOf("ogc").filter((example) => example.slug.startsWith("dgt-srup-"))).toHaveLength(18);
-    // The land-use regime is one dataset read two ways: the table whole, and
-    // its boundaries a few municipalities at a time.
-    expect(feedsOf("ogc").filter((example) => example.slug.startsWith("dgt-crus"))).toHaveLength(2);
+    expect(feedsOf("ogc").filter((example) => example.slug.startsWith("dgt-crus-parcels-"))).toHaveLength(278);
   });
 
   it("reads each collection once, unless the second read is its boundaries", () => {
@@ -1284,15 +1138,16 @@ describe("OGC API Features examples", () => {
       .filter((example) => example.config.geometry === "skip")
       .map((example) => `${example.config.host}/${example.config.collection}`);
     expect(attributes.filter((one, index) => attributes.indexOf(one) !== index)).toEqual([]);
-    // Only the land-use charter is read twice, and the two reads differ in what
-    // they are for: one is the table entire, the other the outlines it is too
-    // large to carry, built up a few municipalities a run.
-    const twice = feedsOf("ogc").filter((example) => example.config.collection === "crus");
-    expect(twice).toHaveLength(2);
-    expect(twice.filter((example) => example.config.geometry === "skip")).toHaveLength(1);
-    expect(twice.filter((example) => example.config.shardField !== undefined)).toHaveLength(1);
-    // Nothing is cut by a fixed attribute value any more.
-    expect(feedsOf("ogc").filter((example) => example.config.filterField !== undefined)).toEqual([]);
+    // Only the land-use charter is read more than once: the table entire without
+    // outlines, and the outlines one municipality each, every one of the 278 once.
+    const crus = feedsOf("ogc").filter((example) => example.config.collection === "crus");
+    expect(crus.filter((example) => example.config.geometry === "skip")).toHaveLength(1);
+    const municipalities = crus.filter((example) => example.config.filterField === "dtcc").map((example) => example.config.filterValue);
+    expect(municipalities).toHaveLength(278);
+    expect(new Set(municipalities).size).toBe(278);
+    expect(municipalities.every((code) => /^\d{4}$/u.test(code ?? ""))).toBe(true);
+    // Nothing else is cut by an attribute value.
+    expect(feedsOf("ogc").filter((example) => example.config.filterField !== undefined && example.config.collection !== "crus")).toEqual([]);
   });
 
   it("reads only the two services it is allowed to read", () => {
@@ -1341,15 +1196,10 @@ describe("OGC API Features examples", () => {
   it("polls reference layers weekly or monthly, never faster, and never calls one stale before it is due", () => {
     for (const example of feedsOf("ogc")) {
       const { cadenceSeconds } = example.policy.collection;
-      // A sharded feed's runs do not repeat each other: each reads shards the
-      // last did not, so what the source is asked for a given row is the
-      // cadence times a whole rotation, not the cadence. That is the number
-      // this rule is about, and it is still slower than a week.
-      const rotation = example.config.shardsPerRun ? Math.ceil(278 / Number(example.config.shardsPerRun)) : 1;
-      expect(cadenceSeconds * rotation, example.slug).toBeGreaterThanOrEqual(43_200);
-      if (rotation === 1) expect(cadenceSeconds, example.slug).toBeGreaterThanOrEqual(604_800);
+      expect(cadenceSeconds, example.slug).toBeGreaterThanOrEqual(604_800);
       expect(example.staleAfterSeconds, example.slug).toBeGreaterThanOrEqual(cadenceSeconds);
-      expect(example.policy.collection.historyMode, example.slug).toBe("changes");
+      // The municipal outlines keep no history: the national table records every parcel's changes.
+      expect(example.policy.collection.historyMode, example.slug).toBe(example.slug.startsWith("dgt-crus-parcels-") ? "latest" : "changes");
     }
   });
 
@@ -1386,7 +1236,7 @@ describe("OGC final snapshot-boundary regressions", () => {
       expect(offset, "A capped walk must not make an unused next-page request").toBe(0);
       return itemsPage({ count: 1, matched: 2, next: 1 });
     }, 2);
-    const fetched = await collectOgcFeed({ ...config, pageSize: "1", maxPages: "1" }, undefined, hosts, fetcher);
+    const fetched = await collectOgcFeed({ ...config, pageSize: "1", maxPages: "1" }, hosts, fetcher);
     expect(bodyOf(fetched).completeness).toBe("partial");
     expect(featureIds(await readDocument(fetched))).toEqual(["m0"]);
     expect(fetcher).toHaveBeenCalledTimes(4);

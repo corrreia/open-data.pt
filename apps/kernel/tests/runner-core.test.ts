@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CollectionFailed, failureFrom } from "../src/engine";
-import { BACKFILL_RESUME_MS, BACKFILL_START_DELAY_MS, COOLDOWN_BASE_MS, MAX_FAILURE_WAIT_SECONDS } from "../src/runner-core";
+import { BACKFILL_RESUME_MS, BACKFILL_START_DELAY_MS, COOLDOWN_BASE_MS, MAX_FAILURE_WAIT_SECONDS, nextRunAfter } from "../src/runner-core";
 import { kernelHarness, policy, record, type KernelHarness } from "./kernel-harness";
 
 const HOUR = 3_600_000;
@@ -336,5 +336,29 @@ describe("durable acceptance, publication and history delivery", () => {
     await h.collect();
     h.core.setState("probe", 1);
     expect(h.core.getState<number>("probe")).toBe(1);
+  });
+});
+
+describe("when a feed runs next", () => {
+  const now = Date.parse("2026-09-25T15:00:00.000Z");
+
+  it("runs a feed read more often than daily as soon as its cadence has passed", () => {
+    expect(nextRunAfter("feed_a", now, 3_600)).toBe("2026-09-25T16:00:00.000Z");
+  });
+
+  it("runs a daily-or-slower feed at a time of day of its own: never sooner, at most a day later, the same every time", () => {
+    const month = 2_592_000;
+    const due = now + month * 1000;
+    const times = Array.from({ length: 278 }, (_, index) => Date.parse(nextRunAfter(`feed_${index}`, now, month)));
+    for (const at of times) {
+      expect(at).toBeGreaterThanOrEqual(due);
+      expect(at).toBeLessThan(due + 86_400_000);
+    }
+    expect(nextRunAfter("feed_7", now, month)).toBe(nextRunAfter("feed_7", now, month));
+    // A day later, the same feed keeps its time of day.
+    expect(nextRunAfter("feed_7", now + 86_400_000, 86_400).slice(11)).toBe(nextRunAfter("feed_7", now, 86_400).slice(11));
+    // 278 feeds installed together spread over the day rather than running in one burst.
+    const hours = new Set(times.map((at) => new Date(at).getUTCHours()));
+    expect(hours.size).toBe(24);
   });
 });

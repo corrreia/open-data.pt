@@ -21,7 +21,7 @@ export const FEED = defineFeed(OGC_DEPLOYMENT, {
   policy: { name: "CAOP weekly boundaries", version: 3, collection: measuredCollection({ source: 506, output: 122, largestRow: 671 }, WEEK) },
   staleAfterSeconds: 1_209_600,
   /** Every week: the CAOP's freguesias collection walked page by page from DGT's OGC API, every feature with its outline. */
-  fetch: ({ config, state, library, fetch }) => collectOgcFeed(config, state, library.hosts, fetch),
+  fetch: ({ config, library, fetch }) => collectOgcFeed(config, library.hosts, fetch),
   /** The service's pages, streamed, into one table of the collection's features. */
   transform: { normalizer: OGC_NORMALIZER, streaming: (body, context) => OGC_TRANSFORMER.transform(body, context) },
 });
