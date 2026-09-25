@@ -138,6 +138,12 @@ describe("Metro Lisboa Gatekeeper", () => {
     await expect(collectMetroFeed({ feed: "waiting-times" }, undefined, ORIGIN, CREDENTIALS, metro(answers).fetcher, new Date("2026-09-25T09:00:00Z"))).rejects.toMatchObject({
       code: "upstream-error",
     });
+    // An API that is down is down at night too: only the answer "code 404" means no trains.
+    const closed = new Date("2026-09-25T02:00:00Z");
+    for (const down of [() => new Response("down", { status: 503 }), ok('{"resposta":"erro","codigo":"500"}'), () => new Response("not here", { status: 404 })]) {
+      const fetcher = metro({ ...answers, "tempoEspera/Estacao/todos": down }).fetcher;
+      await expect(collectMetroFeed({ feed: "waiting-times" }, undefined, ORIGIN, CREDENTIALS, fetcher, closed)).rejects.toMatchObject({ code: "upstream-error" });
+    }
     const stations = { "infoEstacao/todos": ok('{"resposta":"sem dados","codigo":"404"}') };
     await expect(collectMetroFeed({ feed: "stations" }, undefined, ORIGIN, CREDENTIALS, metro(stations).fetcher, new Date("2026-09-25T02:00:00Z"))).rejects.toMatchObject({
       code: "upstream-error",
