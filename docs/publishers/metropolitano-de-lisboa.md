@@ -34,3 +34,9 @@ their hostname and the DNS record and origin rule can go.
 
 That proxy is Cloudflare configuration, not code: it is not in this repository, and a fresh account
 would have to recreate it.
+
+**At night the waiting times are code 404.** When the network closes (trains run from 06:30 to
+01:00, Lisbon time), the gateway first answers an empty list for the waiting times, then, from about
+01:40 until the first trains, `{"codigo":"404"}`. Between 01:10 and 06:20 the waiting-times feed takes
+that one answer as an empty snapshot. Every other failure still fails it, day or night: the token, the
+connection, an HTTP status, another code. So does the same 404 while trains run.
