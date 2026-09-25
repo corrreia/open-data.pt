@@ -20,7 +20,8 @@ import { WFS_FEATURE_ID } from "./wfs";
 
 export class WfsTransformer {
   readonly id = "ogc-wfs-geojson";
-  readonly version = "1";
+  // 2: a layer read for its attributes alone no longer declares an empty geometry, latitude and longitude.
+  readonly version = "2";
 
   transform(bytes: Uint8Array, context: TransformContext): UnstampedResult {
     const config = transformConfig(context.feed.config);
@@ -28,11 +29,13 @@ export class WfsTransformer {
     if (!isJsonObject(root) || root.type !== "FeatureCollection" || !Array.isArray(root.features))
       throw new GatekeeperError("WFS artifact is not a GeoJSON feature collection", "invalid-response");
     const profiles = profile(root.features, config);
-    const schema = schemaOf(profiles);
+    // A layer read for its attributes alone (`propertyNames` without the geometry) has no outline to serve.
+    const located = root.features.some((feature) => isJsonObject(feature) && isJsonObject(feature.geometry));
+    const schema = schemaOf(profiles, located);
     const records: CanonicalRecord[] = [];
     let watermark: string | undefined;
     for (const candidate of root.features) {
-      const record = featureRecord(candidate, config, profiles);
+      const record = featureRecord(candidate, config, profiles, located);
       if (!record) continue;
       records.push(record);
       if (record.sourcePublishedAt && (!watermark || record.sourcePublishedAt > watermark)) watermark = record.sourcePublishedAt;
@@ -92,13 +95,14 @@ function inferType(name: string, values: JsonValue[], numberFields: ReadonlySet<
   return "json";
 }
 
-function schemaOf(profiles: Profile[]): CanonicalSchema {
+function schemaOf(profiles: Profile[], located: boolean): CanonicalSchema {
   const fields: CanonicalField[] = profiles.map((item) => ({ id: item.field, name: item.field, type: item.type, nullable: item.nullable }));
-  fields.push(
-    { id: "geometry", name: "geometry", type: "geometry", nullable: true },
-    { id: "latitude", name: "latitude", type: "latitude", nullable: true },
-    { id: "longitude", name: "longitude", type: "longitude", nullable: true },
-  );
+  if (located)
+    fields.push(
+      { id: "geometry", name: "geometry", type: "geometry", nullable: true },
+      { id: "latitude", name: "latitude", type: "latitude", nullable: true },
+      { id: "longitude", name: "longitude", type: "longitude", nullable: true },
+    );
   return { fields };
 }
 
@@ -110,7 +114,7 @@ function transformConfig(config: SourceConfig): SourceConfig {
   return config;
 }
 
-function featureRecord(value: JsonValue | undefined, config: SourceConfig, profiles: Profile[]): CanonicalRecord | undefined {
+function featureRecord(value: JsonValue | undefined, config: SourceConfig, profiles: Profile[], located: boolean): CanonicalRecord | undefined {
   if (!isJsonObject(value) || !isJsonObject(value.properties)) return undefined;
   const properties = value.properties;
   // A layer that names no identifier of its own is keyed by the identity the service gives the feature.
@@ -118,11 +122,13 @@ function featureRecord(value: JsonValue | undefined, config: SourceConfig, profi
   if ((!isJsonString(key) && !isJsonNumber(key)) || String(key) === "") return undefined;
   const payload: JsonObject = {};
   for (const item of profiles) payload[item.field] = canonical(properties[item.field], item.type);
-  const geometry = isJsonObject(value.geometry) ? value.geometry : null;
-  const centre = geometryCentre(geometry);
-  payload.geometry = geometry;
-  payload.latitude = centre?.[1] ?? null;
-  payload.longitude = centre?.[0] ?? null;
+  if (located) {
+    const geometry = isJsonObject(value.geometry) ? value.geometry : null;
+    const centre = geometryCentre(geometry);
+    payload.geometry = geometry;
+    payload.latitude = centre?.[1] ?? null;
+    payload.longitude = centre?.[0] ?? null;
+  }
   // A reference feature is identified, not dated: it carries no event time to keep.
   if (config.feed === "reference") return { entityKey: String(key), payload };
   const eventTime = sourceDate(properties[config.eventTimeField ?? ""]);

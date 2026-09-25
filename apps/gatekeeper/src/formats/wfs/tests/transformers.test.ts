@@ -84,8 +84,12 @@ describe("WFS normalizer", () => {
       entityKey: "0104_1",
       // The source's own wording is kept verbatim, including where a column named for
       // one article carries the text of another: `art_60` here reads "Artigo 61.º".
-      payload: { municipio: "Arouca", art_60: "Aplicam-se condicionamentos do Artigo 61.º", geometry: null },
+      payload: { municipio: "Arouca", art_60: "Aplicam-se condicionamentos do Artigo 61.º" },
     });
+    // Read for its attributes alone: no feature carries an outline, so there is no geometry, latitude or longitude to declare.
+    expect(product?.records?.[0]?.payload).not.toHaveProperty("geometry");
+    expect(product?.schema.fields.map((field) => field.id)).not.toContain("geometry");
+    expect(product?.schema.fields.map((field) => field.id)).not.toContain("latitude");
     expect(product?.records?.[0]?.eventTime).toBeUndefined();
     expect(result.quality).toMatchObject({ acceptedRecords: 3, rejectedRecords: 0 });
   });
