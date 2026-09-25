@@ -77,6 +77,9 @@ describe("Pipelines delivery", () => {
     expect(sent.map((row) => row.entity_key)).toEqual(["plan-1", "plan-2"]);
     expect(sent[0]?.payload).toEqual({ name: "Plano Diretor", municipality: "Lisboa", _omitted: { fields: ["geometry"], bytes } });
     expect(sent[1]?.payload).toEqual({ name: "Small" });
+    // A payload with an `_omitted` of its own cannot be trimmed without losing it, so its row is left out whole.
+    await lake.send("records", [{ ...record, entity_key: "plan-3", payload: { _omitted: "the source's own", geometry: outline } }]);
+    expect(records.batches.flat().map((row) => row.entity_key)).toEqual(["plan-1", "plan-2"]);
     await lake.send("points", [point(0, "x".repeat(1_000_000)), point(1)]);
     expect(points.batches.flat().map((row) => row.revision_id)).toEqual(["revision-1"]);
   });

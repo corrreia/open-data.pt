@@ -89,7 +89,8 @@ export class PipelinesLake implements LakeSink {
  * revision and every field that fits: its largest payload values (a boundary's
  * geometry, usually) are left out, largest first, and named under `_omitted`
  * with the payload's size, so the history says what it does not hold. A row
- * that still does not fit, or a point, is left out of the lake altogether: one
+ * that still does not fit, whose payload has an `_omitted` of its own, or a
+ * point, is left out of the lake altogether: one
  * row the lake refuses must never hold back the rest. Either is logged.
  */
 export function fitLakeRow(row: JsonObject, table: LakeTable): JsonObject | undefined {
@@ -98,7 +99,8 @@ export function fitLakeRow(row: JsonObject, table: LakeTable): JsonObject | unde
   const bytes = size(row);
   if (bytes <= LAKE_ROW_BYTES) return row;
   const payload = row.payload;
-  if (table === "records" && isJsonObject(payload)) {
+  // A payload with its own `_omitted` has no room to name what was left out without losing that field.
+  if (table === "records" && isJsonObject(payload) && !Object.hasOwn(payload, "_omitted")) {
     const fields = Object.entries(payload)
       .map(([name, value]) => ({ name, bytes: size(value ?? null) }))
       .sort((a, b) => b.bytes - a.bytes);
