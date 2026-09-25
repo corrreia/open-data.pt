@@ -209,6 +209,8 @@ class ArrayScanner {
   private phase: "before" | "inside" | "after" = "before";
   private inString = false;
   private escaped = false;
+  /** Whitespace followed a scalar inside the element: a space goes back only if another scalar comes next. */
+  private separatorPending = false;
   /** Containers open inside the current element. */
   private innerDepth = 0;
   private elementOpen = false;
@@ -265,14 +267,19 @@ class ArrayScanner {
       if (this.phase === "inside") {
         // Whitespace between an element's tokens is left out of its buffer: a pretty-printing service sends outlines at
         // four times their size, and an element is bounded by what it holds, not by how it was indented.
-        // Between two scalars (`[1 2]`) whitespace is what keeps them apart, so one space stays there.
+        // Between two scalars (`[1 2]`) whitespace is what keeps them apart: one space goes back there, and only there,
+        // once the next token shows it is another scalar. The decision waits across chunks.
         if (this.elementOpen && isWhitespace(byte)) {
           this.element.append(chunk, elementStart, index);
           while (index + 1 < chunk.byteLength && isWhitespace(chunk[index + 1]!)) index += 1;
           const last = this.element.last();
-          if (last !== undefined && isScalarByte(last)) this.element.append(SPACE, 0, 1);
+          if (last !== undefined && isScalarByte(last)) this.separatorPending = true;
           elementStart = index + 1;
           continue;
+        }
+        if (this.separatorPending) {
+          this.separatorPending = false;
+          if (isScalarByte(byte)) this.element.append(SPACE, 0, 1);
         }
         if (this.innerDepth > 0) {
           if (byte === QUOTE) this.inString = true;

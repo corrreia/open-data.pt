@@ -180,6 +180,10 @@ describe("streamJsonArray", () => {
       expect(read.elements).toEqual([outline]);
     }
     await expect(collect(textStream(pretty, "one"), ["features"], { maxElementBytes: compact - 8 })).rejects.toMatchObject({ code: "response-too-large" });
+    // A scalar followed by whitespace and a delimiter keeps no separator: `1` fits one byte however it was spaced.
+    for (const sizes of ["one", "whole"] as const) {
+      expect((await collect(textStream('{"features": [1 \n , [2 \n\t] ]}', sizes), ["features"], { maxElementBytes: 3 })).elements).toEqual([1, [2]]);
+    }
   });
 
   it("rejects truncated and malformed documents", async () => {
