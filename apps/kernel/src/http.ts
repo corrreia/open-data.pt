@@ -284,11 +284,10 @@ async function eventRange(ctx: ApiContext, registry: () => RegistryStub, url: UR
   const knownAt = optionalTime(url, "knownAt");
   const limit = parseInteger(url, "limit", 200, 1, 500);
   const cursor = historyCursor(url);
-  const start = await lakeStart(ctx, "records");
   const cursorClause = cursor
     ? ` AND (event_time < TIMESTAMP '${cursor.time}' OR (event_time = TIMESTAMP '${cursor.time}' AND entity_key > '${sqlString(cursor.key)}') OR (event_time = TIMESTAMP '${cursor.time}' AND entity_key = '${sqlString(cursor.key)}' AND revision_id < '${sqlString(cursor.revision)}'))`
     : "";
-  const sql = `WITH ranked AS (SELECT revision_id, entity_key, operation, event_time, valid_from, valid_to, source_published_at, observed_at, ingested_at, payload, ROW_NUMBER() OVER (PARTITION BY entity_key ORDER BY observed_at DESC, revision_id DESC) AS rn FROM open_data.records WHERE feed_id = '${sqlString(product.feedId)}' AND product_slug = '${sqlString(product.slug)}'${ingestFloor(feed, from, start)} AND observed_at <= TIMESTAMP '${knownAt ?? new Date().toISOString()}') SELECT revision_id, entity_key, operation, event_time, valid_from, valid_to, source_published_at, observed_at, ingested_at, payload FROM ranked WHERE rn = 1 AND operation != 'retract' AND event_time >= TIMESTAMP '${from}' AND event_time < TIMESTAMP '${to}'${cursorClause} ORDER BY event_time DESC, entity_key ASC, revision_id DESC LIMIT ${limit + 1}`;
+  const sql = `WITH ranked AS (SELECT revision_id, entity_key, operation, event_time, valid_from, valid_to, source_published_at, observed_at, ingested_at, payload, ROW_NUMBER() OVER (PARTITION BY entity_key ORDER BY observed_at DESC, revision_id DESC) AS rn FROM open_data.records WHERE feed_id = '${sqlString(product.feedId)}' AND product_slug = '${sqlString(product.slug)}'${ingestFloor(feed, from)} AND observed_at <= TIMESTAMP '${knownAt ?? new Date().toISOString()}') SELECT revision_id, entity_key, operation, event_time, valid_from, valid_to, source_published_at, observed_at, ingested_at, payload FROM ranked WHERE rn = 1 AND operation != 'retract' AND event_time >= TIMESTAMP '${from}' AND event_time < TIMESTAMP '${to}'${cursorClause} ORDER BY event_time DESC, entity_key ASC, revision_id DESC LIMIT ${limit + 1}`;
   const result = await runTypedHistoryQuery(registry, ctx, sql, `events:${product.slug}`);
   const page = result.rows.slice(0, limit).map((row) => ({
     ...lakePayload(row.payload),
@@ -306,7 +305,7 @@ async function eventRange(ctx: ApiContext, registry: () => RegistryStub, url: UR
     nextCursor: result.rows.length > limit && last ? encodeHistoryCursor(String(last.event_time), String(last.entity_key), String(last.revision_id)) : null,
     knownAt: knownAt ?? null,
     freshness: { updatedAt: product.updatedAt, stale: product.stale },
-    coverage: coverageFor(feed, from, to, start),
+    coverage: coverageFor(feed, from, to),
     source: "lake",
   });
 }
@@ -316,12 +315,11 @@ async function recordChangeRange(ctx: ApiContext, registry: () => RegistryStub, 
   const { from, to } = historyWindow(url);
   const limit = parseInteger(url, "limit", 200, 1, 500);
   const cursor = historyCursor(url);
-  const start = await lakeStart(ctx, "records");
   const cursorClause = cursor
     ? ` AND (observed_at < TIMESTAMP '${cursor.time}' OR (observed_at = TIMESTAMP '${cursor.time}' AND entity_key > '${sqlString(cursor.key)}') OR (observed_at = TIMESTAMP '${cursor.time}' AND entity_key = '${sqlString(cursor.key)}' AND revision_id < '${sqlString(cursor.revision)}'))`
     : "";
   // Knowledge time never precedes ingestion, so the ingest-day partitions before `from` can be skipped.
-  const sql = `WITH unique_revisions AS (SELECT revision_id, entity_key, operation, event_time, valid_from, valid_to, source_published_at, observed_at, ingested_at, payload, ROW_NUMBER() OVER (PARTITION BY revision_id ORDER BY ingested_at DESC) AS duplicate_rank FROM open_data.records WHERE feed_id = '${sqlString(product.feedId)}' AND product_slug = '${sqlString(product.slug)}' AND __ingest_ts >= TIMESTAMP '${latest(from, start)}') SELECT revision_id, entity_key, operation, event_time, valid_from, valid_to, source_published_at, observed_at, ingested_at, payload FROM unique_revisions WHERE duplicate_rank = 1 AND observed_at >= TIMESTAMP '${from}' AND observed_at < TIMESTAMP '${to}'${cursorClause} ORDER BY observed_at DESC, entity_key ASC, revision_id DESC LIMIT ${limit + 1}`;
+  const sql = `WITH unique_revisions AS (SELECT revision_id, entity_key, operation, event_time, valid_from, valid_to, source_published_at, observed_at, ingested_at, payload, ROW_NUMBER() OVER (PARTITION BY revision_id ORDER BY ingested_at DESC) AS duplicate_rank FROM open_data.records WHERE feed_id = '${sqlString(product.feedId)}' AND product_slug = '${sqlString(product.slug)}' AND __ingest_ts >= TIMESTAMP '${from}') SELECT revision_id, entity_key, operation, event_time, valid_from, valid_to, source_published_at, observed_at, ingested_at, payload FROM unique_revisions WHERE duplicate_rank = 1 AND observed_at >= TIMESTAMP '${from}' AND observed_at < TIMESTAMP '${to}'${cursorClause} ORDER BY observed_at DESC, entity_key ASC, revision_id DESC LIMIT ${limit + 1}`;
   const result = await runTypedHistoryQuery(registry, ctx, sql, `changes:${product.slug}`);
   const page = result.rows.slice(0, limit).map((row) => ({
     revisionId: row.revision_id,
@@ -341,7 +339,7 @@ async function recordChangeRange(ctx: ApiContext, registry: () => RegistryStub, 
     data: page,
     nextCursor: result.rows.length > limit && last ? encodeHistoryCursor(String(last.observed_at), String(last.entity_key), String(last.revision_id)) : null,
     freshness: { updatedAt: product.updatedAt, stale: product.stale },
-    coverage: coverageFor(feed, from, to, start),
+    coverage: coverageFor(feed, from, to),
     source: "lake",
   });
 }
@@ -357,13 +355,12 @@ async function seriesRange(ctx: ApiContext, registry: () => RegistryStub, url: U
   const seriesKey = optionalQuery(url, "seriesKey");
   const limit = parseInteger(url, "limit", 500, 1, MAX_HISTORY_PAGE);
   const cursor = historyCursor(url);
-  const start = await lakeStart(ctx, "points");
   const seriesClause = seriesKey ? ` AND series_key = '${sqlString(seriesKey)}'` : "";
   const knownClause = knownAt ? ` AND observed_at <= TIMESTAMP '${knownAt}'` : "";
   const cursorClause = cursor
     ? ` AND (event_time < TIMESTAMP '${cursor.time}' OR (event_time = TIMESTAMP '${cursor.time}' AND series_key > '${sqlString(cursor.key)}') OR (event_time = TIMESTAMP '${cursor.time}' AND series_key = '${sqlString(cursor.key)}' AND revision_id < '${sqlString(cursor.revision)}'))`
     : "";
-  const sql = `WITH ranked AS (SELECT revision_id, series_key, event_time, value, unit, dimensions, observed_at, ROW_NUMBER() OVER (PARTITION BY series_key, event_time ORDER BY observed_at DESC, revision_id DESC) AS rn FROM open_data.points WHERE feed_id = '${sqlString(product.feedId)}' AND product_slug = '${sqlString(product.slug)}'${ingestFloor(feed, from, start)}${seriesClause}${knownClause}) SELECT revision_id, series_key, event_time, value, unit, dimensions, observed_at FROM ranked WHERE rn = 1 AND event_time >= TIMESTAMP '${from}' AND event_time < TIMESTAMP '${to}'${cursorClause} ORDER BY event_time DESC, series_key ASC, revision_id DESC LIMIT ${limit + 1}`;
+  const sql = `WITH ranked AS (SELECT revision_id, series_key, event_time, value, unit, dimensions, observed_at, ROW_NUMBER() OVER (PARTITION BY series_key, event_time ORDER BY observed_at DESC, revision_id DESC) AS rn FROM open_data.points WHERE feed_id = '${sqlString(product.feedId)}' AND product_slug = '${sqlString(product.slug)}'${ingestFloor(feed, from)}${seriesClause}${knownClause}) SELECT revision_id, series_key, event_time, value, unit, dimensions, observed_at FROM ranked WHERE rn = 1 AND event_time >= TIMESTAMP '${from}' AND event_time < TIMESTAMP '${to}'${cursorClause} ORDER BY event_time DESC, series_key ASC, revision_id DESC LIMIT ${limit + 1}`;
   const result = await runTypedHistoryQuery(registry, ctx, sql, `series:${product.slug}`);
   const page = result.rows.slice(0, limit).map((row) => ({
     seriesKey: row.series_key,
@@ -379,7 +376,7 @@ async function seriesRange(ctx: ApiContext, registry: () => RegistryStub, url: U
     nextCursor: result.rows.length > limit && last ? encodeHistoryCursor(String(last.event_time), String(last.series_key), String(last.revision_id)) : null,
     knownAt: knownAt ?? null,
     freshness: { updatedAt: product.updatedAt, stale: product.stale },
-    coverage: coverageFor(feed, from, to, start),
+    coverage: coverageFor(feed, from, to),
     source: "lake",
   });
 }
@@ -390,13 +387,12 @@ async function seriesChangeRange(ctx: ApiContext, registry: () => RegistryStub, 
   const seriesKey = optionalQuery(url, "seriesKey");
   const limit = parseInteger(url, "limit", 500, 1, MAX_HISTORY_PAGE);
   const cursor = historyCursor(url);
-  const start = await lakeStart(ctx, "points");
   const seriesClause = seriesKey ? ` AND series_key = '${sqlString(seriesKey)}'` : "";
   const cursorClause = cursor
     ? ` AND (observed_at < TIMESTAMP '${cursor.time}' OR (observed_at = TIMESTAMP '${cursor.time}' AND series_key > '${sqlString(cursor.key)}') OR (observed_at = TIMESTAMP '${cursor.time}' AND series_key = '${sqlString(cursor.key)}' AND revision_id < '${sqlString(cursor.revision)}'))`
     : "";
   // A revision is observed no later than it is ingested, so partitions before `from` hold none of the window.
-  const sql = `WITH unique_revisions AS (SELECT revision_id, series_key, event_time, value, unit, dimensions, observed_at, ROW_NUMBER() OVER (PARTITION BY revision_id ORDER BY observed_at DESC) AS duplicate_rank FROM open_data.points WHERE feed_id = '${sqlString(product.feedId)}' AND product_slug = '${sqlString(product.slug)}' AND __ingest_ts >= TIMESTAMP '${latest(from, start)}'${seriesClause}) SELECT revision_id, series_key, event_time, value, unit, dimensions, observed_at FROM unique_revisions WHERE duplicate_rank = 1 AND observed_at >= TIMESTAMP '${from}' AND observed_at < TIMESTAMP '${to}'${cursorClause} ORDER BY observed_at DESC, series_key ASC, revision_id DESC LIMIT ${limit + 1}`;
+  const sql = `WITH unique_revisions AS (SELECT revision_id, series_key, event_time, value, unit, dimensions, observed_at, ROW_NUMBER() OVER (PARTITION BY revision_id ORDER BY observed_at DESC) AS duplicate_rank FROM open_data.points WHERE feed_id = '${sqlString(product.feedId)}' AND product_slug = '${sqlString(product.slug)}' AND __ingest_ts >= TIMESTAMP '${from}'${seriesClause}) SELECT revision_id, series_key, event_time, value, unit, dimensions, observed_at FROM unique_revisions WHERE duplicate_rank = 1 AND observed_at >= TIMESTAMP '${from}' AND observed_at < TIMESTAMP '${to}'${cursorClause} ORDER BY observed_at DESC, series_key ASC, revision_id DESC LIMIT ${limit + 1}`;
   const result = await runTypedHistoryQuery(registry, ctx, sql, `series-changes:${product.slug}`);
   const page = result.rows.slice(0, limit).map((row) => ({
     revisionId: row.revision_id,
@@ -412,7 +408,7 @@ async function seriesChangeRange(ctx: ApiContext, registry: () => RegistryStub, 
     data: page,
     nextCursor: result.rows.length > limit && last ? encodeHistoryCursor(String(last.observed_at), String(last.series_key), String(last.revision_id)) : null,
     freshness: { updatedAt: product.updatedAt, stale: product.stale },
-    coverage: coverageFor(feed, from, to, start),
+    coverage: coverageFor(feed, from, to),
     source: "lake",
   });
 }
@@ -450,41 +446,19 @@ function historyWindow(url: URL): HistoryWindow {
  * ingested before the lake began. Either bound lets the day-partitioned lake
  * skip older files.
  */
-function ingestFloor(feed: Feed, from: string, start: string | undefined): string {
+function ingestFloor(feed: Feed, from: string): string {
   const eventLike = feed.semantics.domainSubject === "event" || feed.semantics.domainSubject === "observation";
-  const bound = eventLike ? latest(new Date(Date.parse(from) - PUBLISHED_AHEAD_MS).toISOString(), start) : start;
-  return bound ? ` AND __ingest_ts >= TIMESTAMP '${bound}'` : "";
+  return eventLike ? ` AND __ingest_ts >= TIMESTAMP '${new Date(Date.parse(from) - PUBLISHED_AHEAD_MS).toISOString()}'` : "";
 }
-
-function latest(time: string, other: string | undefined): string {
-  return other !== undefined && other > time ? other : time;
-}
-
-/** The first ingest day each lake table holds, per isolate, refreshed every six hours. */
-const lakeStarts = new Map<"records" | "points", { value: string | undefined; until: number }>();
 
 /**
- * When history begins: the first ingest day of a lake table. A window that
- * starts earlier is clamped to it, so no query scans days before the lake
- * existed. Unavailable, it clamps nothing and is retried in five minutes.
+ * When history begins: the first ingest day the lake's tables hold, 2026-09-09
+ * for both, which coverage reports. It was asked of the lake on every fresh
+ * isolate (`MIN(__ingest_ts)`, a whole R2 SQL query before the one asked for),
+ * to clamp windows to it; but the lake has no files before it, so the clamp
+ * pruned nothing, and it is a date that does not move.
  */
-async function lakeStart(ctx: ApiContext, table: "records" | "points"): Promise<string | undefined> {
-  const cached = lakeStarts.get(table);
-  if (cached && cached.until > Date.now()) return cached.value;
-  let value: string | undefined;
-  let lifetime = 6 * 3_600_000;
-  try {
-    const result = await runLakeQuery(ctx.env, `SELECT MIN(__ingest_ts) AS first_ingest FROM open_data.${table} LIMIT 1`, `lake-start:${table}`, ctx.lakeQueryFetch);
-    const first = result.rows[0]?.first_ingest;
-    const time = isJsonString(first) ? Date.parse(first) : Number.NaN;
-    if (!Number.isNaN(time)) value = `${new Date(time).toISOString().slice(0, 10)}T00:00:00.000Z`;
-  } catch (error) {
-    console.warn(JSON.stringify({ event: "lake_start_unavailable", table, error: error instanceof Error ? error.message : String(error) }));
-    lifetime = 5 * 60_000;
-  }
-  lakeStarts.set(table, { value, until: Date.now() + lifetime });
-  return value;
-}
+const LAKE_STARTS_AT = "2026-09-09T00:00:00.000Z";
 
 async function runTypedHistoryQuery(registry: () => RegistryStub, ctx: ApiContext, sql: string, label: string) {
   return await withHistorySlot(registry, () => runLakeQuery(ctx.env, sql, label, ctx.lakeQueryFetch));
@@ -509,12 +483,12 @@ function withCadence(response: Response, product: ProductDetail): Response {
   return response;
 }
 
-function coverageFor(feed: Feed, from: string, to: string, lakeStartsAt: string | undefined): Coverage {
+function coverageFor(feed: Feed, from: string, to: string): Coverage {
   const backfill = feed.backfill;
   const coveredFrom = backfill ? Object.values(backfill.floors).sort()[0] : undefined;
   return {
     requested: { from, to },
-    lakeStartsAt: lakeStartsAt ?? null,
+    lakeStartsAt: LAKE_STARTS_AT,
     coveredFrom: coveredFrom ?? null,
     complete: backfill?.status === "complete" && Boolean(coveredFrom && coveredFrom <= from),
     reason: !backfill ? "No completed historical walk is recorded" : backfill.status === "complete" ? null : `Historical walk is ${backfill.status}`,

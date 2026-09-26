@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { QueryError, runLakeQuery, validate } from "../src/query";
 
 /** The kernel's own vars, as its generated `Env` types them from wrangler.jsonc; the token is a test one. */
@@ -42,6 +42,21 @@ describe("internal R2 SQL client", () => {
     await expect(query(async () => new Response("<html>bad gateway</html>", { status: 502 }))).rejects.toMatchObject({ failure: "store" });
     await expect(query(async () => new Response("<html>not json</html>", { status: 200 }))).rejects.toMatchObject({ failure: "unreadable" });
     await expect(query(async () => Response.json({ success: true, result: { rows: "none" } }))).rejects.toMatchObject({ failure: "unreadable" });
+  });
+
+  it("logs every query it makes, answered or not, with its label, how long it took and what it cost", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    await runLakeQuery(env, "SELECT 1 LIMIT 1", "events:anepc", async () =>
+      Response.json({ success: true, result: { rows: [], metrics: { bytes_scanned: 4096, files_scanned: 3 } } }),
+    );
+    await expect(
+      runLakeQuery(env, "SELECT 1 LIMIT 1", "series:ren", async () => Response.json({ success: false, errors: [{ message: "no" }] }, { status: 500 })),
+    ).rejects.toThrow();
+    const lines = log.mock.calls.map((call) => JSON.parse(String(call[0])));
+    expect(lines[0]).toMatchObject({ event: "lake_query", label: "events:anepc", outcome: "answered", metrics: { bytes_scanned: 4096, files_scanned: 3 } });
+    expect(lines[0].ms).toBeTypeOf("number");
+    expect(lines[1]).toMatchObject({ event: "lake_query", label: "series:ren", outcome: "http-500" });
+    log.mockRestore();
   });
 
   it("is disabled without a token", async () => {

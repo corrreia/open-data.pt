@@ -39,8 +39,13 @@ export async function runLakeQuery(
     throw new QueryError("Lake queries are not enabled on this deployment", "disabled");
   }
   const cleaned = validate(sql, maxRows, maxChars);
-  void clientKey;
   const started = Date.now();
+  // Every lake query, answered or not, with what it cost: which history requests are slow, and why, is read from these.
+  const report = (outcome: string, metrics?: JsonObject) => {
+    const line: JsonObject = { event: "lake_query", label: clientKey, outcome, ms: Date.now() - started };
+    if (metrics) line.metrics = metrics;
+    console.log(JSON.stringify(line));
+  };
   const aborter = new AbortController();
   const timer = setTimeout(() => aborter.abort("R2 SQL query deadline exceeded"), QUERY_DEADLINE_SECONDS * 1000);
   try {
@@ -56,6 +61,7 @@ export async function runLakeQuery(
       status = response.status;
       text = await response.text();
     } catch (error) {
+      report(aborter.signal.aborted ? "timeout" : "unreachable");
       if (aborter.signal.aborted) throw new QueryError(`R2 SQL did not answer within ${QUERY_DEADLINE_SECONDS} seconds`, "timeout");
       throw new QueryError(`R2 SQL could not be reached: ${error instanceof Error ? error.message : String(error)}`, "store");
     }
@@ -63,10 +69,12 @@ export async function runLakeQuery(
     try {
       payload = asObject(parseJson(text));
     } catch {
+      report(`unreadable-${status}`);
       throw new QueryError(`R2 SQL answered HTTP ${status} with something other than JSON`, status < 400 ? "unreadable" : "store");
     }
     const result = asObject(payload?.result);
     const bytesScanned = Math.max(0, asNumber(asObject(result?.metrics)?.bytes_scanned) ?? 0);
+    report(status >= 400 || payload?.success === false ? `http-${status}` : "answered", asObject(result?.metrics));
     if (status >= 400 || payload?.success === false) {
       const message =
         asArray(payload?.errors)
