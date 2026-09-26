@@ -56,6 +56,9 @@ describe("internal R2 SQL client", () => {
     expect(lines[0]).toMatchObject({ event: "lake_query", label: "events:anepc", outcome: "answered", metrics: { bytes_scanned: 4096, files_scanned: 3 } });
     expect(lines[0].ms).toBeTypeOf("number");
     expect(lines[1]).toMatchObject({ event: "lake_query", label: "series:ren", outcome: "http-500" });
+    // A 200 whose rows are not rows is not an answer.
+    await expect(runLakeQuery(env, "SELECT 1 LIMIT 1", "changes:x", async () => Response.json({ success: true, result: { rows: "none" } }))).rejects.toThrow();
+    expect(JSON.parse(String(log.mock.calls.at(-1)?.[0]))).toMatchObject({ label: "changes:x", outcome: "invalid-result" });
     log.mockRestore();
   });
 

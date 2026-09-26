@@ -74,8 +74,8 @@ export async function runLakeQuery(
     }
     const result = asObject(payload?.result);
     const bytesScanned = Math.max(0, asNumber(asObject(result?.metrics)?.bytes_scanned) ?? 0);
-    report(status >= 400 || payload?.success === false ? `http-${status}` : "answered", asObject(result?.metrics));
     if (status >= 400 || payload?.success === false) {
+      report(`http-${status}`, asObject(result?.metrics));
       const message =
         asArray(payload?.errors)
           ?.map((error) => asString(asObject(error)?.message))
@@ -84,7 +84,11 @@ export async function runLakeQuery(
       throw new QueryError(message, "store");
     }
     const rows = asArray(result?.rows);
-    if (!rows || !rows.every(isJsonObject)) throw new QueryError("R2 SQL returned an invalid result", "unreadable");
+    if (!rows || !rows.every(isJsonObject)) {
+      report("invalid-result", asObject(result?.metrics));
+      throw new QueryError("R2 SQL returned an invalid result", "unreadable");
+    }
+    report("answered", asObject(result?.metrics));
     return { rows, rowCount: rows.length, bytesScanned, durationMs: Date.now() - started, sql: cleaned };
   } finally {
     clearTimeout(timer);
