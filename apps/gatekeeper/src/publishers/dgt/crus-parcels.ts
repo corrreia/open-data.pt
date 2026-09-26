@@ -42,7 +42,7 @@ export function crusParcelsFeed(slug: string, code: string, municipality: string
   return defineFeed(OGC_DEPLOYMENT, {
     slug,
     title: `Land-use parcels (CRUS) in ${municipality}`,
-    description: `The boundary of every parcel of ${municipality} (district of ${district}) in the Carta do Regime de Uso do Solo, with the class and category of soil its municipal plan puts it in, the designation the plan uses, its area in hectares, and whether that plan is still in force. The same parcels as the national land-use table, which carries their attributes for the whole country and joins these on the parcel's objectid.`,
+    description: `The boundary of every parcel of ${municipality} (district of ${district}) in the Carta do Regime de Uso do Solo, with the class and category of soil its municipal plan puts it in, the designation the plan uses, its area in hectares, and whether that plan is still in force. The same parcels as the national land-use table, which carries their attributes for the whole country and joins these on the parcel's objectid. A parcel too large to store whole, usually a vast rural one drawn with a vertex every few centimetres, has its outline simplified to within a quarter of a metre (half a metre or a metre if that is not enough), and says so in simplifiedToMetres.`,
     licence: "cc-by-4.0",
     attribution: "Direção-Geral do Território — Carta do Regime de Uso do Solo",
     topics: ["cities", "government"],

@@ -23,7 +23,7 @@ import {
   type SourceFetch,
 } from "#/index";
 import { OgcTransformer, collectOgcFeed, itemsUrl, resolveOgcFeed, validateOgcFeedConfig } from "#/formats/ogc/index";
-import { boundingBox } from "#/formats/ogc/geometry";
+import { boundingBox, simplifyGeometry } from "#/formats/ogc/geometry";
 
 const DGT_HOST = "ogcapi.dgterritorio.gov.pt";
 const AZORES_HOST = "ambiente.azores.gov.pt";
@@ -808,6 +808,74 @@ describe("OGC API Features bounding boxes", () => {
   });
 });
 
+describe("simplifying an outline too large to store", () => {
+  /** A ring round a square about 1 km across, with a vertex every few centimetres and each one up to a centimetre off the line. */
+  function denseRing(vertices: number): number[][] {
+    const ring: number[][] = [];
+    const corners = [
+      [-8.0, 39.0],
+      [-7.99, 39.0],
+      [-7.99, 39.009],
+      [-8.0, 39.009],
+    ];
+    for (let side = 0; side < 4; side += 1) {
+      const [from, to] = [corners[side]!, corners[(side + 1) % 4]!];
+      for (let step = 0; step < vertices / 4; step += 1) {
+        const along = step / (vertices / 4);
+        const wobble = (step % 2 === 0 ? 1 : -1) * 0.00000009; // about a centimetre
+        ring.push([from[0]! + (to[0]! - from[0]!) * along + wobble, from[1]! + (to[1]! - from[1]!) * along + wobble]);
+      }
+    }
+    ring.push(ring[0]!);
+    return ring;
+  }
+
+  it("drops the vertices within the tolerance, keeps the ring closed, and keeps a corner a metre out", () => {
+    const ring = denseRing(40_000);
+    // A notch two metres into the first side must survive a quarter-metre simplification.
+    ring.splice(5_000, 0, [-7.9975, 39.0 + 0.000018]);
+    const simplified = simplifyGeometry({ type: "Polygon", coordinates: [ring] }, 0.25);
+    // SAFETY: simplifying a Polygon returns a Polygon, whose coordinates are rings of positions.
+    const out = simplified.coordinates as number[][][];
+    expect(out[0]!.length).toBeLessThan(20);
+    expect(out[0]![0]).toEqual(out[0]!.at(-1));
+    expect(out[0]).toContainEqual([-7.9975, 39.0 + 0.000018]);
+  });
+
+  it("leaves points, and a ring that cannot lose a vertex, as they are", () => {
+    const small = {
+      type: "Polygon",
+      coordinates: [
+        [
+          [-8, 39],
+          [-7.99, 39],
+          [-7.99, 39.01],
+          [-8, 39],
+        ],
+      ],
+    };
+    expect(simplifyGeometry(small, 1)).toEqual(small);
+    const point = { type: "Point", coordinates: [-8, 39] };
+    expect(simplifyGeometry(point, 1)).toEqual(point);
+    // SAFETY: simplifying a LineString returns a LineString, whose coordinates are positions.
+    const line = simplifyGeometry(
+      {
+        type: "LineString",
+        coordinates: [
+          [-8, 39],
+          [-7.995, 39.0000001],
+          [-7.99, 39],
+        ],
+      },
+      0.25,
+    ).coordinates as number[][];
+    expect(line).toEqual([
+      [-8, 39],
+      [-7.99, 39],
+    ]);
+  });
+});
+
 describe("OGC API Features normalization", () => {
   const transformer = new OgcTransformer();
 
@@ -993,6 +1061,33 @@ describe("OGC API Features normalization", () => {
     expect(kept).toEqual(["m1"]);
     expect(transform.finish().quality).toEqual({ acceptedRecords: 1, rejectedRecords: 1 });
     expect(transform.finish().products?.[0]?.completeness).toBe("partial");
+  });
+
+  it("keeps an outline too large to store once simplified to a quarter of a metre, and says it was", async () => {
+    const page = itemsPage({ count: 2, matched: 2 });
+    const features = Array.isArray(page.features) ? page.features : [];
+    const first = features[0];
+    const ring: number[][] = [];
+    for (let step = 0; step < 60_000; step += 1) ring.push([-8 + step / 6_000_000, 39 + (step % 2) * 0.00000009]);
+    ring.push([-7.99, 39.01], [-8, 39.01], ring[0]!);
+    if (isJsonObject(first)) first.geometry = { type: "Polygon", coordinates: [ring] };
+    const fetched = await collectOgcFeed(
+      { ...config, geometry: "include" },
+      hosts,
+      serviceFetcher(() => page, 2),
+    );
+    const text = await readText(bodyOf(fetched).body);
+    const transform = await transformer.transform(chunked(text, 65_536), transformContext);
+    const kept: JsonObject[] = [];
+    for await (const row of transform.rows) if (row.record) kept.push(row.record.payload);
+    expect(kept).toHaveLength(2);
+    expect(kept[0]?.simplifiedToMetres).toBe(0.25);
+    expect(JSON.stringify(kept[0]?.geometry).length).toBeLessThan(10_000);
+    expect(kept[1]).not.toHaveProperty("simplifiedToMetres");
+    const finish = transform.finish();
+    expect(finish.quality).toEqual({ acceptedRecords: 2, rejectedRecords: 0 });
+    expect(finish.products?.[0]?.completeness).not.toBe("partial");
+    expect(finish.products?.[0]?.schema?.fields).toContainEqual({ id: "simplifiedToMetres", name: "simplifiedToMetres", type: "number", nullable: true, unit: "m" });
   });
 
   it("leaves a feature larger than the kernel can store out, rather than truncating it", async () => {
