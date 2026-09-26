@@ -15,7 +15,7 @@ import {
   type StreamingTransform,
   type TransformContext,
 } from "#/index";
-import { boundingBox, representativePoint } from "./geometry";
+import { boundingBox, representativePoint, simplifyGeometry } from "./geometry";
 import { SeenIdentities } from "./identity";
 
 import type { OgcCollectionDescription, OgcProperty } from "./ogc";
@@ -39,6 +39,18 @@ export const MAX_FEATURE_BYTES = 32 * 1024 * 1024;
  * product partial and therefore unable to retract what it did not carry.
  */
 export const MAX_RECORD_BYTES = 1024 * 1024;
+
+/**
+ * How far an outline too large to store may be simplified, tried in turn, in
+ * metres: the first that fits is kept. Some registers digitise a boundary at a
+ * vertex every few centimetres (a 10,566 ha parcel of the land-use charter has
+ * 223,686); a quarter of a metre takes that to 13,199 and changes its area by
+ * less than a thousandth of a percent. A feature that does not fit at a metre
+ * is left out as before.
+ */
+const SIMPLIFY_METRES = [0.25, 0.5, 1];
+/** The field a simplified record carries: the tolerance its outline was simplified to. */
+const SIMPLIFIED_FIELD = "simplifiedToMetres";
 
 /** The document's `ogc` member is the collection description and its published property schema. */
 const MAX_ENVELOPE_BYTES = 2 * 1024 * 1024;
@@ -156,6 +168,7 @@ export class OgcTransformer {
     const geometry = description.geometry;
     let total = 0;
     let accepted = 0;
+    let simplified = 0;
     const identities = new SeenIdentities(MAX_IDENTITIES);
 
     async function* rows(): AsyncGenerator<NormalizedRow> {
@@ -175,6 +188,7 @@ export class OgcTransformer {
             }
           }
           const record = featureRecord(feature, properties, geometry);
+          if (record?.payload[SIMPLIFIED_FIELD] !== undefined) simplified += 1;
           if (record) {
             // Validate the final identity too: the source may omit Feature.id and
             // use an identifying schema property, or mix the two representations.
@@ -210,6 +224,8 @@ export class OgcTransformer {
         // that the batch is not the whole membership and may not retract.
         const short = description.expected !== undefined && accepted < description.expected;
         const final: ProductFinalization = { productKey: PRODUCT_KEY, schema: collectionSchema(properties, geometry, total) };
+        // Declared only when some outline needed it: a field every record leaves empty says nothing.
+        if (simplified > 0 && final.schema) final.schema.fields.push({ id: SIMPLIFIED_FIELD, name: SIMPLIFIED_FIELD, type: "number", nullable: true, unit: "m" });
         if (short) final.completeness = "partial";
         return { quality: { acceptedRecords: accepted, rejectedRecords: total - accepted }, products: [final] };
       },
@@ -246,14 +262,27 @@ function featureRecord(feature: GeojsonFeature, properties: PreparedProperty[], 
     }
   }
   const record: CanonicalRecord = { entityKey: key, payload };
+  if (fits(record)) return record;
+  const outline = feature.geometry;
+  if (geometry !== "include" || !outline) return undefined;
+  for (const metres of SIMPLIFY_METRES) {
+    const simpler: CanonicalRecord = { entityKey: key, payload: { ...payload, geometry: simplifyGeometry(outline, metres), [SIMPLIFIED_FIELD]: metres } };
+    if (fits(simpler)) return simpler;
+  }
+  return undefined;
+}
+
+/**
+ * Whether a record is within what the kernel stores whole. UTF-16 length is a
+ * lower bound on UTF-8 bytes and `length * 3` an upper one, so only a record
+ * between the two needs the exact count. Checking `length > limit` alone would
+ * let a multi-byte record under the limit in characters through while being
+ * over it in bytes, which the kernel would then refuse mid-stream instead of
+ * this rejecting it cleanly.
+ */
+function fits(record: CanonicalRecord): boolean {
   const encoded = JSON.stringify(record);
-  // UTF-16 length is a lower bound on UTF-8 bytes and `length * 3` an upper one,
-  // so only a record between the two needs the exact count. Checking
-  // `length > limit` alone would let a multi-byte record under the limit in
-  // characters through while being over it in bytes, which the kernel would
-  // then refuse mid-stream instead of this rejecting it cleanly.
-  if (encoded.length * 3 > MAX_RECORD_BYTES && utf8Length(encoded) > MAX_RECORD_BYTES) return undefined;
-  return record;
+  return !(encoded.length * 3 > MAX_RECORD_BYTES && utf8Length(encoded) > MAX_RECORD_BYTES);
 }
 
 /**

@@ -145,3 +145,74 @@ function collectionPositions(value: JsonValue | undefined): Array<[number, numbe
   if (!Array.isArray(value)) return [];
   return value.flatMap((member) => (isJsonObject(member) ? collectPositions(member.coordinates) : []));
 }
+
+/** Metres in a degree of latitude, and of longitude at the equator. */
+const METRES_PER_DEGREE = 111_320;
+
+/**
+ * The geometry with every vertex dropped that lies within `metres` of the line
+ * its neighbours draw (Douglas–Peucker, per line and per ring). A ring keeps
+ * its closing position and never falls below four positions; one that would is
+ * kept as written. Points are kept as they are. Distances are measured on a
+ * local flat projection at each line's own latitude, which at these tolerances
+ * is exact to well under a millimetre.
+ */
+export function simplifyGeometry(geometry: JsonObject, metres: number): JsonObject {
+  const type = geometry.type;
+  if (type === "GeometryCollection" && Array.isArray(geometry.geometries)) {
+    return { ...geometry, geometries: geometry.geometries.map((member) => (isJsonObject(member) ? simplifyGeometry(member, metres) : member)) };
+  }
+  const coordinates = geometry.coordinates;
+  if (!Array.isArray(coordinates)) return geometry;
+  const line = (value: JsonValue): JsonValue => simplifyLine(value, metres, false);
+  const ring = (value: JsonValue): JsonValue => simplifyLine(value, metres, true);
+  const each = (value: JsonValue, inner: (member: JsonValue) => JsonValue): JsonValue => (Array.isArray(value) ? value.map(inner) : value);
+  if (type === "LineString") return { ...geometry, coordinates: line(coordinates) };
+  if (type === "MultiLineString" || type === "Polygon") return { ...geometry, coordinates: coordinates.map(type === "Polygon" ? ring : line) };
+  if (type === "MultiPolygon") return { ...geometry, coordinates: coordinates.map((polygon) => each(polygon, ring)) };
+  return geometry;
+}
+
+function simplifyLine(value: JsonValue, metres: number, closed: boolean): JsonValue {
+  if (!Array.isArray(value) || value.length <= (closed ? 4 : 2)) return value;
+  const points = value.map(position);
+  if (points.some((point) => point === undefined)) return value;
+  // SAFETY: every position was just checked to be defined.
+  const xy = points as Array<[number, number]>;
+  const scale = Math.cos((xy[0]![1] * Math.PI) / 180) * METRES_PER_DEGREE;
+  const keep = new Uint8Array(xy.length);
+  keep[0] = 1;
+  keep[xy.length - 1] = 1;
+  // An explicit stack: a boundary of two hundred thousand vertices would overflow a recursive one.
+  const stack: Array<[number, number]> = [[0, xy.length - 1]];
+  while (stack.length > 0) {
+    const [first, last] = stack.pop()!;
+    let farthest = -1;
+    let distance = metres;
+    for (let index = first + 1; index < last; index += 1) {
+      const away = offLine(xy[index]!, xy[first]!, xy[last]!, scale);
+      if (away > distance) {
+        distance = away;
+        farthest = index;
+      }
+    }
+    if (farthest >= 0) {
+      keep[farthest] = 1;
+      stack.push([first, farthest], [farthest, last]);
+    }
+  }
+  const kept = value.filter((_, index) => keep[index] === 1);
+  return closed && kept.length < 4 ? value : kept;
+}
+
+/** How far `point` lies from the segment `from`–`to`, in metres. */
+function offLine(point: [number, number], from: [number, number], to: [number, number], scale: number): number {
+  const px = (point[0] - from[0]) * scale;
+  const py = (point[1] - from[1]) * METRES_PER_DEGREE;
+  const dx = (to[0] - from[0]) * scale;
+  const dy = (to[1] - from[1]) * METRES_PER_DEGREE;
+  const length = dx * dx + dy * dy;
+  if (length === 0) return Math.hypot(px, py);
+  const along = Math.max(0, Math.min(1, (px * dx + py * dy) / length));
+  return Math.hypot(px - along * dx, py - along * dy);
+}
