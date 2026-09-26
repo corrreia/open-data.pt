@@ -43,7 +43,7 @@ async function waitFor<T>(probe: () => Promise<T | undefined>, what: string): Pr
 }
 
 /** What the fixture source returns next, or what its Gatekeeper lists for the example. */
-type FixtureWrite = { path: "/test/source"; rows: Array<{ key: string; name: string }>; deny?: boolean } | { path: "/test/example"; title: string };
+type FixtureWrite = { path: "/test/source"; rows: Array<{ key: string; name: string }>; deny?: boolean } | { path: "/test/example"; title: string; revision?: string };
 
 async function put({ path, ...body }: FixtureWrite): Promise<void> {
   expect((await server.fetch(path, { method: "PUT", body: JSON.stringify(body) })).status).toBe(200);
@@ -53,9 +53,12 @@ async function source(rows: Array<{ key: string; name: string }>, deny = false):
   await put(deny ? { path: "/test/source", deny: true, rows } : { path: "/test/source", rows });
 }
 
-/** Change what the fixture Gatekeeper lists for its example and let the Registry sync it: a changed definition is due at once. */
-async function renameExample(title: string): Promise<void> {
-  await put({ path: "/test/example", title });
+/**
+ * Change what the fixture Gatekeeper lists for its example and let the Registry sync it. A new title alone leaves a
+ * healthy feed's schedule as it was; a revision changes what the example collects, which is due at once.
+ */
+async function renameExample(title: string, revision?: string): Promise<void> {
+  await put(revision ? { path: "/test/example", title, revision } : { path: "/test/example", title });
   const synced = await server.fetch("/test/sync", { method: "POST" });
   expect(synced.status, await synced.clone().text()).toBe(200);
 }
@@ -121,7 +124,14 @@ describe("a kernel nobody operates", () => {
     ]);
     let seen = await knownIds();
     const epoch = (await runnerFeed())?.feedEpoch;
+    // A new name alone does not send a healthy feed back to its source: it waits for its regular run.
+    const scheduled = (await runnerFeed())?.nextRunAt;
     await renameExample("Fixture things, renamed");
+    expect((await runnerFeed())?.nextRunAt).toBe(scheduled);
+    expect(Date.parse(scheduled ?? "") - Date.now()).toBeGreaterThan(30 * 60_000);
+    expect((await knownIds()).size).toBe(seen.size);
+    // What it collects changing is due at once.
+    await renameExample("Fixture things, renamed", "2");
     expect(await settled((item) => !seen.has(item.id))).toMatchObject({ status: "succeeded", revisions: 1 });
     expect((await feeds()).filter((feed) => feed.slug === "fixture-things")).toMatchObject([{ id: feedId, title: "Fixture things, renamed" }]);
     // A renamed feed renames its only product, so its next collection reads the source whole: a new epoch, the same ID.
@@ -135,7 +145,7 @@ describe("a kernel nobody operates", () => {
     expect(changes.data[0]).toMatchObject({ entityKey: "b", operation: "upsert" });
 
     seen = await knownIds();
-    await renameExample("Fixture things, again");
+    await renameExample("Fixture things, again", "3");
     expect((await settled((item) => !seen.has(item.id))).status).toBe("unchanged");
     const geojson = await jsonBody<{ numberReturned: number }>(await server.fetch("/api/products/fixture-things.geojson"));
     expect(geojson.numberReturned).toBe(3);
@@ -177,7 +187,7 @@ describe("a kernel nobody operates", () => {
   it("cools a permanent source failure down, and a changed definition retries the same acquisition at once", async () => {
     await source([], true);
     const seen = await knownIds();
-    await renameExample("Fixture things, refused");
+    await renameExample("Fixture things, refused", "4");
     const failed = await settled((item) => !seen.has(item.id));
     expect(failed.status).toBe("failed");
     const cooling = await waitFor(async () => {

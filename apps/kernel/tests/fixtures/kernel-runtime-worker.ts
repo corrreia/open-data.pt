@@ -155,13 +155,16 @@ export class FixtureGatekeeper extends WorkerEntrypoint<Env> implements FeedGate
 
   async exampleFeeds(): Promise<ExampleFeed[]> {
     const stored = await this.env.DATA_OBJECTS.get(EXAMPLE_KEY);
-    const title = asString(asObject(parseJson(stored ? await stored.text() : "{}"))?.title) ?? "Fixture things";
+    const written = asObject(parseJson(stored ? await stored.text() : "{}"));
+    const title = asString(written?.title) ?? "Fixture things";
+    // A revision is a change to what the example collects, as a new query or address would be; a title alone is not.
+    const revision = asString(written?.revision);
     return [
       {
         slug: "fixture-things",
         title,
         description: "Runtime fixture",
-        config: { source: "fixture", feed: "things" },
+        config: revision ? { source: "fixture", feed: "things", revision } : { source: "fixture", feed: "things" },
         staleAfterSeconds: 3600,
         publisher: "fixture-publisher",
         licence: "cc-by-4.0",

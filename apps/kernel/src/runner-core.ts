@@ -247,6 +247,8 @@ export interface RunnerDeps {
   claim(feedId: string, slugs: string[]): Promise<void>;
   lakeAvailable: boolean;
   now(): number;
+  /** A number in [0, 1) that spreads retries; without it, retries are not spread. */
+  random?(): number;
 }
 
 type Transaction = <T>(body: () => T) => T;
@@ -361,6 +363,8 @@ export class RunnerCore {
     this.setState("policy", policy);
     const now = this.deps.now();
     const at = new Date(now).toISOString();
+    // A feed that is failing, or resting after failing, takes a changed definition as a repair to try at once.
+    const failing = this.runtime().consecutiveFailures > 0 || Boolean(this.runtime().cooldownUntil);
     if (this.runtime().cooldownUntil) this.endCooldown(true);
     const backfill = this.getState<BackfillState & { nextAt?: string }>("backfill");
     if (feed.resolved.history && (backfill?.status === "paused" || backfill?.status === "failed")) {
@@ -370,7 +374,12 @@ export class RunnerCore {
     // that lengthened this feed's waits was the old configuration's, so the next attempt starts over.
     const runtime: RunnerState = { ...this.runtime(), consecutiveFailures: 0 };
     if (feed.enabled) {
-      const due = runtime.nextRunAt ? Math.min(Date.parse(runtime.nextRunAt), now) : now;
+      // Only a feed that now collects something else, or one that is failing, runs at once. A healthy feed whose words
+      // or policy changed keeps the data it has until its regular run: a new description once sent 278 feeds at one
+      // server within minutes, a day after each had read it whole.
+      const collectsSomethingElse = !current || current.resolved.resourceKey !== feed.resolved.resourceKey || current.resolved.configHash !== feed.resolved.configHash;
+      const regular = runtime.lastSuccessAt ? Date.parse(nextRunAfter(feed.id, Date.parse(runtime.lastSuccessAt), policy.collection.cadenceSeconds)) : now;
+      const due = collectsSomethingElse || failing || !runtime.nextRunAt ? now : Math.min(Date.parse(runtime.nextRunAt), Math.max(now, regular));
       this.setRuntime({ ...runtime, nextRunAt: new Date(due).toISOString() });
     } else {
       const { nextRunAt: _next, ...rest } = runtime;
@@ -846,6 +855,14 @@ export class RunnerCore {
         this.setRuntime(next);
         return;
       }
+      // A run the data was not due for, that failed, is not retried early and is not the feed failing: what was read
+      // last is still within its cadence, so the next attempt is the regular one.
+      const regular = runtime.lastSuccessAt ? Date.parse(nextRunAfter(this.requireFeed().id, Date.parse(runtime.lastSuccessAt), policy.collection.cadenceSeconds)) : 0;
+      if (regular > now) {
+        next.nextRunAt = new Date(regular).toISOString();
+        this.setRuntime(next);
+        return;
+      }
       const failures = runtime.consecutiveFailures + 1;
       next.consecutiveFailures = failures;
       // The same doubling throughout: quick retries up to the limit, then rests that are never longer
@@ -855,7 +872,9 @@ export class RunnerCore {
         failures <= RETRY_LIMIT ? Math.min(MAX_RETRY_BACKOFF_SECONDS, exponential) : Math.min(policy.collection.cadenceSeconds, MAX_FAILURE_WAIT_SECONDS, exponential);
       // A source that says when to come back is obeyed up to the same six hours, not talked down to fifteen minutes.
       const requested = failure.retryAfterSeconds === undefined ? 0 : Math.min(MAX_FAILURE_WAIT_SECONDS, failure.retryAfterSeconds);
-      next.nextRunAt = new Date(now + Math.max(backoff, requested) * 1000).toISOString();
+      // Up to a quarter more, at random: feeds that failed together, against one server, do not come back together.
+      const spread = 1 + (this.deps.random?.() ?? 0) * 0.25;
+      next.nextRunAt = new Date(now + Math.max(backoff * spread, requested) * 1000).toISOString();
       this.setRuntime(next);
     });
   }

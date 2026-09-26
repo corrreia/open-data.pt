@@ -90,6 +90,44 @@ describe("runner schedule and failure handling", () => {
     expect(waitsAfterFailing(h, 1)).toEqual([120]);
   });
 
+  it("keeps a healthy feed's regular run when only its words or policy change, and runs one that collects something else at once", async () => {
+    const monthly = policy({ cadenceSeconds: 30 * 24 * 3600 });
+    const h = await kernelHarness({ policy: monthly, history: null });
+    h.source.records = [record("a", 1)];
+    await h.collect();
+    const regular = h.core.runtime().nextRunAt;
+    h.clock.now += HOUR;
+    expect(h.core.configure({ ...h.core.feed()!, title: "Things, renamed", description: "Renamed" }, h.core.policy()!)).toBe(true);
+    expect(h.core.runtime().nextRunAt).toBe(regular);
+    expect(h.core.takeDue()).toBeUndefined();
+    const feed = h.core.feed()!;
+    expect(h.core.configure({ ...feed, resolved: { ...feed.resolved, configHash: "another-config" } }, h.core.policy()!)).toBe(true);
+    expect(Date.parse(h.core.runtime().nextRunAt!)).toBeLessThanOrEqual(h.clock.now);
+    expect(h.core.takeDue()?.trigger).toBe("scheduled");
+  });
+
+  it("does not retry early a run the data was not yet due for, nor count it as the feed failing", async () => {
+    const monthly = policy({ cadenceSeconds: 30 * 24 * 3600 });
+    const h = await kernelHarness({ policy: monthly });
+    h.source.records = [record("a", 1)];
+    await h.collect();
+    const lastSuccess = Date.parse(h.core.runtime().lastSuccessAt!);
+    h.clock.now += HOUR;
+    const early = h.core.collectNow("scheduled");
+    h.core.markStarted(early.id, "instance-early");
+    h.core.fail(early.id, unreachable());
+    expect(h.core.runtime().nextRunAt).toBe(nextRunAfter("feed_1", lastSuccess, 30 * 24 * 3600));
+    expect(h.core.runtime().consecutiveFailures).toBe(0);
+    expect(h.core.getAcquisition(early.id)?.status).toBe("failed");
+  });
+
+  it("spreads retries by up to a quarter, so feeds that failed together do not come back together", async () => {
+    const low = await kernelHarness({ random: () => 0 });
+    const high = await kernelHarness({ random: () => 0.999 });
+    expect(waitsAfterFailing(low, 1)).toEqual([120]);
+    expect(waitsAfterFailing(high, 1)[0]).toBeCloseTo(149.97, 2);
+  });
+
   it("cools a permanent failure down for six hours, then retries the same acquisition by itself", async () => {
     const h = await kernelHarness();
     const failed = failPermanently(h);
