@@ -93,6 +93,8 @@ export interface RunnerState {
   nextRunAt?: string;
   lastAttemptAt?: string;
   lastSuccessAt?: string;
+  /** What the last success collected (`resourceKey|configHash`): data read under another configuration is not this one's. */
+  lastSuccessSource?: string;
   /** Where the latest live collection read its data, for the site's source link. */
   sourceUrl?: string;
   consecutiveFailures: number;
@@ -746,6 +748,7 @@ export class RunnerCore {
       } else {
         next.checkpoint = input.checkpoint;
         next.lastSuccessAt = at;
+        next.lastSuccessSource = sourceOf(this.requireFeed());
         if (input.sourceUrl) next.sourceUrl = input.sourceUrl;
         next.cooldowns = 0;
         next.nextRunAt = nextRunAfter(this.requireFeed().id, now, policy.collection.cadenceSeconds);
@@ -781,6 +784,7 @@ export class RunnerCore {
         ...runtime,
         checkpoint,
         lastSuccessAt: at,
+        lastSuccessSource: sourceOf(this.requireFeed()),
         consecutiveFailures: 0,
         consecutiveInterruptions: 0,
         cooldowns: 0,
@@ -856,8 +860,12 @@ export class RunnerCore {
         return;
       }
       // A run the data was not due for, that failed, is not retried early and is not the feed failing: what was read
-      // last is still within its cadence, so the next attempt is the regular one.
-      const regular = runtime.lastSuccessAt ? Date.parse(nextRunAfter(this.requireFeed().id, Date.parse(runtime.lastSuccessAt), policy.collection.cadenceSeconds)) : 0;
+      // last is still within its cadence, so the next attempt is the regular one. Data read under another configuration
+      // is not this one's: a changed configuration keeps retrying until it has read. A success recorded before the
+      // source was, counts as this configuration's.
+      const feed = this.requireFeed();
+      const sameSource = runtime.lastSuccessSource === undefined || runtime.lastSuccessSource === sourceOf(feed);
+      const regular = runtime.lastSuccessAt && sameSource ? Date.parse(nextRunAfter(feed.id, Date.parse(runtime.lastSuccessAt), policy.collection.cadenceSeconds)) : 0;
       if (regular > now) {
         next.nextRunAt = new Date(regular).toISOString();
         this.setRuntime(next);
@@ -872,9 +880,12 @@ export class RunnerCore {
         failures <= RETRY_LIMIT ? Math.min(MAX_RETRY_BACKOFF_SECONDS, exponential) : Math.min(policy.collection.cadenceSeconds, MAX_FAILURE_WAIT_SECONDS, exponential);
       // A source that says when to come back is obeyed up to the same six hours, not talked down to fifteen minutes.
       const requested = failure.retryAfterSeconds === undefined ? 0 : Math.min(MAX_FAILURE_WAIT_SECONDS, failure.retryAfterSeconds);
-      // Up to a quarter more, at random: feeds that failed together, against one server, do not come back together.
-      const spread = 1 + (this.deps.random?.() ?? 0) * 0.25;
-      next.nextRunAt = new Date(now + Math.max(backoff * spread, requested) * 1000).toISOString();
+      // Feeds that failed together, against one server, do not come back together: a backoff is shortened by up to a
+      // quarter at random, never below what the source asked, and a source's own delay is lengthened by up to a quarter,
+      // never past the six-hour ceiling. Neither passes the limits the backoff itself keeps to.
+      const spread = (this.deps.random?.() ?? 0) * 0.25;
+      const wait = requested > backoff ? Math.min(MAX_FAILURE_WAIT_SECONDS, requested * (1 + spread)) : Math.max(requested, backoff * (1 - spread));
+      next.nextRunAt = new Date(now + wait * 1000).toISOString();
       this.setRuntime(next);
     });
   }
@@ -1499,6 +1510,11 @@ export function nextRunAfter(feedId: string, now: number, cadenceSeconds: number
   const phase = Number.parseInt(digest(`phase:${feedId}`).slice(0, 8), 16) % DAY_MS;
   const at = Math.floor(due / DAY_MS) * DAY_MS + phase;
   return new Date(at < due ? at + DAY_MS : at).toISOString();
+}
+
+/** What a feed collects, as its identity and configuration say. */
+function sourceOf(feed: Feed): string {
+  return `${feed.resolved.resourceKey}|${feed.resolved.configHash}`;
 }
 
 function objectKeysOf(entry: ProductIndexEntry): string[] {

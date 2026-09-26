@@ -121,11 +121,34 @@ describe("runner schedule and failure handling", () => {
     expect(h.core.getAcquisition(early.id)?.status).toBe("failed");
   });
 
-  it("spreads retries by up to a quarter, so feeds that failed together do not come back together", async () => {
+  it("still retries a changed configuration until it has read, whatever the old one read", async () => {
+    const monthly = policy({ cadenceSeconds: 30 * 24 * 3600 });
+    const h = await kernelHarness({ policy: monthly, history: null });
+    h.source.records = [record("a", 1)];
+    await h.collect();
+    const feed = h.core.feed()!;
+    h.core.configure({ ...feed, resolved: { ...feed.resolved, configHash: "another-config" } }, h.core.policy()!);
+    expect(waitsAfterFailing(h, 1)).toEqual([120]);
+    expect(h.core.runtime().consecutiveFailures).toBe(1);
+  });
+
+  it("spreads retries by up to a quarter, within every limit the backoff keeps to", async () => {
     const low = await kernelHarness({ random: () => 0 });
     const high = await kernelHarness({ random: () => 0.999 });
     expect(waitsAfterFailing(low, 1)).toEqual([120]);
-    expect(waitsAfterFailing(high, 1)[0]).toBeCloseTo(149.97, 2);
+    // Sooner, never later: the quick retries stay under their fifteen minutes and the rests under six hours.
+    expect(waitsAfterFailing(high, 1)[0]).toBeCloseTo(90.03, 2);
+    // A source's own delay is kept as the least wait, spread later, and never past the ceiling.
+    const asked = await kernelHarness({ random: () => 0.999 });
+    const acquisition = asked.core.collectNow("scheduled");
+    asked.core.markStarted(acquisition.id, "instance-asked");
+    asked.core.fail(acquisition.id, failureFrom(new CollectionFailed("Gatekeeper collection failed: upstream-error", true, 600)));
+    expect((Date.parse(asked.core.runtime().nextRunAt!) - asked.clock.now) / 1000).toBeCloseTo(749.85, 1);
+    const ceiling = await kernelHarness({ random: () => 0.999 });
+    const long = ceiling.core.collectNow("scheduled");
+    ceiling.core.markStarted(long.id, "instance-long");
+    ceiling.core.fail(long.id, failureFrom(new CollectionFailed("Gatekeeper collection failed: upstream-error", true, 7 * 3600)));
+    expect((Date.parse(ceiling.core.runtime().nextRunAt!) - ceiling.clock.now) / 1000).toBe(MAX_FAILURE_WAIT_SECONDS);
   });
 
   it("cools a permanent failure down for six hours, then retries the same acquisition by itself", async () => {
