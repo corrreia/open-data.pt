@@ -579,6 +579,7 @@ export class FeedRunner extends DurableObject<Env> {
       claim: async (feedId, slugs) => registry(env).claimProducts(feedId, slugs),
       lakeAvailable: PipelinesLake.available(lakeStreams(env)),
       now: () => Date.now(),
+      random: () => Math.random(),
     });
     this.core.migrate();
   }

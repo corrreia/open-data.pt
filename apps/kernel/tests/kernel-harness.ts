@@ -19,7 +19,7 @@ import type { Feed, FeedPolicy, ProductIndexEntry } from "../src/feed-model";
 import type { LakeTable } from "../src/lake";
 import { ObjectStore } from "../src/object-store";
 import type { SnapshotStore, StoredObject } from "../src/ports";
-import { RunnerCore } from "../src/runner-core";
+import { RunnerCore, type RunnerDeps } from "../src/runner-core";
 import { sqliteStorage } from "./sqlite-storage";
 
 /** R2 in memory, counting what the cost model counts: writes and reads. */
@@ -126,6 +126,8 @@ export interface HarnessOptions {
   keepLake?: boolean;
   /** Replace the fixture kind's history capability; null resolves a feed without history. */
   history?: ResolvedFeed["history"] | null;
+  /** What spreads retries; without it they are not spread. */
+  random?: () => number;
 }
 
 export async function kernelHarness(options: HarnessOptions = {}): Promise<KernelHarness> {
@@ -147,7 +149,7 @@ export async function kernelHarness(options: HarnessOptions = {}): Promise<Kerne
   const objects = new ObjectStore(snapshots);
   const published: ProductIndexEntry[][] = [];
   const failPublish = { next: false };
-  const core = new RunnerCore(sqliteStorage(database), transaction, {
+  const deps: RunnerDeps = {
     objects,
     publish: async (entries) => {
       if (failPublish.next) {
@@ -160,7 +162,9 @@ export async function kernelHarness(options: HarnessOptions = {}): Promise<Kerne
     claim: async () => undefined,
     lakeAvailable: true,
     now: () => clock.now,
-  });
+  };
+  if (options.random) deps.random = options.random;
+  const core = new RunnerCore(sqliteStorage(database), transaction, deps);
   core.migrate();
   const resolved = await fixtureResolved();
   if (options.history === null) delete resolved.history;
