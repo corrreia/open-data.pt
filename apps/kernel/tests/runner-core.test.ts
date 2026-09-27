@@ -137,6 +137,23 @@ describe("runner schedule and failure handling", () => {
     expect(h.core.runtime().checkpoint).toBeUndefined();
   });
 
+  it.each(["a changed batch", "an unchanged source"])("keeps no checkpoint from %s read while the feed was reconfigured", async (kind) => {
+    const h = await kernelHarness({ history: null });
+    h.source.records = [record("a", 1)];
+    await h.collect();
+    // The feed takes a new epoch while the next collection is reading its source.
+    h.source.fetch = async () => {
+      h.core.configure({ ...h.core.feed()!, feedEpoch: "epoch-2" }, h.core.policy()!);
+      return kind === "an unchanged source"
+        ? { kind: "not-modified" }
+        : { kind: "body", body: new Uint8Array(0), provenance: { sourceUrl: "https://example.test/things" }, completeness: "complete" };
+    };
+    h.source.records = [record("a", 2)];
+    const outcome = await h.collect();
+    expect(outcome.status).toBe(kind === "an unchanged source" ? "unchanged" : "succeeded");
+    expect(h.core.runtime().checkpoint).toBeUndefined();
+  });
+
   it("still retries a changed configuration until it has read, whatever the old one read", async () => {
     const monthly = policy({ cadenceSeconds: 30 * 24 * 3600 });
     const h = await kernelHarness({ policy: monthly, history: null });

@@ -619,7 +619,7 @@ export class RunnerCore {
       plan.backfill = { floors: backfill.floors, seen: backfill.seen };
       if (backfill.until) plan.backfill.until = backfill.until;
     }
-    this.setState(collectionKey(acquisitionId), { observedAt: plan.observedAt, lake: plan.lake } satisfies CollectionMemo);
+    this.setState(collectionKey(acquisitionId), { observedAt: plan.observedAt, lake: plan.lake, scope: checkpointScope(feed) } satisfies CollectionMemo);
     return plan;
   }
 
@@ -778,7 +778,9 @@ export class RunnerCore {
       if (history) {
         this.advanceBackfill(input);
       } else {
-        next.checkpoint = input.checkpoint;
+        // A feed reconfigured while this collection ran keeps no checkpoint from it: the next one reads the source whole.
+        if (memo.scope === checkpointScope(this.requireFeed())) next.checkpoint = input.checkpoint;
+        else delete next.checkpoint;
         next.lastSuccessAt = at;
         next.lastSuccessSource = sourceOf(this.requireFeed());
         if (input.sourceUrl) next.sourceUrl = input.sourceUrl;
@@ -808,6 +810,7 @@ export class RunnerCore {
     const policy = this.requirePolicy();
     const now = this.deps.now();
     const at = new Date(now).toISOString();
+    const scope = this.getState<CollectionMemo>(collectionKey(acquisitionId))?.scope;
     this.transaction(() => {
       this.discard(acquisitionId);
       this.exec(`UPDATE acquisitions SET status = 'unchanged', completed_at = ?, observed_at = COALESCE(observed_at, ?), error = NULL WHERE id = ?`, at, at, acquisitionId);
@@ -822,6 +825,8 @@ export class RunnerCore {
         cooldowns: 0,
         nextRunAt: nextRunAfter(this.requireFeed().id, now, policy.collection.cadenceSeconds),
       };
+      // A feed reconfigured while this collection ran keeps no checkpoint from it: the next one reads the source whole.
+      if (scope !== checkpointScope(this.requireFeed())) delete next.checkpoint;
       delete next.runningAcquisitionId;
       delete next.watchdogAt;
       this.setRuntime(next);
@@ -1455,6 +1460,8 @@ function mapAcquisition(row: AcquisitionRow, feedId: string): Acquisition {
 interface CollectionMemo {
   observedAt: string;
   lake: boolean;
+  /** The configuration and epoch the collection read under; its checkpoint is kept only if the feed still has them. */
+  scope?: string;
   normalizer?: { id: string; version: string };
   sourcePublishedAt?: string;
   declared?: Array<{ productKey: string; slug: string; version: number; baseline: boolean }>;
@@ -1552,6 +1559,11 @@ export function nextRunAfter(feedId: string, now: number, cadenceSeconds: number
 /** What a feed collects, as its identity and configuration say. */
 function sourceOf(feed: Feed): string {
   return `${feed.resolved.resourceKey}|${feed.resolved.configHash}`;
+}
+
+/** What a checkpoint belongs to: one configuration of the source, and one epoch of the feed. */
+function checkpointScope(feed: Feed): string {
+  return `${sourceOf(feed)}|${feed.feedEpoch}`;
 }
 
 function objectKeysOf(entry: ProductIndexEntry): string[] {
