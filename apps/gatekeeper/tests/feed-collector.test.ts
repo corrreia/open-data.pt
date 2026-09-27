@@ -1,10 +1,37 @@
 import { describe, expect, it } from "vitest";
-import { feedCollector, feedNormalizer, type GatekeeperLibraries, type ProductBuild, type RunnableFeed, type SourceFetch, type TransformContext } from "@open-data-pt/gatekeeper";
+import {
+  feedCollector,
+  feedNormalizer,
+  type GatekeeperLibraries,
+  type ProductBuild,
+  type RunnableFeed,
+  type SourceConfig,
+  type SourceFetch,
+  type TransformContext,
+} from "@open-data-pt/gatekeeper";
 
 const BODY: SourceFetch = { kind: "body", body: new Uint8Array(), provenance: { sourceUrl: "https://example.test/" }, completeness: "complete" };
 
-/** A library with nothing to it, so a test feed can run through the Worker's own composition. */
-const LIBRARIES: GatekeeperLibraries = new Map([["fixture", { kinds: [], resolve: () => Promise.reject(new Error("not resolved here")), context: {} }]]);
+/**
+ * A library with nothing to it but its resolution, so a test feed can run through the Worker's own composition. Like a
+ * real validator, it canonicalizes: a region is trimmed and lower-cased, and one left out is the default.
+ */
+const LIBRARIES: GatekeeperLibraries = new Map([
+  [
+    "fixture",
+    {
+      kinds: [],
+      resolve: async (config) => ({
+        config: { ...config, region: (config.region ?? "North").trim().toLowerCase() },
+        configHash: "",
+        resourceKey: "things:fixture",
+        kind: "things",
+        semantics: { domainSubject: "reference", defaultProductRole: "reference" },
+      }),
+      context: {},
+    },
+  ],
+]);
 
 function feed(fetchOf: RunnableFeed["fetch"]): RunnableFeed {
   return {
@@ -25,6 +52,36 @@ function feed(fetchOf: RunnableFeed["fetch"]): RunnableFeed {
 }
 
 describe("a feed's fetch, as the Worker hands it", () => {
+  it("runs the canonical configuration whose digest the kernel installed, not the feed file's spelling", async () => {
+    let fetched: SourceConfig | undefined;
+    let transformed: SourceConfig | undefined;
+    const runnable: RunnableFeed = {
+      ...feed(async ({ config }) => {
+        fetched = config;
+        return BODY;
+      }),
+      config: { source: "fixture", region: " South " },
+      transform: {
+        normalizer: { id: "fixture", version: "1" },
+        buffered: (_bytes, context) => {
+          transformed = context.feed.config;
+          return { transformer: { id: "fixture", version: "1" }, products: [], quality: { acceptedRecords: 0, rejectedRecords: 0 } };
+        },
+      },
+    };
+    const collector = feedCollector(runnable, LIBRARIES);
+    const resolved = await collector.resolve();
+    expect(resolved.config).toEqual({ source: "fixture", region: "south" });
+    await collector.source(undefined, { kind: "live" }, new AbortController().signal);
+    expect(fetched).toEqual({ region: "south" });
+    if (collector.normalize.kind !== "buffered") throw new Error("expected a buffered transform");
+    await collector.normalize.transform(new Uint8Array(), {
+      feed: { ...collector.feed, config: resolved.config, semantics: resolved.semantics },
+      observedAt: "2026-09-27T00:00:00.000Z",
+    });
+    expect(transformed).toEqual({ region: "south" });
+  });
+
   it("keeps a request's own timeout and the collection's deadline, aborting on whichever ends first", async () => {
     const seen: AbortSignal[] = [];
     const fetcher: typeof fetch = async (_input, init) => {

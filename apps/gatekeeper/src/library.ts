@@ -275,18 +275,20 @@ export function feedNormalizer(normalizer: NormalizedCollector["normalizer"]): N
 }
 
 /**
- * A feed's collector, reading the configuration its own file declares. Routing waits until the collection asks for the
+ * A feed's collector. It runs the canonical configuration its library resolves from the feed's file, the one whose
+ * digest the kernel installed, never the file's own spelling. Resolution waits until the collection asks for the
  * feed's identity, so a library this Worker does not carry is a failure the collection reports, not an error it throws.
  */
 export function feedCollector(feed: RunnableFeed, libraries: GatekeeperLibraries, runtime: FeedRuntime = {}): NormalizedCollector {
   const base = runtime.fetcher ?? ((input: RequestInfo | URL, init?: RequestInit) => fetch(input, init));
   const fetcher = runtime.sources ? publisherClient(runtime.sources, base) : base;
   const now = runtime.now ?? (() => new Date());
-  let routed: Routed | undefined;
-  const routing = (): Routed => (routed ??= route(feed.config, libraries));
+  let resolving: Promise<ResolvedFeed> | undefined;
+  const resolved = (): Promise<ResolvedFeed> => (resolving ??= resolveLibraryFeed(feed.config, libraries));
   const transform = feed.transform;
   const normalizer = feedNormalizer(transform.normalizer);
-  const withoutRoutingKey = (context: TransformContext): TransformContext => ({ ...context, feed: { ...context.feed, config: routing().rest } });
+  // The collection hands the transform the canonical configuration; the library sees it without the routing key.
+  const withoutRoutingKey = (context: TransformContext): TransformContext => ({ ...context, feed: { ...context.feed, config: libraryConfig(context.feed.config) } });
   // What this collection's fetch described its body with, for this collection's transform only.
   let metadata: object | undefined;
   const settle = (fetched: SourceFetch | Described<object>): SourceFetch => {
@@ -302,9 +304,9 @@ export function feedCollector(feed: RunnableFeed, libraries: GatekeeperLibraries
   return {
     feed: { slug: feed.slug, title: feed.title, description: feed.description },
     normalizer,
-    resolve: () => resolveLibraryFeed(feed.config, libraries),
+    resolve: resolved,
     source: async (state, mode, signal) => {
-      const { library, rest } = routing();
+      const { library, rest } = route((await resolved()).config, libraries);
       const context: FeedContext<never> = {
         config: rest,
         state,
