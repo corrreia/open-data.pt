@@ -1,7 +1,6 @@
 import {
   NormalizedInputError,
   historyCursorKey,
-  isCollectionFailureCode,
   isPermanentCollectionError,
   type CollectionFailureCode,
   type CollectionLimits,
@@ -16,7 +15,6 @@ import {
 import { chunkIndexFor, chunkListProblem, parseChunkRows, regenerateChunks, servedIdentity, type ChunkSink, type ServingRow } from "./chunks";
 import {
   definitionFingerprint,
-  liftResolvedFeed,
   feedDefinition,
   keepsHistory,
   type Acquisition,
@@ -293,58 +291,9 @@ export class RunnerCore {
       rows INTEGER NOT NULL, bytes INTEGER NOT NULL, committed INTEGER NOT NULL DEFAULT 0, committed_at TEXT)`);
     this.exec(`CREATE INDEX IF NOT EXISTS outbox_acquisition ON outbox(acquisition_id)`);
     this.exec(`CREATE TABLE IF NOT EXISTS garbage (object_key TEXT PRIMARY KEY, delete_after TEXT NOT NULL)`);
-    this.migrateCollectionContract();
-    this.liftResolvedFeed();
     // Every construction runs this; writing the version only when it is new keeps a warm-up free of row writes.
     if (current !== String(RUNNER_SCHEMA_VERSION))
       this.exec(`INSERT INTO meta (key, value) VALUES ('schema_version', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`, String(RUNNER_SCHEMA_VERSION));
-  }
-
-  /**
-   * One-time rewrite for protocol 5, kept only until every runner has run it once. A checkpoint keeps just its
-   * normalizer and state, and only if it was read under the configuration and epoch this runner holds: the Gatekeeper
-   * used to check that scope, and this runner owns it now. A product stored as a partial snapshot is the delta it
-   * always behaved as. Failed acquisitions gain the code their message names, so an outage keeps its cause.
-   */
-  private migrateCollectionContract(): void {
-    this.exec(`UPDATE state SET value_json = CASE
-        WHEN json_extract(value_json, '$.checkpoint.resourceKey') IS (SELECT COALESCE(json_extract(feed.value_json, '$.resolved.resourceKey'), json_extract(feed.value_json, '$.resourceKey')) FROM state AS feed WHERE feed.key = 'feed')
-          AND json_extract(value_json, '$.checkpoint.configHash') IS (SELECT COALESCE(json_extract(feed.value_json, '$.resolved.configHash'), json_extract(feed.value_json, '$.configHash')) FROM state AS feed WHERE feed.key = 'feed')
-          AND json_extract(value_json, '$.checkpoint.feedEpoch') IS (SELECT json_extract(feed.value_json, '$.feedEpoch') FROM state AS feed WHERE feed.key = 'feed')
-        THEN json_set(value_json, '$.checkpoint', json_object(
-          'normalizer', json(json_extract(value_json, '$.checkpoint.normalizer')), 'state', json(json_extract(value_json, '$.checkpoint.state'))))
-        ELSE json_remove(value_json, '$.checkpoint') END
-      WHERE key = 'runtime' AND json_type(value_json, '$.checkpoint.version') IS NOT NULL`);
-    this.exec(`UPDATE products SET entry_json = json_set(entry_json, '$.updateMode', 'delta') WHERE json_extract(entry_json, '$.updateMode') = 'partial-snapshot'`);
-    const acquisitions = this.rows<{ sql: string }>(`SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'acquisitions'`)[0]?.sql ?? "";
-    if (acquisitions.includes("error_code")) return;
-    // The column and its backfill commit together: a runner interrupted in between finds no column and starts again.
-    this.transaction(() => {
-      this.exec(`ALTER TABLE acquisitions ADD COLUMN error_code TEXT`);
-      const named = this.rows<{ id: string; error: string }>(`SELECT id, error FROM acquisitions WHERE status = 'failed' AND error LIKE '%Gatekeeper collection failed: %'`);
-      for (const { id, error } of named) {
-        const code = /Gatekeeper collection failed: ([a-z-]+)/.exec(error)?.[1];
-        if (code !== undefined && isCollectionFailureCode(code)) this.exec(`UPDATE acquisitions SET error_code = ? WHERE id = ?`, code, id);
-      }
-    });
-  }
-
-  /**
-   * One-time, after the collection contract's: a feed stored with a resolved copy of its configuration and a separate
-   * policy takes the identity the catalog now sends and its policy, and acquisitions stop recording a policy version.
-   * Kept until every runner has run it once.
-   */
-  private liftResolvedFeed(): void {
-    const policy = this.getState<JsonObject>("policy");
-    const acquisitions = this.rows<{ sql: string }>(`SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'acquisitions'`)[0]?.sql ?? "";
-    if (policy === undefined && !acquisitions.includes("policy_version")) return;
-    this.transaction(() => {
-      const stored = this.getState<JsonObject>("feed");
-      const lifted = stored && liftResolvedFeed(stored, policy?.collection);
-      if (lifted) this.setState("feed", lifted);
-      this.deleteState("policy");
-      if (acquisitions.includes("policy_version")) this.exec(`ALTER TABLE acquisitions DROP COLUMN policy_version`);
-    });
   }
 
   private reset(): void {
