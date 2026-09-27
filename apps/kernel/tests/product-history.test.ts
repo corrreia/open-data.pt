@@ -115,7 +115,7 @@ interface HistoryPage {
   coverage: { lakeStartsAt: string | null };
 }
 
-/** The history queries the fixture ran, without the lake-start probe. */
+/** The history queries the fixture ran. */
 async function historyQueries(): Promise<string[]> {
   const queries = await jsonBody<Array<{ query: string }>>(await server.fetch("/test/queries"));
   return queries.map(({ query }) => query).filter((query) => query.includes("product_slug"));
@@ -147,8 +147,9 @@ describe("typed product history owner isolation", () => {
     for (const query of (await historyQueries()).slice(-2)) {
       expect(query).toContain("WHERE feed_id = 'feed-owner''s' AND product_slug = '");
       expect(query).toContain(`product_slug = '${slug}'`);
-      // Event and observation feeds let the lake skip ingest-day partitions before the window.
-      expect(query).toContain("__ingest_ts >= TIMESTAMP '2026-09-01T00:00:00.000Z'");
+      // Event and observation feeds let the lake skip ingest-day partitions: ten days before the window for what a
+      // source may publish ahead, and the window itself for changes, since knowledge time never precedes ingestion.
+      expect(query).toContain(`__ingest_ts >= TIMESTAMP '${endpoint.includes("changes") ? "2026-09-01" : "2026-08-22"}T00:00:00.000Z'`);
     }
   });
 
@@ -213,13 +214,15 @@ describe("series as known at any moment", () => {
       ["rev-b", 10],
       ["rev-a", 1],
     ]);
-    expect(page.coverage.lakeStartsAt).toBe("2026-09-01T00:00:00.000Z");
+    expect(page.coverage.lakeStartsAt).toBe("2026-09-09T00:00:00.000Z");
   });
 
-  it("clamps a window that starts before the lake to its first ingest day", async () => {
+  it("reads a window that starts before the lake without first asking the lake where it starts", async () => {
     const response = await server.fetch("/api/products/revised-series/series/changes/range?from=2026-01-01T00:00:00Z&to=2026-09-06T00:00:00Z");
     expect(response.status).toBe(200);
-    expect((await historyQueries()).at(-1)).toContain("__ingest_ts >= TIMESTAMP '2026-09-01T00:00:00.000Z'");
+    expect((await historyQueries()).at(-1)).toContain("__ingest_ts >= TIMESTAMP '2026-01-01T00:00:00.000Z'");
+    const everything = await jsonBody<Array<{ query: string }>>(await server.fetch("/test/queries"));
+    expect(everything.some(({ query }) => query.includes("MIN(__ingest_ts)"))).toBe(false);
   });
 
   // The site's chart asks for the largest page; the query reads one row more to know whether another page follows.
