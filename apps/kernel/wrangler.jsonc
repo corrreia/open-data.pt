@@ -108,8 +108,11 @@
   // A first baseline of a large product applies its whole index in one runner
   // transaction; Workflow steps also run under this CPU limit.
   "limits": { "cpu_ms": 120000 },
-  // Every invocation is logged and traced. Each span counts as one
-  // observability event against the same quota as logs.
+  // Every invocation is logged; a tenth is traced. From 2026-10-01 each span is one observability
+  // event on the logs quota (20M a month on Workers Paid, then $0.60 a million), and a traced
+  // invocation is dozens of spans: one per Durable Object SQL statement alone made 1.18M of the
+  // 1.48M spans a day at a rate of 1 (2026-09-27). A tenth still traces about a thousand alarms
+  // and three thousand RPC calls a day.
   "observability": {
     "logs": {
       "enabled": true,
@@ -119,7 +122,7 @@
     },
     "traces": {
       "enabled": true,
-      "head_sampling_rate": 1,
+      "head_sampling_rate": 0.1,
       "persist": true,
     },
   },
