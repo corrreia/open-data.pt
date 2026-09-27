@@ -1,4 +1,4 @@
-import { asObject, asString, isJsonObject } from "@open-data-pt/contract";
+import { isJsonObject } from "@open-data-pt/contract";
 import type {
   CanonicalSchema,
   CollectionFailureCode,
@@ -108,27 +108,6 @@ export function feedDefinition(feed: Feed): Feed {
 export function definitionFingerprint(feed: Feed): string {
   const { createdAt: _created, updatedAt: _updated, ...definition } = feedDefinition(feed);
   return canonicalJson(definition);
-}
-
-/**
- * One-time: a feed definition stored before the Gatekeeper's catalog carried resolved feeds, with the collection
- * policy it was installed under, as the catalog would now install it. `undefined` for one already in this shape.
- * Kept until every Registry and runner has rewritten what it stores.
- */
-export function liftResolvedFeed(stored: JsonObject, collection: JsonValue | undefined): JsonObject | undefined {
-  const resolved = asObject(stored.resolved);
-  if (!resolved) return undefined;
-  const { config: _config, semantics: _semantics, resolved: _resolved, policyId: _policy, ...definition } = stored;
-  const subject = asString(asObject(resolved.semantics)?.domainSubject);
-  const lifted: JsonObject = {
-    ...definition,
-    resourceKey: resolved.resourceKey ?? null,
-    configHash: resolved.configHash ?? null,
-    eventTimed: subject === "event" || subject === "observation",
-    policy: collection ?? null,
-  };
-  if (isJsonObject(resolved.history)) lifted.history = resolved.history;
-  return lifted;
 }
 
 /** A feed definition without its write times: what fingerprints compare. */

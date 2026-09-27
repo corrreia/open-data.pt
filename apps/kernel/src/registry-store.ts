@@ -1,7 +1,7 @@
 import { NormalizedInputError, UNSTATED_LICENCE, asArrayOrEmpty, asObject, asString, asStringList, isProductSlug, parseJson } from "@open-data-pt/contract";
 import type { JsonObject } from "@open-data-pt/contract";
 import type { ManifestChunk } from "./chunks";
-import { feedDefinition, liftResolvedFeed, type Acquisition, type Feed, type FeedStatus, type ProductIndexEntry, type ProductSummary } from "./feed-model";
+import { feedDefinition, type Acquisition, type Feed, type FeedStatus, type ProductIndexEntry, type ProductSummary } from "./feed-model";
 import { dropAllTables, userTables, type SqlExec } from "./sqlite-reset";
 
 /**
@@ -25,24 +25,17 @@ export class RegistryStore {
     }
     this.exec(`CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)`);
     this.exec(`CREATE TABLE IF NOT EXISTS registry_state (key TEXT PRIMARY KEY, value_json TEXT NOT NULL)`);
-    // One-time: the sync of examples became the sync of the catalog. Its queue and hashes were examples', so it starts
-    // again from an empty queue and applies every feed once; the check is still the scheduled one.
-    this.exec(`UPDATE registry_state SET key = 'catalog-sync', value_json = json_remove(json_set(value_json, '$.queue', json('[]'), '$.hashes', json('{}')), '$.nextResolveAllAt')
-      WHERE key = 'example-sync'`);
     this.exec(`CREATE TABLE IF NOT EXISTS feeds (
       id TEXT PRIMARY KEY, slug TEXT NOT NULL UNIQUE, definition_json TEXT NOT NULL, enabled INTEGER NOT NULL, title TEXT NOT NULL)`);
     // One-time terminology cleanup: old definitions called their library `gatekeeperKind`. Rewrite the JSON in place before any feed is read.
     this.exec(`UPDATE feeds SET definition_json = json_remove(json_set(definition_json, '$.library', json_extract(definition_json, '$.gatekeeperKind')), '$.gatekeeperKind')
       WHERE json_type(definition_json, '$.library') IS NULL AND json_type(definition_json, '$.gatekeeperKind') = 'text'`);
     this.foldDatasetsIntoFeeds();
-    this.liftResolvedFeeds();
     this.exec(`CREATE TABLE IF NOT EXISTS feed_status (feed_id TEXT PRIMARY KEY, status_json TEXT NOT NULL, updated_at TEXT NOT NULL)`);
     this.exec(`CREATE TABLE IF NOT EXISTS claims (slug TEXT PRIMARY KEY, feed_id TEXT NOT NULL)`);
     // The chunk list is its own column, last, so product lists never read it.
     this.exec(`CREATE TABLE IF NOT EXISTS products (
       slug TEXT PRIMARY KEY, feed_id TEXT NOT NULL, product_key TEXT NOT NULL, title TEXT NOT NULL, entry_json TEXT NOT NULL, chunks_json TEXT, UNIQUE(feed_id, product_key))`);
-    // Protocol 5 folded partial snapshots into delta, which they always behaved as; kept until every entry is rewritten.
-    this.exec(`UPDATE products SET entry_json = json_set(entry_json, '$.updateMode', 'delta') WHERE json_extract(entry_json, '$.updateMode') = 'partial-snapshot'`);
     this.exec(`CREATE TABLE IF NOT EXISTS activity (id TEXT PRIMARY KEY, feed_id TEXT NOT NULL, at TEXT NOT NULL, item_json TEXT NOT NULL)`);
     this.exec(`CREATE INDEX IF NOT EXISTS activity_at ON activity (at DESC)`);
     this.exec(`CREATE TABLE IF NOT EXISTS backfills (feed_id TEXT PRIMARY KEY, library TEXT NOT NULL, status TEXT NOT NULL, updated_at TEXT NOT NULL)`);
@@ -67,27 +60,6 @@ export class RegistryStore {
 
   setState<T>(key: string, value: T): void {
     this.exec(`INSERT INTO registry_state (key, value_json) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json`, key, JSON.stringify(value));
-  }
-
-  /**
-   * One-time: feeds installed with a resolved copy of their configuration and a shared policy row. Each takes the
-   * identity the catalog now sends and its own policy, the `feeds` table loses its policy column, and the `policies`
-   * table goes. The constructor runs this without awaiting anything, so the Durable Object commits it whole.
-   */
-  private liftResolvedFeeds(): void {
-    if (!userTables(this.sql).includes("policies")) return;
-    const rows = this.rows<{ id: string; slug: string; definition_json: string; enabled: number; title: string; collection_json: string | null }>(
-      `SELECT f.id, f.slug, f.definition_json, f.enabled, f.title, p.collection_json FROM feeds f LEFT JOIN policies p ON p.id = f.policy_id`,
-    );
-    this.exec(`CREATE TABLE feeds_lifted (id TEXT PRIMARY KEY, slug TEXT NOT NULL UNIQUE, definition_json TEXT NOT NULL, enabled INTEGER NOT NULL, title TEXT NOT NULL)`);
-    for (const row of rows) {
-      const stored = asObject(parseJson(row.definition_json)) ?? {};
-      const lifted = liftResolvedFeed(stored, row.collection_json === null ? undefined : parseJson(row.collection_json)) ?? stored;
-      this.exec(`INSERT INTO feeds_lifted (id, slug, definition_json, enabled, title) VALUES (?, ?, ?, ?, ?)`, row.id, row.slug, JSON.stringify(lifted), row.enabled, row.title);
-    }
-    this.exec(`DROP TABLE feeds`);
-    this.exec(`ALTER TABLE feeds_lifted RENAME TO feeds`);
-    this.exec(`DROP TABLE policies`);
   }
 
   /**

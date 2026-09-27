@@ -1,5 +1,5 @@
 import { parseJson, asNumber, asString, isJsonArray, isJsonBoolean, isJsonNumber, isJsonObject, isJsonString, type JsonObject, type JsonValue } from "./json";
-import { type CollectionFailureCode, type CollectionRequest, type CollectionResult, type HistoryCursor, type ResolvedFeed, type SourceCheckpoint } from "./index";
+import { type CollectionRequest, type CollectionResult, type HistoryCursor, type ResolvedFeed, type SourceCheckpoint } from "./index";
 
 const NORMALIZED_ERROR_PREFIX = "Normalized contract rejected: [open-data/normalized-input] ";
 
@@ -81,11 +81,6 @@ const FAILURE_CODES = [
   "history-unsupported",
   "protocol-mismatch",
 ] as const;
-
-/** Whether a string is one of the codes a collection fails with. */
-export function isCollectionFailureCode(value: string): value is CollectionFailureCode {
-  return FAILURE_CODES.some((code) => code === value);
-}
 
 /** Narrow a Gatekeeper's resolved feed descriptor before the kernel persists or executes it. */
 export function assertResolvedFeed(value: ResolvedFeed): void {
