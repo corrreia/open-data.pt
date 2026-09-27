@@ -95,7 +95,7 @@ function source(fetcher: typeof fetch): OpendatasoftSource {
 const HISTORY_FEED = RUNNABLE.get("e-redes-national-consumption-feed")!;
 
 function odsCollector(config: SourceConfig, fetcher: typeof fetch): NormalizedCollector {
-  return feedCollector(HISTORY_FEED, { ...config, source: "opendatasoft" }, carriedLibraries("opendatasoft"), { fetcher });
+  return feedCollector({ ...HISTORY_FEED, slug: "sample-feed", config: { ...config, source: "opendatasoft" } }, carriedLibraries("opendatasoft"), { fetcher });
 }
 
 function bodyOf(fetched: SourceFetch): SourceBody {
@@ -123,15 +123,13 @@ async function transformed(fetched: SourceFetch): Promise<{ records: CanonicalRe
 const LIVE_CONFIG: SourceConfig = { host: "e-redes.opendatasoft.com", dataset: "sample-dataset", limit: "10" };
 
 async function request(config: SourceConfig, fetcher: typeof fetch, mode: CollectionRequest["mode"], sourceBytes = 1024 * 1024): Promise<CollectionRequest> {
-  const resolved: ResolvedFeed = await odsCollector(config, fetcher).resolve({ ...config, source: "opendatasoft" });
+  const resolved: ResolvedFeed = await odsCollector(config, fetcher).resolve();
   return {
     protocol: NORMALIZED_PROTOCOL,
-    collectionId: "batch_ods",
-    feed: { id: "feed_sample", slug: "sample-feed", title: "Sample", description: "Sample dataset" },
-    resolved,
-    feedEpoch: "epoch-1",
+    slug: "sample-feed",
+    configHash: resolved.configHash,
     mode,
-    limits: { sourceBytes, outputBytes: 4 * 1024 * 1024, frameBytes: 1024 * 1024, recordBytes: 512 * 1024, records: 1_000, products: 16 },
+    limits: { sourceBytes, outputBytes: 4 * 1024 * 1024, recordBytes: 512 * 1024, records: 1_000 },
     deadline: new Date(Date.now() + 30_000).toISOString(),
     observedAt: "2026-09-10T00:00:00.000Z",
   };
@@ -637,14 +635,12 @@ describe("Opendatasoft through the shared collector", () => {
       sourceUrl: "https://e-redes.opendatasoft.com/api/explore/v2.1/catalog/datasets/sample-dataset",
       sourcePublishedAt: "2026-09-07T11:00:51.432Z",
     });
-    expect(header.completeness).toBe("complete");
-    expect(header.normalizer).toEqual(feedNormalizer({ id: "opendatasoft-explore-v2.1", version: "6" }));
+    expect(header.checkpoint.normalizer).toEqual(feedNormalizer({ id: "opendatasoft-explore-v2.1", version: "6" }));
     expect(header.products.map((product) => [product.productKey, product.completeness])).toEqual([["records", "complete"]]);
     expect(header.checkpoint.state).toMatchObject({ validators: { default: { etag: expect.stringMatching(/^"ods-/) } } });
     expect(rest.filter((frame) => frame.type === "record").map((frame) => frame.type === "record" && frame.value.entityKey)).toEqual(["a", "b"]);
     const complete = rest.at(-1);
     if (complete?.type !== "complete") throw new Error("Expected a completion frame last");
-    expect(complete.counts).toEqual({ records: 2, points: 0 });
     expect(complete.quality).toEqual({ acceptedRecords: 2, rejectedRecords: 0 });
     expect(complete.products?.[0]).toMatchObject({
       productKey: "records",
@@ -668,7 +664,7 @@ describe("Opendatasoft through the shared collector", () => {
     const slice = await frames(await collectNormalized(sliceRequest, odsCollector(config, sliceFetcher)));
     const header = slice[0];
     if (header?.type !== "header") throw new Error("Expected a header frame first");
-    expect(header.completeness).toBe("complete");
+    expect(header.products.every((product) => product.completeness === "complete")).toBe(true);
     expect(slice.filter((frame) => frame.type === "point")).toHaveLength(2);
     const complete = slice.at(-1);
     if (complete?.type !== "complete") throw new Error("Expected a completion frame last");

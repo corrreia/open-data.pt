@@ -156,12 +156,12 @@ describe("PeeringDB public directory normalization", () => {
     await expect(transform({ pages: [{ data: rows }, { data: [] }] }, undefined, 1024)).rejects.toMatchObject({ code: "response-too-large" });
   });
 
-  it("emits protocol-v4 record frames and completion without any repeated series product", async () => {
+  it("emits protocol-v5 record frames and completion without any repeated series product", async () => {
     let request = 0;
     const fetcher: typeof fetch = async () => Response.json({ data: request++ === 0 ? [exchange(1)] : [], meta: {} });
-    const { resolved, collector } = await feedCollection("peeringdb-portugal-exchanges-feed", { fetcher });
-    const frames = await networkFrames(await collectNormalized(await networkRequest(collector, resolved.config), collector));
+    const { collector } = await feedCollection("peeringdb-portugal-exchanges-feed", { fetcher });
+    const frames = await networkFrames(await collectNormalized(await networkRequest(collector), collector));
     expect(frames.map((frame) => frame.type)).toEqual(["header", "record", "complete"]);
-    expect(frames.at(-1)).toMatchObject({ counts: { records: 1, points: 0 }, quality: { acceptedRecords: 1, rejectedRecords: 0 } });
+    expect(frames.at(-1)).toMatchObject({ quality: { acceptedRecords: 1, rejectedRecords: 0 } });
   });
 });

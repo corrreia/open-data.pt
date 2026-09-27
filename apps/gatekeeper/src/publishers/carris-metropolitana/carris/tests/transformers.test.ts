@@ -171,7 +171,6 @@ describe("Carris transformers", () => {
     const record = result.products[0]?.records?.[0];
     expect(record).toMatchObject({
       entityKey: "alert-1",
-      operation: "upsert",
       eventTime: "2026-09-04T03:00:00.000Z",
       validFrom: "2026-09-04T03:00:00.000Z",
       validTo: "2026-09-04T04:00:00.000Z",

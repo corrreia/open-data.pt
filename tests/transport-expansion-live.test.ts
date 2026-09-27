@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { collectNormalized, NORMALIZED_PROTOCOL, type CollectionRequest, type ExampleFeed } from "@open-data-pt/gatekeeper";
+import { collectNormalized, NORMALIZED_PROTOCOL, type CollectionRequest, type ExampleFeed, type ResolvedFeed } from "@open-data-pt/gatekeeper";
 import { readFrames } from "../apps/kernel/src/frames";
 import { feedCollection, feedsOf } from "../apps/gatekeeper/tests/catalog";
 
@@ -54,10 +54,6 @@ describe.skipIf(selected.length === 0)("live transport and municipal expansion",
         }),
       );
       for await (const frame of readFrames(stream, request.limits, {
-        collectionId: request.collectionId,
-        resourceKey: resolved.resourceKey,
-        configHash: resolved.configHash,
-        feedEpoch: request.feedEpoch,
         mode: request.mode,
         deadline: request.deadline,
       })) {
@@ -82,14 +78,12 @@ describe.skipIf(selected.length === 0)("live transport and municipal expansion",
   );
 });
 
-function requestFor(example: ExampleFeed, resolved: CollectionRequest["resolved"]): CollectionRequest {
+function requestFor(example: ExampleFeed, resolved: ResolvedFeed): CollectionRequest {
   const policy = example.policy.collection;
   return {
     protocol: NORMALIZED_PROTOCOL,
-    collectionId: `live_${example.slug}`,
-    feed: { id: "fixture", slug: example.slug, title: example.title, description: example.description },
-    resolved,
-    feedEpoch: "live",
+    slug: example.slug,
+    configHash: resolved.configHash,
     observedAt: new Date().toISOString(),
     mode: { kind: "live" },
     deadline: new Date(Date.now() + policy.timeoutSeconds * 1000).toISOString(),
@@ -98,8 +92,6 @@ function requestFor(example: ExampleFeed, resolved: CollectionRequest["resolved"
       outputBytes: policy.maxOutputBytes ?? 16 * 1024 * 1024,
       records: policy.maxRecords ?? 1_000_000,
       recordBytes: policy.maxRecordBytes ?? 256 * 1024,
-      frameBytes: (policy.maxRecordBytes ?? 256 * 1024) + 16 * 1024,
-      products: 64,
     },
   };
 }

@@ -4,8 +4,8 @@ import { BACKFILL_RESUME_MS, BACKFILL_START_DELAY_MS, COOLDOWN_BASE_MS, MAX_FAIL
 import { kernelHarness, policy, record, type KernelHarness } from "./kernel-harness";
 
 const HOUR = 3_600_000;
-const refused = () => failureFrom(new CollectionFailed("Gatekeeper collection failed: invalid-config", false));
-const unreachable = () => failureFrom(new CollectionFailed("Gatekeeper collection failed: upstream-error", true));
+const refused = () => failureFrom(new CollectionFailed("invalid-config", false));
+const unreachable = () => failureFrom(new CollectionFailed("upstream-error", true));
 
 /** Start a live acquisition and fail it permanently; returns its id. */
 function failPermanently(h: KernelHarness, acquisitionId = h.core.collectNow("manual").id): string {
@@ -44,7 +44,7 @@ describe("runner schedule and failure handling", () => {
     h.core.markStarted(acquisition.id, "instance");
     h.core.begin(acquisition.id);
     h.core.appendOutbox(acquisition.id, "records", "[]", 1);
-    h.core.fail(acquisition.id, failureFrom(new CollectionFailed("Gatekeeper collection failed: upstream-error", true)));
+    h.core.fail(acquisition.id, failureFrom(new CollectionFailed("upstream-error", true)));
     expect(h.core.pendingOutbox(10)).toHaveLength(0);
     expect(h.core.committedOutboxRows()).toBe(0);
     const runtime = h.core.runtime();
@@ -72,7 +72,7 @@ describe("runner schedule and failure handling", () => {
     const askedFor = (seconds: number): number => {
       const acquisition = h.core.collectNow("scheduled");
       h.core.markStarted(acquisition.id, `instance-${seconds}`);
-      h.core.fail(acquisition.id, failureFrom(new CollectionFailed("Gatekeeper collection failed: upstream-error", true, seconds)));
+      h.core.fail(acquisition.id, failureFrom(new CollectionFailed("upstream-error", true, seconds)));
       return (Date.parse(h.core.runtime().nextRunAt!) - h.clock.now) / 1000;
     };
     // An hour asked for is an hour waited: talking a rate-limited source down to fifteen minutes is how we get refused.
@@ -121,6 +121,61 @@ describe("runner schedule and failure handling", () => {
     expect(h.core.getAcquisition(early.id)?.status).toBe("failed");
   });
 
+  it("keeps a checkpoint only for the configuration and epoch it was read under", async () => {
+    const h = await kernelHarness({ history: null });
+    h.source.records = [record("a", 1)];
+    await h.collect();
+    expect(h.core.runtime().checkpoint).toMatchObject({ normalizer: { id: "fixture", version: "1" } });
+    const feed = h.core.feed()!;
+    h.core.configure({ ...feed, title: "Things, renamed" }, h.core.policy()!);
+    expect(h.core.runtime().checkpoint).toBeDefined();
+    h.core.configure({ ...feed, feedEpoch: "epoch-2" }, h.core.policy()!);
+    expect(h.core.runtime().checkpoint).toBeUndefined();
+    await h.collect();
+    expect(h.core.runtime().checkpoint).toBeDefined();
+    h.core.configure({ ...h.core.feed()!, resolved: { ...feed.resolved, configHash: "another-config" } }, h.core.policy()!);
+    expect(h.core.runtime().checkpoint).toBeUndefined();
+  });
+
+  it.each(["a changed batch", "an unchanged source"])("keeps no checkpoint from %s read while the feed was reconfigured", async (kind) => {
+    const h = await kernelHarness({ history: null });
+    h.source.records = [record("a", 1)];
+    await h.collect();
+    // The feed takes a new epoch while the next collection is reading its source.
+    h.source.fetch = async () => {
+      h.core.configure({ ...h.core.feed()!, feedEpoch: "epoch-2" }, h.core.policy()!);
+      return kind === "an unchanged source"
+        ? { kind: "not-modified" }
+        : { kind: "body", body: new Uint8Array(0), provenance: { sourceUrl: "https://example.test/things" }, completeness: "complete" };
+    };
+    h.source.records = [record("a", 2)];
+    const outcome = await h.collect();
+    expect(outcome.status).toBe(kind === "an unchanged source" ? "unchanged" : "succeeded");
+    expect(h.core.runtime().checkpoint).toBeUndefined();
+  });
+
+  it.each(["a changed batch", "an unchanged source"])("leaves a feed due when %s was read from the source it has just stopped reading", async (kind) => {
+    const monthly = policy({ cadenceSeconds: 30 * 24 * 3600 });
+    const h = await kernelHarness({ policy: monthly, history: null });
+    h.source.records = [record("a", 1)];
+    await h.collect();
+    const before = h.core.runtime().lastSuccessSource;
+    // The feed is pointed at another configuration while the next collection is reading the old one.
+    h.source.fetch = async () => {
+      const feed = h.core.feed()!;
+      h.core.configure({ ...feed, resolved: { ...feed.resolved, configHash: "another-config" } }, h.core.policy()!);
+      return kind === "an unchanged source"
+        ? { kind: "not-modified" }
+        : { kind: "body", body: new Uint8Array(0), provenance: { sourceUrl: "https://example.test/things" }, completeness: "complete" };
+    };
+    h.source.records = [record("a", 2)];
+    await h.collect();
+    // Not a month away: the new configuration has still to be read.
+    expect(Date.parse(h.core.runtime().nextRunAt!)).toBeLessThanOrEqual(h.clock.now);
+    expect(h.core.runtime().lastSuccessSource).toBe(before);
+    expect(h.core.runtime().checkpoint).toBeUndefined();
+  });
+
   it("still retries a changed configuration until it has read, whatever the old one read", async () => {
     const monthly = policy({ cadenceSeconds: 30 * 24 * 3600 });
     const h = await kernelHarness({ policy: monthly, history: null });
@@ -142,12 +197,12 @@ describe("runner schedule and failure handling", () => {
     const asked = await kernelHarness({ random: () => 0.999 });
     const acquisition = asked.core.collectNow("scheduled");
     asked.core.markStarted(acquisition.id, "instance-asked");
-    asked.core.fail(acquisition.id, failureFrom(new CollectionFailed("Gatekeeper collection failed: upstream-error", true, 600)));
+    asked.core.fail(acquisition.id, failureFrom(new CollectionFailed("upstream-error", true, 600)));
     expect((Date.parse(asked.core.runtime().nextRunAt!) - asked.clock.now) / 1000).toBeCloseTo(749.85, 1);
     const ceiling = await kernelHarness({ random: () => 0.999 });
     const long = ceiling.core.collectNow("scheduled");
     ceiling.core.markStarted(long.id, "instance-long");
-    ceiling.core.fail(long.id, failureFrom(new CollectionFailed("Gatekeeper collection failed: upstream-error", true, 7 * 3600)));
+    ceiling.core.fail(long.id, failureFrom(new CollectionFailed("upstream-error", true, 7 * 3600)));
     expect((Date.parse(ceiling.core.runtime().nextRunAt!) - ceiling.clock.now) / 1000).toBe(MAX_FAILURE_WAIT_SECONDS);
   });
 
@@ -164,9 +219,13 @@ describe("runner schedule and failure handling", () => {
     h.clock.now = Date.parse(until) - 60_000;
     expect(h.core.takeDue()).toBeUndefined();
     h.clock.now = Date.parse(until);
+    expect(h.core.getAcquisition(failed)?.errorCode).toBe("invalid-config");
     expect(h.core.takeDue()?.id).toBe(failed);
     expect(h.core.runtime().cooldownUntil).toBeUndefined();
     expect(h.core.status().cooldownUntil).toBeUndefined();
+    // Queued again, it carries neither the failure's message nor its code.
+    expect(h.core.getAcquisition(failed)).not.toHaveProperty("error");
+    expect(h.core.getAcquisition(failed)).not.toHaveProperty("errorCode");
   });
 
   it("doubles the cooldown on every repeat up to 48 hours, and a success forgets it", async () => {

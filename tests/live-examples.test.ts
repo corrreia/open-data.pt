@@ -55,18 +55,14 @@ function liveRequest(example: ExampleFeed, resolved: ResolvedFeed): CollectionRe
   const recordBytes = Math.min(policy.maxRecordBytes ?? 256 * 1024, MAX_RECORD_BYTES);
   return {
     protocol: NORMALIZED_PROTOCOL,
-    collectionId: `live_${example.slug}`,
-    feed: { id: "feed_live", slug: example.slug, title: example.title, description: example.description },
-    resolved,
-    feedEpoch: "live",
+    slug: example.slug,
+    configHash: resolved.configHash,
     mode: { kind: "live" },
     limits: {
       sourceBytes: policy.maxBytes,
       outputBytes,
-      frameBytes: Math.min(outputBytes, recordBytes + 16 * 1024),
       recordBytes,
       records: policy.maxRecords ?? 1_000_000,
-      products: 64,
     },
     deadline: new Date(Date.now() + policy.timeoutSeconds * 1000).toISOString(),
     observedAt: new Date().toISOString(),
@@ -83,14 +79,10 @@ describe.skipIf(cases.length === 0)("live examples", () => {
       const request = liveRequest(example, resolved);
       const feed = RUNNABLE.get(example.slug);
       if (!feed) throw new Error(`No feed file defines ${example.slug}`);
-      const result = await collectNormalized(request, feedCollector(feed, resolved.config, libraries, runtimeOf(example.slug)));
+      const result = await collectNormalized(request, feedCollector(feed, libraries, runtimeOf(example.slug)));
       if (result.kind !== "batch") throw new Error(`${example.slug} returned ${JSON.stringify(result)}`);
       const counts = new Map<string, number>();
       const scope = {
-        collectionId: request.collectionId,
-        resourceKey: resolved.resourceKey,
-        configHash: resolved.configHash,
-        feedEpoch: request.feedEpoch,
         mode: request.mode,
         deadline: request.deadline,
       };

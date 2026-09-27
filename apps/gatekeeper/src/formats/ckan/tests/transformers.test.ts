@@ -514,16 +514,14 @@ describe("CKAN streaming through the shared collector", () => {
       return Response.json({ success: true, result: { fields, records: limit === 0 ? [] : records, total: records.length } });
     });
     const config = { source: "ckan", host: "opendata.porto.digital", dataset: "sensor-readings", resource: resourceId };
-    const collector = feedCollector(PARKING, config, LIBRARIES, { fetcher });
-    const resolved = await collector.resolve(config);
+    const collector = feedCollector({ ...PARKING, slug: "porto-sensors-feed", config }, LIBRARIES, { fetcher });
+    const resolved = await collector.resolve();
     const request: CollectionRequest = {
       protocol: NORMALIZED_PROTOCOL,
-      collectionId: "collection_1",
-      feed: { id: "feed_1", slug: "porto-sensors-feed", title: "Porto sensors", description: "Sensor readings" },
-      resolved,
-      feedEpoch: "epoch-1",
+      slug: "porto-sensors-feed",
+      configHash: resolved.configHash,
       mode: { kind: "live" },
-      limits: { sourceBytes: 1024 * 1024, outputBytes: 4 * 1024 * 1024, frameBytes: 256 * 1024, recordBytes: 128 * 1024, records: 10_000, products: 4 },
+      limits: { sourceBytes: 1024 * 1024, outputBytes: 4 * 1024 * 1024, recordBytes: 128 * 1024, records: 10_000 },
       deadline: new Date(Date.now() + 30_000).toISOString(),
       observedAt: "2026-09-10T12:00:00.000Z",
     };
@@ -537,12 +535,11 @@ describe("CKAN streaming through the shared collector", () => {
 
     expect(frames[0]).toMatchObject({
       type: "header",
-      normalizer: feedNormalizer({ id: "ckan-resource", version: "6" }),
       provenance: {
         sourceUrl: `https://opendata.porto.digital/api/3/action/datastore_search?resource_id=${resourceId}&limit=2&offset=0`,
         sourcePublishedAt: "2026-09-07T12:00:00.000Z",
       },
-      products: [{ productKey: "records", suggestedSlug: "porto-sensors", completeness: "complete" }],
+      products: [{ productKey: "records", slug: "porto-sensors", completeness: "complete" }],
       checkpoint: {
         normalizer: feedNormalizer({ id: "ckan-resource", version: "6" }),
         state: { validators: { default: { etag: `"ckan:6:${resourceId}:2026-09-07T12:00:00.000Z"` } } },
@@ -552,7 +549,6 @@ describe("CKAN streaming through the shared collector", () => {
     expect(frames.filter((frame) => isJsonObject(frame) && frame.type === "point")).toHaveLength(0);
     expect(frames.at(-1)).toMatchObject({
       type: "complete",
-      counts: { records: 2, points: 0 },
       quality: { acceptedRecords: 2, rejectedRecords: 0 },
       products: [{ productKey: "records", watermark: "2026-09-07T11:00:00.000Z" }],
     });

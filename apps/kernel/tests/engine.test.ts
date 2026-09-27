@@ -1,3 +1,4 @@
+import type { Completeness } from "@open-data-pt/contract";
 import { describe, expect, it } from "vitest";
 import { PromotionRequired, collectionStep, openableUrl, type CollectingGatekeeper } from "../src/engine";
 import { MAX_RECORD_BYTES, STAGE_BYTES } from "../src/blob-budget";
@@ -92,6 +93,32 @@ describe("collection engine: current state", () => {
     expect((await h.served()).map((row) => row.id)).toEqual(["k000000", "k000001", "k000002"]);
   });
 
+  it.each<[string, Completeness, Completeness, Completeness]>([
+    ["a partial second product", "complete", "partial", "partial"],
+    ["a first product finalized as unknown", "unknown", "partial", "unknown"],
+    ["every product complete", "complete", "complete", "complete"],
+  ])("records a run as complete as its least complete product: %s", async (_name, first, second, run) => {
+    const h = await kernelHarness();
+    h.source.records = [record("k000000", "a")];
+    if (first !== "complete") h.source.finalCompleteness = first;
+    h.source.extra = [
+      {
+        productKey: "others",
+        slug: "others",
+        title: "Others",
+        description: "A second product of the batch",
+        role: "reference",
+        kind: "record",
+        schema: { fields: [{ id: "name", name: "Name", type: "string", nullable: false }] },
+        updateMode: "delta",
+        completeness: second,
+        records: [record("o000000", "b")],
+      },
+    ];
+    const { acquisitionId } = await h.collect();
+    expect(h.core.getAcquisition(acquisitionId)?.completeness).toBe(run);
+  });
+
   it("keeps current state when a streamed product is finalized as unknown (a declared file was absent)", async () => {
     const h = await kernelHarness();
     await baseline(h, 3);
@@ -102,14 +129,14 @@ describe("collection engine: current state", () => {
     expect(await h.served()).toHaveLength(3);
   });
 
-  it("applies explicit source deletions from a delta without touching other entities", async () => {
+  it("adds and updates from a delta without removing the entities it leaves out", async () => {
     const h = await kernelHarness();
     await baseline(h, 3);
     h.source.updateMode = "delta";
-    h.source.records = [{ entityKey: "k000001", operation: "delete", payload: {} }, record("k000009", "new")];
+    h.source.records = [record("k000001", "changed"), record("k000009", "new")];
     const outcome = await h.collect();
     expect(outcome.revisions).toBe(2);
-    expect((await h.served()).map((row) => row.id)).toEqual(["k000000", "k000002", "k000009"]);
+    expect((await h.served()).map((row) => row.id)).toEqual(["k000000", "k000001", "k000002", "k000009"]);
   });
 });
 
@@ -440,7 +467,7 @@ describe("collection engine: the Workflow step", () => {
     const { h, id } = await begun();
     const failing: CollectingGatekeeper = { collect: async () => ({ kind: "failure", code: "upstream-error", retryable: true, retryAfterSeconds: 30 }) };
     await expect(collectionStep(id, { runner: h.port, gatekeeper: failing, objects: h.objects })).resolves.toEqual({
-      failure: { message: "Gatekeeper collection failed: upstream-error", retryable: true, retryAfterSeconds: 30 },
+      failure: { message: "Gatekeeper collection failed: upstream-error", code: "upstream-error", retryable: true, retryAfterSeconds: 30 },
     });
   });
 

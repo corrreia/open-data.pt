@@ -548,7 +548,7 @@ export function openApiDocument(origin: string) {
           properties: {
             id: { type: "string" },
             entityKey: { type: "string", description: "The `id` of the record it changed." },
-            operation: { type: "string", enum: ["baseline", "create", "upsert", "correct", "delete", "retract"] },
+            operation: { type: "string", enum: ["baseline", "create", "upsert", "retract"] },
             payload: { type: ["object", "null"], description: "The record's fields after the change; null for a retraction." },
             recordHash: { type: "string" },
             eventTime: nullableTime(),

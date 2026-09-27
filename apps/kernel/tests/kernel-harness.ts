@@ -7,6 +7,7 @@ import {
   type Completeness,
   type FeedKindDescription,
   type JsonObject,
+  type ProductBuild,
   type ProductUpdateMode,
   type ResolvedFeed,
   type SeriesPoint,
@@ -64,6 +65,8 @@ export interface FixtureSource {
   generate?: () => Iterable<CanonicalRecord>;
   fetch?: () => Promise<SourceFetch>;
   finalCompleteness?: Completeness;
+  /** Products the batch declares after the fixture's own, each with its rows. */
+  extra?: ProductBuild[];
 }
 
 const KIND: FeedKindDescription = {
@@ -212,6 +215,7 @@ export async function kernelHarness(options: HarnessOptions = {}): Promise<Kerne
   const gatekeeper = {
     collect: (request: Parameters<typeof collectNormalized>[0]) =>
       collectNormalized(request, {
+        feed: { slug: feed.slug, title: feed.title, description: feed.description },
         normalizer: { id: "fixture", version: "1" },
         resolve: async () => resolved,
         source: async () =>
@@ -297,8 +301,10 @@ function fixtureTransform(source: FixtureSource): StreamingTransform {
   if (!source.generate) {
     const base = bufferedTransform({
       transformer: { id: "fixture", version: "1" },
-      products:
-        source.kind === "record" ? [{ ...product, kind: "record", records: source.records }] : [{ ...product, kind: "series", updateMode: "source-window", points: source.points }],
+      products: [
+        source.kind === "record" ? { ...product, kind: "record", records: source.records } : { ...product, kind: "series", updateMode: "source-window", points: source.points },
+        ...(source.extra ?? []),
+      ],
       quality: { acceptedRecords: source.records.length + source.points.length, rejectedRecords: source.rejected },
     });
     if (!source.finalCompleteness) return base;

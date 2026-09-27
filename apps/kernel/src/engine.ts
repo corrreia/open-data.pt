@@ -8,8 +8,9 @@ import {
   type CollectionRequest,
   type CollectionResult,
   type Completeness,
+  type CollectionFailureCode,
   type JsonObject,
-  type NormalizedProductHeader,
+  type ProductDeclaration,
   type ProductFinalization,
   type ProductUpdateMode,
   type SeriesPoint,
@@ -114,11 +115,11 @@ export class PromotionRequired extends Error {
 /** The Gatekeeper reported a typed failure. */
 export class CollectionFailed extends Error {
   constructor(
-    message: string,
+    readonly code: CollectionFailureCode,
     readonly retryable: boolean,
     readonly retryAfterSeconds?: number,
   ) {
-    super(message);
+    super(`Gatekeeper collection failed: ${code}`);
     this.name = "CollectionFailed";
   }
 }
@@ -126,7 +127,7 @@ export class CollectionFailed extends Error {
 /** How a thrown error should be reported to the runner once retries are exhausted. */
 export function failureFrom(error: Error): CollectionFailure {
   if (error instanceof CollectionFailed) {
-    const failure: CollectionFailure = { message: error.message, retryable: error.retryable };
+    const failure: CollectionFailure = { message: error.message, code: error.code, retryable: error.retryable };
     if (error.retryAfterSeconds !== undefined) failure.retryAfterSeconds = error.retryAfterSeconds;
     return failure;
   }
@@ -166,10 +167,8 @@ export async function runCollection(acquisitionId: string, ports: EnginePorts): 
   const plan = begun;
   const request: CollectionRequest = {
     protocol: NORMALIZED_PROTOCOL,
-    collectionId: acquisitionId,
-    feed: { id: plan.feed.id, slug: plan.feed.slug, title: plan.feed.title, description: plan.feed.description },
-    resolved: plan.feed.resolved,
-    feedEpoch: plan.feed.feedEpoch,
+    slug: plan.feed.slug,
+    configHash: plan.feed.resolved.configHash,
     mode: plan.mode,
     limits: plan.limits,
     deadline: plan.deadline,
@@ -188,7 +187,7 @@ export async function runCollection(acquisitionId: string, ports: EnginePorts): 
       void pending.then((late) => (late.kind === "batch" ? late.stream.cancel() : undefined)).catch(() => undefined);
       throw error;
     }
-    if (result.kind === "failure") throw new CollectionFailed(`Gatekeeper collection failed: ${result.code}`, result.retryable, result.retryAfterSeconds);
+    if (result.kind === "failure") throw new CollectionFailed(result.code, result.retryable, result.retryAfterSeconds);
     if (result.kind === "unchanged") {
       await ports.runner.unchanged(acquisitionId, result.checkpoint);
       return { status: "unchanged", rows: 0, revisions: 0, historyRows: 0, undelivered: false };
@@ -206,10 +205,6 @@ export async function runCollection(acquisitionId: string, ports: EnginePorts): 
 async function consumeBatch(plan: CollectionPlan, stream: ReadableStream<Uint8Array>, ports: EnginePorts): Promise<EngineOutcome> {
   const acquisitionId = plan.acquisitionId;
   const scope: FrameScope = {
-    collectionId: acquisitionId,
-    resourceKey: plan.feed.resolved.resourceKey,
-    configHash: plan.feed.resolved.configHash,
-    feedEpoch: plan.feed.feedEpoch,
     mode: plan.mode,
     deadline: plan.deadline,
     visitedCursors: plan.visitedCursors,
@@ -228,7 +223,7 @@ async function consumeBatch(plan: CollectionPlan, stream: ReadableStream<Uint8Ar
       const local = declareProducts(plan.products, frame.products);
       let declared = local;
       if (local.some((product) => !product.previous || product.mode === "large")) {
-        const input: DeclareInput = { normalizer: frame.normalizer, products: frame.products };
+        const input: DeclareInput = { normalizer: frame.checkpoint.normalizer, products: frame.products };
         if (frame.provenance.sourcePublishedAt) input.sourcePublishedAt = frame.provenance.sourcePublishedAt;
         declared = await ports.runner.declare(acquisitionId, input);
       }
@@ -263,9 +258,13 @@ async function consumeBatch(plan: CollectionPlan, stream: ReadableStream<Uint8Ar
   const finals = new Map((complete.products ?? []).map((item) => [item.productKey, item]));
   const commits: ProductCommit[] = [];
   let revisions = 0;
+  // A collection is as complete as the least complete of its products.
+  let completeness: Completeness = "complete";
   for (const [productKey, worker] of workers) {
     const product = header.products.find((candidate) => candidate.productKey === productKey)!;
-    const finished = await worker.finish(rulesFor(product, complete, finals.get(productKey)));
+    const rules = rulesFor(product, complete, finals.get(productKey));
+    completeness = weaker(completeness, rules.completeness);
+    const finished = await worker.finish(rules);
     revisions += finished.revisions;
     if (finished.commit) commits.push(finished.commit);
   }
@@ -275,11 +274,11 @@ async function consumeBatch(plan: CollectionPlan, stream: ReadableStream<Uint8Ar
     .filter((value): value is string => Boolean(value))
     .sort()
     .at(-1);
+  if (complete.quality.rejectedRecords > 0) completeness = weaker(completeness, "partial");
   const input: CommitInput = {
     checkpoint: header.checkpoint,
-    normalizer: header.normalizer,
     quality: complete.quality,
-    completeness: complete.quality.rejectedRecords > 0 ? "partial" : header.completeness,
+    completeness,
     rows,
     revisions,
     products: commits,
@@ -362,10 +361,11 @@ interface ProductRules {
 }
 
 /** The kernel, not the Gatekeeper, decides what a batch may authorize once every row was seen. */
-function rulesFor(product: NormalizedProductHeader, complete: CompleteFrame, final: ProductFinalization | undefined): ProductRules {
+function rulesFor(product: ProductDeclaration, complete: CompleteFrame, final: ProductFinalization | undefined): ProductRules {
   const declared = weaker(product.completeness, final?.completeness ?? product.completeness);
   const completeness: Completeness = complete.quality.rejectedRecords > 0 && declared === "complete" ? "partial" : declared;
-  const updateMode: ProductUpdateMode = product.updateMode === "authoritative-snapshot" && completeness !== "complete" ? "partial-snapshot" : product.updateMode;
+  // An incomplete snapshot is not the whole membership: it adds and updates, and removes nothing.
+  const updateMode: ProductUpdateMode = product.updateMode === "authoritative-snapshot" && completeness !== "complete" ? "delta" : product.updateMode;
   const replaceCurrent = (updateMode === "authoritative-snapshot" || updateMode === "source-window") && completeness === "complete";
   // A complete authoritative snapshot is the whole membership: what it leaves out has been deleted.
   const retract = updateMode === "authoritative-snapshot";
@@ -382,7 +382,7 @@ interface WorkerBase {
   plan: CollectionPlan;
   ports: EnginePorts;
   outbox: OutboxBuffer;
-  header: NormalizedProductHeader;
+  header: ProductDeclaration;
   declared: DeclaredProduct;
   context: RecordContext;
 }
@@ -405,7 +405,7 @@ function recordContext(plan: CollectionPlan, header: HeaderFrame, declared: Decl
     slug: declared.slug,
     productVersion: declared.version,
     observedAt: plan.observedAt,
-    normalizer: header.normalizer,
+    normalizer: header.checkpoint.normalizer,
     baseline: declared.baseline,
     keepHistory: plan.lake && keepsHistory(plan.policy, declared.productKey),
   };
@@ -529,12 +529,11 @@ class SmallRecordWorker implements ProductWorker {
     if (!rules.replaceCurrent) for (const [key, row] of previousRows) next.set(key, row.json);
     for (const [key, prepared] of this.incoming) {
       const before = previousRows.get(key);
-      if (before && !prepared.removal && before.hash === prepared.hash) {
+      if (before && before.hash === prepared.hash) {
         next.set(key, before.json);
         continue;
       }
-      if (prepared.removal) next.delete(key);
-      else next.set(key, servingJson(prepared, base.context));
+      next.set(key, servingJson(prepared, base.context));
       const revision = recordRevision(prepared, Boolean(before), base.context);
       changes.add(revision.change);
       revisions += 1;
@@ -543,7 +542,7 @@ class SmallRecordWorker implements ProductWorker {
     let removed = 0;
     if (rules.replaceCurrent) {
       for (const key of [...previousRows.keys()].sort(compareKeys)) {
-        if (next.has(key) || this.incoming.get(key)?.removal) continue;
+        if (next.has(key)) continue;
         removed += 1;
         if (!rules.retract) continue;
         const revision = retractionRevision(key, base.context);
@@ -589,11 +588,11 @@ class LargeRecordWorker implements ProductWorker {
 
   async pushRecord(record: CanonicalRecord): Promise<void> {
     const prepared = prepareRecord(record);
-    const json = prepared.removal ? null : servingJson(prepared, this.base.context);
+    const json = servingJson(prepared, this.base.context);
     this.buffer.push({ prepared, json });
     // A staged row carries both the prepared record and the JSON it will be
     // served as, so it weighs about twice what it will be stored as.
-    this.bufferBytes += (json === null ? 0 : utf8Length(json)) + utf8Length(prepared.hash) + prepared.key.length + STAGED_ROW_OVERHEAD;
+    this.bufferBytes += utf8Length(json) + utf8Length(prepared.hash) + prepared.key.length + STAGED_ROW_OVERHEAD;
     if (this.buffer.length >= STAGE_ROWS || this.bufferBytes >= STAGE_BYTES) await this.flush();
   }
 
@@ -831,7 +830,7 @@ class HistoryWorker implements ProductWorker {
     const logical = `r|${this.base.declared.slug}|${record.entityKey}`;
     const hash = digest(
       stableStringify({
-        operation: record.operation ?? "upsert",
+        operation: "upsert",
         payload: record.payload,
         eventTime: record.eventTime,
         validFrom: record.validFrom ?? null,
@@ -854,7 +853,7 @@ class HistoryWorker implements ProductWorker {
       normalizer_version: this.base.context.normalizer.version,
       schema: {},
       entity_key: record.entityKey,
-      operation: record.operation ?? "upsert",
+      operation: "upsert",
       event_time: record.eventTime,
       observed_at: plan.observedAt,
       ingested_at: plan.observedAt,

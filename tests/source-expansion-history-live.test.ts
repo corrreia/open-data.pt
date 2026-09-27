@@ -18,18 +18,14 @@ async function request(example: ExampleFeed, resolved: ResolvedFeed): Promise<Co
   const recordBytes = Math.min(policy.maxRecordBytes ?? 256 * 1024, MAX_RECORD_BYTES);
   return {
     protocol: NORMALIZED_PROTOCOL,
-    collectionId: `history-probe-${example.slug}`,
-    feed: { id: "probe", slug: example.slug, title: example.title, description: example.description },
-    resolved,
-    feedEpoch: "probe",
+    slug: example.slug,
+    configHash: resolved.configHash,
     mode: { kind: "live" },
     limits: {
       sourceBytes: policy.maxBytes,
       outputBytes,
       recordBytes,
-      frameBytes: Math.min(outputBytes, recordBytes + 16 * 1024),
       records: policy.maxRecords ?? 1_000_000,
-      products: 64,
     },
     deadline: new Date(Date.now() + policy.timeoutSeconds * 1000).toISOString(),
     observedAt: new Date().toISOString(),
@@ -43,15 +39,11 @@ describe.skipIf(examples.length === 0)("new source automatic-history smoke check
     async (example) => {
       const { resolved, collector } = await sourceCollection(example);
       const live = await request(example, resolved);
-      expect(live.resolved.history, "Only explicitly history-capable feeds should be selected").toBeDefined();
+      expect(resolved.history, "Only explicitly history-capable feeds should be selected").toBeDefined();
       let oldest: string | undefined;
       const first = await collectNormalized(live, collector);
       if (first.kind !== "batch") throw new Error(`Live source returned ${JSON.stringify(first)}`);
       const liveScope = {
-        collectionId: live.collectionId,
-        resourceKey: live.resolved.resourceKey,
-        configHash: live.resolved.configHash,
-        feedEpoch: live.feedEpoch,
         mode: live.mode,
         deadline: live.deadline,
       };
@@ -62,7 +54,6 @@ describe.skipIf(examples.length === 0)("new source automatic-history smoke check
       const before = oldest ?? live.observedAt;
       const historical: CollectionRequest = {
         ...live,
-        collectionId: `older-${example.slug}`,
         mode: { kind: "history", cursor: { before } },
         deadline: new Date(Date.now() + example.policy.collection.timeoutSeconds * 1000).toISOString(),
       };
@@ -73,10 +64,6 @@ describe.skipIf(examples.length === 0)("new source automatic-history smoke check
       }
       if (result.kind !== "batch") throw new Error(`History source returned ${JSON.stringify(result)}`);
       const scope = {
-        collectionId: historical.collectionId,
-        resourceKey: historical.resolved.resourceKey,
-        configHash: historical.resolved.configHash,
-        feedEpoch: historical.feedEpoch,
         mode: historical.mode,
         deadline: historical.deadline,
       };

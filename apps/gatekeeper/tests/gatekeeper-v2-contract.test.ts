@@ -48,6 +48,13 @@ describe("the Gatekeeper entrypoint exposes the normalized five-operation contra
     },
   );
 
+  it("answers a kernel of the previous release with a retry, before reading the feed it names", async () => {
+    // Deploys are per Worker: for a minute a kernel of one release asks a Gatekeeper of the other. A permanent failure
+    // would rest every feed for hours.
+    const response = await server.fetch("/previous-release");
+    expect(await response.json()).toEqual({ kind: "failure", code: "protocol-mismatch", retryable: true, retryAfterSeconds: 60 });
+  }, 30_000);
+
   // A library whose publishers are all held installs nothing, so the entrypoint offers it nothing to resolve;
   // `feed-identity.test.ts` still resolves every example it lists.
   it("resolves a canonical example of every installing library through the real entrypoint over private Worker RPC", async () => {

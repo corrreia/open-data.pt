@@ -75,8 +75,8 @@ describe("Opendatasoft measure-expanded history bounds", () => {
         }
         return Response.json(metadata);
       };
-      const collector = feedCollector(HISTORY_FEED, { ...config, source: "opendatasoft" }, LIBRARIES, { fetcher });
-      const resolved = await collector.resolve({ ...config, source: "opendatasoft" });
+      const collector = feedCollector({ ...HISTORY_FEED, slug: "history-budget-feed", config: { ...config, source: "opendatasoft" } }, LIBRARIES, { fetcher });
+      const resolved = await collector.resolve();
       const unique = new Set<string>();
       let before = "2023-01-01T00:00:00.000Z";
       let exhausted = false;
@@ -86,20 +86,16 @@ describe("Opendatasoft measure-expanded history bounds", () => {
         expect(slices).toBeLessThanOrEqual(4);
         const request: CollectionRequest = {
           protocol: NORMALIZED_PROTOCOL,
-          collectionId: `history-budget-${slices}`,
-          feed: { id: "history-budget", slug: "history-budget-feed", title: "Annual indicators", description: "Synthetic history boundary regression" },
-          resolved,
-          feedEpoch: "history-budget",
+          slug: "history-budget-feed",
+          configHash: resolved.configHash,
           mode: { kind: "history", cursor: { before } },
           deadline: new Date(Date.now() + 60_000).toISOString(),
           observedAt: "2026-09-16T00:00:00Z",
           limits: {
             sourceBytes: 8 * 1024 * 1024,
             outputBytes: 16 * 1024 * 1024,
-            frameBytes: 1024 * 1024,
             recordBytes: 512 * 1024,
             records: MAX_HISTORY_NORMALIZED_ROWS,
-            products: 32,
           },
         };
         const result = await collectNormalized(request, collector);
@@ -107,6 +103,7 @@ describe("Opendatasoft measure-expanded history bounds", () => {
         const text = await new Response(result.stream).text();
         const periods = new Map<string, number>();
         let sawCompletion = false;
+        let points = 0;
         for (const line of text.trim().split("\n")) {
           const parsed = parseJson(line);
           if (!isJsonObject(parsed) || !isNormalizedFrame(parsed)) throw new Error("Invalid frame");
@@ -114,6 +111,7 @@ describe("Opendatasoft measure-expanded history bounds", () => {
           // SAFETY: isNormalizedFrame checked the discriminant and every field of this frame variant, as the kernel's reader does.
           const frame = untrusted as NormalizedFrame;
           if (frame.type === "point") {
+            points += 1;
             const key = JSON.stringify([frame.productKey, frame.value.seriesKey, frame.value.eventTime]);
             expect(unique.has(key)).toBe(false);
             unique.add(key);
@@ -122,8 +120,8 @@ describe("Opendatasoft measure-expanded history bounds", () => {
           }
           if (frame.type === "complete") {
             sawCompletion = true;
-            expect(frame.counts.points).toBeLessThanOrEqual(MAX_HISTORY_NORMALIZED_ROWS);
-            if (slices === 1) expect(frame.counts.points).toBe(measureCount === 10 ? 19_460 : 17_792);
+            expect(points).toBeLessThanOrEqual(MAX_HISTORY_NORMALIZED_ROWS);
+            if (slices === 1) expect(points).toBe(measureCount === 10 ? 19_460 : 17_792);
             exhausted = frame.exhausted === true;
             if (!exhausted) {
               if (!frame.nextCursor) throw new Error("Missing continuation");

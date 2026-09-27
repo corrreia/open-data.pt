@@ -109,7 +109,7 @@ describe("MYINFO transformer", () => {
     expect(departures.slug).toBe("barraqueirooeste-torres-vedras-lisboa-departures");
     expect(departures.title).toBe("TORRES VEDRAS to LISBOA departures");
     // A search answers for one day, so it can add and correct departures but never retract them.
-    expect(departures.updateMode).toBe("partial-snapshot");
+    expect(departures.updateMode).toBe("delta");
     expect(departures.completeness).toBe("partial");
     expect(departures.schema.fields.map((each) => each.id)).toEqual(["id", "departure", "arrival", "minutes", "lines", "transfer", "days"]);
     expect(departures.schema.fields.find((each) => each.id === "minutes")?.unit).toBe("min");

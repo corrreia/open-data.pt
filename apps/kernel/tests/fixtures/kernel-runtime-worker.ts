@@ -105,10 +105,14 @@ export class FixtureGatekeeper extends WorkerEntrypoint<Env> implements FeedGate
     return resolveFeed(config, { library: "fixture", kinds: [KIND], validate: (value) => value });
   }
 
+  /** The one example's configuration, as the Registry installed it: this Gatekeeper collects what it lists. */
   async collect(request: CollectionRequest): Promise<CollectionResult> {
+    const [example] = await this.exampleFeeds();
+    if (!example || example.slug !== request.slug) return { kind: "failure", code: "invalid-config", retryable: false };
     return collectNormalized(request, {
+      feed: { slug: example.slug, title: example.title, description: example.description },
       normalizer: { id: "fixture", version: "1" },
-      resolve: (config) => this.resolveFeed(config),
+      resolve: () => this.resolveFeed(example.config),
       source: async () => {
         const object = await this.env.DATA_OBJECTS.get(ROWS_KEY);
         const text = object ? await object.text() : '{"rows":[]}';

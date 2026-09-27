@@ -385,7 +385,6 @@ function transformAlerts(values: JsonValue[]): UnstampedResult {
     const validTo = ends.length > 0 ? unixTime(Math.max(...ends)) : undefined;
     const record: CanonicalRecord = {
       entityKey: value.alert_id,
-      operation: "upsert",
       payload: {
         id: value.alert_id,
         title: translation(value.header_text) ?? "Service alert",

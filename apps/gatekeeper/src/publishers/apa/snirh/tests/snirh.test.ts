@@ -368,7 +368,7 @@ describe("SNIRH groundwater state", () => {
 describe("SNIRH through a feed's own file", () => {
   it("frames a live collection with the feed's fetch, and a history slice with its backfill", async () => {
     const { resolved, collector } = await feedCollection("snirh-river-levels-feed", { fetcher: snirh(), now: () => new Date("2026-09-22T02:00:00.000Z") });
-    const live = await collectNormalized(await request({ resolved }), collector);
+    const live = await collectNormalized(await request({ configHash: resolved.configHash }), collector);
     expect(live.kind).toBe("batch");
     if (live.kind !== "batch") return;
     const frames = (await new Response(live.stream).text())
@@ -382,9 +382,13 @@ describe("SNIRH through a feed's own file", () => {
     expect(frames[0]?.type).toBe("header");
     const complete: JsonObject | undefined = frames.at(-1);
     expect(complete?.type).toBe("complete");
-    expect(complete?.counts).toEqual({ records: 0, points: 48 });
+    expect(frames.filter((frame) => frame.type === "record")).toHaveLength(0);
+    expect(frames.filter((frame) => frame.type === "point")).toHaveLength(48);
 
-    const history = await collectNormalized(await request({ resolved, mode: { kind: "history", cursor: { before: "2026-09-21T00:00:00.000Z" } } }), collector);
+    const history = await collectNormalized(
+      await request({ configHash: resolved.configHash, mode: { kind: "history", cursor: { before: "2026-09-21T00:00:00.000Z" } } }),
+      collector,
+    );
     expect(history.kind).toBe("batch");
   });
 });
@@ -392,12 +396,10 @@ describe("SNIRH through a feed's own file", () => {
 async function request(overrides: Partial<CollectionRequest> = {}): Promise<CollectionRequest> {
   return {
     protocol: NORMALIZED_PROTOCOL,
-    collectionId: "collection_1",
-    feed: { id: "feed_1", slug: "snirh-river-levels-feed", title: "River levels", description: "test feed" },
-    resolved: await resolveSnirhFeed(LEVELS),
-    feedEpoch: "epoch-1",
+    slug: "snirh-river-levels-feed",
+    configHash: (await resolveSnirhFeed(LEVELS)).configHash,
     mode: { kind: "live" },
-    limits: { sourceBytes: 12_582_912, outputBytes: 16_777_216, frameBytes: 262_144, recordBytes: 4_096, records: 150_000, products: 4 },
+    limits: { sourceBytes: 12_582_912, outputBytes: 16_777_216, recordBytes: 4_096, records: 150_000 },
     deadline: new Date(Date.now() + 30_000).toISOString(),
     observedAt: "2026-09-22T02:00:00.000Z",
     ...overrides,

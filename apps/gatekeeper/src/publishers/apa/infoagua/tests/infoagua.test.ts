@@ -146,30 +146,32 @@ describe("InfoÁgua drought index", () => {
 describe("InfoÁgua through a feed's own file", () => {
   it("refuses a history walk", async () => {
     const { resolved, collector } = await feedCollection("infoagua-flood-alerts-feed", { fetcher: infoagua() });
-    const result = await collectNormalized(await request({ resolved, mode: { kind: "history", cursor: { before: "2026-01-01T00:00:00.000Z" } } }), collector);
+    const result = await collectNormalized(
+      await request({ configHash: resolved.configHash, mode: { kind: "history", cursor: { before: "2026-01-01T00:00:00.000Z" } } }),
+      collector,
+    );
     expect(result).toEqual({ kind: "failure", code: "history-unsupported", retryable: false });
   });
 
   it("frames a live collection", async () => {
     const { resolved, collector } = await feedCollection("infoagua-flood-alerts-feed", { fetcher: infoagua() });
-    const result = await collectNormalized(await request({ resolved }), collector);
+    const result = await collectNormalized(await request({ configHash: resolved.configHash }), collector);
     expect(result.kind).toBe("batch");
     if (result.kind !== "batch") return;
     const frames = (await new Response(result.stream).text()).trim().split("\n");
     expect(frames).toHaveLength(5);
-    expect(frames.at(-1)).toContain('"counts":{"records":3,"points":0}');
+    expect(frames.filter((frame) => frame.startsWith('{"type":"record"'))).toHaveLength(3);
+    expect(frames.at(-1)).toContain('"quality":{"acceptedRecords":3,"rejectedRecords":0}');
   });
 });
 
 async function request(overrides: Partial<CollectionRequest> = {}): Promise<CollectionRequest> {
   return {
     protocol: NORMALIZED_PROTOCOL,
-    collectionId: "collection_1",
-    feed: { id: "feed_1", slug: "infoagua-flood-alerts-feed", title: "Flood alerts", description: "test feed" },
-    resolved: await resolveInfoaguaFeed(FLOODS),
-    feedEpoch: "epoch-1",
+    slug: "infoagua-flood-alerts-feed",
+    configHash: (await resolveInfoaguaFeed(FLOODS)).configHash,
     mode: { kind: "live" },
-    limits: { sourceBytes: 4_194_304, outputBytes: 16_777_216, frameBytes: 262_144, recordBytes: 262_144, records: 10_000, products: 4 },
+    limits: { sourceBytes: 4_194_304, outputBytes: 16_777_216, recordBytes: 262_144, records: 10_000 },
     deadline: new Date(Date.now() + 30_000).toISOString(),
     observedAt: "2026-09-22T02:00:00.000Z",
     ...overrides,

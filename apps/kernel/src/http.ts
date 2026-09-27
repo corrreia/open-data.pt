@@ -574,9 +574,9 @@ function parseBbox(value: string): BoundingBox {
 
 /* ---------- Views ---------- */
 
-/** A run as the API shows it; the policy version and the lake bookkeeping stay inside the platform. */
+/** A run as the API shows it; the policy version, the lake bookkeeping and the failure code stay inside the platform. */
 function publicAcquisition(acquisition: Acquisition): ApiAcquisition {
-  const { policyVersion: _policy, historyRows: _history, ...publicValue } = acquisition;
+  const { policyVersion: _policy, historyRows: _history, errorCode: _code, ...publicValue } = acquisition;
   return publicValue;
 }
 

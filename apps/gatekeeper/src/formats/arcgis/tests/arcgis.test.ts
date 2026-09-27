@@ -61,7 +61,7 @@ const metadata = {
 function layerCollector(fetcher: typeof fetch) {
   const feed = RUNNABLE.get("lisbon-parishes-feed");
   if (!feed) throw new Error("No feed file defines lisbon-parishes-feed");
-  return feedCollector(feed, { ...config, source: "arcgis" }, carriedLibraries("arcgis"), { fetcher });
+  return feedCollector({ ...feed, slug: "useful-layer-feed", config: { ...config, source: "arcgis" } }, carriedLibraries("arcgis"), { fetcher });
 }
 
 /** A GeoJSON page of consecutive object IDs; the transfer flag sits where some servers put it. */
@@ -114,12 +114,10 @@ interface Artifact {
 async function request(overrides: Partial<CollectionRequest> = {}): Promise<CollectionRequest> {
   return {
     protocol: NORMALIZED_PROTOCOL,
-    collectionId: "collection_1",
-    feed: { id: "feed_1", slug: "useful-layer-feed", title: "Useful layer", description: "test feed" },
-    resolved: await resolveLibraryFeed({ ...config, source: "arcgis" }, carriedLibraries("arcgis")),
-    feedEpoch: "epoch-1",
+    slug: "useful-layer-feed",
+    configHash: (await resolveLibraryFeed({ ...config, source: "arcgis" }, carriedLibraries("arcgis"))).configHash,
     mode: { kind: "live" },
-    limits: { sourceBytes: 1_048_576, outputBytes: 1_048_576, frameBytes: 65_536, recordBytes: 65_536, records: 100, products: 4 },
+    limits: { sourceBytes: 1_048_576, outputBytes: 1_048_576, recordBytes: 65_536, records: 100 },
     deadline: new Date(Date.now() + 10_000).toISOString(),
     observedAt: "2026-09-10T10:00:00.000Z",
     ...overrides,
@@ -207,6 +205,14 @@ describe("ArcGIS Gatekeeper", () => {
     expect(result).toEqual({ kind: "failure", code: "protocol-mismatch", retryable: true, retryAfterSeconds: 60 });
   });
 
+  it("answers a request for another configuration of the feed with a passing failure, before reading the source", async () => {
+    // The kernel installs a changed feed file's configuration once it has synced the new catalog; until then it asks for the old one.
+    const fetcher = layerFetcher(3);
+    const result = await collectNormalized(await request({ configHash: "another-configuration" }), layerCollector(fetcher));
+    expect(result).toEqual({ kind: "failure", code: "feed-changed", retryable: true, retryAfterSeconds: 60 });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it("declares a layer beyond the page cap partial before reading any page", async () => {
     const fetcher = layerFetcher(201, (offset) => page(offset + 1, 2, true));
     const fetched = bodyOf(await collectArcgisFeed(config, undefined, hosts, fetcher));
@@ -276,10 +282,9 @@ describe("ArcGIS collection through the shared collector", () => {
 
     expect(header).toMatchObject({
       type: "header",
-      normalizer: feedNormalizer({ id: "arcgis-rest-layer", version: "2" }),
       provenance: { sourceUrl: layerUrl, sourcePublishedAt: "2026-09-04T08:12:10.839Z" },
-      products: [{ productKey: "features", suggestedSlug: "useful-layer", kind: "record", completeness: "complete" }],
-      checkpoint: { state: { validators: { default: revision } } },
+      products: [{ productKey: "features", slug: "useful-layer", kind: "record", completeness: "complete" }],
+      checkpoint: { normalizer: feedNormalizer({ id: "arcgis-rest-layer", version: "2" }), state: { validators: { default: revision } } },
     });
     expect(rest.slice(0, -1)).toEqual(
       [1, 2, 3].map((id) =>
@@ -292,7 +297,6 @@ describe("ArcGIS collection through the shared collector", () => {
     );
     expect(complete).toMatchObject({
       type: "complete",
-      counts: { records: 3, points: 0 },
       quality: { acceptedRecords: 3, rejectedRecords: 0 },
       products: [{ productKey: "features", schema: { fields: expect.arrayContaining([expect.objectContaining({ id: "GlobalID", type: "identifier", nullable: false })]) } }],
     });
@@ -304,10 +308,6 @@ describe("ArcGIS collection through the shared collector", () => {
       {
         ...req,
         checkpoint: {
-          version: 2,
-          resourceKey: req.resolved.resourceKey,
-          configHash: req.resolved.configHash,
-          feedEpoch: req.feedEpoch,
           normalizer: feedNormalizer({ id: "arcgis-rest-layer", version: "2" }),
           state: { validators: { default: { etag: revision.etag } } },
         },
@@ -319,7 +319,7 @@ describe("ArcGIS collection through the shared collector", () => {
 
   it("fails when the streamed layer exceeds the source byte budget", async () => {
     const result = await collectNormalized(
-      await request({ limits: { sourceBytes: 64, outputBytes: 1_048_576, frameBytes: 65_536, recordBytes: 65_536, records: 100, products: 4 } }),
+      await request({ limits: { sourceBytes: 64, outputBytes: 1_048_576, recordBytes: 65_536, records: 100 } }),
       layerCollector(layerFetcher(3)),
     );
     expect(result).toEqual({ kind: "failure", code: "response-too-large", retryable: false });

@@ -61,11 +61,11 @@ Versioned limits and rules for collection: cadence, timeout, size, and history m
 
 ## Collection
 
-One logical live or historical request, run by a Workflow instance. The kernel supplies one ID, one resolved configuration/resource identity, a compatible checkpoint, observation time, explicit limits, a deadline, and a mode. Outcomes are typed unchanged, batch byte stream, history exhaustion, or failure.
+One logical live or historical request, run by a Workflow instance. The kernel names the feed by slug with the configuration digest it installed, and supplies the checkpoint it holds for that configuration and epoch, observation time, explicit limits, a deadline, and a mode. Outcomes are typed unchanged, batch byte stream, history exhaustion, or failure; a failure carries a code the kernel stores beside its message.
 
 ## Normalized batch
 
-A complete byte-oriented `open-data-normalized/4` NDJSON stream: a header with protocol, normalizer, stable feed-local product keys, product declarations, provenance, the source body's completeness and candidate checkpoint; product-keyed record and point frames; and a mandatory completion frame with counts, quality, and values only known at the end (inferred schema, watermark, downgraded completeness). A missing or invalid completion frame is never accepted.
+A complete byte-oriented `open-data-normalized/5` NDJSON stream: a header with product declarations under stable feed-local product keys (each one's completeness already folding in the source body's), provenance, and the candidate checkpoint (the normalizer and its source state); product-keyed record and point frames; and a mandatory completion frame with quality and values only known at the end (inferred schema, watermark, downgraded completeness). A missing or invalid completion frame is never accepted.
 
 ## Product
 
@@ -81,7 +81,7 @@ The serving form of a current record product: the ordered list of immutable, con
 
 ## Revision
 
-A meaningful create, update, delete, correction, retraction, or time-series correction with a stable retry-safe identity. Payload, value, unit, dimensions, validity, operation, and the record's own source clocks participate in semantic comparison. Input order, a batch-level publication timestamp, and wrapper-only source changes do not create revisions.
+A meaningful create, update, retraction, or time-series correction with a stable retry-safe identity. Payload, value, unit, dimensions, validity, and the record's own source clocks participate in semantic comparison. Input order, a batch-level publication timestamp, and wrapper-only source changes do not create revisions.
 
 ## History outbox
 

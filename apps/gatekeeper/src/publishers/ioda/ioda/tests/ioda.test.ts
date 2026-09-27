@@ -218,11 +218,11 @@ describe("IODA examples", () => {
   });
 
   it("frames a whole collection the way the kernel reads it", async () => {
-    const { resolved, collector } = await feedCollection("ioda-meo-as3243-internet-signals-feed", {
+    const { collector } = await feedCollection("ioda-meo-as3243-internet-signals-feed", {
       fetcher: async () => Response.json(fixture("signals-asn")),
       now: () => NOW,
     });
-    const request = await networkRequest(collector, resolved.config);
+    const request = await networkRequest(collector);
     const frames = await networkFrames(await collectNormalized(request, collector));
     const header = frames[0];
     if (header?.type !== "header") throw new Error("No header");
@@ -230,8 +230,8 @@ describe("IODA examples", () => {
     expect(header.provenance.sourceUrl).toContain("/v2/signals/raw/asn/3243");
     const complete = frames.at(-1);
     if (complete?.type !== "complete") throw new Error("No completion frame");
-    expect(complete.counts.points).toBe(71);
-    expect(complete.counts.records).toBe(0);
+    expect(frames.filter((frame) => frame.type === "point")).toHaveLength(71);
+    expect(frames.filter((frame) => frame.type === "record")).toHaveLength(0);
     expect(complete.quality.rejectedRecords).toBe(0);
   });
 });

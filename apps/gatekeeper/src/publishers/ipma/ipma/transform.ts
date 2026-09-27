@@ -390,7 +390,6 @@ async function transformSeismic(root: JsonObject): Promise<Omit<TransformResult,
       const sourcePublishedAt = utcDateTime(value.dataUpdate);
       const record: CanonicalRecord = {
         entityKey: id,
-        operation: "upsert",
         eventTime: time,
         payload: {
           id,
@@ -467,7 +466,6 @@ function transformWarnings(root: JsonObject): Omit<TransformResult, "transformer
     const warningId = `${areaCode}:${type}:${String(value.startTime).trim()}`;
     const record: CanonicalRecord = {
       entityKey: warningId,
-      operation: "upsert",
       eventTime: startTime,
       validFrom: startTime,
       validTo: endTime,

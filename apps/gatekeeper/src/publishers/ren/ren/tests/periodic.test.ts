@@ -36,7 +36,7 @@ function context(service: RenPeriodicService, observedAt: string): TransformCont
 }
 
 async function normalized(service: RenPeriodicService, observedAt = NOW.toISOString()) {
-  const collector = feedCollector(periodicFeed(service), { service, day: "2026-09-14", source: "ren" }, carriedLibraries("ren"), {
+  const collector = feedCollector({ ...periodicFeed(service), config: { service, day: "2026-09-14", source: "ren" } }, carriedLibraries("ren"), {
     fetcher: async () => new Response(fixture(service === "installed-capacity" ? "ren-installed-capacity.json" : "ren-daily-storage.json")),
     now: () => NOW,
   });
@@ -182,16 +182,16 @@ describe("REN periodic public API", () => {
     const resolved = await resolveLibraryFeed({ service: "gas-storage", day: "2026-09-14", source: "ren" }, libraries);
     const request: CollectionRequest = {
       protocol: NORMALIZED_PROTOCOL,
-      collectionId: "ren-periodic",
-      feed: { id: "test", slug: "ren-gas-storage-feed", title: "Storage", description: "Storage" },
-      resolved,
-      feedEpoch: "test",
+      slug: "ren-gas-storage-feed",
+      configHash: resolved.configHash,
       mode: { kind: "live" },
       observedAt: NOW.toISOString(),
       deadline: new Date(Date.now() + 30_000).toISOString(),
-      limits: { sourceBytes: 100_000, outputBytes: 100_000, frameBytes: 50_000, recordBytes: 20_000, products: 10, records: 1000 },
+      limits: { sourceBytes: 100_000, outputBytes: 100_000, recordBytes: 20_000, records: 1000 },
     };
-    const collector = feedCollector(periodicFeed("gas-storage"), resolved.config, libraries, { fetcher: async () => new Response(fixture("ren-daily-storage.json")) });
+    const collector = feedCollector({ ...periodicFeed("gas-storage"), config: resolved.config }, libraries, {
+      fetcher: async () => new Response(fixture("ren-daily-storage.json")),
+    });
     const result = await collectNormalized(request, collector);
     if (result.kind !== "batch") throw new Error(`Expected batch, got ${result.kind}`);
     const lines = (await new Response(result.stream).text()).trim().split("\n");
@@ -201,7 +201,9 @@ describe("REN periodic public API", () => {
         return isJsonObject(value) && isNormalizedFrame(value);
       }),
     ).toBe(true);
-    expect(parseJson(lines.at(-1)!)).toMatchObject({ type: "complete", counts: { points: 4, records: 0 } });
+    expect(lines.filter((line) => line.startsWith('{"type":"point"'))).toHaveLength(4);
+    expect(lines.filter((line) => line.startsWith('{"type":"record"'))).toHaveLength(0);
+    expect(parseJson(lines.at(-1)!)).toMatchObject({ type: "complete" });
     expect(await collectNormalized({ ...request, mode: { kind: "history", cursor: { before: "2025-01-01T00:00:00Z" } } }, collector)).toMatchObject({
       kind: "failure",
       code: "history-unsupported",

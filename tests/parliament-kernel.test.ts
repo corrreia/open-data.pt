@@ -54,33 +54,27 @@ function sourceFetcher(doc: ParliamentDocument, status = 200): typeof fetch {
 }
 
 describe("Parliament frames as the kernel reads them", () => {
-  it.each(feedsOf("parliament"))("streams $slug through its own feed file and the complete protocol-v4 collector", async (example) => {
+  it.each(feedsOf("parliament"))("streams $slug through its own feed file and the complete protocol-v5 collector", async (example) => {
     const doc = parliamentDocument(libraryConfig(example.config));
     const { resolved, collector } = await feedCollection(example.slug, { fetcher: sourceFetcher(doc) });
     const request: CollectionRequest = {
       protocol: NORMALIZED_PROTOCOL,
-      collectionId: `fixture_${doc.feed}`,
-      feed: { id: "fixture", slug: example.slug, title: example.title, description: example.description },
-      resolved,
-      feedEpoch: "fixture",
+      slug: example.slug,
+      configHash: resolved.configHash,
       observedAt: "2026-09-15T00:00:00Z",
       deadline: new Date(Date.now() + 30_000).toISOString(),
       mode: { kind: "live" },
-      limits: { sourceBytes: doc.sourceBytes, outputBytes: 8 * 1024 * 1024, recordBytes: 256 * 1024, frameBytes: 272 * 1024, records: 50_000, products: 16 },
+      limits: { sourceBytes: doc.sourceBytes, outputBytes: 8 * 1024 * 1024, recordBytes: 256 * 1024, records: 50_000 },
     };
     const result = await collectNormalized(request, collector);
     if (result.kind !== "batch") throw new Error(JSON.stringify(result));
     const frames: NormalizedFrame[] = [];
     for await (const frame of readFrames(result.stream, request.limits, {
-      collectionId: request.collectionId,
-      resourceKey: resolved.resourceKey,
-      configHash: resolved.configHash,
-      feedEpoch: request.feedEpoch,
       mode: request.mode,
       deadline: request.deadline,
     }))
       frames.push(frame);
-    expect(frames[0]).toMatchObject({ type: "header", protocol: NORMALIZED_PROTOCOL, normalizer: feedNormalizer(PARLIAMENT_NORMALIZER) });
+    expect(frames[0]).toMatchObject({ type: "header", checkpoint: { normalizer: feedNormalizer(PARLIAMENT_NORMALIZER) } });
     expect(frames.at(-1)).toMatchObject({ type: "complete", quality: { rejectedRecords: 0 } });
     expect(frames.filter((frame) => frame.type === "record").length).toBeGreaterThan(0);
     expect(JSON.stringify(frames)).not.toContain("c3ludGhldGljLXBhdGg");
@@ -102,15 +96,12 @@ const samples = process.env.PARLIAMENT_SAMPLES === "1";
 
 /** Aggregate-only validation; never copies real personal records into repository fixtures or logs. */
 async function collect(example: ExampleFeed, fetcher: typeof fetch, mode: "saved-research" | "live"): Promise<void> {
-  const config = libraryConfig(example.config);
   const { resolved, collector } = await feedCollection(example.slug, { fetcher });
   const policy = example.policy.collection;
   const request: CollectionRequest = {
     protocol: NORMALIZED_PROTOCOL,
-    collectionId: `${mode}_${config.feed}`,
-    feed: { id: "validation", slug: example.slug, title: example.title, description: example.description },
-    resolved,
-    feedEpoch: "validation",
+    slug: example.slug,
+    configHash: resolved.configHash,
     mode: { kind: "live" },
     observedAt: new Date().toISOString(),
     deadline: new Date(Date.now() + policy.timeoutSeconds * 1000).toISOString(),
@@ -118,9 +109,7 @@ async function collect(example: ExampleFeed, fetcher: typeof fetch, mode: "saved
       sourceBytes: policy.maxBytes,
       outputBytes: policy.maxOutputBytes ?? 8 * 1024 * 1024,
       recordBytes: 256 * 1024,
-      frameBytes: 272 * 1024,
       records: policy.maxRecords ?? 50_000,
-      products: 16,
     },
   };
   const result = await collectNormalized(request, collector);
@@ -139,10 +128,6 @@ async function collect(example: ExampleFeed, fetcher: typeof fetch, mode: "saved
     }),
   );
   for await (const frame of readFrames(stream, request.limits, {
-    collectionId: request.collectionId,
-    resourceKey: resolved.resourceKey,
-    configHash: resolved.configHash,
-    feedEpoch: request.feedEpoch,
     mode: request.mode,
     deadline: request.deadline,
   })) {

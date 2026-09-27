@@ -17,7 +17,7 @@ const STATUS = { feed: "routing-status", asn: "64496" };
 function routingStatus(fetcher: typeof fetch): NormalizedCollector {
   const feed = RUNNABLE.get("ripe-meo-as3243-routing-feed");
   if (!feed) throw new Error("No feed file reads a routing status");
-  return feedCollector(feed, { ...STATUS, source: "ripestat" }, carriedLibraries("ripestat"), { fetcher });
+  return feedCollector({ ...feed, config: { ...STATUS, source: "ripestat" } }, carriedLibraries("ripestat"), { fetcher });
 }
 const RESOURCES = { feed: "country-resources", country: "PT" };
 const ROUTING = { feed: "country-routing", country: "PT", days: "3" };
@@ -272,13 +272,13 @@ describe("RIPEstat normalized data", () => {
     expect(result.summary.products?.[0]?.completeness).toBe("partial");
   });
 
-  it("emits protocol-v4 frames and converts HTTP-200 API failures to typed failures", async () => {
+  it("emits protocol-v5 frames and converts HTTP-200 API failures to typed failures", async () => {
     const collector = routingStatus(async () => Response.json(fixture("status")));
-    const request = await networkRequest(collector, { ...STATUS, source: "ripestat" });
+    const request = await networkRequest(collector);
     const frames = await networkFrames(await collectNormalized(request, collector));
     expect(frames.map((frame) => frame.type)).toEqual(["header", ...Array.from({ length: 9 }, () => "point"), "complete"]);
-    expect(frames.at(-1)).toMatchObject({ counts: { records: 0, points: 9 }, quality: { acceptedRecords: 9, rejectedRecords: 0 } });
+    expect(frames.at(-1)).toMatchObject({ quality: { acceptedRecords: 9, rejectedRecords: 0 } });
     const failed = routingStatus(async () => Response.json({ status: "error", status_code: 500, data: {} }));
-    expect(await collectNormalized(await networkRequest(failed, { ...STATUS, source: "ripestat" }), failed)).toMatchObject({ kind: "failure", code: "invalid-response" });
+    expect(await collectNormalized(await networkRequest(failed), failed)).toMatchObject({ kind: "failure", code: "invalid-response" });
   });
 });

@@ -169,18 +169,17 @@ describe("Metro Lisboa Gatekeeper", () => {
     const resolved = await resolve({ feed: "waiting-times" });
     const request: CollectionRequest = {
       protocol: NORMALIZED_PROTOCOL,
-      collectionId: "acq_test",
-      feed: { id: "feed_test", slug: "metrolisboa-waiting-times-feed", title: "t", description: "d" },
-      resolved,
-      feedEpoch: "e",
+      slug: "metrolisboa-waiting-times-feed",
+      configHash: resolved.configHash,
       mode: { kind: "live" },
-      limits: { sourceBytes: 512 * 1024, outputBytes: 4 * 1024 * 1024, frameBytes: 272 * 1024, recordBytes: 256 * 1024, records: 1_000_000, products: 64 },
+      limits: { sourceBytes: 512 * 1024, outputBytes: 4 * 1024 * 1024, recordBytes: 256 * 1024, records: 1_000_000 },
       deadline: new Date(Date.now() + 60_000).toISOString(),
       observedAt: "2026-09-14T08:00:00.000Z",
     };
     const result = await collectNormalized(request, {
+      feed: { slug: "metrolisboa-waiting-times-feed", title: "t", description: "d" },
       normalizer: { id: transformer.id, version: transformer.version },
-      resolve,
+      resolve: () => resolved,
       source: () => collectMetroFeed(resolved.config, undefined, ORIGIN, CREDENTIALS, fetcher),
       normalize: { kind: "buffered", transform: (bytes, context) => runTransformer(transformer, bytes, context) },
     });
@@ -192,6 +191,7 @@ describe("Metro Lisboa Gatekeeper", () => {
     const waiting = jsonAs<{ resposta: unknown[] }>(fixture("waiting-times")).resposta;
     expect(frames[0]?.type).toBe("header");
     expect(frames.filter((frame) => frame.type === "record")).toHaveLength(waiting.length);
-    expect(frames.at(-1)).toMatchObject({ type: "complete", counts: { records: waiting.length, points: 0 } });
+    expect(frames.filter((frame) => frame.type === "point")).toHaveLength(0);
+    expect(frames.at(-1)).toMatchObject({ type: "complete", quality: { acceptedRecords: waiting.length } });
   });
 });

@@ -54,5 +54,5 @@ export async function feedCollection(
   const fixture: FeedRuntime = {};
   const sources = runtimeOf(slug).sources;
   if (sources) fixture.sources = sources.map((each) => (each instanceof Object ? { ...each, minIntervalSeconds: 0 } : each));
-  return { resolved, collector: feedCollector(feed, resolved.config, libraries, { ...fixture, ...runtime }) };
+  return { resolved, collector: feedCollector(feed, libraries, { ...fixture, ...runtime }) };
 }

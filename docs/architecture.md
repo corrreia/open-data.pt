@@ -35,11 +35,15 @@ The Worker holds no parsing. It builds each library from its declared vars and t
 and lists every library's example feeds. Every feed's configuration names its library in `source`,
 and that key is what routes it; the library never sees it.
 
-The RPC has five operations: `describe`, `listFeedKinds`, `resolveFeed`, `collect`, and
-`exampleFeeds`. `collect` returns a typed unchanged, batch, exhausted, or failure result. A batch is
-one `open-data-normalized/4` NDJSON stream: a header, product-keyed record and point frames, and a
-mandatory completion frame that may finalize values only known at the end (inferred schema,
-watermark, a product found absent). Adapters hand the shared collector a typed source fetch; formats
+The RPC has seven operations: `describe`, `listFeedKinds`, `resolveFeed`, `exampleFeeds`, `catalog`,
+`catalogVersion` and `collect`. A collection names its feed by slug with the configuration digest the
+kernel installed; the Gatekeeper reads the feed from its own catalog and answers `feed-changed` when
+it holds another configuration. `collect` returns a typed unchanged, batch, exhausted, or failure
+result. A batch is one `open-data-normalized/5` NDJSON stream: a header (product declarations,
+provenance, and the checkpoint: the normalizer and its source state), product-keyed record and point
+frames, and a mandatory completion frame that may finalize values only known at the end (inferred
+schema, watermark, a product found absent). The kernel keeps a checkpoint for one configuration and
+feed epoch and drops it when either changes. Adapters hand the shared collector a typed source fetch; formats
 that can be read row by row (CSV, NDJSON, JSON arrays, GeoJSON features, GTFS ZIP entries) stream,
 and everything else is buffered under a 16 MiB cap. Source bodies never leave the Gatekeeper.
 

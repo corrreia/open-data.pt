@@ -1,7 +1,7 @@
 import type { WorkerEntrypoint } from "cloudflare:workers";
 
 import type { JsonObject } from "./json";
-import type { CanonicalRecord, CanonicalSchema, Completeness, ProductFinalization, ProductRole, ProductUpdateMode, SeriesPoint, TransformQuality } from "./data";
+import type { CanonicalRecord, Completeness, ProductDeclaration, ProductFinalization, ProductRole, SeriesPoint, TransformQuality } from "./data";
 
 /*
  * The contract between the kernel and the Gatekeeper: the private RPC, the
@@ -47,7 +47,6 @@ export type {
   ProductFinalization,
   ProductRole,
   ProductUpdateMode,
-  RecordOperation,
   RecordProductBuild,
   SeriesPoint,
   SeriesProductBuild,
@@ -64,6 +63,7 @@ export {
   assertSourceCheckpoint,
   historyCursorKey,
   isNormalizedFrame,
+  isCollectionFailureCode,
   isPermanentCollectionError,
   isProductSlug,
 } from "./validation";
@@ -75,12 +75,13 @@ export interface SourceValidator {
   lastModified?: string;
 }
 
-/** A kernel-owned scope envelope around bounded, source-owned JSON state. */
+/**
+ * Bounded, source-owned JSON state and the normalizer that wrote it: the same
+ * shape both ways. The kernel keeps it for one feed configuration and epoch and
+ * drops it when either changes; the Gatekeeper uses it only when the normalizer
+ * that wrote it is still the one it runs.
+ */
 export interface SourceCheckpoint {
-  version: 2;
-  resourceKey: string;
-  configHash: string;
-  feedEpoch: string;
   normalizer: { id: string; version: string };
   state: JsonObject;
 }
@@ -275,7 +276,7 @@ export interface ExampleFeed {
   staleAfterSeconds: number;
 }
 
-export const NORMALIZED_PROTOCOL = "open-data-normalized/4" as const;
+export const NORMALIZED_PROTOCOL = "open-data-normalized/5" as const;
 
 export interface ResolvedFeed {
   config: SourceConfig;
@@ -290,18 +291,24 @@ export interface ResolvedFeed {
 export interface CollectionLimits {
   sourceBytes: number;
   outputBytes: number;
-  frameBytes: number;
   recordBytes: number;
   records: number;
-  products: number;
 }
 
+/** The most products one collection may declare. */
+export const MAX_PRODUCTS = 64;
+
+/** The longest line of a normalized stream: one record and its frame, or a header of product declarations. */
+export function frameBytesFor(limits: Pick<CollectionLimits, "outputBytes" | "recordBytes">): number {
+  return Math.min(limits.outputBytes, limits.recordBytes + 16 * 1024);
+}
+
+/** One collection of one feed. The Gatekeeper reads the feed its own catalog names by `slug`. */
 export interface CollectionRequest {
   protocol: typeof NORMALIZED_PROTOCOL;
-  collectionId: string;
-  feed: { id: string; slug: string; title: string; description: string };
-  resolved: ResolvedFeed;
-  feedEpoch: string;
+  slug: string;
+  /** The configuration the kernel installed; a Gatekeeper holding another one answers `feed-changed`. */
+  configHash: string;
   checkpoint?: SourceCheckpoint;
   mode: { kind: "live" } | { kind: "history"; cursor: HistoryCursor };
   limits: CollectionLimits;
@@ -310,22 +317,11 @@ export interface CollectionRequest {
   observedAt: string;
 }
 
-export interface NormalizedProductHeader {
-  productKey: string;
-  suggestedSlug: string;
-  title: string;
-  description: string;
-  role: ProductRole;
-  schema: CanonicalSchema;
-  kind: "record" | "series";
-  updateMode: ProductUpdateMode;
-  /** Declared completeness combined with the source body's completeness. The kernel downgrades it when rows were rejected. */
-  completeness: Completeness;
-  watermark?: string;
-}
-
-/** `protocol-mismatch`: kernel and Gatekeeper run different releases, as they do for a minute during a deploy; retried, never a cooldown. */
-export type CollectionFailureCode = GatekeeperError["code"] | "deadline-exceeded" | "history-unsupported" | "protocol-mismatch";
+/**
+ * `protocol-mismatch` and `feed-changed`: kernel and Gatekeeper run different releases, or the kernel has not synced
+ * the Gatekeeper's new catalog yet, as happens for a minute during a deploy; retried, never a cooldown.
+ */
+export type CollectionFailureCode = GatekeeperError["code"] | "deadline-exceeded" | "feed-changed" | "history-unsupported" | "protocol-mismatch";
 export type CollectionResult =
   | { kind: "unchanged"; checkpoint: SourceCheckpoint }
   | { kind: "batch"; stream: ReadableStream<Uint8Array> }
@@ -335,20 +331,16 @@ export type CollectionResult =
 export type NormalizedFrame =
   | {
       type: "header";
-      protocol: typeof NORMALIZED_PROTOCOL;
-      collectionId: string;
-      normalizer: { id: string; version: string };
-      products: NormalizedProductHeader[];
+      /** Each product's completeness already folds in whether the body was the source's whole scope. */
+      products: ProductDeclaration[];
       provenance: SourceProvenance;
-      /** Whether the body behind this batch was the source's whole scope for the feed. */
-      completeness: Completeness;
+      /** The state for the next collection, and the normalizer that produced this batch. */
       checkpoint: SourceCheckpoint;
     }
   | { type: "record"; productKey: string; value: CanonicalRecord }
   | { type: "point"; productKey: string; value: SeriesPoint }
   | {
       type: "complete";
-      counts: { records: number; points: number };
       quality: TransformQuality;
       products?: ProductFinalization[];
       nextCursor?: HistoryCursor;
