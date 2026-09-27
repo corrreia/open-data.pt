@@ -98,6 +98,7 @@ export function feedDefinition(feed: Feed): Feed {
     consecutiveFailures: _failures,
     running: _running,
     historyBacklog: _backlog,
+    sourceUrl: _source,
     ...definition
   } = feed;
   return definition;
