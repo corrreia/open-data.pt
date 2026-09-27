@@ -7,6 +7,7 @@ import {
   type Completeness,
   type FeedKindDescription,
   type JsonObject,
+  type ProductBuild,
   type ProductUpdateMode,
   type ResolvedFeed,
   type SeriesPoint,
@@ -64,6 +65,8 @@ export interface FixtureSource {
   generate?: () => Iterable<CanonicalRecord>;
   fetch?: () => Promise<SourceFetch>;
   finalCompleteness?: Completeness;
+  /** Products the batch declares after the fixture's own, each with its rows. */
+  extra?: ProductBuild[];
 }
 
 const KIND: FeedKindDescription = {
@@ -298,8 +301,10 @@ function fixtureTransform(source: FixtureSource): StreamingTransform {
   if (!source.generate) {
     const base = bufferedTransform({
       transformer: { id: "fixture", version: "1" },
-      products:
-        source.kind === "record" ? [{ ...product, kind: "record", records: source.records }] : [{ ...product, kind: "series", updateMode: "source-window", points: source.points }],
+      products: [
+        source.kind === "record" ? { ...product, kind: "record", records: source.records } : { ...product, kind: "series", updateMode: "source-window", points: source.points },
+        ...(source.extra ?? []),
+      ],
       quality: { acceptedRecords: source.records.length + source.points.length, rejectedRecords: source.rejected },
     });
     if (!source.finalCompleteness) return base;

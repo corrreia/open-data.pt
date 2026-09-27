@@ -1,3 +1,4 @@
+import type { Completeness } from "@open-data-pt/contract";
 import { describe, expect, it } from "vitest";
 import { PromotionRequired, collectionStep, openableUrl, type CollectingGatekeeper } from "../src/engine";
 import { MAX_RECORD_BYTES, STAGE_BYTES } from "../src/blob-budget";
@@ -90,6 +91,32 @@ describe("collection engine: current state", () => {
     expect(outcome.revisions).toBe(1);
     expect(h.lakeRows("records").at(-1)).toMatchObject({ entity_key: "k000003", operation: "retract", payload: {} });
     expect((await h.served()).map((row) => row.id)).toEqual(["k000000", "k000001", "k000002"]);
+  });
+
+  it.each<[string, Completeness, Completeness, Completeness]>([
+    ["a partial second product", "complete", "partial", "partial"],
+    ["a first product finalized as unknown", "unknown", "partial", "unknown"],
+    ["every product complete", "complete", "complete", "complete"],
+  ])("records a run as complete as its least complete product: %s", async (_name, first, second, run) => {
+    const h = await kernelHarness();
+    h.source.records = [record("k000000", "a")];
+    if (first !== "complete") h.source.finalCompleteness = first;
+    h.source.extra = [
+      {
+        productKey: "others",
+        slug: "others",
+        title: "Others",
+        description: "A second product of the batch",
+        role: "reference",
+        kind: "record",
+        schema: { fields: [{ id: "name", name: "Name", type: "string", nullable: false }] },
+        updateMode: "delta",
+        completeness: second,
+        records: [record("o000000", "b")],
+      },
+    ];
+    const { acquisitionId } = await h.collect();
+    expect(h.core.getAcquisition(acquisitionId)?.completeness).toBe(run);
   });
 
   it("keeps current state when a streamed product is finalized as unknown (a declared file was absent)", async () => {
