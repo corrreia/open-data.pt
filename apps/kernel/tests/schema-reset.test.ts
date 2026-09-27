@@ -49,6 +49,23 @@ describe("schema reset", () => {
     expect(userTables(sqliteStorage(database))).not.toContain("transform_runs");
   });
 
+  it("stores a Registry product once served as a partial snapshot as the delta it behaved as", () => {
+    const database = new DatabaseSync(":memory:");
+    const store = new RegistryStore(sqliteStorage(database));
+    store.migrate();
+    const insert = database.prepare("INSERT INTO products (slug, feed_id, product_key, title, entry_json) VALUES (?, 'feed_1', ?, 'Things', ?)");
+    insert.run("partial", "partial", JSON.stringify({ slug: "partial", updateMode: "partial-snapshot" }));
+    insert.run("whole", "whole", JSON.stringify({ slug: "whole", updateMode: "authoritative-snapshot" }));
+
+    store.migrate();
+
+    const modes = database.prepare("SELECT slug, json_extract(entry_json, '$.updateMode') AS mode FROM products ORDER BY slug").all();
+    expect(modes).toEqual([
+      { slug: "partial", mode: "delta" },
+      { slug: "whole", mode: "authoritative-snapshot" },
+    ]);
+  });
+
   it("renames a Registry feed's library and backfill grouping in place", () => {
     const database = new DatabaseSync(":memory:");
     const store = new RegistryStore(sqliteStorage(database));

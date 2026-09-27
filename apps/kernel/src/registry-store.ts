@@ -41,6 +41,8 @@ export class RegistryStore {
     // The chunk list is its own column, last, so product lists never read it.
     this.exec(`CREATE TABLE IF NOT EXISTS products (
       slug TEXT PRIMARY KEY, feed_id TEXT NOT NULL, product_key TEXT NOT NULL, title TEXT NOT NULL, entry_json TEXT NOT NULL, chunks_json TEXT, UNIQUE(feed_id, product_key))`);
+    // Protocol 5 folded partial snapshots into delta, which they always behaved as; kept until every entry is rewritten.
+    this.exec(`UPDATE products SET entry_json = json_set(entry_json, '$.updateMode', 'delta') WHERE json_extract(entry_json, '$.updateMode') = 'partial-snapshot'`);
     this.exec(`CREATE TABLE IF NOT EXISTS activity (id TEXT PRIMARY KEY, feed_id TEXT NOT NULL, at TEXT NOT NULL, item_json TEXT NOT NULL)`);
     this.exec(`CREATE INDEX IF NOT EXISTS activity_at ON activity (at DESC)`);
     this.exec(`CREATE TABLE IF NOT EXISTS backfills (feed_id TEXT PRIMARY KEY, library TEXT NOT NULL, status TEXT NOT NULL, updated_at TEXT NOT NULL)`);

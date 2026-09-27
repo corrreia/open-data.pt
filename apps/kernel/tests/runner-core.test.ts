@@ -219,9 +219,13 @@ describe("runner schedule and failure handling", () => {
     h.clock.now = Date.parse(until) - 60_000;
     expect(h.core.takeDue()).toBeUndefined();
     h.clock.now = Date.parse(until);
+    expect(h.core.getAcquisition(failed)?.errorCode).toBe("invalid-config");
     expect(h.core.takeDue()?.id).toBe(failed);
     expect(h.core.runtime().cooldownUntil).toBeUndefined();
     expect(h.core.status().cooldownUntil).toBeUndefined();
+    // Queued again, it carries neither the failure's message nor its code.
+    expect(h.core.getAcquisition(failed)).not.toHaveProperty("error");
+    expect(h.core.getAcquisition(failed)).not.toHaveProperty("errorCode");
   });
 
   it("doubles the cooldown on every repeat up to 48 hours, and a success forgets it", async () => {

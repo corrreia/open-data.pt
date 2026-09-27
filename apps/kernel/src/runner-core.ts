@@ -498,7 +498,7 @@ export class RunnerCore {
     if (backfill?.status === "running" && (!backfill.nextAt || Date.parse(backfill.nextAt) <= now + 1000)) {
       const id = backfillAcquisitionId(this.requireFeed().id, backfill);
       if (!this.getAcquisition(id)) this.insertAcquisition(id, "history", policy.version);
-      else this.exec(`UPDATE acquisitions SET status = 'queued', error = NULL WHERE id = ?`, id);
+      else this.exec(`UPDATE acquisitions SET status = 'queued', error = NULL, error_code = NULL WHERE id = ?`, id);
       return this.getAcquisition(id);
     }
     return undefined;
@@ -572,7 +572,7 @@ export class RunnerCore {
       next.consecutiveInterruptions = 0;
     }
     this.transaction(() => {
-      if (acquisitionId) this.exec(`UPDATE acquisitions SET status = 'queued', error = NULL WHERE id = ? AND status = 'failed'`, acquisitionId);
+      if (acquisitionId) this.exec(`UPDATE acquisitions SET status = 'queued', error = NULL, error_code = NULL WHERE id = ? AND status = 'failed'`, acquisitionId);
       this.setRuntime(next);
     });
   }
@@ -760,7 +760,7 @@ export class RunnerCore {
       historyRows = Number(this.rows<{ total: number | null }>(`SELECT SUM(rows) AS total FROM outbox WHERE acquisition_id = ?`, acquisitionId)[0]?.total ?? 0);
       this.exec(`UPDATE outbox SET committed = 1, committed_at = ? WHERE acquisition_id = ?`, at, acquisitionId);
       this.exec(
-        `UPDATE acquisitions SET status = ?, completed_at = ?, observed_at = ?, event_time = ?, source_published_at = ?, completeness = ?, normalizer_json = ?, quality_json = ?, rows = ?, revisions = ?, history_rows = ?, error = NULL WHERE id = ?`,
+        `UPDATE acquisitions SET status = ?, completed_at = ?, observed_at = ?, event_time = ?, source_published_at = ?, completeness = ?, normalizer_json = ?, quality_json = ?, rows = ?, revisions = ?, history_rows = ?, error = NULL, error_code = NULL WHERE id = ?`,
         status,
         at,
         memo.observedAt,
@@ -821,7 +821,12 @@ export class RunnerCore {
     const memo = this.getState<CollectionMemo>(collectionKey(acquisitionId));
     this.transaction(() => {
       this.discard(acquisitionId);
-      this.exec(`UPDATE acquisitions SET status = 'unchanged', completed_at = ?, observed_at = COALESCE(observed_at, ?), error = NULL WHERE id = ?`, at, at, acquisitionId);
+      this.exec(
+        `UPDATE acquisitions SET status = 'unchanged', completed_at = ?, observed_at = COALESCE(observed_at, ?), error = NULL, error_code = NULL WHERE id = ?`,
+        at,
+        at,
+        acquisitionId,
+      );
       const feed = this.requireFeed();
       const sameSource = memo?.source === sourceOf(feed);
       const runtime = this.runtime();
@@ -846,7 +851,7 @@ export class RunnerCore {
     const now = new Date(this.deps.now()).toISOString();
     this.transaction(() => {
       this.discard(acquisitionId);
-      this.exec(`UPDATE acquisitions SET status = 'unchanged', completed_at = ?, error = NULL WHERE id = ?`, now, acquisitionId);
+      this.exec(`UPDATE acquisitions SET status = 'unchanged', completed_at = ?, error = NULL, error_code = NULL WHERE id = ?`, now, acquisitionId);
       const backfill = this.getState<BackfillState>("backfill");
       if (backfill) this.setState("backfill", { ...backfill, status: "complete", updatedAt: now });
       const runtime = this.runtime();
