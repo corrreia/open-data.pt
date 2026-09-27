@@ -2,7 +2,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import type { RunnableFeed } from "@open-data-pt/gatekeeper";
-import { FEEDS, PUBLISHERS, RUNNABLE } from "@open-data-pt/gatekeeper/catalog";
+import { FEEDS, PUBLISHERS, RUNNABLE, enabledFeed, feedEnabled } from "@open-data-pt/gatekeeper/catalog";
 import { INDEX_PATH, catalogIndex } from "../../../tools/catalog-index";
 
 const PUBLISHER_ROOT = fileURLToPath(new URL("../src/publishers/", import.meta.url).href);
@@ -51,5 +51,12 @@ describe("the publisher folders", () => {
       expect("buffered" in feed.transform || "streaming" in feed.transform, slug).toBe(true);
     }
     expect(RUNNABLE.size).toBe(FEEDS.length);
+  });
+
+  it("collect only the feeds of publishers we may republish, whoever names a held one by slug", () => {
+    const held = FEEDS.filter((feed) => !feedEnabled(feed));
+    expect(held.length, "a publisher is held for permission, so the check has something to refuse").toBeGreaterThan(0);
+    for (const feed of FEEDS) expect(enabledFeed(feed.slug) !== undefined, feed.slug).toBe(feedEnabled(feed));
+    expect(enabledFeed("no-such-feed")).toBeUndefined();
   });
 });

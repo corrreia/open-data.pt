@@ -39,25 +39,19 @@ export const IODA_PORTUGUESE_ASNS = new Map<string, string>([
 ]);
 
 export const IODA_FEEDS = {
+  // Outage events IODA detected for one entity, from academic measurement: not an operator's own incident report.
   "outage-events": {
     kind: "outage-events",
-    title: "Detected internet outage events",
-    description:
-      "Outage events IODA detected for one entity: when each one started, how long it lasted, which measurement source and detection method saw it, and how large the deviation was. Detections from academic measurement, not an operator's own incident report.",
     semantics: { domainSubject: "event", defaultProductRole: "event-log" },
   },
+  // The per-bin alert records behind IODA's outage events: the level a datasource crossed, and the observed and historical values compared.
   "outage-alerts": {
     kind: "outage-alerts",
-    title: "Internet outage alert levels",
-    description:
-      "The per-bin alert records behind IODA's outage events for one entity: the level a datasource crossed, the condition it crossed, the observed value and the historical value it was compared against.",
     semantics: { domainSubject: "event", defaultProductRole: "event-log" },
   },
+  // IODA's raw connectivity measurements for one entity, one series per datasource: not a speed, quality or customer-availability report.
   signals: {
     kind: "signals",
-    title: "Internet connectivity signals",
-    description:
-      "IODA's raw connectivity measurements for one entity, one series per datasource: routed /24s seen in BGP, /24s answering active probes, unique source IPs at the Merit network telescope, and normalized Google traffic. Not a speed, quality or customer-availability report.",
     semantics: { domainSubject: "observation", defaultProductRole: "time-series" },
   },
 } as const satisfies Record<string, FeedKindDescription>;

@@ -92,10 +92,9 @@ const CRS84 = "http://www.opengis.net/def/crs/OGC/1.3/CRS84";
 const WGS84_CRS = new Set([CRS84, "http://www.opengis.net/def/crs/EPSG/0/4326"]);
 
 export const OGC_FEEDS = {
+  // One collection of an OGC API — Features service, walked page by page as GeoJSON in WGS 84, with the property schema the service publishes.
   collection: {
     kind: "collection",
-    title: "OGC API Features collection",
-    description: "One collection of an OGC API — Features service, walked page by page as GeoJSON in WGS 84, with the property schema the service publishes.",
     semantics: {
       domainSubject: "feature",
       defaultProductRole: "reference",

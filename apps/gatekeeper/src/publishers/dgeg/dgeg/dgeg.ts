@@ -26,10 +26,9 @@ const MAX_PAGES_PER_DISTRICT = 20;
 const DEFAULT_REQUEST_DELAY_MS = 350;
 
 export const DGEG_FEEDS = {
+  // Current retail prices for one fuel type, nationally or in one district.
   "fuel-prices": {
     kind: "fuel-prices",
-    title: "Fuel prices",
-    description: "Current retail prices for one fuel type, nationally or in one district.",
     semantics: {
       domainSubject: "observation",
       defaultProductRole: "current-state",
@@ -37,8 +36,6 @@ export const DGEG_FEEDS = {
   },
   "fuel-types": {
     kind: "fuel-types",
-    title: "Fuel types",
-    description: "Fuel types, source units, and publication flags used by the price service.",
     semantics: {
       domainSubject: "reference",
       defaultProductRole: "reference",
@@ -73,25 +70,13 @@ interface AggregateDocument {
   stations: JsonValue[];
 }
 
-export async function validateDgegFeedConfig(config: SourceConfig, apiOrigin: string, fetcher: Fetcher): Promise<SourceConfig> {
-  const normalized = normalizeConfig(config);
-  const origin = allowedOrigin(apiOrigin);
-  if (normalized.feed === "fuel-types") return normalized;
-
-  const fuelTypes = await fetchReferenceArray(origin, "GetTiposCombustiveis", fetcher);
-  const fuelTypeId = Number(normalized.fuelTypeId);
-  if (!fuelTypes.some((value) => numericId(value) === fuelTypeId)) {
-    throw new GatekeeperError(`DGEG does not publish fuel type ${normalized.fuelTypeId}`, "invalid-config");
-  }
-
-  if (normalized.districtId) {
-    const districts = await fetchReferenceArray(origin, "GetDistritos", fetcher);
-    const districtId = Number(normalized.districtId);
-    if (!districts.some((value) => numericId(value) === districtId)) {
-      throw new GatekeeperError(`DGEG does not publish district ${normalized.districtId}`, "invalid-config");
-    }
-  }
-  return normalized;
+/**
+ * A DGEG feed's configuration in its canonical form. Whether DGEG still publishes the fuel type and district it names
+ * is the collection's to find out, from the lists it reads anyway: resolving a feed reads nothing.
+ */
+export function validateDgegFeedConfig(config: SourceConfig, apiOrigin: string): SourceConfig {
+  allowedOrigin(apiOrigin);
+  return normalizeConfig(config);
 }
 
 export async function collectDgegFeed(

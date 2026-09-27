@@ -14,7 +14,7 @@ export const FEED = defineFeed(CKAN_DEPLOYMENT, {
     dataset: "apd-pontos-de-interesse-cultura-e-patrimonio-agenda-cultural",
     resource: "e246f08d-b4d0-4955-ae82-07b516c4c747",
   },
-  policy: { ...DAILY_REFERENCE, name: "Porto CKAN daily event changes" },
+  policy: DAILY_REFERENCE,
   staleAfterSeconds: 172_800,
   /** Once a day: Porto's cultural agenda resource on its CKAN portal, downloaded only when it has changed. */
   fetch: ({ config, validator, library, fetch }) => new CkanSource(library.hosts, fetch).collect(config, validator),

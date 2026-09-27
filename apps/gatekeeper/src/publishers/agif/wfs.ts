@@ -16,15 +16,11 @@ export const APPS_PROPERTY_NAMES =
 
 /** The programmes are revised, not streamed: a week between reads catches a revision the week it lands. */
 export const APPS_POLICY: FeedPolicy = {
-  name: "SGIFR sub-regional APPS district",
-  version: 1,
-  collection: {
-    cadenceSeconds: 604_800,
-    timeoutSeconds: 300,
-    maxBytes: WFS_MAX_BYTES,
-    maxOutputBytes: 48 * 1024 * 1024,
-    maxRecordBytes: 64 * 1024,
-    maxRecords: 20_000,
-    historyMode: "changes",
-  },
+  cadenceSeconds: 604_800,
+  timeoutSeconds: 300,
+  maxBytes: WFS_MAX_BYTES,
+  maxOutputBytes: 48 * 1024 * 1024,
+  maxRecordBytes: 64 * 1024,
+  maxRecords: 20_000,
+  historyMode: "changes",
 };

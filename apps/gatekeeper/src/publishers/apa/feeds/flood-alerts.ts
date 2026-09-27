@@ -11,12 +11,8 @@ export const FEED = defineFeed(INFOAGUA_DEPLOYMENT, {
   attribution: "InfoÁgua, Agência Portuguesa do Ambiente",
   topics: ["environment", "weather"],
   config: { feed: "flood-alerts" },
-  policy: {
-    name: "InfoÁgua flood alerts",
-    version: 1,
-    // A station's alert follows its hourly reading; a quarter-hour cadence sees a change within the hour it happens.
-    collection: { cadenceSeconds: 900, timeoutSeconds: 60, maxBytes: INFOAGUA_MAX_BYTES, historyMode: "changes" },
-  },
+  // A station's alert follows its hourly reading; a quarter-hour cadence sees a change within the hour it happens.
+  policy: { cadenceSeconds: 900, timeoutSeconds: 60, maxBytes: INFOAGUA_MAX_BYTES, historyMode: "changes" },
   staleAfterSeconds: 3_600,
   /** Every quarter hour: InfoÁgua's flood search page, which carries the latest alert of every station it watches inline. */
   fetch: ({ config, validator, library, fetch }) => collectInfoaguaFeed(config, validator, library.apiOrigin, fetch),

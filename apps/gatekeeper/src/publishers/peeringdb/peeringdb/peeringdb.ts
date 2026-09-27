@@ -21,10 +21,9 @@ export const PEERINGDB_MAX_BYTES = 1024 * 1024;
 export const PEERINGDB_PUBLIC_FIELDS = "id,name,name_long,city,country,website,media,proto_unicast,proto_multicast,proto_ipv6,created,updated,status";
 
 export const PEERINGDB_FEEDS = {
+  // Public non-contact metadata for PeeringDB Internet exchanges in Portugal; no traffic, speed or outage measurements.
   exchanges: {
     kind: "exchanges",
-    title: "Portuguese Internet exchange directory",
-    description: "Public non-contact metadata for PeeringDB Internet exchanges in Portugal; no traffic, speed or outage measurements.",
     semantics: { domainSubject: "reference", defaultProductRole: "reference" },
   },
 } as const satisfies Record<string, FeedKindDescription>;

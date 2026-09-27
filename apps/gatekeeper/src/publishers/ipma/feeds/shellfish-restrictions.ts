@@ -11,16 +11,12 @@ export const FEED = defineFeed(IPMA_DEPLOYMENT, {
   topics: ["environment", "health"],
   config: { feed: "shellfish-restrictions" },
   policy: {
-    name: "IPMA shellfish bulletin",
-    version: 2,
-    collection: {
-      cadenceSeconds: 21_600,
-      timeoutSeconds: 90,
-      maxBytes: 8 * 1024 * 1024,
-      maxOutputBytes: 16 * 1024 * 1024,
-      maxRecordBytes: 1024 * 1024,
-      historyMode: "changes",
-    },
+    cadenceSeconds: 21_600,
+    timeoutSeconds: 90,
+    maxBytes: 8 * 1024 * 1024,
+    maxOutputBytes: 16 * 1024 * 1024,
+    maxRecordBytes: 1024 * 1024,
+    historyMode: "changes",
   },
   staleAfterSeconds: 86_400,
   /** Every six hours: IPMA's shellfish bulletin, re-read only when the file has changed. */

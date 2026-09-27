@@ -1,53 +1,46 @@
-import type { ExampleFeed, FeedKindDescription } from "@open-data-pt/contract";
+import type { CatalogFeed } from "@open-data-pt/contract";
 import { describe, expect, it } from "vitest";
 import {
   SYNC_BATCH,
   SYNC_CHECK_MS,
-  SYNC_RESOLVE_ALL_MS,
   VERSION_CHECK_MIN_MS,
   cadenceFloorOf,
   checkForVersion,
   syncStep,
   withCadenceFloor,
-  type CatalogEntry,
   type SyncFeed,
   type SyncPorts,
   type SyncProgress,
   type SyncState,
-} from "../src/example-sync";
+} from "../src/catalog-sync";
 
-function example(slug: string, title = slug): ExampleFeed {
+/** A catalog feed of library alpha (slugs starting with a) or beta, resolved as the Gatekeeper sends it. */
+function feed(slug: string, title = slug): CatalogFeed {
+  const library = slug[0] === "a" ? "alpha" : "beta";
   return {
     slug,
+    publisher: "ine",
+    library,
     title,
     description: "Fixture",
-    config: { source: slug[0] === "a" ? "alpha" : "beta", feed: slug },
-    staleAfterSeconds: 3600,
-    publisher: "ine",
     licence: "cc-by-4.0",
     topics: ["economy"],
-    policy: { name: "Fixture", version: 1, collection: { cadenceSeconds: 3600, timeoutSeconds: 30, maxBytes: 1024, historyMode: "changes" } },
-  };
-}
-
-function kind(name: string, title = name): FeedKindDescription {
-  return {
-    kind: name,
-    title,
-    description: "Fixture",
-    semantics: { domainSubject: "reference", defaultProductRole: "reference" },
+    resourceKey: `${library}:${library}:things:${slug}`,
+    configHash: "0".repeat(64),
+    eventTimed: false,
+    policy: { cadenceSeconds: 3600, timeoutSeconds: 30, maxBytes: 1024, historyMode: "changes" },
+    staleAfterSeconds: 3600,
   };
 }
 
 interface InstalledFeed extends SyncFeed {
-  /** The example's own title; absent when the feed is its whole dataset. */
-  title: string | undefined;
+  title: string;
   library: string;
 }
 
 /** A Registry in memory: what the sync installs, updates and retires, and its stored sync state. */
 class FakeRegistry implements SyncPorts {
-  catalog: CatalogEntry[] | undefined = [];
+  catalog: CatalogFeed[] | undefined = [];
   version: string | undefined = "v1";
   readonly installed = new Map<string, InstalledFeed>();
   readonly applied: string[] = [];
@@ -57,7 +50,7 @@ class FakeRegistry implements SyncPorts {
   clock = 1_000_000;
   private nextId = 1;
 
-  async readCatalog(): Promise<CatalogEntry[] | undefined> {
+  async readCatalog(): Promise<CatalogFeed[] | undefined> {
     return structuredClone(this.catalog);
   }
   async catalogVersion(): Promise<string | undefined> {
@@ -67,11 +60,11 @@ class FakeRegistry implements SyncPorts {
     return [...this.installed.values()];
   }
 
-  async apply(library: string, feed: ExampleFeed): Promise<void> {
-    if (this.failing.has(feed.slug)) throw new Error("resolution failed");
-    this.applied.push(feed.slug);
-    const id = this.installed.get(feed.slug)?.id ?? `feed_${this.nextId++}`;
-    this.installed.set(feed.slug, { id, slug: feed.slug, library, title: feed.title });
+  async apply(listed: CatalogFeed): Promise<void> {
+    if (this.failing.has(listed.slug)) throw new Error("install failed");
+    this.applied.push(listed.slug);
+    const id = this.installed.get(listed.slug)?.id ?? `feed_${this.nextId++}`;
+    this.installed.set(listed.slug, { id, slug: listed.slug, library: listed.library, title: listed.title });
   }
 
   async retire(feedId: string): Promise<void> {
@@ -107,15 +100,12 @@ class FakeRegistry implements SyncPorts {
 
 function registry(): FakeRegistry {
   const fake = new FakeRegistry();
-  fake.catalog = [
-    { library: "alpha", kinds: [kind("alpha-things")], examples: ["a1", "a2", "a3", "a4", "a5", "a6"].map((slug) => example(slug)) },
-    { library: "beta", kinds: [kind("beta-things")], examples: ["b1", "b2", "b3"].map((slug) => example(slug)) },
-  ];
+  fake.catalog = ["a1", "a2", "a3", "a4", "a5", "a6", "b1", "b2", "b3"].map((slug) => feed(slug));
   return fake;
 }
 
-describe("example sync", () => {
-  it("installs every example on a fresh Registry's first steps, at most four per step", async () => {
+describe("catalog sync", () => {
+  it("installs every catalog feed on a fresh Registry's first steps, at most four per step", async () => {
     const fake = registry();
     const steps = await fake.drain();
     expect(SYNC_BATCH).toBe(4);
@@ -153,7 +143,7 @@ describe("example sync", () => {
 
     // A release: the next step checks at once and installs what it added.
     fake.version = "v2";
-    fake.catalog![1]!.examples.push(example("b4"));
+    fake.catalog!.push(feed("b4"));
     fake.clock += 1_000;
     const forward = checkForVersion(settled, "v2", fake.clock);
     expect(forward).toMatchObject({ nextCheckAt: fake.clock, versionCheckAt: fake.clock });
@@ -183,7 +173,7 @@ describe("example sync", () => {
     expect(checkForVersion(fake.load(), "v2", fake.clock)).toBeUndefined();
   });
 
-  it("updates a changed example under the same feed ID, and every example of a library whose feed kinds changed", async () => {
+  it("applies nothing while the catalog stays the same, and a changed feed under its same feed ID", async () => {
     const fake = registry();
     await fake.drain();
     const id = fake.installed.get("a1")!.id;
@@ -191,28 +181,29 @@ describe("example sync", () => {
     const catalog = fake.catalog;
     if (catalog === undefined) throw new Error("the fixture Registry starts with a catalog");
 
-    catalog[0]!.examples[0] = example("a1", "Renamed");
+    catalog[0] = feed("a1", "Renamed");
     await fake.nextCheck();
     expect(fake.applied).toEqual(["a1"]);
     expect(fake.installed.get("a1")).toMatchObject({ id, title: "Renamed" });
 
-    catalog[1]!.kinds = [kind("beta-things", "Beta things, new semantics")];
+    // A release that changes how beta's feeds are read resolves them to another configuration.
+    fake.catalog = catalog.map((listed) => (listed.library === "beta" ? { ...listed, configHash: "1".repeat(64) } : listed));
     await fake.nextCheck();
     expect(fake.applied).toEqual(["b1", "b2", "b3"]);
   });
 
-  it("retires a feed whose example disappeared, and every feed of a library no longer carried", async () => {
+  it("retires a feed the catalog no longer lists, and every feed of a library no longer carried", async () => {
     const fake = registry();
     await fake.drain();
     const a2 = fake.installed.get("a2")!.id;
     const beta = ["b1", "b2", "b3"].map((slug) => fake.installed.get(slug)!.id);
 
-    fake.catalog![0]!.examples.splice(1, 1);
+    fake.catalog = fake.catalog!.filter((listed) => listed.slug !== "a2");
     await fake.nextCheck();
     expect(fake.retired).toEqual([a2]);
 
     // Held or deleted, the library lists nothing: its feeds go.
-    fake.catalog!.splice(1, 1);
+    fake.catalog = fake.catalog.filter((listed) => listed.library !== "beta");
     await fake.nextCheck();
     expect(fake.retired).toEqual(beta);
     expect(fake.state!.hashes.b1).toBeUndefined();
@@ -236,23 +227,13 @@ describe("example sync", () => {
     expect(fake.state!.lastError).toBeUndefined();
   });
 
-  it("applies every example again once a day, so each feed is resolved and handed to its runner daily", async () => {
-    const fake = registry();
-    await fake.drain();
-    fake.clock += SYNC_RESOLVE_ALL_MS - SYNC_CHECK_MS;
-    await fake.nextCheck();
-    expect(fake.applied).toHaveLength(9);
-    await fake.nextCheck();
-    expect(fake.applied).toHaveLength(0);
-  });
-
   it("retries a failed operation at the next check and keeps going with the rest", async () => {
     const fake = registry();
     fake.failing.add("a2");
     const steps = await fake.drain();
     expect(steps.reduce((total, step) => total + step.failed, 0)).toBe(1);
     expect(fake.installed.size).toBe(8);
-    expect(fake.state!.lastError).toMatch(/^a2: .*resolution failed/);
+    expect(fake.state!.lastError).toMatch(/^a2: .*install failed/);
     fake.failing.clear();
     await fake.nextCheck();
     expect(fake.applied).toEqual(["a2"]);
@@ -264,26 +245,26 @@ describe("example sync", () => {
 
 describe("the cadence floor a local session puts under a feed", () => {
   it("slows a feed that runs more often than the floor, and moves its freshness window with it", () => {
-    const minutely = { ...example("a-live"), staleAfterSeconds: 180 };
-    minutely.policy = { ...minutely.policy, collection: { ...minutely.policy.collection, cadenceSeconds: 60 } };
+    const listed = feed("a-live");
+    const minutely = { ...listed, staleAfterSeconds: 180, policy: { ...listed.policy, cadenceSeconds: 60 } };
 
     const slowed = withCadenceFloor(minutely, 1800);
 
-    expect(slowed.policy.collection.cadenceSeconds).toBe(1800);
+    expect(slowed.policy.cadenceSeconds).toBe(1800);
     expect(slowed.staleAfterSeconds).toBe(5400);
   });
 
   it("leaves a feed that is already slower alone, and never shortens its freshness window", () => {
-    const daily = { ...example("a-daily"), staleAfterSeconds: 172_800 };
-    daily.policy = { ...daily.policy, collection: { ...daily.policy.collection, cadenceSeconds: 86_400 } };
+    const listed = feed("a-daily");
+    const daily = { ...listed, staleAfterSeconds: 172_800, policy: { ...listed.policy, cadenceSeconds: 86_400 } };
 
     expect(withCadenceFloor(daily, 1800)).toBe(daily);
   });
 
   it("is off without a floor, which is what a deployment has", () => {
-    const feed = example("a-one");
+    const listed = feed("a-one");
 
-    expect(withCadenceFloor(feed, 0)).toBe(feed);
+    expect(withCadenceFloor(listed, 0)).toBe(listed);
     expect(cadenceFloorOf(undefined)).toBe(0);
     expect(cadenceFloorOf("")).toBe(0);
     expect(cadenceFloorOf("-60")).toBe(0);

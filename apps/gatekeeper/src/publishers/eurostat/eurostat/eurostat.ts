@@ -36,10 +36,9 @@ const HISTORY_PERIODS = 120;
 const HISTORY_MAX_OBSERVATIONS = 3_000;
 
 export const EUROSTAT_FEEDS = {
+  // A bounded Portugal-focused snapshot of one Eurostat JSON-stat 2.0 dataset, published once as time-series points.
   dataset: {
     kind: "dataset",
-    title: "Eurostat statistical dataset",
-    description: "A bounded Portugal-focused snapshot of one Eurostat JSON-stat 2.0 dataset, published once as time-series points.",
     semantics: {
       domainSubject: "observation",
       defaultProductRole: "time-series",
@@ -87,7 +86,7 @@ export function validateEurostatFeedConfig(config: SourceConfig): SourceConfig {
     lastTimePeriod: String(lastTimePeriod),
     lang,
   };
-  // Some datasets have no unit dimension; the example may state the documented unit.
+  // Some datasets have no unit dimension; the feed may state the documented unit.
   const unit = config.unit?.trim();
   if (unit) {
     if (unit.length > 80 || !UNIT_PATTERN.test(unit)) {

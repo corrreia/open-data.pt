@@ -20,22 +20,18 @@ import { CRUS_COLUMNS, DGT_HOST } from "#/publishers/dgt/ogc";
  * keeping every outline twice would double about a gigabyte of storage.
  */
 const CRUS_PARCELS_POLICY = {
-  name: "CRUS parcel boundaries by municipality",
-  version: 1,
-  collection: {
-    // A municipal plan is revised over years. Monthly, each at its own time of day.
-    cadenceSeconds: MONTH,
-    // The heaviest municipality measured sends 135 MB in about ten seconds.
-    timeoutSeconds: 600,
-    maxBytes: 256 * MEBIBYTE,
-    maxOutputBytes: 96 * MEBIBYTE,
-    // The largest parcel measured is 970 KiB stored, in Vila Nova de Gaia.
-    maxRecordBytes: 1024 * 1024,
-    // Chamusca has the most parcels: 5,011.
-    maxRecords: 10_000,
-    historyMode: "latest",
-  } satisfies CollectionPolicyDefinition,
-} as const;
+  // A municipal plan is revised over years. Monthly, each at its own time of day.
+  cadenceSeconds: MONTH,
+  // The heaviest municipality measured sends 135 MB in about ten seconds.
+  timeoutSeconds: 600,
+  maxBytes: 256 * MEBIBYTE,
+  maxOutputBytes: 96 * MEBIBYTE,
+  // The largest parcel measured is 970 KiB stored, in Vila Nova de Gaia.
+  maxRecordBytes: 1024 * 1024,
+  // Chamusca has the most parcels: 5,011.
+  maxRecords: 10_000,
+  historyMode: "latest",
+} as const satisfies CollectionPolicyDefinition;
 
 /** The parcels of one municipality, `code` being its four-digit DTCC as the charter and the CAOP write it. */
 export function crusParcelsFeed(slug: string, code: string, municipality: string, district: string) {

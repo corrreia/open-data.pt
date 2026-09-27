@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { collectNormalized, NORMALIZED_PROTOCOL, type CollectionRequest, type ExampleFeed, type ResolvedFeed } from "@open-data-pt/gatekeeper";
+import { collectNormalized, NORMALIZED_PROTOCOL, type CollectionRequest, type ResolvedFeed } from "@open-data-pt/gatekeeper";
 import { readFrames } from "../apps/kernel/src/frames";
 import { feedCollection, feedsOf } from "../apps/gatekeeper/tests/catalog";
+import type { DeclaredFeed } from "@open-data-pt/gatekeeper/catalog";
 
 const GTFS_SLUGS = new Set(["cp-gtfs-feed", "fertagus-gtfs-feed", "tub-braga-gtfs-feed", "tcb-barreiro-gtfs-feed", "horarios-do-funchal-gtfs-feed"]);
 const BIRD_SLUGS = new Set(["bird-porto", "bird-cascais", "bird-matosinhos"]);
@@ -78,8 +79,8 @@ describe.skipIf(selected.length === 0)("live transport and municipal expansion",
   );
 });
 
-function requestFor(example: ExampleFeed, resolved: ResolvedFeed): CollectionRequest {
-  const policy = example.policy.collection;
+function requestFor(example: DeclaredFeed, resolved: ResolvedFeed): CollectionRequest {
+  const policy = example.policy;
   return {
     protocol: NORMALIZED_PROTOCOL,
     slug: example.slug,

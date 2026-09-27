@@ -2,7 +2,7 @@ import {
   GatekeeperError,
   hashSourceConfig,
   sourceValidator,
-  type ExampleFeed,
+  type CollectionPolicyDefinition,
   type FeedKindDescription,
   type HistoryCursor,
   type JsonObject,
@@ -78,16 +78,31 @@ export type FeedTransform<M extends object = never> =
 
 /** The functions a feed's own file defines: how it reads now, how it walks back through history, and how its bytes become products. */
 export interface FeedFunctions<C, M extends object = never> {
-  /** What the source holds now. The kernel runs it every `policy.collection.cadenceSeconds`. */
+  /** What the source holds now. The kernel runs it every `policy.cadenceSeconds`. */
   fetch: (context: FeedContext<C>) => Promise<SourceFetch | Described<M>>;
   /** One slice of history older than `cursor`. Absent when the source keeps none. */
   backfill?: (context: FeedContext<C>, cursor: HistoryCursor) => Promise<SourceFetch | Described<M>>;
   transform: FeedTransform<M>;
 }
 
-/** A feed as the Worker runs it: what the kernel is told about it, and its own functions, whatever their library and metadata. */
-export interface RunnableFeed extends Omit<ExampleFeed, "publisher" | "topics"> {
+/** What a feed's file says about it besides its functions: what it is, under what terms, what it reads and how often. */
+export interface FeedData {
+  slug: string;
+  title: string;
+  description: string;
+  /** The terms the publisher states for it: a licence's key, or `source-terms` when they state none. */
+  licence: string;
+  /** How the publisher asks to be credited, when they say. */
+  attribution?: string;
   topics: readonly string[];
+  /** What the feed's identity and history hang on: it never changes once merged. `source` names its library. */
+  config: SourceConfig;
+  policy: CollectionPolicyDefinition;
+  staleAfterSeconds: number;
+}
+
+/** A feed as the Worker runs it: what its file says about it, and its own functions, whatever their library and metadata. */
+export interface RunnableFeed extends FeedData {
   fetch: (context: FeedContext<never>) => Promise<SourceFetch | Described<object>>;
   backfill?: (context: FeedContext<never>, cursor: HistoryCursor) => Promise<SourceFetch | Described<object>>;
   transform: FeedTransform;
@@ -109,7 +124,7 @@ export interface R2BucketDeployment {
  * Worker under the names declared here.
  */
 export interface LibraryDeployment<E, C = never> {
-  /** The `source` value its examples carry, which is also its directory's name. */
+  /** The `source` value its feeds carry, which is also its directory's name. */
   source: string;
   /** How the library describes itself, in words ("CKAN portals"). */
   name: string;
@@ -121,11 +136,10 @@ export interface LibraryDeployment<E, C = never> {
   /** The CPU limit one collection needs; the Worker takes the largest any library declares. */
   cpuMs?: number;
   /**
-   * Builds the library from the Worker's environment and what the publishers it
-   * reads bring to it. `fetcher` is what a library that checks a feed against
-   * its source (DGEG's fuel types) reads with while the feed is resolved.
+   * Builds the library from the Worker's environment and what the publishers it reads bring to it. Resolving a feed
+   * reads nothing but its configuration: whatever the source must confirm, its collection finds out.
    */
-  library: (env: E, publishers: PublisherInputs, fetcher: typeof fetch) => GatekeeperLibrary<C>;
+  library: (env: E, publishers: PublisherInputs) => GatekeeperLibrary<C>;
 }
 
 /**
@@ -170,26 +184,17 @@ export function buildLibrary<E extends object>(
   deployment: LibraryDeployment<never, unknown>,
   env: E,
   publishers: PublisherInputs = NO_PUBLISHER_INPUTS,
-  fetcher: typeof fetch = (input, init) => fetch(input, init),
 ): GatekeeperLibrary<unknown> {
   const bound = { ...deployment.vars, ...env };
   // SAFETY: a deployment reads its own declared vars, secrets and buckets from the environment, and this one is
   // built from those declarations; `never` only lets deployments with different environments share a list.
-  return deployment.library(bound as never, publishers, fetcher);
+  return deployment.library(bound as never, publishers);
 }
 
-/** The routing key every example configuration carries; it names the library, not the publisher. */
+/** The routing key every feed's configuration carries; it names the library, not the publisher. */
 export const SOURCE_KEY = "source";
 
-/**
- * Kinds are prefixed `<library>:<kind>` so a `dataset` of one library is never
- * confused with another's.
- */
-export function libraryFeedKinds(libraries: GatekeeperLibraries): FeedKindDescription[] {
-  return [...libraries].flatMap(([source, library]) => library.kinds.map((kind) => ({ ...kind, kind: `${source}:${kind.kind}` })));
-}
-
-/** What a library sees of a feed's configuration: everything the example carries but the routing key. */
+/** What a library sees of a feed's configuration: everything it carries but the routing key. */
 export function libraryConfig(config: SourceConfig): SourceConfig {
   const rest: SourceConfig = { ...config };
   delete rest[SOURCE_KEY];

@@ -155,7 +155,7 @@ class DatasetNormalization {
   private readonly timeType: string;
   private readonly dimensions: OdsField[];
   private readonly series: SeriesMeasure[];
-  /** A dataset is published once: as its table, or as the series an example names, never both. */
+  /** A dataset is published once: as its table, or as the series its feed names, never both. */
   private readonly tablePublished: boolean;
   private readonly seenPoints = new Map<string, number>();
   private total = 0;
@@ -208,7 +208,7 @@ class DatasetNormalization {
       mapped.source.annotations = { ...mapped.source.annotations, unit };
       for (const field of mapped.canonical) field.unit = unit;
     }
-    // Series exist only for the fields an example names. Guessing measures from
+    // Series exist only for the fields a feed names. Guessing measures from
     // numeric-looking columns published days of the month and phone numbers
     // as series, and publishing table and series together restated every value.
     this.tablePublished = seriesFields.length === 0;
@@ -657,7 +657,7 @@ function isDatePartName(name: string): boolean {
   return name.split(/[_\s-]+/).some((token) => DATE_PART_NAME.test(token));
 }
 
-/** The fields an example names in `series`; none means the dataset is published as a table. */
+/** The fields a feed names in `series`; none means the dataset is published as a table. */
 function seriesNames(value: string | undefined): string[] {
   return (value ?? "")
     .split(",")

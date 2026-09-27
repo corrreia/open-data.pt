@@ -9,7 +9,8 @@ import { DGT_MONTHLY_POLICY } from "#/publishers/dgt/wfs";
  */
 const FOTOTECA_POLICY = {
   ...DGT_MONTHLY_POLICY,
-  collection: { ...DGT_MONTHLY_POLICY.collection, timeoutSeconds: 600, maxRecords: 40_000 },
+  timeoutSeconds: 600,
+  maxRecords: 40_000,
 };
 
 export const FEED = defineFeed(WFS_DEPLOYMENT, {

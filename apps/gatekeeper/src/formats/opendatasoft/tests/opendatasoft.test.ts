@@ -152,9 +152,9 @@ describe("Opendatasoft Gatekeeper", () => {
     expect(examples).toHaveLength(57);
     for (const example of examples) {
       expect(() => instance.validateConfig(libraryConfig(example.config))).not.toThrow();
-      expect(["changes", "latest"]).toContain(example.policy.collection.historyMode);
-      expect(Object.keys(example.policy.collection)).not.toContain("allowedLatenessSeconds");
-      expect(Object.keys(example.policy.collection)).not.toContain("lateRetentionSeconds");
+      expect(["changes", "latest"]).toContain(example.policy.historyMode);
+      expect(Object.keys(example.policy)).not.toContain("allowedLatenessSeconds");
+      expect(Object.keys(example.policy)).not.toContain("lateRetentionSeconds");
     }
   });
 

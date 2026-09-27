@@ -155,6 +155,6 @@ describe("ArcGIS transformers — APA SNIAmb live fixtures", () => {
       "getogc/rest/services/SNIAmb/Qualidade_do_Ar/MapServer/0",
       "getogc/rest/services/SNIAmb/RADNET/MapServer/0",
     ]);
-    expect(examples.every((example) => example.policy.collection.maxBytes === 5 * 1024 * 1024 && example.policy.collection.historyMode === "changes")).toBe(true);
+    expect(examples.every((example) => example.policy.maxBytes === 5 * 1024 * 1024 && example.policy.historyMode === "changes")).toBe(true);
   });
 });

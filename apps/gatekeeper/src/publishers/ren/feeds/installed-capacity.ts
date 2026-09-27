@@ -10,11 +10,7 @@ export const FEED = defineFeed(REN_DEPLOYMENT, {
   attribution: "REN — Redes Energéticas Nacionais",
   topics: ["energy"],
   config: { service: "installed-capacity" },
-  policy: {
-    name: "REN monthly capacity",
-    version: 2,
-    collection: { cadenceSeconds: 604_800, timeoutSeconds: 90, maxBytes: 512 * 1024, historyMode: "changes" },
-  },
+  policy: { cadenceSeconds: 604_800, timeoutSeconds: 90, maxBytes: 512 * 1024, historyMode: "changes" },
   staleAfterSeconds: 1_209_600,
   /** Once a week: the service bus's installed capacity for each of the last three completed months. */
   fetch: ({ config, validator, signal, library, fetch, now }) => collectRenPeriodic({ config, apiOrigin: library.dataApiOrigin, fetcher: fetch, now }, validator, signal),

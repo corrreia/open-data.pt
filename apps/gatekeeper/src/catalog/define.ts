@@ -1,6 +1,6 @@
-import type { ExampleFeed, SourceConfig } from "@open-data-pt/contract";
+import type { CollectionPolicyDefinition, SourceConfig } from "@open-data-pt/contract";
 
-import type { FeedFunctions, LibraryDeployment, RunnableFeed } from "#/library";
+import type { FeedData, FeedFunctions, LibraryDeployment, RunnableFeed } from "#/library";
 import type { PublisherSources } from "#/publisher-client";
 
 import type { Licence } from "./licences";
@@ -47,7 +47,7 @@ export interface PublisherDefinition {
 }
 
 /** How often a feed runs, how long it may take, how much it may read, and whether its changes are history. */
-export type FeedPolicy = ExampleFeed["policy"];
+export type FeedPolicy = CollectionPolicyDefinition;
 
 /**
  * One feed, in its own file under its publisher's `feeds/`: what it is, under
@@ -57,7 +57,7 @@ export type FeedPolicy = ExampleFeed["policy"];
  * history hang on: it never changes once merged. It carries no `source`;
  * `defineFeed` takes the library.
  */
-export interface FeedDefinition<C, M extends object = never> extends Omit<ExampleFeed, "publisher" | "config" | "licence" | "topics">, FeedFunctions<C, M> {
+export interface FeedDefinition<C, M extends object = never> extends Omit<FeedData, "config" | "licence" | "topics">, FeedFunctions<C, M> {
   config: SourceConfig;
   /** The terms the publisher states for it, or `source-terms` when they state none. */
   licence: Licence;

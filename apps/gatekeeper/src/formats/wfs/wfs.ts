@@ -40,16 +40,14 @@ export const WFS_FEATURE_ID = "@id";
 export const WFS_NO_PAGING = "none";
 
 export const WFS_FEEDS = {
+  // A rolling window of event features from an OGC Web Feature Service, returned as GeoJSON.
   events: {
     kind: "events",
-    title: "WFS event features",
-    description: "A rolling window of event features from an OGC Web Feature Service, returned as GeoJSON.",
     semantics: { domainSubject: "event", defaultProductRole: "event-log" },
   },
+  // A whole feature type of an OGC Web Feature Service, walked page by page as GeoJSON: what each feature is, not when it happened.
   reference: {
     kind: "reference",
-    title: "WFS reference features",
-    description: "A whole feature type of an OGC Web Feature Service, walked page by page as GeoJSON: what each feature is, not when it happened.",
     semantics: { domainSubject: "feature", defaultProductRole: "reference" },
   },
 } as const satisfies Record<string, FeedKindDescription>;

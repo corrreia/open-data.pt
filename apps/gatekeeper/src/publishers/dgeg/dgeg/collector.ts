@@ -13,7 +13,6 @@ export const DGEG_TRANSFORMER = new DgegTransformer();
 /** The normalizer a DGEG feed's collection is stamped with: the translator's name and version. */
 export const DGEG_NORMALIZER = { id: DGEG_TRANSFORMER.id, version: DGEG_TRANSFORMER.version };
 
-/** DGEG names its fuels by numeric id, so resolution asks the source for the current list. */
-export function resolveDgegFeed(config: SourceConfig, apiOrigin: string, fetcher: typeof fetch): Promise<ResolvedFeed> {
-  return resolveFeed(config, { library: "dgeg", kinds: DGEG_FEEDS, validate: (value) => validateDgegFeedConfig(value, apiOrigin, fetcher) });
+export function resolveDgegFeed(config: SourceConfig, apiOrigin: string): Promise<ResolvedFeed> {
+  return resolveFeed(config, { library: "dgeg", kinds: DGEG_FEEDS, validate: (value) => validateDgegFeedConfig(value, apiOrigin) });
 }

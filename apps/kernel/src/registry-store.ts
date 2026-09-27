@@ -1,11 +1,11 @@
 import { NormalizedInputError, UNSTATED_LICENCE, asArrayOrEmpty, asObject, asString, asStringList, isProductSlug, parseJson } from "@open-data-pt/contract";
-import type { CollectionPolicyDefinition, FeedSemantics, JsonObject, ResolvedFeed, SourceConfig } from "@open-data-pt/contract";
+import type { JsonObject } from "@open-data-pt/contract";
 import type { ManifestChunk } from "./chunks";
-import { feedDefinition, type Acquisition, type Feed, type FeedPolicy, type FeedStatus, type ProductIndexEntry, type ProductSummary } from "./feed-model";
+import { feedDefinition, liftResolvedFeed, type Acquisition, type Feed, type FeedStatus, type ProductIndexEntry, type ProductSummary } from "./feed-model";
 import { dropAllTables, userTables, type SqlExec } from "./sqlite-reset";
 
 /**
- * SQLite inside the Registry Durable Object: feed definitions, policies, a
+ * SQLite inside the Registry Durable Object: feed definitions, a
  * mirror of each runner's status and recent acquisitions, slug ownership, and
  * the atomically selected product index the public API reads.
  */
@@ -25,17 +25,17 @@ export class RegistryStore {
     }
     this.exec(`CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)`);
     this.exec(`CREATE TABLE IF NOT EXISTS registry_state (key TEXT PRIMARY KEY, value_json TEXT NOT NULL)`);
-    // A sync queue is ephemeral: if it still has the old `kind` field, discard its at-most-four pending operations and rebuild it immediately with `library`.
-    this.exec(`UPDATE registry_state SET value_json = json_set(value_json, '$.queue', json('[]'), '$.nextCheckAt', 0)
-      WHERE key = 'example-sync' AND EXISTS (SELECT 1 FROM json_each(value_json, '$.queue') WHERE json_type(value, '$.kind') = 'text')`);
-    this.exec(`CREATE TABLE IF NOT EXISTS policies (
-      id TEXT PRIMARY KEY, name TEXT NOT NULL, version INTEGER NOT NULL, collection_json TEXT NOT NULL, serving_json TEXT NOT NULL, created_at TEXT NOT NULL, UNIQUE(name, version))`);
+    // One-time: the sync of examples became the sync of the catalog. Its queue and hashes were examples', so it starts
+    // again from an empty queue and applies every feed once; the check is still the scheduled one.
+    this.exec(`UPDATE registry_state SET key = 'catalog-sync', value_json = json_remove(json_set(value_json, '$.queue', json('[]'), '$.hashes', json('{}')), '$.nextResolveAllAt')
+      WHERE key = 'example-sync'`);
     this.exec(`CREATE TABLE IF NOT EXISTS feeds (
-      id TEXT PRIMARY KEY, slug TEXT NOT NULL UNIQUE, definition_json TEXT NOT NULL, policy_id TEXT NOT NULL REFERENCES policies(id), enabled INTEGER NOT NULL, title TEXT NOT NULL)`);
+      id TEXT PRIMARY KEY, slug TEXT NOT NULL UNIQUE, definition_json TEXT NOT NULL, enabled INTEGER NOT NULL, title TEXT NOT NULL)`);
     // One-time terminology cleanup: old definitions called their library `gatekeeperKind`. Rewrite the JSON in place before any feed is read.
     this.exec(`UPDATE feeds SET definition_json = json_remove(json_set(definition_json, '$.library', json_extract(definition_json, '$.gatekeeperKind')), '$.gatekeeperKind')
       WHERE json_type(definition_json, '$.library') IS NULL AND json_type(definition_json, '$.gatekeeperKind') = 'text'`);
     this.foldDatasetsIntoFeeds();
+    this.liftResolvedFeeds();
     this.exec(`CREATE TABLE IF NOT EXISTS feed_status (feed_id TEXT PRIMARY KEY, status_json TEXT NOT NULL, updated_at TEXT NOT NULL)`);
     this.exec(`CREATE TABLE IF NOT EXISTS claims (slug TEXT PRIMARY KEY, feed_id TEXT NOT NULL)`);
     // The chunk list is its own column, last, so product lists never read it.
@@ -69,35 +69,25 @@ export class RegistryStore {
     this.exec(`INSERT INTO registry_state (key, value_json) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json`, key, JSON.stringify(value));
   }
 
-  /* ---------- Policies ---------- */
-
-  upsertPolicy(policy: FeedPolicy): void {
-    this.exec(
-      `INSERT INTO policies (id, name, version, collection_json, serving_json, created_at) VALUES (?, ?, ?, ?, ?, ?)
-       ON CONFLICT(id) DO UPDATE SET name = excluded.name, version = excluded.version, collection_json = excluded.collection_json, serving_json = excluded.serving_json`,
-      policy.id,
-      policy.name,
-      policy.version,
-      JSON.stringify(policy.collection),
-      // A policy states no terms any more: those are the dataset's word. The column stays so a live Registry needs no migration.
-      "{}",
-      policy.createdAt,
+  /**
+   * One-time: feeds installed with a resolved copy of their configuration and a shared policy row. Each takes the
+   * identity the catalog now sends and its own policy, the `feeds` table loses its policy column, and the `policies`
+   * table goes. The constructor runs this without awaiting anything, so the Durable Object commits it whole.
+   */
+  private liftResolvedFeeds(): void {
+    if (!userTables(this.sql).includes("policies")) return;
+    const rows = this.rows<{ id: string; slug: string; definition_json: string; enabled: number; title: string; collection_json: string | null }>(
+      `SELECT f.id, f.slug, f.definition_json, f.enabled, f.title, p.collection_json FROM feeds f LEFT JOIN policies p ON p.id = f.policy_id`,
     );
-  }
-
-  getPolicy(id: string): FeedPolicy | undefined {
-    const row = this.rows<PolicyRow>(`SELECT * FROM policies WHERE id = ?`, id)[0];
-    return row ? mapPolicy(row) : undefined;
-  }
-
-  /** A policy by the pair the table keeps unique, whatever id it was installed under. */
-  getPolicyByName(name: string, version: number): FeedPolicy | undefined {
-    const row = this.rows<PolicyRow>(`SELECT * FROM policies WHERE name = ? AND version = ?`, name, version)[0];
-    return row ? mapPolicy(row) : undefined;
-  }
-
-  listPolicies(): FeedPolicy[] {
-    return this.rows<PolicyRow>(`SELECT * FROM policies ORDER BY name, version`).map(mapPolicy);
+    this.exec(`CREATE TABLE feeds_lifted (id TEXT PRIMARY KEY, slug TEXT NOT NULL UNIQUE, definition_json TEXT NOT NULL, enabled INTEGER NOT NULL, title TEXT NOT NULL)`);
+    for (const row of rows) {
+      const stored = asObject(parseJson(row.definition_json)) ?? {};
+      const lifted = liftResolvedFeed(stored, row.collection_json === null ? undefined : parseJson(row.collection_json)) ?? stored;
+      this.exec(`INSERT INTO feeds_lifted (id, slug, definition_json, enabled, title) VALUES (?, ?, ?, ?, ?)`, row.id, row.slug, JSON.stringify(lifted), row.enabled, row.title);
+    }
+    this.exec(`DROP TABLE feeds`);
+    this.exec(`ALTER TABLE feeds_lifted RENAME TO feeds`);
+    this.exec(`DROP TABLE policies`);
   }
 
   /**
@@ -139,12 +129,11 @@ export class RegistryStore {
   upsertFeed(feed: Feed): void {
     const definition = feedDefinition(feed);
     this.exec(
-      `INSERT INTO feeds (id, slug, definition_json, policy_id, enabled, title) VALUES (?, ?, ?, ?, ?, ?)
-       ON CONFLICT(id) DO UPDATE SET slug = excluded.slug, definition_json = excluded.definition_json, policy_id = excluded.policy_id, enabled = excluded.enabled, title = excluded.title`,
+      `INSERT INTO feeds (id, slug, definition_json, enabled, title) VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET slug = excluded.slug, definition_json = excluded.definition_json, enabled = excluded.enabled, title = excluded.title`,
       feed.id,
       feed.slug,
       JSON.stringify(definition),
-      feed.policyId,
       feed.enabled ? 1 : 0,
       feed.title,
     );
@@ -400,29 +389,9 @@ function mapOutage(row: OutageRow): Outage {
   return outage;
 }
 
-interface PolicyRow extends Record<string, SqlStorageValue> {
-  id: string;
-  name: string;
-  version: number;
-  collection_json: string;
-  serving_json: string;
-  created_at: string;
-}
-
 interface FeedRow extends Record<string, SqlStorageValue> {
   definition_json: string;
   status_json: string | null;
-}
-
-function mapPolicy(row: PolicyRow): FeedPolicy {
-  return {
-    id: row.id,
-    name: row.name,
-    version: row.version,
-    // SAFETY: collection_json is written from a validated collection policy.
-    collection: JSON.parse(row.collection_json) as CollectionPolicyDefinition,
-    createdAt: row.created_at,
-  };
 }
 
 function mapFeed(row: FeedRow): Feed {
@@ -433,4 +402,4 @@ function mapFeed(row: FeedRow): Feed {
   return { ...definition, ...status };
 }
 
-export type { FeedSemantics, JsonObject, ResolvedFeed, SourceConfig };
+export type { JsonObject };

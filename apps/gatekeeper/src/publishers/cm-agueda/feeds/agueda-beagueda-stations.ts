@@ -10,11 +10,7 @@ export const FEED = defineFeed(CKAN_DEPLOYMENT, {
   attribution: "Câmara Municipal de Águeda via dadosabertos.cm-agueda.pt",
   topics: ["cities", "mobility"],
   config: { host: AGUEDA_HOST, dataset: "estacoes-beagueda", resource: "c6da7509-f4b1-4a3c-a39b-5af5e4908288", idField: "id" },
-  policy: {
-    name: "Águeda municipal reference inventory, monthly",
-    version: 1,
-    collection: AGUEDA_MONTHLY,
-  },
+  policy: AGUEDA_MONTHLY,
   staleAfterSeconds: 90 * 86_400,
   /** Once a month: the estacoes-beagueda resource on Águeda's CKAN portal, downloaded only when it has changed. */
   fetch: ({ config, validator, library, fetch }) => new CkanSource(library.hosts, fetch).collect(config, validator),

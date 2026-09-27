@@ -25,10 +25,9 @@ export const OMIE_SERIES = ["marginalpdbc", "marginalpdbcpt"] as const;
 export type OmieSeries = (typeof OMIE_SERIES)[number];
 
 export const OMIE_FEEDS = {
+  // Hourly through 2025-09-30 and quarter-hourly from 2025-10-01: day-ahead market prices for the Portuguese and Spanish bidding zones.
   prices: {
     kind: "prices",
-    title: "Day-ahead electricity prices",
-    description: "Hourly through 2025-09-30 and quarter-hourly from 2025-10-01: day-ahead market prices for the Portuguese and Spanish bidding zones.",
     history: {
       // Seven reports stay around 20-80 KB and at most 1,400 points, well below
       // the 1 MiB policy cap while avoiding an overly chatty one-day walk.

@@ -32,11 +32,14 @@ its name, its vars with their values, and any secrets, buckets and CPU limit;
 [Libraries](libraries.md) has the full list and the vocabularies the catalog groups by.
 
 The Worker holds no parsing. It builds each library from its declared vars and the Worker's bindings,
-and lists every library's example feeds. Every feed's configuration names its library in `source`,
+and every feed its publisher folders list. Every feed's configuration names its library in `source`,
 and that key is what routes it; the library never sees it.
 
-The RPC has seven operations: `describe`, `listFeedKinds`, `resolveFeed`, `exampleFeeds`, `catalog`,
-`catalogVersion` and `collect`. A collection names its feed by slug with the configuration digest the
+The RPC has three operations: `catalog`, `catalogVersion` and `collect`. The catalog is every feed of
+a publisher we may republish, each resolved by its library to its resource key and configuration
+digest and carrying its own policy, with the publishers, licences and topics they name; the kernel
+installs exactly those feeds, and a feed's configuration never leaves the Gatekeeper.
+`catalogVersion` is its digest. A collection names its feed by slug with the configuration digest the
 kernel installed; the Gatekeeper reads the feed from its own catalog and answers `feed-changed` when
 it holds another configuration. `collect` returns a typed unchanged, batch, exhausted, or failure
 result. A batch is one `open-data-normalized/5` NDJSON stream: a header (product declarations,
@@ -77,7 +80,7 @@ budget, and accepted history is never deleted to relieve pressure.
 
 ## Storage
 
-- **Durable Object SQLite:** feed definitions, policies, the product index with each record product's
+- **Durable Object SQLite:** feed definitions with their policies, the product index with each record product's
   chunk list, status and recent activity (Registry); schedule, checkpoint, product entries, the
   entity index of large products, staged changes, the history outbox and acquisitions (each
   FeedRunner).

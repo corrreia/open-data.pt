@@ -168,7 +168,7 @@ export async function runCollection(acquisitionId: string, ports: EnginePorts): 
   const request: CollectionRequest = {
     protocol: NORMALIZED_PROTOCOL,
     slug: plan.feed.slug,
-    configHash: plan.feed.resolved.configHash,
+    configHash: plan.feed.configHash,
     mode: plan.mode,
     limits: plan.limits,
     deadline: plan.deadline,
@@ -407,7 +407,7 @@ function recordContext(plan: CollectionPlan, header: HeaderFrame, declared: Decl
     observedAt: plan.observedAt,
     normalizer: header.checkpoint.normalizer,
     baseline: declared.baseline,
-    keepHistory: plan.lake && keepsHistory(plan.policy, declared.productKey),
+    keepHistory: plan.lake && keepsHistory(plan.feed.policy, declared.productKey),
   };
   if (header.provenance.sourcePublishedAt) context.sourcePublishedAt = header.provenance.sourcePublishedAt;
   return context;
@@ -415,7 +415,7 @@ function recordContext(plan: CollectionPlan, header: HeaderFrame, declared: Decl
 
 /** Recent change windows are history too: a product whose history the policy does not keep has none. */
 function keepsChangeWindow(base: WorkerBase): boolean {
-  return keepsHistory(base.plan.policy, base.header.productKey);
+  return keepsHistory(base.plan.feed.policy, base.header.productKey);
 }
 
 /** The entry this acquisition would publish, before storage-specific keys are filled in. */
@@ -796,7 +796,7 @@ class HistoryWorker implements ProductWorker {
 
   async pushPoint(point: SeriesPoint): Promise<void> {
     // A product whose history the policy does not keep has none to walk either.
-    if (!keepsHistory(this.base.plan.policy, this.base.header.productKey)) return;
+    if (!keepsHistory(this.base.plan.feed.policy, this.base.header.productKey)) return;
     const floor = await this.currentFloor();
     const logical = `p|${this.base.declared.slug}|${point.seriesKey}|${point.eventTime}`;
     const hash = digest(stableStringify({ value: point.value, unit: point.unit, dimensions: point.dimensions }));
@@ -825,7 +825,7 @@ class HistoryWorker implements ProductWorker {
   }
 
   async pushRecord(record: CanonicalRecord): Promise<void> {
-    if (!record.eventTime || !keepsHistory(this.base.plan.policy, this.base.header.productKey)) return;
+    if (!record.eventTime || !keepsHistory(this.base.plan.feed.policy, this.base.header.productKey)) return;
     const floor = await this.currentFloor();
     const logical = `r|${this.base.declared.slug}|${record.entityKey}`;
     const hash = digest(

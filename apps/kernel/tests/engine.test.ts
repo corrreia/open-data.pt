@@ -343,7 +343,7 @@ describe("collection engine: history per product and fewer round trips", () => {
     await baseline(h, 3);
     const window = h.entry()?.changesKey;
     expect(window).toBeTruthy();
-    h.core.configure(h.core.feed()!, policy({ withoutHistory: ["things"] }));
+    h.core.configure({ ...h.core.feed()!, policy: policy({ withoutHistory: ["things"] }) });
     h.source.records = rows(3, (index) => (index === 1 ? "moved" : index));
     await h.collect();
     expect(h.entry()?.changesKey).toBeNull();

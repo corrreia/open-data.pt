@@ -10,11 +10,7 @@ export const FEED = defineFeed(METROLISBOA_DEPLOYMENT, {
   attribution: "Metropolitano de Lisboa",
   topics: ["mobility"],
   config: { feed: "stations" },
-  policy: {
-    name: "Metro Lisboa reference data",
-    version: 1,
-    collection: { cadenceSeconds: 86_400, timeoutSeconds: 30, maxBytes: 256 * 1024, historyMode: "changes" },
-  },
+  policy: { cadenceSeconds: 86_400, timeoutSeconds: 30, maxBytes: 256 * 1024, historyMode: "changes" },
   staleAfterSeconds: 172_800,
   /** Once a day: every station, from the EstadoServicoML gateway with a fresh access token. */
   fetch: ({ config, validator, library, fetch }) => collectMetroFeed(config, validator, library.apiOrigin, library.credentials, fetch),

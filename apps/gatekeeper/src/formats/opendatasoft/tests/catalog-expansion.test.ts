@@ -1,14 +1,31 @@
 import { describe, expect, it } from "vitest";
 import { readFixture } from "#/tests/support";
 import { feedsOf } from "#/tests/catalog";
-import { isJsonObject, libraryConfig, parseJson, toByteStream, type JsonObject, type JsonValue, type NormalizedRow, type SourceConfig, type SourceFetch } from "#/index";
+import {
+  isJsonObject,
+  libraryConfig,
+  parseJson,
+  toByteStream,
+  type JsonObject,
+  type JsonValue,
+  type NormalizedRow,
+  type SourceConfig,
+  type SourceFetch,
+  type FeedPolicy,
+} from "#/index";
 import { OpendatasoftSource, validateOpendatasoftFeedConfig } from "#/formats/opendatasoft/opendatasoft";
 import { resolveOpendatasoftFeed } from "#/formats/opendatasoft/collector";
 import { OpendatasoftTransformer } from "#/formats/opendatasoft/transform";
+import { boundedReportingPeriodPolicy } from "#/formats/opendatasoft/feeds";
+
+/** Whether a feed is collected as a bounded window of reporting periods: its policy is exactly that helper's. */
+function readsBoundedPeriods(policy: FeedPolicy): boolean {
+  return JSON.stringify(policy) === JSON.stringify(boundedReportingPeriodPolicy(policy.cadenceSeconds));
+}
 
 const OPENDATASOFT_EXAMPLES = feedsOf("opendatasoft");
 /** The feeds that read a bounded window of reporting periods: the catalog expansion. */
-const CATALOG_EXAMPLES = OPENDATASOFT_EXAMPLES.filter((example) => example.policy.name.endsWith("bounded reporting-period collection"));
+const CATALOG_EXAMPLES = OPENDATASOFT_EXAMPLES.filter((example) => readsBoundedPeriods(example.policy));
 
 const HOSTS = new Set(["e-redes.opendatasoft.com", "transparencia.sns.gov.pt"]);
 const BASE = { host: "e-redes.opendatasoft.com", dataset: "sample", limit: "100" };
@@ -72,7 +89,7 @@ describe("Opendatasoft catalog expansion", () => {
     expect(new Set(OPENDATASOFT_EXAMPLES.map((example) => `${example.config.host}/${example.config.dataset}`)).size).toBe(57);
     for (const example of CATALOG_EXAMPLES) {
       expect(() => validateOpendatasoftFeedConfig(libraryConfig(example.config), HOSTS)).not.toThrow();
-      expect(example.policy.collection.cadenceSeconds).toBeGreaterThanOrEqual(86_400);
+      expect(example.policy.cadenceSeconds).toBeGreaterThanOrEqual(86_400);
       // Every grouped series keeps the full set of non-time grouping dimensions, including numeric-looking codes.
       if (example.config.groupBy && example.config.series) {
         const clock = new Set([example.config.timeField, example.config.monthField]);

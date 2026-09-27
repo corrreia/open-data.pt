@@ -21,7 +21,7 @@ export const FEED = defineFeed(UDATA_DEPLOYMENT, {
     feed: "distribution",
     transformer: "municipal-accessibility",
   },
-  policy: annualPolicy("Municipal accessibility annual snapshot", 2 * MIB),
+  policy: annualPolicy(2 * MIB),
   staleAfterSeconds: 30 * 86_400,
   /** Once a day: DEMARCA's accessibility survey CSV on dados.gov.pt, downloaded only when it has changed. */
   fetch: ({ config, state, library, fetch }) => collectUdataFeed(config, state, library.hosts, fetch),

@@ -12,14 +12,10 @@ export const FEED = defineFeed(OPENDATASOFT_DEPLOYMENT, {
   topics: ["energy"],
   config: { host: E_REDES_HOST, dataset: "network-scheduling-work", orderBy: "updatedatetime DESC,startdatetime,zipcode", limit: "500" },
   policy: {
-    name: "E-REDES scheduled interruption changes",
-    version: 1,
-    collection: {
-      cadenceSeconds: 21_600,
-      timeoutSeconds: 30,
-      maxBytes: 2 * MEBIBYTE,
-      historyMode: "changes",
-    },
+    cadenceSeconds: 21_600,
+    timeoutSeconds: 30,
+    maxBytes: 2 * MEBIBYTE,
+    historyMode: "changes",
   },
   staleAfterSeconds: 43_200,
   /** Every six hours: E-REDES's `network-scheduling-work` dataset, up to 500 records ordered by `updatedatetime DESC,startdatetime,zipcode`. */

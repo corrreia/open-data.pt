@@ -1,21 +1,12 @@
 import { DurableObject } from "cloudflare:workers";
-import {
-  NormalizedInputError,
-  assertResolvedFeed,
-  hashSourceConfig,
-  type CatalogDescription,
-  type ExampleFeed,
-  type SourceCheckpoint,
-  type SourceConfig,
-} from "@open-data-pt/contract";
+import { NormalizedInputError, type CatalogFeed, type SourceCheckpoint } from "@open-data-pt/contract";
 
 import { drainOutbox } from "./engine";
-import { NotFoundError } from "./errors";
-import { cadenceFloorOf, checkForVersion, syncStep, withCadenceFloor, type CatalogEntry, type SyncPorts, type SyncProgress, type SyncState } from "./example-sync";
+import { cadenceFloorOf, checkForVersion, syncStep, withCadenceFloor, type SyncPorts, type SyncProgress, type SyncState } from "./catalog-sync";
 import type { ManifestChunk } from "./chunks";
-import { definitionFingerprint, keepsHistory, policyFingerprint, type Acquisition, type Feed, type FeedPolicy, type ProductIndexEntry, type ProductSummary } from "./feed-model";
+import { definitionFingerprint, keepsHistory, type Acquisition, type Feed, type ProductIndexEntry, type ProductSummary } from "./feed-model";
 import { catalogVersionOf, gatekeeperOf } from "./gatekeeper";
-import { EMPTY_CATALOG, Vocabulary, checkedCatalog, type VocabularyRef } from "./vocabulary";
+import { EMPTY_VOCABULARIES, Vocabulary, checkedCatalog, type Vocabularies, type VocabularyRef } from "./vocabulary";
 import { digest } from "./hash";
 import { PipelinesLake, lakeStreams, type LakeTable } from "./lake";
 import { ObjectStore } from "./object-store";
@@ -40,13 +31,13 @@ import {
 import { ingestRunnerReport, OUTAGE_KEEP_MS, OUTAGES_SINCE_KEY, type OutageWindow, type RunnerReport, type RunnerReportReceipt, isSustained } from "./runner-reporting";
 
 export type { RunnerReport, RunnerReportReceipt } from "./runner-reporting";
-export type { SyncProgress } from "./example-sync";
+export type { SyncProgress } from "./catalog-sync";
 
 /** Coordinated names: one registry, one runner per feed. */
 export const REGISTRY_ROOM = "main";
 
-const SYNC_STATE_KEY = "example-sync";
-/** The catalog the Gatekeeper last declared: its publishers, licences and topics. */
+const SYNC_STATE_KEY = "catalog-sync";
+/** The vocabularies the Gatekeeper's catalog last declared: its publishers, licences and topics. */
 const CATALOG_STATE_KEY = "catalog";
 const AUDIT_DUE_KEY = "lake-audit-due";
 /** History its Workflow has not delivered after this long is drained by the runner's alarm. */
@@ -56,24 +47,9 @@ const LEFTOVER_ALARM_BLOBS = 40;
 /** A history slot outlives its query's own deadline by a margin, and is then taken back from a request that cannot still hold it. */
 const HISTORY_SLOT_TTL_MS = (QUERY_DEADLINE_SECONDS + 15) * 1000;
 
-/** One example the Gatekeeper lists, as the Registry turns it into a feed. */
-interface FeedInput {
-  slug: string;
-  title: string;
-  description: string;
-  library: string;
-  config: SourceConfig;
-  policyId: string;
-  staleAfterSeconds: number;
-  publisher: string;
-  licence: string;
-  topics: string[];
-  attribution?: string;
-}
-
 /**
  * A product as the public API lists it: the selected entry without its chunk
- * list, and what its feed and current policy say about it, computed at read time.
+ * list, and what its feed and its policy say about it, computed at read time.
  */
 export interface ProductView extends ProductSummary {
   stale: boolean;
@@ -105,11 +81,11 @@ function registry(env: Env): DurableObjectStub<Registry> {
 }
 
 /**
- * The Registry: feed definitions and policies, a mirror of runner status and
- * recent acquisitions, slug ownership, and the product index the public API
- * reads. Nobody administers it. Its alarm keeps the feeds equal to the
- * examples the Gatekeeper lists (installing, updating and retiring them,
- * see example-sync.ts) and runs the daily lake delivery audit. Product
+ * The Registry: feed definitions, a mirror of runner status and recent
+ * acquisitions, slug ownership, and the product index the public API reads.
+ * Nobody administers it. Its alarm keeps the feeds equal to the Gatekeeper's
+ * catalog (installing, updating and retiring them, see catalog-sync.ts) and
+ * runs the daily lake delivery audit. Product
  * staleness is computed when products are read.
  */
 export class Registry extends DurableObject<Env> {
@@ -161,11 +137,11 @@ export class Registry extends DurableObject<Env> {
     if (this.env.CATALOG_TOKEN) await this.auditIfDue();
     let retryIn = 0;
     try {
-      await this.syncExamples();
+      await this.syncCatalog();
     } catch (error) {
       // Never a tight loop: a step that throws (not one whose operations fail) waits a minute.
       retryIn = 60_000;
-      console.error(JSON.stringify({ event: "example_sync_failed", error: String(error) }));
+      console.error(JSON.stringify({ event: "catalog_sync_failed", error: String(error) }));
     }
     // After the sync, so keeping feeds equal to the examples never waits on the lake.
     if (this.env.CATALOG_TOKEN) await this.summariseIfDue();
@@ -227,13 +203,13 @@ export class Registry extends DurableObject<Env> {
     }
   }
 
-  /* ---------- Keeping feeds equal to the Gatekeeper's examples ---------- */
+  /* ---------- Keeping feeds equal to the Gatekeeper's catalog ---------- */
 
   /**
    * One sync step; the alarm calls it and runs another at once while work is
    * queued. `check` compares the catalog now instead of on schedule.
    */
-  syncExamples(check = false): Promise<SyncProgress> {
+  syncCatalog(check = false): Promise<SyncProgress> {
     this.syncing ??= syncStep(this.syncPorts(), { check }).finally(() => {
       this.syncing = undefined;
     });
@@ -251,7 +227,7 @@ export class Registry extends DurableObject<Env> {
       readCatalog: () => this.readCatalog(),
       catalogVersion: () => catalogVersionOf(this.env),
       feeds: () => this.store.listFeeds().map((feed) => ({ id: feed.id, slug: feed.slug })),
-      apply: (library, example) => this.applyExample(library, example),
+      apply: (feed) => this.installFeed(feed),
       retire: (feedId) => this.retireFeed(feedId),
       load: () => this.store.getState<SyncState>(SYNC_STATE_KEY),
       save: (state) => this.store.setState(SYNC_STATE_KEY, state),
@@ -260,29 +236,19 @@ export class Registry extends DurableObject<Env> {
   }
 
   /**
-   * The Gatekeeper's examples and feed kinds, grouped by the library each
-   * example names in `source`, so a change to one library's kinds re-resolves
-   * that library's feeds and no other's. Its catalog is stored on the way, so
-   * the examples are applied against the vocabularies it declared with them. A
-   * Gatekeeper that does not answer, or lists nothing, is broken rather than emptied.
+   * The feeds the Gatekeeper's catalog lists, each already resolved. Its
+   * vocabularies are stored on the way, so the feeds are installed against the
+   * vocabularies declared with them. A Gatekeeper that does not answer, answers
+   * in another shape (one of another release, for a minute during a deploy), or
+   * lists nothing, is broken rather than emptied.
    */
-  private async readCatalog(): Promise<CatalogEntry[] | undefined> {
+  private async readCatalog(): Promise<CatalogFeed[] | undefined> {
     try {
-      const gatekeeper = gatekeeperOf(this.env);
-      const [examples, kinds, declared] = await Promise.all([gatekeeper.exampleFeeds(), gatekeeper.listFeedKinds(), gatekeeper.catalog()]);
-      if (examples.length === 0) throw new Error("The Gatekeeper listed no examples");
-      const description = checkedCatalog(declared);
-      if (description.publishers.length === 0) throw new Error("The Gatekeeper declared no publishers");
-      this.storeCatalog(description);
-      const catalog = new Map<string, CatalogEntry>();
-      for (const example of examples) {
-        const library = example.config.source;
-        if (!library) throw new Error(`${example.slug} names no library in its configuration`);
-        const entry = catalog.get(library) ?? { library, examples: [], kinds: kinds.filter((kind) => kind.kind.startsWith(`${library}:`)) };
-        entry.examples.push(example);
-        catalog.set(library, entry);
-      }
-      return [...catalog.values()];
+      const { feeds, ...vocabularies } = checkedCatalog(await gatekeeperOf(this.env).catalog());
+      if (feeds.length === 0) throw new Error("The Gatekeeper listed no feeds");
+      if (vocabularies.publishers.length === 0) throw new Error("The Gatekeeper declared no publishers");
+      this.storeVocabularies(vocabularies);
+      return feeds;
     } catch (error) {
       console.warn(JSON.stringify({ event: "gatekeeper_unavailable", error: String(error) }));
       return undefined;
@@ -290,8 +256,8 @@ export class Registry extends DurableObject<Env> {
   }
 
   /** Every publisher, licence and topic the Gatekeeper last declared; empty until it first answers. */
-  catalog(): CatalogDescription {
-    return this.store.getState<CatalogDescription>(CATALOG_STATE_KEY) ?? EMPTY_CATALOG;
+  catalog(): Vocabularies {
+    return this.store.getState<Vocabularies>(CATALOG_STATE_KEY) ?? EMPTY_VOCABULARIES;
   }
 
   private vocabulary(): Vocabulary {
@@ -299,69 +265,35 @@ export class Registry extends DurableObject<Env> {
     return this.vocabularyCache;
   }
 
-  /** Written only when it changed: a Gatekeeper that says the same thing every check costs one read. */
-  private storeCatalog(description: CatalogDescription): void {
-    if (JSON.stringify(this.store.getState<CatalogDescription>(CATALOG_STATE_KEY)) === JSON.stringify(description)) return;
-    this.store.setState(CATALOG_STATE_KEY, description);
+  /** Written only when they changed: a Gatekeeper that says the same thing every check costs one read. */
+  private storeVocabularies(vocabularies: Vocabularies): void {
+    if (JSON.stringify(this.store.getState<Vocabularies>(CATALOG_STATE_KEY)) === JSON.stringify(vocabularies)) return;
+    this.store.setState(CATALOG_STATE_KEY, vocabularies);
     this.vocabularyCache = undefined;
   }
 
-  private async applyExample(library: string, raw: ExampleFeed): Promise<void> {
-    // A local session polls politely: `pnpm dev` sets a floor under every cadence, and a deployment sets none.
-    const example = withCadenceFloor(raw, cadenceFloorOf(this.env.DEV_MIN_CADENCE_SECONDS));
-    const unknown = this.vocabulary().unknownKey(example);
-    if (unknown !== undefined) throw new NormalizedInputError(`${example.slug} names ${unknown}`);
-    // A policy is its name and version; the id is only the row's handle. One installed under an earlier Worker's
-    // name keeps its id, so moving a feed between Workers never collides with the row it already uses.
-    const current = this.store.getPolicyByName(example.policy.name, example.policy.version);
-    const policyId = current?.id ?? `policy_${library}_${slugify(example.policy.name)}_v${example.policy.version}`;
-    const policy: FeedPolicy = { id: policyId, ...example.policy, createdAt: current?.createdAt ?? new Date().toISOString() };
-    if (!current || policyFingerprint(current) !== policyFingerprint(policy)) this.store.upsertPolicy(policy);
-    const input: FeedInput = {
-      slug: example.slug,
-      title: example.title,
-      description: example.description,
-      library,
-      config: example.config,
-      policyId,
-      staleAfterSeconds: example.staleAfterSeconds,
-      publisher: example.publisher,
-      licence: example.licence,
-      topics: [...example.topics],
-    };
-    if (example.attribution !== undefined) input.attribution = example.attribution;
-    await this.installFeed(input);
-  }
-
   /**
-   * Resolve an example through its Gatekeeper and hand the definition to its
+   * Install a feed as the catalog resolved it and hand the definition to its
    * runner, which ignores one it already has. A known slug keeps its feed ID
    * (lake history is keyed by it); a new slug gets an ID derived from it, so a
    * reset Registry installs it under the same ID again.
    */
-  private async installFeed(input: FeedInput): Promise<string> {
-    const resolved = await gatekeeperOf(this.env).resolveFeed(input.config);
-    assertResolvedFeed(resolved);
-    if (resolved.configHash !== (await hashSourceConfig(resolved.config))) throw new NormalizedInputError("Resolved feed configuration digest did not match");
-    const policy = this.store.getPolicy(input.policyId);
-    if (!policy) throw new NotFoundError(`Policy ${input.policyId} was not found`);
+  private async installFeed(listed: CatalogFeed): Promise<void> {
+    // A local session polls politely: `pnpm dev` sets a floor under every cadence, and a deployment sets none.
+    const input = withCadenceFloor(listed, cadenceFloorOf(this.env.DEV_MIN_CADENCE_SECONDS));
+    const unknown = this.vocabulary().unknownKey(input);
+    if (unknown !== undefined) throw new NormalizedInputError(`${input.slug} names ${unknown}`);
     const existing = this.store.getFeedBySlug(input.slug);
     const now = new Date().toISOString();
-    const sameSemantics =
-      existing?.resolved.resourceKey === resolved.resourceKey &&
-      existing.resolved.kind === resolved.kind &&
-      JSON.stringify(existing.resolved.semantics) === JSON.stringify(resolved.semantics) &&
-      JSON.stringify(existing.resolved.history ?? null) === JSON.stringify(resolved.history ?? null);
+    const sameSource =
+      existing?.resourceKey === input.resourceKey && existing.eventTimed === input.eventTimed && JSON.stringify(existing.history ?? null) === JSON.stringify(input.history ?? null);
     const candidate: Feed = {
       ...input,
       id: existing?.id ?? `feed_${digest(`feed:${input.slug}`)}`,
-      config: resolved.config,
-      semantics: resolved.semantics,
-      resolved,
       enabled: true,
       // A feed of one product names it as the feed is named, so a new name is a new product name: the next collection
       // reads the source whole rather than trusting a checkpoint from under the old one.
-      feedEpoch: sameSemantics && existing.title === input.title && existing.description === input.description ? existing.feedEpoch : now,
+      feedEpoch: sameSource && existing.title === input.title && existing.description === input.description ? existing.feedEpoch : now,
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     };
@@ -369,8 +301,7 @@ export class Registry extends DurableObject<Env> {
     const feed: Feed = unchanged ? { ...candidate, updatedAt: existing.updatedAt } : candidate;
     if (!unchanged) this.store.upsertFeed(feed);
     // A runner re-sent what it already has reports nothing, unless this Registry holds no status for it (a fresh or reset Registry).
-    await this.env.FeedRunner.getByName(feed.id).configure(feed, policy, existing?.consecutiveFailures === undefined);
-    return feed.id;
+    await this.env.FeedRunner.getByName(feed.id).configure(feed, existing?.consecutiveFailures === undefined);
   }
 
   /** The runner first stops taking work (so a failure here leaves the feed listed and the next check retries), then the feed is forgotten. */
@@ -380,7 +311,7 @@ export class Registry extends DurableObject<Env> {
     console.warn(JSON.stringify({ event: "feed_retired", feedId }));
   }
 
-  /* ---------- Feeds and policies ---------- */
+  /* ---------- Feeds ---------- */
 
   listFeeds(): Feed[] {
     return this.store.listFeeds();
@@ -390,24 +321,12 @@ export class Registry extends DurableObject<Env> {
     return this.store.getFeed(id);
   }
 
-  listPolicies(): FeedPolicy[] {
-    return this.store.listPolicies();
-  }
-
-  getPolicy(id: string): FeedPolicy | undefined {
-    return this.store.getPolicy(id);
-  }
-
   /* ---------- Products ---------- */
 
   listProducts(): ProductView[] {
     const feeds = new Map(this.store.listFeeds().map((feed) => [feed.id, feed]));
-    const policies = new Map(this.store.listPolicies().map((policy) => [policy.id, policy]));
     const vocabulary = this.vocabulary();
-    return this.store.listProducts().map((entry) => {
-      const feed = feeds.get(entry.feedId);
-      return productView(entry, feed, feed ? policies.get(feed.policyId) : undefined, vocabulary);
-    });
+    return this.store.listProducts().map((entry) => productView(entry, feeds.get(entry.feedId), vocabulary));
   }
 
   /** One product with its chunk list, answered in one call so a public read costs one Registry request. */
@@ -415,7 +334,7 @@ export class Registry extends DurableObject<Env> {
     const entry = this.store.getProductBySlug(slug);
     if (!entry) return undefined;
     const feed = this.store.getFeed(entry.feedId);
-    return { ...productView(entry, feed, feed ? this.store.getPolicy(feed.policyId) : undefined, this.vocabulary()), chunks: entry.chunks };
+    return { ...productView(entry, feed, this.vocabulary()), chunks: entry.chunks };
   }
 
   claimProducts(feedId: string, slugs: string[]): void {
@@ -529,10 +448,10 @@ export class Registry extends DurableObject<Env> {
   }
 }
 
-function productView(entry: ProductSummary, feed: Feed | undefined, policy: FeedPolicy | undefined, vocabulary: Vocabulary): ProductView {
+function productView(entry: ProductSummary, feed: Feed | undefined, vocabulary: Vocabulary): ProductView {
   const lastSuccess = feed?.lastSuccessAt ? Date.parse(feed.lastSuccessAt) : Date.parse(entry.updatedAt);
   const staleAfterSeconds = feed?.staleAfterSeconds ?? 86_400;
-  const history = policy !== undefined && keepsHistory(policy, entry.productKey);
+  const history = feed !== undefined && keepsHistory(feed.policy, entry.productKey);
   return {
     ...entry,
     stale: lastSuccess + staleAfterSeconds * 1000 < Date.now(),
@@ -542,20 +461,13 @@ function productView(entry: ProductSummary, feed: Feed | undefined, policy: Feed
     licence: feed ? vocabulary.licenceRef(feed.licence) : null,
     attribution: feed?.attribution ?? null,
     staleAfterSeconds,
-    cadenceSeconds: policy?.collection.cadenceSeconds ?? 86_400,
+    cadenceSeconds: feed?.policy.cadenceSeconds ?? 86_400,
   };
 }
 
 function nextAuditTime(now: number): number {
   const day = Math.floor(now / 86_400_000) * 86_400_000;
   return day + 86_400_000 + 3 * 60 * 60_000;
-}
-
-function slugify(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
 }
 
 /**
@@ -656,8 +568,8 @@ export class FeedRunner extends DurableObject<Env> {
    * nothing and reports nothing, unless the Registry asks for a report because
    * it holds no status for this feed. Returns whether it changed.
    */
-  async configure(feed: Feed, policy: FeedPolicy, report = false): Promise<boolean> {
-    const changed = this.core.configure(feed, policy);
+  async configure(feed: Feed, report = false): Promise<boolean> {
+    const changed = this.core.configure(feed);
     if (changed) await this.settle();
     else if (report) await this.report();
     return changed;
@@ -730,13 +642,12 @@ export class FeedRunner extends DurableObject<Env> {
   /** Hand an acquisition to a Workflow; false when it could not start and was recorded as failed. */
   private async start(acquisition: Acquisition): Promise<boolean> {
     const feed = this.core.requireFeed();
-    const policy = this.core.requirePolicy();
     const instanceId = `${acquisition.id}-${Date.now().toString(36)}`;
     this.core.markStarted(acquisition.id, instanceId);
     try {
       await this.env.COLLECTIONS.create({
         id: instanceId,
-        params: { feedId: feed.id, acquisitionId: acquisition.id, timeoutSeconds: policy.collection.timeoutSeconds },
+        params: { feedId: feed.id, acquisitionId: acquisition.id, timeoutSeconds: feed.policy.timeoutSeconds },
       });
       return true;
     } catch (error) {

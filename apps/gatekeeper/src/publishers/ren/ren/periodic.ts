@@ -28,22 +28,19 @@ const DAILY_NO_DATA = "No data available for the selected date.";
 export type RenPeriodicService = "installed-capacity" | "lng-terminal-balance" | "gas-storage";
 
 export const REN_PERIODIC_FEEDS = {
+  // Installed generating capacity by technology for the latest three completed months available from REN.
   "installed-capacity": {
     kind: "installed-capacity",
-    title: "Installed electricity capacity",
-    description: "Installed generating capacity by technology for the latest three completed months available from REN.",
     semantics: { domainSubject: "observation", defaultProductRole: "time-series" },
   },
+  // Daily total inputs, outputs, stored energy and fullness of Portugal's LNG terminal in the latest seven-day reporting window.
   "lng-terminal-balance": {
     kind: "lng-terminal-balance",
-    title: "LNG terminal daily balance",
-    description: "Daily total inputs, outputs, stored energy and fullness of Portugal's LNG terminal in the latest seven-day reporting window.",
     semantics: { domainSubject: "observation", defaultProductRole: "time-series" },
   },
+  // Daily total injections, withdrawals, stored energy and fullness in the latest seven-day reporting window.
   "gas-storage": {
     kind: "gas-storage",
-    title: "Underground natural gas storage",
-    description: "Daily total injections, withdrawals, stored energy and fullness in the latest seven-day reporting window.",
     semantics: { domainSubject: "observation", defaultProductRole: "time-series" },
   },
 } as const satisfies Record<string, FeedKindDescription>;

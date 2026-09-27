@@ -35,17 +35,14 @@ export type MetroDayType = (typeof METRO_DAY_TYPES)[number];
 export const METRO_FEEDS = {
   "line-status": {
     kind: "line-status",
-    title: "Line status",
-    description: "Whether each Metro line runs normally, with the operator's service message when it does not.",
     semantics: {
       domainSubject: "observation",
       defaultProductRole: "current-state",
     },
   },
+  // The next trains at every platform, in seconds, as the operator computed them.
   "waiting-times": {
     kind: "waiting-times",
-    title: "Waiting times",
-    description: "The next trains at every platform, in seconds, as the operator computed them.",
     semantics: {
       domainSubject: "observation",
       defaultProductRole: "current-state",
@@ -53,17 +50,14 @@ export const METRO_FEEDS = {
   },
   stations: {
     kind: "stations",
-    title: "Stations",
-    description: "Every station with its position, lines, fare zone and page.",
     semantics: {
       domainSubject: "feature",
       defaultProductRole: "reference",
     },
   },
+  // The scheduled interval between trains on each line by time band, for weekdays and for weekends and holidays.
   headways: {
     kind: "headways",
-    title: "Scheduled headways",
-    description: "The scheduled interval between trains on each line by time band, for weekdays and for weekends and holidays.",
     semantics: {
       domainSubject: "reference",
       defaultProductRole: "reference",

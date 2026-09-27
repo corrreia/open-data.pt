@@ -10,12 +10,8 @@ export const FEED = defineFeed(METROLISBOA_DEPLOYMENT, {
   attribution: "Metropolitano de Lisboa",
   topics: ["mobility"],
   config: { feed: "waiting-times" },
-  policy: {
-    name: "Metro Lisboa waiting times",
-    version: 2,
-    // Next-train times are a live reading that is out of date a minute later, not history.
-    collection: { cadenceSeconds: 60, timeoutSeconds: 20, maxBytes: 512 * 1024, historyMode: "latest" },
-  },
+  // Next-train times are a live reading that is out of date a minute later, not history.
+  policy: { cadenceSeconds: 60, timeoutSeconds: 20, maxBytes: 512 * 1024, historyMode: "latest" },
   staleAfterSeconds: 180,
   /** Every minute: the next trains at every platform, from the EstadoServicoML gateway with a fresh access token; none while the network is closed. */
   fetch: ({ config, validator, library, fetch, now }) => collectMetroFeed(config, validator, library.apiOrigin, library.credentials, fetch, now()),

@@ -23,11 +23,7 @@ export const FEED = defineFeed(UDATA_DEPLOYMENT, {
     transformer: "tabular",
   },
   // About 45,000 rows: the 5.7 MB CSV can normalize to more than the 16 MiB default output cap.
-  policy: {
-    name: "Primary-care oral-health monthly series",
-    version: 1,
-    collection: { cadenceSeconds: 86_400, timeoutSeconds: 45, maxBytes: 8 * MIB, historyMode: "changes", maxOutputBytes: 64 * MIB },
-  },
+  policy: { cadenceSeconds: 86_400, timeoutSeconds: 45, maxBytes: 8 * MIB, historyMode: "changes", maxOutputBytes: 64 * MIB },
   staleAfterSeconds: 7 * 86_400,
   /** Once a day: DGS's monthly oral-health referrals CSV on dados.gov.pt, downloaded only when it has changed. */
   fetch: ({ config, state, library, fetch }) => collectUdataFeed(config, state, library.hosts, fetch),

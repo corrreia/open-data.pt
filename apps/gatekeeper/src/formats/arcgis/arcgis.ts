@@ -34,10 +34,9 @@ const MAX_PAGES = 100;
 export type Fetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
 export const ARCGIS_FEEDS = {
+  // A complete, periodically refreshed ArcGIS FeatureServer or MapServer layer with canonical attributes and geometry.
   layer: {
     kind: "layer",
-    title: "ArcGIS feature layer",
-    description: "A complete, periodically refreshed ArcGIS FeatureServer or MapServer layer with canonical attributes and geometry.",
     semantics: {
       domainSubject: "feature",
       defaultProductRole: "reference",

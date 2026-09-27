@@ -1,29 +1,19 @@
-import { isJsonObject } from "@open-data-pt/contract";
+import { asObject, asString, isJsonObject } from "@open-data-pt/contract";
 import type {
   CanonicalSchema,
   CollectionFailureCode,
   CollectionPolicyDefinition,
   Completeness,
-  FeedSemantics,
+  HistoryCapability,
   JsonObject,
   JsonValue,
   ProductRole,
   ProductUpdateMode,
-  ResolvedFeed,
   SourceCheckpoint,
-  SourceConfig,
   TransformQuality,
 } from "@open-data-pt/contract";
 
 import type { ManifestChunk } from "./chunks";
-
-export interface FeedPolicy {
-  id: string;
-  name: string;
-  version: number;
-  collection: CollectionPolicyDefinition;
-  createdAt: string;
-}
 
 /** Runtime state a FeedRunner reports to the Registry after every run. */
 export interface BackfillSummary {
@@ -66,14 +56,20 @@ export interface Feed extends FeedStatus {
   slug: string;
   title: string;
   description: string;
-  /** The library that reads the feed: the `source` key of its configuration. */
+  /** The library that reads the feed. */
   library: string;
-  config: SourceConfig;
-  semantics: FeedSemantics;
+  /** What the feed reads, as the Gatekeeper resolved it: its checkpoint and the history of what it read hang on it. */
+  resourceKey: string;
+  /** Digest of the feed's whole canonical configuration; the Gatekeeper collects only the configuration it names. */
+  configHash: string;
+  /** Its facts are events or observations: a history window need not scan what was ingested long before it. */
+  eventTimed: boolean;
+  /** Present when the source hands out history older than a live collection returns. */
+  history?: HistoryCapability;
+  /** How it is collected: how often, for how long, how much it may read, and whether its changes are history. */
+  policy: CollectionPolicyDefinition;
   /** Semantic collection generation, independent of administrative edits. */
   feedEpoch: string;
-  resolved: ResolvedFeed;
-  policyId: string;
   enabled: boolean;
   staleAfterSeconds: number;
   /** Who made the data: a key of the publishers the Gatekeeper's catalog declares. */
@@ -113,14 +109,29 @@ export function definitionFingerprint(feed: Feed): string {
   return canonicalJson(definition);
 }
 
-/** Equal for two copies of a policy that differ only in when they were written. */
-export function policyFingerprint(policy: FeedPolicy): string {
-  const { createdAt: _created, ...definition } = policy;
-  return canonicalJson(definition);
+/**
+ * One-time: a feed definition stored before the Gatekeeper's catalog carried resolved feeds, with the collection
+ * policy it was installed under, as the catalog would now install it. `undefined` for one already in this shape.
+ * Kept until every Registry and runner has rewritten what it stores.
+ */
+export function liftResolvedFeed(stored: JsonObject, collection: JsonValue | undefined): JsonObject | undefined {
+  const resolved = asObject(stored.resolved);
+  if (!resolved) return undefined;
+  const { config: _config, semantics: _semantics, resolved: _resolved, policyId: _policy, ...definition } = stored;
+  const subject = asString(asObject(resolved.semantics)?.domainSubject);
+  const lifted: JsonObject = {
+    ...definition,
+    resourceKey: resolved.resourceKey ?? null,
+    configHash: resolved.configHash ?? null,
+    eventTimed: subject === "event" || subject === "observation",
+    policy: collection ?? null,
+  };
+  if (isJsonObject(resolved.history)) lifted.history = resolved.history;
+  return lifted;
 }
 
-/** A feed definition or policy without its write times: what fingerprints compare. */
-type Fingerprinted = Omit<Feed, "createdAt" | "updatedAt"> | Omit<FeedPolicy, "createdAt">;
+/** A feed definition without its write times: what fingerprints compare. */
+type Fingerprinted = Omit<Feed, "createdAt" | "updatedAt">;
 
 /** JSON with object members sorted, so member order never looks like a change. */
 function canonicalJson(value: Fingerprinted): string {
@@ -164,8 +175,8 @@ export type ProductSummary = Omit<ProductIndexEntry, "chunks">;
  * recent change windows, and served by the history API. The one rule every
  * part of the kernel asks.
  */
-export function keepsHistory(policy: Pick<FeedPolicy, "collection">, productKey: string): boolean {
-  return policy.collection.historyMode === "changes" && !(policy.collection.withoutHistory ?? []).includes(productKey);
+export function keepsHistory(policy: CollectionPolicyDefinition, productKey: string): boolean {
+  return policy.historyMode === "changes" && !(policy.withoutHistory ?? []).includes(productKey);
 }
 
 export type LiveEventKind = "backfill" | "failed" | "published" | "unchanged";
@@ -204,7 +215,6 @@ export interface Acquisition {
   revisions?: number;
   /** History rows committed for delivery to the lake (zero when sampling skipped this one). */
   historyRows?: number;
-  policyVersion: number;
   error?: string;
   /** What the Gatekeeper said went wrong, when it was the Gatekeeper that said so. */
   errorCode?: CollectionFailureCode;

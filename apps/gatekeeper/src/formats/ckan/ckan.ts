@@ -26,19 +26,17 @@ import {
 import { CKAN_NORMALIZER } from "./transform";
 import { csvSeriesOptions } from "./csv-series";
 export const CKAN_FEEDS = {
+  // One CSV, JSON, or GeoJSON resource from a CKAN dataset.
   resource: {
     kind: "resource",
-    title: "CKAN resource",
-    description: "One CSV, JSON, or GeoJSON resource from a CKAN dataset.",
     semantics: {
       domainSubject: "reference",
       defaultProductRole: "reference",
     },
   },
+  // Explicit measurements and source timestamps from a published CSV observation window.
   observations: {
     kind: "observations",
-    title: "CKAN CSV observations",
-    description: "Explicit measurements and source timestamps from a published CSV observation window.",
     semantics: { domainSubject: "observation", defaultProductRole: "time-series" },
   },
 } as const satisfies Record<string, FeedKindDescription>;

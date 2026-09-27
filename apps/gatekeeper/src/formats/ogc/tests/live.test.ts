@@ -38,12 +38,12 @@ describe.runIf(wanted.length > 0)("OGC live collection", () => {
         configHash: resolved.configHash,
         mode: { kind: "live" },
         limits: {
-          sourceBytes: example.policy.collection.maxBytes,
-          outputBytes: example.policy.collection.maxOutputBytes ?? Math.max(1024 * 1024, Math.min(16 * 1024 * 1024, example.policy.collection.maxBytes * 4)),
-          recordBytes: example.policy.collection.maxRecordBytes ?? 262_144,
-          records: example.policy.collection.maxRecords ?? 1_000_000,
+          sourceBytes: example.policy.maxBytes,
+          outputBytes: example.policy.maxOutputBytes ?? Math.max(1024 * 1024, Math.min(16 * 1024 * 1024, example.policy.maxBytes * 4)),
+          recordBytes: example.policy.maxRecordBytes ?? 262_144,
+          records: example.policy.maxRecords ?? 1_000_000,
         },
-        deadline: new Date(Date.now() + example.policy.collection.timeoutSeconds * 1000).toISOString(),
+        deadline: new Date(Date.now() + example.policy.timeoutSeconds * 1000).toISOString(),
         observedAt: new Date().toISOString(),
       };
       const result = await collectNormalized(request, collector);

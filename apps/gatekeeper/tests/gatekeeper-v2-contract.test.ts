@@ -1,17 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createTestHarness } from "wrangler";
 import { readdirSync, readFileSync } from "node:fs";
-import { hashSourceConfig } from "@open-data-pt/contract";
 import { INSTALLED } from "./catalog";
+import type { ConformanceAnswer } from "./fixtures/gatekeeper-conformance-worker";
 import { jsonAs } from "./support";
-
-/** What the conformance Worker answers for each library it resolved. */
-interface ConformanceRow {
-  library: string;
-  description: { kind: string; name: string };
-  kindCount: number;
-  resolved: { config: Record<string, string>; configHash: string; resourceKey: string; kind: string };
-}
 
 function workerConfig(name: string, bindings = false) {
   const config = {
@@ -30,12 +22,11 @@ const server = createTestHarness({
 beforeAll(async () => server.listen(), 60_000);
 afterAll(async () => server.close(), 30_000);
 
-describe("the Gatekeeper entrypoint exposes the normalized five-operation contract", () => {
-  it("gives the Worker the five operations and no legacy RPC", () => {
+describe("the Gatekeeper entrypoint exposes the three-operation contract", () => {
+  it("gives the Worker its catalog, the catalog's digest and collection, and no other RPC", () => {
     const factory = readFileSync("apps/gatekeeper/src/gatekeeper.ts", "utf8");
-    for (const method of ["describe", "listFeedKinds", "resolveFeed", "collect", "exampleFeeds", "catalog"]) expect(factory).toContain(`async ${method}(`);
-    expect(factory).not.toContain("async validateFeedConfig(");
-    expect(factory).not.toContain("async collectHistory(");
+    for (const method of ["catalog", "catalogVersion", "collect"]) expect(factory).toContain(`async ${method}(`);
+    for (const removed of ["describe", "listFeedKinds", "resolveFeed", "exampleFeeds", "validateFeedConfig", "collectHistory"]) expect(factory).not.toContain(`async ${removed}(`);
     expect(readFileSync("apps/gatekeeper/src/worker.ts", "utf8")).toContain("gatekeeper<Env>(LIBRARIES)");
   });
 
@@ -55,22 +46,26 @@ describe("the Gatekeeper entrypoint exposes the normalized five-operation contra
     expect(await response.json()).toEqual({ kind: "failure", code: "protocol-mismatch", retryable: true, retryAfterSeconds: 60 });
   }, 30_000);
 
-  // A library whose publishers are all held installs nothing, so the entrypoint offers it nothing to resolve;
-  // `feed-identity.test.ts` still resolves every example it lists.
-  it("resolves a canonical example of every installing library through the real entrypoint over private Worker RPC", async () => {
+  // A library whose publishers are all held installs nothing, so the catalog carries nothing of it;
+  // `feed-identity.test.ts` still resolves every feed the folders list.
+  it("answers every installing library's feeds resolved, and a stable digest, through the real entrypoint over private Worker RPC", async () => {
     const response = await server.fetch("/conformance");
     expect(response.status, await response.clone().text()).toBe(200);
-    const rows = jsonAs<ConformanceRow[]>(await response.text());
-    expect(rows.map((row) => row.library)).toEqual([...new Set(INSTALLED.map((example) => example.config.source ?? ""))].toSorted());
-    for (const row of rows) {
-      expect(row.description.kind).toBeTruthy();
-      expect(row.description.name).toBeTruthy();
-      expect(row.kindCount).toBeGreaterThan(0);
-      expect(row.resolved.configHash).toBe(await hashSourceConfig(row.resolved.config));
-      // `<library>:<library>:<kind>:<digest>`: the library's name twice, once where the Worker's name used to be.
-      expect(row.resolved.resourceKey).toMatch(new RegExp(`^${row.library}:${row.library}:[a-z0-9-]+:`));
-      expect(row.resolved.kind).toMatch(new RegExp(`^${row.library}:[a-z0-9-]+$`));
-      expect(row.resolved.config.source).toBe(row.library);
+    const answer = jsonAs<ConformanceAnswer>(await response.text());
+    expect(answer.versions[0]).toMatch(/^[0-9a-f]{64}$/);
+    expect(answer.versions[1]).toBe(answer.versions[0]);
+    expect(answer.feeds.map((feed) => feed.slug).toSorted()).toEqual(INSTALLED.map((feed) => feed.slug).toSorted());
+    const libraries = [...new Set(INSTALLED.map((feed) => feed.config.source ?? ""))].toSorted();
+    expect([...new Set(answer.feeds.map((feed) => feed.library))].toSorted()).toEqual(libraries);
+    for (const library of libraries) {
+      const feeds = answer.feeds.filter((feed) => feed.library === library);
+      expect(feeds.length, library).toBeGreaterThan(0);
+      for (const feed of feeds) {
+        // `<library>:<library>:<kind>:<digest>`: the library's name twice, once where the Worker's name used to be.
+        expect(feed.resourceKey, feed.slug).toMatch(new RegExp(`^${library}:${library}:[a-z0-9-]+:`));
+        expect(feed.configHash, feed.slug).toMatch(/^[0-9a-f]{64}$/);
+        expect([true, false], feed.slug).toContain(feed.eventTimed);
+      }
     }
-  }, 30_000);
+  }, 60_000);
 });

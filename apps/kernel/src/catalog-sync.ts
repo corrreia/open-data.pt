@@ -1,14 +1,15 @@
-import type { ExampleFeed, FeedKindDescription } from "@open-data-pt/contract";
+import type { CatalogFeed } from "@open-data-pt/contract";
 
 import { digest } from "./hash";
 
 /**
  * Keeping the Registry's feeds in step with the Gatekeeper, with no operator:
- * every example it lists is a feed. The Registry alarm runs one step
- * at a time; this module is the decision logic, free of Durable Object APIs.
+ * every feed its catalog lists is installed, as the catalog resolves it. The
+ * Registry alarm runs one step at a time; this module is the decision logic,
+ * free of Durable Object APIs.
  */
 
-/** How often the Gatekeeper's examples and feed kinds are compared with the feeds. */
+/** How often the Gatekeeper's catalog is compared with the feeds. */
 export const SYNC_CHECK_MS = 15 * 60_000;
 /**
  * The least time between two checks brought forward by a catalog version the
@@ -16,22 +17,12 @@ export const SYNC_CHECK_MS = 15 * 60_000;
  * Gatekeeper before every instance of it answers the Registry.
  */
 export const VERSION_CHECK_MIN_MS = 60_000;
-/** How often every feed is resolved and handed to its runner again, even when nothing it came from changed. */
-export const SYNC_RESOLVE_ALL_MS = 24 * 60 * 60_000;
 /**
  * Feed installs, updates and retirements per step. Each one is a runner round
  * trip that reports back to the Registry; 29 in one request once hit the Workers
  * "subrequest depth limit exceeded" error after eight.
  */
 export const SYNC_BATCH = 4;
-
-/** One library's part of the Gatekeeper's answer: its examples and the feed kinds it resolves them with. */
-export interface CatalogEntry {
-  /** The library's name, which is the `source` key its examples and installed feeds carry. */
-  library: string;
-  examples: ExampleFeed[];
-  kinds: FeedKindDescription[];
-}
 
 /** The part of a stored feed the sync needs. */
 export interface SyncFeed {
@@ -45,14 +36,9 @@ export interface SyncFeed {
  * so a feed slowed to half an hour is not shown as late thirty seconds after it ran. A deployment
  * sets no floor and every policy's own cadence stands.
  */
-export function withCadenceFloor(example: ExampleFeed, floorSeconds: number): ExampleFeed {
-  const { cadenceSeconds } = example.policy.collection;
-  if (floorSeconds <= 0 || cadenceSeconds >= floorSeconds) return example;
-  return {
-    ...example,
-    policy: { ...example.policy, collection: { ...example.policy.collection, cadenceSeconds: floorSeconds } },
-    staleAfterSeconds: Math.max(example.staleAfterSeconds, floorSeconds * 3),
-  };
+export function withCadenceFloor(feed: CatalogFeed, floorSeconds: number): CatalogFeed {
+  if (floorSeconds <= 0 || feed.policy.cadenceSeconds >= floorSeconds) return feed;
+  return { ...feed, policy: { ...feed.policy, cadenceSeconds: floorSeconds }, staleAfterSeconds: Math.max(feed.staleAfterSeconds, floorSeconds * 3) };
 }
 
 /** The floor a `DEV_MIN_CADENCE_SECONDS` var asks for: a positive whole number of seconds, or none. */
@@ -61,14 +47,13 @@ export function cadenceFloorOf(value: string | undefined): number {
   return Number.isSafeInteger(seconds) && seconds > 0 ? seconds : 0;
 }
 
-/** Install or update one example, or retire a feed whose example is gone. */
-export type SyncOp = { op: "apply"; library: string; example: ExampleFeed; hash: string } | { op: "retire"; feedId: string; slug: string };
+/** Install or update one feed the catalog lists, or retire one it no longer does. */
+export type SyncOp = { op: "apply"; feed: CatalogFeed; hash: string } | { op: "retire"; feedId: string; slug: string };
 
 export interface SyncState {
   nextCheckAt: number;
-  nextResolveAllAt: number;
   queue: SyncOp[];
-  /** Per example slug, the hash of the example and its library's feed kinds last applied successfully. */
+  /** Per feed slug, the hash of the catalog entry last applied successfully. */
   hashes: Record<string, string>;
   lastCheckedAt?: string;
   lastError?: string;
@@ -88,12 +73,12 @@ export interface SyncProgress {
 }
 
 export interface SyncPorts {
-  /** The Gatekeeper's examples and kinds, by library; `undefined` when it did not answer, or answered with nothing. */
-  readCatalog(): Promise<CatalogEntry[] | undefined>;
+  /** The feeds the Gatekeeper's catalog lists; `undefined` when it did not answer, or answered with nothing. */
+  readCatalog(): Promise<CatalogFeed[] | undefined>;
   /** The Gatekeeper's catalog version; `undefined` from one too old to say. */
   catalogVersion(): Promise<string | undefined>;
   feeds(): SyncFeed[];
-  apply(library: string, example: ExampleFeed): Promise<void>;
+  apply(feed: CatalogFeed): Promise<void>;
   retire(feedId: string): Promise<void>;
   load(): SyncState | undefined;
   save(state: SyncState): void;
@@ -109,7 +94,7 @@ export interface SyncPorts {
  */
 export async function syncStep(ports: SyncPorts, options: { check?: boolean } = {}): Promise<SyncProgress> {
   const now = ports.now();
-  const state = ports.load() ?? { nextCheckAt: 0, nextResolveAllAt: 0, queue: [], hashes: {} };
+  const state = ports.load() ?? { nextCheckAt: 0, queue: [], hashes: {} };
   const progress: SyncProgress = { checked: false, applied: 0, retired: 0, failed: 0, pending: 0 };
   if (state.queue.length === 0 && (options.check === true || now >= state.nextCheckAt)) {
     const [catalog, version] = await Promise.all([ports.readCatalog(), ports.catalogVersion()]);
@@ -121,9 +106,7 @@ export async function syncStep(ports: SyncPorts, options: { check?: boolean } = 
     }
     if (version === undefined) delete state.catalogVersion;
     else state.catalogVersion = version;
-    const resolveAll = now >= state.nextResolveAllAt;
-    state.queue = planSync(catalog, ports.feeds(), state.hashes, resolveAll);
-    if (resolveAll) state.nextResolveAllAt = now + SYNC_RESOLVE_ALL_MS;
+    state.queue = planSync(catalog, ports.feeds(), state.hashes);
     state.lastCheckedAt = new Date(now).toISOString();
     // A check that finds nothing left to do ends the last failure's story; a failed operation is queued again by the
     // check, so its error is set again if it fails again.
@@ -134,8 +117,8 @@ export async function syncStep(ports: SyncPorts, options: { check?: boolean } = 
   for (const op of state.queue.splice(0, SYNC_BATCH)) {
     try {
       if (op.op === "apply") {
-        await ports.apply(op.library, op.example);
-        state.hashes[op.example.slug] = op.hash;
+        await ports.apply(op.feed);
+        state.hashes[op.feed.slug] = op.hash;
         progress.applied += 1;
       } else {
         await ports.retire(op.feedId);
@@ -144,9 +127,9 @@ export async function syncStep(ports: SyncPorts, options: { check?: boolean } = 
       }
     } catch (error) {
       progress.failed += 1;
-      const subject = op.op === "apply" ? op.example.slug : op.slug;
+      const subject = op.op === "apply" ? op.feed.slug : op.slug;
       state.lastError = `${subject}: ${String(error)}`.slice(0, 500);
-      console.warn(JSON.stringify({ event: "example_sync_operation_failed", op: op.op, subject, error: String(error) }));
+      console.warn(JSON.stringify({ event: "catalog_sync_operation_failed", op: op.op, subject, error: String(error) }));
     }
   }
   progress.pending = state.queue.length;
@@ -155,21 +138,18 @@ export async function syncStep(ports: SyncPorts, options: { check?: boolean } = 
 }
 
 /**
- * What one check queues: new and changed examples (every example on a
- * re-resolve day), then feeds whose example is gone. A library the Gatekeeper
- * no longer carries (held, or deleted) lists nothing, so its feeds go.
+ * What one check queues: new and changed feeds, then feeds the catalog no longer
+ * lists. A library the Gatekeeper no longer carries (held, or deleted) lists
+ * nothing, so its feeds go.
  */
-export function planSync(catalog: CatalogEntry[], feeds: SyncFeed[], hashes: Record<string, string>, resolveAll: boolean): SyncOp[] {
+export function planSync(catalog: CatalogFeed[], feeds: SyncFeed[], hashes: Record<string, string>): SyncOp[] {
   const ops: SyncOp[] = [];
   const installed = new Set(feeds.map((feed) => feed.slug));
   const listed = new Set<string>();
-  for (const entry of catalog) {
-    const kindsHash = digest(JSON.stringify(entry.kinds));
-    for (const example of entry.examples) {
-      listed.add(example.slug);
-      const hash = digest(`${kindsHash}|${JSON.stringify(example)}`);
-      if (resolveAll || !installed.has(example.slug) || hashes[example.slug] !== hash) ops.push({ op: "apply", library: entry.library, example, hash });
-    }
+  for (const feed of catalog) {
+    listed.add(feed.slug);
+    const hash = digest(JSON.stringify(feed));
+    if (!installed.has(feed.slug) || hashes[feed.slug] !== hash) ops.push({ op: "apply", feed, hash });
   }
   for (const feed of feeds) if (!listed.has(feed.slug)) ops.push({ op: "retire", feedId: feed.id, slug: feed.slug });
   return ops;

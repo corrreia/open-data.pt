@@ -18,11 +18,7 @@ export const FEED = defineFeed(OGC_DEPLOYMENT, {
     pageSize: "97",
     maxPages: "35",
   },
-  policy: {
-    name: "SRUP weekly register",
-    version: 2,
-    collection: measuredCollection({ source: 520, output: 125, largestRow: 423 }, WEEK),
-  },
+  policy: measuredCollection({ source: 520, output: 125, largestRow: 423 }, WEEK),
   staleAfterSeconds: 2 * WEEK,
   /** Every week: the srup_rede_viaria layer walked page by page from DGT's OGC API, every feature with its outline. */
   fetch: ({ config, library, fetch }) => collectOgcFeed(config, library.hosts, fetch),

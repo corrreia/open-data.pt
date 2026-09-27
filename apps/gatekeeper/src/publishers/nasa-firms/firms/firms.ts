@@ -13,10 +13,9 @@ export const FIRMS_REGIONS = {
 export const FIRMS_PRODUCTS = ["VIIRS_SNPP_NRT", "VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT", "MODIS_NRT"] as const;
 
 export const FIRMS_FEEDS = {
+  // NASA FIRMS active-fire and thermal-anomaly pixels from one MODIS or VIIRS near-real-time product.
   hotspots: {
     kind: "hotspots",
-    title: "Satellite thermal anomalies",
-    description: "NASA FIRMS active-fire and thermal-anomaly pixels from one MODIS or VIIRS near-real-time product.",
     semantics: { domainSubject: "event", defaultProductRole: "event-log" },
   },
 } as const satisfies Record<string, FeedKindDescription>;

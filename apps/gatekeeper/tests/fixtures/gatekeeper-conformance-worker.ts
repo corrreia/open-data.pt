@@ -22,24 +22,23 @@ function previousRelease(): CollectionRequest {
   };
 }
 
-/** Resolves the first example of every library through the real Worker, over a real service binding. */
+/** What the conformance route answers: two readings of the catalog's digest, and every feed the catalog resolved. */
+export interface ConformanceAnswer {
+  versions: string[];
+  feeds: Array<{ slug: string; library: string; resourceKey: string; configHash: string; eventTimed: boolean }>;
+}
+
+/** Reads the catalog through the real Worker, over a real service binding. */
 export default {
   async fetch(request: Request, env: FixtureEnv): Promise<Response> {
     if (new URL(request.url).pathname === "/previous-release") return Response.json(await env.GK.collect(previousRelease()));
-    const [description, kinds, examples] = await Promise.all([env.GK.describe(), env.GK.listFeedKinds(), env.GK.exampleFeeds()]);
-    const output = [];
-    const seen = new Set<string>();
-    for (const example of examples) {
-      const library = example.config.source ?? "";
-      if (seen.has(library)) continue;
-      seen.add(library);
-      try {
-        const resolved = await env.GK.resolveFeed(example.config);
-        output.push({ library, description, kindCount: kinds.filter((kind) => kind.kind.startsWith(`${library}:`)).length, resolved });
-      } catch (error) {
-        throw new Error(`${library}: ${String(error)}`);
-      }
-    }
-    return Response.json(output.sort((left, right) => left.library.localeCompare(right.library)));
+    const first = await env.GK.catalogVersion();
+    const catalog = await env.GK.catalog();
+    const second = await env.GK.catalogVersion();
+    const answer: ConformanceAnswer = {
+      versions: [first, second],
+      feeds: catalog.feeds.map(({ slug, library, resourceKey, configHash, eventTimed }) => ({ slug, library, resourceKey, configHash, eventTimed })),
+    };
+    return Response.json(answer);
   },
 };

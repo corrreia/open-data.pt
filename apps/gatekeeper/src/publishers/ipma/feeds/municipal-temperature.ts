@@ -10,11 +10,7 @@ export const FEED = defineFeed(IPMA_DEPLOYMENT, {
   attribution: "Instituto Português do Mar e da Atmosfera (IPMA)",
   topics: ["environment", "weather"],
   config: { feed: "municipal-temperature" },
-  policy: {
-    name: "IPMA daily municipal climate",
-    version: 2,
-    collection: { cadenceSeconds: 86_400, timeoutSeconds: 120, maxBytes: 2 * 1024 * 1024, maxOutputBytes: 16 * 1024 * 1024, historyMode: "changes" },
-  },
+  policy: { cadenceSeconds: 86_400, timeoutSeconds: 120, maxBytes: 2 * 1024 * 1024, maxOutputBytes: 16 * 1024 * 1024, historyMode: "changes" },
   staleAfterSeconds: 3 * 86_400,
   /** Once a day: IPMA's 20-day CSV of municipal temperature, re-read only when the file has changed. */
   fetch: ({ config, validator, library, fetch }) => collectIpmaFeed(config, validator, library.apiOrigin, fetch),

@@ -1,6 +1,6 @@
-import type { CatalogDescription, ExampleFeed } from "@open-data-pt/contract";
+import type { CatalogDescription, CatalogFeed } from "@open-data-pt/contract";
 
-import type { FeedRuntime, PublisherInputs, RunnableFeed } from "#/library";
+import { resolveLibraryFeed, SOURCE_KEY, type FeedData, type FeedRuntime, type GatekeeperLibraries, type PublisherInputs, type RunnableFeed } from "#/library";
 import { sourceHosts, type PublisherSources } from "#/publisher-client";
 
 import { PUBLISHER_FOLDERS } from "./folders.generated";
@@ -27,25 +27,29 @@ export function publisherEnabled(id: string): boolean {
   return PUBLISHERS.get(id)?.enabled !== false;
 }
 
-/** A feed as the kernel is told about it: plain data, since functions do not cross RPC, and the publisher whose folder lists it. */
-function exampleOf(feed: RunnableFeed, publisher: string): ExampleFeed {
-  const { fetch: _fetch, backfill: _backfill, transform: _transform, topics, ...data } = feed;
-  return { ...data, publisher, topics: [...topics] };
+/** A feed as its publisher's folder declares it: what its file says, without its functions, and whose folder it is in. */
+export interface DeclaredFeed extends FeedData {
+  publisher: string;
+}
+
+function declared(feed: RunnableFeed, publisher: string): DeclaredFeed {
+  const { fetch: _fetch, backfill: _backfill, transform: _transform, ...data } = feed;
+  return { ...data, publisher };
 }
 
 /** Every feed every publisher lists, by slug: the functions the Worker runs when the kernel asks for a feed's collection. */
 export const RUNNABLE: ReadonlyMap<string, RunnableFeed> = new Map(PUBLISHER_FOLDERS.flatMap((folder) => folder.publisher.feeds.map((feed) => [feed.slug, feed] as const)));
 
 /** Every feed every publisher lists, held or not, each carrying the key of its publisher. */
-export const FEEDS: readonly ExampleFeed[] = PUBLISHER_FOLDERS.flatMap((folder) => folder.publisher.feeds.map((feed) => exampleOf(feed, folder.id)));
+export const FEEDS: readonly DeclaredFeed[] = PUBLISHER_FOLDERS.flatMap((folder) => folder.publisher.feeds.map((feed) => declared(feed, folder.id)));
 
 /** Whether a feed may be installed: every one but those of a publisher held for permission. */
-export function feedEnabled(feed: ExampleFeed): boolean {
+export function feedEnabled(feed: DeclaredFeed): boolean {
   return publisherEnabled(feed.publisher);
 }
 
 /** What the kernel is told besides the feeds: every publisher we may republish, and the vocabularies the feeds name. */
-export const CATALOG: CatalogDescription = {
+export const VOCABULARIES: Omit<CatalogDescription, "feeds"> = {
   publishers: PUBLISHER_FOLDERS.filter((folder) => folder.publisher.enabled !== false).map((folder) => {
     const { enabled: _enabled, feeds: _feeds, ...publisher } = folder.publisher;
     return { id: folder.id, ...publisher };
@@ -53,6 +57,30 @@ export const CATALOG: CatalogDescription = {
   licences: Object.entries(LICENCES).map(([id, licence]) => ({ id, ...licence })),
   topics: Object.entries(TOPICS).map(([id, name]) => ({ id, name })),
 };
+
+/**
+ * The catalog the kernel installs: the vocabularies, and each of these feeds as its library resolves it. Resolving
+ * reads nothing but the feed's own configuration and its publishers' inputs, so the same release always answers the
+ * same catalog.
+ */
+export async function catalogOf(feeds: readonly DeclaredFeed[], libraries: GatekeeperLibraries): Promise<CatalogDescription> {
+  return { ...VOCABULARIES, feeds: await Promise.all(feeds.map((feed) => catalogFeed(feed, libraries))) };
+}
+
+async function catalogFeed(feed: DeclaredFeed, libraries: GatekeeperLibraries): Promise<CatalogFeed> {
+  const resolved = await resolveLibraryFeed(feed.config, libraries);
+  const { config: _config, topics, ...data } = feed;
+  const entry: CatalogFeed = {
+    ...data,
+    topics: [...topics],
+    library: feed.config[SOURCE_KEY] ?? "",
+    resourceKey: resolved.resourceKey,
+    configHash: resolved.configHash,
+    eventTimed: resolved.semantics.domainSubject === "event" || resolved.semantics.domainSubject === "observation",
+  };
+  if (resolved.history) entry.history = resolved.history;
+  return entry;
+}
 
 /**
  * What the publisher folders bring one library: the configurations of every
@@ -68,6 +96,15 @@ export function publisherInputs(source: string): PublisherInputs {
 
 /** The publisher whose folder lists each feed, by slug. */
 const PUBLISHER_OF: ReadonlyMap<string, string> = new Map(FEEDS.map((feed) => [feed.slug, feed.publisher] as const));
+
+/**
+ * A feed the Worker may collect: one its catalog lists. A held publisher's feed has code, and tests run it, but it is
+ * not ours to read until the hold is lifted, whoever asks for it by slug.
+ */
+export function enabledFeed(slug: string): RunnableFeed | undefined {
+  const feed = RUNNABLE.get(slug);
+  return feed && publisherEnabled(PUBLISHER_OF.get(slug) ?? "") ? feed : undefined;
+}
 
 /** The hosts a feed may reach, and what its publisher asked every request to carry: its publisher's declared sources. */
 export function sourcesOf(slug: string): PublisherSources {

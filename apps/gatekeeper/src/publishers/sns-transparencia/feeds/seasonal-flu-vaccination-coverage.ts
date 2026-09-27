@@ -12,11 +12,7 @@ export const FEED = defineFeed(OPENDATASOFT_DEPLOYMENT, {
   config: { host: SNS_HOST, dataset: "taxa-de-cobertura-da-vacina-antigripal-sazonal-na-populacao-em-portugal-continen", orderBy: "epoca_sazonal DESC", limit: "100" },
   policy: {
     ...SNS_MONTHLY_SERIES,
-    name: "SNS annual series snapshot",
-    collection: {
-      ...SNS_MONTHLY_SERIES.collection,
-      cadenceSeconds: 2_592_000,
-    },
+    cadenceSeconds: 2_592_000,
   },
   staleAfterSeconds: 5_184_000,
   /** Once a month: SNS Transparência's `taxa-de-cobertura-da-vacina-antigripal-sazonal-na-populacao-em-portugal-continen` dataset, up to 100 records ordered by `epoca_sazonal DESC`. */

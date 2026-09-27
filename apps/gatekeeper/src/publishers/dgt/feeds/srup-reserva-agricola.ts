@@ -19,11 +19,7 @@ export const FEED = defineFeed(OGC_DEPLOYMENT, {
     maxPages: "4",
     properties: "designacao,serv_dr,serv_data,serv_hiperligacao,serv_lei,municipio",
   },
-  policy: {
-    name: "SRUP weekly register",
-    version: 2,
-    collection: measuredCollection({ source: 1, output: 1, largestRow: 1 }, WEEK),
-  },
+  policy: measuredCollection({ source: 1, output: 1, largestRow: 1 }, WEEK),
   staleAfterSeconds: 2 * WEEK,
   /** Every week: the srup_ran layer walked page by page from DGT's OGC API, its register columns without outlines. */
   fetch: ({ config, library, fetch }) => collectOgcFeed(config, library.hosts, fetch),

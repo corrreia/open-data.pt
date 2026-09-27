@@ -1,20 +1,10 @@
 import { describe, expect, it } from "vitest";
-import {
-  isJsonArray,
-  isJsonObject,
-  isJsonString,
-  libraryConfig,
-  parseJson,
-  type ExampleFeed,
-  type JsonObject,
-  type JsonValue,
-  type NormalizedRow,
-  type TransformContext,
-} from "#/index";
+import { isJsonArray, isJsonObject, isJsonString, libraryConfig, parseJson, type JsonObject, type JsonValue, type NormalizedRow, type TransformContext } from "#/index";
 import { transformGtfs } from "#/formats/gtfs/index";
 import { GtfsCsvReader } from "#/formats/gtfs/csv";
 import { feedCollection, feedsOf } from "#/tests/catalog";
 import { readFixture } from "#/tests/support";
+import type { DeclaredFeed } from "#/catalog/index";
 
 const GTFS = array(parseJson(readFixture(new URL("./fixtures/portugal-expansion.json", import.meta.url)))).map(object);
 
@@ -44,7 +34,7 @@ function bytesInChunks(bytes: Uint8Array, size: number): ReadableStream<Uint8Arr
     },
   });
 }
-function context(entry: ExampleFeed, observedAt = "2026-09-15T00:00:00Z"): TransformContext {
+function context(entry: DeclaredFeed, observedAt = "2026-09-15T00:00:00Z"): TransformContext {
   return {
     observedAt,
     feed: {
@@ -79,7 +69,7 @@ describe("Portuguese transport expansion", () => {
     expect(transformed.finish().products).toEqual([]);
     expect(transformed.products.every((product) => rows.some((row) => row.productKey === product.productKey))).toBe(true);
     expect(rows.every((row) => row.record?.eventTime === undefined)).toBe(true);
-    expect(entry.policy.collection.cadenceSeconds).toBe(86_400);
+    expect(entry.policy.cadenceSeconds).toBe(86_400);
   });
 
   it("trims GTFS header padding without trimming values and rejects resulting duplicates", () => {

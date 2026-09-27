@@ -10,14 +10,10 @@ export const FEED = defineFeed(IPMA_DEPLOYMENT, {
   topics: ["environment", "weather"],
   config: { feed: "daily-forecast" },
   policy: {
-    name: "IPMA forecast reference",
-    version: 3,
-    collection: {
-      cadenceSeconds: 3_600,
-      timeoutSeconds: 30,
-      maxBytes: 2 * 1024 * 1024,
-      historyMode: "changes",
-    },
+    cadenceSeconds: 3_600,
+    timeoutSeconds: 30,
+    maxBytes: 2 * 1024 * 1024,
+    historyMode: "changes",
   },
   staleAfterSeconds: 3_600,
   /** Every hour: IPMA's three daily city forecasts, with the district and weather-type tables they refer to. */

@@ -150,10 +150,8 @@ describe("ArcGIS Gatekeeper", () => {
     expect(newLisbonExamples).toHaveLength(24);
     const permits = newLisbonExamples.find((example) => example.slug === "lisbon-building-permits-feed");
     // The permits layer outgrew the kernel's default output cap: 14,737 outlines, about 19 MB normalized.
-    expect(permits?.policy.collection).toMatchObject({ maxBytes: 32 * 1024 * 1024, maxOutputBytes: 48 * 1024 * 1024 });
-    expect(
-      newLisbonExamples.every((example) => (example === permits || example.policy.collection.maxBytes === 5 * 1024 * 1024) && example.policy.collection.historyMode === "changes"),
-    ).toBe(true);
+    expect(permits?.policy).toMatchObject({ maxBytes: 32 * 1024 * 1024, maxOutputBytes: 48 * 1024 * 1024 });
+    expect(newLisbonExamples.every((example) => (example === permits || example.policy.maxBytes === 5 * 1024 * 1024) && example.policy.historyMode === "changes")).toBe(true);
   });
 
   it("rejects denied hosts and unsafe service paths", () => {

@@ -276,10 +276,10 @@ describe("SNIT examples", () => {
 
   it("polls the register weekly at most, and gives the slow types room to answer", () => {
     for (const example of feedsOf("snit")) {
-      expect(example.policy.collection.cadenceSeconds).toBeGreaterThanOrEqual(604_800);
-      expect(example.staleAfterSeconds).toBeGreaterThanOrEqual(example.policy.collection.cadenceSeconds);
-      expect(example.policy.collection.historyMode).toBe("changes");
-      expect(example.policy.collection.timeoutSeconds).toBeGreaterThanOrEqual(120);
+      expect(example.policy.cadenceSeconds).toBeGreaterThanOrEqual(604_800);
+      expect(example.staleAfterSeconds).toBeGreaterThanOrEqual(example.policy.cadenceSeconds);
+      expect(example.policy.historyMode).toBe("changes");
+      expect(example.policy.timeoutSeconds).toBeGreaterThanOrEqual(120);
     }
   });
 

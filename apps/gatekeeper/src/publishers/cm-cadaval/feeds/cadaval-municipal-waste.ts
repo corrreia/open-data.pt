@@ -20,7 +20,7 @@ export const FEED = defineFeed(UDATA_DEPLOYMENT, {
     feed: "distribution",
     transformer: "municipal-waste",
   },
-  policy: annualPolicy("Cadaval waste annual snapshot", 256 * 1024),
+  policy: annualPolicy(256 * 1024),
   staleAfterSeconds: 30 * 86_400,
   /** Once a day: Cadaval's 2024 waste CSV on dados.gov.pt, downloaded only when it has changed. */
   fetch: ({ config, state, library, fetch }) => collectUdataFeed(config, state, library.hosts, fetch),

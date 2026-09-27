@@ -8,7 +8,6 @@ import {
   feedCollector,
   resolveLibraryFeed,
   type CollectionRequest,
-  type ExampleFeed,
   type GatekeeperLibraries,
   type JsonObject,
   type ResolvedFeed,
@@ -17,7 +16,7 @@ import { isNormalizedFrame } from "../packages/contract/src/validation";
 import { readFrames } from "../apps/kernel/src/frames";
 import { MAX_RECORD_BYTES } from "../apps/kernel/src/blob-budget";
 import { jsonAs } from "./support";
-import { RUNNABLE, runtimeOf } from "@open-data-pt/gatekeeper/catalog";
+import { RUNNABLE, runtimeOf, type DeclaredFeed } from "@open-data-pt/gatekeeper/catalog";
 import { CARRIED, carriedLibraries, feedsOf } from "../apps/gatekeeper/tests/catalog";
 
 /**
@@ -33,13 +32,13 @@ const SELECTED =
     .filter(Boolean) ?? [];
 
 /** Whether LIVE_EXAMPLES asks for this feed: every feed, the feed by its slug, or every feed of its publisher. */
-function selected(example: ExampleFeed): boolean {
+function selected(example: DeclaredFeed): boolean {
   return SELECTED.includes("all") || SELECTED.includes(example.slug) || SELECTED.includes(example.publisher);
 }
 const MIB = 1024 * 1024;
 
 /** The wiring the Worker deploys, from the same declarations and vars, with the real fetch. */
-const LIBRARIES: Array<{ libraries: GatekeeperLibraries; examples: readonly ExampleFeed[] }> = CARRIED.map((library) => ({
+const LIBRARIES: Array<{ libraries: GatekeeperLibraries; examples: readonly DeclaredFeed[] }> = CARRIED.map((library) => ({
   libraries: carriedLibraries(library.deployment.source, {
     ML_CONSUMER_KEY: process.env.ML_CONSUMER_KEY,
     ML_CONSUMER_SECRET: process.env.ML_CONSUMER_SECRET,
@@ -49,8 +48,8 @@ const LIBRARIES: Array<{ libraries: GatekeeperLibraries; examples: readonly Exam
 }));
 
 /** The request the kernel builds for a live collection under this example's policy. */
-function liveRequest(example: ExampleFeed, resolved: ResolvedFeed): CollectionRequest {
-  const policy = example.policy.collection;
+function liveRequest(example: DeclaredFeed, resolved: ResolvedFeed): CollectionRequest {
+  const policy = example.policy;
   const outputBytes = policy.maxOutputBytes ?? Math.max(MIB, Math.min(16 * MIB, policy.maxBytes * 4));
   const recordBytes = Math.min(policy.maxRecordBytes ?? 256 * 1024, MAX_RECORD_BYTES);
   return {

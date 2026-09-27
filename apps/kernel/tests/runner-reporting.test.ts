@@ -8,7 +8,7 @@ import { fixtureResolved } from "./kernel-harness";
 import { sqliteStorage } from "./sqlite-storage";
 
 function acquisition(id: string, requestedAt: string): Acquisition {
-  return { id, feedId: "feed_1", trigger: "scheduled", status: "succeeded", requestedAt, completedAt: requestedAt, policyVersion: 1, revisions: 1, historyRows: 1 };
+  return { id, feedId: "feed_1", trigger: "scheduled", status: "succeeded", requestedAt, completedAt: requestedAt, revisions: 1, historyRows: 1 };
 }
 
 function report(lastError: string, acquisitions: Acquisition[]): RunnerReport {
@@ -20,13 +20,6 @@ describe("Registry ingestion", () => {
     const database = new DatabaseSync(":memory:");
     const store = new RegistryStore(sqliteStorage(database));
     store.migrate();
-    store.upsertPolicy({
-      id: "policy_1",
-      name: "Fixture",
-      version: 1,
-      createdAt: "2026-09-10T00:00:00.000Z",
-      collection: { cadenceSeconds: 60, timeoutSeconds: 30, maxBytes: 1024, historyMode: "changes" },
-    });
     const resolved = await fixtureResolved();
     store.upsertFeed({
       id: "feed_1",
@@ -34,11 +27,11 @@ describe("Registry ingestion", () => {
       title: "Things",
       description: "",
       library: "fixture",
-      config: resolved.config,
-      semantics: resolved.semantics,
-      resolved,
+      resourceKey: resolved.resourceKey,
+      configHash: resolved.configHash,
+      eventTimed: false,
+      policy: { cadenceSeconds: 60, timeoutSeconds: 30, maxBytes: 1024, historyMode: "changes" },
       feedEpoch: "e",
-      policyId: "policy_1",
       enabled: true,
       staleAfterSeconds: 60,
       publisher: "ine",
@@ -63,13 +56,6 @@ describe("Registry ingestion", () => {
 async function registryWithFeed(): Promise<RegistryStore> {
   const store = new RegistryStore(sqliteStorage(new DatabaseSync(":memory:")));
   store.migrate();
-  store.upsertPolicy({
-    id: "policy_1",
-    name: "Fixture",
-    version: 1,
-    createdAt: "2026-09-10T00:00:00.000Z",
-    collection: { cadenceSeconds: 60, timeoutSeconds: 30, maxBytes: 1024, historyMode: "changes" },
-  });
   const resolved = await fixtureResolved();
   store.upsertFeed({
     id: "feed_1",
@@ -77,11 +63,11 @@ async function registryWithFeed(): Promise<RegistryStore> {
     title: "Things",
     description: "",
     library: "fixture",
-    config: resolved.config,
-    semantics: resolved.semantics,
-    resolved,
+    resourceKey: resolved.resourceKey,
+    configHash: resolved.configHash,
+    eventTimed: false,
+    policy: { cadenceSeconds: 60, timeoutSeconds: 30, maxBytes: 1024, historyMode: "changes" },
     feedEpoch: "e",
-    policyId: "policy_1",
     enabled: true,
     staleAfterSeconds: 60,
     publisher: "ine",
@@ -102,7 +88,7 @@ interface RunFailure {
 const UPSTREAM: RunFailure = { error: "Gatekeeper collection failed: upstream-error", code: "upstream-error" };
 
 function run(id: string, at: string, status: Acquisition["status"], failure?: RunFailure, trigger = "scheduled"): Acquisition {
-  const item: Acquisition = { id, feedId: "feed_1", trigger, status, requestedAt: at, completedAt: at, policyVersion: 1 };
+  const item: Acquisition = { id, feedId: "feed_1", trigger, status, requestedAt: at, completedAt: at };
   if (failure) item.error = failure.error;
   if (failure?.code) item.errorCode = failure.code;
   return item;

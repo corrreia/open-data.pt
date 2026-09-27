@@ -1,5 +1,6 @@
 import { IODA_MAX_BYTES, IODA_PAGE_LIMIT } from "./ioda";
 
+// IODA's measurements: republishing them needs IODA's permission.
 const COLLECTION = {
   timeoutSeconds: 60,
   maxBytes: IODA_MAX_BYTES,
@@ -15,11 +16,7 @@ const COLLECTION = {
  * event log within about one bin of the source while asking for a two-kilobyte
  * answer ninety-six times a day.
  */
-export const IODA_OUTAGE_POLICY = {
-  name: "IODA measurement — republication permission required",
-  version: 1,
-  collection: { ...COLLECTION, cadenceSeconds: 900, maxRecords: IODA_PAGE_LIMIT },
-} as const;
+export const IODA_OUTAGE_POLICY = { ...COLLECTION, cadenceSeconds: 900, maxRecords: IODA_PAGE_LIMIT } as const;
 
 /**
  * Signals move in five- and ten-minute steps, but a connectivity series is
@@ -28,8 +25,4 @@ export const IODA_OUTAGE_POLICY = {
  * republishes two hours already published, which is what picks up a bin IODA
  * filled in or corrected late; unchanged points cost the kernel no history.
  */
-export const IODA_SIGNAL_POLICY = {
-  name: "IODA measurement — republication permission required",
-  version: 1,
-  collection: { ...COLLECTION, cadenceSeconds: 3600, maxRecords: 5000 },
-} as const;
+export const IODA_SIGNAL_POLICY = { ...COLLECTION, cadenceSeconds: 3600, maxRecords: 5000 } as const;

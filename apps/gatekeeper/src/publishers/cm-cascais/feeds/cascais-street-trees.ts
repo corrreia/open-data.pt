@@ -25,14 +25,10 @@ export const FEED = defineFeed(CKAN_DEPLOYMENT, {
    */
   policy: {
     ...CASCAIS_DAILY_REFERENCE,
-    name: "Cascais CKAN weekly large reference snapshot",
-    collection: {
-      ...CASCAIS_DAILY_REFERENCE.collection,
-      cadenceSeconds: 604_800,
-      timeoutSeconds: 300,
-      maxBytes: 48 * 1024 * 1024,
-      maxOutputBytes: 192 * 1024 * 1024,
-    },
+    cadenceSeconds: 604_800,
+    timeoutSeconds: 300,
+    maxBytes: 48 * 1024 * 1024,
+    maxOutputBytes: 192 * 1024 * 1024,
   },
   staleAfterSeconds: 1_209_600,
   /** Once a week: the geocascais-arvore resource on Cascais's CKAN portal, downloaded only when it has changed. */

@@ -18,7 +18,7 @@ export const FEED = defineFeed(OGC_DEPLOYMENT, {
     pageSize: "500",
     maxPages: "22",
   },
-  policy: { name: "CAOP weekly boundaries", version: 3, collection: measuredCollection({ source: 219, output: 67, largestRow: 397 }, WEEK) },
+  policy: measuredCollection({ source: 219, output: 67, largestRow: 397 }, WEEK),
   staleAfterSeconds: 1_209_600,
   /** Every week: the CAOP's trocos collection walked page by page from DGT's OGC API, every feature with its outline. */
   fetch: ({ config, library, fetch }) => collectOgcFeed(config, library.hosts, fetch),

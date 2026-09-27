@@ -1,11 +1,12 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { collectNormalized, libraryConfig, NORMALIZED_PROTOCOL, type CollectionRequest, type ExampleFeed, type NormalizedFrame, feedNormalizer } from "@open-data-pt/gatekeeper";
+import { collectNormalized, libraryConfig, NORMALIZED_PROTOCOL, type CollectionRequest, type NormalizedFrame, feedNormalizer } from "@open-data-pt/gatekeeper";
 import { PARLIAMENT_NORMALIZER } from "../apps/gatekeeper/src/publishers/assembleia-da-republica/parliament/index";
 import { parliamentDocument, type ParliamentDocument } from "../apps/gatekeeper/src/publishers/assembleia-da-republica/parliament/parliament";
 import { feedCollection, feedsOf } from "../apps/gatekeeper/tests/catalog";
 import { readFixture } from "../apps/gatekeeper/tests/support";
 import { readFrames } from "../apps/kernel/src/frames";
+import type { DeclaredFeed } from "@open-data-pt/gatekeeper/catalog";
 
 /*
  * The Parliament library's output read back the way the kernel reads it: every frame through `readFrames`.
@@ -95,9 +96,9 @@ const live =
 const samples = process.env.PARLIAMENT_SAMPLES === "1";
 
 /** Aggregate-only validation; never copies real personal records into repository fixtures or logs. */
-async function collect(example: ExampleFeed, fetcher: typeof fetch, mode: "saved-research" | "live"): Promise<void> {
+async function collect(example: DeclaredFeed, fetcher: typeof fetch, mode: "saved-research" | "live"): Promise<void> {
   const { resolved, collector } = await feedCollection(example.slug, { fetcher });
-  const policy = example.policy.collection;
+  const policy = example.policy;
   const request: CollectionRequest = {
     protocol: NORMALIZED_PROTOCOL,
     slug: example.slug,

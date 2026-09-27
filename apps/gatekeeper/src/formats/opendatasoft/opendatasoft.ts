@@ -59,10 +59,9 @@ const CONFIG_KEYS = new Set([
 const SERIES_FIELD_PATTERN = /^[a-z0-9_]{1,128}$/;
 
 export const OPENDATASOFT_FEEDS = {
+  // A bounded Opendatasoft Explore dataset scope, published as records or explicitly selected numeric measures with source reporting clocks.
   dataset: {
     kind: "dataset",
-    title: "Opendatasoft dataset",
-    description: "A bounded Opendatasoft Explore dataset scope, published as records or explicitly selected numeric measures with source reporting clocks.",
     semantics: {
       domainSubject: "observation",
       defaultProductRole: "current-state",

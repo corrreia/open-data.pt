@@ -38,19 +38,17 @@ const OPERATOR = /^[A-Za-z][A-Za-z0-9]{1,39}$/u;
 const ZONE_ID = /^[0-9]{1,12}$/u;
 
 export const MYINFO_FEEDS = {
+  // Every stop the operator serves, with its position and the lines that call there, and every line with its number and name.
   network: {
     kind: "network",
-    title: "Stops and lines",
-    description: "Every stop the operator serves, with its position and the lines that call there, and every line with its number and name.",
     semantics: {
       domainSubject: "feature",
       defaultProductRole: "reference",
     },
   },
+  // Every scheduled departure between one origin and one destination, with its arrival, journey time, lines and the days it runs.
   timetable: {
     kind: "timetable",
-    title: "Departures between two places",
-    description: "Every scheduled departure between one origin and one destination, with its arrival, journey time, lines and the days it runs.",
     semantics: {
       domainSubject: "reference",
       defaultProductRole: "reference",

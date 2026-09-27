@@ -18,7 +18,7 @@ import {
  * `/v2/entities`, holding typed entities that hold attributes. Cities run
  * brokers as the live face of their sensors and fleets, which is why this is a
  * format and not one city's library — Porto's broker is the first read, and
- * the next one is an entry in the host list and an example.
+ * the next one is an entry in the host list and a feed.
  */
 export const NGSI_PATH = "/v2/entities";
 export const NGSI_MAX_BYTES = 8 * 1024 * 1024;
@@ -28,16 +28,14 @@ const NGSI_MAX_ENTITIES = 20_000;
 const NGSI_TOTAL_HEADER = "fiware-total-count";
 
 export const NGSI_FEEDS = {
+  // Entities of one type from an NGSI v2 broker, each carrying the time it was observed: the latest reading of each, and the measurements as series.
   observations: {
     kind: "observations",
-    title: "NGSI observations",
-    description: "Entities of one type from an NGSI v2 broker, each carrying the time it was observed: the latest reading of each, and the measurements as series.",
     semantics: { domainSubject: "observation", defaultProductRole: "current-state" },
   },
+  // Entities of one type from an NGSI v2 broker as they stand now: what each is and the state it is in, with no clock of its own.
   inventory: {
     kind: "inventory",
-    title: "NGSI inventory",
-    description: "Entities of one type from an NGSI v2 broker as they stand now: what each is and the state it is in, with no clock of its own.",
     semantics: { domainSubject: "feature", defaultProductRole: "current-state" },
   },
 } as const satisfies Record<string, FeedKindDescription>;
@@ -184,7 +182,7 @@ function measureList(value: string | undefined): string {
   return measures.join(",");
 }
 
-/** A measure's attribute name and the unit the example states for it, if any. */
+/** A measure's attribute name and the unit the feed states for it, if any. */
 export function ngsiMeasures(value: string | undefined): readonly { readonly name: string; readonly unit: string }[] {
   return (value ?? "")
     .split(",")

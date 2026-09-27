@@ -9,12 +9,8 @@ export const PORTO_HOST = "dadosabertos.cm-porto.pt";
  */
 
 export const DAILY_REFERENCE = {
-  name: "Porto CKAN daily reference snapshot",
-  version: 1,
-  collection: {
-    cadenceSeconds: 86_400,
-    timeoutSeconds: 60,
-    maxBytes: 10 * 1024 * 1024,
-    historyMode: "changes",
-  },
+  cadenceSeconds: 86_400,
+  timeoutSeconds: 60,
+  maxBytes: 10 * 1024 * 1024,
+  historyMode: "changes",
 } as const;

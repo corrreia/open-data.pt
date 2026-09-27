@@ -10,11 +10,7 @@ export const FEED = defineFeed(INFOAGUA_DEPLOYMENT, {
   attribution: "InfoÁgua, Agência Portuguesa do Ambiente",
   topics: ["environment", "weather"],
   config: { feed: "drought-index" },
-  policy: {
-    name: "InfoÁgua drought index",
-    version: 1,
-    collection: { cadenceSeconds: 86_400, timeoutSeconds: 60, maxBytes: INFOAGUA_MAX_BYTES, historyMode: "changes" },
-  },
+  policy: { cadenceSeconds: 86_400, timeoutSeconds: 60, maxBytes: INFOAGUA_MAX_BYTES, historyMode: "changes" },
   staleAfterSeconds: 259_200,
   /** Once a day: InfoÁgua's drought page, which carries the latest month's index of every river basin inline. */
   fetch: ({ config, validator, library, fetch }) => collectInfoaguaFeed(config, validator, library.apiOrigin, fetch),

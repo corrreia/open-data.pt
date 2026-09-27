@@ -24,10 +24,9 @@ export const NASA_POWER_REGIONS = {
 export const NASA_POWER_PARAMETERS = ["ALLSKY_SFC_SW_DWN", "T2M", "PRECTOTCORR", "WS10M"] as const;
 
 export const NASA_POWER_FEEDS = {
+  // NASA POWER daily analysis-ready values on the source grid for one Portugal bounding region and parameter.
   "daily-region": {
     kind: "daily-region",
-    title: "Daily gridded solar and meteorological analysis",
-    description: "NASA POWER daily analysis-ready values on the source grid for one Portugal bounding region and parameter.",
     semantics: { domainSubject: "observation", defaultProductRole: "time-series" },
   },
 } as const satisfies Record<string, FeedKindDescription>;

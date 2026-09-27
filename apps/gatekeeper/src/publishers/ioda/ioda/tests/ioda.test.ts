@@ -212,8 +212,8 @@ describe("IODA examples", () => {
       expect(example.publisher).toBe("ioda");
       expect(example.topics).toEqual(["telecom"]);
       expect(example.licence).toBe("ioda-all-rights-reserved");
-      expect(example.policy.collection.cadenceSeconds).toBe(example.config.feed === "signals" ? 3600 : 900);
-      expect(example.staleAfterSeconds).toBe(example.policy.collection.cadenceSeconds * 3);
+      expect(example.policy.cadenceSeconds).toBe(example.config.feed === "signals" ? 3600 : 900);
+      expect(example.staleAfterSeconds).toBe(example.policy.cadenceSeconds * 3);
     }
   });
 

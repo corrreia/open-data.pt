@@ -11,14 +11,10 @@ export const FEED = defineFeed(OPENDATASOFT_DEPLOYMENT, {
   topics: ["health"],
   config: { host: SNS_HOST, dataset: "acordos-quadro-na-area-da-saude", orderBy: "referencia_do_acordo_quadro", limit: "500" },
   policy: {
-    name: "Opendatasoft changing reference data",
-    version: 1,
-    collection: {
-      cadenceSeconds: 86_400,
-      timeoutSeconds: 30,
-      maxBytes: 2 * 1024 * 1024,
-      historyMode: "changes",
-    },
+    cadenceSeconds: 86_400,
+    timeoutSeconds: 30,
+    maxBytes: 2 * 1024 * 1024,
+    historyMode: "changes",
   },
   staleAfterSeconds: 2_592_000,
   /** Once a day: SNS Transparência's `acordos-quadro-na-area-da-saude` dataset, up to 500 records ordered by `referencia_do_acordo_quadro`. */

@@ -19,7 +19,7 @@ export const FEED = defineFeed(NGSI_DEPLOYMENT, {
     // taxi ranks, which TaxiDigital keeps, and loading bays already read from its portal.
     query: "allowedVehicleType==twoWheeledVehicle",
   },
-  policy: { name: "NGSI inventory", version: 1, collection: SENSOR },
+  policy: SENSOR,
   staleAfterSeconds: 86_400,
   /** Every quarter of an hour: the OnStreetParking entities on Porto's broker that allow two-wheeled vehicles, page by page. */
   fetch: ({ config, validator, library, fetch }) => collectNgsiFeed(config, validator, library.hosts, fetch),

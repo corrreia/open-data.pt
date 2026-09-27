@@ -71,7 +71,7 @@ export const LIBRARIES: readonly Library[] = [
   { deployment: USGS_DEPLOYMENT },
 ];
 
-/** One listed library by the `source` value its examples carry. */
+/** One listed library by the `source` value its feeds carry. */
 export function library(source: string): Library {
   const found = LIBRARIES.find((candidate) => candidate.deployment.source === source);
   if (!found) throw new Error(`No library is listed as ${source}`);
