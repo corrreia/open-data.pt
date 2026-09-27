@@ -88,11 +88,9 @@ export function seriesLabel(point: SeriesPoint): string {
     .join(" · ");
 }
 
-export const OPERATION_BADGE = new Map<string, "green" | "blue" | "orange" | "red" | "neutral">([
+export const OPERATION_BADGE = new Map<string, "green" | "blue" | "red" | "neutral">([
   ["create", "green"],
   ["baseline", "green"],
   ["upsert", "blue"],
-  ["correct", "orange"],
   ["retract", "red"],
-  ["delete", "red"],
 ]);

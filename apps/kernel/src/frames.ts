@@ -1,15 +1,15 @@
 import {
-  NORMALIZED_PROTOCOL,
+  MAX_PRODUCTS,
   NormalizedInputError,
   assertHistoryProgress,
+  frameBytesFor,
   isJsonObject,
-  isJsonString,
   isNormalizedFrame,
   parseJson,
   type CollectionLimits,
   type CollectionRequest,
   type NormalizedFrame,
-  type NormalizedProductHeader,
+  type ProductDeclaration,
 } from "@open-data-pt/contract";
 
 import { CollectionDeadline } from "./collection-deadline";
@@ -18,18 +18,14 @@ export type HeaderFrame = Extract<NormalizedFrame, { type: "header" }>;
 export type CompleteFrame = Extract<NormalizedFrame, { type: "complete" }>;
 export type RowFrame = Extract<NormalizedFrame, { type: "record" | "point" }>;
 
-/** What the kernel expects a batch to be about; the header must agree with every field. */
+/** What the kernel asked for: the mode the batch must answer, and when it must have arrived. */
 export interface FrameScope {
-  collectionId: string;
-  resourceKey: string;
-  configHash: string;
-  feedEpoch: string;
   mode: CollectionRequest["mode"];
   deadline: string;
   visitedCursors?: string[];
 }
 
-export type FrameLimits = Pick<CollectionLimits, "outputBytes" | "frameBytes" | "recordBytes" | "records" | "products">;
+export type FrameLimits = Pick<CollectionLimits, "outputBytes" | "recordBytes" | "records">;
 
 /**
  * Validate an untrusted normalized byte stream one frame at a time. Nothing is
@@ -41,31 +37,25 @@ export async function* readFrames(stream: ReadableStream<Uint8Array>, limits: Fr
   const reader = stream.getReader();
   const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: false });
   const encoder = new TextEncoder();
+  const frameBytes = frameBytesFor(limits);
   let carry = "";
   let totalBytes = 0;
   let rows = 0;
-  let records = 0;
-  let points = 0;
   let header: HeaderFrame | undefined;
-  let products = new Map<string, NormalizedProductHeader>();
+  let products = new Map<string, ProductDeclaration>();
   let complete = false;
   let finished = false;
 
   const frameOf = (line: string): NormalizedFrame => {
     if (!line.trim()) throw new NormalizedInputError("Blank normalized frame");
-    if (line.length * 3 > limits.frameBytes && encoder.encode(line).byteLength + 1 > limits.frameBytes) {
-      throw new NormalizedInputError(`Normalized frame exceeds ${limits.frameBytes} bytes`);
+    if (line.length * 3 > frameBytes && encoder.encode(line).byteLength + 1 > frameBytes) {
+      throw new NormalizedInputError(`Normalized frame exceeds ${frameBytes} bytes`);
     }
     let parsed;
     try {
       parsed = parseJson(line);
     } catch {
       throw new NormalizedInputError("Gatekeeper normalized stream contained invalid JSON");
-    }
-    // A Gatekeeper on another release than this kernel is a deploy in progress, over in a minute: a retry, never a cooldown.
-    // Decided before the shape check, which would otherwise call the whole header invalid.
-    if (isJsonObject(parsed) && parsed.type === "header" && isJsonString(parsed.protocol) && parsed.protocol !== NORMALIZED_PROTOCOL) {
-      throw new Error(`Gatekeeper speaks ${parsed.protocol}; this kernel expects ${NORMALIZED_PROTOCOL}`);
     }
     if (!isJsonObject(parsed) || !isNormalizedFrame(parsed)) throw new NormalizedInputError("Gatekeeper normalized stream contained an invalid frame");
     if (complete) throw new NormalizedInputError("Gatekeeper normalized stream continued after completion");
@@ -74,7 +64,7 @@ export async function* readFrames(stream: ReadableStream<Uint8Array>, limits: Fr
     const frame = untrusted as NormalizedFrame;
     if (frame.type === "header") {
       if (header) throw new NormalizedInputError("Gatekeeper normalized stream contained duplicate headers");
-      acceptHeader(frame, limits, scope);
+      acceptHeader(frame);
       header = frame;
       products = new Map(frame.products.map((product) => [product.productKey, product]));
       return frame;
@@ -90,12 +80,9 @@ export async function* readFrames(stream: ReadableStream<Uint8Array>, limits: Fr
       const product = products.get(frame.productKey);
       if (!product) throw new NormalizedInputError("Normalized row referred to an unknown product");
       if ((frame.type === "record") !== (product.kind === "record")) throw new NormalizedInputError("Normalized row and product content disagree");
-      if (frame.type === "record") records += 1;
-      else points += 1;
       return frame;
     }
     if (frame.type !== "complete") throw new NormalizedInputError("Gatekeeper normalized stream contained an unknown frame");
-    if (frame.counts.records !== records || frame.counts.points !== points) throw new NormalizedInputError("Gatekeeper normalized stream completion counts did not match");
     for (const item of frame.products ?? []) if (!products.has(item.productKey)) throw new NormalizedInputError("Completion finalized an undeclared product");
     if (scope.mode.kind === "history") assertHistoryProgress(scope.mode.cursor, frame.nextCursor, frame.exhausted === true, scope.visitedCursors);
     else if (frame.nextCursor !== undefined || frame.exhausted !== undefined) throw new NormalizedInputError("Live collection returned history progress");
@@ -130,8 +117,8 @@ export async function* readFrames(stream: ReadableStream<Uint8Array>, limits: Fr
         yield frameOf(line);
       }
       carry = start > 0 ? carry.slice(start) : carry;
-      if (carry.length * 3 > limits.frameBytes && encoder.encode(carry).byteLength > limits.frameBytes) {
-        throw new NormalizedInputError(`Normalized frame exceeds ${limits.frameBytes} bytes`);
+      if (carry.length * 3 > frameBytes && encoder.encode(carry).byteLength > frameBytes) {
+        throw new NormalizedInputError(`Normalized frame exceeds ${frameBytes} bytes`);
       }
     }
     try {
@@ -151,18 +138,8 @@ export async function* readFrames(stream: ReadableStream<Uint8Array>, limits: Fr
   }
 }
 
-function acceptHeader(frame: HeaderFrame, limits: FrameLimits, scope: FrameScope): void {
-  if (frame.collectionId !== scope.collectionId) throw new NormalizedInputError("Gatekeeper normalized stream header did not match the request");
-  if (
-    frame.checkpoint.resourceKey !== scope.resourceKey ||
-    frame.checkpoint.configHash !== scope.configHash ||
-    frame.checkpoint.feedEpoch !== scope.feedEpoch ||
-    frame.checkpoint.normalizer.id !== frame.normalizer.id ||
-    frame.checkpoint.normalizer.version !== frame.normalizer.version
-  ) {
-    throw new NormalizedInputError("Checkpoint scope or normalizer did not match the request");
-  }
-  if (frame.products.length > limits.products) throw new NormalizedInputError(`Normalized output exceeds ${limits.products} products`);
+function acceptHeader(frame: HeaderFrame): void {
+  if (frame.products.length > MAX_PRODUCTS) throw new NormalizedInputError(`Normalized output exceeds ${MAX_PRODUCTS} products`);
   if (new Set(frame.products.map((product) => product.productKey)).size !== frame.products.length) throw new NormalizedInputError("Duplicate product key");
-  if (new Set(frame.products.map((product) => product.suggestedSlug)).size !== frame.products.length) throw new NormalizedInputError("Duplicate product slug");
+  if (new Set(frame.products.map((product) => product.slug)).size !== frame.products.length) throw new NormalizedInputError("Duplicate product slug");
 }

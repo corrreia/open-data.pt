@@ -122,4 +122,33 @@ describe("schema reset", () => {
     expect(core.feed()).toMatchObject({ id: "feed_1", library: "fixture" });
     expect(core.feed()).not.toHaveProperty("gatekeeperKind");
   });
+
+  it("brings a runner written under protocol 4 to protocol 5 in place, keeping what it collected", () => {
+    const database = new DatabaseSync(":memory:");
+    const sql = sqliteStorage(database);
+    const core = new RunnerCore(sql, (body) => body(), {
+      objects: new ObjectStore(new MemorySnapshots()),
+      publish: async () => true,
+      claim: async () => undefined,
+      lakeAvailable: true,
+      now: () => 0,
+    });
+    core.migrate();
+    // What a protocol 4 runner holds: a checkpoint in its scope envelope, a downgraded snapshot, no failure codes.
+    database.exec(`ALTER TABLE acquisitions DROP COLUMN error_code`);
+    const normalizer = { id: "fixture", version: "1" };
+    const state = { validators: { default: { etag: '"v1"' } } };
+    const checkpoint = { version: 2, resourceKey: "fixture:things", configHash: "config", feedEpoch: "epoch", normalizer, state };
+    database.prepare("INSERT INTO state (key, value_json) VALUES ('runtime', ?)").run(JSON.stringify({ checkpoint, consecutiveFailures: 0, consecutiveInterruptions: 0 }));
+    database
+      .prepare("INSERT INTO products (product_key, slug, mode, entry_json) VALUES ('things', 'things', 'small', ?)")
+      .run(JSON.stringify({ slug: "things", updateMode: "partial-snapshot" }));
+
+    core.migrate();
+    core.migrate();
+
+    expect(core.runtime().checkpoint).toEqual({ normalizer, state });
+    expect(JSON.parse(String(database.prepare("SELECT entry_json FROM products").get()?.entry_json))).toEqual({ slug: "things", updateMode: "delta" });
+    expect(database.prepare("SELECT COUNT(*) AS count FROM pragma_table_info('acquisitions') WHERE name = 'error_code'").get()?.count).toBe(1);
+  });
 });

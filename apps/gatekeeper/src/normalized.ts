@@ -3,14 +3,15 @@ import {
   GatekeeperError,
   assertHistoryProgress,
   assertResolvedFeed,
+  MAX_PRODUCTS,
   NORMALIZED_PROTOCOL,
+  frameBytesFor,
   type CollectionRequest,
   type CollectionResult,
   type Completeness,
   type FeedKindDescription,
   type JsonObject,
   type NormalizedFrame,
-  type NormalizedProductHeader,
   type NormalizedRow,
   type ProductDeclaration,
   type ResolvedFeed,
@@ -23,7 +24,7 @@ import {
   type TransformContext,
   type TransformResult,
 } from "./index";
-import { assertSourceCheckpoint, canonicalSourceConfig, hashSourceConfig, isJsonObject, isJsonString } from "@open-data-pt/contract";
+import { assertSourceCheckpoint, hashSourceConfig, isJsonObject, isJsonString } from "@open-data-pt/contract";
 import { limitBytes, readBoundedBytes, toByteStream } from "./stream";
 
 /**
@@ -38,8 +39,11 @@ type Normalizer =
   | { kind: "streaming"; transform: (body: ReadableStream<Uint8Array>, context: TransformContext) => StreamingTransform | Promise<StreamingTransform> };
 
 export interface NormalizedCollector {
+  /** The feed as the Gatekeeper's own catalog names it. */
+  feed: { slug: string; title: string; description: string };
   normalizer: { id: string; version: string };
-  resolve: (config: SourceConfig) => ResolvedFeed | Promise<ResolvedFeed>;
+  /** The feed's identity, worked out from the configuration the Gatekeeper holds for it. */
+  resolve: () => ResolvedFeed | Promise<ResolvedFeed>;
   /** Receives the complete compatible source-owned state, not one guessed validator. */
   source: (state: JsonObject | undefined, mode: CollectionRequest["mode"], signal: AbortSignal) => Promise<SourceFetch>;
   normalize: Normalizer;
@@ -94,13 +98,13 @@ export function responseValidator(headers: Headers): SourceValidator | undefined
   return Object.keys(validator).length ? validator : undefined;
 }
 
-/** Keep source bytes inside the Gatekeeper and expose only a typed v3 result. */
+/** Keep source bytes inside the Gatekeeper and expose only a typed result: every failure, the source's or this side's, is a code. */
 export async function collectNormalized(request: CollectionRequest, collector: NormalizedCollector): Promise<CollectionResult> {
   try {
     return await collect(request, collector);
   } catch (error) {
     // The kernel is told only the failure's code; what the source actually said stays in the Gatekeeper's own log.
-    console.warn(JSON.stringify({ event: "collection_failed", feed: request.feed.slug, mode: request.mode.kind, error: error instanceof Error ? error.message : String(error) }));
+    console.warn(JSON.stringify({ event: "collection_failed", feed: request.slug, mode: request.mode.kind, error: error instanceof Error ? error.message : String(error) }));
     if (error instanceof GatekeeperError) {
       const failure: Extract<CollectionResult, { kind: "failure" }> = { kind: "failure", code: error.code, retryable: error.code === "upstream-error" };
       if (error.retryAfterSeconds !== undefined) failure.retryAfterSeconds = error.retryAfterSeconds;
@@ -123,23 +127,16 @@ class ProtocolMismatch extends Error {
 
 async function collect(request: CollectionRequest, collector: NormalizedCollector): Promise<CollectionResult> {
   validateRequest(request);
-  const resolved = await collector.resolve(request.resolved.config);
+  const resolved = await collector.resolve();
   assertResolvedFeed(resolved);
-  assertResolvedFeed(request.resolved);
-  if (canonicalResolved(resolved) !== canonicalResolved(request.resolved)) {
-    return { kind: "failure", code: "invalid-config", retryable: false };
-  }
+  if (resolved.configHash !== (await hashSourceConfig(resolved.config))) throw new NormalizedInputError("Resolved feed configuration digest did not match");
+  // The kernel installed another configuration of this feed: it syncs the Gatekeeper's new catalog within a minute.
+  if (request.configHash !== resolved.configHash) return { kind: "failure", code: "feed-changed", retryable: true, retryAfterSeconds: 60 };
   if (request.mode.kind === "history" && !resolved.history) return { kind: "failure", code: "history-unsupported", retryable: false };
-  const configHash = await hashSourceConfig(resolved.config);
-  if (resolved.configHash !== configHash) return { kind: "failure", code: "invalid-config", retryable: false };
-  const compatible =
-    request.checkpoint?.version === 2 &&
-    request.checkpoint.resourceKey === resolved.resourceKey &&
-    request.checkpoint.configHash === configHash &&
-    request.checkpoint.feedEpoch === request.feedEpoch &&
-    request.checkpoint.normalizer.id === collector.normalizer.id &&
-    request.checkpoint.normalizer.version === collector.normalizer.version;
-  const previousState = compatible ? request.checkpoint?.state : undefined;
+  // The kernel drops a checkpoint when the feed's configuration or epoch changes; a new normalizer is this side's to notice.
+  const checkpoint = request.checkpoint;
+  const compatible = checkpoint?.normalizer.id === collector.normalizer.id && checkpoint.normalizer.version === collector.normalizer.version;
+  const previousState = compatible ? checkpoint.state : undefined;
   const aborter = new AbortController();
   const abort = () => aborter.abort("Collection deadline exceeded");
   let fetched: SourceFetch;
@@ -151,11 +148,11 @@ async function collect(request: CollectionRequest, collector: NormalizedCollecto
     throw error;
   }
 
-  const checkpoint = checkpointFrom(request, collector.normalizer, configHash, previousState, fetched);
-  assertSourceCheckpoint(checkpoint);
+  const next = checkpointFrom(collector.normalizer, previousState, fetched);
+  assertSourceCheckpoint(next);
   if (fetched.kind === "not-modified") {
     if (request.mode.kind === "history") throw new NormalizedInputError("History cannot report unchanged");
-    return { kind: "unchanged", checkpoint };
+    return { kind: "unchanged", checkpoint: next };
   }
   if (fetched.kind === "exhausted") {
     if (request.mode.kind === "live") throw new NormalizedInputError("Live collection cannot report history exhaustion");
@@ -166,7 +163,7 @@ async function collect(request: CollectionRequest, collector: NormalizedCollecto
   else if (fetched.next || fetched.exhausted) throw new NormalizedInputError("Live source returned history progress");
 
   const context: TransformContext = {
-    feed: { slug: request.feed.slug, title: request.feed.title, description: request.feed.description, config: resolved.config, semantics: resolved.semantics },
+    feed: { ...collector.feed, config: resolved.config, semantics: resolved.semantics },
     observedAt: request.observedAt,
   };
 
@@ -178,19 +175,15 @@ async function collect(request: CollectionRequest, collector: NormalizedCollecto
     if (aborter.signal.aborted) return { kind: "failure", code: "deadline-exceeded", retryable: true };
     throw new NormalizedInputError(`Normalizer failed: ${String(error)}`);
   }
-  if (transform.products.length > request.limits.products) throw new NormalizedInputError(`Normalized output exceeds ${request.limits.products} products`);
+  if (transform.products.length > MAX_PRODUCTS) throw new NormalizedInputError(`Normalized output exceeds ${MAX_PRODUCTS} products`);
   const productKeys = new Set(transform.products.map((product) => product.productKey));
   if (productKeys.size !== transform.products.length) throw new NormalizedInputError("Normalizer produced duplicate product keys");
 
   const header: Extract<NormalizedFrame, { type: "header" }> = {
     type: "header",
-    protocol: NORMALIZED_PROTOCOL,
-    collectionId: request.collectionId,
-    normalizer: collector.normalizer,
-    products: transform.products.map((product) => productHeader(product, fetched.completeness)),
+    products: transform.products.map((product) => withSourceCompleteness(product, fetched.completeness)),
     provenance: provenanceFrom(fetched),
-    completeness: fetched.completeness,
-    checkpoint,
+    checkpoint: next,
   };
   return { kind: "batch", stream: frameStream(request, header, transform, fetched, productKeys, aborter) };
 }
@@ -240,16 +233,17 @@ async function* bufferedRows(result: TransformResult): AsyncGenerator<Normalized
   }
 }
 
-function productHeader(product: ProductDeclaration, sourceCompleteness: Completeness): NormalizedProductHeader {
+/** A product is only as complete as the body it was read from. */
+function withSourceCompleteness(product: ProductDeclaration, sourceCompleteness: Completeness): ProductDeclaration {
   const completeness: Completeness =
     sourceCompleteness === "partial" || product.completeness === "partial"
       ? "partial"
       : sourceCompleteness === "unknown" || product.completeness === "unknown"
         ? "unknown"
         : "complete";
-  const header: NormalizedProductHeader = {
+  const declaration: ProductDeclaration = {
     productKey: product.productKey,
-    suggestedSlug: product.slug,
+    slug: product.slug,
     title: product.title,
     description: product.description,
     role: product.role,
@@ -258,8 +252,8 @@ function productHeader(product: ProductDeclaration, sourceCompleteness: Complete
     updateMode: product.updateMode,
     completeness,
   };
-  if (product.watermark) header.watermark = product.watermark;
-  return header;
+  if (product.watermark) declaration.watermark = product.watermark;
+  return declaration;
 }
 
 /**
@@ -279,12 +273,12 @@ function frameStream(
   const kinds = new Map(transform.products.map((product) => [product.productKey, product.kind]));
   let phase: "header" | "rows" | "done" = "header";
   let outputBytes = 0;
-  let records = 0;
-  let points = 0;
+  let emitted = 0;
   const deadline = Date.parse(request.deadline);
+  const frameBytes = frameBytesFor(request.limits);
   const emit = (controller: ReadableByteStreamController, line: string): void => {
     const bytes = encoder.encode(`${line}\n`);
-    if (bytes.byteLength > request.limits.frameBytes) throw new NormalizedInputError(`Normalized frame exceeds ${request.limits.frameBytes} bytes`);
+    if (bytes.byteLength > frameBytes) throw new NormalizedInputError(`Normalized frame exceeds ${frameBytes} bytes`);
     outputBytes += bytes.byteLength;
     if (outputBytes > request.limits.outputBytes) throw new NormalizedInputError(`Normalized output exceeds ${request.limits.outputBytes} bytes`);
     controller.enqueue(bytes);
@@ -308,19 +302,18 @@ function frameStream(
           const row = next.value;
           if (!productKeys.has(row.productKey)) throw new NormalizedInputError("Normalizer produced a row for an undeclared product");
           const expected = kinds.get(row.productKey);
+          emitted += 1;
           if (row.record !== undefined) {
             if (expected !== "record") throw new NormalizedInputError("Normalizer produced a record for a series product");
-            records += 1;
-            emit(controller, encodeRow("record", row.productKey, row.record, request, records + points));
+            emit(controller, encodeRow("record", row.productKey, row.record, request, emitted));
           } else {
             if (expected !== "series") throw new NormalizedInputError("Normalizer produced a point for a record product");
-            points += 1;
-            emit(controller, encodeRow("point", row.productKey, row.point, request, records + points));
+            emit(controller, encodeRow("point", row.productKey, row.point, request, emitted));
           }
           return;
         }
         const summary = transform.finish();
-        const complete: Extract<NormalizedFrame, { type: "complete" }> = { type: "complete", counts: { records, points }, quality: summary.quality };
+        const complete: Extract<NormalizedFrame, { type: "complete" }> = { type: "complete", quality: summary.quality };
         if (summary.products?.length) complete.products = summary.products;
         if (fetched.next) complete.nextCursor = fetched.next;
         if (fetched.exhausted) complete.exhausted = true;
@@ -328,16 +321,14 @@ function frameStream(
         phase = "done";
       } catch (error) {
         // The kernel sees only a stream that broke off; why it did, and how far it got, is said here.
-        console.warn(
-          JSON.stringify({ event: "collection_stream_failed", feed: request.feed.slug, rows: records + points, error: error instanceof Error ? error.message : String(error) }),
-        );
+        console.warn(JSON.stringify({ event: "collection_stream_failed", feed: request.slug, rows: emitted, error: error instanceof Error ? error.message : String(error) }));
         aborter.abort(error);
         void rows.return?.(undefined);
         controller.error(error);
       }
     },
     cancel(reason) {
-      console.warn(JSON.stringify({ event: "collection_stream_cancelled", feed: request.feed.slug, rows: records + points, reason: String(reason) }));
+      console.warn(JSON.stringify({ event: "collection_stream_cancelled", feed: request.slug, rows: emitted, reason: String(reason) }));
       aborter.abort(reason);
       void rows.return?.(undefined);
     },
@@ -354,28 +345,21 @@ function encodeRow(type: "record" | "point", productKey: string, value: Normaliz
   return `{"type":"${type}","productKey":${JSON.stringify(productKey)},"value":${encoded}}`;
 }
 
+/** The protocol first: a kernel on another release sends a request of another shape. */
 function validateRequest(request: CollectionRequest): void {
   if (request.protocol !== NORMALIZED_PROTOCOL) throw new ProtocolMismatch(request.protocol);
-  if (!request.collectionId || !request.feedEpoch || !request.resolved.resourceKey || !request.feed.id || !request.feed.slug) throw new Error("Collection identity is required");
   if (Number.isNaN(Date.parse(request.deadline)) || Date.parse(request.deadline) <= Date.now()) throw new Error("Collection deadline is invalid or expired");
   if (Number.isNaN(Date.parse(request.observedAt))) throw new Error("Observation time is invalid");
   for (const [name, value] of Object.entries(request.limits))
     if (!Number.isSafeInteger(value) || value <= 0) throw new Error(`Collection limit ${name} must be a positive integer`);
-  if (request.limits.recordBytes > request.limits.frameBytes || request.limits.frameBytes > request.limits.outputBytes)
-    throw new Error("Collection limits must satisfy recordBytes <= frameBytes <= outputBytes");
+  if (request.limits.recordBytes > request.limits.outputBytes) throw new Error("Collection limits must satisfy recordBytes <= outputBytes");
 }
 
-function checkpointFrom(
-  request: CollectionRequest,
-  normalizer: { id: string; version: string },
-  configHash: string,
-  previous: JsonObject | undefined,
-  fetched: SourceFetch,
-): SourceCheckpoint {
+function checkpointFrom(normalizer: { id: string; version: string }, previous: JsonObject | undefined, fetched: SourceFetch): SourceCheckpoint {
   const validator = fetched.kind === "exhausted" ? undefined : fetched.validator;
   const owned = fetched.kind === "body" ? fetched.state : undefined;
   const state = owned ?? (validator ? withSourceValidator(previous, validator) : (previous ?? {}));
-  return { version: 2, resourceKey: request.resolved.resourceKey, configHash, feedEpoch: request.feedEpoch, normalizer, state };
+  return { normalizer, state };
 }
 
 function provenanceFrom(fetched: SourceBody): Extract<NormalizedFrame, { type: "header" }>["provenance"] {
@@ -383,17 +367,6 @@ function provenanceFrom(fetched: SourceBody): Extract<NormalizedFrame, { type: "
   const published = fetched.provenance.sourcePublishedAt;
   if (published && !Number.isNaN(Date.parse(published))) value.sourcePublishedAt = new Date(published).toISOString();
   return value;
-}
-
-function canonicalResolved(value: ResolvedFeed): string {
-  return JSON.stringify({
-    config: JSON.parse(canonicalSourceConfig(value.config)),
-    configHash: value.configHash,
-    resourceKey: value.resourceKey,
-    kind: value.kind,
-    semantics: value.semantics,
-    history: value.history ?? null,
-  });
 }
 
 async function beforeDeadline<T>(promise: Promise<T>, deadline: string, onTimeout?: () => void): Promise<T> {

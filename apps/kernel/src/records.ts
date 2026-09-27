@@ -23,9 +23,8 @@ export interface RecordContext {
 /** One incoming record reduced to what comparison and serving need. */
 export interface PreparedRecord {
   key: string;
-  /** Semantic hash: payload, operation, validity and the record's own source clocks. */
+  /** Semantic hash: payload, validity and the record's own source clocks. */
   hash: string;
-  removal: boolean;
   record: CanonicalRecord;
   /**
    * What holding this row costs, in the UTF-16 code units a JavaScript string
@@ -41,7 +40,8 @@ export interface PreparedRecord {
 
 export function prepareRecord(record: CanonicalRecord): PreparedRecord {
   const semantic = stableStringify({
-    operation: record.operation ?? "upsert",
+    // Records once named their operation, and every source said upsert; it stays in the hash so no stored hash moves.
+    operation: "upsert",
     payload: record.payload,
     eventTime: record.eventTime ?? null,
     validFrom: record.validFrom ?? null,
@@ -49,9 +49,8 @@ export function prepareRecord(record: CanonicalRecord): PreparedRecord {
     sourcePublishedAt: record.sourcePublishedAt ?? null,
     sourceSequence: record.sourceSequence ?? null,
   });
-  const removal = record.operation === "delete" || record.operation === "retract";
   // The semantic form is already built here, so its length is free to take.
-  return { key: record.entityKey, hash: digest(semantic), removal, record, weight: semantic.length + record.entityKey.length };
+  return { key: record.entityKey, hash: digest(semantic), record, weight: semantic.length + record.entityKey.length };
 }
 
 /**
@@ -86,7 +85,7 @@ export interface Revision {
 
 export function recordRevision(prepared: PreparedRecord, existed: boolean, context: RecordContext): Revision {
   const record = prepared.record;
-  const operation = context.baseline ? "baseline" : (record.operation ?? (existed ? "upsert" : "create"));
+  const operation = context.baseline ? "baseline" : existed ? "upsert" : "create";
   const id = revisionId(context, prepared.key, "");
   const published = record.sourcePublishedAt ?? context.sourcePublishedAt ?? null;
   const change: ChangeItem = {

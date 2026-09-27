@@ -95,7 +95,6 @@ describe("IPMA transformers", () => {
     expect(ids.some((id) => id.startsWith("ipma-") && id.length === 29)).toBe(true);
     expect(second.products[0]?.records?.map((record) => record.entityKey)).toEqual(ids);
     expect(product?.records?.find((record) => record.entityKey === "20260810020824C")).toMatchObject({
-      operation: "upsert",
       eventTime: "2026-08-10T02:08:25.000Z",
       payload: {
         magnitude: 3.4,

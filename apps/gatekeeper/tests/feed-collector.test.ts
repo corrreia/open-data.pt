@@ -39,7 +39,6 @@ describe("a feed's fetch, as the Worker hands it", () => {
         await fetch("https://example.test/b");
         return BODY;
       }),
-      { source: "fixture" },
       LIBRARIES,
       { fetcher },
     );
@@ -65,7 +64,7 @@ describe("a feed's fetch, as the Worker hands it", () => {
         },
       },
     };
-    const collector = feedCollector(runnable, { source: "fixture" }, LIBRARIES);
+    const collector = feedCollector(runnable, LIBRARIES);
     const fetched = await collector.source(undefined, { kind: "live" }, new AbortController().signal);
     expect(fetched).toBe(BODY);
     if (collector.normalize.kind !== "buffered") throw new Error("expected a buffered transform");
@@ -107,7 +106,7 @@ describe("a feed's fetch, as the Worker hands it", () => {
           buffered: () => ({ transformer: { id: "fixture", version: "1" }, products, quality: { acceptedRecords: 0, rejectedRecords: 0 } }),
         },
       };
-      return feedCollector(runnable, { source: "fixture" }, LIBRARIES);
+      return feedCollector(runnable, LIBRARIES);
     };
 
     it("names a feed's only product as the feed is named, not as the source names its file", async () => {

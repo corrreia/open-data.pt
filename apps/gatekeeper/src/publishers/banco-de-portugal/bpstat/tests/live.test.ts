@@ -1,6 +1,16 @@
 import { appendFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { NORMALIZED_PROTOCOL, collectNormalized, isJsonObject, isNormalizedFrame, parseJson, type CollectionRequest, type ExampleFeed, type NormalizedFrame } from "#/index";
+import {
+  NORMALIZED_PROTOCOL,
+  collectNormalized,
+  isJsonObject,
+  isNormalizedFrame,
+  parseJson,
+  type CollectionRequest,
+  type ExampleFeed,
+  type NormalizedFrame,
+  type ResolvedFeed,
+} from "#/index";
 import { feedCollection, feedsOf } from "#/tests/catalog";
 
 // Opt in by slug or with `bpstat`; no production writes are made.
@@ -35,9 +45,10 @@ describe("BPstat live collection", () => {
         const header = frames[0];
         const complete = frames.at(-1);
         if (header?.type !== "header" || complete?.type !== "complete") throw new Error("Incomplete normalized stream");
-        expect(header.completeness).toBe("complete");
+        expect(header.products.every((product) => product.completeness === "complete")).toBe(true);
         expect(complete.quality.rejectedRecords).toBe(0);
-        expect(complete.counts.records + complete.counts.points).toBeGreaterThan(0);
+        const counts = { records: frames.filter((frame) => frame.type === "record").length, points: frames.filter((frame) => frame.type === "point").length };
+        expect(counts.records + counts.points).toBeGreaterThan(0);
         expect(bytes.length).toBeLessThanOrEqual(example.policy.collection.maxOutputBytes ?? 16 * 1024 * 1024);
         const keys = new Set<string>();
         const seriesCounts = new Map<string, number>();
@@ -62,7 +73,7 @@ describe("BPstat live collection", () => {
           slug: example.slug,
           requests,
           bytes: bytes.length,
-          ...complete.counts,
+          ...counts,
           sourceRows: complete.quality.acceptedRecords,
           watermarks: complete.products?.map((product) => product.watermark) ?? header.products.map((product) => product.watermark),
         });
@@ -74,24 +85,20 @@ describe("BPstat live collection", () => {
   }
 });
 
-function request(example: ExampleFeed, resolved: CollectionRequest["resolved"]): CollectionRequest {
+function request(example: ExampleFeed, resolved: ResolvedFeed): CollectionRequest {
   const collection = example.policy.collection;
   return {
     protocol: NORMALIZED_PROTOCOL,
-    collectionId: `live-${example.slug}`,
-    feed: { id: example.slug, slug: example.slug, title: example.title, description: example.description },
-    resolved,
-    feedEpoch: "catalog-probe",
+    slug: example.slug,
+    configHash: resolved.configHash,
     mode: { kind: "live" },
     observedAt: new Date().toISOString(),
     deadline: new Date(Date.now() + collection.timeoutSeconds * 1000).toISOString(),
     limits: {
       sourceBytes: collection.maxBytes,
       outputBytes: collection.maxOutputBytes ?? 16 * 1024 * 1024,
-      frameBytes: 1024 * 1024,
       recordBytes: collection.maxRecordBytes ?? 512 * 1024,
       records: collection.maxRecords ?? 20_000,
-      products: 32,
     },
   };
 }

@@ -41,11 +41,8 @@ export interface CanonicalSchema {
   fields: CanonicalField[];
 }
 
-export type RecordOperation = "correct" | "create" | "delete" | "retract" | "upsert";
-
 export interface CanonicalRecord {
   entityKey: string;
-  operation?: RecordOperation;
   payload: JsonObject;
   eventTime?: string;
   validFrom?: string;
@@ -62,7 +59,12 @@ export interface SeriesPoint {
   dimensions: Record<string, string>;
 }
 
-export type ProductUpdateMode = "authoritative-snapshot" | "partial-snapshot" | "delta" | "source-window";
+/**
+ * How a product's rows relate to what it served before. `authoritative-snapshot`: the whole membership, so a complete
+ * one retracts what it leaves out. `source-window`: the source's current window, so a complete one replaces what is
+ * served but retracts nothing. `delta`: rows to add or update; nothing is removed.
+ */
+export type ProductUpdateMode = "authoritative-snapshot" | "delta" | "source-window";
 
 /** Everything the kernel must know about one product before its first row arrives. */
 export interface ProductDeclaration {

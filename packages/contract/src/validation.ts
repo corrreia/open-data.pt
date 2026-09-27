@@ -1,5 +1,5 @@
 import { parseJson, asNumber, asString, isJsonArray, isJsonBoolean, isJsonNumber, isJsonObject, isJsonString, type JsonObject, type JsonValue } from "./json";
-import { NORMALIZED_PROTOCOL, type CollectionRequest, type CollectionResult, type HistoryCursor, type ResolvedFeed, type SourceCheckpoint } from "./index";
+import { type CollectionRequest, type CollectionResult, type HistoryCursor, type ResolvedFeed, type SourceCheckpoint } from "./index";
 
 const NORMALIZED_ERROR_PREFIX = "Normalized contract rejected: [open-data/normalized-input] ";
 
@@ -77,6 +77,7 @@ const FAILURE_CODES = [
   "invalid-response",
   "response-too-large",
   "deadline-exceeded",
+  "feed-changed",
   "history-unsupported",
   "protocol-mismatch",
 ] as const;
@@ -208,17 +209,16 @@ function schema(value: JsonValue | undefined): boolean {
 function product(value: JsonValue): boolean {
   return (
     isJsonObject(value) &&
-    onlyKeys(value, ["productKey", "suggestedSlug", "title", "description", "role", "schema", "kind", "updateMode", "completeness", "watermark"]) &&
+    onlyKeys(value, ["productKey", "slug", "title", "description", "role", "schema", "kind", "updateMode", "completeness", "watermark"]) &&
     text(value.productKey, 256) &&
-    isProductSlug(value.suggestedSlug) &&
+    isProductSlug(value.slug) &&
     text(value.title) &&
     isJsonString(value.description) &&
     ["current-state", "event-log", "reference", "summary", "time-series"].includes(asString(value.role) ?? "") &&
     schema(value.schema) &&
     ["record", "series"].includes(asString(value.kind) ?? "") &&
     (value.kind !== "series" || value.role === "time-series") &&
-    ["authoritative-snapshot", "partial-snapshot", "delta", "source-window"].includes(asString(value.updateMode) ?? "") &&
-    (value.kind !== "series" || value.updateMode !== "partial-snapshot") &&
+    ["authoritative-snapshot", "delta", "source-window"].includes(asString(value.updateMode) ?? "") &&
     ["complete", "partial", "unknown"].includes(asString(value.completeness) ?? "") &&
     optionalTime(value.watermark)
   );
@@ -226,11 +226,7 @@ function product(value: JsonValue): boolean {
 function isSourceCheckpoint(value: JsonValue | undefined): boolean {
   if (
     !isJsonObject(value) ||
-    !onlyKeys(value, ["version", "resourceKey", "configHash", "feedEpoch", "normalizer", "state"]) ||
-    value.version !== 2 ||
-    !text(value.resourceKey, 1024) ||
-    !text(value.configHash, 256) ||
-    !text(value.feedEpoch, 256) ||
+    !onlyKeys(value, ["normalizer", "state"]) ||
     !isJsonObject(value.normalizer) ||
     !onlyKeys(value.normalizer, ["id", "version"]) ||
     !text(value.normalizer.id, 256) ||
@@ -254,10 +250,9 @@ function finalization(value: JsonValue): boolean {
 function record(value: JsonValue | undefined): boolean {
   return (
     isJsonObject(value) &&
-    onlyKeys(value, ["entityKey", "operation", "payload", "eventTime", "validFrom", "validTo", "sourcePublishedAt", "sourceSequence"]) &&
+    onlyKeys(value, ["entityKey", "payload", "eventTime", "validFrom", "validTo", "sourcePublishedAt", "sourceSequence"]) &&
     text(value.entityKey) &&
     isJsonObject(value.payload) &&
-    (value.operation === undefined || ["correct", "create", "delete", "retract", "upsert"].includes(asString(value.operation) ?? "")) &&
     optionalTime(value.eventTime) &&
     timeRange(value.validFrom, value.validTo) &&
     optionalTime(value.sourcePublishedAt) &&
@@ -295,37 +290,24 @@ export function isNormalizedFrame(value: JsonObject): boolean {
   if (value.type === "point")
     return onlyKeys(value, ["type", "productKey", "value"]) && text(value.productKey, 256) && point(value.value) && Number.isFinite(asNumber(asObjectValue(value.value)));
   if (value.type === "header") {
-    const normalizer = isJsonObject(value.normalizer) ? value.normalizer : undefined;
     const provenance = isJsonObject(value.provenance) ? value.provenance : undefined;
     return (
-      onlyKeys(value, ["type", "protocol", "collectionId", "normalizer", "products", "provenance", "completeness", "checkpoint"]) &&
-      value.protocol === NORMALIZED_PROTOCOL &&
-      text(value.collectionId, 200) &&
-      isJsonObject(normalizer) &&
-      onlyKeys(normalizer, ["id", "version"]) &&
-      text(normalizer.id, 256) &&
-      text(normalizer.version, 256) &&
+      onlyKeys(value, ["type", "products", "provenance", "checkpoint"]) &&
       isJsonArray(value.products) &&
       value.products.every(product) &&
       isJsonObject(provenance) &&
       onlyKeys(provenance, ["sourceUrl", "sourcePublishedAt"]) &&
       text(provenance.sourceUrl) &&
       optionalTime(provenance.sourcePublishedAt) &&
-      ["complete", "partial", "unknown"].includes(asString(value.completeness) ?? "") &&
       isSourceCheckpoint(value.checkpoint)
     );
   }
   if (value.type !== "complete") return false;
-  const counts = isJsonObject(value.counts) ? value.counts : undefined;
   const quality = isJsonObject(value.quality) ? value.quality : undefined;
   return (
-    onlyKeys(value, ["type", "counts", "quality", "products", "nextCursor", "exhausted"]) &&
-    isJsonObject(counts) &&
-    onlyKeys(counts, ["records", "points"]) &&
+    onlyKeys(value, ["type", "quality", "products", "nextCursor", "exhausted"]) &&
     isJsonObject(quality) &&
     onlyKeys(quality, ["acceptedRecords", "rejectedRecords"]) &&
-    count(counts.records) &&
-    count(counts.points) &&
     count(quality.acceptedRecords) &&
     count(quality.rejectedRecords) &&
     (value.products === undefined || (isJsonArray(value.products) && value.products.length <= 256 && value.products.every(finalization))) &&

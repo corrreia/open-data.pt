@@ -34,18 +34,14 @@ describe.runIf(wanted.length > 0)("OGC live collection", () => {
       const { resolved, collector } = await feedCollection(example.slug, { fetcher: (input, init) => fetch(input, init) });
       const request: CollectionRequest = {
         protocol: NORMALIZED_PROTOCOL,
-        collectionId: `live_${example.slug}`,
-        feed: { id: "feed_live", slug: example.slug, title: example.title, description: example.description },
-        resolved,
-        feedEpoch: "epoch-live",
+        slug: example.slug,
+        configHash: resolved.configHash,
         mode: { kind: "live" },
         limits: {
           sourceBytes: example.policy.collection.maxBytes,
           outputBytes: example.policy.collection.maxOutputBytes ?? Math.max(1024 * 1024, Math.min(16 * 1024 * 1024, example.policy.collection.maxBytes * 4)),
-          frameBytes: (example.policy.collection.maxRecordBytes ?? 262_144) + 16_384,
           recordBytes: example.policy.collection.maxRecordBytes ?? 262_144,
           records: example.policy.collection.maxRecords ?? 1_000_000,
-          products: 64,
         },
         deadline: new Date(Date.now() + example.policy.collection.timeoutSeconds * 1000).toISOString(),
         observedAt: new Date().toISOString(),
@@ -55,12 +51,12 @@ describe.runIf(wanted.length > 0)("OGC live collection", () => {
       const frames = await readFrames(result.stream);
       const header = frames[0];
       const complete = frames.at(-1);
-      const counts = isJsonObject(complete?.counts) ? complete.counts : {};
+      const records = frames.filter((frame) => frame.type === "record").length;
       console.log(
         JSON.stringify({
           slug: example.slug,
-          completeness: header?.completeness,
-          records: counts.records,
+          completeness: Array.isArray(header?.products) && isJsonObject(header.products[0]) ? header.products[0].completeness : undefined,
+          records,
           quality: complete?.quality,
           finalCompleteness: Array.isArray(complete?.products) && isJsonObject(complete.products[0]) ? complete.products[0].completeness : undefined,
           bytes: frames.reduce((total, frame) => total + JSON.stringify(frame).length, 0),
@@ -69,7 +65,7 @@ describe.runIf(wanted.length > 0)("OGC live collection", () => {
       );
       expect(header?.type).toBe("header");
       expect(complete?.type).toBe("complete");
-      expect(Number(counts.records)).toBeGreaterThan(0);
+      expect(records).toBeGreaterThan(0);
     },
     300_000,
   );

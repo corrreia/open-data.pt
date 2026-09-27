@@ -322,25 +322,19 @@ describe("CKAN Gatekeeper", () => {
 
 describe("CKAN collection through the shared collector", () => {
   async function collect(fetcher: typeof fetch, checkpointEtag?: string): Promise<CollectionResult> {
-    const collector = feedCollector(PARKING, { ...config, source: "ckan" }, LIBRARIES, { fetcher });
-    const resolved = await collector.resolve({ ...config, source: "ckan" });
+    const collector = feedCollector({ ...PARKING, config: { ...config, source: "ckan" } }, LIBRARIES, { fetcher });
+    const resolved = await collector.resolve();
     const request: CollectionRequest = {
       protocol: NORMALIZED_PROTOCOL,
-      collectionId: "collection_1",
-      feed: { id: "feed_1", slug: "porto-municipal-parking-feed", title: "Porto parking", description: "Car parks" },
-      resolved,
-      feedEpoch: "epoch-1",
+      slug: PARKING.slug,
+      configHash: resolved.configHash,
       mode: { kind: "live" },
-      limits: { sourceBytes: 1024 * 1024, outputBytes: 4 * 1024 * 1024, frameBytes: 256 * 1024, recordBytes: 128 * 1024, records: 10_000, products: 4 },
+      limits: { sourceBytes: 1024 * 1024, outputBytes: 4 * 1024 * 1024, recordBytes: 128 * 1024, records: 10_000 },
       deadline: new Date(Date.now() + 30_000).toISOString(),
       observedAt: "2026-09-10T12:00:00.000Z",
     };
     if (checkpointEtag) {
       request.checkpoint = {
-        version: 2,
-        resourceKey: resolved.resourceKey,
-        configHash: resolved.configHash,
-        feedEpoch: "epoch-1",
         normalizer: feedNormalizer({ id: "ckan-resource", version: "6" }),
         state: { validators: { default: { etag: checkpointEtag } } },
       };

@@ -58,17 +58,15 @@ export async function networkRows(transform: StreamingTransform) {
   return { products: transform.products, rows, summary: transform.finish() };
 }
 
-export async function networkRequest(collector: NormalizedCollector, config: SourceConfig): Promise<CollectionRequest> {
+export async function networkRequest(collector: NormalizedCollector): Promise<CollectionRequest> {
   return {
     protocol: NORMALIZED_PROTOCOL,
-    collectionId: "network-test",
-    feed: { id: "network-test", slug: "network-test-feed", title: "Network test", description: "Synthetic network test" },
-    resolved: await collector.resolve(config),
-    feedEpoch: "network-test",
+    slug: collector.feed.slug,
+    configHash: (await collector.resolve()).configHash,
     mode: { kind: "live" },
     observedAt: "2026-09-16T12:00:00Z",
     deadline: new Date(Date.now() + 60_000).toISOString(),
-    limits: { sourceBytes: 1024 * 1024, outputBytes: 2 * 1024 * 1024, frameBytes: 128 * 1024, recordBytes: 16 * 1024, records: 5000, products: 4 },
+    limits: { sourceBytes: 1024 * 1024, outputBytes: 2 * 1024 * 1024, recordBytes: 16 * 1024, records: 5000 },
   };
 }
 

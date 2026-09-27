@@ -1,30 +1,23 @@
-import { NORMALIZED_PROTOCOL, type JsonObject, type SourceCheckpoint } from "@open-data-pt/contract";
+import type { JsonObject, SourceCheckpoint } from "@open-data-pt/contract";
 
 export const scope = {
-  collectionId: "batch_1",
-  resourceKey: "fixture:events:config-v1",
-  configHash: "config-v1",
-  feedEpoch: "epoch-1",
   mode: { kind: "live" as const },
   deadline: new Date(Date.now() + 60_000).toISOString(),
 };
-export const limits = { outputBytes: 32_768, frameBytes: 8192, recordBytes: 1024, records: 10, products: 4 };
+export const limits = { outputBytes: 32_768, recordBytes: 1024, records: 10 };
 
-/** The checkpoint a fixture header carries: the scope above, and no state of the source's own. */
+/** The checkpoint a fixture header carries: the fixture normalizer, and no state of the source's own. */
 export function checkpoint(): SourceCheckpoint {
-  return { version: 2, resourceKey: scope.resourceKey, configHash: scope.configHash, feedEpoch: scope.feedEpoch, normalizer: { id: "fixture", version: "1" }, state: {} };
+  return { normalizer: { id: "fixture", version: "1" }, state: {} };
 }
 
 export function header(): JsonObject {
   return {
     type: "header",
-    protocol: NORMALIZED_PROTOCOL,
-    collectionId: scope.collectionId,
-    normalizer: { id: "fixture", version: "1" },
     products: [
       {
         productKey: "events",
-        suggestedSlug: "events",
+        slug: "events",
         title: "Events",
         description: "",
         role: "event-log",
@@ -35,7 +28,6 @@ export function header(): JsonObject {
       },
     ],
     provenance: { sourceUrl: "https://example.test/data" },
-    completeness: "complete",
     checkpoint: { ...checkpoint() },
   };
 }
@@ -44,7 +36,7 @@ export function header(): JsonObject {
 export function framedText(frames: JsonObject[], completion: JsonObject = {}): string {
   const counts = { records: frames.filter((frame) => frame.type === "record").length, points: frames.filter((frame) => frame.type === "point").length };
   const text = frames.map((frame) => `${JSON.stringify(frame)}\n`).join("");
-  return `${text}${JSON.stringify({ type: "complete", counts, quality: { acceptedRecords: counts.records + counts.points, rejectedRecords: 0 }, ...completion })}\n`;
+  return `${text}${JSON.stringify({ type: "complete", quality: { acceptedRecords: counts.records + counts.points, rejectedRecords: 0 }, ...completion })}\n`;
 }
 
 export function framed(frames: JsonObject[], completion: JsonObject = {}): ReadableStream<Uint8Array> {

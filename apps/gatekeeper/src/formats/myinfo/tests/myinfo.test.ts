@@ -265,12 +265,10 @@ describe("MYINFO Gatekeeper", () => {
     const { resolved, collector } = await feedCollection("barraqueiro-oeste-network-feed", { fetcher });
     const request: CollectionRequest = {
       protocol: NORMALIZED_PROTOCOL,
-      collectionId: "acq_test",
-      feed: { id: "feed_test", slug: "barraqueiro-oeste-network-feed", title: "t", description: "d" },
-      resolved,
-      feedEpoch: "e",
+      slug: "barraqueiro-oeste-network-feed",
+      configHash: resolved.configHash,
       mode: { kind: "live" },
-      limits: { sourceBytes: 4 * 1024 * 1024, outputBytes: 4 * 1024 * 1024, frameBytes: 272 * 1024, recordBytes: 256 * 1024, records: 1_000_000, products: 64 },
+      limits: { sourceBytes: 4 * 1024 * 1024, outputBytes: 4 * 1024 * 1024, recordBytes: 256 * 1024, records: 1_000_000 },
       deadline: new Date(Date.now() + 60_000).toISOString(),
       observedAt: "2026-09-18T08:00:00.000Z",
     };
@@ -282,6 +280,7 @@ describe("MYINFO Gatekeeper", () => {
       .map((line) => jsonAs<JsonObject>(line));
     expect(frames[0]?.type).toBe("header");
     expect(frames.filter((frame) => frame.type === "record")).toHaveLength(10);
-    expect(frames.at(-1)).toMatchObject({ type: "complete", counts: { records: 10, points: 0 } });
+    expect(frames.filter((frame) => frame.type === "point")).toHaveLength(0);
+    expect(frames.at(-1)).toMatchObject({ type: "complete", quality: { acceptedRecords: 10 } });
   });
 });

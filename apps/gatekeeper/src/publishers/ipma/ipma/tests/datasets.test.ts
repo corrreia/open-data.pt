@@ -39,12 +39,10 @@ async function transformed(text: string, feed: IpmaDatasetFeed, chunkSize = 1000
 async function request(feed: IpmaDatasetFeed): Promise<CollectionRequest> {
   return {
     protocol: NORMALIZED_PROTOCOL,
-    collectionId: "test-ipma",
-    feed: { id: "test", slug: `ipma-${feed}-feed`, title: feed, description: feed },
-    feedEpoch: "test",
-    resolved: await resolveIpmaFeed({ feed }),
+    slug: `ipma-${feed}-feed`,
+    configHash: (await resolveIpmaFeed({ feed })).configHash,
     mode: { kind: "live" },
-    limits: { sourceBytes: 2_000_000, outputBytes: 4_000_000, frameBytes: 2_000_000, recordBytes: 1_000_000, records: 20_000, products: 10 },
+    limits: { sourceBytes: 2_000_000, outputBytes: 4_000_000, recordBytes: 1_000_000, records: 20_000 },
     deadline: new Date(Date.now() + 60_000).toISOString(),
     observedAt: "2026-09-15T12:00:00Z",
   };
@@ -155,7 +153,7 @@ describe("IPMA published datasets", () => {
 
   it("passes the normalized protocol and keeps arbitrary history unsupported", async () => {
     const { resolved, collector } = await feedCollection("ipma-municipal-precipitation-feed", { fetcher: async () => new Response(fixture("ipma-municipal-rain.csv")) });
-    const req = { ...(await request("municipal-precipitation")), resolved };
+    const req = { ...(await request("municipal-precipitation")), configHash: resolved.configHash };
     const result = await collectNormalized(req, collector);
     if (result.kind !== "batch") throw new Error(`Expected batch, got ${result.kind}`);
     const lines = (await new Response(result.stream).text()).trim().split("\n");
@@ -165,7 +163,9 @@ describe("IPMA published datasets", () => {
         return isJsonObject(value) && isNormalizedFrame(value);
       }),
     ).toBe(true);
-    expect(parseJson(lines.at(-1)!)).toMatchObject({ type: "complete", counts: { records: 0, points: 4 } });
+    expect(lines.filter((line) => line.startsWith('{"type":"point"'))).toHaveLength(4);
+    expect(lines.filter((line) => line.startsWith('{"type":"record"'))).toHaveLength(0);
+    expect(parseJson(lines.at(-1)!)).toMatchObject({ type: "complete" });
     expect(await collectNormalized({ ...req, mode: { kind: "history", cursor: { before: "2026-01-01T00:00:00Z" } } }, collector)).toMatchObject({
       kind: "failure",
       code: "history-unsupported",
@@ -174,7 +174,7 @@ describe("IPMA published datasets", () => {
 
   it("fails the byte stream without a completion frame if the kernel output budget is exhausted", async () => {
     const { resolved, collector } = await feedCollection("ipma-municipal-precipitation-feed", { fetcher: async () => new Response(fixture("ipma-municipal-rain.csv")) });
-    const req = { ...(await request("municipal-precipitation")), resolved };
+    const req = { ...(await request("municipal-precipitation")), configHash: resolved.configHash };
     req.limits = { ...req.limits, records: 1 };
     const result = await collectNormalized(req, collector);
     if (result.kind !== "batch") throw new Error("Expected stream");

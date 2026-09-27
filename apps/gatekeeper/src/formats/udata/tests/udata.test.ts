@@ -50,18 +50,16 @@ const TABULAR_FEED = RUNNABLE.get("justice-facilities-feed")!;
 
 /** One collection through a tabular feed's own functions, with the test's fetch. */
 function collect(fetcher: typeof fetch, request: CollectionRequest): Promise<CollectionResult> {
-  return collectNormalized(request, feedCollector(TABULAR_FEED, { ...config, source: "udata" }, LIBRARIES, { fetcher }));
+  return collectNormalized(request, feedCollector({ ...TABULAR_FEED, slug: "population-feed", config: { ...config, source: "udata" } }, LIBRARIES, { fetcher }));
 }
 
 async function request(overrides: Partial<CollectionRequest> = {}): Promise<CollectionRequest> {
   return {
     protocol: NORMALIZED_PROTOCOL,
-    collectionId: "batch_1",
-    feed: { id: "feed_1", slug: "population-feed", title: "Population", description: "Population by municipality" },
-    resolved: await resolveLibraryFeed({ ...config, source: "udata" }, LIBRARIES),
-    feedEpoch: "epoch-1",
+    slug: "population-feed",
+    configHash: (await resolveLibraryFeed({ ...config, source: "udata" }, LIBRARIES)).configHash,
     mode: { kind: "live" },
-    limits: { sourceBytes: 1024 * 1024, outputBytes: 4 * 1024 * 1024, frameBytes: 1024 * 1024, recordBytes: 256 * 1024, records: 1_000, products: 4 },
+    limits: { sourceBytes: 1024 * 1024, outputBytes: 4 * 1024 * 1024, recordBytes: 256 * 1024, records: 1_000 },
     deadline: new Date(Date.now() + 30_000).toISOString(),
     observedAt: "2026-09-10T10:00:00.000Z",
     ...overrides,
@@ -231,11 +229,9 @@ describe("uData collection", () => {
     const [header, ...rest] = await frames(result.stream);
     expect(header).toMatchObject({
       type: "header",
-      protocol: NORMALIZED_PROTOCOL,
-      normalizer: feedNormalizer({ id: "tabular-v2", version: "5" }),
       provenance: { sourceUrl: "https://publisher.example/data.csv", sourcePublishedAt: "2026-08-24T20:14:58.444Z" },
-      checkpoint: { state: { resource: "resource-1", validators: { default: { etag: '"v2"' } } } },
-      products: [{ productKey: "records", suggestedSlug: "population", completeness: "complete" }],
+      checkpoint: { normalizer: feedNormalizer({ id: "tabular-v2", version: "5" }), state: { resource: "resource-1", validators: { default: { etag: '"v2"' } } } },
+      products: [{ productKey: "records", slug: "population", completeness: "complete" }],
     });
     expect(rest.filter((frame) => frame.type === "record").map((frame) => frame.value)).toEqual([
       { entityKey: expect.stringMatching(/^row-/), payload: { name: "Lisbon", value: 42 } },
@@ -243,7 +239,6 @@ describe("uData collection", () => {
     ]);
     expect(rest.at(-1)).toMatchObject({
       type: "complete",
-      counts: { records: 2, points: 0 },
       quality: { acceptedRecords: 2, rejectedRecords: 0 },
       products: [
         { productKey: "records", schema: { fields: [expect.objectContaining({ name: "name" }), expect.objectContaining({ name: "value", type: "number", nullable: true })] } },
@@ -261,10 +256,6 @@ describe("uData collection", () => {
     const result = await collect(fetcher, {
       ...base,
       checkpoint: {
-        version: 2,
-        resourceKey: base.resolved.resourceKey,
-        configHash: base.resolved.configHash,
-        feedEpoch: base.feedEpoch,
         normalizer: feedNormalizer(selected),
         state: { resource: "resource-1", validators: { default: { etag: '"v1"' } } },
       },

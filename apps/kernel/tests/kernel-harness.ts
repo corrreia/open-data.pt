@@ -212,6 +212,7 @@ export async function kernelHarness(options: HarnessOptions = {}): Promise<Kerne
   const gatekeeper = {
     collect: (request: Parameters<typeof collectNormalized>[0]) =>
       collectNormalized(request, {
+        feed: { slug: feed.slug, title: feed.title, description: feed.description },
         normalizer: { id: "fixture", version: "1" },
         resolve: async () => resolved,
         source: async () =>

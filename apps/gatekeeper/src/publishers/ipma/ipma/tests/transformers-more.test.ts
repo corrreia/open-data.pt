@@ -46,7 +46,6 @@ describe("IPMA additional transformers", () => {
     });
     expect(product?.records?.[0]?.eventTime).toBe("2026-09-07T17:36:00.000Z");
     expect(yellow).toMatchObject({
-      operation: "upsert",
       validFrom: "2026-09-07T17:36:00.000Z",
       payload: {
         area: "Évora",

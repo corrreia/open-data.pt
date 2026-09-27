@@ -121,18 +121,18 @@ The RPC is `describe`, `listFeedKinds`, `resolveFeed`, `collect`, `exampleFeeds`
 ## Normalizing
 
 - Stream whenever the format allows (CSV, NDJSON, JSON arrays, GeoJSON features, ZIP entries): `streamCsvRecords`, `streamJsonArray`, `streamNdjson`; declare products up front, yield rows lazily, and report what is only known at the end through `finish().products`. Otherwise buffer; buffered bodies are capped at 16 MiB.
-- The stream is one header (protocol, collection ID, normalizer, product keys, schemas, update declarations, provenance, completeness, candidate checkpoint), one bounded frame per record or point, and a mandatory completion frame. An error after the header truncates the stream, which the kernel rejects; never catch it and complete.
+- The stream is one header (product keys, schemas, update declarations and completeness, provenance, candidate checkpoint with its normalizer), one bounded frame per record or point, and a mandatory completion frame. An error after the header truncates the stream, which the kernel rejects; never catch it and complete.
 - Date rows by the source's own clock, never by when you polled: the poll time on an unchanged row makes a new revision every collection. Use it only for a reading that is a measurement taken then.
 - Publish each value once: a statistical indicator is one series, not a table and a series of the same numbers. A series beside a table only when it carries what the table does not (a count, a median, a total per period).
 - Whether a product keeps history is the policy's decision: under `historyMode: "changes"`, `collection.withoutHistory` lists what moves rather than changes (vehicle positions) and copies of values another product records.
-- `authoritative-snapshot` only when omission is authoritative across the declared scope; otherwise `partial-snapshot`, `delta` or `source-window`.
+- `authoritative-snapshot` only when omission is authoritative across the declared scope; `source-window` when a complete read is the source's whole current window but what leaves it was not deleted; otherwise `delta`, which adds and updates and never removes.
 - Never infer measures from columns that merely look numeric: phone numbers, codes and identifiers are not measurements.
 - Bump the normalizer version whenever the products or their meaning change.
 
 ## Test
 
 - Fixture tests beside the code, under its `tests/`, with saved source responses under `tests/fixtures/`. No network, no module mocking: inject a `fetcher`. `feedCollection(slug, { fetcher })` from `#/tests/catalog` runs a feed exactly as the Worker does, against a fixture.
-- Cover: config validation and hosts; upstream errors, malformed data and byte caps; conditional requests; resolution identity; framing, counts and size limits; streaming in 1-byte chunks; history and exhaustion; determinism independent of the poll clock.
+- Cover: config validation and hosts; upstream errors, malformed data and byte caps; conditional requests; resolution identity; framing and size limits; streaming in 1-byte chunks; history and exhaustion; determinism independent of the poll clock.
 - `pnpm test:publisher <key>` runs one publisher's tests; `pnpm test:publisher <key> --live` collects their feeds from the real sources.
 - `pnpm dev <library>` runs the kernel and the Gatekeeper carrying that library alone.
 - Run the checks in `AGENTS.md` one at a time. A change to what the kernel and the Gatekeeper exchange is proven only by running the new pair and loading the site. Do not deploy.

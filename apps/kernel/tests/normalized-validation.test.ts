@@ -107,32 +107,28 @@ describe("collection result envelope validation", () => {
 });
 
 describe("normalized consumer validation", () => {
-  it.each(["resourceKey", "configHash", "feedEpoch"])("rejects wrong checkpoint %s", async (field) => {
+  it.each<JsonObject>([
+    { version: 2, normalizer: { id: "fixture", version: "1" }, state: {} },
+    { normalizer: { id: "fixture" }, state: {} },
+    { normalizer: { id: "fixture", version: "1" } },
+  ])("rejects a checkpoint of another shape %j", async (checkpoint) => {
     const h = header();
-    h.checkpoint = {
-      version: 2,
-      resourceKey: scope.resourceKey,
-      configHash: scope.configHash,
-      feedEpoch: scope.feedEpoch,
-      normalizer: { id: "fixture", version: "1" },
-      state: {},
-      [field]: "wrong",
-    };
-    await expect(readNormalizedStream(framed([h]), limits, scope)).rejects.toThrow();
+    h.checkpoint = checkpoint;
+    await expect(readNormalizedStream(framed([h]), limits, scope)).rejects.toThrow("invalid frame");
   });
   it.each<[string, JsonValue]>([
     ["schema", {}],
     ["schema", { fields: [{ id: "x", name: "x", type: "bogus", nullable: false }] }],
     ["updateMode", "replace"],
     ["role", "bogus"],
-    ["suggestedSlug", "../other"],
+    ["slug", "../other"],
     ["watermark", "2026-02-30T00:00:00Z"],
   ])("rejects malformed product %s", async (field, value) => {
     const h = header();
     h.products = [
       {
         productKey: "events",
-        suggestedSlug: "events",
+        slug: "events",
         title: "Events",
         description: "",
         role: "event-log",
@@ -145,7 +141,7 @@ describe("normalized consumer validation", () => {
     ];
     await expect(readNormalizedStream(framed([h]), limits, scope)).rejects.toThrow();
   });
-  it.each(["record", "series"])("rejects inline product rows under kind:%s rather than bypassing row budgets and completion counts", async (kind) => {
+  it.each(["record", "series"])("rejects inline product rows under kind:%s rather than bypassing row budgets", async (kind) => {
     for (const field of ["records", "points"]) {
       const h = header();
       const record = { entityKey: "inline", payload: { oversized: "x".repeat(200) } };
@@ -153,7 +149,7 @@ describe("normalized consumer validation", () => {
       h.products = [
         {
           productKey: "inline",
-          suggestedSlug: "inline",
+          slug: "inline",
           title: "Inline",
           description: "",
           role: "time-series",
@@ -164,12 +160,11 @@ describe("normalized consumer validation", () => {
           [field]: field === "records" ? [record, record] : [point, point],
         },
       ];
-      // No row frames: framed() emits all-zero completion counts.
       await expect(readNormalizedStream(framed([h]), { ...limits, records: 1, recordBytes: 64 }, scope)).rejects.toThrow("invalid frame");
     }
   });
   it.each<JsonObject>([
-    { operation: "replace" },
+    { operation: "upsert" },
     { eventTime: "yesterday" },
     { validFrom: "2026-09-10T00:00:00Z", validTo: "2026-09-09T00:00:00Z" },
     { identity: { confidence: "stable" } },
@@ -198,7 +193,7 @@ describe("normalized consumer validation", () => {
   it("rejects oversized or malformed checkpoint metadata", async () => {
     for (const state of [{ nested: { value: "x".repeat(17000) } }, { tooDeep: Array.from({ length: 70 }).reduce<JsonObject>((value) => ({ value }), {}) }]) {
       const h = header();
-      h.checkpoint = { version: 2, resourceKey: scope.resourceKey, configHash: scope.configHash, feedEpoch: scope.feedEpoch, normalizer: { id: "fixture", version: "1" }, state };
+      h.checkpoint = { normalizer: { id: "fixture", version: "1" }, state };
       await expect(readNormalizedStream(framed([h]), limits, scope)).rejects.toThrow();
     }
   });
@@ -219,11 +214,11 @@ it("rejects exact offset/token repetition and bounded opaque cursor cycles befor
   expect(accepted.nextCursor?.offset).toBe(3);
 });
 
-it("rejects duplicate product keys and negative completion counts", async () => {
+it("rejects duplicate product keys and completion counts, which the stream no longer carries", async () => {
   const h = header();
   const duplicate = {
     productKey: "duplicate",
-    suggestedSlug: "duplicate",
+    slug: "duplicate",
     title: "Duplicate",
     description: "",
     role: "reference",
@@ -234,5 +229,5 @@ it("rejects duplicate product keys and negative completion counts", async () => 
   };
   h.products = [duplicate, duplicate];
   await expect(readNormalizedStream(framed([h]), limits, scope)).rejects.toThrow("Duplicate product key");
-  await expect(readNormalizedStream(framed([header()], { counts: { records: -1, points: 0 } }), limits, scope)).rejects.toThrow("invalid frame");
+  await expect(readNormalizedStream(framed([header()], { counts: { records: 0, points: 0 } }), limits, scope)).rejects.toThrow("invalid frame");
 });

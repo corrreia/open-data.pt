@@ -13,7 +13,7 @@ describe("RIPEstat live research", () => {
       async () => {
         let requests = 0;
         let detail = "";
-        const { resolved, collector: adapter } = await feedCollection(example.slug, {
+        const { collector: adapter } = await feedCollection(example.slug, {
           fetcher: async (input, init) => {
             requests += 1;
             try {
@@ -26,13 +26,7 @@ describe("RIPEstat live research", () => {
             }
           },
         });
-        const request = await networkRequest(adapter, resolved.config);
-        request.feed = {
-          id: example.slug,
-          slug: example.slug,
-          title: example.title,
-          description: example.description,
-        };
+        const request = await networkRequest(adapter);
         request.observedAt = new Date().toISOString();
         const result = await collectNormalized(request, adapter);
         if (result.kind !== "batch") throw new Error(`${JSON.stringify(result)} ${detail}`);
@@ -41,14 +35,15 @@ describe("RIPEstat live research", () => {
         expect(complete?.type).toBe("complete");
         if (complete?.type !== "complete") throw new Error("No completion frame");
         expect(complete.quality.rejectedRecords).toBe(0);
-        expect(complete.counts.records + complete.counts.points).toBeGreaterThan(0);
+        const counts = { records: frames.filter((frame) => frame.type === "record").length, points: frames.filter((frame) => frame.type === "point").length };
+        expect(counts.records + counts.points).toBeGreaterThan(0);
         expect(frames.filter((frame) => frame.type === "header")).toHaveLength(1);
         expect(requests).toBeLessThanOrEqual(1);
         console.log(
           JSON.stringify({
             slug: example.slug,
             requests,
-            ...complete.counts,
+            ...counts,
             normalizedBytes: new TextEncoder().encode(frames.map((frame) => JSON.stringify(frame)).join("\n")).length,
           }),
         );
@@ -61,15 +56,15 @@ describe("RIPEstat live research", () => {
     "RIPEstat source-supported historical window",
     async () => {
       const example = feedsOf("ripestat").find((item) => item.config.feed === "country-routing")!;
-      const { resolved, collector: adapter } = await feedCollection(example.slug, { fetcher: (input, init) => fetch(input, init) });
-      const request = await networkRequest(adapter, resolved.config);
+      const { collector: adapter } = await feedCollection(example.slug, { fetcher: (input, init) => fetch(input, init) });
+      const request = await networkRequest(adapter);
       const now = new Date();
       const before = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) - 30 * 86_400_000).toISOString();
       request.mode = { kind: "history", cursor: { before } };
       const frames = await networkFrames(await collectNormalized(request, adapter));
       const complete = frames.at(-1);
       if (complete?.type !== "complete") throw new Error("No history completion");
-      expect(complete.counts.points).toBeGreaterThan(0);
+      expect(frames.filter((frame) => frame.type === "point").length).toBeGreaterThan(0);
       if (!complete.nextCursor) throw new Error("History slice omitted its older cursor");
       expect(complete.nextCursor.before < before).toBe(true);
       expect(complete.quality.rejectedRecords).toBe(0);

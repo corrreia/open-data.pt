@@ -123,12 +123,10 @@ describe("GTFS Gatekeeper", () => {
     );
     const request: CollectionRequest = {
       protocol: NORMALIZED_PROTOCOL,
-      collectionId: "col_gtfs_metro",
-      feed: { id: "feed_metro", slug: "metro-do-porto-gtfs-feed", title: "Metro do Porto GTFS", description: "GTFS fixture" },
-      resolved,
-      feedEpoch: "epoch-1",
+      slug: "metro-do-porto-gtfs-feed",
+      configHash: resolved.configHash,
       mode: { kind: "live" },
-      limits: { sourceBytes: 1024 * 1024, outputBytes: 4 * 1024 * 1024, frameBytes: 256 * 1024, recordBytes: 128 * 1024, records: 10_000, products: 16 },
+      limits: { sourceBytes: 1024 * 1024, outputBytes: 4 * 1024 * 1024, recordBytes: 128 * 1024, records: 10_000 },
       deadline: new Date(Date.now() + 60_000).toISOString(),
       observedAt: "2026-09-10T09:00:00.000Z",
     };
@@ -140,6 +138,7 @@ describe("GTFS Gatekeeper", () => {
     );
 
     const result = await collectNormalized(request, {
+      feed: { slug: "metro-do-porto-gtfs-feed", title: "Metro do Porto GTFS", description: "GTFS fixture" },
       normalizer: GTFS_NORMALIZER,
       resolve: () => resolved,
       source: (state) => collectGtfsFeed(resolved.config, sourceValidator(state), ALLOWED_HOSTS, fetcher),
@@ -153,10 +152,10 @@ describe("GTFS Gatekeeper", () => {
 
     const header = frames[0];
     if (header?.type !== "header") throw new Error("Expected the header frame first");
-    expect(header.normalizer).toEqual({ id: "gtfs-schedule", version: "3" });
+    expect(header.checkpoint.normalizer).toEqual({ id: "gtfs-schedule", version: "3" });
     expect(header.products.map((product) => product.productKey)).toEqual(["stops", "routes", "agencies", "calendar", "calendar-dates", "trips", "shapes"]);
     expect(header.provenance).toEqual({ sourceUrl: metro.source, sourcePublishedAt: "2026-09-07T15:27:33.000Z" });
-    expect(header.completeness).toBe("complete");
+    expect(header.products.map((product) => product.completeness)).toEqual(Array.from({ length: 7 }, () => "complete"));
     expect(header.checkpoint.state).toEqual({
       validators: { default: { etag: '"metro-1"', lastModified: "Mon, 07 Sep 2026 15:27:33 GMT" } },
     });
@@ -176,7 +175,6 @@ describe("GTFS Gatekeeper", () => {
     });
     expect(frames.at(-1)).toEqual({
       type: "complete",
-      counts: { records: 14, points: 0 },
       quality: { acceptedRecords: 14, rejectedRecords: 0 },
     });
   });

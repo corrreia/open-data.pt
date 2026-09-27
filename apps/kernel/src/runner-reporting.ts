@@ -1,3 +1,5 @@
+import type { CollectionFailureCode } from "@open-data-pt/contract";
+
 import type { Acquisition, AcquisitionStatus, FeedStatus } from "./feed-model";
 import type { Outage, OutageCause, RegistryStore } from "./registry-store";
 
@@ -63,7 +65,7 @@ export function isSustained(outage: Outage, now: string): boolean {
 const LAST_REPORT_KEY = "lastReportAt";
 const FINISHED = new Set<AcquisitionStatus>(["succeeded", "unchanged", "failed"]);
 /** Failures that are the source's: it did not answer, refused, or was too slow. Anything else is this platform's to fix. */
-const SOURCE_FAILURES = new Set(["upstream-error", "source-denied", "deadline-exceeded"]);
+const SOURCE_FAILURES = new Set<CollectionFailureCode>(["upstream-error", "source-denied", "deadline-exceeded"]);
 
 export interface OutageWindow {
   /** When tracking began; nothing is known before it. */
@@ -71,8 +73,7 @@ export interface OutageWindow {
   items: Outage[];
 }
 
-export function outageCause(error: string | undefined): OutageCause {
-  const code = /Gatekeeper collection failed: ([a-z-]+)/.exec(error ?? "")?.[1];
+export function outageCause(code: CollectionFailureCode | undefined): OutageCause {
   return code !== undefined && SOURCE_FAILURES.has(code) ? "source" : "collection";
 }
 
@@ -102,7 +103,7 @@ function trackOutage(store: RegistryStore, report: RunnerReport): void {
     const recovered = live.findIndex((acquisition) => acquisition.status !== "failed");
     const streak = recovered === -1 ? live : live.slice(0, recovered);
     const failures = Math.max(report.status.consecutiveFailures ?? 0, streak.length);
-    const cause = outageCause(newest.error);
+    const cause = outageCause(newest.errorCode);
     const error = newest.error?.slice(0, 500);
     if (open) store.updateOutage(open.id, cause, Math.max(open.failures, failures), error);
     else store.startOutage(report.feedId, finishedAt(streak[streak.length - 1] ?? newest), cause, failures, error);

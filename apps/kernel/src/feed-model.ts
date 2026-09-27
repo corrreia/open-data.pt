@@ -1,6 +1,7 @@
 import { isJsonObject } from "@open-data-pt/contract";
 import type {
   CanonicalSchema,
+  CollectionFailureCode,
   CollectionPolicyDefinition,
   Completeness,
   FeedSemantics,
@@ -205,4 +206,6 @@ export interface Acquisition {
   historyRows?: number;
   policyVersion: number;
   error?: string;
+  /** What the Gatekeeper said went wrong, when it was the Gatekeeper that said so. */
+  errorCode?: CollectionFailureCode;
 }

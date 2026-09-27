@@ -2,11 +2,12 @@ import {
   NormalizedInputError,
   historyCursorKey,
   isPermanentCollectionError,
+  type CollectionFailureCode,
   type CollectionLimits,
   type Completeness,
   type HistoryCursor,
   type JsonObject,
-  type NormalizedProductHeader,
+  type ProductDeclaration,
   type SourceCheckpoint,
   type TransformQuality,
 } from "@open-data-pt/contract";
@@ -166,7 +167,7 @@ const COMMIT_OUTBOX_BLOBS = 4;
 export interface DeclareInput {
   normalizer: { id: string; version: string };
   sourcePublishedAt?: string;
-  products: NormalizedProductHeader[];
+  products: ProductDeclaration[];
 }
 
 export interface DeclaredProduct {
@@ -183,8 +184,8 @@ export interface DeclaredProduct {
 /** One prepared record on its way into the large-product index. */
 export interface StagedRecord {
   prepared: PreparedRecord;
-  /** Served JSON for an upsert; null for a removal. */
-  json: string | null;
+  /** The JSON the row is served as. */
+  json: string;
 }
 
 export interface StageResult {
@@ -213,8 +214,8 @@ export interface ProductCommit {
 }
 
 export interface CommitInput {
+  /** The next collection's state, and the normalizer that produced this batch. */
   checkpoint: SourceCheckpoint;
-  normalizer: { id: string; version: string };
   quality: TransformQuality;
   completeness: Completeness;
   rows: number;
@@ -229,6 +230,8 @@ export interface CommitInput {
 
 export interface CollectionFailure {
   message: string;
+  /** What the Gatekeeper said went wrong; absent when the failure was this side's. */
+  code?: CollectionFailureCode;
   retryable: boolean;
   retryAfterSeconds?: number;
   /** The executor died without finishing (memory, CPU or platform kill). */
@@ -277,7 +280,7 @@ export class RunnerCore {
     this.exec(`CREATE TABLE IF NOT EXISTS acquisitions (
       id TEXT PRIMARY KEY, trigger TEXT NOT NULL, status TEXT NOT NULL, requested_at TEXT NOT NULL, started_at TEXT, completed_at TEXT,
       observed_at TEXT, event_time TEXT, source_published_at TEXT, completeness TEXT, normalizer_json TEXT, quality_json TEXT,
-      rows INTEGER, revisions INTEGER, history_rows INTEGER, policy_version INTEGER NOT NULL, error TEXT)`);
+      rows INTEGER, revisions INTEGER, history_rows INTEGER, policy_version INTEGER NOT NULL, error TEXT, error_code TEXT)`);
     this.exec(`CREATE INDEX IF NOT EXISTS acquisitions_requested ON acquisitions(requested_at)`);
     this.exec(`CREATE TABLE IF NOT EXISTS products (
       product_key TEXT PRIMARY KEY, slug TEXT NOT NULL UNIQUE, mode TEXT NOT NULL, entry_json TEXT NOT NULL, regenerate INTEGER NOT NULL DEFAULT 0)`);
@@ -291,9 +294,24 @@ export class RunnerCore {
       rows INTEGER NOT NULL, bytes INTEGER NOT NULL, committed INTEGER NOT NULL DEFAULT 0, committed_at TEXT)`);
     this.exec(`CREATE INDEX IF NOT EXISTS outbox_acquisition ON outbox(acquisition_id)`);
     this.exec(`CREATE TABLE IF NOT EXISTS garbage (object_key TEXT PRIMARY KEY, delete_after TEXT NOT NULL)`);
+    this.migrateCollectionContract();
     // Every construction runs this; writing the version only when it is new keeps a warm-up free of row writes.
     if (current !== String(RUNNER_SCHEMA_VERSION))
       this.exec(`INSERT INTO meta (key, value) VALUES ('schema_version', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`, String(RUNNER_SCHEMA_VERSION));
+  }
+
+  /**
+   * One-time rewrite for protocol 5, kept only until every runner has run it once: a checkpoint keeps just its
+   * normalizer and state (this runner now owns its scope), a product stored as a partial snapshot is the delta it
+   * always behaved as, and failed acquisitions gain the code the Gatekeeper gave.
+   */
+  private migrateCollectionContract(): void {
+    this.exec(`UPDATE state SET value_json = json_set(value_json, '$.checkpoint', json_object(
+        'normalizer', json(json_extract(value_json, '$.checkpoint.normalizer')), 'state', json(json_extract(value_json, '$.checkpoint.state'))))
+      WHERE key = 'runtime' AND json_type(value_json, '$.checkpoint.version') IS NOT NULL`);
+    this.exec(`UPDATE products SET entry_json = json_set(entry_json, '$.updateMode', 'delta') WHERE json_extract(entry_json, '$.updateMode') = 'partial-snapshot'`);
+    const acquisitions = this.rows<{ sql: string }>(`SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'acquisitions'`)[0]?.sql ?? "";
+    if (!acquisitions.includes("error_code")) this.exec(`ALTER TABLE acquisitions ADD COLUMN error_code TEXT`);
   }
 
   private reset(): void {
@@ -375,6 +393,14 @@ export class RunnerCore {
     // A different definition or policy is a fresh chance for the schedule too: the streak of failures
     // that lengthened this feed's waits was the old configuration's, so the next attempt starts over.
     const runtime: RunnerState = { ...this.runtime(), consecutiveFailures: 0 };
+    // A checkpoint belongs to one configuration of the source and one epoch of the feed: under another, the next
+    // collection reads the source whole.
+    const sameScope =
+      current !== undefined &&
+      current.resolved.resourceKey === feed.resolved.resourceKey &&
+      current.resolved.configHash === feed.resolved.configHash &&
+      current.feedEpoch === feed.feedEpoch;
+    if (!sameScope) delete runtime.checkpoint;
     if (feed.enabled) {
       // Only a feed that now collects something else, or one that is failing, runs at once. A healthy feed whose words
       // or policy changed keeps the data it has until its regular run: a new description once sent 278 feeds at one
@@ -570,10 +596,8 @@ export class RunnerCore {
       limits: {
         sourceBytes: policy.collection.maxBytes,
         outputBytes,
-        frameBytes: Math.min(outputBytes, recordBytes + 16 * 1024),
         recordBytes,
         records: policy.collection.maxRecords ?? 1_000_000,
-        products: 64,
       },
     };
     if (history && !this.deps.lakeAvailable) throw new NormalizedInputError("Historical collection requires lake bindings");
@@ -641,13 +665,8 @@ export class RunnerCore {
     for (const row of latest.values()) {
       const previous = existing.get(row.prepared.key);
       if (previous) seen.push(previous.id);
-      if (previous && !row.prepared.removal && previous.hash === row.prepared.hash) continue;
-      if (row.prepared.removal) {
-        if (previous) staged.push([row.prepared.key, null, null]);
-      } else {
-        if (row.json === null) throw new NormalizedInputError("An upsert must carry its served JSON");
-        staged.push([row.prepared.key, row.prepared.hash, row.json]);
-      }
+      if (previous && previous.hash === row.prepared.hash) continue;
+      staged.push([row.prepared.key, row.prepared.hash, row.json]);
       const revision = recordRevision(row.prepared, Boolean(previous), context);
       changes.add(revision.change);
       revisions += 1;
@@ -732,7 +751,7 @@ export class RunnerCore {
         input.eventTime ?? null,
         input.sourcePublishedAt ?? null,
         input.completeness,
-        JSON.stringify(input.normalizer),
+        JSON.stringify(input.checkpoint.normalizer),
         JSON.stringify(input.quality),
         input.rows,
         input.revisions,
@@ -827,7 +846,7 @@ export class RunnerCore {
     const permanent = !failure.retryable || isPermanentCollectionError(new Error(failure.message));
     this.transaction(() => {
       this.discard(acquisitionId);
-      this.exec(`UPDATE acquisitions SET status = 'failed', completed_at = ?, error = ? WHERE id = ?`, at, message, acquisitionId);
+      this.exec(`UPDATE acquisitions SET status = 'failed', completed_at = ?, error = ?, error_code = ? WHERE id = ?`, at, message, failure.code ?? null, acquisitionId);
       const runtime = this.runtime();
       const next: RunnerState = { ...runtime };
       delete next.runningAcquisitionId;
@@ -1413,6 +1432,10 @@ function mapAcquisition(row: AcquisitionRow, feedId: string): Acquisition {
   if (row.revisions !== null) acquisition.revisions = row.revisions;
   if (row.history_rows !== null) acquisition.historyRows = row.history_rows;
   if (row.error) acquisition.error = row.error;
+  if (row.error_code) {
+    // SAFETY: error_code is written only from a CollectionFailureCode the contract validated.
+    acquisition.errorCode = row.error_code as CollectionFailureCode;
+  }
   return acquisition;
 }
 
@@ -1447,6 +1470,7 @@ interface AcquisitionRow extends Record<string, SqlStorageValue> {
   history_rows: number | null;
   policy_version: number;
   error: string | null;
+  error_code: string | null;
 }
 
 interface ProductRow extends Record<string, SqlStorageValue> {
@@ -1463,7 +1487,7 @@ interface ProductRow extends Record<string, SqlStorageValue> {
  * one starts as a baseline under its suggested slug. The runner and the
  * executor compute the same answer from the same product plans.
  */
-export function declareProducts(existing: ProductPlan[], headers: NormalizedProductHeader[]): DeclaredProduct[] {
+export function declareProducts(existing: ProductPlan[], headers: ProductDeclaration[]): DeclaredProduct[] {
   const byKey = new Map(existing.map((product) => [product.productKey, product]));
   const declared = headers.map((header): DeclaredProduct => {
     const previous = byKey.get(header.productKey);
@@ -1480,7 +1504,7 @@ export function declareProducts(existing: ProductPlan[], headers: NormalizedProd
     }
     return {
       productKey: header.productKey,
-      slug: header.suggestedSlug,
+      slug: header.slug,
       kind: header.kind,
       version: 1,
       baseline: true,

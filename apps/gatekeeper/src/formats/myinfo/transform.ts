@@ -199,7 +199,7 @@ function timetable(operator: string, document: JsonObject): UnstampedResult {
     ),
     records,
     // A search answers for one day, so it can add and correct departures but never retract them.
-    updateMode: "partial-snapshot",
+    updateMode: "delta",
     completeness: "partial",
   };
   return { products: [product], quality: { acceptedRecords: records.length, rejectedRecords: trips.length - records.length } };

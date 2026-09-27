@@ -1,5 +1,6 @@
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
+import type { CollectionFailureCode } from "@open-data-pt/contract";
 import type { Acquisition } from "../src/feed-model";
 import { RegistryStore } from "../src/registry-store";
 import { ingestRunnerReport, isSustained, type RunnerReport } from "../src/runner-reporting";
@@ -92,9 +93,18 @@ async function registryWithFeed(): Promise<RegistryStore> {
   return store;
 }
 
-function run(id: string, at: string, status: Acquisition["status"], error?: string, trigger = "scheduled"): Acquisition {
+/** How a run failed: the message people read, and the code the Gatekeeper gave when it was the Gatekeeper that failed. */
+interface RunFailure {
+  error: string;
+  code?: CollectionFailureCode;
+}
+
+const UPSTREAM: RunFailure = { error: "Gatekeeper collection failed: upstream-error", code: "upstream-error" };
+
+function run(id: string, at: string, status: Acquisition["status"], failure?: RunFailure, trigger = "scheduled"): Acquisition {
   const item: Acquisition = { id, feedId: "feed_1", trigger, status, requestedAt: at, completedAt: at, policyVersion: 1 };
-  if (error) item.error = error;
+  if (failure) item.error = failure.error;
+  if (failure?.code) item.errorCode = failure.code;
   return item;
 }
 
@@ -130,13 +140,13 @@ describe("outages", () => {
 
   it("opens when live collection starts failing, counts the failures, and closes at the first success", async () => {
     const store = await registryWithFeed();
-    const upstream = "Gatekeeper collection failed: upstream-error";
+    const upstream = UPSTREAM;
     const ok = run("a0", "2026-09-10T09:59:00.000Z", "succeeded");
     const first = run("a1", "2026-09-10T10:00:00.000Z", "failed", upstream);
     const second = run("a2", "2026-09-10T10:02:00.000Z", "failed", upstream);
     ingestRunnerReport(store, { feedId: "feed_1", library: "fixture", status: { consecutiveFailures: 1 }, acquisitions: [first, ok] }, "2026-09-10T10:00:01.000Z");
     ingestRunnerReport(store, { feedId: "feed_1", library: "fixture", status: { consecutiveFailures: 2 }, acquisitions: [second, first, ok] }, "2026-09-10T10:02:01.000Z");
-    expect(store.outagesBetween(...WINDOW)).toEqual([{ feedId: "feed_1", startedAt: first.completedAt, cause: "source", failures: 2, lastError: upstream }]);
+    expect(store.outagesBetween(...WINDOW)).toEqual([{ feedId: "feed_1", startedAt: first.completedAt, cause: "source", failures: 2, lastError: upstream.error }]);
     const recovered = run("a3", "2026-09-10T10:05:00.000Z", "unchanged");
     const later = run("a4", "2026-09-10T10:06:00.000Z", "succeeded");
     // A lost report means the next one may already hold several successes: the first one ended it.
@@ -146,7 +156,7 @@ describe("outages", () => {
       "2026-09-10T10:06:01.000Z",
     );
     expect(store.outagesBetween(...WINDOW)).toEqual([
-      { feedId: "feed_1", startedAt: first.completedAt, endedAt: recovered.completedAt, cause: "source", failures: 2, lastError: upstream },
+      { feedId: "feed_1", startedAt: first.completedAt, endedAt: recovered.completedAt, cause: "source", failures: 2, lastError: upstream.error },
     ]);
     expect(store.openOutage("feed_1")).toBeUndefined();
   });
@@ -159,14 +169,19 @@ describe("outages", () => {
         feedId: "feed_1",
         library: "fixture",
         status: { consecutiveFailures: 0 },
-        acquisitions: [run("h1", "2026-09-10T10:00:00.000Z", "failed", "Gatekeeper collection failed: upstream-error", "history")],
+        acquisitions: [run("h1", "2026-09-10T10:00:00.000Z", "failed", UPSTREAM, "history")],
       },
       "2026-09-10T10:00:01.000Z",
     );
     expect(store.outagesBetween(...WINDOW)).toEqual([]);
     ingestRunnerReport(
       store,
-      { feedId: "feed_1", library: "fixture", status: { consecutiveFailures: 1 }, acquisitions: [run("a1", "2026-09-10T10:01:00.000Z", "failed", "Illegal invocation")] },
+      {
+        feedId: "feed_1",
+        library: "fixture",
+        status: { consecutiveFailures: 1 },
+        acquisitions: [run("a1", "2026-09-10T10:01:00.000Z", "failed", { error: "Illegal invocation" })],
+      },
       "2026-09-10T10:01:01.000Z",
     );
     expect(store.outagesBetween(...WINDOW).map((outage) => outage.cause)).toEqual(["collection"]);

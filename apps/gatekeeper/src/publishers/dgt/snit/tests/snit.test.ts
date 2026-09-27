@@ -238,7 +238,7 @@ describe("SNIT normalization", () => {
 describe("SNIT through the shared collector", () => {
   it("streams a normalized batch carrying both products", async () => {
     const { resolved, collector } = await feedCollection("snit-prof-feed", { fetcher: serviceFetcher() });
-    const result = await collectNormalized(await request({ resolved }), collector);
+    const result = await collectNormalized(await request({ configHash: resolved.configHash }), collector);
     expect(result.kind).toBe("batch");
     if (result.kind !== "batch") return;
     const frames = (await readText(result.stream))
@@ -254,12 +254,15 @@ describe("SNIT through the shared collector", () => {
     expect(Array.isArray(header?.products) ? header.products.length : 0).toBe(2);
     const complete = frames.at(-1);
     expect(complete?.type).toBe("complete");
-    expect(isJsonObject(complete?.counts) ? complete.counts.records : 0).toBe(34);
+    expect(frames.filter((frame) => frame.type === "record")).toHaveLength(34);
   });
 
   it("refuses a history walk, because the register publishes no older edition", async () => {
     const { resolved, collector } = await feedCollection("snit-prof-feed", { fetcher: serviceFetcher() });
-    const result = await collectNormalized(await request({ resolved, mode: { kind: "history", cursor: { before: "2026-01-01T00:00:00.000Z" } } }), collector);
+    const result = await collectNormalized(
+      await request({ configHash: resolved.configHash, mode: { kind: "history", cursor: { before: "2026-01-01T00:00:00.000Z" } } }),
+      collector,
+    );
     expect(result).toEqual({ kind: "failure", code: "history-unsupported", retryable: false });
   });
 });
@@ -291,12 +294,10 @@ describe("SNIT examples", () => {
 async function request(overrides: Partial<CollectionRequest> = {}): Promise<CollectionRequest> {
   return {
     protocol: NORMALIZED_PROTOCOL,
-    collectionId: "collection_1",
-    feed: { id: "feed_1", slug: "snit-prof-feed", title: "Regional forest programmes", description: "test feed" },
-    resolved: await resolveSnitFeed(config),
-    feedEpoch: "epoch-1",
+    slug: "snit-prof-feed",
+    configHash: (await resolveSnitFeed(config)).configHash,
     mode: { kind: "live" },
-    limits: { sourceBytes: 25_165_824, outputBytes: 25_165_824, frameBytes: 262_144, recordBytes: 262_144, records: 50_000, products: 4 },
+    limits: { sourceBytes: 25_165_824, outputBytes: 25_165_824, recordBytes: 262_144, records: 50_000 },
     deadline: new Date(Date.now() + 30_000).toISOString(),
     observedAt: "2026-09-21T09:00:00.000Z",
     ...overrides,

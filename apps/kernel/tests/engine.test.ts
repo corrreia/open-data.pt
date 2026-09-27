@@ -102,14 +102,14 @@ describe("collection engine: current state", () => {
     expect(await h.served()).toHaveLength(3);
   });
 
-  it("applies explicit source deletions from a delta without touching other entities", async () => {
+  it("adds and updates from a delta without removing the entities it leaves out", async () => {
     const h = await kernelHarness();
     await baseline(h, 3);
     h.source.updateMode = "delta";
-    h.source.records = [{ entityKey: "k000001", operation: "delete", payload: {} }, record("k000009", "new")];
+    h.source.records = [record("k000001", "changed"), record("k000009", "new")];
     const outcome = await h.collect();
     expect(outcome.revisions).toBe(2);
-    expect((await h.served()).map((row) => row.id)).toEqual(["k000000", "k000002", "k000009"]);
+    expect((await h.served()).map((row) => row.id)).toEqual(["k000000", "k000001", "k000002", "k000009"]);
   });
 });
 
@@ -440,7 +440,7 @@ describe("collection engine: the Workflow step", () => {
     const { h, id } = await begun();
     const failing: CollectingGatekeeper = { collect: async () => ({ kind: "failure", code: "upstream-error", retryable: true, retryAfterSeconds: 30 }) };
     await expect(collectionStep(id, { runner: h.port, gatekeeper: failing, objects: h.objects })).resolves.toEqual({
-      failure: { message: "Gatekeeper collection failed: upstream-error", retryable: true, retryAfterSeconds: 30 },
+      failure: { message: "Gatekeeper collection failed: upstream-error", code: "upstream-error", retryable: true, retryAfterSeconds: 30 },
     });
   });
 

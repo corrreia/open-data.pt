@@ -57,11 +57,14 @@ export function gatekeeper<E extends object>(libraries: readonly Library[]) {
       return resolveLibraryFeed(config, this.libraries());
     }
 
-    /** A feed runs the functions its own file defines. A feed no file defines any more was retired, and has nothing to run. */
+    /**
+     * A feed runs the configuration and the functions its own file defines. A feed no file defines any more was
+     * retired, and has nothing to run.
+     */
     async collect(request: CollectionRequest): Promise<CollectionResult> {
-      const feed = RUNNABLE.get(request.feed.slug);
+      const feed = RUNNABLE.get(request.slug);
       if (!feed) return { kind: "failure", code: "invalid-config", retryable: false };
-      return collectNormalized(request, feedCollector(feed, request.resolved.config, this.libraries(), runtimeOf(feed.slug)));
+      return collectNormalized(request, feedCollector(feed, this.libraries(), runtimeOf(feed.slug)));
     }
 
     /** Every feed of a publisher we may republish that a carried library reads; a held publisher's code ships, and installs nothing. */
