@@ -154,6 +154,28 @@ describe("runner schedule and failure handling", () => {
     expect(h.core.runtime().checkpoint).toBeUndefined();
   });
 
+  it.each(["a changed batch", "an unchanged source"])("leaves a feed due when %s was read from the source it has just stopped reading", async (kind) => {
+    const monthly = policy({ cadenceSeconds: 30 * 24 * 3600 });
+    const h = await kernelHarness({ policy: monthly, history: null });
+    h.source.records = [record("a", 1)];
+    await h.collect();
+    const before = h.core.runtime().lastSuccessSource;
+    // The feed is pointed at another configuration while the next collection is reading the old one.
+    h.source.fetch = async () => {
+      const feed = h.core.feed()!;
+      h.core.configure({ ...feed, resolved: { ...feed.resolved, configHash: "another-config" } }, h.core.policy()!);
+      return kind === "an unchanged source"
+        ? { kind: "not-modified" }
+        : { kind: "body", body: new Uint8Array(0), provenance: { sourceUrl: "https://example.test/things" }, completeness: "complete" };
+    };
+    h.source.records = [record("a", 2)];
+    await h.collect();
+    // Not a month away: the new configuration has still to be read.
+    expect(Date.parse(h.core.runtime().nextRunAt!)).toBeLessThanOrEqual(h.clock.now);
+    expect(h.core.runtime().lastSuccessSource).toBe(before);
+    expect(h.core.runtime().checkpoint).toBeUndefined();
+  });
+
   it("still retries a changed configuration until it has read, whatever the old one read", async () => {
     const monthly = policy({ cadenceSeconds: 30 * 24 * 3600 });
     const h = await kernelHarness({ policy: monthly, history: null });

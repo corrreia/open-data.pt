@@ -319,12 +319,15 @@ export class RunnerCore {
     this.exec(`UPDATE products SET entry_json = json_set(entry_json, '$.updateMode', 'delta') WHERE json_extract(entry_json, '$.updateMode') = 'partial-snapshot'`);
     const acquisitions = this.rows<{ sql: string }>(`SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'acquisitions'`)[0]?.sql ?? "";
     if (acquisitions.includes("error_code")) return;
-    this.exec(`ALTER TABLE acquisitions ADD COLUMN error_code TEXT`);
-    const named = this.rows<{ id: string; error: string }>(`SELECT id, error FROM acquisitions WHERE status = 'failed' AND error LIKE '%Gatekeeper collection failed: %'`);
-    for (const { id, error } of named) {
-      const code = /Gatekeeper collection failed: ([a-z-]+)/.exec(error)?.[1];
-      if (code !== undefined && isCollectionFailureCode(code)) this.exec(`UPDATE acquisitions SET error_code = ? WHERE id = ?`, code, id);
-    }
+    // The column and its backfill commit together: a runner interrupted in between finds no column and starts again.
+    this.transaction(() => {
+      this.exec(`ALTER TABLE acquisitions ADD COLUMN error_code TEXT`);
+      const named = this.rows<{ id: string; error: string }>(`SELECT id, error FROM acquisitions WHERE status = 'failed' AND error LIKE '%Gatekeeper collection failed: %'`);
+      for (const { id, error } of named) {
+        const code = /Gatekeeper collection failed: ([a-z-]+)/.exec(error)?.[1];
+        if (code !== undefined && isCollectionFailureCode(code)) this.exec(`UPDATE acquisitions SET error_code = ? WHERE id = ?`, code, id);
+      }
+    });
   }
 
   private reset(): void {
@@ -619,7 +622,7 @@ export class RunnerCore {
       plan.backfill = { floors: backfill.floors, seen: backfill.seen };
       if (backfill.until) plan.backfill.until = backfill.until;
     }
-    this.setState(collectionKey(acquisitionId), { observedAt: plan.observedAt, lake: plan.lake, scope: checkpointScope(feed) } satisfies CollectionMemo);
+    this.setState(collectionKey(acquisitionId), { observedAt: plan.observedAt, lake: plan.lake, source: sourceOf(feed), feedEpoch: feed.feedEpoch } satisfies CollectionMemo);
     return plan;
   }
 
@@ -778,14 +781,19 @@ export class RunnerCore {
       if (history) {
         this.advanceBackfill(input);
       } else {
+        const feed = this.requireFeed();
+        const sameSource = memo.source === sourceOf(feed);
         // A feed reconfigured while this collection ran keeps no checkpoint from it: the next one reads the source whole.
-        if (memo.scope === checkpointScope(this.requireFeed())) next.checkpoint = input.checkpoint;
+        if (sameSource && memo.feedEpoch === feed.feedEpoch) next.checkpoint = input.checkpoint;
         else delete next.checkpoint;
         next.lastSuccessAt = at;
-        next.lastSuccessSource = sourceOf(this.requireFeed());
         if (input.sourceUrl) next.sourceUrl = input.sourceUrl;
         next.cooldowns = 0;
-        next.nextRunAt = nextRunAfter(this.requireFeed().id, now, policy.collection.cadenceSeconds);
+        // What it read was the old source's: the new one has still to be read, and stays due as configure left it.
+        if (sameSource) {
+          next.lastSuccessSource = sourceOf(feed);
+          next.nextRunAt = nextRunAfter(feed.id, now, policy.collection.cadenceSeconds);
+        }
       }
       this.setRuntime(next);
       if (!history) this.maybeStartBackfill();
@@ -810,23 +818,21 @@ export class RunnerCore {
     const policy = this.requirePolicy();
     const now = this.deps.now();
     const at = new Date(now).toISOString();
-    const scope = this.getState<CollectionMemo>(collectionKey(acquisitionId))?.scope;
+    const memo = this.getState<CollectionMemo>(collectionKey(acquisitionId));
     this.transaction(() => {
       this.discard(acquisitionId);
       this.exec(`UPDATE acquisitions SET status = 'unchanged', completed_at = ?, observed_at = COALESCE(observed_at, ?), error = NULL WHERE id = ?`, at, at, acquisitionId);
+      const feed = this.requireFeed();
+      const sameSource = memo?.source === sourceOf(feed);
       const runtime = this.runtime();
-      const next: RunnerState = {
-        ...runtime,
-        checkpoint,
-        lastSuccessAt: at,
-        lastSuccessSource: sourceOf(this.requireFeed()),
-        consecutiveFailures: 0,
-        consecutiveInterruptions: 0,
-        cooldowns: 0,
-        nextRunAt: nextRunAfter(this.requireFeed().id, now, policy.collection.cadenceSeconds),
-      };
+      const next: RunnerState = { ...runtime, checkpoint, lastSuccessAt: at, consecutiveFailures: 0, consecutiveInterruptions: 0, cooldowns: 0 };
       // A feed reconfigured while this collection ran keeps no checkpoint from it: the next one reads the source whole.
-      if (scope !== checkpointScope(this.requireFeed())) delete next.checkpoint;
+      if (!sameSource || memo?.feedEpoch !== feed.feedEpoch) delete next.checkpoint;
+      // What it confirmed was the old source's: the new one has still to be read, and stays due as configure left it.
+      if (sameSource) {
+        next.lastSuccessSource = sourceOf(feed);
+        next.nextRunAt = nextRunAfter(feed.id, now, policy.collection.cadenceSeconds);
+      }
       delete next.runningAcquisitionId;
       delete next.watchdogAt;
       this.setRuntime(next);
@@ -1460,8 +1466,12 @@ function mapAcquisition(row: AcquisitionRow, feedId: string): Acquisition {
 interface CollectionMemo {
   observedAt: string;
   lake: boolean;
-  /** The configuration and epoch the collection read under; its checkpoint is kept only if the feed still has them. */
-  scope?: string;
+  /**
+   * The source configuration (`resourceKey|configHash`) and feed epoch the collection read under. A feed reconfigured
+   * while it ran keeps no checkpoint from it, and one that now reads another source does not count it as read.
+   */
+  source?: string;
+  feedEpoch?: string;
   normalizer?: { id: string; version: string };
   sourcePublishedAt?: string;
   declared?: Array<{ productKey: string; slug: string; version: number; baseline: boolean }>;
@@ -1559,11 +1569,6 @@ export function nextRunAfter(feedId: string, now: number, cadenceSeconds: number
 /** What a feed collects, as its identity and configuration say. */
 function sourceOf(feed: Feed): string {
   return `${feed.resolved.resourceKey}|${feed.resolved.configHash}`;
-}
-
-/** What a checkpoint belongs to: one configuration of the source, and one epoch of the feed. */
-function checkpointScope(feed: Feed): string {
-  return `${sourceOf(feed)}|${feed.feedEpoch}`;
 }
 
 function objectKeysOf(entry: ProductIndexEntry): string[] {
