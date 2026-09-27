@@ -1,7 +1,7 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
 import type { CatalogDescription } from "@open-data-pt/contract";
 
-import { FEEDS, RUNNABLE, catalogOf, feedEnabled, publisherInputs, runtimeOf } from "./catalog";
+import { FEEDS, catalogOf, enabledFeed, feedEnabled, publisherInputs, runtimeOf } from "./catalog";
 import { buildLibrary, collectNormalized, otherRelease, feedCollector, type CollectionRequest, type CollectionResult, type GatekeeperLibraries, type Library } from "./index";
 import { sha256Hex } from "./source-http";
 
@@ -35,13 +35,13 @@ export function gatekeeper<E extends object>(libraries: readonly Library[]) {
 
     /**
      * A feed runs the configuration and the functions its own file defines. A feed no file defines any more was
-     * retired, and has nothing to run.
+     * retired, and one of a publisher held for permission is not ours to read: neither has anything to run.
      */
     async collect(request: CollectionRequest): Promise<CollectionResult> {
       // Before the feed is looked up: a kernel on another release names it another way.
       const mismatch = otherRelease(request);
       if (mismatch) return mismatch;
-      const feed = RUNNABLE.get(request.slug);
+      const feed = enabledFeed(request.slug);
       if (!feed) return { kind: "failure", code: "invalid-config", retryable: false };
       return collectNormalized(request, feedCollector(feed, this.libraries(), runtimeOf(feed.slug)));
     }

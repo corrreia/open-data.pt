@@ -97,6 +97,15 @@ export function publisherInputs(source: string): PublisherInputs {
 /** The publisher whose folder lists each feed, by slug. */
 const PUBLISHER_OF: ReadonlyMap<string, string> = new Map(FEEDS.map((feed) => [feed.slug, feed.publisher] as const));
 
+/**
+ * A feed the Worker may collect: one its catalog lists. A held publisher's feed has code, and tests run it, but it is
+ * not ours to read until the hold is lifted, whoever asks for it by slug.
+ */
+export function enabledFeed(slug: string): RunnableFeed | undefined {
+  const feed = RUNNABLE.get(slug);
+  return feed && publisherEnabled(PUBLISHER_OF.get(slug) ?? "") ? feed : undefined;
+}
+
 /** The hosts a feed may reach, and what its publisher asked every request to carry: its publisher's declared sources. */
 export function sourcesOf(slug: string): PublisherSources {
   const publisher = PUBLISHERS.get(PUBLISHER_OF.get(slug) ?? "");
