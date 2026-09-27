@@ -5,6 +5,7 @@ import { CATALOG, FEEDS, RUNNABLE, feedEnabled, publisherInputs, runtimeOf } fro
 import {
   buildLibrary,
   collectNormalized,
+  otherRelease,
   feedCollector,
   libraryFeedKinds,
   resolveLibraryFeed,
@@ -62,6 +63,9 @@ export function gatekeeper<E extends object>(libraries: readonly Library[]) {
      * retired, and has nothing to run.
      */
     async collect(request: CollectionRequest): Promise<CollectionResult> {
+      // Before the feed is looked up: a kernel on another release names it another way.
+      const mismatch = otherRelease(request);
+      if (mismatch) return mismatch;
       const feed = RUNNABLE.get(request.slug);
       if (!feed) return { kind: "failure", code: "invalid-config", retryable: false };
       return collectNormalized(request, feedCollector(feed, this.libraries(), runtimeOf(feed.slug)));

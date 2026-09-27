@@ -34,7 +34,16 @@ export {
 } from "./library";
 export { lisbonDay, lisbonInstants, lisbonOffsetMinutes, lisbonToUtc } from "@open-data-pt/lisbon";
 export { r2Staging, type SourceStaging } from "./staging";
-export { BUFFERED_SOURCE_MAX_BYTES, bufferedTransform, collectNormalized, resolveFeed, responseValidator, sourceValidator, type NormalizedCollector } from "./normalized";
+export {
+  BUFFERED_SOURCE_MAX_BYTES,
+  bufferedTransform,
+  collectNormalized,
+  otherRelease,
+  resolveFeed,
+  responseValidator,
+  sourceValidator,
+  type NormalizedCollector,
+} from "./normalized";
 export {
   allowedHosts,
   contentEtag,

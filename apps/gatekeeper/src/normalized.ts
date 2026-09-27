@@ -98,8 +98,20 @@ export function responseValidator(headers: Headers): SourceValidator | undefined
   return Object.keys(validator).length ? validator : undefined;
 }
 
+/**
+ * A kernel on another release than this Gatekeeper, as during a deploy: its request has another shape, so nothing else
+ * in it can be read, not even the feed it names. Retried in a minute, never a cooldown.
+ */
+export function otherRelease(request: CollectionRequest): CollectionResult | undefined {
+  if (request.protocol === NORMALIZED_PROTOCOL) return undefined;
+  console.warn(JSON.stringify({ event: "protocol_mismatch", requested: String(request.protocol), speaks: NORMALIZED_PROTOCOL }));
+  return { kind: "failure", code: "protocol-mismatch", retryable: true, retryAfterSeconds: 60 };
+}
+
 /** Keep source bytes inside the Gatekeeper and expose only a typed result: every failure, the source's or this side's, is a code. */
 export async function collectNormalized(request: CollectionRequest, collector: NormalizedCollector): Promise<CollectionResult> {
+  const mismatch = otherRelease(request);
+  if (mismatch) return mismatch;
   try {
     return await collect(request, collector);
   } catch (error) {
@@ -111,17 +123,8 @@ export async function collectNormalized(request: CollectionRequest, collector: N
       return failure;
     }
     if (error instanceof NormalizedInputError) return { kind: "failure", code: "invalid-response", retryable: false };
-    // The kernel and this Gatekeeper are different releases: a deploy in progress, over in a minute.
-    if (error instanceof ProtocolMismatch) return { kind: "failure", code: "protocol-mismatch", retryable: true, retryAfterSeconds: 60 };
     if (error instanceof Error && /deadline/i.test(error.message)) return { kind: "failure", code: "deadline-exceeded", retryable: true };
     throw error;
-  }
-}
-
-class ProtocolMismatch extends Error {
-  constructor(requested: string) {
-    super(`The kernel asked for ${requested}; this Gatekeeper speaks ${NORMALIZED_PROTOCOL}`);
-    this.name = "ProtocolMismatch";
   }
 }
 
@@ -345,9 +348,7 @@ function encodeRow(type: "record" | "point", productKey: string, value: Normaliz
   return `{"type":"${type}","productKey":${JSON.stringify(productKey)},"value":${encoded}}`;
 }
 
-/** The protocol first: a kernel on another release sends a request of another shape. */
 function validateRequest(request: CollectionRequest): void {
-  if (request.protocol !== NORMALIZED_PROTOCOL) throw new ProtocolMismatch(request.protocol);
   if (Number.isNaN(Date.parse(request.deadline)) || Date.parse(request.deadline) <= Date.now()) throw new Error("Collection deadline is invalid or expired");
   if (Number.isNaN(Date.parse(request.observedAt))) throw new Error("Observation time is invalid");
   for (const [name, value] of Object.entries(request.limits))
