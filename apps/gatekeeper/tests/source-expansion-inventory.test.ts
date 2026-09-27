@@ -1,12 +1,13 @@
 import { writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { asStringList, parseJson, type ExampleFeed } from "@open-data-pt/contract";
+import { asStringList, parseJson } from "@open-data-pt/contract";
 import { CARRIED, feedsOf } from "./catalog";
 import { readFixture } from "./support";
+import type { DeclaredFeed } from "@open-data-pt/gatekeeper/catalog";
 
 interface LibraryExamples {
   library: string;
-  examples: ExampleFeed[];
+  examples: DeclaredFeed[];
 }
 const libraries: LibraryExamples[] = CARRIED.map((library) => ({ library: library.deployment.source, examples: feedsOf(library.deployment.source) }));
 const baseline = new Set(asStringList(parseJson(readFixture(new URL("./fixtures/source-expansion-baseline-slugs.json", import.meta.url)))));
@@ -35,10 +36,10 @@ describe("source expansion inventory", () => {
       expect(example.publisher).toBeTruthy();
       expect(example.attribution).toBeTruthy();
       expect(example.licence).toBeTruthy();
-      expect(Number.isSafeInteger(example.policy.collection.cadenceSeconds)).toBe(true);
-      expect(example.policy.collection.cadenceSeconds).toBeGreaterThanOrEqual(60);
-      expect(example.policy.collection.maxBytes).toBeGreaterThan(0);
-      expect(example.policy.collection.timeoutSeconds).toBeGreaterThan(0);
+      expect(Number.isSafeInteger(example.policy.cadenceSeconds)).toBe(true);
+      expect(example.policy.cadenceSeconds).toBeGreaterThanOrEqual(60);
+      expect(example.policy.maxBytes).toBeGreaterThan(0);
+      expect(example.policy.timeoutSeconds).toBeGreaterThan(0);
     }
     // Optional release evidence, never an automatic change to application state.
     if (process.env.SOURCE_EXPANSION_REPORT)

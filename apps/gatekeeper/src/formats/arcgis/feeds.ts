@@ -1,15 +1,9 @@
 import type { FeedPolicy } from "#/catalog/define";
 
 /** A reference layer read once a day, whole, keeping only what changed. */
-export function arcgisReferencePolicy(name: string): FeedPolicy {
-  return {
-    name,
-    version: 1,
-    collection: {
-      cadenceSeconds: 86_400,
-      timeoutSeconds: 60,
-      maxBytes: 5 * 1024 * 1024,
-      historyMode: "changes" as const,
-    },
-  };
-}
+export const ARCGIS_REFERENCE_POLICY: FeedPolicy = {
+  cadenceSeconds: 86_400,
+  timeoutSeconds: 60,
+  maxBytes: 5 * 1024 * 1024,
+  historyMode: "changes",
+};

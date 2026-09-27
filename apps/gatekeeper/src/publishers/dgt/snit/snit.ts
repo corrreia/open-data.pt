@@ -82,11 +82,9 @@ export function isSnitType(value: string | undefined): value is SnitType {
 }
 
 export const SNIT_FEEDS = {
+  // One kind of territorial management instrument in the national register, with every instrument in force and every act of the Diário da República that created, amended, suspended or corrected it.
   instruments: {
     kind: "instruments",
-    title: "Territorial management instruments",
-    description:
-      "One kind of territorial management instrument in the national register, with every instrument in force and every act of the Diário da República that created, amended, suspended or corrected it.",
     semantics: { domainSubject: "document", defaultProductRole: "reference" },
   },
 } as const satisfies Record<string, FeedKindDescription>;

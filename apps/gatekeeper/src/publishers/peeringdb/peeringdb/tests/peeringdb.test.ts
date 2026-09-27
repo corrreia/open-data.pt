@@ -39,7 +39,7 @@ describe("PeeringDB source boundaries", () => {
     expect(feedsOf("peeringdb")).toHaveLength(1);
     const example = feedsOf("peeringdb")[0]!;
     expect(validatePeeringdbFeedConfig(libraryConfig(example.config))).toEqual(CONFIG);
-    expect(example.policy.collection.cadenceSeconds).toBe(604_800);
+    expect(example.policy.cadenceSeconds).toBe(604_800);
     expect(example.licence).toBe("peeringdb-aup");
   });
 

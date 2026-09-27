@@ -87,7 +87,7 @@ CATALOG_TOKEN=... infra/lake/provision.sh
 pnpm run deploy
 ```
 
-After a Gatekeeper deploy the Registry picks up new, changed and removed examples by itself, usually
+After a Gatekeeper deploy the Registry picks up new, changed and removed feeds by itself, usually
 within a minute: every runner's report carries the Gatekeeper's catalog version, and a version the
 Registry has not synced brings its next check forward to now. The check every 15 minutes still runs,
 for a Gatekeeper too old to say. New feeds are installed, changed ones keep their IDs and are reconfigured, and runners of feeds whose

@@ -16,10 +16,9 @@ export const GTFS_ENTRY_NAMES = ["agency", "stops", "routes", "calendar", "calen
 export const DEFAULT_GTFS_FILES = ["agency", "stops", "routes", "calendar", "calendar_dates", "feed_info"] as const;
 
 export const GTFS_FEEDS = {
+  // A snapshot of selected files from a GTFS Schedule archive, normalized as the archive streams.
   static: {
     kind: "static",
-    title: "GTFS static schedule",
-    description: "A snapshot of selected files from a GTFS Schedule archive, normalized as the archive streams.",
     semantics: {
       domainSubject: "reference",
       defaultProductRole: "reference",

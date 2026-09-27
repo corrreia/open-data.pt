@@ -20,10 +20,9 @@ export const USGS_REGIONS = {
 } as const;
 
 export const USGS_FEEDS = {
+  // Earthquakes in a Portugal bounding region from the USGS FDSN Event Web Service.
   earthquakes: {
     kind: "earthquakes",
-    title: "Earthquake events",
-    description: "Earthquakes in a Portugal bounding region from the USGS FDSN Event Web Service.",
     semantics: { domainSubject: "event", defaultProductRole: "event-log" },
   },
 } as const satisfies Record<string, FeedKindDescription>;

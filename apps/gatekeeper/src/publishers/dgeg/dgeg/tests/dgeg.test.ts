@@ -32,23 +32,33 @@ function referenceFetcher() {
 }
 
 describe("DGEG Gatekeeper", () => {
-  it("normalizes and validates fuel and district identifiers against the source lists", async () => {
-    const fetcher = referenceFetcher();
-    await expect(validateDgegFeedConfig({ feed: "fuel-prices", fuelTypeId: "03201", districtId: "011" }, DGEG_API_ORIGIN, fetcher)).resolves.toEqual({
+  it("normalizes fuel and district identifiers without reading the source", () => {
+    expect(validateDgegFeedConfig({ feed: "fuel-prices", fuelTypeId: "03201", districtId: "011" }, DGEG_API_ORIGIN)).toEqual({
       feed: "fuel-prices",
       fuelTypeId: "3201",
       districtId: "11",
     });
-    expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
-  it("rejects caller-provided hosts and a configured origin outside the allowlist", async () => {
+  it("rejects caller-provided hosts and a configured origin outside the allowlist", () => {
+    expect(() => validateDgegFeedConfig({ feed: "fuel-prices", fuelTypeId: "3201", host: "evil.example" }, DGEG_API_ORIGIN)).toThrow(
+      expect.objectContaining({ code: "source-denied" }),
+    );
+    expect(() => validateDgegFeedConfig({ feed: "fuel-prices", fuelTypeId: "3201" }, "https://evil.example")).toThrow(expect.objectContaining({ code: "source-denied" }));
+  });
+
+  it("refuses at collection a fuel type or a district DGEG does not list, before asking for any price", async () => {
     const fetcher = referenceFetcher();
-    await expect(validateDgegFeedConfig({ feed: "fuel-prices", fuelTypeId: "3201", host: "evil.example" }, DGEG_API_ORIGIN, fetcher)).rejects.toMatchObject({
-      code: "source-denied",
+    await expect(collectDgegFeed({ feed: "fuel-prices", fuelTypeId: "9999" }, undefined, DGEG_API_ORIGIN, fetcher, { requestDelayMs: 0 })).rejects.toMatchObject({
+      code: "invalid-config",
+      message: "DGEG does not publish fuel type 9999",
     });
-    await expect(validateDgegFeedConfig({ feed: "fuel-prices", fuelTypeId: "3201" }, "https://evil.example", fetcher)).rejects.toMatchObject({ code: "source-denied" });
-    expect(fetcher).not.toHaveBeenCalled();
+    await expect(collectDgegFeed({ feed: "fuel-prices", fuelTypeId: "3201", districtId: "99" }, undefined, DGEG_API_ORIGIN, fetcher, { requestDelayMs: 0 })).rejects.toMatchObject({
+      code: "invalid-config",
+      message: "DGEG does not publish district 99",
+    });
+    // Only the two reference lists were read: GetTiposCombustiveis twice, GetDistritos once.
+    expect(fetcher).toHaveBeenCalledTimes(3);
   });
 
   it("collects one district into a deterministic document with typed provenance", async () => {

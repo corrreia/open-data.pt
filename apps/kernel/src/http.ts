@@ -114,16 +114,15 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
     /* ---------- Feeds: what each one reads, whose it is and under what terms, and how its collection is going ---------- */
     if (url.pathname === "/api/feeds") {
       const reg = registry();
-      const [feeds, policies, catalog] = await Promise.all([reg.listFeeds(), reg.listPolicies(), reg.catalog()]);
-      const cadences = new Map(policies.map((policy) => [policy.id, policy.collection.cadenceSeconds]));
+      const [feeds, catalog] = await Promise.all([reg.listFeeds(), reg.catalog()]);
       const vocabulary = new Vocabulary(catalog);
-      return json({ data: feeds.map((feed) => publicFeed(feed, cadences.get(feed.policyId), vocabulary, url.origin)) });
+      return json({ data: feeds.map((feed) => publicFeed(feed, vocabulary, url.origin)) });
     }
     const feedMatch = url.pathname.match(/^\/api\/feeds\/([^/]+)$/);
     if (feedMatch?.[1]) {
       const reg = registry();
-      const [feed, policies, catalog] = await Promise.all([requireFeed(reg, decodeURIComponent(feedMatch[1])), reg.listPolicies(), reg.catalog()]);
-      return json({ data: publicFeed(feed, policies.find((policy) => policy.id === feed.policyId)?.collection.cadenceSeconds, new Vocabulary(catalog), url.origin) });
+      const [feed, catalog] = await Promise.all([requireFeed(reg, decodeURIComponent(feedMatch[1])), reg.catalog()]);
+      return json({ data: publicFeed(feed, new Vocabulary(catalog), url.origin) });
     }
 
     /* ---------- Collection runs, across feeds or of one, recent or of one UTC day ---------- */
@@ -447,8 +446,7 @@ function historyWindow(url: URL): HistoryWindow {
  * skip older files.
  */
 function ingestFloor(feed: Feed, from: string): string {
-  const eventLike = feed.semantics.domainSubject === "event" || feed.semantics.domainSubject === "observation";
-  return eventLike ? ` AND __ingest_ts >= TIMESTAMP '${new Date(Date.parse(from) - PUBLISHED_AHEAD_MS).toISOString()}'` : "";
+  return feed.eventTimed ? ` AND __ingest_ts >= TIMESTAMP '${new Date(Date.parse(from) - PUBLISHED_AHEAD_MS).toISOString()}'` : "";
 }
 
 /**
@@ -516,15 +514,16 @@ const STANDARD_FORMATS = new Set(["arcgis", "ckan", "gbfs", "gtfs", "opendatasof
  * collection is going. The runner's scope and checkpoint, the policy, the library, the lake
  * backlog and raw errors stay inside the platform; /api/outages says when a source failed.
  */
-function publicFeed(feed: Feed, cadenceSeconds: number | undefined, vocabulary: Vocabulary, origin: string): ApiFeed {
+function publicFeed(feed: Feed, vocabulary: Vocabulary, origin: string): ApiFeed {
   const {
     feedEpoch: _epoch,
-    resolved: _resolved,
+    resourceKey: _resource,
+    configHash: _config,
+    eventTimed: _eventTimed,
+    history: _history,
     checkpoint: _checkpoint,
-    policyId: _policy,
-    library: _library,
-    semantics: _semantics,
-    config,
+    policy,
+    library,
     publisher,
     licence,
     topics,
@@ -535,9 +534,8 @@ function publicFeed(feed: Feed, cadenceSeconds: number | undefined, vocabulary: 
     backfill: _backfill,
     ...publicValue
   } = feed;
-  const source = config.source ?? "";
   const terms = vocabulary.feedTerms(attribution === undefined ? { publisher, licence, topics } : { publisher, licence, topics, attribution }, origin);
-  return { ...publicValue, ...terms, format: STANDARD_FORMATS.has(source) ? source : "own-api", cadenceSeconds: cadenceSeconds ?? null };
+  return { ...publicValue, ...terms, format: STANDARD_FORMATS.has(library) ? library : "own-api", cadenceSeconds: policy.cadenceSeconds };
 }
 
 /* ---------- Record filters ---------- */
@@ -574,9 +572,9 @@ function parseBbox(value: string): BoundingBox {
 
 /* ---------- Views ---------- */
 
-/** A run as the API shows it; the policy version, the lake bookkeeping and the failure code stay inside the platform. */
+/** A run as the API shows it; the lake bookkeeping and the failure code stay inside the platform. */
 function publicAcquisition(acquisition: Acquisition): ApiAcquisition {
-  const { policyVersion: _policy, historyRows: _history, errorCode: _code, ...publicValue } = acquisition;
+  const { historyRows: _history, errorCode: _code, ...publicValue } = acquisition;
   return publicValue;
 }
 

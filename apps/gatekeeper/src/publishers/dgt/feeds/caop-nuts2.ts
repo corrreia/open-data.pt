@@ -18,7 +18,7 @@ export const FEED = defineFeed(OGC_DEPLOYMENT, {
     pageSize: "10",
     maxPages: "4",
   },
-  policy: { name: "CAOP weekly placed table", version: 3, collection: measuredCollection({ source: 50, output: 1, largestRow: 1 }, WEEK) },
+  policy: measuredCollection({ source: 50, output: 1, largestRow: 1 }, WEEK),
   staleAfterSeconds: 1_209_600,
   /** Every week: the CAOP's nuts2 collection walked page by page from DGT's OGC API, each area placed by where it lies and how far it reaches, its outline left behind. */
   fetch: ({ config, library, fetch }) => collectOgcFeed(config, library.hosts, fetch),

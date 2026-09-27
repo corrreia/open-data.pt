@@ -1,6 +1,6 @@
 import { defineFeed } from "#/catalog/define";
 import { GTFS_DEPLOYMENT, GTFS_NORMALIZER, collectGtfsFeed, transformGtfs } from "#/formats/gtfs/index";
-import { LICENSED_DAILY_STATIC } from "#/formats/gtfs/feeds";
+import { DAILY_STATIC } from "#/formats/gtfs/feeds";
 
 export const FEED = defineFeed(GTFS_DEPLOYMENT, {
   slug: "carris-metropolitana-gtfs-feed",
@@ -16,7 +16,7 @@ export const FEED = defineFeed(GTFS_DEPLOYMENT, {
     files: "agency,stops,routes,calendar_dates,feed_info",
   },
   // The repository that distributes this archive carries a CC BY 4.0 LICENSE.
-  policy: LICENSED_DAILY_STATIC,
+  policy: DAILY_STATIC,
   staleAfterSeconds: 259_200,
   /** Once a day: Carris Metropolitana's GTFS archive, downloaded only when it changed. */
   fetch: ({ config, validator, library, fetch }) => collectGtfsFeed(config, validator, library.hosts, fetch),

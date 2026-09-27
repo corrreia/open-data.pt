@@ -10,14 +10,10 @@ export const FEED = defineFeed(IPMA_DEPLOYMENT, {
   topics: ["environment"],
   config: { feed: "fire-risk" },
   policy: {
-    name: "IPMA fire-risk current state",
-    version: 2,
-    collection: {
-      cadenceSeconds: 14_400,
-      timeoutSeconds: 30,
-      maxBytes: 128 * 1024,
-      historyMode: "latest",
-    },
+    cadenceSeconds: 14_400,
+    timeoutSeconds: 30,
+    maxBytes: 128 * 1024,
+    historyMode: "latest",
   },
   staleAfterSeconds: 28_800,
   /** Every four hours: IPMA's three daily fire-risk forecasts, with the district table they refer to. */

@@ -21,11 +21,7 @@ export const FEED = defineFeed(UDATA_DEPLOYMENT, {
     distributionId: "d85c49f0-b6ab-4cb7-afbe-4e103016b9a0",
     keyField: "nifEntidade",
   },
-  policy: {
-    name: "Public-procurement entities",
-    version: 1,
-    collection: { cadenceSeconds: 2_592_000, timeoutSeconds: 240, maxBytes: 80 * MIB, maxOutputBytes: 160 * MIB, historyMode: "changes" },
-  },
+  policy: { cadenceSeconds: 2_592_000, timeoutSeconds: 240, maxBytes: 80 * MIB, maxOutputBytes: 160 * MIB, historyMode: "changes" },
   staleAfterSeconds: 7_776_000,
   /** Once a month: IMPIC's procurement entities JSON on dados.gov.pt, downloaded only when it has changed. */
   fetch: ({ config, state, library, fetch }) => collectUdataFeed(config, state, library.hosts, fetch),

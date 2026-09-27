@@ -32,13 +32,11 @@ beforeAll(async () => {
   expect((await server.fetch("/api/feeds")).status).toBe(200);
   const sql = await server.getWorker().getDurableObjectStorage("Registry", { name: "main" });
   const collection = { cadenceSeconds: 3600, timeoutSeconds: 60, maxBytes: 1024 };
-  for (const [policy, history] of [
-    ["public-history", { historyMode: "changes" }],
-    ["no-history", { historyMode: "latest" }],
-    ["left-out", { historyMode: "changes", withoutHistory: ["left-out-events"] }],
-  ] as const) {
-    await sql.exec("INSERT INTO policies VALUES (?, ?, 1, ?, ?, 'saved')", policy, policy, JSON.stringify({ ...collection, ...history }), "{}");
-  }
+  const policies = {
+    "public-history": { ...collection, historyMode: "changes" },
+    "no-history": { ...collection, historyMode: "latest" },
+    "left-out": { ...collection, historyMode: "changes", withoutHistory: ["left-out-events"] },
+  } as const;
   const resolved = await fixtureResolved();
   for (const [feedId, policy] of [
     ["feed-owner's", "public-history"],
@@ -46,18 +44,17 @@ beforeAll(async () => {
     ["private-owner", "no-history"],
     ["left-out-owner", "left-out"],
   ] as const) {
-    const semantics = { ...resolved.semantics, domainSubject: "event" as const };
     const feed: Feed = {
       id: feedId,
       slug: feedId,
       title: feedId,
       description: "",
       library: "fixture",
-      config: {},
-      semantics,
-      resolved: { ...resolved, semantics },
+      resourceKey: resolved.resourceKey,
+      configHash: resolved.configHash,
+      eventTimed: true,
+      policy: policies[policy],
       feedEpoch: "e",
-      policyId: policy,
       enabled: false,
       staleAfterSeconds: 60,
       publisher: "ine",
@@ -66,7 +63,7 @@ beforeAll(async () => {
       createdAt: "2026-09-01T00:00:00.000Z",
       updatedAt: "2026-09-01T00:00:00.000Z",
     };
-    await sql.exec("INSERT INTO feeds (id, slug, definition_json, policy_id, enabled, title) VALUES (?, ?, ?, ?, 0, ?)", feedId, feedId, JSON.stringify(feed), policy, feedId);
+    await sql.exec("INSERT INTO feeds (id, slug, definition_json, enabled, title) VALUES (?, ?, ?, 0, ?)", feedId, feedId, JSON.stringify(feed), feedId);
   }
   for (const [slug, role, feedId] of [
     ["shared-events", "event-log", "feed-owner's"],

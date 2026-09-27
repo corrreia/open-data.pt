@@ -4,6 +4,5 @@ import { REALTIME_POLICY } from "#/formats/gbfs/feeds";
 // hammering the operator while retaining useful municipal fleet counts.
 export const BIRD_POLICY = {
   ...REALTIME_POLICY,
-  name: "GBFS Bird snapshots, five minutes",
-  collection: { ...REALTIME_POLICY.collection, cadenceSeconds: 300 },
+  cadenceSeconds: 300,
 } as const;

@@ -22,11 +22,7 @@ export const FEED = defineFeed(UDATA_DEPLOYMENT, {
     keyField: "nAnuncio",
     eventTimeField: "dataPublicacao",
   },
-  policy: {
-    name: "Public-procurement notices published in 2026",
-    version: 1,
-    collection: { cadenceSeconds: 604_800, timeoutSeconds: 240, maxBytes: 48 * MIB, maxOutputBytes: 96 * MIB, historyMode: "changes" },
-  },
+  policy: { cadenceSeconds: 604_800, timeoutSeconds: 240, maxBytes: 48 * MIB, maxOutputBytes: 96 * MIB, historyMode: "changes" },
   staleAfterSeconds: 1_814_400,
   /** Once a week: IMPIC's 2026 procurement notices JSON on dados.gov.pt, downloaded only when it has changed. */
   fetch: ({ config, state, library, fetch }) => collectUdataFeed(config, state, library.hosts, fetch),

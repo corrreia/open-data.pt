@@ -285,7 +285,7 @@ function decodeCell(
     const name = names.get(selection.dimension.id) ?? selection.dimension.name;
     dimensions[name] = selection.label;
   }
-  // A dataset without a unit dimension uses the unit its example states.
+  // A dataset without a unit dimension uses the unit its feed states.
   const unit = nonTime.find(({ dimension }) => dimension.id === "unit")?.label ?? statedUnit ?? "unknown";
   const seriesCodes = varying.map(({ code }) => code);
   const entityCodes = [...seriesCodes, time.code];

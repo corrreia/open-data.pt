@@ -13,8 +13,7 @@ export const FEED = defineFeed(BPSTAT_DEPLOYMENT, {
   // About 49,000 points from a 2 MiB source: more than the 32 MiB cap the smaller datasets use.
   policy: {
     ...DAILY_STATISTICS,
-    name: "BPstat daily large dataset snapshot",
-    collection: { ...DAILY_STATISTICS.collection, maxOutputBytes: 64 * 1024 * 1024 },
+    maxOutputBytes: 64 * 1024 * 1024,
   },
   staleAfterSeconds: 604_800,
   /** Once a day: the whole of BPstat dataset `7f13efcd65fc6bd0c5adb0e8d29d9b44`, domain 12. */

@@ -8,7 +8,6 @@ import {
   libraryConfig,
   parseJson,
   type CanonicalRecord,
-  type ExampleFeed,
   type JsonObject,
   type JsonValue,
   type SeriesPoint,
@@ -19,6 +18,7 @@ import {
 import { CkanSource, validateCkanFeedConfig } from "#/formats/ckan/index";
 import { transformCkan, type CkanResourceMetadata } from "#/formats/ckan/index";
 import { feedCollection, feedsOf } from "#/tests/catalog";
+import type { DeclaredFeed } from "#/catalog/index";
 
 const HOSTS = new Set(["dadosabertos.cm-agueda.pt", "oeirasinterativa.oeiras.pt"]);
 const OEIRAS = example("oeiras-hourly-environment-feed");
@@ -42,7 +42,7 @@ function text(value: JsonValue | undefined): string {
   if (!isJsonString(value)) throw new Error("Expected string");
   return value;
 }
-function example(slug: string): ExampleFeed {
+function example(slug: string): DeclaredFeed {
   const found = feedsOf("ckan").find((entry) => entry.slug === slug);
   if (!found) throw new Error(slug);
   return found;
@@ -64,7 +64,7 @@ function bytesInChunks(bytes: Uint8Array, size: number): ReadableStream<Uint8Arr
 function body(value: string, size = 1): ReadableStream<Uint8Array> {
   return bytesInChunks(new TextEncoder().encode(value), size);
 }
-function context(entry: ExampleFeed, observedAt = "2026-09-15T00:00:00Z"): TransformContext {
+function context(entry: DeclaredFeed, observedAt = "2026-09-15T00:00:00Z"): TransformContext {
   return {
     observedAt,
     feed: {
@@ -81,7 +81,7 @@ interface Result {
   points: SeriesPoint[];
   summary: StreamingSummary;
 }
-async function normalize(value: string, entry: ExampleFeed, format: "geojson" | "csv", chunkSize = 1, observedAt?: string): Promise<Result> {
+async function normalize(value: string, entry: DeclaredFeed, format: "geojson" | "csv", chunkSize = 1, observedAt?: string): Promise<Result> {
   const metadata: CkanResourceMetadata = { package: {}, resource: { id: entry.config.resource ?? "rotating" }, source: { kind: "file", format } };
   const transformed = await transformCkan(body(value, chunkSize), context(entry, observedAt), metadata);
   const records: CanonicalRecord[] = [];
@@ -115,7 +115,7 @@ describe("Águeda municipal reference inventories", () => {
       expect(longitude).toBeGreaterThan(-9);
       expect(longitude).toBeLessThan(-8);
     }
-    expect(entry.policy.collection.cadenceSeconds).toBe(30 * 86_400);
+    expect(entry.policy.cadenceSeconds).toBe(30 * 86_400);
   });
 
   it("keeps provider identity through changes and rejects a missing configured ID", async () => {
@@ -235,7 +235,7 @@ describe("CKAN monthly discovery and explicit CSV observations", () => {
     const transformed = await transformCkan(body(CSV), context(OEIRAS), { package: {}, resource: {}, source: { kind: "file", format: "csv" } });
     expect(transformed.products).toMatchObject([{ productKey: "observations", role: "time-series", kind: "series", updateMode: "source-window" }]);
     for await (const row of transformed.rows) expect(row.point).toBeDefined();
-    expect(OEIRAS.policy.collection.cadenceSeconds).toBe(604_800);
+    expect(OEIRAS.policy.cadenceSeconds).toBe(604_800);
     const first = await normalize(CSV, OEIRAS, "csv");
     const later = await normalize(CSV, OEIRAS, "csv", 11, "2027-01-01T00:00:00Z");
     expect(first).toEqual(later);

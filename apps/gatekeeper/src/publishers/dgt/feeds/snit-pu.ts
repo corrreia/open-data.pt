@@ -12,7 +12,7 @@ export const FEED = defineFeed(SNIT_DEPLOYMENT, {
   attribution: "Direção-Geral do Território — Sistema Nacional de Informação Territorial",
   topics: ["cities", "government"],
   config: { feed: "instruments", type: "pu" },
-  policy: { ...SNIT_WEEKLY_POLICY, collection: { ...SNIT_WEEKLY_POLICY.collection, timeoutSeconds: 300 } },
+  policy: { ...SNIT_WEEKLY_POLICY, timeoutSeconds: 300 },
   staleAfterSeconds: 2 * WEEK,
   /** Every week: the register's list of municipalities, then every Plano de Urbanização (PU) in force across them, with the acts behind each. */
   fetch: ({ config, validator, library, fetch }) => collectSnitFeed(config, validator, library.apiOrigin, fetch),

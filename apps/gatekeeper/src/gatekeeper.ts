@@ -1,32 +1,19 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
 import type { CatalogDescription } from "@open-data-pt/contract";
 
-import { CATALOG, FEEDS, RUNNABLE, feedEnabled, publisherInputs, runtimeOf } from "./catalog";
-import {
-  buildLibrary,
-  collectNormalized,
-  otherRelease,
-  feedCollector,
-  libraryFeedKinds,
-  resolveLibraryFeed,
-  type CollectionRequest,
-  type CollectionResult,
-  type ExampleFeed,
-  type FeedKindDescription,
-  type GatekeeperDescription,
-  type GatekeeperLibraries,
-  type Library,
-  type ResolvedFeed,
-  type SourceConfig,
-} from "./index";
+import { FEEDS, RUNNABLE, catalogOf, feedEnabled, publisherInputs, runtimeOf } from "./catalog";
+import { buildLibrary, collectNormalized, otherRelease, feedCollector, type CollectionRequest, type CollectionResult, type GatekeeperLibraries, type Library } from "./index";
 import { sha256Hex } from "./source-http";
 
-/** Each selection of libraries' catalog version, worked out once per isolate: the catalog is fixed for a release. */
-const VERSIONS = new Map<string, Promise<string>>();
+/**
+ * Each selection of libraries' catalog and its digest, worked out once per isolate: a release always answers the
+ * same catalog. Resolving every feed hashes each configuration twice, which is worth doing once, not on every sync.
+ */
+const CATALOGS = new Map<string, Promise<{ catalog: CatalogDescription; version: string }>>();
 
 /**
  * The libraries this Worker carries, comma-separated, so `pnpm dev ckan`
- * installs CKAN's examples and polls nobody else. It is a var of the Worker's
+ * installs CKAN's feeds and polls nobody else. It is a var of the Worker's
  * configuration, empty in a deployment and overridden per local session with
  * `--var`; `.dev.vars` cannot carry it, because this Worker declares
  * `secrets.required` and Wrangler then loads only those keys from that file.
@@ -46,18 +33,6 @@ export function gatekeeper<E extends object>(libraries: readonly Library[]) {
       return new Response("The Gatekeeper is available through RPC only.", { status: 404 });
     }
 
-    async describe(): Promise<GatekeeperDescription> {
-      return { kind: "gatekeeper", name: "open-data.pt Gatekeeper" };
-    }
-
-    async listFeedKinds(): Promise<FeedKindDescription[]> {
-      return libraryFeedKinds(this.libraries());
-    }
-
-    async resolveFeed(config: SourceConfig): Promise<ResolvedFeed> {
-      return resolveLibraryFeed(config, this.libraries());
-    }
-
     /**
      * A feed runs the configuration and the functions its own file defines. A feed no file defines any more was
      * retired, and has nothing to run.
@@ -71,27 +46,31 @@ export function gatekeeper<E extends object>(libraries: readonly Library[]) {
       return collectNormalized(request, feedCollector(feed, this.libraries(), runtimeOf(feed.slug)));
     }
 
-    /** Every feed of a publisher we may republish that a carried library reads; a held publisher's code ships, and installs nothing. */
-    async exampleFeeds(): Promise<ExampleFeed[]> {
-      const carried = new Set(this.carried().map((library) => library.deployment.source));
-      return FEEDS.filter((feed) => carried.has(feed.config.source ?? "") && feedEnabled(feed));
-    }
-
+    /**
+     * Every feed of a publisher we may republish that a carried library reads, resolved, with the vocabularies they
+     * name. A held publisher's code ships, and installs nothing.
+     */
     async catalog(): Promise<CatalogDescription> {
-      return CATALOG;
+      return (await this.resolvedCatalog()).catalog;
     }
 
-    /** The digest of what `catalog`, `exampleFeeds` and `listFeedKinds` answer for the libraries this Worker carries. */
+    /** The digest of what `catalog` answers for the libraries this Worker carries. */
     async catalogVersion(): Promise<string> {
-      const selection = this.carried()
-        .map((library) => library.deployment.source)
-        .join(",");
-      let version = VERSIONS.get(selection);
-      if (!version) {
-        version = Promise.all([this.exampleFeeds(), this.listFeedKinds()]).then(([examples, kinds]) => sha256Hex(JSON.stringify({ catalog: CATALOG, examples, kinds })));
-        VERSIONS.set(selection, version);
+      return (await this.resolvedCatalog()).version;
+    }
+
+    private resolvedCatalog(): Promise<{ catalog: CatalogDescription; version: string }> {
+      const carried = this.carried().map((library) => library.deployment.source);
+      const selection = carried.join(",");
+      let resolved = CATALOGS.get(selection);
+      if (!resolved) {
+        const feeds = FEEDS.filter((feed) => carried.includes(feed.config.source ?? "") && feedEnabled(feed));
+        resolved = catalogOf(feeds, this.libraries()).then(async (catalog) => ({ catalog, version: await sha256Hex(JSON.stringify(catalog)) }));
+        // A catalog that could not be resolved is asked for again, not remembered.
+        resolved.catch(() => CATALOGS.delete(selection));
+        CATALOGS.set(selection, resolved);
       }
-      return version;
+      return resolved;
     }
 
     private libraries(): GatekeeperLibraries {

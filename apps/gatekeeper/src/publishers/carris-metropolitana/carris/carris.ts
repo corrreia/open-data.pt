@@ -12,8 +12,6 @@ import {
 export const CARRIS_FEEDS = {
   alerts: {
     kind: "alerts",
-    title: "Service alerts",
-    description: "Active service alerts and their validity periods.",
     semantics: {
       domainSubject: "event",
       defaultProductRole: "event-log",
@@ -21,8 +19,6 @@ export const CARRIS_FEEDS = {
   },
   routes: {
     kind: "routes",
-    title: "Route variants",
-    description: "Every route variant of every line, with colours and served municipalities.",
     semantics: {
       domainSubject: "reference",
       defaultProductRole: "reference",
@@ -30,8 +26,6 @@ export const CARRIS_FEEDS = {
   },
   stops: {
     kind: "stops",
-    title: "Stops",
-    description: "Every stop in the network with its position, municipality, and served lines.",
     semantics: {
       domainSubject: "feature",
       defaultProductRole: "reference",
@@ -39,8 +33,6 @@ export const CARRIS_FEEDS = {
   },
   lines: {
     kind: "lines",
-    title: "Transit lines",
-    description: "The current Carris Metropolitana line reference catalog.",
     semantics: {
       domainSubject: "reference",
       defaultProductRole: "reference",
@@ -48,8 +40,6 @@ export const CARRIS_FEEDS = {
   },
   vehicles: {
     kind: "vehicles",
-    title: "Vehicle positions",
-    description: "The latest known vehicle position and operating state.",
     semantics: {
       domainSubject: "observation",
       defaultProductRole: "current-state",

@@ -1,17 +1,8 @@
 import { appendFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import {
-  NORMALIZED_PROTOCOL,
-  collectNormalized,
-  isJsonObject,
-  isNormalizedFrame,
-  parseJson,
-  type CollectionRequest,
-  type ExampleFeed,
-  type NormalizedFrame,
-  type ResolvedFeed,
-} from "#/index";
+import { NORMALIZED_PROTOCOL, collectNormalized, isJsonObject, isNormalizedFrame, parseJson, type CollectionRequest, type NormalizedFrame, type ResolvedFeed } from "#/index";
 import { feedCollection, feedsOf } from "#/tests/catalog";
+import type { DeclaredFeed } from "#/catalog/index";
 
 // Opt in by slug or with `bpstat`; no production writes are made.
 const selected = (process.env.LIVE_CATALOGS ?? "").split(",");
@@ -49,7 +40,7 @@ describe("BPstat live collection", () => {
         expect(complete.quality.rejectedRecords).toBe(0);
         const counts = { records: frames.filter((frame) => frame.type === "record").length, points: frames.filter((frame) => frame.type === "point").length };
         expect(counts.records + counts.points).toBeGreaterThan(0);
-        expect(bytes.length).toBeLessThanOrEqual(example.policy.collection.maxOutputBytes ?? 16 * 1024 * 1024);
+        expect(bytes.length).toBeLessThanOrEqual(example.policy.maxOutputBytes ?? 16 * 1024 * 1024);
         const keys = new Set<string>();
         const seriesCounts = new Map<string, number>();
         for (const frame of frames) {
@@ -85,8 +76,8 @@ describe("BPstat live collection", () => {
   }
 });
 
-function request(example: ExampleFeed, resolved: ResolvedFeed): CollectionRequest {
-  const collection = example.policy.collection;
+function request(example: DeclaredFeed, resolved: ResolvedFeed): CollectionRequest {
+  const collection = example.policy;
   return {
     protocol: NORMALIZED_PROTOCOL,
     slug: example.slug,

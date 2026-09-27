@@ -40,21 +40,17 @@ export const CAOP_PARISH_COLUMNS = "dtmnfr,freguesia,municipio,distrito_ilha,nut
 
 /** An edition-based layer, read once a week. */
 export const DGT_WEEKLY_POLICY: FeedPolicy = {
-  name: "DGT GeoServer reference layer",
-  version: 1,
-  collection: {
-    cadenceSeconds: 604_800,
-    timeoutSeconds: 300,
-    maxBytes: WFS_MAX_BYTES,
-    maxOutputBytes: 48 * 1024 * 1024,
-    maxRecordBytes: 512 * 1024,
-    maxRecords: 20_000,
-    historyMode: "changes",
-  },
+  cadenceSeconds: 604_800,
+  timeoutSeconds: 300,
+  maxBytes: WFS_MAX_BYTES,
+  maxOutputBytes: 48 * 1024 * 1024,
+  maxRecordBytes: 512 * 1024,
+  maxRecords: 20_000,
+  historyMode: "changes",
 };
 
 /** An archive or a gazetteer, read once a month. */
 export const DGT_MONTHLY_POLICY: FeedPolicy = {
   ...DGT_WEEKLY_POLICY,
-  collection: { ...DGT_WEEKLY_POLICY.collection, cadenceSeconds: 2_592_000 },
+  cadenceSeconds: 2_592_000,
 };

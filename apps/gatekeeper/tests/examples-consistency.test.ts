@@ -2,8 +2,8 @@ import { existsSync, readdirSync } from "node:fs";
 import { basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { LICENCES, TOPICS, isLicence, isTopic, type ExampleFeed } from "@open-data-pt/gatekeeper";
-import { FEEDS, PUBLISHERS, feedEnabled, publisherEnabled } from "@open-data-pt/gatekeeper/catalog";
+import { LICENCES, TOPICS, isLicence, isTopic } from "@open-data-pt/gatekeeper";
+import { FEEDS, PUBLISHERS, feedEnabled, publisherEnabled, type DeclaredFeed } from "@open-data-pt/gatekeeper/catalog";
 import { CARRIED_NAMES, INSTALLED } from "./catalog";
 
 /**
@@ -25,8 +25,8 @@ const LIBRARY_NAMES = [...folders(`${SRC}formats/`), ...folders(`${SRC}publisher
   .map((folder) => basename(folder));
 
 /** Every feed every publisher folder declares, held or not, by the library that reads it. */
-function feedsByLibrary(): Map<string, ExampleFeed[]> {
-  const found = new Map<string, ExampleFeed[]>();
+function feedsByLibrary(): Map<string, DeclaredFeed[]> {
+  const found = new Map<string, DeclaredFeed[]>();
   for (const feed of FEEDS) {
     const name = feed.config.source ?? "";
     found.set(name, [...(found.get(name) ?? []), feed]);
@@ -35,20 +35,20 @@ function feedsByLibrary(): Map<string, ExampleFeed[]> {
 }
 
 /** What the Gatekeeper Worker installs, which is what the Registry turns into feeds. */
-const DEPLOYED: ExampleFeed[] = INSTALLED;
+const DEPLOYED: DeclaredFeed[] = INSTALLED;
 
 describe("example feed policies", () => {
   it("never call a feed stale before its next collection is due", () => {
-    const early = DEPLOYED.filter((example) => example.staleAfterSeconds < example.policy.collection.cadenceSeconds).map(
-      (example) => `${example.slug}: stale after ${example.staleAfterSeconds}s, collected every ${example.policy.collection.cadenceSeconds}s`,
+    const early = DEPLOYED.filter((example) => example.staleAfterSeconds < example.policy.cadenceSeconds).map(
+      (example) => `${example.slug}: stale after ${example.staleAfterSeconds}s, collected every ${example.policy.cadenceSeconds}s`,
     );
     expect(early).toEqual([]);
   });
 
   it("leave products out of history only under a policy that keeps changes, naming each once", () => {
     const misplaced = DEPLOYED.filter((example) => {
-      const left = example.policy.collection.withoutHistory ?? [];
-      return left.length > 0 && (example.policy.collection.historyMode !== "changes" || new Set(left).size !== left.length || left.some((key) => key.trim() === ""));
+      const left = example.policy.withoutHistory ?? [];
+      return left.length > 0 && (example.policy.historyMode !== "changes" || new Set(left).size !== left.length || left.some((key) => key.trim() === ""));
     }).map((example) => example.slug);
     expect(misplaced).toEqual([]);
   });

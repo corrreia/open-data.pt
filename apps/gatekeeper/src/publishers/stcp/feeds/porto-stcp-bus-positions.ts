@@ -30,7 +30,7 @@ export const FEED = defineFeed(NGSI_DEPLOYMENT, {
     query: "vehicleType==bus",
     timeField: "observationDateTime",
   },
-  policy: { name: "NGSI vehicle positions", version: 1, collection: POSITIONS },
+  policy: POSITIONS,
   staleAfterSeconds: 3_600,
   /** Every five minutes: every bus Vehicle entity on Porto's broker, page by page. */
   fetch: ({ config, validator, library, fetch }) => collectNgsiFeed(config, validator, library.hosts, fetch),

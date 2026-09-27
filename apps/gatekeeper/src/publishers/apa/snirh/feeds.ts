@@ -21,21 +21,9 @@ const COLLECTION = {
  * and a day's readings keep arriving after that; a few collections a day see
  * each of them within hours.
  */
-export const SNIRH_HOURLY_POLICY: FeedPolicy = {
-  name: "SNIRH hourly station readings",
-  version: 1,
-  collection: { ...COLLECTION, cadenceSeconds: 10_800 },
-};
+export const SNIRH_HOURLY_POLICY: FeedPolicy = { ...COLLECTION, cadenceSeconds: 10_800 };
 
-export const SNIRH_DAILY_POLICY: FeedPolicy = {
-  name: "SNIRH daily station readings",
-  version: 1,
-  collection: { ...COLLECTION, cadenceSeconds: 21_600 },
-};
+export const SNIRH_DAILY_POLICY: FeedPolicy = { ...COLLECTION, cadenceSeconds: 21_600 };
 
 /** Wells read by hand once a month, and bulletins published once a month: once a day is plenty. */
-export const SNIRH_MONTHLY_POLICY: FeedPolicy = {
-  name: "SNIRH monthly readings and bulletins",
-  version: 1,
-  collection: { ...COLLECTION, cadenceSeconds: 86_400 },
-};
+export const SNIRH_MONTHLY_POLICY: FeedPolicy = { ...COLLECTION, cadenceSeconds: 86_400 };

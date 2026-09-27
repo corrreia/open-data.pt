@@ -56,7 +56,7 @@ export function measuredCollection(measured: LayerSize, cadenceSeconds: number):
  * our Workers with 403 and `cf-mitigated: challenge` on every request, whatever
  * user agent they send, so not one of those feeds ever collected. A publication
  * hold is per library and would have taken the DGT feeds down with them, so the
- * examples go instead and the Registry retires the eight feeds. Restoring them
+ * feeds go instead and the Registry retires the eight feeds. Restoring them
  * needs the regional government to let our traffic through — a WAF skip rule for
  * the IDEA API paths, or a documented token — after which these entries come back
  * against host `ambiente.azores.gov.pt`, base path `idea-api`, collections Farois,

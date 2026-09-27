@@ -11,17 +11,13 @@ export const FEED = defineFeed(CARRIS_DEPLOYMENT, {
   topics: ["mobility"],
   config: { feed: "vehicles" },
   policy: {
-    name: "Carris realtime state",
-    version: 4,
-    collection: {
-      cadenceSeconds: 60,
-      timeoutSeconds: 20,
-      maxBytes: 10 * 1024 * 1024,
-      historyMode: "changes",
-      // Positions move every minute: their revisions are noise, not history (about 1.1 million lake rows a day).
-      // The fleet summary repeats the counts the active-vehicles series records. That series keeps every minute.
-      withoutHistory: ["vehicles-current", "fleet-summary"],
-    },
+    cadenceSeconds: 60,
+    timeoutSeconds: 20,
+    maxBytes: 10 * 1024 * 1024,
+    historyMode: "changes",
+    // Positions move every minute: their revisions are noise, not history (about 1.1 million lake rows a day).
+    // The fleet summary repeats the counts the active-vehicles series records. That series keeps every minute.
+    withoutHistory: ["vehicles-current", "fleet-summary"],
   },
   staleAfterSeconds: 180,
   /** Every minute: Carris Metropolitana's /v2/vehicles endpoint, which answers with where every vehicle is now. */

@@ -6,13 +6,9 @@ import { LISBON_POLICY } from "#/publishers/cm-lisboa/arcgis";
 // normalized, past the 16 MB the kernel allows an output that states no cap of its own.
 const LISBON_PERMITS_POLICY = {
   ...LISBON_POLICY,
-  name: "ArcGIS daily large reference layer",
-  collection: {
-    ...LISBON_POLICY.collection,
-    timeoutSeconds: 180,
-    maxBytes: 32 * 1024 * 1024,
-    maxOutputBytes: 48 * 1024 * 1024,
-  },
+  timeoutSeconds: 180,
+  maxBytes: 32 * 1024 * 1024,
+  maxOutputBytes: 48 * 1024 * 1024,
 };
 
 export const FEED = defineFeed(ARCGIS_DEPLOYMENT, {

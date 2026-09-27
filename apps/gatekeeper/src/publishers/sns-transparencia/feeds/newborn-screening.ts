@@ -11,14 +11,10 @@ export const FEED = defineFeed(OPENDATASOFT_DEPLOYMENT, {
   topics: ["health"],
   config: { host: SNS_HOST, dataset: "programa-nacional-de-diagnostico-precoce", orderBy: "tempo", limit: "100" },
   policy: {
-    name: "Opendatasoft slow series",
-    version: 1,
-    collection: {
-      cadenceSeconds: 604_800,
-      timeoutSeconds: 30,
-      maxBytes: 2 * 1024 * 1024,
-      historyMode: "changes",
-    },
+    cadenceSeconds: 604_800,
+    timeoutSeconds: 30,
+    maxBytes: 2 * 1024 * 1024,
+    historyMode: "changes",
   },
   staleAfterSeconds: 1_209_600,
   /** Once a week: SNS Transparência's `programa-nacional-de-diagnostico-precoce` dataset, up to 100 records ordered by `tempo`. */

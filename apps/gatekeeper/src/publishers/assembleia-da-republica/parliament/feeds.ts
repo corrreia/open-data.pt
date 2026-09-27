@@ -14,9 +14,5 @@ const DEFAULT_LIMITS: CollectionLimits = { timeoutSeconds: 180, maxOutputBytes: 
 /** The collection policy of one XVII legislature document: its cadence, its limits, and its document's own source ceiling. */
 export function parliamentPolicy(feed: ParliamentFeed, cadenceSeconds: number, limits: CollectionLimits = DEFAULT_LIMITS): FeedPolicy {
   const document = parliamentDocument({ feed, legislature: "XVII" });
-  return {
-    name: `Parliament ${feed}: ${cadenceSeconds === 604_800 ? "weekly professional reference" : "daily public record updates"}`,
-    version: 1,
-    collection: { cadenceSeconds, ...limits, maxBytes: document.sourceBytes, maxRecords: PARLIAMENT_MAX_RECORDS, historyMode: "changes" },
-  };
+  return { cadenceSeconds, ...limits, maxBytes: document.sourceBytes, maxRecords: PARLIAMENT_MAX_RECORDS, historyMode: "changes" };
 }

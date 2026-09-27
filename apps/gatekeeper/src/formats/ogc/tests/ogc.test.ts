@@ -1280,11 +1280,11 @@ describe("OGC API Features examples", () => {
 
   it("polls reference layers weekly or monthly, never faster, and never calls one stale before it is due", () => {
     for (const example of feedsOf("ogc")) {
-      const { cadenceSeconds } = example.policy.collection;
+      const { cadenceSeconds } = example.policy;
       expect(cadenceSeconds, example.slug).toBeGreaterThanOrEqual(604_800);
       expect(example.staleAfterSeconds, example.slug).toBeGreaterThanOrEqual(cadenceSeconds);
       // The municipal outlines keep no history: the national table records every parcel's changes.
-      expect(example.policy.collection.historyMode, example.slug).toBe(example.slug.startsWith("dgt-crus-parcels-") ? "latest" : "changes");
+      expect(example.policy.historyMode, example.slug).toBe(example.slug.startsWith("dgt-crus-parcels-") ? "latest" : "changes");
     }
   });
 
@@ -1294,13 +1294,13 @@ describe("OGC API Features examples", () => {
       expect(pages, example.slug).toBeGreaterThan(0);
       // A megabyte is the floor a 36-feature register needs; the layers read
       // with their outlines declare their own, measured, much larger.
-      expect(example.policy.collection.maxBytes, example.slug).toBeGreaterThanOrEqual(1024 * 1024);
+      expect(example.policy.maxBytes, example.slug).toBeGreaterThanOrEqual(1024 * 1024);
       // A record is stored whole in SQLite; no policy may ask for more than the kernel keeps.
-      expect(example.policy.collection.maxRecordBytes ?? 256 * 1024, example.slug).toBeLessThanOrEqual(1024 * 1024);
+      expect(example.policy.maxRecordBytes ?? 256 * 1024, example.slug).toBeLessThanOrEqual(1024 * 1024);
       // A walk must be allowed to finish: the deadline has to cover the download
       // at the five mebibytes a second the service was measured to send.
-      const seconds = example.policy.collection.maxBytes / (1024 * 1024) / 5;
-      expect(example.policy.collection.timeoutSeconds, example.slug).toBeGreaterThanOrEqual(Math.min(seconds, 120));
+      const seconds = example.policy.maxBytes / (1024 * 1024) / 5;
+      expect(example.policy.timeoutSeconds, example.slug).toBeGreaterThanOrEqual(Math.min(seconds, 120));
     }
   });
 

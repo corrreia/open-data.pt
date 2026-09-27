@@ -11,15 +11,11 @@ export const FEED = defineFeed(CARRIS_DEPLOYMENT, {
   topics: ["mobility"],
   config: { feed: "alerts" },
   policy: {
-    name: "Carris service alerts",
-    version: 2,
-    collection: {
-      // Alerts are posted days before the disruption they announce; five-minute polling never saw one change.
-      cadenceSeconds: 900,
-      timeoutSeconds: 20,
-      maxBytes: 2 * 1024 * 1024,
-      historyMode: "changes",
-    },
+    // Alerts are posted days before the disruption they announce; five-minute polling never saw one change.
+    cadenceSeconds: 900,
+    timeoutSeconds: 20,
+    maxBytes: 2 * 1024 * 1024,
+    historyMode: "changes",
   },
   staleAfterSeconds: 900,
   /** Every fifteen minutes: Carris Metropolitana's /v2/alerts endpoint, which answers with every active service alert. */

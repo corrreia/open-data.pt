@@ -2,13 +2,18 @@ import type { Term } from "@open-data-pt/api";
 import {
   NormalizedInputError,
   isJsonArray,
+  isJsonBoolean,
+  isJsonNumber,
   isJsonObject,
   isJsonString,
   parseJson,
   type CatalogDescription,
+  type CatalogFeed,
   type CatalogLicence,
   type CatalogPublisher,
   type CatalogTopic,
+  type CollectionPolicyDefinition,
+  type HistoryCapability,
   type JsonObject,
   type JsonValue,
 } from "@open-data-pt/contract";
@@ -16,8 +21,11 @@ import {
 /** A vocabulary entry as the public API serves it. */
 export type VocabularyRef = Term;
 
+/** What the catalog's feeds name: its publishers, licences and topics. The Registry keeps these, and installs the feeds. */
+export type Vocabularies = Omit<CatalogDescription, "feeds">;
+
 /** What the Registry holds before the Gatekeeper has first answered: every key is served as itself. */
-export const EMPTY_CATALOG: CatalogDescription = { publishers: [], licences: [], topics: [] };
+export const EMPTY_VOCABULARIES: Vocabularies = { publishers: [], licences: [], topics: [] };
 
 /** What a feed says about itself that the catalog expands: whose it is, under what terms, and what it is about. */
 export interface FeedTermKeys {
@@ -46,7 +54,7 @@ export class Vocabulary {
   private readonly licences: Map<string, CatalogLicence>;
   private readonly topics: Set<string>;
 
-  constructor(catalog: CatalogDescription) {
+  constructor(catalog: Vocabularies) {
     this.publishers = new Map(catalog.publishers.map((publisher) => [publisher.id, publisher]));
     this.licences = new Map(catalog.licences.map((licence) => [licence.id, licence]));
     this.topics = new Set(catalog.topics.map((topic) => topic.id));
@@ -119,7 +127,89 @@ export function checkedCatalog(value: CatalogDescription): CatalogDescription {
     return licence;
   });
   const topics = entries(parsed.topics, "topic", (entry, id): CatalogTopic => ({ id, name: required(entry, "name", `topic ${id}`) }));
-  return { publishers, licences, topics };
+  if (!isJsonArray(parsed.feeds)) throw new NormalizedInputError("Gatekeeper catalog has no list of feeds");
+  const slugs = new Set<string>();
+  const feeds = parsed.feeds.map((entry) => {
+    const feed = checkedFeed(entry);
+    if (slugs.has(feed.slug)) throw new NormalizedInputError(`Gatekeeper catalog lists the feed ${feed.slug} twice`);
+    slugs.add(feed.slug);
+    return feed;
+  });
+  return { publishers, licences, topics, feeds };
+}
+
+/** One feed of the catalog, rebuilt from the fields the kernel reads: what it is, what it reads, and how it is collected. */
+function checkedFeed(value: JsonValue): CatalogFeed {
+  if (!isJsonObject(value)) throw new NormalizedInputError("Gatekeeper catalog lists a feed that is not an object");
+  const slug = required(value, "slug", "a feed");
+  const subject = `feed ${slug}`;
+  const configHash = required(value, "configHash", subject);
+  if (!/^[0-9a-f]{64}$/.test(configHash)) throw new NormalizedInputError(`Gatekeeper catalog: ${subject} has an invalid configHash`);
+  if (!isJsonBoolean(value.eventTimed)) throw new NormalizedInputError(`Gatekeeper catalog: ${subject} has no eventTimed`);
+  const topics = value.topics;
+  if (!isJsonArray(topics) || !topics.every(isJsonString)) throw new NormalizedInputError(`Gatekeeper catalog: ${subject} has invalid topics`);
+  if (!isJsonString(value.description)) throw new NormalizedInputError(`Gatekeeper catalog: ${subject} has no description`);
+  const feed: CatalogFeed = {
+    slug,
+    publisher: required(value, "publisher", subject),
+    library: required(value, "library", subject),
+    title: required(value, "title", subject),
+    description: value.description,
+    licence: required(value, "licence", subject),
+    topics: [...topics],
+    resourceKey: required(value, "resourceKey", subject),
+    configHash,
+    eventTimed: value.eventTimed,
+    policy: checkedPolicy(value.policy, subject),
+    staleAfterSeconds: whole(value.staleAfterSeconds, "staleAfterSeconds", subject),
+  };
+  const attribution = optional(value, "attribution", subject);
+  if (attribution !== undefined) feed.attribution = attribution;
+  if (value.history !== undefined) feed.history = checkedHistory(value.history, subject);
+  return feed;
+}
+
+function checkedPolicy(value: JsonValue | undefined, subject: string): CollectionPolicyDefinition {
+  if (!isJsonObject(value)) throw new NormalizedInputError(`Gatekeeper catalog: ${subject} has no policy`);
+  const historyMode = value.historyMode;
+  if (historyMode !== "changes" && historyMode !== "latest") throw new NormalizedInputError(`Gatekeeper catalog: ${subject} has an invalid history mode`);
+  const policy: CollectionPolicyDefinition = {
+    cadenceSeconds: whole(value.cadenceSeconds, "cadenceSeconds", subject),
+    timeoutSeconds: whole(value.timeoutSeconds, "timeoutSeconds", subject),
+    maxBytes: whole(value.maxBytes, "maxBytes", subject),
+    historyMode,
+  };
+  if (value.maxOutputBytes !== undefined) policy.maxOutputBytes = whole(value.maxOutputBytes, "maxOutputBytes", subject);
+  if (value.maxRecordBytes !== undefined) policy.maxRecordBytes = whole(value.maxRecordBytes, "maxRecordBytes", subject);
+  if (value.maxRecords !== undefined) policy.maxRecords = whole(value.maxRecords, "maxRecords", subject);
+  if (value.withoutHistory !== undefined) {
+    const without = value.withoutHistory;
+    if (!isJsonArray(without) || !without.every(isJsonString)) throw new NormalizedInputError(`Gatekeeper catalog: ${subject} has an invalid withoutHistory`);
+    policy.withoutHistory = [...without];
+  }
+  return policy;
+}
+
+function checkedHistory(value: JsonValue, subject: string): HistoryCapability {
+  if (!isJsonObject(value)) throw new NormalizedInputError(`Gatekeeper catalog: ${subject} has an invalid history`);
+  const history: HistoryCapability = {};
+  const earliest = optional(value, "earliest", subject);
+  if (earliest !== undefined) {
+    if (Number.isNaN(Date.parse(earliest))) throw new NormalizedInputError(`Gatekeeper catalog: ${subject} has an invalid earliest`);
+    history.earliest = earliest;
+  }
+  if (value.minSliceSeconds !== undefined) {
+    const pace = whole(value.minSliceSeconds, "minSliceSeconds", subject);
+    if (pace > 86_400) throw new NormalizedInputError(`Gatekeeper catalog: ${subject} paces its history slower than a day`);
+    history.minSliceSeconds = pace;
+  }
+  return history;
+}
+
+/** A positive whole number. */
+function whole(value: JsonValue | undefined, field: string, subject: string): number {
+  if (!isJsonNumber(value) || !Number.isSafeInteger(value) || value <= 0) throw new NormalizedInputError(`Gatekeeper catalog: ${subject} has an invalid ${field}`);
+  return value;
 }
 
 /** One list of the catalog, each entry an object with a unique non-empty `id`. */

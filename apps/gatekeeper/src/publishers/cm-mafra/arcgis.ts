@@ -1,4 +1,4 @@
-import { arcgisReferencePolicy } from "#/formats/arcgis/feeds";
+import { ARCGIS_REFERENCE_POLICY } from "#/formats/arcgis/feeds";
 
 /*
  * Mafra means these to be read: a folder named `Dados_Abertos` on the
@@ -9,4 +9,4 @@ import { arcgisReferencePolicy } from "#/formats/arcgis/feeds";
  * Metropolitana stops is that operator's data, already collected from the
  * operator, and its fuel stations are DGEG's.
  */
-export const MAFRA_POLICY = arcgisReferencePolicy("Mafra daily reference layer");
+export const MAFRA_POLICY = ARCGIS_REFERENCE_POLICY;

@@ -21,11 +21,7 @@ export const FEED = defineFeed(UDATA_DEPLOYMENT, {
     keyField: "N.º Parecer",
     eventTimeField: "Data Parecer",
   },
-  policy: {
-    name: "CADA administrative-document access opinions for 2025",
-    version: 1,
-    collection: { cadenceSeconds: 2_592_000, timeoutSeconds: 240, maxBytes: 2 * MIB, maxOutputBytes: 8 * MIB, historyMode: "changes" },
-  },
+  policy: { cadenceSeconds: 2_592_000, timeoutSeconds: 240, maxBytes: 2 * MIB, maxOutputBytes: 8 * MIB, historyMode: "changes" },
   staleAfterSeconds: 7_776_000,
   /** Once a month: CADA's 2025 opinions CSV on dados.gov.pt, downloaded only when it has changed. */
   fetch: ({ config, state, library, fetch }) => collectUdataFeed(config, state, library.hosts, fetch),

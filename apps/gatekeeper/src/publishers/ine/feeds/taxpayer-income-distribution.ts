@@ -11,7 +11,7 @@ export const FEED = defineFeed(INE_DEPLOYMENT, {
   attribution: "Instituto Nacional de Estatística (INE)",
   topics: ["economy", "society"],
   config: { indicator: "0012759", lang: "PT" },
-  policy: { ...ANNUAL_SERIES, version: 2 },
+  policy: ANNUAL_SERIES,
   staleAfterSeconds: 5_184_000,
   /** Every thirty days: the indicator's latest year, from INE's indicator API, unless its metadata says nothing changed. */
   fetch: ({ config, validator, library, fetch }) => collectIneIndicator(config, validator, library.apiOrigin, fetch),

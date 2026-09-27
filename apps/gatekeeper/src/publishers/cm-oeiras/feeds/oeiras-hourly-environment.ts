@@ -38,11 +38,7 @@ export const FEED = defineFeed(CKAN_DEPLOYMENT, {
       "Precipitação - mm": "mm",
     }),
   },
-  policy: {
-    name: "Oeiras monthly observations checked weekly",
-    version: 1,
-    collection: { cadenceSeconds: 604_800, timeoutSeconds: 90, maxBytes: 2 * 1024 * 1024, maxOutputBytes: 8 * 1024 * 1024, historyMode: "changes" },
-  },
+  policy: { cadenceSeconds: 604_800, timeoutSeconds: 90, maxBytes: 2 * 1024 * 1024, maxOutputBytes: 8 * 1024 * 1024, historyMode: "changes" },
   staleAfterSeconds: 45 * 86_400,
   /** Once a week: the newest monthly QART hourly-averages CSV on Oeiras's CKAN portal, downloaded only when it has changed. */
   fetch: ({ config, validator, library, fetch }) => new CkanSource(library.hosts, fetch).collect(config, validator),

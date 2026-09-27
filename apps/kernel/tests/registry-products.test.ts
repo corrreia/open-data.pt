@@ -37,13 +37,6 @@ async function registry() {
   const database = new DatabaseSync(":memory:");
   const store = new RegistryStore(sqliteStorage(database));
   store.migrate();
-  store.upsertPolicy({
-    id: "policy_1",
-    name: "Fixture",
-    version: 1,
-    createdAt: "2026-09-10T00:00:00.000Z",
-    collection: { cadenceSeconds: 60, timeoutSeconds: 30, maxBytes: 1024, historyMode: "changes" },
-  });
   const resolved = await fixtureResolved();
   store.upsertFeed({
     id: "feed_1",
@@ -51,11 +44,11 @@ async function registry() {
     title: "Things",
     description: "",
     library: "fixture",
-    config: resolved.config,
-    semantics: resolved.semantics,
-    resolved,
+    resourceKey: resolved.resourceKey,
+    configHash: resolved.configHash,
+    eventTimed: false,
+    policy: { cadenceSeconds: 60, timeoutSeconds: 30, maxBytes: 1024, historyMode: "changes" },
     feedEpoch: "e",
-    policyId: "policy_1",
     enabled: true,
     staleAfterSeconds: 60,
     publisher: "ine",

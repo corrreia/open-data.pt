@@ -2,14 +2,13 @@ import {
   buildLibrary,
   feedCollector,
   resolveLibraryFeed,
-  type ExampleFeed,
   type FeedRuntime,
   type GatekeeperLibraries,
   type Library,
   type NormalizedCollector,
   type ResolvedFeed,
 } from "@open-data-pt/gatekeeper";
-import { FEEDS, RUNNABLE, feedEnabled, publisherInputs, runtimeOf } from "@open-data-pt/gatekeeper/catalog";
+import { FEEDS, RUNNABLE, feedEnabled, publisherInputs, runtimeOf, type DeclaredFeed } from "@open-data-pt/gatekeeper/catalog";
 import { LIBRARIES, library } from "@open-data-pt/gatekeeper/libraries";
 
 /** Every library the Gatekeeper Worker carries, as `libraries.ts` lists them. */
@@ -19,20 +18,19 @@ export const CARRIED: readonly Library[] = LIBRARIES;
 export const CARRIED_NAMES: string[] = CARRIED.map((candidate) => candidate.deployment.source);
 
 /** Every feed one library reads, across every publisher folder, whether or not its publisher is enabled. */
-export function feedsOf(name: string): ExampleFeed[] {
+export function feedsOf(name: string): DeclaredFeed[] {
   return FEEDS.filter((feed) => feed.config.source === name);
 }
 
 /** Every feed the Registry installs: every feed a carried library reads, less the publishers held for permission. */
-export const INSTALLED: ExampleFeed[] = FEEDS.filter((feed) => CARRIED_NAMES.includes(feed.config.source ?? "") && feedEnabled(feed));
+export const INSTALLED: DeclaredFeed[] = FEEDS.filter((feed) => CARRIED_NAMES.includes(feed.config.source ?? "") && feedEnabled(feed));
 
 /**
  * One library built the way the Worker builds it: its declared vars, whatever
- * else the caller hands over (secrets), what its publishers bring, and what it
- * reads its source with while a feed is resolved.
+ * else the caller hands over (secrets), and what its publishers bring.
  */
-export function carriedLibraries(name: string, extra: Record<string, string | undefined> = {}, fetcher?: typeof fetch): GatekeeperLibraries {
-  return new Map([[name, buildLibrary(library(name).deployment, extra, publisherInputs(name), fetcher)]]);
+export function carriedLibraries(name: string, extra: Record<string, string | undefined> = {}): GatekeeperLibraries {
+  return new Map([[name, buildLibrary(library(name).deployment, extra, publisherInputs(name))]]);
 }
 
 /**

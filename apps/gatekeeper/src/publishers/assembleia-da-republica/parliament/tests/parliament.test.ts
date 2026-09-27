@@ -93,7 +93,7 @@ describe("Parliament public-directory source", () => {
     expect(first.history).toBeUndefined();
     expect(raw.legislature).toBe("XVII");
     expect(Object.values(raw).some((value) => value.includes("http"))).toBe(false);
-    expect(example.policy.collection.cadenceSeconds).toBe(raw.feed === "careers" ? 604_800 : 86_400);
+    expect(example.policy.cadenceSeconds).toBe(raw.feed === "careers" ? 604_800 : 86_400);
   });
 
   it("discovers two levels, decodes entities, and ignores the publisher's HTTP canonical URL", async () => {

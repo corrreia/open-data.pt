@@ -86,14 +86,12 @@ export interface SourceCheckpoint {
   state: JsonObject;
 }
 
-export interface GatekeeperDescription {
-  kind: string;
-  name: string;
-}
-
 type FeedDomainSubject = "coverage" | "document" | "event" | "feature" | "media" | "observation" | "reference";
 
-/** What a feed is about, and what its products are by default. Everything else about a feed is its policy's business. */
+/**
+ * What a feed is about, and what its products are by default: the Gatekeeper's to know. The kernel is told only
+ * whether its facts are events or observations (`CatalogFeed.eventTimed`).
+ */
 export interface FeedSemantics {
   domainSubject: FeedDomainSubject;
   defaultProductRole: ProductRole;
@@ -116,10 +114,9 @@ export interface HistoryCapability {
   minSliceSeconds?: number;
 }
 
+/** One kind of feed a library reads: what its facts are about, and how far back its history reaches. */
 export interface FeedKindDescription {
   kind: string;
-  title: string;
-  description: string;
   semantics: FeedSemantics;
   history?: HistoryCapability;
 }
@@ -180,7 +177,7 @@ export interface TransformContext {
 
 /* ---------- Policies (values a Gatekeeper may suggest; the kernel owns and enforces them) ---------- */
 
-/** Which live collections send their revisions to the lake. Omit it to send none. */
+/** How a feed is collected: how often, for how long, how much it may read, and whether its changes are history. */
 export interface CollectionPolicyDefinition {
   cadenceSeconds: number;
   timeoutSeconds: number;
@@ -241,28 +238,30 @@ export interface CatalogTopic {
 }
 
 /**
- * The vocabularies the feeds name, as the Gatekeeper declares them; the kernel
- * stores them and serves every feed's keys expanded. The feeds themselves are
- * `exampleFeeds()`.
+ * Everything the Gatekeeper reads and under what terms: the publishers whose data may be republished, the
+ * vocabularies their feeds name, and every feed, already resolved. The kernel installs exactly these feeds.
  */
 export interface CatalogDescription {
   publishers: CatalogPublisher[];
   licences: CatalogLicence[];
   topics: CatalogTopic[];
+  feeds: CatalogFeed[];
 }
 
 /** The licence key for data whose publisher states no reuse terms: not a licence, so no markup names one. */
 export const UNSTATED_LICENCE = "source-terms";
 
 /**
- * A ready-to-install feed a Gatekeeper ships as an example of what it can do.
- * What the data is, who published it and under what terms belongs to its
- * dataset; a feed says only how a part of that dataset is read, and how often.
+ * One feed, as its publisher's folder declares it and its library resolves it: what it is, whose it is and under
+ * what terms, what it reads, and how it is collected. Nothing of its configuration crosses: the Gatekeeper collects
+ * it by slug.
  */
-export interface ExampleFeed {
+export interface CatalogFeed {
   slug: string;
   /** The key of the publisher whose folder declares it: who made the data, never the portal it was read from. */
   publisher: string;
+  /** The library that reads it: how, never what or whose. */
+  library: string;
   title: string;
   description: string;
   /** The terms the publisher states for it: a licence's `id`, or `source-terms` when they state none. */
@@ -271,8 +270,19 @@ export interface ExampleFeed {
   attribution?: string;
   /** Topic `id`s: what the catalog groups and filters by. */
   topics: string[];
-  config: SourceConfig;
-  policy: { name: string; version: number; collection: CollectionPolicyDefinition };
+  /** What it reads, `<library>:<library>:<kind>:<digest>`: its checkpoint and the history of what it read hang on it. */
+  resourceKey: string;
+  /** Digest of its whole canonical configuration: a new one is another configuration of the same resource. */
+  configHash: string;
+  /**
+   * Whether its facts are events or observations, which arrive soon after they happen: a history window then need
+   * not look at what was ingested long before it.
+   */
+  eventTimed: boolean;
+  /** Present when the source hands out history older than a live collection returns. */
+  history?: HistoryCapability;
+  policy: CollectionPolicyDefinition;
+  /** After how long without a successful collection the feed is shown as late. */
   staleAfterSeconds: number;
 }
 
@@ -347,21 +357,15 @@ export type NormalizedFrame =
       exhausted?: boolean;
     };
 
-/** The Gatekeeper's private RPC: its feed kinds, its catalog and example feeds, and normalized collection. */
+/** The Gatekeeper's private RPC: its catalog, a digest of it, and normalized collection. */
 export interface FeedGatekeeper extends WorkerEntrypoint {
-  describe(): Promise<GatekeeperDescription>;
-  listFeedKinds(): Promise<FeedKindDescription[]>;
-  resolveFeed(config: SourceConfig): Promise<ResolvedFeed>;
-  collect(request: CollectionRequest): Promise<CollectionResult>;
-  exampleFeeds(): Promise<ExampleFeed[]>;
   catalog(): Promise<CatalogDescription>;
   /**
-   * A digest of everything the three calls above answer: it changes exactly
-   * when a release changes the catalog, the feeds or their kinds, so the
-   * kernel can sync the moment a new Gatekeeper answers instead of on its
-   * schedule. A method of its own, so a kernel that never asks is unaffected.
+   * A digest of the catalog: it changes exactly when a release changes the publishers, the vocabularies or the
+   * feeds, so the kernel syncs the moment a new Gatekeeper answers instead of on its schedule.
    */
   catalogVersion(): Promise<string>;
+  collect(request: CollectionRequest): Promise<CollectionResult>;
 }
 
 export class GatekeeperError extends Error {

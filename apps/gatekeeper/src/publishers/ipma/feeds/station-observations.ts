@@ -10,16 +10,12 @@ export const FEED = defineFeed(IPMA_DEPLOYMENT, {
   topics: ["environment", "weather"],
   config: { feed: "station-observations" },
   policy: {
-    name: "IPMA hourly observations",
-    version: 5,
-    collection: {
-      cadenceSeconds: 3_600,
-      timeoutSeconds: 30,
-      maxBytes: 3 * 1024 * 1024,
-      historyMode: "changes",
-      // The latest reading per station repeats values the observations series already records.
-      withoutHistory: ["stations-latest"],
-    },
+    cadenceSeconds: 3_600,
+    timeoutSeconds: 30,
+    maxBytes: 3 * 1024 * 1024,
+    historyMode: "changes",
+    // The latest reading per station repeats values the observations series already records.
+    withoutHistory: ["stations-latest"],
   },
   staleAfterSeconds: 7_200,
   /** Every hour: the last 24 hours of IPMA station observations, with the station list. */

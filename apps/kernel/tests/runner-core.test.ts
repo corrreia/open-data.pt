@@ -85,7 +85,7 @@ describe("runner schedule and failure handling", () => {
   it("forgets the failure streak when the Registry sends a changed definition, so the next failure retries fast", async () => {
     const h = await kernelHarness({ policy: policy({ cadenceSeconds: 30 * 24 * 3600 }) });
     expect(waitsAfterFailing(h, 6).at(-1)).toBe(3840);
-    expect(h.core.configure({ ...h.core.feed()!, title: "Things, renamed" }, h.core.policy()!)).toBe(true);
+    expect(h.core.configure({ ...h.core.feed()!, title: "Things, renamed" })).toBe(true);
     expect(h.core.runtime().consecutiveFailures).toBe(0);
     expect(waitsAfterFailing(h, 1)).toEqual([120]);
   });
@@ -97,11 +97,11 @@ describe("runner schedule and failure handling", () => {
     await h.collect();
     const regular = h.core.runtime().nextRunAt;
     h.clock.now += HOUR;
-    expect(h.core.configure({ ...h.core.feed()!, title: "Things, renamed", description: "Renamed" }, h.core.policy()!)).toBe(true);
+    expect(h.core.configure({ ...h.core.feed()!, title: "Things, renamed", description: "Renamed" })).toBe(true);
     expect(h.core.runtime().nextRunAt).toBe(regular);
     expect(h.core.takeDue()).toBeUndefined();
     const feed = h.core.feed()!;
-    expect(h.core.configure({ ...feed, resolved: { ...feed.resolved, configHash: "another-config" } }, h.core.policy()!)).toBe(true);
+    expect(h.core.configure({ ...feed, configHash: "another-config" })).toBe(true);
     expect(Date.parse(h.core.runtime().nextRunAt!)).toBeLessThanOrEqual(h.clock.now);
     expect(h.core.takeDue()?.trigger).toBe("scheduled");
   });
@@ -127,13 +127,13 @@ describe("runner schedule and failure handling", () => {
     await h.collect();
     expect(h.core.runtime().checkpoint).toMatchObject({ normalizer: { id: "fixture", version: "1" } });
     const feed = h.core.feed()!;
-    h.core.configure({ ...feed, title: "Things, renamed" }, h.core.policy()!);
+    h.core.configure({ ...feed, title: "Things, renamed" });
     expect(h.core.runtime().checkpoint).toBeDefined();
-    h.core.configure({ ...feed, feedEpoch: "epoch-2" }, h.core.policy()!);
+    h.core.configure({ ...feed, feedEpoch: "epoch-2" });
     expect(h.core.runtime().checkpoint).toBeUndefined();
     await h.collect();
     expect(h.core.runtime().checkpoint).toBeDefined();
-    h.core.configure({ ...h.core.feed()!, resolved: { ...feed.resolved, configHash: "another-config" } }, h.core.policy()!);
+    h.core.configure({ ...h.core.feed()!, configHash: "another-config" });
     expect(h.core.runtime().checkpoint).toBeUndefined();
   });
 
@@ -143,7 +143,7 @@ describe("runner schedule and failure handling", () => {
     await h.collect();
     // The feed takes a new epoch while the next collection is reading its source.
     h.source.fetch = async () => {
-      h.core.configure({ ...h.core.feed()!, feedEpoch: "epoch-2" }, h.core.policy()!);
+      h.core.configure({ ...h.core.feed()!, feedEpoch: "epoch-2" });
       return kind === "an unchanged source"
         ? { kind: "not-modified" }
         : { kind: "body", body: new Uint8Array(0), provenance: { sourceUrl: "https://example.test/things" }, completeness: "complete" };
@@ -163,7 +163,7 @@ describe("runner schedule and failure handling", () => {
     // The feed is pointed at another configuration while the next collection is reading the old one.
     h.source.fetch = async () => {
       const feed = h.core.feed()!;
-      h.core.configure({ ...feed, resolved: { ...feed.resolved, configHash: "another-config" } }, h.core.policy()!);
+      h.core.configure({ ...feed, configHash: "another-config" });
       return kind === "an unchanged source"
         ? { kind: "not-modified" }
         : { kind: "body", body: new Uint8Array(0), provenance: { sourceUrl: "https://example.test/things" }, completeness: "complete" };
@@ -182,7 +182,7 @@ describe("runner schedule and failure handling", () => {
     h.source.records = [record("a", 1)];
     await h.collect();
     const feed = h.core.feed()!;
-    h.core.configure({ ...feed, resolved: { ...feed.resolved, configHash: "another-config" } }, h.core.policy()!);
+    h.core.configure({ ...feed, configHash: "another-config" });
     expect(waitsAfterFailing(h, 1)).toEqual([120]);
     expect(h.core.runtime().consecutiveFailures).toBe(1);
   });
@@ -266,12 +266,11 @@ describe("runner schedule and failure handling", () => {
     const h = await kernelHarness();
     const failed = failPermanently(h);
     const feed = h.core.feed()!;
-    const feedPolicy = h.core.policy()!;
-    // The daily re-resolve re-sends every feed; an identical definition, even rewritten later, must not cut the cooldown short.
-    expect(h.core.configure({ ...feed, updatedAt: "2026-09-11T00:00:00.000Z" }, { ...feedPolicy, createdAt: "2026-09-11T00:00:00.000Z" })).toBe(false);
+    // A sync re-sends a feed; an identical definition, even rewritten later, must not cut the cooldown short.
+    expect(h.core.configure({ ...feed, updatedAt: "2026-09-11T00:00:00.000Z" })).toBe(false);
     expect(h.core.runtime().cooldownUntil).toBeDefined();
     expect(h.core.takeDue()).toBeUndefined();
-    expect(h.core.configure({ ...feed, title: "Things, renamed" }, feedPolicy)).toBe(true);
+    expect(h.core.configure({ ...feed, title: "Things, renamed" })).toBe(true);
     expect(h.core.runtime().cooldownUntil).toBeUndefined();
     expect(h.core.takeDue()?.id).toBe(failed);
   });
@@ -314,7 +313,7 @@ describe("runner schedule and failure handling", () => {
     expect(h.core.retiring()).toBe(true);
     expect(h.core.takeDue()).toBeUndefined();
     // The same definition, but adopted again after being dropped, is a change: the runner must plan its wake-ups again.
-    expect(h.core.configure(h.core.feed()!, h.core.policy()!)).toBe(true);
+    expect(h.core.configure(h.core.feed()!)).toBe(true);
     expect(h.core.retiring()).toBe(false);
     expect(h.core.takeDue()?.trigger).toBe("scheduled");
   });

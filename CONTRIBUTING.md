@@ -1,6 +1,6 @@
 # Contributing
 
-open-data.pt collects Portuguese public data and publishes it as cacheable JSON. Everything it collects is described by an **example feed**: a slug, a title, a source configuration and a policy. Add one and the platform installs it, collects it, keeps its history and gives it a product page. Pull requests welcome; deploys and secrets are the owner's.
+open-data.pt collects Portuguese public data and publishes it as cacheable JSON. Everything it collects is described by a **feed**: a slug, a title, a source configuration and a policy, in a file of its own. Add one and the platform installs it, collects it, keeps its history and gives it a product page. Pull requests welcome; deploys and secrets are the owner's.
 
 The long-form documentation is in [`docs/`](docs/): [Architecture](docs/architecture.md),
 [Libraries](docs/libraries.md), [Public API](docs/api.md), [Running it](docs/development.md), and
@@ -34,7 +34,7 @@ packages/lisbon/            Europe/Lisbon wall-clock arithmetic
 3. **One Worker, every library.** A library is how the data is read, never what it is about or who publishes it: topics overlap — a city Wi-Fi map is `cities` and `telecom` — and a publisher may be read two ways, so neither is a code boundary. Each library's `deployment.ts` declares its name, its vars with their values, and any secrets, buckets and CPU limit; `libraries.ts` lists the libraries the Worker carries, every one of them. Topics (`TOPICS` in `apps/gatekeeper/src/catalog/topics.ts`) and the publisher are labels on a feed, shown on the site.
 4. **Feed slugs never change.** A feed's ID derives from its slug, so a feed keeps its history wherever it runs. Renaming a slug throws that history away.
 
-A library exports its feed-kind table, `validate<Name>FeedConfig`, `collect<Name>Feed`, its transformer, its examples array, `<name>Collector(options)`, and `<NAME>_DEPLOYMENT` from `deployment.ts` — what the Worker needs to carry it. Every example configuration carries `source: "<library>"`, which is what routes it inside the Worker; the library never sees that key.
+A library exports its feed-kind table, `validate<Name>FeedConfig`, `collect<Name>Feed`, its transformer, `<name>Collector(options)`, and `<NAME>_DEPLOYMENT` from `deployment.ts` — what the Worker needs to carry it. Every feed configuration carries `source: "<library>"`, which is what routes it inside the Worker; the library never sees that key.
 
 ## The kinds of contribution
 
@@ -74,7 +74,7 @@ export const PUBLISHER: PublisherDefinition = {
 ```
 
 A feed file is the whole story of that feed: what it is and under what terms, and how it is read.
-`fetch` is the live read the kernel runs every `policy.collection.cadenceSeconds`; `backfill`, when
+`fetch` is the live read the kernel runs every `policy.cadenceSeconds`; `backfill`, when
 the source keeps history, walks back one older slice at a time; `transform` turns what was fetched
 into products. Each calls whatever shared code it needs — `formats/<format>/` for a standard,
 `publishers/<publisher>/<library>/` for the publisher's own API — and gets what the Worker holds

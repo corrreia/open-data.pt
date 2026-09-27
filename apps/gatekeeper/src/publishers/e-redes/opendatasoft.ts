@@ -1,35 +1,24 @@
 import { MEBIBYTE, MONTH, WEEK, boundedReportingPeriodPolicy } from "#/formats/opendatasoft/feeds";
 
-/** The name their policies are called by: the kernel keeps a policy by its name, so this never changes. */
-const POLICY_NAME = "E-REDES";
-
 /** E-REDES's Opendatasoft portal, which every E-REDES feed reads. */
 export const E_REDES_HOST = "e-redes.opendatasoft.com";
 
 export const E_REDES_PERIODIC_SERIES = {
-  name: "E-REDES periodic series subset",
-  version: 1,
-  collection: {
-    cadenceSeconds: 604_800,
-    timeoutSeconds: 180,
-    maxBytes: 8 * MEBIBYTE,
-    historyMode: "changes",
-  },
+  cadenceSeconds: 604_800,
+  timeoutSeconds: 180,
+  maxBytes: 8 * MEBIBYTE,
+  historyMode: "changes",
 } as const;
 
 export const E_REDES_QUARTER_HOUR_SERIES = {
-  name: "E-REDES quarter-hour series",
-  version: 1,
-  collection: {
-    cadenceSeconds: 21_600,
-    timeoutSeconds: 180,
-    maxBytes: 8 * MEBIBYTE,
-    historyMode: "changes",
-  },
+  cadenceSeconds: 21_600,
+  timeoutSeconds: 180,
+  maxBytes: 8 * MEBIBYTE,
+  historyMode: "changes",
 } as const;
 
 /** A bounded window of reporting periods, read once a week. */
-export const E_REDES_WEEKLY_PERIODS = boundedReportingPeriodPolicy(POLICY_NAME, WEEK);
+export const E_REDES_WEEKLY_PERIODS = boundedReportingPeriodPolicy(WEEK);
 
 /** A bounded window of reporting periods, read once a month. */
-export const E_REDES_MONTHLY_PERIODS = boundedReportingPeriodPolicy(POLICY_NAME, MONTH);
+export const E_REDES_MONTHLY_PERIODS = boundedReportingPeriodPolicy(MONTH);

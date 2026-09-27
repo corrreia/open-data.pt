@@ -21,46 +21,37 @@ const DOCUMENT_PATH = "/webutils/docs/doc.txt";
 export const PARLIAMENT_HTML_BYTES = 1024 * 1024;
 
 export const PARLIAMENT_FEEDS = {
+  // Published mandates, including historical statuses within the selected legislature, constituencies, groups and sessions.
   members: {
     kind: "members",
-    title: "Parliamentary mandates and legislature reference",
-    description: "Published mandates, including historical statuses within the selected legislature, constituencies, groups and sessions.",
     semantics: { domainSubject: "reference", defaultProductRole: "reference" },
   },
+  // Professional qualifications and career information, excluding birth dates, sex and private contact details.
   careers: {
     kind: "careers",
-    title: "Parliamentary professional profiles",
-    description: "Professional qualifications and career information, excluding birth dates, sex and private contact details.",
     semantics: { domainSubject: "reference", defaultProductRole: "reference" },
   },
   petitions: {
     kind: "petitions",
-    title: "Parliamentary petitions",
-    description: "Petition subjects, processing status, signature counts, dates and official metadata.",
     semantics: { domainSubject: "event", defaultProductRole: "event-log" },
   },
   diplomas: {
     kind: "diplomas",
-    title: "Approved parliamentary legislation",
-    description: "Approved legislation metadata and its stated publication dates and official text links.",
     semantics: { domainSubject: "document", defaultProductRole: "event-log" },
   },
+  // Hearings, audiences, debates, visits and events in the selected legislature.
   activities: {
     kind: "activities",
-    title: "Parliamentary activities",
-    description: "Hearings, audiences, debates, visits and events in the selected legislature.",
     semantics: { domainSubject: "event", defaultProductRole: "event-log" },
   },
+  // Committee reference, published membership histories and meeting metadata, plus plenary sittings and attendance with stated absence reasons.
   committees: {
     kind: "committees",
-    title: "Parliamentary committees and plenary attendance",
-    description: "Committee reference, published membership histories and meeting metadata, plus plenary sittings and attendance with stated absence reasons.",
     semantics: { domainSubject: "reference", defaultProductRole: "reference" },
   },
+  // Bills, draft resolutions and other initiatives, every step of their procedure, and every plenary and committee vote on them with each group's position.
   initiatives: {
     kind: "initiatives",
-    title: "Parliamentary initiatives and votes",
-    description: "Bills, draft resolutions and other initiatives, every step of their procedure, and every plenary and committee vote on them with each group's position.",
     semantics: { domainSubject: "event", defaultProductRole: "event-log" },
   },
 } as const satisfies Record<string, FeedKindDescription>;

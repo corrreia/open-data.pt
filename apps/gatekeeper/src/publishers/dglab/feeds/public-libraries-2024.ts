@@ -21,7 +21,7 @@ export const FEED = defineFeed(UDATA_DEPLOYMENT, {
     feed: "distribution",
     transformer: "tabular",
   },
-  policy: annualPolicy("Public libraries annual snapshot", 1 * MIB),
+  policy: annualPolicy(1 * MIB),
   staleAfterSeconds: 30 * 86_400,
   /** Once a day: DGLAB's 2024 public library statistics CSV on dados.gov.pt, downloaded only when it has changed. */
   fetch: ({ config, state, library, fetch }) => collectUdataFeed(config, state, library.hosts, fetch),

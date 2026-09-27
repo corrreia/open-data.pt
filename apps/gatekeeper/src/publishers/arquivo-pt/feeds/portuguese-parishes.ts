@@ -21,7 +21,7 @@ export const FEED = defineFeed(UDATA_DEPLOYMENT, {
     feed: "distribution",
     transformer: "tabular",
   },
-  policy: annualPolicy("Portuguese parishes annual snapshot", 2 * MIB),
+  policy: annualPolicy(2 * MIB),
   staleAfterSeconds: 30 * 86_400,
   /** Once a day: the parish websites CSV Arquivo.pt published on dados.gov.pt, downloaded only when it has changed. */
   fetch: ({ config, state, library, fetch }) => collectUdataFeed(config, state, library.hosts, fetch),

@@ -68,7 +68,7 @@ describe("RIPEstat capabilities and boundaries", () => {
       expect(() => validateRipestatFeedConfig(libraryConfig(example.config))).not.toThrow();
       expect(example.licence).toBe("ripe-ncc-terms");
       expect(example.publisher).toBe("ripe-ncc");
-      expect(example.policy.collection.cadenceSeconds).toBe(example.config.asn ? 28_800 : 86_400);
+      expect(example.policy.cadenceSeconds).toBe(example.config.asn ? 28_800 : 86_400);
     }
   });
 

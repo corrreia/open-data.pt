@@ -18,7 +18,7 @@ export const FEED = defineFeed(NGSI_DEPLOYMENT, {
     // LAeq is an A-weighted decibel by definition; the broker states no unit of its own.
     measures: "LAeq=dB(A)",
   },
-  policy: { name: "NGSI sensor network", version: 1, collection: SENSOR },
+  policy: SENSOR,
   staleAfterSeconds: 86_400,
   /** Every quarter of an hour: every NoiseLevelObserved entity Porto's broker holds, page by page. */
   fetch: ({ config, validator, library, fetch }) => collectNgsiFeed(config, validator, library.hosts, fetch),

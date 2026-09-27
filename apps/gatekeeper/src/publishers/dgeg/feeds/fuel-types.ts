@@ -11,14 +11,10 @@ export const FEED = defineFeed(DGEG_DEPLOYMENT, {
   topics: ["energy"],
   config: { feed: "fuel-types" },
   policy: {
-    name: "DGEG fuel reference data",
-    version: 1,
-    collection: {
-      cadenceSeconds: 86_400,
-      timeoutSeconds: 20,
-      maxBytes: FUEL_TYPES_MAX_BYTES,
-      historyMode: "changes",
-    },
+    cadenceSeconds: 86_400,
+    timeoutSeconds: 20,
+    maxBytes: FUEL_TYPES_MAX_BYTES,
+    historyMode: "changes",
   },
   staleAfterSeconds: 172_800,
   /** Once a day: the list of fuel types and their units that DGEG's price service names fuels by. */

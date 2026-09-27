@@ -39,10 +39,9 @@ const HISTORY_PERIODS = {
 const HISTORY_TARGET_POINTS = 3_000;
 
 export const INE_FEEDS = {
+  // A complete snapshot of the latest values published for one INE indicator, as time-series points.
   indicator: {
     kind: "indicator",
-    title: "Statistical indicator",
-    description: "A complete snapshot of the latest values published for one INE indicator, as time-series points.",
     semantics: {
       domainSubject: "observation",
       defaultProductRole: "time-series",

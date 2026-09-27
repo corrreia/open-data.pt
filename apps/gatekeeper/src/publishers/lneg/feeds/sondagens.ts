@@ -17,11 +17,7 @@ export const FEED = defineFeed(OGC_DEPLOYMENT, {
     pageSize: "500",
     maxPages: "9",
   },
-  policy: {
-    name: "LNEG monthly reference layer",
-    version: 2,
-    collection: measuredCollection({ source: 1, output: 1, largestRow: 1 }, MONTH),
-  },
+  policy: measuredCollection({ source: 1, output: 1, largestRow: 1 }, MONTH),
   staleAfterSeconds: 2 * MONTH,
   /** Once a month: the sondabase-sondagem collection walked page by page from LNEG's OGC API, every feature with its geometry. */
   fetch: ({ config, library, fetch }) => collectOgcFeed(config, library.hosts, fetch),

@@ -32,16 +32,14 @@ export const INFOAGUA_ORIGIN = "https://infoagua.apambiente.pt";
 export const INFOAGUA_MAX_BYTES = 4 * 1024 * 1024;
 
 export const INFOAGUA_FEEDS = {
+  // The flood alert level InfoÁgua shows for each river, rain and reservoir station it watches.
   "flood-alerts": {
     kind: "flood-alerts",
-    title: "Flood alert state by station",
-    description: "The flood alert level InfoÁgua shows for each river, rain and reservoir station it watches.",
     semantics: { domainSubject: "observation", defaultProductRole: "current-state" },
   },
+  // The monthly hydrological drought index and state InfoÁgua shows for each river basin.
   "drought-index": {
     kind: "drought-index",
-    title: "Hydrological drought index by basin",
-    description: "The monthly hydrological drought index and state InfoÁgua shows for each river basin.",
     semantics: { domainSubject: "observation", defaultProductRole: "summary" },
   },
 } as const satisfies Record<string, FeedKindDescription>;

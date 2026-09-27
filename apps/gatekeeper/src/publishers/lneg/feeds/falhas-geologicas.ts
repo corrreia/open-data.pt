@@ -17,11 +17,7 @@ export const FEED = defineFeed(OGC_DEPLOYMENT, {
     pageSize: "500",
     maxPages: "4",
   },
-  policy: {
-    name: "LNEG monthly reference layer",
-    version: 2,
-    collection: measuredCollection({ source: 1, output: 1, largestRow: 10 }, MONTH),
-  },
+  policy: measuredCollection({ source: 1, output: 1, largestRow: 10 }, MONTH),
   staleAfterSeconds: 2 * MONTH,
   /** Once a month: the cgp1m-ge-geologicfault collection walked page by page from LNEG's OGC API, every feature with its geometry. */
   fetch: ({ config, library, fetch }) => collectOgcFeed(config, library.hosts, fetch),

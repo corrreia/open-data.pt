@@ -41,7 +41,7 @@ function feed(fetchOf: RunnableFeed["fetch"]): RunnableFeed {
     licence: "source-terms",
     topics: ["society"],
     config: { source: "fixture" },
-    policy: { name: "Fixture", version: 1, collection: { cadenceSeconds: 60, timeoutSeconds: 30, maxBytes: 1024, historyMode: "latest" } },
+    policy: { cadenceSeconds: 60, timeoutSeconds: 30, maxBytes: 1024, historyMode: "latest" },
     staleAfterSeconds: 120,
     fetch: fetchOf,
     transform: {

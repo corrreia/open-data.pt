@@ -16,14 +16,13 @@ import {
 import { chunkIndexFor, chunkListProblem, parseChunkRows, regenerateChunks, servedIdentity, type ChunkSink, type ServingRow } from "./chunks";
 import {
   definitionFingerprint,
+  liftResolvedFeed,
   feedDefinition,
   keepsHistory,
-  policyFingerprint,
   type Acquisition,
   type AcquisitionStatus,
   type BackfillSummary,
   type Feed,
-  type FeedPolicy,
   type FeedStatus,
   type ProductIndexEntry,
 } from "./feed-model";
@@ -139,7 +138,6 @@ export interface CollectionPlan {
   kind: "run";
   acquisitionId: string;
   feed: Feed;
-  policy: FeedPolicy;
   checkpoint?: SourceCheckpoint;
   mode: CollectionMode;
   visitedCursors: string[];
@@ -281,7 +279,7 @@ export class RunnerCore {
     this.exec(`CREATE TABLE IF NOT EXISTS acquisitions (
       id TEXT PRIMARY KEY, trigger TEXT NOT NULL, status TEXT NOT NULL, requested_at TEXT NOT NULL, started_at TEXT, completed_at TEXT,
       observed_at TEXT, event_time TEXT, source_published_at TEXT, completeness TEXT, normalizer_json TEXT, quality_json TEXT,
-      rows INTEGER, revisions INTEGER, history_rows INTEGER, policy_version INTEGER NOT NULL, error TEXT, error_code TEXT)`);
+      rows INTEGER, revisions INTEGER, history_rows INTEGER, error TEXT, error_code TEXT)`);
     this.exec(`CREATE INDEX IF NOT EXISTS acquisitions_requested ON acquisitions(requested_at)`);
     this.exec(`CREATE TABLE IF NOT EXISTS products (
       product_key TEXT PRIMARY KEY, slug TEXT NOT NULL UNIQUE, mode TEXT NOT NULL, entry_json TEXT NOT NULL, regenerate INTEGER NOT NULL DEFAULT 0)`);
@@ -296,6 +294,7 @@ export class RunnerCore {
     this.exec(`CREATE INDEX IF NOT EXISTS outbox_acquisition ON outbox(acquisition_id)`);
     this.exec(`CREATE TABLE IF NOT EXISTS garbage (object_key TEXT PRIMARY KEY, delete_after TEXT NOT NULL)`);
     this.migrateCollectionContract();
+    this.liftResolvedFeed();
     // Every construction runs this; writing the version only when it is new keeps a warm-up free of row writes.
     if (current !== String(RUNNER_SCHEMA_VERSION))
       this.exec(`INSERT INTO meta (key, value) VALUES ('schema_version', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`, String(RUNNER_SCHEMA_VERSION));
@@ -309,8 +308,8 @@ export class RunnerCore {
    */
   private migrateCollectionContract(): void {
     this.exec(`UPDATE state SET value_json = CASE
-        WHEN json_extract(value_json, '$.checkpoint.resourceKey') IS (SELECT json_extract(feed.value_json, '$.resolved.resourceKey') FROM state AS feed WHERE feed.key = 'feed')
-          AND json_extract(value_json, '$.checkpoint.configHash') IS (SELECT json_extract(feed.value_json, '$.resolved.configHash') FROM state AS feed WHERE feed.key = 'feed')
+        WHEN json_extract(value_json, '$.checkpoint.resourceKey') IS (SELECT COALESCE(json_extract(feed.value_json, '$.resolved.resourceKey'), json_extract(feed.value_json, '$.resourceKey')) FROM state AS feed WHERE feed.key = 'feed')
+          AND json_extract(value_json, '$.checkpoint.configHash') IS (SELECT COALESCE(json_extract(feed.value_json, '$.resolved.configHash'), json_extract(feed.value_json, '$.configHash')) FROM state AS feed WHERE feed.key = 'feed')
           AND json_extract(value_json, '$.checkpoint.feedEpoch') IS (SELECT json_extract(feed.value_json, '$.feedEpoch') FROM state AS feed WHERE feed.key = 'feed')
         THEN json_set(value_json, '$.checkpoint', json_object(
           'normalizer', json(json_extract(value_json, '$.checkpoint.normalizer')), 'state', json(json_extract(value_json, '$.checkpoint.state'))))
@@ -327,6 +326,24 @@ export class RunnerCore {
         const code = /Gatekeeper collection failed: ([a-z-]+)/.exec(error)?.[1];
         if (code !== undefined && isCollectionFailureCode(code)) this.exec(`UPDATE acquisitions SET error_code = ? WHERE id = ?`, code, id);
       }
+    });
+  }
+
+  /**
+   * One-time, after the collection contract's: a feed stored with a resolved copy of its configuration and a separate
+   * policy takes the identity the catalog now sends and its policy, and acquisitions stop recording a policy version.
+   * Kept until every runner has run it once.
+   */
+  private liftResolvedFeed(): void {
+    const policy = this.getState<JsonObject>("policy");
+    const acquisitions = this.rows<{ sql: string }>(`SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'acquisitions'`)[0]?.sql ?? "";
+    if (policy === undefined && !acquisitions.includes("policy_version")) return;
+    this.transaction(() => {
+      const stored = this.getState<JsonObject>("feed");
+      const lifted = stored && liftResolvedFeed(stored, policy?.collection);
+      if (lifted) this.setState("feed", lifted);
+      this.deleteState("policy");
+      if (acquisitions.includes("policy_version")) this.exec(`ALTER TABLE acquisitions DROP COLUMN policy_version`);
     });
   }
 
@@ -354,10 +371,6 @@ export class RunnerCore {
   feed(): Feed | undefined {
     return this.getState<Feed>("feed");
   }
-  policy(): FeedPolicy | undefined {
-    return this.getState<FeedPolicy>("policy");
-  }
-
   runtime(): RunnerState {
     return this.getState<RunnerState>("runtime") ?? { consecutiveFailures: 0, consecutiveInterruptions: 0 };
   }
@@ -372,57 +385,44 @@ export class RunnerCore {
     return feed;
   }
 
-  requirePolicy(): FeedPolicy {
-    const policy = this.policy();
-    if (!policy) throw new Error("This runner has no policy configured");
-    return policy;
-  }
-
   /* ---------- Configuration and schedule ---------- */
 
   /**
-   * Take the feed definition and policy the Registry resolved. The same ones
-   * again change nothing, so the Registry can re-send every feed daily without
-   * cutting cooldowns short. Different ones are a fresh chance: a cooldown
-   * ends, a stalled history walk resumes, and the feed is due now.
+   * Take the feed definition the Registry installed. The same one again changes
+   * nothing, so the Registry can re-send every feed without cutting cooldowns
+   * short. A different one is a fresh chance: a cooldown ends, a stalled
+   * history walk resumes, and the feed is due now.
    * Returns whether anything changed.
    */
-  configure(feed: Feed, policy: FeedPolicy): boolean {
+  configure(feed: Feed): boolean {
     const wasRetiring = this.retiring();
     if (wasRetiring) this.deleteState("retiring");
     const current = this.feed();
-    const currentPolicy = this.policy();
     // Adopted again after being dropped is a change too: the runner must plan its wake-ups again.
-    if (current && currentPolicy && definitionFingerprint(current) === definitionFingerprint(feed) && policyFingerprint(currentPolicy) === policyFingerprint(policy))
-      return wasRetiring;
+    if (current && definitionFingerprint(current) === definitionFingerprint(feed)) return wasRetiring;
     this.setState("feed", feedDefinition(feed));
-    this.setState("policy", policy);
     const now = this.deps.now();
     const at = new Date(now).toISOString();
     // A feed that is failing, or resting after failing, takes a changed definition as a repair to try at once.
     const failing = this.runtime().consecutiveFailures > 0 || Boolean(this.runtime().cooldownUntil);
     if (this.runtime().cooldownUntil) this.endCooldown(true);
     const backfill = this.getState<BackfillState & { nextAt?: string }>("backfill");
-    if (feed.resolved.history && (backfill?.status === "paused" || backfill?.status === "failed")) {
+    if (feed.history && (backfill?.status === "paused" || backfill?.status === "failed")) {
       this.setState("backfill", { ...backfill, status: "running", failures: 0, updatedAt: at, nextAt: at });
     }
-    // A different definition or policy is a fresh chance for the schedule too: the streak of failures
+    // A different definition is a fresh chance for the schedule too: the streak of failures
     // that lengthened this feed's waits was the old configuration's, so the next attempt starts over.
     const runtime: RunnerState = { ...this.runtime(), consecutiveFailures: 0 };
     // A checkpoint belongs to one configuration of the source and one epoch of the feed: under another, the next
     // collection reads the source whole.
-    const sameScope =
-      current !== undefined &&
-      current.resolved.resourceKey === feed.resolved.resourceKey &&
-      current.resolved.configHash === feed.resolved.configHash &&
-      current.feedEpoch === feed.feedEpoch;
+    const sameScope = current !== undefined && current.resourceKey === feed.resourceKey && current.configHash === feed.configHash && current.feedEpoch === feed.feedEpoch;
     if (!sameScope) delete runtime.checkpoint;
     if (feed.enabled) {
       // Only a feed that now collects something else, or one that is failing, runs at once. A healthy feed whose words
       // or policy changed keeps the data it has until its regular run: a new description once sent 278 feeds at one
       // server within minutes, a day after each had read it whole.
-      const collectsSomethingElse = !current || current.resolved.resourceKey !== feed.resolved.resourceKey || current.resolved.configHash !== feed.resolved.configHash;
-      const regular = runtime.lastSuccessAt ? Date.parse(nextRunAfter(feed.id, Date.parse(runtime.lastSuccessAt), policy.collection.cadenceSeconds)) : now;
+      const collectsSomethingElse = !current || current.resourceKey !== feed.resourceKey || current.configHash !== feed.configHash;
+      const regular = runtime.lastSuccessAt ? Date.parse(nextRunAfter(feed.id, Date.parse(runtime.lastSuccessAt), feed.policy.cadenceSeconds)) : now;
       const due = collectsSomethingElse || failing || !runtime.nextRunAt ? now : Math.min(Date.parse(runtime.nextRunAt), Math.max(now, regular));
       this.setRuntime({ ...runtime, nextRunAt: new Date(due).toISOString() });
     } else {
@@ -475,8 +475,7 @@ export class RunnerCore {
     const runtime = this.runtime();
     if (runtime.runningAcquisitionId || this.retiring()) return undefined;
     const now = this.deps.now();
-    const policy = this.policy();
-    if (!policy) return undefined;
+    if (!this.feed()) return undefined;
     if (runtime.cooldownUntil) {
       if (Date.parse(runtime.cooldownUntil) > now + 1000) return undefined;
       // The cooldown is over: retry the acquisition that caused it, keeping the count so a repeat waits longer.
@@ -487,7 +486,7 @@ export class RunnerCore {
     const feed = this.feed();
     const nextRunAt = this.runtime().nextRunAt;
     if (feed?.enabled && nextRunAt && Date.parse(nextRunAt) <= now + 1000) {
-      return this.createAcquisition("scheduled", policy.version);
+      return this.createAcquisition("scheduled");
     }
     let backfill = this.getState<BackfillState & { nextAt?: string }>("backfill");
     const resumeAt = backfill ? this.backfillResumeAt(backfill) : undefined;
@@ -497,7 +496,7 @@ export class RunnerCore {
     }
     if (backfill?.status === "running" && (!backfill.nextAt || Date.parse(backfill.nextAt) <= now + 1000)) {
       const id = backfillAcquisitionId(this.requireFeed().id, backfill);
-      if (!this.getAcquisition(id)) this.insertAcquisition(id, "history", policy.version);
+      if (!this.getAcquisition(id)) this.insertAcquisition(id, "history");
       else this.exec(`UPDATE acquisitions SET status = 'queued', error = NULL, error_code = NULL WHERE id = ?`, id);
       return this.getAcquisition(id);
     }
@@ -518,7 +517,7 @@ export class RunnerCore {
   }
 
   private watchdogDeadline(): string {
-    return new Date(this.deps.now() + (this.requirePolicy().collection.timeoutSeconds + WATCHDOG_MARGIN_SECONDS) * 1000).toISOString();
+    return new Date(this.deps.now() + (this.requireFeed().policy.timeoutSeconds + WATCHDOG_MARGIN_SECONDS) * 1000).toISOString();
   }
 
   /** How many feeds of the same library are walking history; paces this runner's slices. */
@@ -556,8 +555,8 @@ export class RunnerCore {
   }
 
   collectNow(trigger: string): Acquisition {
-    const policy = this.requirePolicy();
-    return this.createAcquisition(trigger, policy.version);
+    this.requireFeed();
+    return this.createAcquisition(trigger);
   }
 
   /** Leave the cooldown: queue its acquisition again and make the feed due now. `resetCount` forgets earlier cooldowns. */
@@ -585,7 +584,7 @@ export class RunnerCore {
     if (acquisition.status === "succeeded" || acquisition.status === "unchanged" || acquisition.status === "failed") return { kind: "done", status: acquisition.status };
     if (this.getState<PendingPublication>("publication")) throw new Error("A committed batch is still being published; retry shortly");
     const feed = this.requireFeed();
-    const policy = this.requirePolicy();
+    const policy = this.requireFeed().policy;
     if (this.committedOutboxBytes() >= PENDING_MAX_BYTES)
       throw new Error(`History backlog reached ${PENDING_MAX_BYTES} bytes; collection paused without discarding accepted history`);
     // A retried attempt starts clean; nothing uncommitted from an earlier attempt survives.
@@ -595,25 +594,24 @@ export class RunnerCore {
     const history = acquisition.trigger === "history";
     const backfill = history ? this.getState<BackfillState>("backfill") : undefined;
     if (history && !backfill) throw new NormalizedInputError("History acquisition has no backfill walk");
-    const outputBytes = policy.collection.maxOutputBytes ?? Math.max(1024 * 1024, Math.min(16 * 1024 * 1024, policy.collection.maxBytes * 4));
+    const outputBytes = policy.maxOutputBytes ?? Math.max(1024 * 1024, Math.min(16 * 1024 * 1024, policy.maxBytes * 4));
     // A record is stored whole in SQLite (entity index, history outbox), so no policy may exceed MAX_RECORD_BYTES.
-    const recordBytes = Math.min(policy.collection.maxRecordBytes ?? 256 * 1024, MAX_RECORD_BYTES);
+    const recordBytes = Math.min(policy.maxRecordBytes ?? 256 * 1024, MAX_RECORD_BYTES);
     const plan: CollectionPlan = {
       kind: "run",
       acquisitionId,
       feed,
-      policy,
       mode: history ? { kind: "history", cursor: backfill!.cursor } : { kind: "live" },
       visitedCursors: backfill?.visitedCursors ?? [],
       products: this.productPlans(),
-      lake: this.deps.lakeAvailable && (history || policy.collection.historyMode === "changes"),
+      lake: this.deps.lakeAvailable && (history || policy.historyMode === "changes"),
       observedAt: new Date(now).toISOString(),
-      deadline: new Date(now + policy.collection.timeoutSeconds * 1000).toISOString(),
+      deadline: new Date(now + policy.timeoutSeconds * 1000).toISOString(),
       limits: {
-        sourceBytes: policy.collection.maxBytes,
+        sourceBytes: policy.maxBytes,
         outputBytes,
         recordBytes,
-        records: policy.collection.maxRecords ?? 1_000_000,
+        records: policy.maxRecords ?? 1_000_000,
       },
     };
     if (history && !this.deps.lakeAvailable) throw new NormalizedInputError("Historical collection requires lake bindings");
@@ -743,7 +741,7 @@ export class RunnerCore {
     if (!acquisition) throw new Error(`Unknown acquisition ${acquisitionId}`);
     if (acquisition.status === "succeeded" || acquisition.status === "unchanged")
       return { status: acquisition.status, historyRows: acquisition.historyRows ?? 0, outbox: this.pendingOutbox(COMMIT_OUTBOX_BLOBS) };
-    const policy = this.requirePolicy();
+    const policy = this.requireFeed().policy;
     const now = this.deps.now();
     const at = new Date(now).toISOString();
     const memo = this.memo(acquisitionId);
@@ -792,7 +790,7 @@ export class RunnerCore {
         // What it read was the old source's: the new one has still to be read, and stays due as configure left it.
         if (sameSource) {
           next.lastSuccessSource = sourceOf(feed);
-          next.nextRunAt = nextRunAfter(feed.id, now, policy.collection.cadenceSeconds);
+          next.nextRunAt = nextRunAfter(feed.id, now, policy.cadenceSeconds);
         }
       }
       this.setRuntime(next);
@@ -815,7 +813,7 @@ export class RunnerCore {
   unchanged(acquisitionId: string, checkpoint: SourceCheckpoint): void {
     const acquisition = this.getAcquisition(acquisitionId);
     if (!acquisition || acquisition.status === "succeeded" || acquisition.status === "unchanged") return;
-    const policy = this.requirePolicy();
+    const policy = this.requireFeed().policy;
     const now = this.deps.now();
     const at = new Date(now).toISOString();
     const memo = this.getState<CollectionMemo>(collectionKey(acquisitionId));
@@ -836,7 +834,7 @@ export class RunnerCore {
       // What it confirmed was the old source's: the new one has still to be read, and stays due as configure left it.
       if (sameSource) {
         next.lastSuccessSource = sourceOf(feed);
-        next.nextRunAt = nextRunAfter(feed.id, now, policy.collection.cadenceSeconds);
+        next.nextRunAt = nextRunAfter(feed.id, now, policy.cadenceSeconds);
       }
       delete next.runningAcquisitionId;
       delete next.watchdogAt;
@@ -868,7 +866,7 @@ export class RunnerCore {
     if (!acquisition || acquisition.status === "succeeded" || acquisition.status === "unchanged") return;
     // Only the running attempt can fail: a repeated report, or one from an executor the watchdog already gave up on, changes nothing.
     if (this.runtime().runningAcquisitionId !== acquisitionId) return;
-    const policy = this.requirePolicy();
+    const policy = this.requireFeed().policy;
     const now = this.deps.now();
     const at = new Date(now).toISOString();
     const message = failure.message.slice(0, 2000);
@@ -913,7 +911,7 @@ export class RunnerCore {
       // source was, counts as this configuration's.
       const feed = this.requireFeed();
       const sameSource = runtime.lastSuccessSource === undefined || runtime.lastSuccessSource === sourceOf(feed);
-      const regular = runtime.lastSuccessAt && sameSource ? Date.parse(nextRunAfter(feed.id, Date.parse(runtime.lastSuccessAt), policy.collection.cadenceSeconds)) : 0;
+      const regular = runtime.lastSuccessAt && sameSource ? Date.parse(nextRunAfter(feed.id, Date.parse(runtime.lastSuccessAt), policy.cadenceSeconds)) : 0;
       if (regular > now) {
         next.nextRunAt = new Date(regular).toISOString();
         this.setRuntime(next);
@@ -924,8 +922,7 @@ export class RunnerCore {
       // The same doubling throughout: quick retries up to the limit, then rests that are never longer
       // than the feed's own cadence, and never longer than MAX_FAILURE_WAIT_SECONDS whatever the cadence.
       const exponential = 60 * 2 ** Math.min(failures, 9);
-      const backoff =
-        failures <= RETRY_LIMIT ? Math.min(MAX_RETRY_BACKOFF_SECONDS, exponential) : Math.min(policy.collection.cadenceSeconds, MAX_FAILURE_WAIT_SECONDS, exponential);
+      const backoff = failures <= RETRY_LIMIT ? Math.min(MAX_RETRY_BACKOFF_SECONDS, exponential) : Math.min(policy.cadenceSeconds, MAX_FAILURE_WAIT_SECONDS, exponential);
       // A source that says when to come back is obeyed up to the same six hours, not talked down to fifteen minutes.
       const requested = failure.retryAfterSeconds === undefined ? 0 : Math.min(MAX_FAILURE_WAIT_SECONDS, failure.retryAfterSeconds);
       // Feeds that failed together, against one server, do not come back together: a backoff is shortened by up to a
@@ -1119,20 +1116,14 @@ export class RunnerCore {
 
   /* ---------- Internals ---------- */
 
-  private createAcquisition(trigger: string, policyVersion: number): Acquisition {
+  private createAcquisition(trigger: string): Acquisition {
     const id = `acq_${crypto.randomUUID()}`;
-    this.insertAcquisition(id, trigger, policyVersion);
+    this.insertAcquisition(id, trigger);
     return this.getAcquisition(id)!;
   }
 
-  private insertAcquisition(id: string, trigger: string, policyVersion: number): void {
-    this.exec(
-      `INSERT INTO acquisitions (id, trigger, status, requested_at, policy_version) VALUES (?, ?, 'queued', ?, ?)`,
-      id,
-      trigger,
-      new Date(this.deps.now()).toISOString(),
-      policyVersion,
-    );
+  private insertAcquisition(id: string, trigger: string): void {
+    this.exec(`INSERT INTO acquisitions (id, trigger, status, requested_at) VALUES (?, ?, 'queued', ?)`, id, trigger, new Date(this.deps.now()).toISOString());
   }
 
   private nextQueued(): Acquisition | undefined {
@@ -1150,7 +1141,7 @@ export class RunnerCore {
     const memo = this.memo(acquisitionId);
     const declared = memo.declared?.find((product) => product.productKey === productKey);
     if (!declared || !memo.normalizer) throw new NormalizedInputError(`Product ${productKey} was not declared`);
-    const policy = this.requirePolicy();
+    const policy = this.requireFeed().policy;
     const context: RecordContext = {
       feedId: this.requireFeed().id,
       acquisitionId,
@@ -1361,7 +1352,7 @@ export class RunnerCore {
       updatedAt: new Date(now).toISOString(),
       // Pace per library: several feeds read the same way share one polite rate; a source that states how often one of
       // its slices may be read is never read faster than that.
-      nextAt: new Date(now + Math.max(20_000, 6_000 * this.backfillPeers, (this.feed()?.resolved.history?.minSliceSeconds ?? 0) * 1000)).toISOString(),
+      nextAt: new Date(now + Math.max(20_000, 6_000 * this.backfillPeers, (this.feed()?.history?.minSliceSeconds ?? 0) * 1000)).toISOString(),
     };
     delete next.lastError;
     this.setState("backfill", next);
@@ -1374,10 +1365,11 @@ export class RunnerCore {
    * started twice; it stops by itself when the source says it is exhausted.
    */
   private maybeStartBackfill(): void {
-    const history = this.feed()?.resolved.history;
+    const feed = this.feed();
+    const history = feed?.history;
     if (!history || !this.deps.lakeAvailable || this.getState<BackfillState>("backfill")) return;
     // A policy that keeps no history walks none either.
-    if (this.policy()?.collection.historyMode !== "changes") return;
+    if (feed?.policy.historyMode !== "changes") return;
     const now = this.deps.now();
     const at = new Date(now).toISOString();
     const floor = new Date(now);
@@ -1438,7 +1430,6 @@ function mapAcquisition(row: AcquisitionRow, feedId: string): Acquisition {
     // SAFETY: status is written only from the AcquisitionStatus union.
     status: row.status as AcquisitionStatus,
     requestedAt: row.requested_at,
-    policyVersion: row.policy_version,
   };
   if (row.started_at) acquisition.startedAt = row.started_at;
   if (row.completed_at) acquisition.completedAt = row.completed_at;
@@ -1503,7 +1494,6 @@ interface AcquisitionRow extends Record<string, SqlStorageValue> {
   rows: number | null;
   revisions: number | null;
   history_rows: number | null;
-  policy_version: number;
   error: string | null;
   error_code: string | null;
 }
@@ -1573,7 +1563,7 @@ export function nextRunAfter(feedId: string, now: number, cadenceSeconds: number
 
 /** What a feed collects, as its identity and configuration say. */
 function sourceOf(feed: Feed): string {
-  return `${feed.resolved.resourceKey}|${feed.resolved.configHash}`;
+  return `${feed.resourceKey}|${feed.configHash}`;
 }
 
 function objectKeysOf(entry: ProductIndexEntry): string[] {

@@ -10,14 +10,10 @@ export const FEED = defineFeed(IPMA_DEPLOYMENT, {
   topics: ["environment", "weather"],
   config: { feed: "uv-index" },
   policy: {
-    name: "IPMA UV forecast reference",
-    version: 2,
-    collection: {
-      cadenceSeconds: 14_400,
-      timeoutSeconds: 30,
-      maxBytes: 128 * 1024,
-      historyMode: "changes",
-    },
+    cadenceSeconds: 14_400,
+    timeoutSeconds: 30,
+    maxBytes: 128 * 1024,
+    historyMode: "changes",
   },
   staleAfterSeconds: 28_800,
   /** Every four hours: IPMA's UV index forecast, with the district table it refers to. */

@@ -10,14 +10,10 @@ export const FEED = defineFeed(IPMA_DEPLOYMENT, {
   topics: ["environment", "weather"],
   config: { feed: "warnings" },
   policy: {
-    name: "IPMA warning changes",
-    version: 3,
-    collection: {
-      cadenceSeconds: 1_800,
-      timeoutSeconds: 30,
-      maxBytes: 128 * 1024,
-      historyMode: "changes",
-    },
+    cadenceSeconds: 1_800,
+    timeoutSeconds: 30,
+    maxBytes: 128 * 1024,
+    historyMode: "changes",
   },
   staleAfterSeconds: 3_600,
   /** Every half hour: IPMA's current weather warnings, with the district table they refer to. */

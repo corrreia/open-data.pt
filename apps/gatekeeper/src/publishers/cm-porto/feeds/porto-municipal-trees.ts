@@ -17,8 +17,8 @@ export const FEED = defineFeed(CKAN_DEPLOYMENT, {
   // About 72,000 trees: the 6.5 MB CSV normalizes to more than the 16 MiB default output cap.
   policy: {
     ...DAILY_REFERENCE,
-    name: "Porto CKAN daily large reference snapshot",
-    collection: { ...DAILY_REFERENCE.collection, timeoutSeconds: 180, maxOutputBytes: 64 * 1024 * 1024 },
+    timeoutSeconds: 180,
+    maxOutputBytes: 64 * 1024 * 1024,
   },
   staleAfterSeconds: 604_800,
   /** Once a day: Porto's tree inventory resource on its CKAN portal, downloaded only when it has changed. */

@@ -19,10 +19,9 @@ export const ANEPC_API_ORIGIN = "https://api.sgifr.gov.pt";
 export const ANEPC_MAX_BYTES = 4 * 1024 * 1024;
 
 export const ANEPC_FEEDS = {
+  // Active protection-and-relief operations published by ANEPC through SGIFR, including accidents and fires.
   "active-occurrences": {
     kind: "active-occurrences",
-    title: "Active civil-protection occurrences",
-    description: "Active protection-and-relief operations published by ANEPC through SGIFR, including accidents and fires.",
     semantics: { domainSubject: "event", defaultProductRole: "event-log" },
   },
 } as const satisfies Record<string, FeedKindDescription>;

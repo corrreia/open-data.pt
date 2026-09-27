@@ -172,7 +172,7 @@ describe("GBFS Gatekeeper", () => {
       "tubabike-barcelos",
     ]);
     expect(reference.map((example) => example.slug).toSorted()).toEqual(status.map((example) => `${example.slug}-reference`).toSorted());
-    expect(reference.every((example) => example.policy.collection.cadenceSeconds === 86_400)).toBe(true);
+    expect(reference.every((example) => example.policy.cadenceSeconds === 86_400)).toBe(true);
     for (const example of reference) {
       const partner = status.find((candidate) => `${candidate.slug}-reference` === example.slug);
       expect(example.config.url).toBe(partner?.config.url);
@@ -181,7 +181,7 @@ describe("GBFS Gatekeeper", () => {
   });
 
   it("polls each system as fast as its data really moves", () => {
-    const cadence = (slug: string) => feedsOf("gbfs").find((example) => example.slug === slug)?.policy.collection.cadenceSeconds;
+    const cadence = (slug: string) => feedsOf("gbfs").find((example) => example.slug === slug)?.policy.cadenceSeconds;
 
     expect(cadence("bird-lisbon")).toBe(180);
     expect(cadence("bird-cascais")).toBe(300);
@@ -201,11 +201,11 @@ describe("GBFS Gatekeeper", () => {
   it("ships every working additional Portuguese system", () => {
     expect(newExamples.map((example) => example.slug)).toEqual(["bird-cascais", "bird-matosinhos", "bird-porto", "tubabike-barcelos"]);
     expect(feedsOf("gbfs").some((example) => example.slug === "bird-braga")).toBe(true);
-    expect(newExamples.every((example) => example.policy.collection.cadenceSeconds === (example.publisher === "bird" ? 300 : 600))).toBe(true);
+    expect(newExamples.every((example) => example.policy.cadenceSeconds === (example.publisher === "bird" ? 300 : 600))).toBe(true);
     expect(
       newExamples
         .filter((example) => example.publisher === "bird")
-        .every((example) => example.policy.collection.withoutHistory?.includes("vehicles") && example.policy.collection.withoutHistory.includes("stations")),
+        .every((example) => example.policy.withoutHistory?.includes("vehicles") && example.policy.withoutHistory.includes("stations")),
     ).toBe(true);
   });
 
@@ -305,8 +305,8 @@ describe("GBFS Bird feeds", () => {
     for (const slug of ["bird-porto", "bird-cascais", "bird-matosinhos"]) {
       const bird = feedsOf("gbfs").find((entry) => entry.slug === slug);
       expect(bird?.config.url).toMatch(/\/gbfs\.json$/);
-      expect(bird?.policy.collection.cadenceSeconds).toBe(300);
-      expect(bird?.policy.collection.withoutHistory).toEqual(["vehicles", "stations"]);
+      expect(bird?.policy.cadenceSeconds).toBe(300);
+      expect(bird?.policy.withoutHistory).toEqual(["vehicles", "stations"]);
     }
     expect(feedsOf("gbfs").find((entry) => entry.slug === "bird-braga")).toBeDefined();
   });

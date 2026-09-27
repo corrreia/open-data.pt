@@ -11,7 +11,7 @@ The one trusted Worker that carries every library — `arcgis`, `ckan`, `gtfs`, 
 
 The Worker is wiring: every listed library, built from the vars each declares and the secrets and buckets the Worker binds, and every feed every publisher folder lists. Format and source code are libraries; the Worker is only their deployment unit. A feed's `source` key names its library, and that is what routes it. Topics and the publisher are labels on a feed, not code boundaries: topics overlap, and a publisher may be read through more than one library.
 
-Its RPC answers `describe`, `listFeedKinds`, `resolveFeed`, `collect`, `exampleFeeds` (every feed of a publisher we may republish), `catalog` (the publishers, licences and topics those feeds name) and `catalogVersion` (a digest of the three, which tells the kernel a release has changed them).
+Its RPC answers `catalog` (every feed of a publisher we may republish, each resolved to its identity and carrying its policy, with the publishers, licences and topics those feeds name), `catalogVersion` (a digest of the catalog, which tells the kernel a release has changed it) and `collect`.
 
 ## Library
 
@@ -27,11 +27,11 @@ What an adapter hands the shared collector: a typed body with provenance, comple
 
 ## Feed kind
 
-One capability a library declares: what its facts are about, what role its products play by default, and how far back its history reaches. How often it is collected, and under what licence it is served, are its policy's business.
+One capability a library declares: what its facts are about, what role its products play by default, and how far back its history reaches. It is the Gatekeeper's: the kernel is told a feed's identity, whether its facts are events or observations, and its history, never its kind. How often it is collected, and under what licence it is served, are its policy's and its feed's business.
 
 ## Feed
 
-One repeatable collection definition: library, canonical resolved source configuration/resource identity, feed semantics, policy, and semantic feed epoch. Administrative edits do not rotate the epoch, except its title and description: a feed of one product names it as the feed is named, so a new name makes the next collection read its source whole.
+One repeatable collection definition: library, resource identity and configuration digest (as the Gatekeeper resolves them; the configuration itself stays in the Gatekeeper), whether its facts are events or observations, its history, its policy, and semantic feed epoch. Administrative edits do not rotate the epoch, except its title and description: a feed of one product names it as the feed is named, so a new name makes the next collection read its source whole.
 
 A feed is a file under its publisher's `feeds/`, listed in their `index.ts`: its slug, what it is (`title`, `description`), the terms it is served under (`licence`, `attribution`), its `topics`, its configuration and policy, and its own `fetch`, `backfill` and `transform`. Its slug is its identity and never changes. A feed is how data is collected, never shown: the site lists each of its products, every table and series on its own, and a feed of one product names it as the feed is named.
 
@@ -57,7 +57,7 @@ The terms a product is served under, one key of `LICENCES` per set of terms, as 
 
 ## Policy
 
-Versioned limits and rules for collection: cadence, timeout, size, and history mode (`changes` or `latest`) with the products it leaves out. The terms a feed is served under are the feed's, not its policy's. A product keeps history when its policy keeps changes and does not name it in `withoutHistory`; nothing else decides it. Retry counts and the history backlog budget are the kernel's, the same for every feed.
+A feed's limits and rules for collection, declared in its file (siblings share one constant): cadence, timeout, size, and history mode (`changes` or `latest`) with the products it leaves out. The terms a feed is served under are the feed's, not its policy's. A product keeps history when its policy keeps changes and does not name it in `withoutHistory`; nothing else decides it. Retry counts and the history backlog budget are the kernel's, the same for every feed.
 
 ## Collection
 
@@ -101,7 +101,7 @@ The FeedRunner Durable Object that owns one feed's schedule, checkpoint, product
 
 ## Registry
 
-The small Durable Object that stores feed definitions and policies, slug ownership, and the atomically selected product index with each record product's chunk list, and mirrors each runner's status and recent acquisitions. A product read is one call to it: staleness, whether the public may read it, whether it serves history, and its cadence are computed then. Its alarms are the example sync and the daily lake delivery audit.
+The small Durable Object that stores feed definitions with their policies, slug ownership, and the atomically selected product index with each record product's chunk list, and mirrors each runner's status and recent acquisitions. A product read is one call to it: staleness, whether the public may read it, whether it serves history, and its cadence are computed then. Its alarms are the catalog sync and the daily lake delivery audit.
 
 ## Lake
 

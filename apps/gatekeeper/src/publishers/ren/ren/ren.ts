@@ -117,8 +117,6 @@ const REN_CHART_FEEDS: RenFeedCatalogue =
       kind,
       {
         kind,
-        title: definition.title,
-        description: definition.description,
         semantics: {
           domainSubject: "observation",
           defaultProductRole: "time-series",

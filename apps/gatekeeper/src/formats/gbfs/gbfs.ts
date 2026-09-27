@@ -62,19 +62,17 @@ interface ParsedResource {
 }
 
 export const GBFS_FEEDS = {
+  // What a GBFS system has out right now: vehicle positions, fleet counts, and how many vehicles and docks each station holds.
   status: {
     kind: "status",
-    title: "GBFS shared-mobility availability",
-    description: "What a GBFS system has out right now: vehicle positions, fleet counts, and how many vehicles and docks each station holds.",
     semantics: {
       domainSubject: "observation",
       defaultProductRole: "current-state",
     },
   },
+  // What a GBFS system and its stations are: operator, licence, and every station's name, position, address, and capacity.
   reference: {
     kind: "reference",
-    title: "GBFS shared-mobility system and stations",
-    description: "What a GBFS system and its stations are: operator, licence, and every station's name, position, address, and capacity.",
     semantics: {
       domainSubject: "reference",
       defaultProductRole: "reference",

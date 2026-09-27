@@ -10,11 +10,7 @@ export const FEED = defineFeed(CKAN_DEPLOYMENT, {
   attribution: "Câmara Municipal de Águeda via dadosabertos.cm-agueda.pt",
   topics: ["cities", "environment"],
   config: { host: AGUEDA_HOST, dataset: "cotas-de-cheia", resource: "51ebb54b-0249-46b6-8aa9-edf5365a9976", idField: "gid", crs: "EPSG:3763" },
-  policy: {
-    name: "Águeda municipal reference inventory, monthly",
-    version: 1,
-    collection: AGUEDA_MONTHLY,
-  },
+  policy: AGUEDA_MONTHLY,
   staleAfterSeconds: 90 * 86_400,
   /** Once a month: the cotas-de-cheia resource on Águeda's CKAN portal, downloaded only when it has changed. */
   fetch: ({ config, validator, library, fetch }) => new CkanSource(library.hosts, fetch).collect(config, validator),

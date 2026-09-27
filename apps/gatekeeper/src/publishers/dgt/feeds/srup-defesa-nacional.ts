@@ -18,11 +18,7 @@ export const FEED = defineFeed(OGC_DEPLOYMENT, {
     pageSize: "405",
     maxPages: "4",
   },
-  policy: {
-    name: "SRUP weekly register",
-    version: 2,
-    collection: measuredCollection({ source: 6, output: 1, largestRow: 725 }, WEEK),
-  },
+  policy: measuredCollection({ source: 6, output: 1, largestRow: 725 }, WEEK),
   staleAfterSeconds: 2 * WEEK,
   /** Every week: the srup_defesa_militar layer walked page by page from DGT's OGC API, every feature with its outline. */
   fetch: ({ config, library, fetch }) => collectOgcFeed(config, library.hosts, fetch),

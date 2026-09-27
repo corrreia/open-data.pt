@@ -14,7 +14,7 @@ export const FEED = defineFeed(CARRIS_DEPLOYMENT, {
   // About 13,000 stops in a 6.8 MB response, close to the 16 MiB default output cap.
   policy: {
     ...CARRIS_REFERENCE_POLICY,
-    collection: { ...CARRIS_REFERENCE_POLICY.collection, maxOutputBytes: 64 * 1024 * 1024 },
+    maxOutputBytes: 64 * 1024 * 1024,
   },
   staleAfterSeconds: 172_800,
   /** Once a day: Carris Metropolitana's /v2/stops endpoint, which answers with every stop in the network. */

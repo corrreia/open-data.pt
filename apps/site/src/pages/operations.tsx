@@ -95,7 +95,7 @@ const productLinks = (products: Product[]): Named[] => products.map((product) =>
 interface FeedRow {
   feed: Feed;
   source: string;
-  cadence: number | undefined;
+  cadence: number;
   health: Health;
   label: string;
   products: Product[];
@@ -158,7 +158,7 @@ function FeedsSection({ feeds, productsByFeed, loading }: { feeds: Feed[]; produ
         return {
           feed,
           source: formatOf(feed),
-          cadence: feed.cadenceSeconds ?? undefined,
+          cadence: feed.cadenceSeconds,
           health,
           label: healthLabel(feed, health),
           products: productsByFeed.get(feed.id) ?? [],
@@ -204,7 +204,7 @@ function FeedsSection({ feeds, productsByFeed, loading }: { feeds: Feed[]; produ
               title: row.feed.title,
               publisher: row.feed.publisher.name,
               source: row.source,
-              cadenceSeconds: row.cadence ?? null,
+              cadenceSeconds: row.cadence,
               lastSuccessAt: row.feed.lastSuccessAt ?? null,
               nextRunAt: row.feed.nextRunAt ?? null,
               status: row.label,
@@ -220,7 +220,7 @@ function FeedsSection({ feeds, productsByFeed, loading }: { feeds: Feed[]; produ
                   publisher: row.feed.publisher.name,
                   source: row.source,
                   status: row.label,
-                  cadenceSeconds: row.cadence ?? null,
+                  cadenceSeconds: row.cadence,
                   lastSuccessAt: row.feed.lastSuccessAt ?? null,
                   nextRunAt: row.feed.nextRunAt ?? null,
                   products: row.products.map((product) => product.slug),

@@ -21,7 +21,7 @@ export const FEED = defineFeed(NGSI_DEPLOYMENT, {
     // unnamed here would sit in the sensor table as though it described the sensor.
     measures: "co,no2,o3,pm10,pm25,pm1,temperature",
   },
-  policy: { name: "NGSI sensor network", version: 1, collection: SENSOR },
+  policy: SENSOR,
   staleAfterSeconds: 86_400,
   /** Every quarter of an hour: every AirQualityObserved entity Porto's broker holds, page by page. */
   fetch: ({ config, validator, library, fetch }) => collectNgsiFeed(config, validator, library.hosts, fetch),

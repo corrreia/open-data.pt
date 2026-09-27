@@ -10,11 +10,7 @@ export const FEED = defineFeed(CKAN_DEPLOYMENT, {
   attribution: "Câmara Municipal de Águeda via dadosabertos.cm-agueda.pt",
   topics: ["cities", "energy", "mobility"],
   config: { host: AGUEDA_HOST, dataset: "ponto-de-carregamento-de-veiculos-eletricos", resource: "8a0e420f-ebe4-452c-956f-870427811bcd", idField: "id_pontocve" },
-  policy: {
-    name: "Águeda municipal reference inventory, monthly",
-    version: 1,
-    collection: AGUEDA_MONTHLY,
-  },
+  policy: AGUEDA_MONTHLY,
   staleAfterSeconds: 90 * 86_400,
   /** Once a month: the ponto-de-carregamento-de-veiculos-eletricos resource on Águeda's CKAN portal, downloaded only when it has changed. */
   fetch: ({ config, validator, library, fetch }) => new CkanSource(library.hosts, fetch).collect(config, validator),

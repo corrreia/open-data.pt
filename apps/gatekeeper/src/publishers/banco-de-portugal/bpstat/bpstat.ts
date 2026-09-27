@@ -19,7 +19,7 @@ import {
   type SourceConfig,
 } from "#/index";
 
-// JSON-stat is buffered. Keep its source budget small; scoped examples use the
+// JSON-stat is buffered. Keep its source budget small; scoped feeds use the
 // provider's series_ids and obs_last_n filters instead of downloading broad
 // domains. Whole-dataset pagination still reports partial at this cap.
 export const BPSTAT_MAX_BYTES = 2 * 1024 * 1024;
@@ -29,10 +29,9 @@ const MAX_PAGES = 1_000;
 const WRAPPER_BYTES = new TextEncoder().encode('{"pages":[]}').byteLength;
 
 export const BPSTAT_FEEDS = {
+  // A bounded snapshot of one BPstat JSON-stat 2.0 dataset, published once as time-series points.
   dataset: {
     kind: "dataset",
-    title: "Statistical dataset",
-    description: "A bounded snapshot of one BPstat JSON-stat 2.0 dataset, published once as time-series points.",
     semantics: {
       domainSubject: "observation",
       defaultProductRole: "time-series",

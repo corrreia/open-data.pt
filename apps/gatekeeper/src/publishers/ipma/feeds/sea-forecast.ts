@@ -10,14 +10,10 @@ export const FEED = defineFeed(IPMA_DEPLOYMENT, {
   topics: ["environment", "weather"],
   config: { feed: "sea-forecast" },
   policy: {
-    name: "IPMA sea forecast reference",
-    version: 3,
-    collection: {
-      cadenceSeconds: 3_600,
-      timeoutSeconds: 30,
-      maxBytes: 64 * 1024,
-      historyMode: "changes",
-    },
+    cadenceSeconds: 3_600,
+    timeoutSeconds: 30,
+    maxBytes: 64 * 1024,
+    historyMode: "changes",
   },
   staleAfterSeconds: 7_200,
   /** Every hour: IPMA's three daily sea forecasts, with the coastal locations they refer to. */

@@ -16,18 +16,14 @@ export const WEEK = 604_800;
  * before the next run has had its chance at it.
  */
 export const SNIT_WEEKLY_POLICY = {
-  name: "SNIT weekly register",
-  version: 1,
-  collection: {
-    // An act reaches the register when it is published in the Diário da
-    // República — a few a month across the whole system. Weekly catches one
-    // within days; the master plans, the slowest query here, cost the
-    // register about ninety seconds of work for that.
-    cadenceSeconds: WEEK,
-    timeoutSeconds: 120,
-    maxBytes: 4 * MEBIBYTE,
-    maxRecordBytes: 256 * 1024,
-    maxRecords: 20_000,
-    historyMode: "changes",
-  },
+  // An act reaches the register when it is published in the Diário da
+  // República — a few a month across the whole system. Weekly catches one
+  // within days; the master plans, the slowest query here, cost the
+  // register about ninety seconds of work for that.
+  cadenceSeconds: WEEK,
+  timeoutSeconds: 120,
+  maxBytes: 4 * MEBIBYTE,
+  maxRecordBytes: 256 * 1024,
+  maxRecords: 20_000,
+  historyMode: "changes",
 } as const satisfies FeedPolicy;

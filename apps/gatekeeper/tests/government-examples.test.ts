@@ -1,18 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { type ExampleFeed, type NormalizedRow, type TransformContext } from "@open-data-pt/contract";
+import { type NormalizedRow, type TransformContext } from "@open-data-pt/contract";
 import { type Topic } from "@open-data-pt/gatekeeper";
 import { INSTALLED, feedCollection, feedsOf } from "./catalog";
 import { readFixture } from "./support";
+import type { DeclaredFeed } from "@open-data-pt/gatekeeper/catalog";
 
 /** Topics are catalog tags now, so these are the installed feeds carrying each tag, whatever Worker reads them. */
-const tagged = (topic: Topic): ExampleFeed[] => INSTALLED.filter((example) => example.topics.includes(topic));
+const tagged = (topic: Topic): DeclaredFeed[] => INSTALLED.filter((example) => example.topics.includes(topic));
 const GOVERNMENT_EXAMPLES = tagged("government");
 const CITIES_EXAMPLES = tagged("cities");
 /** Telecom statistics from INE; the RIPE NCC network feeds share the tag and are held to their own tests. */
 const TELECOM_EXAMPLES = tagged("telecom").filter((example) => example.config.source === "ine");
 const government = feedsOf("udata").filter((example) => example.topics.includes("government"));
 
-async function normalized(example: ExampleFeed, observedAt: string) {
+async function normalized(example: DeclaredFeed, observedAt: string) {
   const text = readFixture(new URL(example.config.format === "csv" ? "./fixtures/cada-opinions.csv" : "./fixtures/government-registry-sample.json", import.meta.url));
   const { resolved, collector } = await feedCollection(example.slug, {
     fetcher: async (input) => {
@@ -48,9 +49,9 @@ describe("government distribution examples", () => {
     for (const example of government) {
       expect(GOVERNMENT_EXAMPLES.filter((candidate) => candidate.slug === example.slug)).toHaveLength(1);
       expect(CITIES_EXAMPLES.some((candidate) => candidate.slug === example.slug)).toBe(false);
-      expect(example.policy.collection.cadenceSeconds).toBeGreaterThanOrEqual(604_800);
+      expect(example.policy.cadenceSeconds).toBeGreaterThanOrEqual(604_800);
     }
-    expect(government.find((example) => example.slug === "base-procurement-entities-feed")?.policy.collection.cadenceSeconds).toBe(30 * 86_400);
+    expect(government.find((example) => example.slug === "base-procurement-entities-feed")?.policy.cadenceSeconds).toBe(30 * 86_400);
     const startups = government.find((example) => example.slug === "recognised-startups-feed");
     expect(startups && startups.licence).toBe("source-terms");
   });
@@ -71,7 +72,7 @@ describe("government distribution examples", () => {
     expect(telecom).toHaveLength(6);
     expect(TELECOM_EXAMPLES.map((example) => example.slug).toSorted()).toEqual(telecom.map((example) => example.slug).toSorted());
     for (const example of telecom) {
-      expect(example.policy.collection.cadenceSeconds).toBe(30 * 86_400);
+      expect(example.policy.cadenceSeconds).toBe(30 * 86_400);
       expect(example.licence).toBe("cc-by-4.0");
       expect(example.config.indicator).not.toBe("0006853");
     }
@@ -90,7 +91,7 @@ describe("government distribution examples", () => {
     for (const example of examples) {
       expect(example.config.indicator).not.toBe("0009940");
       expect(example.config.dims).toBeUndefined();
-      expect(example.policy.collection.cadenceSeconds).toBe(30 * 86_400);
+      expect(example.policy.cadenceSeconds).toBe(30 * 86_400);
     }
   });
 });

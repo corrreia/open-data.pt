@@ -1,6 +1,6 @@
 import { defineFeed } from "#/catalog/define";
 import { GTFS_DEPLOYMENT, GTFS_NORMALIZER, collectGtfsFeed, transformGtfs } from "#/formats/gtfs/index";
-import { LICENSED_DAILY_STATIC } from "#/formats/gtfs/feeds";
+import { DAILY_STATIC } from "#/formats/gtfs/feeds";
 
 export const FEED = defineFeed(GTFS_DEPLOYMENT, {
   slug: "tcb-barreiro-gtfs-feed",
@@ -16,7 +16,7 @@ export const FEED = defineFeed(GTFS_DEPLOYMENT, {
     url: "https://backend.tcbarreiro.pt/download-gtfs",
     files: "agency,stops,routes,calendar,calendar_dates,shapes",
   },
-  policy: LICENSED_DAILY_STATIC,
+  policy: DAILY_STATIC,
   staleAfterSeconds: 259_200,
   /** Once a day: Transportes Colectivos do Barreiro's GTFS archive, downloaded only when it changed. */
   fetch: ({ config, validator, library, fetch }) => collectGtfsFeed(config, validator, library.hosts, fetch),

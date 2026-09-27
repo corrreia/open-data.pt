@@ -10,11 +10,7 @@ export const FEED = defineFeed(CKAN_DEPLOYMENT, {
   attribution: "Câmara Municipal de Águeda via dadosabertos.cm-agueda.pt",
   topics: ["cities", "environment"],
   config: { host: AGUEDA_HOST, dataset: "contentores-reee", resource: "a7963739-44fd-47ec-b9bf-481141cfcda5", idField: "id", crs: "EPSG:3763" },
-  policy: {
-    name: "Águeda municipal reference inventory, monthly",
-    version: 1,
-    collection: AGUEDA_MONTHLY,
-  },
+  policy: AGUEDA_MONTHLY,
   staleAfterSeconds: 90 * 86_400,
   /** Once a month: the contentores-reee resource on Águeda's CKAN portal, downloaded only when it has changed. */
   fetch: ({ config, validator, library, fetch }) => new CkanSource(library.hosts, fetch).collect(config, validator),

@@ -71,8 +71,8 @@ export interface Feed {
   topics: string[];
   /** The standard the publisher shares it through (arcgis, ckan, opendatasoft, gtfs, gbfs, udata), or own-api. */
   format: string;
-  /** How often it is collected; null for a feed whose policy is gone. */
-  cadenceSeconds: number | null;
+  /** How often it is collected. */
+  cadenceSeconds: number;
   enabled: boolean;
   staleAfterSeconds: number;
   createdAt: string;

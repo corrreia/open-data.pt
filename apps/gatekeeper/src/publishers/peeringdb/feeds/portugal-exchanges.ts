@@ -11,18 +11,15 @@ export const FEED = defineFeed(PEERINGDB_DEPLOYMENT, {
   topics: ["telecom"],
   config: { feed: "exchanges", country: "PT" },
   staleAfterSeconds: 1_209_600,
+  // PeeringDB's directory: republishing it needs PeeringDB's permission.
   policy: {
-    name: "PeeringDB directory — republication permission required",
-    version: 1,
-    collection: {
-      cadenceSeconds: 604_800,
-      timeoutSeconds: 60,
-      maxBytes: 1024 * 1024,
-      maxOutputBytes: 2 * 1024 * 1024,
-      maxRecordBytes: 16 * 1024,
-      maxRecords: 1000,
-      historyMode: "changes",
-    },
+    cadenceSeconds: 604_800,
+    timeoutSeconds: 60,
+    maxBytes: 1024 * 1024,
+    maxOutputBytes: 2 * 1024 * 1024,
+    maxRecordBytes: 16 * 1024,
+    maxRecords: 1000,
+    historyMode: "changes",
   },
   /** Once a week: every page of PeeringDB's active exchanges in Portugal, with their public non-contact fields only. */
   fetch: ({ config, library, fetch }) => collectPeeringdbFeed(config, library.apiOrigin, fetch),

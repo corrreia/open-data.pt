@@ -12,12 +12,10 @@ import {
   type CatalogDescription,
   type CollectionRequest,
   type CollectionResult,
-  type ExampleFeed,
+  type FeedData,
   type FeedGatekeeper,
   type FeedKindDescription,
-  type GatekeeperDescription,
   type ResolvedFeed,
-  type SourceConfig,
 } from "@open-data-pt/gatekeeper";
 import { REGISTRY_ROOM } from "../../src/coordinators";
 import { handleApi } from "../../src/http";
@@ -46,7 +44,7 @@ export default class RuntimeTestWorker extends KernelWorker {
       // What the Registry alarm does, without waiting for the next check: compare the catalog, then apply until nothing is queued.
       let checked = false;
       for (let step = 0; step < 50; step += 1) {
-        const progress = await registry.syncExamples(true);
+        const progress = await registry.syncCatalog(true);
         checked ||= progress.checked;
         if (checked && progress.pending === 0) return Response.json({ data: progress });
       }
@@ -73,8 +71,8 @@ export default class RuntimeTestWorker extends KernelWorker {
   }
 }
 
-/** The vocabularies the fixture Gatekeeper declares: its example's publisher, licence and topic. */
-const CATALOG: CatalogDescription = {
+/** The vocabularies the fixture Gatekeeper declares: its one feed's publisher, licence and topic. */
+const VOCABULARIES: Omit<CatalogDescription, "feeds"> = {
   publishers: [{ id: "fixture-publisher", name: "Fixture Publisher", url: "https://example.test/", logo: "svg" }],
   licences: [{ id: "cc-by-4.0", name: "CC BY 4.0", url: "https://creativecommons.org/licenses/by/4.0/", summary: "Reuse with credit." }],
   topics: [{ id: "economy", name: "Economy" }],
@@ -82,8 +80,6 @@ const CATALOG: CatalogDescription = {
 
 const KIND: FeedKindDescription = {
   kind: "things",
-  title: "Things",
-  description: "Rows the runtime test controls",
   semantics: { domainSubject: "reference", defaultProductRole: "reference" },
 };
 
@@ -93,26 +89,14 @@ export class FixtureGatekeeper extends WorkerEntrypoint<Env> implements FeedGate
     return new Response("RPC only", { status: 404 });
   }
 
-  async describe(): Promise<GatekeeperDescription> {
-    return { kind: "fixture", name: "Fixture" };
-  }
-
-  async listFeedKinds(): Promise<FeedKindDescription[]> {
-    return [KIND];
-  }
-
-  async resolveFeed(config: SourceConfig): Promise<ResolvedFeed> {
-    return resolveFeed(config, { library: "fixture", kinds: [KIND], validate: (value) => value });
-  }
-
-  /** The one example's configuration, as the Registry installed it: this Gatekeeper collects what it lists. */
+  /** The one feed this Gatekeeper lists, collected as its catalog resolved it. */
   async collect(request: CollectionRequest): Promise<CollectionResult> {
-    const [example] = await this.exampleFeeds();
-    if (!example || example.slug !== request.slug) return { kind: "failure", code: "invalid-config", retryable: false };
+    const declared = await this.declared();
+    if (declared.slug !== request.slug) return { kind: "failure", code: "invalid-config", retryable: false };
     return collectNormalized(request, {
-      feed: { slug: example.slug, title: example.title, description: example.description },
+      feed: { slug: declared.slug, title: declared.title, description: declared.description },
       normalizer: { id: "fixture", version: "1" },
-      resolve: () => this.resolveFeed(example.config),
+      resolve: () => resolved(declared),
       source: async () => {
         const object = await this.env.DATA_OBJECTS.get(ROWS_KEY);
         const text = object ? await object.text() : '{"rows":[]}';
@@ -157,37 +141,54 @@ export class FixtureGatekeeper extends WorkerEntrypoint<Env> implements FeedGate
     });
   }
 
-  async exampleFeeds(): Promise<ExampleFeed[]> {
+  async catalog(): Promise<CatalogDescription> {
+    const declared = await this.declared();
+    const resolution = await resolved(declared);
+    const { config: _config, topics, ...data } = declared;
+    return {
+      ...VOCABULARIES,
+      feeds: [
+        {
+          ...data,
+          topics: [...topics],
+          publisher: "fixture-publisher",
+          library: "fixture",
+          resourceKey: resolution.resourceKey,
+          configHash: resolution.configHash,
+          eventTimed: false,
+        },
+      ],
+    };
+  }
+
+  /** Changes with the feed the test writes, as a real Gatekeeper's does with a release. */
+  async catalogVersion(): Promise<string> {
+    return `fixture:${JSON.stringify(await this.catalog())}`;
+  }
+
+  /** The feed as the test last wrote it: its title, and a revision standing for a change to what it collects. */
+  private async declared(): Promise<FeedData> {
     const stored = await this.env.DATA_OBJECTS.get(EXAMPLE_KEY);
     const written = asObject(parseJson(stored ? await stored.text() : "{}"));
     const title = asString(written?.title) ?? "Fixture things";
-    // A revision is a change to what the example collects, as a new query or address would be; a title alone is not.
+    // A revision is a change to what the feed collects, as a new query or address would be; a title alone is not.
     const revision = asString(written?.revision);
-    return [
-      {
-        slug: "fixture-things",
-        title,
-        description: "Runtime fixture",
-        config: revision ? { source: "fixture", feed: "things", revision } : { source: "fixture", feed: "things" },
-        staleAfterSeconds: 3600,
-        publisher: "fixture-publisher",
-        licence: "cc-by-4.0",
-        attribution: "Fixture Publisher",
-        topics: ["economy"],
-        policy: { name: "Fixture", version: 1, collection: { cadenceSeconds: 3600, timeoutSeconds: 30, maxBytes: 1024 * 1024, historyMode: "changes" } },
-      },
-    ];
+    return {
+      slug: "fixture-things",
+      title,
+      description: "Runtime fixture",
+      config: revision ? { source: "fixture", feed: "things", revision } : { source: "fixture", feed: "things" },
+      staleAfterSeconds: 3600,
+      licence: "cc-by-4.0",
+      attribution: "Fixture Publisher",
+      topics: ["economy"],
+      policy: { cadenceSeconds: 3600, timeoutSeconds: 30, maxBytes: 1024 * 1024, historyMode: "changes" },
+    };
   }
+}
 
-  async catalog(): Promise<CatalogDescription> {
-    return CATALOG;
-  }
-
-  /** Changes with the example the test writes, as a real Gatekeeper's does with a release. */
-  async catalogVersion(): Promise<string> {
-    const [example] = await this.exampleFeeds();
-    return `fixture:${example?.title ?? ""}`;
-  }
+function resolved(declared: FeedData): Promise<ResolvedFeed> {
+  return resolveFeed(declared.config, { library: "fixture", kinds: [KIND], validate: (value) => value });
 }
 
 export { bufferedTransform };

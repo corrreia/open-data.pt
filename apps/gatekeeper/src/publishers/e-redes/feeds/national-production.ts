@@ -11,14 +11,10 @@ export const FEED = defineFeed(OPENDATASOFT_DEPLOYMENT, {
   topics: ["energy"],
   config: { host: E_REDES_HOST, dataset: "energia-produzida-total-nacional", orderBy: "datahora DESC", limit: "1000", series: "total,dgm,pre" },
   policy: {
-    name: "Opendatasoft daily series subset",
-    version: 1,
-    collection: {
-      cadenceSeconds: 21_600,
-      timeoutSeconds: 180,
-      maxBytes: 8 * 1024 * 1024,
-      historyMode: "changes",
-    },
+    cadenceSeconds: 21_600,
+    timeoutSeconds: 180,
+    maxBytes: 8 * 1024 * 1024,
+    historyMode: "changes",
   },
   staleAfterSeconds: 172_800,
   /** Every six hours: E-REDES's `energia-produzida-total-nacional` dataset, up to 1000 records ordered by `datahora DESC`. */

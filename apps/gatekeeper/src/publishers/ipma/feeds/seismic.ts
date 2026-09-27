@@ -10,14 +10,10 @@ export const FEED = defineFeed(IPMA_DEPLOYMENT, {
   topics: ["environment"],
   config: { feed: "seismic" },
   policy: {
-    name: "IPMA seismic changes",
-    version: 3,
-    collection: {
-      cadenceSeconds: 3_600,
-      timeoutSeconds: 30,
-      maxBytes: 2 * 1024 * 1024,
-      historyMode: "changes",
-    },
+    cadenceSeconds: 3_600,
+    timeoutSeconds: 30,
+    maxBytes: 2 * 1024 * 1024,
+    historyMode: "changes",
   },
   staleAfterSeconds: 7_200,
   /** Every hour: IPMA's two 30-day seismic event lists. */

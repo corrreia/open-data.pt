@@ -4,6 +4,7 @@ import {
   collectNormalized,
   resolveFeed,
   type CanonicalRecord,
+  type CollectionPolicyDefinition,
   type Completeness,
   type FeedKindDescription,
   type JsonObject,
@@ -16,7 +17,7 @@ import {
 } from "@open-data-pt/gatekeeper";
 import type { ChunkObject } from "../src/chunks";
 import { drainOutbox, runCollection, type EngineOutcome, type LakeSend, type RunnerPort } from "../src/engine";
-import type { Feed, FeedPolicy, ProductIndexEntry } from "../src/feed-model";
+import type { Feed, ProductIndexEntry } from "../src/feed-model";
 import type { LakeTable } from "../src/lake";
 import { ObjectStore } from "../src/object-store";
 import type { SnapshotStore, StoredObject } from "../src/ports";
@@ -71,8 +72,6 @@ export interface FixtureSource {
 
 const KIND: FeedKindDescription = {
   kind: "things",
-  title: "Things",
-  description: "Fixture",
   semantics: { domainSubject: "reference", defaultProductRole: "reference" },
   history: {},
 };
@@ -81,21 +80,15 @@ export async function fixtureResolved(): Promise<ResolvedFeed> {
   return resolveFeed({ feed: "things" }, { library: "fixture", kinds: [KIND], validate: (config) => config });
 }
 
-export function policy(overrides: Partial<FeedPolicy["collection"]> = {}): FeedPolicy {
+export function policy(overrides: Partial<CollectionPolicyDefinition> = {}): CollectionPolicyDefinition {
   return {
-    id: "policy_1",
-    name: "Fixture",
-    version: 1,
-    createdAt: "2026-09-10T00:00:00.000Z",
-    collection: {
-      cadenceSeconds: 3600,
-      timeoutSeconds: 120,
-      maxBytes: 1024 * 1024,
-      historyMode: "changes",
-      maxRecords: 2_000_000,
-      maxOutputBytes: 2 * 1024 * 1024 * 1024,
-      ...overrides,
-    },
+    cadenceSeconds: 3600,
+    timeoutSeconds: 120,
+    maxBytes: 1024 * 1024,
+    historyMode: "changes",
+    maxRecords: 2_000_000,
+    maxOutputBytes: 2 * 1024 * 1024 * 1024,
+    ...overrides,
   };
 }
 
@@ -124,7 +117,7 @@ export interface KernelHarness {
 }
 
 export interface HarnessOptions {
-  policy?: FeedPolicy;
+  policy?: CollectionPolicyDefinition;
   keepChunkBodies?: boolean;
   keepLake?: boolean;
   /** Replace the fixture kind's history capability; null resolves a feed without history. */
@@ -172,18 +165,17 @@ export async function kernelHarness(options: HarnessOptions = {}): Promise<Kerne
   const resolved = await fixtureResolved();
   if (options.history === null) delete resolved.history;
   else if (options.history) resolved.history = options.history;
-  const feedPolicy = options.policy ?? policy();
   const feed: Feed = {
     id: "feed_1",
     slug: "things",
     title: "Things",
     description: "Fixture",
     library: "fixture",
-    config: resolved.config,
-    semantics: resolved.semantics,
-    resolved,
+    resourceKey: resolved.resourceKey,
+    configHash: resolved.configHash,
+    eventTimed: false,
+    policy: options.policy ?? policy(),
     feedEpoch: "epoch-1",
-    policyId: feedPolicy.id,
     enabled: true,
     staleAfterSeconds: 7200,
     publisher: "ine",
@@ -192,7 +184,8 @@ export async function kernelHarness(options: HarnessOptions = {}): Promise<Kerne
     createdAt: "2026-09-10T00:00:00.000Z",
     updatedAt: "2026-09-10T00:00:00.000Z",
   };
-  core.configure(feed, feedPolicy);
+  if (resolved.history) feed.history = resolved.history;
+  core.configure(feed);
   const source: FixtureSource = { records: [], points: [], completeness: "complete", rejected: 0, updateMode: "authoritative-snapshot", kind: "record" };
   const lake: Array<{ table: LakeTable; rows: JsonObject[] }> = [];
   const port: RunnerPort = {

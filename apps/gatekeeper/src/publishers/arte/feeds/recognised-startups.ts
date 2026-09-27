@@ -22,11 +22,7 @@ export const FEED = defineFeed(UDATA_DEPLOYMENT, {
     keyField: "titularNipc",
     eventTimeField: "fileDate",
   },
-  policy: {
-    name: "Companies recognised with startup status",
-    version: 1,
-    collection: { cadenceSeconds: 604_800, timeoutSeconds: 240, maxBytes: 2 * MIB, maxOutputBytes: 8 * MIB, historyMode: "changes" },
-  },
+  policy: { cadenceSeconds: 604_800, timeoutSeconds: 240, maxBytes: 2 * MIB, maxOutputBytes: 8 * MIB, historyMode: "changes" },
   staleAfterSeconds: 1_814_400,
   /** Once a week: the newest JSON release in ARTE's startup registry dataset on dados.gov.pt, downloaded only when it has changed. */
   fetch: ({ config, state, library, fetch }) => collectUdataFeed(config, state, library.hosts, fetch),

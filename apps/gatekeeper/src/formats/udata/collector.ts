@@ -4,10 +4,9 @@ import { TABULAR } from "./transform";
 import { UdataSource, type DistributionSelector, type Fetcher } from "./udata";
 
 export const UDATA_FEEDS = {
+  // One CSV or JSON distribution from a uData dataset, by id or the newest in its format.
   distribution: {
     kind: "distribution",
-    title: "Tabular uData distribution",
-    description: "One CSV or JSON distribution from a uData dataset, by id or the newest in its format.",
     semantics: {
       domainSubject: "reference",
       defaultProductRole: "reference",

@@ -2,8 +2,6 @@ import { defineFeed } from "#/catalog/define";
 import { GBFS_DEPLOYMENT, GBFS_NORMALIZER, GBFS_TRANSFORMER, collectGbfsFeed } from "#/formats/gbfs/index";
 import { REFERENCE_POLICY } from "#/formats/gbfs/feeds";
 
-// Collected under a policy of its own, as TubaBike states a licence (see the dataset).
-const TUBABIKE_REFERENCE_POLICY = { ...REFERENCE_POLICY, name: "GBFS system and station reference, daily, dedicated" } as const;
 export const FEED = defineFeed(GBFS_DEPLOYMENT, {
   slug: "tubabike-barcelos-reference",
   title: "TubaBike stations and system information in Barcelos",
@@ -12,7 +10,7 @@ export const FEED = defineFeed(GBFS_DEPLOYMENT, {
   attribution: "TubaBike — Mobilidade de Barcelos",
   topics: ["mobility"],
   config: { url: "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_bx/gbfs.json", language: "pt", feed: "reference" },
-  policy: TUBABIKE_REFERENCE_POLICY,
+  policy: REFERENCE_POLICY,
   staleAfterSeconds: 172_800,
   /** Once a day: TubaBike's GBFS discovery document, then the system and station-information files it names. */
   fetch: ({ config, validator, library, fetch }) => collectGbfsFeed(config, validator, library.hosts, fetch),

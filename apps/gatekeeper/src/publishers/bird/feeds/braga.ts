@@ -7,8 +7,7 @@ import { DAY_SECONDS, REALTIME_POLICY } from "#/formats/gbfs/feeds";
 // every five minutes buys nothing.
 const EMPTY_SYSTEM_POLICY = {
   ...REALTIME_POLICY,
-  name: "GBFS snapshots of an empty system, daily",
-  collection: { ...REALTIME_POLICY.collection, cadenceSeconds: DAY_SECONDS },
+  cadenceSeconds: DAY_SECONDS,
 } as const;
 
 // Keep the pre-existing Braga definition: removing it would retire published state.

@@ -7,15 +7,22 @@ import {
   isNormalizedFrame,
   parseJson,
   type CollectionRequest,
-  type ExampleFeed,
   type NormalizedFrame,
   type ResolvedFeed,
+  type FeedPolicy,
 } from "#/index";
 import { feedCollection, feedsOf } from "#/tests/catalog";
+import type { DeclaredFeed } from "#/catalog/index";
+import { boundedReportingPeriodPolicy } from "#/formats/opendatasoft/feeds";
+
+/** Whether a feed is collected as a bounded window of reporting periods: its policy is exactly that helper's. */
+function readsBoundedPeriods(policy: FeedPolicy): boolean {
+  return JSON.stringify(policy) === JSON.stringify(boundedReportingPeriodPolicy(policy.cadenceSeconds));
+}
 
 // Opt in by slug or with `opendatasoft`; no production writes are made.
 const selected = (process.env.LIVE_CATALOGS ?? "").split(",");
-const examples = feedsOf("opendatasoft").filter((example) => example.policy.name.endsWith("bounded reporting-period collection"));
+const examples = feedsOf("opendatasoft").filter((example) => readsBoundedPeriods(example.policy));
 
 describe("Opendatasoft bounded reporting-period live collection", () => {
   for (const example of examples) {
@@ -49,7 +56,7 @@ describe("Opendatasoft bounded reporting-period live collection", () => {
         expect(complete.quality.rejectedRecords).toBe(0);
         const counts = { records: frames.filter((frame) => frame.type === "record").length, points: frames.filter((frame) => frame.type === "point").length };
         expect(counts.records + counts.points).toBeGreaterThan(0);
-        expect(bytes.length).toBeLessThanOrEqual(example.policy.collection.maxOutputBytes ?? 16 * 1024 * 1024);
+        expect(bytes.length).toBeLessThanOrEqual(example.policy.maxOutputBytes ?? 16 * 1024 * 1024);
         const keys = new Set<string>();
         const seriesCounts = new Map<string, number>();
         for (const frame of frames) {
@@ -85,8 +92,8 @@ describe("Opendatasoft bounded reporting-period live collection", () => {
   }
 });
 
-function request(example: ExampleFeed, resolved: ResolvedFeed): CollectionRequest {
-  const collection = example.policy.collection;
+function request(example: DeclaredFeed, resolved: ResolvedFeed): CollectionRequest {
+  const collection = example.policy;
   return {
     protocol: NORMALIZED_PROTOCOL,
     slug: example.slug,

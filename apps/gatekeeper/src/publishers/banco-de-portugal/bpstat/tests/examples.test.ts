@@ -1,9 +1,10 @@
 import { readFixture } from "#/tests/support";
 import { describe, expect, it } from "vitest";
-import { isJsonObject, libraryConfig, parseJson, type ExampleFeed, type JsonObject, type JsonValue, type SourceConfig, type TransformContext } from "#/index";
+import { isJsonObject, libraryConfig, parseJson, type JsonObject, type JsonValue, type SourceConfig, type TransformContext } from "#/index";
 import { feedsOf } from "#/tests/catalog";
 import { collectBpstatDataset, validateBpstatFeedConfig } from "#/publishers/banco-de-portugal/bpstat/bpstat";
 import { transformBpstatDataset } from "#/publishers/banco-de-portugal/bpstat/transform";
+import type { DeclaredFeed } from "#/catalog/index";
 
 const BPSTAT_EXAMPLES = feedsOf("bpstat");
 /** The feeds that select series and their latest observations: the catalog expansion. */
@@ -15,7 +16,7 @@ function fixture(slug: string): JsonObject {
   return value;
 }
 
-function context(example: ExampleFeed, observedAt = "2026-09-16T00:00:00Z"): TransformContext {
+function context(example: DeclaredFeed, observedAt = "2026-09-16T00:00:00Z"): TransformContext {
   return {
     feed: {
       slug: example.slug,
@@ -48,8 +49,8 @@ describe("BPstat catalog expansion", () => {
         expect(ids.has(id)).toBe(false);
         ids.add(id);
       }
-      expect(Number(config.lastN) * config.seriesIds!.split(",").length).toBeLessThanOrEqual(example.policy.collection.maxRecords!);
-      expect(example.policy.collection.cadenceSeconds).toBeGreaterThanOrEqual(86_400);
+      expect(Number(config.lastN) * config.seriesIds!.split(",").length).toBeLessThanOrEqual(example.policy.maxRecords!);
+      expect(example.policy.cadenceSeconds).toBeGreaterThanOrEqual(86_400);
     }
   });
 

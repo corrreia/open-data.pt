@@ -6,30 +6,12 @@ const MEBIBYTE = 1024 * 1024;
  * which INE's own endpoint does not return in one call.
  */
 export const DAILY_STATISTICS = {
-  name: "INE daily indicator snapshot",
-  version: 1,
-  collection: {
-    cadenceSeconds: 86_400,
-    timeoutSeconds: 120,
-    maxBytes: 8 * MEBIBYTE,
-    historyMode: "changes",
-  },
+  cadenceSeconds: 86_400,
+  timeoutSeconds: 120,
+  maxBytes: 8 * MEBIBYTE,
+  historyMode: "changes",
 } as const;
 
-export const MONTHLY_SERIES = {
-  ...DAILY_STATISTICS,
-  name: "INE monthly indicator series",
-  collection: {
-    ...DAILY_STATISTICS.collection,
-    cadenceSeconds: 604_800,
-  },
-} as const;
+export const MONTHLY_SERIES = { ...DAILY_STATISTICS, cadenceSeconds: 604_800 } as const;
 
-export const ANNUAL_SERIES = {
-  ...DAILY_STATISTICS,
-  name: "INE annual indicator series",
-  collection: {
-    ...DAILY_STATISTICS.collection,
-    cadenceSeconds: 2_592_000,
-  },
-} as const;
+export const ANNUAL_SERIES = { ...DAILY_STATISTICS, cadenceSeconds: 2_592_000 } as const;

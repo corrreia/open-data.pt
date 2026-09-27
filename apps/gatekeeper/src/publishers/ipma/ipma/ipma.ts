@@ -18,28 +18,25 @@ import { isIpmaDatasetFeed, type IpmaDatasetFeed } from "./datasets";
 const ALLOWED_ORIGIN = "https://api.ipma.pt";
 
 export const IPMA_FEEDS = {
+  // Hourly observations from the last 24 hours, with station names and coordinates.
   "station-observations": {
     kind: "station-observations",
-    title: "Meteorological station observations",
-    description: "Hourly observations from the last 24 hours, with station names and coordinates.",
     semantics: {
       domainSubject: "observation",
       defaultProductRole: "time-series",
     },
   },
+  // Daily meteorological forecasts for Portuguese district capitals and islands for the next three days.
   "daily-forecast": {
     kind: "daily-forecast",
-    title: "Daily city forecasts",
-    description: "Daily meteorological forecasts for Portuguese district capitals and islands for the next three days.",
     semantics: {
       domainSubject: "reference",
       defaultProductRole: "reference",
     },
   },
+  // The last 30 days of seismic events for mainland Portugal, Madeira, and the Azores.
   seismic: {
     kind: "seismic",
-    title: "Seismic events",
-    description: "The last 30 days of seismic events for mainland Portugal, Madeira, and the Azores.",
     semantics: {
       domainSubject: "event",
       defaultProductRole: "event-log",
@@ -47,8 +44,6 @@ export const IPMA_FEEDS = {
   },
   warnings: {
     kind: "warnings",
-    title: "Weather warnings",
-    description: "Weather warnings by district or island, with severity and validity periods.",
     semantics: {
       domainSubject: "event",
       defaultProductRole: "event-log",
@@ -56,47 +51,40 @@ export const IPMA_FEEDS = {
   },
   "uv-index": {
     kind: "uv-index",
-    title: "UV index forecast",
-    description: "Daily ultraviolet index forecasts for IPMA forecast locations.",
     semantics: {
       domainSubject: "observation",
       defaultProductRole: "reference",
     },
   },
+  // Three-day rural fire danger forecasts by municipality code.
   "fire-risk": {
     kind: "fire-risk",
-    title: "Municipal fire risk forecast",
-    description: "Three-day rural fire danger forecasts by municipality code.",
     semantics: {
       domainSubject: "observation",
       defaultProductRole: "current-state",
     },
   },
+  // Three-day wave and sea-surface forecasts for Portuguese coastal locations.
   "sea-forecast": {
     kind: "sea-forecast",
-    title: "Sea forecast",
-    description: "Three-day wave and sea-surface forecasts for Portuguese coastal locations.",
     semantics: {
       domainSubject: "observation",
       defaultProductRole: "reference",
     },
   },
+  // Spatial municipal means of interpolated daily precipitation totals and maximum rates in the latest 20-day window.
   "municipal-precipitation": {
     kind: "municipal-precipitation",
-    title: "Daily municipal precipitation",
-    description: "Spatial municipal means of interpolated daily precipitation totals and maximum rates in the latest 20-day window.",
     semantics: { domainSubject: "observation", defaultProductRole: "time-series" },
   },
+  // Spatial municipal means of interpolated daily minimum, mean and maximum temperatures in the latest 20-day window.
   "municipal-temperature": {
     kind: "municipal-temperature",
-    title: "Daily municipal temperature",
-    description: "Spatial municipal means of interpolated daily minimum, mean and maximum temperatures in the latest 20-day window.",
     semantics: { domainSubject: "observation", defaultProductRole: "time-series" },
   },
+  // Current permissions and restrictions by coastal production zone and species, including partially open zones.
   "shellfish-restrictions": {
     kind: "shellfish-restrictions",
-    title: "Shellfish harvesting restrictions",
-    description: "Current permissions and restrictions by coastal production zone and species, including partially open zones.",
     semantics: { domainSubject: "feature", defaultProductRole: "current-state" },
   },
 } as const satisfies Record<string, FeedKindDescription>;

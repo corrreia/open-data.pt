@@ -23,24 +23,21 @@ export const RIPESTAT_MAX_DAYS = 90;
 const DAY_MS = 86_400_000;
 
 export const RIPESTAT_FEEDS = {
+  // RIR-statistics AS numbers and IPv4/IPv6 resources registered to Portugal, not physical network geolocation or allocation dates.
   "country-resources": {
     kind: "country-resources",
-    title: "Registered country internet resources",
-    description: "RIR-statistics AS numbers and IPv4/IPv6 resources registered to Portugal, not physical network geolocation or allocation dates.",
     semantics: { domainSubject: "reference", defaultProductRole: "reference" },
   },
+  // Bounded daily Portuguese RIS prefix/ASN observations and RIR registered-ASN counts, using source dates and availability boundaries.
   "country-routing": {
     kind: "country-routing",
-    title: "Country internet routing observations",
-    description: "Bounded daily Portuguese RIS prefix/ASN observations and RIR registered-ASN counts, using source dates and availability boundaries.",
     semantics: { domainSubject: "observation", defaultProductRole: "time-series" },
     // One RIPEstat request a slice, which RIPE NCC answered is no burden for them.
     history: { earliest: "2004-01-01T00:00:00.000Z", minSliceSeconds: 20 },
   },
+  // RIPE RIS eight-hour routing snapshots for one AS, one series per count, not first-party customer outages, availability or broadband speeds.
   "routing-status": {
     kind: "routing-status",
-    title: "Autonomous-system routing counts",
-    description: "RIPE RIS eight-hour routing snapshots for one AS, one series per count, not first-party customer outages, availability or broadband speeds.",
     semantics: { domainSubject: "observation", defaultProductRole: "time-series" },
   },
 } as const satisfies Record<string, FeedKindDescription>;
