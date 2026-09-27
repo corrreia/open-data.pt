@@ -1,6 +1,7 @@
 import {
   NormalizedInputError,
   historyCursorKey,
+  isCollectionFailureCode,
   isPermanentCollectionError,
   type CollectionFailureCode,
   type CollectionLimits,
@@ -301,17 +302,29 @@ export class RunnerCore {
   }
 
   /**
-   * One-time rewrite for protocol 5, kept only until every runner has run it once: a checkpoint keeps just its
-   * normalizer and state (this runner now owns its scope), a product stored as a partial snapshot is the delta it
-   * always behaved as, and failed acquisitions gain the code the Gatekeeper gave.
+   * One-time rewrite for protocol 5, kept only until every runner has run it once. A checkpoint keeps just its
+   * normalizer and state, and only if it was read under the configuration and epoch this runner holds: the Gatekeeper
+   * used to check that scope, and this runner owns it now. A product stored as a partial snapshot is the delta it
+   * always behaved as. Failed acquisitions gain the code their message names, so an outage keeps its cause.
    */
   private migrateCollectionContract(): void {
-    this.exec(`UPDATE state SET value_json = json_set(value_json, '$.checkpoint', json_object(
-        'normalizer', json(json_extract(value_json, '$.checkpoint.normalizer')), 'state', json(json_extract(value_json, '$.checkpoint.state'))))
+    this.exec(`UPDATE state SET value_json = CASE
+        WHEN json_extract(value_json, '$.checkpoint.resourceKey') IS (SELECT json_extract(feed.value_json, '$.resolved.resourceKey') FROM state AS feed WHERE feed.key = 'feed')
+          AND json_extract(value_json, '$.checkpoint.configHash') IS (SELECT json_extract(feed.value_json, '$.resolved.configHash') FROM state AS feed WHERE feed.key = 'feed')
+          AND json_extract(value_json, '$.checkpoint.feedEpoch') IS (SELECT json_extract(feed.value_json, '$.feedEpoch') FROM state AS feed WHERE feed.key = 'feed')
+        THEN json_set(value_json, '$.checkpoint', json_object(
+          'normalizer', json(json_extract(value_json, '$.checkpoint.normalizer')), 'state', json(json_extract(value_json, '$.checkpoint.state'))))
+        ELSE json_remove(value_json, '$.checkpoint') END
       WHERE key = 'runtime' AND json_type(value_json, '$.checkpoint.version') IS NOT NULL`);
     this.exec(`UPDATE products SET entry_json = json_set(entry_json, '$.updateMode', 'delta') WHERE json_extract(entry_json, '$.updateMode') = 'partial-snapshot'`);
     const acquisitions = this.rows<{ sql: string }>(`SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'acquisitions'`)[0]?.sql ?? "";
-    if (!acquisitions.includes("error_code")) this.exec(`ALTER TABLE acquisitions ADD COLUMN error_code TEXT`);
+    if (acquisitions.includes("error_code")) return;
+    this.exec(`ALTER TABLE acquisitions ADD COLUMN error_code TEXT`);
+    const named = this.rows<{ id: string; error: string }>(`SELECT id, error FROM acquisitions WHERE status = 'failed' AND error LIKE '%Gatekeeper collection failed: %'`);
+    for (const { id, error } of named) {
+      const code = /Gatekeeper collection failed: ([a-z-]+)/.exec(error)?.[1];
+      if (code !== undefined && isCollectionFailureCode(code)) this.exec(`UPDATE acquisitions SET error_code = ? WHERE id = ?`, code, id);
+    }
   }
 
   private reset(): void {

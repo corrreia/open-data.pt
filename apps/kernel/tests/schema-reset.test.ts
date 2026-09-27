@@ -124,31 +124,60 @@ describe("schema reset", () => {
   });
 
   it("brings a runner written under protocol 4 to protocol 5 in place, keeping what it collected", () => {
-    const database = new DatabaseSync(":memory:");
-    const sql = sqliteStorage(database);
-    const core = new RunnerCore(sql, (body) => body(), {
-      objects: new ObjectStore(new MemorySnapshots()),
-      publish: async () => true,
-      claim: async () => undefined,
-      lakeAvailable: true,
-      now: () => 0,
-    });
-    core.migrate();
-    // What a protocol 4 runner holds: a checkpoint in its scope envelope, a downgraded snapshot, no failure codes.
-    database.exec(`ALTER TABLE acquisitions DROP COLUMN error_code`);
-    const normalizer = { id: "fixture", version: "1" };
-    const state = { validators: { default: { etag: '"v1"' } } };
-    const checkpoint = { version: 2, resourceKey: "fixture:things", configHash: "config", feedEpoch: "epoch", normalizer, state };
-    database.prepare("INSERT INTO state (key, value_json) VALUES ('runtime', ?)").run(JSON.stringify({ checkpoint, consecutiveFailures: 0, consecutiveInterruptions: 0 }));
-    database
-      .prepare("INSERT INTO products (product_key, slug, mode, entry_json) VALUES ('things', 'things', 'small', ?)")
-      .run(JSON.stringify({ slug: "things", updateMode: "partial-snapshot" }));
+    const { database, core } = protocolFourRunner({});
+    const failed = database.prepare(
+      "INSERT INTO acquisitions (id, trigger, status, requested_at, policy_version, error) VALUES (?, 'scheduled', 'failed', '2026-09-27T00:00:00.000Z', 1, ?)",
+    );
+    failed.run("acq_source", "Gatekeeper collection failed: upstream-error");
+    failed.run("acq_cooled", "Gatekeeper collection failed: source-denied Retrying automatically after 2026-09-27T06:00:00.000Z.");
+    failed.run("acq_platform", "Illegal invocation");
 
     core.migrate();
     core.migrate();
 
-    expect(core.runtime().checkpoint).toEqual({ normalizer, state });
+    expect(core.runtime().checkpoint).toEqual({ normalizer: FIXTURE_NORMALIZER, state: FIXTURE_STATE });
     expect(JSON.parse(String(database.prepare("SELECT entry_json FROM products").get()?.entry_json))).toEqual({ slug: "things", updateMode: "delta" });
-    expect(database.prepare("SELECT COUNT(*) AS count FROM pragma_table_info('acquisitions') WHERE name = 'error_code'").get()?.count).toBe(1);
+    // A failure's code was named only in its message; the outage it belongs to keeps its cause.
+    expect(core.getAcquisition("acq_source")?.errorCode).toBe("upstream-error");
+    expect(core.getAcquisition("acq_cooled")?.errorCode).toBe("source-denied");
+    expect(core.getAcquisition("acq_platform")).not.toHaveProperty("errorCode");
   });
+
+  it.each([{ resourceKey: "fixture:other" }, { configHash: "another-config" }, { feedEpoch: "another-epoch" }])(
+    "drops a protocol 4 checkpoint read under another scope than the runner holds: %j",
+    (scope) => {
+      const { core } = protocolFourRunner(scope);
+      core.migrate();
+      expect(core.runtime()).not.toHaveProperty("checkpoint");
+    },
+  );
 });
+
+const FIXTURE_NORMALIZER = { id: "fixture", version: "1" };
+const FIXTURE_STATE = { validators: { default: { etag: '"v1"' } } };
+
+/**
+ * What a protocol 4 runner holds: its feed, a checkpoint in its scope envelope (with `scope` overriding the feed's own),
+ * a downgraded snapshot, and an acquisitions table without failure codes.
+ */
+function protocolFourRunner(scope: { resourceKey?: string; configHash?: string; feedEpoch?: string }) {
+  const database = new DatabaseSync(":memory:");
+  const core = new RunnerCore(sqliteStorage(database), (body) => body(), {
+    objects: new ObjectStore(new MemorySnapshots()),
+    publish: async () => true,
+    claim: async () => undefined,
+    lakeAvailable: true,
+    now: () => 0,
+  });
+  core.migrate();
+  database.exec(`ALTER TABLE acquisitions DROP COLUMN error_code`);
+  const feed = { id: "feed_1", library: "fixture", feedEpoch: "epoch", resolved: { resourceKey: "fixture:things", configHash: "config" } };
+  const checkpoint = { version: 2, resourceKey: "fixture:things", configHash: "config", feedEpoch: "epoch", ...scope, normalizer: FIXTURE_NORMALIZER, state: FIXTURE_STATE };
+  const insert = database.prepare("INSERT INTO state (key, value_json) VALUES (?, ?)");
+  insert.run("feed", JSON.stringify(feed));
+  insert.run("runtime", JSON.stringify({ checkpoint, consecutiveFailures: 0, consecutiveInterruptions: 0 }));
+  database
+    .prepare("INSERT INTO products (product_key, slug, mode, entry_json) VALUES ('things', 'things', 'small', ?)")
+    .run(JSON.stringify({ slug: "things", updateMode: "partial-snapshot" }));
+  return { database, core };
+}

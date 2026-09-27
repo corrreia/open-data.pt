@@ -63,6 +63,7 @@ export {
   assertSourceCheckpoint,
   historyCursorKey,
   isNormalizedFrame,
+  isCollectionFailureCode,
   isPermanentCollectionError,
   isProductSlug,
 } from "./validation";
