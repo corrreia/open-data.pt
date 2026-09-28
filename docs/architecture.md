@@ -118,6 +118,6 @@ The pages come from `apps/site`, a Vite and React build on Cloudflare's Kumo com
 `pnpm deploy:kernel` builds them first. They fetch on initial load, explicit refresh, and visibility
 restoration. They do not open WebSockets or continuously poll.
 
-The MCP server at `/mcp` is built with Cloudflare Code Mode (`apps/kernel/src/mcp.ts`): a `search`
+The MCP server at `/mcp` is built with Cloudflare Code Mode (`apps/kernel/src/api/mcp.ts`): a `search`
 tool over the OpenAPI document and an `execute` tool against the API, each run in a Dynamic Worker
 with no network access.

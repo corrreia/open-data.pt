@@ -16,7 +16,14 @@ apps/gatekeeper/src/
   catalog/                  define.ts, the LICENCES and TOPICS vocabularies, the generated publisher index
   libraries.ts              the libraries the Gatekeeper Worker carries
   publisher-client.ts       the fetch every feed is handed: its publisher's hosts, pace and User-Agent
-apps/kernel/                storage, history and the API; serves the site
+apps/kernel/src/              storage, history and the API; serves the site
+  registry/                 the Registry Durable Object: feed definitions, the product index, the catalog sync
+  runner/                   the FeedRunner Durable Object: one feed's schedule, checkpoint, products and retries
+  collection/               one collection: the Workflow, the call to the Gatekeeper, the normalized stream
+  serving/                  current products as objects in R2
+  history/                  the lake: Pipelines, the outbox, R2 SQL, series summaries
+  api/                      the public read-only API and the MCP server
+  pages/                    what people, crawlers and agents read besides JSON: Markdown, previews, discovery, analytics
 apps/site/                  the site, built into the kernel's static assets
 packages/contract/          what the two Workers say to each other: the RPC, the normalized stream, JSON helpers
 packages/api/               the API's wire shapes, which the kernel builds and the site reads
