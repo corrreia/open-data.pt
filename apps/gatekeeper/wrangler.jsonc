@@ -7,11 +7,11 @@
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": false,
   "preview_urls": false,
-  // SNIRH refuses Paris and Marseille and answers Madrid. Placement moves only this Worker's fetch handler, near
-  // Google Cloud's Madrid region, and PLACED binds the Worker to itself: a placed library's collection is one request
-  // to that handler (src/placed.ts), so it reads SNIRH from Madrid while RPC runs where it always did. Not
-  // `hostname: "snirh.apambiente.pt"`: Cloudflare's probes place SNIRH's server near Paris (docs/publishers/apa.md).
-  "placement": { "region": "gcp:europe-southwest1" },
+  // SNIRH answers only Lisbon. Placement moves only this Worker's fetch handler, near SNIRH's server as TCP probes
+  // find it, and PLACED binds the Worker to itself: a placed library's collection is one request to that handler
+  // (src/placed.ts), so it reads SNIRH from near SNIRH while RPC runs where it always did. TCP, not `hostname`: SNIRH
+  // refuses the HTTP probes from outside Portugal, which placed it near Paris (docs/publishers/apa.md).
+  "placement": { "host": "snirh.apambiente.pt:443" },
   "services": [{ "binding": "PLACED", "service": "open-data-pt-gatekeeper" }],
   // A library's vars are declared with their values in its `deployment.ts`; only what varies by deployment is bound here.
   // Secrets (wrangler secret put): ML_CONSUMER_KEY, ML_CONSUMER_SECRET (Metro Lisboa), NASA_FIRMS_MAP_KEY (NASA FIRMS).

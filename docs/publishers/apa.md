@@ -45,16 +45,22 @@ No credentials. SNIRH has no API: the `snirh` library reads what its own pages r
   and a feed's collections mostly run from the same location, so precipitation, wind speed and
   groundwater levels never got through. The `snirh` library is therefore `placed`: its collections
   run in the Gatekeeper's own `fetch` handler, which `placement` in its Wrangler configuration has
-  Cloudflare run near Madrid, and which the Gatekeeper reaches through a binding to itself
+  Cloudflare run near SNIRH's server, and which the Gatekeeper reaches through a binding to itself
   (`src/placed.ts`). Placement moves only a `fetch` handler, never an RPC method, and a request to a
   binding counts against the 32 Worker invocations one request may make, so a whole collection (the
   wells take about a hundred requests) is one call. Spans record `cloudflare.colo`: SNIRH's requests
-  should all say `MAD`.
+  should all say `LIS`.
 - **Placed near Madrid, not near SNIRH, 28 September 2026.** The first placement was
   `hostname: "snirh.apambiente.pt"`. SNIRH's server is in Portugal (193.136.235.19, announced by FCCN,
   AS1930), but Cloudflare's probes placed it near Paris, and every collection then left from Paris,
   which SNIRH refuses. No cloud region is in Portugal; Madrid is the nearest one, and the location
   SNIRH answered most after Lisbon. Placement cannot name a Cloudflare location itself.
+- **Only Lisbon, 28 September 2026.** Madrid then stopped answering too: in the day's sampled requests,
+  Lisbon 6 answered, Madrid 15 refused, Marseille 3, Milan 2 and Paris 1. The Madrid placement sent
+  every collection to a location SNIRH refuses. Placement is now `host: "snirh.apambiente.pt:443"`,
+  which probes SNIRH with TCP connections. The `hostname` probes were HTTP requests, which SNIRH
+  refuses from outside Portugal as it refuses us; a TCP connection completes from anywhere, so it
+  measures where SNIRH's server is rather than where it answers.
 
 ## Quirks
 
