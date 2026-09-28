@@ -5,7 +5,7 @@ import { PARLIAMENT_NORMALIZER } from "../apps/gatekeeper/src/publishers/assembl
 import { parliamentDocument, type ParliamentDocument } from "../apps/gatekeeper/src/publishers/assembleia-da-republica/parliament/parliament";
 import { feedCollection, feedsOf } from "../apps/gatekeeper/tests/catalog";
 import { readFixture } from "../apps/gatekeeper/tests/support";
-import { readFrames } from "../apps/kernel/src/frames";
+import { readFrames } from "../apps/kernel/src/collection/frames";
 import type { DeclaredFeed } from "@open-data-pt/gatekeeper/catalog";
 
 /*

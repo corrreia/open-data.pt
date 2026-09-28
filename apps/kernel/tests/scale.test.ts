@@ -2,7 +2,7 @@ import { writeFileSync } from "node:fs";
 import { setFlagsFromString } from "node:v8";
 import { runInNewContext } from "node:vm";
 import { describe, expect, it } from "vitest";
-import { kernelHarness, policy } from "./kernel-harness";
+import { kernelHarness, policy } from "#/tests/kernel-harness";
 
 /**
  * The plan's phase 2 exit gate, run on demand: SCALE_ROWS=1000000 npx vitest run tests/scale.test.ts

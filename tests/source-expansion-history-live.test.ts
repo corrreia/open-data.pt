@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { NORMALIZED_PROTOCOL, collectNormalized, type CollectionRequest, type NormalizedCollector, type ResolvedFeed } from "@open-data-pt/gatekeeper";
-import { readFrames } from "../apps/kernel/src/frames";
+import { readFrames } from "../apps/kernel/src/collection/frames";
 import { MAX_RECORD_BYTES } from "../apps/kernel/src/blob-budget";
 import { feedCollection, feedsOf } from "../apps/gatekeeper/tests/catalog";
 import type { DeclaredFeed } from "@open-data-pt/gatekeeper/catalog";

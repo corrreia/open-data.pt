@@ -21,7 +21,14 @@ apps/gatekeeper/src/
                             myinfo  ngsi  ogc  opendatasoft  udata  wfs
   catalog/                  the licences and topics every feed names, and the publisher index
   libraries.ts              the libraries the Worker carries
-apps/kernel/                storage, history and the API; serves the site
+apps/kernel/src/              storage, history and the API; serves the site
+  registry/                 the Registry Durable Object: feed definitions, the product index, the catalog sync
+  runner/                   the FeedRunner Durable Object: one feed's schedule, checkpoint, products and retries
+  collection/               one collection: the Workflow, the call to the Gatekeeper, the normalized stream
+  serving/                  current products as objects in R2
+  history/                  the lake: Pipelines, the outbox, R2 SQL, series summaries
+  api/                      the public read-only API and the MCP server
+  pages/                    what people, crawlers and agents read besides JSON: Markdown, previews, discovery, analytics
 apps/site/                  the site, built into the kernel's static assets
 packages/contract/          what the two Workers say to each other: the RPC (the catalog included),
                             the normalized stream, JSON helpers and validation
@@ -176,7 +183,8 @@ A test sits beside what it tests, with the responses it replays in a `fixtures/`
 apps/gatekeeper/src/publishers/<publisher>/<library>/tests/   a publisher's own library
 apps/gatekeeper/src/formats/<format>/tests/                    a shared format
 apps/gatekeeper/tests/                                         the Gatekeeper as a whole: every feed's identity, the folder rules
-apps/kernel/tests/                                             the kernel
+apps/kernel/src/<folder>/tests/                                one part of the kernel
+apps/kernel/tests/                                             the kernel as a whole: the harness, the runtime, scale
 apps/site/tests/                                               the site
 tests/                                                         only what runs both Workers together
 ```

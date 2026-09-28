@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createTestHarness } from "wrangler";
-import type { Acquisition, Feed } from "../src/feed-model";
-import { openApiDocument } from "../src/openapi";
+import type { Acquisition, Feed } from "#/registry/feed-model";
+import { openApiDocument } from "#/api/openapi";
 import type { JsonObject } from "@open-data-pt/contract";
-import { jsonBody } from "./support";
+import { jsonBody } from "#/tests/support";
 
 // Isolated local Workers: the real kernel, a real Workflow executor, Durable Objects and R2; no production config and no operator.
 const server = createTestHarness({

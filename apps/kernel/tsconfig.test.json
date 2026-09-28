@@ -10,5 +10,6 @@
     "../../packages/lisbon/src/**/*.ts",
     "../../packages/contract/src/**/*.ts",
     "worker-configuration.d.ts"
-  ]
+  ],
+  "exclude": []
 }

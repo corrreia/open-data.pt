@@ -13,7 +13,7 @@ import {
   type ResolvedFeed,
 } from "@open-data-pt/gatekeeper";
 import { isNormalizedFrame } from "../packages/contract/src/validation";
-import { readFrames } from "../apps/kernel/src/frames";
+import { readFrames } from "../apps/kernel/src/collection/frames";
 import { MAX_RECORD_BYTES } from "../apps/kernel/src/blob-budget";
 import { jsonAs } from "./support";
 import { RUNNABLE, runtimeOf, type DeclaredFeed } from "@open-data-pt/gatekeeper/catalog";

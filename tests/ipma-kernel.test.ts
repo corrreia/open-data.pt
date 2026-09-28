@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CanonicalRecord, TransformContext } from "@open-data-pt/contract";
-import { prepareRecord } from "../apps/kernel/src/records";
+import { prepareRecord } from "../apps/kernel/src/collection/records";
 import { IpmaTransformer } from "../apps/gatekeeper/src/publishers/ipma/ipma/transform";
 import { readFixtureBytes } from "../apps/gatekeeper/tests/support";
 
