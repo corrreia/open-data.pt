@@ -1,4 +1,4 @@
-import type { SnapshotStore } from "./ports";
+import type { SnapshotStore } from "#/ports";
 
 export class R2SnapshotStore implements SnapshotStore {
   constructor(private readonly bucket: R2Bucket) {}

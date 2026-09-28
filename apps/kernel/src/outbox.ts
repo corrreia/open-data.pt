@@ -1,7 +1,7 @@
 import type { JsonObject } from "@open-data-pt/contract";
 
-import { BLOB_BYTES, utf8Length } from "./blob-budget";
-import { validateLakeRow, type LakeTable } from "./lake";
+import { BLOB_BYTES, utf8Length } from "#/blob-budget";
+import { validateLakeRow, type LakeTable } from "#/lake";
 
 export type OutboxFlush = (table: LakeTable, rowsJson: string, rows: number) => Promise<void>;
 

@@ -13,9 +13,9 @@ import { asArray, asNumber, asObject, asString, isJsonObject, parseJson, type Js
 import { isbot } from "isbot";
 import { parse as parseReferrer } from "ts-referer-parser";
 
-import { isPage, pagePath } from "./markdown";
-import { NAMING_PARAMETER } from "./page-meta";
-import { routeTemplate } from "./request-guard";
+import { isPage, pagePath } from "#/markdown";
+import { NAMING_PARAMETER } from "#/page-meta";
+import { routeTemplate } from "#/request-guard";
 
 /** The dataset every data point is written to; wrangler.jsonc binds it as USAGE. */
 export const USAGE_DATASET = "open_data_pt_usage";

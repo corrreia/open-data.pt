@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { isJsonArray, isJsonObject, type JsonObject, type NormalizedFrame } from "@open-data-pt/contract";
-import { CollectionFailed, failureFrom } from "../src/engine";
-import { readFrames, type FrameLimits, type FrameScope } from "../src/frames";
-import { chunked, framed, framedText, header, limits, scope } from "./normalized-fixtures";
+import { CollectionFailed, failureFrom } from "#/engine";
+import { readFrames, type FrameLimits, type FrameScope } from "#/frames";
+import { chunked, framed, framedText, header, limits, scope } from "#/tests/normalized-fixtures";
 
 async function drain(stream: ReadableStream<Uint8Array>, frameLimits: FrameLimits = limits, frameScope: FrameScope = scope): Promise<NormalizedFrame[]> {
   const frames: NormalizedFrame[] = [];

@@ -1,7 +1,7 @@
 import { NormalizedInputError, type CanonicalRecord, type JsonObject } from "@open-data-pt/contract";
 
-import { digest, stableStringify } from "./hash";
-import type { ChangeItem } from "./object-store";
+import { digest, stableStringify } from "#/hash";
+import type { ChangeItem } from "#/object-store";
 
 /** Everything needed to classify one record product's rows within one acquisition. */
 export interface RecordContext {

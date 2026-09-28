@@ -26,9 +26,9 @@
  */
 import { LISBON_TIME_ZONE } from "@open-data-pt/lisbon";
 import { asNumber, asString, isJsonObject, parseJson, type JsonObject, type JsonValue } from "@open-data-pt/contract";
-import type { ObjectStore } from "./object-store";
-import { runLakeQuery } from "./query";
-import { InvalidQueryError } from "./serving";
+import type { ObjectStore } from "#/object-store";
+import { runLakeQuery } from "#/query";
+import { InvalidQueryError } from "#/serving";
 
 export const SUMMARY_TIME_ZONE = LISBON_TIME_ZONE;
 /** How long after a Lisbon day ends its points may still arrive; the day is summarised once this has passed. */

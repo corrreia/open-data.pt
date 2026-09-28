@@ -1,20 +1,20 @@
 import { DurableObject } from "cloudflare:workers";
 import { NormalizedInputError, type CatalogFeed, type SourceCheckpoint } from "@open-data-pt/contract";
 
-import { drainOutbox } from "./engine";
-import { cadenceFloorOf, checkForVersion, syncStep, withCadenceFloor, type SyncPorts, type SyncProgress, type SyncState } from "./catalog-sync";
-import type { ManifestChunk } from "./chunks";
-import { definitionFingerprint, keepsHistory, type Acquisition, type Feed, type ProductIndexEntry, type ProductSummary } from "./feed-model";
-import { catalogVersionOf, gatekeeperOf } from "./gatekeeper";
-import { EMPTY_VOCABULARIES, Vocabulary, checkedCatalog, type Vocabularies, type VocabularyRef } from "./vocabulary";
-import { digest } from "./hash";
-import { PipelinesLake, lakeStreams, type LakeTable } from "./lake";
-import { ObjectStore } from "./object-store";
-import { QUERY_DEADLINE_SECONDS, runLakeQuery } from "./query";
-import { SUMMARY_DAYS_PER_WAKE, SUMMARY_DUE_STATE_KEY, summariseSettledDays } from "./summaries";
-import { R2SnapshotStore } from "./r2-snapshot-store";
-import { RegistryStore } from "./registry-store";
-import type { ActivityWindow } from "./registry-store";
+import { drainOutbox } from "#/engine";
+import { cadenceFloorOf, checkForVersion, syncStep, withCadenceFloor, type SyncPorts, type SyncProgress, type SyncState } from "#/catalog-sync";
+import type { ManifestChunk } from "#/chunks";
+import { definitionFingerprint, keepsHistory, type Acquisition, type Feed, type ProductIndexEntry, type ProductSummary } from "#/feed-model";
+import { catalogVersionOf, gatekeeperOf } from "#/gatekeeper";
+import { EMPTY_VOCABULARIES, Vocabulary, checkedCatalog, type Vocabularies, type VocabularyRef } from "#/vocabulary";
+import { digest } from "#/hash";
+import { PipelinesLake, lakeStreams, type LakeTable } from "#/lake";
+import { ObjectStore } from "#/object-store";
+import { QUERY_DEADLINE_SECONDS, runLakeQuery } from "#/query";
+import { SUMMARY_DAYS_PER_WAKE, SUMMARY_DUE_STATE_KEY, summariseSettledDays } from "#/summaries";
+import { R2SnapshotStore } from "#/r2-snapshot-store";
+import { RegistryStore } from "#/registry-store";
+import type { ActivityWindow } from "#/registry-store";
 import {
   RunnerCore,
   type BeginResult,
@@ -27,11 +27,11 @@ import {
   type StagedRecord,
   type StageResult,
   type SweepResult,
-} from "./runner-core";
-import { ingestRunnerReport, OUTAGE_KEEP_MS, OUTAGES_SINCE_KEY, type OutageWindow, type RunnerReport, type RunnerReportReceipt, isSustained } from "./runner-reporting";
+} from "#/runner-core";
+import { ingestRunnerReport, OUTAGE_KEEP_MS, OUTAGES_SINCE_KEY, type OutageWindow, type RunnerReport, type RunnerReportReceipt, isSustained } from "#/runner-reporting";
 
-export type { RunnerReport, RunnerReportReceipt } from "./runner-reporting";
-export type { SyncProgress } from "./catalog-sync";
+export type { RunnerReport, RunnerReportReceipt } from "#/runner-reporting";
+export type { SyncProgress } from "#/catalog-sync";
 
 /** Coordinated names: one registry, one runner per feed. */
 export const REGISTRY_ROOM = "main";

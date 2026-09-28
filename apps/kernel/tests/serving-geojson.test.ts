@@ -1,11 +1,11 @@
 import type { FieldType, JsonObject } from "@open-data-pt/contract";
 import { describe, expect, it } from "vitest";
-import { buildChunks, compareKeys } from "../src/chunks";
-import type { ProductDetail } from "../src/coordinators";
-import { ObjectStore, keys, type SeriesWindow } from "../src/object-store";
-import { InvalidQueryError, Serving, type RowFilters } from "../src/serving";
-import { MemorySnapshots } from "./kernel-harness";
-import { jsonAs } from "./support";
+import { buildChunks, compareKeys } from "#/chunks";
+import type { ProductDetail } from "#/coordinators";
+import { ObjectStore, keys, type SeriesWindow } from "#/object-store";
+import { InvalidQueryError, Serving, type RowFilters } from "#/serving";
+import { MemorySnapshots } from "#/tests/kernel-harness";
+import { jsonAs } from "#/tests/support";
 
 /** One product published over real content-addressed chunks, listed on its entry. */
 async function serving(schemaFields: Array<{ name: string; type: FieldType }>, records: JsonObject[]) {

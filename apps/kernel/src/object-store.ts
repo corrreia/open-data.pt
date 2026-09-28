@@ -1,5 +1,5 @@
 import type { JsonObject } from "@open-data-pt/contract";
-import type { SnapshotStore } from "./ports";
+import type { SnapshotStore } from "#/ports";
 
 /**
  * JSON objects in R2: the whole serving plane. Record products are immutable

@@ -12,7 +12,7 @@ import {
   type SyncPorts,
   type SyncProgress,
   type SyncState,
-} from "../src/catalog-sync";
+} from "#/catalog-sync";
 
 /** A catalog feed of library alpha (slugs starting with a) or beta, resolved as the Gatekeeper sends it. */
 function feed(slug: string, title = slug): CatalogFeed {

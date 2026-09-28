@@ -1,11 +1,11 @@
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import type { CollectionFailureCode } from "@open-data-pt/contract";
-import type { Acquisition } from "../src/feed-model";
-import { RegistryStore } from "../src/registry-store";
-import { ingestRunnerReport, isSustained, type RunnerReport } from "../src/runner-reporting";
-import { fixtureResolved } from "./kernel-harness";
-import { sqliteStorage } from "./sqlite-storage";
+import type { Acquisition } from "#/feed-model";
+import { RegistryStore } from "#/registry-store";
+import { ingestRunnerReport, isSustained, type RunnerReport } from "#/runner-reporting";
+import { fixtureResolved } from "#/tests/kernel-harness";
+import { sqliteStorage } from "#/tests/sqlite-storage";
 
 function acquisition(id: string, requestedAt: string): Acquisition {
   return { id, feedId: "feed_1", trigger: "scheduled", status: "succeeded", requestedAt, completedAt: requestedAt, revisions: 1, historyRows: 1 };

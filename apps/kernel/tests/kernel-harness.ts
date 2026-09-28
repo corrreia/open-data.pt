@@ -15,14 +15,14 @@ import {
   type SourceFetch,
   type StreamingTransform,
 } from "@open-data-pt/gatekeeper";
-import type { ChunkObject } from "../src/chunks";
-import { drainOutbox, runCollection, type EngineOutcome, type LakeSend, type RunnerPort } from "../src/engine";
-import type { Feed, ProductIndexEntry } from "../src/feed-model";
-import type { LakeTable } from "../src/lake";
-import { ObjectStore } from "../src/object-store";
-import type { SnapshotStore, StoredObject } from "../src/ports";
-import { RunnerCore, type RunnerDeps } from "../src/runner-core";
-import { sqliteStorage } from "./sqlite-storage";
+import type { ChunkObject } from "#/chunks";
+import { drainOutbox, runCollection, type EngineOutcome, type LakeSend, type RunnerPort } from "#/engine";
+import type { Feed, ProductIndexEntry } from "#/feed-model";
+import type { LakeTable } from "#/lake";
+import { ObjectStore } from "#/object-store";
+import type { SnapshotStore, StoredObject } from "#/ports";
+import { RunnerCore, type RunnerDeps } from "#/runner-core";
+import { sqliteStorage } from "#/tests/sqlite-storage";
 
 /** R2 in memory, counting what the cost model counts: writes and reads. */
 export class MemorySnapshots implements SnapshotStore {

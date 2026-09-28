@@ -5,10 +5,10 @@
  * for text/markdown. All of it is public and read-only, built on each read
  * from the same API any client reads and from the site's own files.
  */
-import { sha256Hex } from "./hash";
-import type { HeaderMap } from "./errors";
-import { isPage, pageMarkdown, prefersMarkdown, productPage, publisherPage, readCatalog } from "./markdown";
-import { withPageMeta } from "./page-meta";
+import { sha256Hex } from "#/hash";
+import type { HeaderMap } from "#/errors";
+import { isPage, pageMarkdown, prefersMarkdown, productPage, publisherPage, readCatalog } from "#/markdown";
+import { withPageMeta } from "#/page-meta";
 
 /** The MCP server's name and version: what /mcp answers initialize with, and what its Server Card says. */
 export const MCP_SERVER_NAME = "open-data.pt";

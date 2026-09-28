@@ -13,7 +13,7 @@ import type {
   TransformQuality,
 } from "@open-data-pt/contract";
 
-import type { ManifestChunk } from "./chunks";
+import type { ManifestChunk } from "#/chunks";
 
 /** Runtime state a FeedRunner reports to the Registry after every run. */
 export interface BackfillSummary {

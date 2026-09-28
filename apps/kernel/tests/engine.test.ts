@@ -1,9 +1,9 @@
 import type { Completeness } from "@open-data-pt/contract";
 import { describe, expect, it } from "vitest";
-import { PromotionRequired, collectionStep, openableUrl, type CollectingGatekeeper } from "../src/engine";
-import { MAX_RECORD_BYTES, STAGE_BYTES } from "../src/blob-budget";
-import { BACKFILL_START_DELAY_MS, SMALL_PRODUCT_ROWS } from "../src/runner-core";
-import { kernelHarness, policy, record, type KernelHarness } from "./kernel-harness";
+import { PromotionRequired, collectionStep, openableUrl, type CollectingGatekeeper } from "#/engine";
+import { MAX_RECORD_BYTES, STAGE_BYTES } from "#/blob-budget";
+import { BACKFILL_START_DELAY_MS, SMALL_PRODUCT_ROWS } from "#/runner-core";
+import { kernelHarness, policy, record, type KernelHarness } from "#/tests/kernel-harness";
 
 function rows(count: number, value: (index: number) => number | string = (index) => index): ReturnType<typeof record>[] {
   return Array.from({ length: count }, (_, index) => record(`k${String(index).padStart(6, "0")}`, value(index)));

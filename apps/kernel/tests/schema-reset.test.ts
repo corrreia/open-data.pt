@@ -1,11 +1,11 @@
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
-import { ObjectStore } from "../src/object-store";
-import { RegistryStore, REGISTRY_SCHEMA_VERSION } from "../src/registry-store";
-import { RunnerCore } from "../src/runner-core";
-import { dropAllTables, userTables } from "../src/sqlite-reset";
-import { MemorySnapshots } from "./kernel-harness";
-import { sqliteStorage } from "./sqlite-storage";
+import { ObjectStore } from "#/object-store";
+import { RegistryStore, REGISTRY_SCHEMA_VERSION } from "#/registry-store";
+import { RunnerCore } from "#/runner-core";
+import { dropAllTables, userTables } from "#/sqlite-reset";
+import { MemorySnapshots } from "#/tests/kernel-harness";
+import { sqliteStorage } from "#/tests/sqlite-storage";
 
 /**
  * Production Registries hold tables from older schemas, created parent first

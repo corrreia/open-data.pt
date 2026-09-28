@@ -1,8 +1,8 @@
 import { readFileSync, readdirSync } from "node:fs";
 import SwaggerParser from "@apidevtools/swagger-parser";
 import { describe, expect, it } from "vitest";
-import { openApiDocument, scalarReferenceHtml } from "../src/openapi";
-import { jsonAs } from "./support";
+import { openApiDocument, scalarReferenceHtml } from "#/openapi";
+import { jsonAs } from "#/tests/support";
 
 /** An OpenAPI document as the validator takes it. */
 type OpenApiDocument = Exclude<Parameters<typeof SwaggerParser.validate>[0], string>;

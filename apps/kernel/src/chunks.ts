@@ -1,7 +1,7 @@
 import { isJsonString, parseJson, type JsonValue } from "@open-data-pt/contract";
 
-import { MAX_CHUNK_LIST_BYTES, utf8Length } from "./blob-budget";
-import { hash32, sha256Hex } from "./hash";
+import { MAX_CHUNK_LIST_BYTES, utf8Length } from "#/blob-budget";
+import { hash32, sha256Hex } from "#/hash";
 
 /**
  * Current record products are served from immutable, content-addressed chunks,

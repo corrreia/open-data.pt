@@ -1,6 +1,6 @@
 import type { CatalogFeed } from "@open-data-pt/contract";
 
-import { digest } from "./hash";
+import { digest } from "#/hash";
 
 /**
  * Keeping the Registry's feeds in step with the Gatekeeper, with no operator:

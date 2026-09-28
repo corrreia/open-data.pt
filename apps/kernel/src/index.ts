@@ -1,11 +1,11 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
-import { UsageRecorder, isOwnPageFetch, surfaceOf, type CacheOutcome, type McpCall } from "./analytics";
-import { CADENCE_HEADER, cacheTtl, productTtl } from "./cache";
-import { handleSite, type SiteHost } from "./discovery";
-import { handleApi, problem, type ApiContext } from "./http";
-import type { McpHost } from "./mcp";
-import { openApiDocument, scalarReferenceHtml } from "./openapi";
-import { R2SnapshotStore } from "./r2-snapshot-store";
+import { UsageRecorder, isOwnPageFetch, surfaceOf, type CacheOutcome, type McpCall } from "#/analytics";
+import { CADENCE_HEADER, cacheTtl, productTtl } from "#/cache";
+import { handleSite, type SiteHost } from "#/discovery";
+import { handleApi, problem, type ApiContext } from "#/http";
+import type { McpHost } from "#/mcp";
+import { openApiDocument, scalarReferenceHtml } from "#/openapi";
+import { R2SnapshotStore } from "#/r2-snapshot-store";
 import {
   ALLOWED_METHODS,
   GuardError,
@@ -16,10 +16,10 @@ import {
   withinRateLimit,
   type CanonicalRoute,
   type RateLimiters,
-} from "./request-guard";
+} from "#/request-guard";
 
-export { FeedRunner, Registry } from "./coordinators";
-export { CollectionWorkflow } from "./workflow";
+export { FeedRunner, Registry } from "#/coordinators";
+export { CollectionWorkflow } from "#/workflow";
 
 /** One MCP code run may page through a few history windows; past this it is stopped. */
 const MCP_RUN_TIMEOUT_MS = 30_000;
@@ -67,7 +67,7 @@ export default class KernelWorker extends WorkerEntrypoint<Env> {
       const served: Served = { response: new Response(null), cache: "none" };
       try {
         // Loaded on first use: the MCP SDK and its schemas are most of the bundle, and API reads never need them.
-        const { handleMcp } = await import("./mcp");
+        const { handleMcp } = await import("#/mcp");
         served.response = await handleMcp(
           request,
           await this.mcpHost(request, usage, (call) => {
@@ -177,7 +177,7 @@ export default class KernelWorker extends WorkerEntrypoint<Env> {
    * read is counted as the MCP client's, so the page can say what assistants read.
    */
   protected async mcpHost(request: Request, usage: UsageRecorder, onCall: (call: McpCall) => void): Promise<McpHost> {
-    const [{ DynamicWorkerExecutor }, { limitRuns, mcpClientKey }] = await Promise.all([import("@cloudflare/codemode"), import("./mcp")]);
+    const [{ DynamicWorkerExecutor }, { limitRuns, mcpClientKey }] = await Promise.all([import("@cloudflare/codemode"), import("#/mcp")]);
     const key = mcpClientKey(request);
     const limiter = this.env.MCP_RATE_LIMIT;
     const executor = new DynamicWorkerExecutor({ loader: this.env.LOADER, timeout: MCP_RUN_TIMEOUT_MS });

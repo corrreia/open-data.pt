@@ -5,7 +5,7 @@
  */
 import type { Feed as CatalogFeed, Outage, Product as CatalogProduct, Term } from "@open-data-pt/api";
 import type { JsonObject, JsonValue } from "@open-data-pt/contract";
-import type { SiteHost } from "./discovery";
+import type { SiteHost } from "#/discovery";
 
 /** One table or series as the catalog lists it, with the feed it comes from, which gives it its publisher, terms and topics. */
 export interface Listing {

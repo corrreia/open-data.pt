@@ -12,7 +12,7 @@ import {
   type TransformQuality,
 } from "@open-data-pt/contract";
 
-import { chunkIndexFor, chunkListProblem, parseChunkRows, regenerateChunks, servedIdentity, type ChunkSink, type ServingRow } from "./chunks";
+import { chunkIndexFor, chunkListProblem, parseChunkRows, regenerateChunks, servedIdentity, type ChunkSink, type ServingRow } from "#/chunks";
 import {
   definitionFingerprint,
   feedDefinition,
@@ -23,13 +23,13 @@ import {
   type Feed,
   type FeedStatus,
   type ProductIndexEntry,
-} from "./feed-model";
-import { digest } from "./hash";
-import type { LakeTable } from "./lake";
-import { keys, WINDOW, type ChangeItem, type ObjectStore } from "./object-store";
-import { BLOB_BYTES, jsonArrays, MAX_RECORD_BYTES, SMALL_PRODUCT_BYTES, utf8Length } from "./blob-budget";
-import { RecentChanges, recordRevision, retractionRevision, type PreparedRecord, type RecordContext } from "./records";
-import { dropAllTables, userTables, type SqlExec } from "./sqlite-reset";
+} from "#/feed-model";
+import { digest } from "#/hash";
+import type { LakeTable } from "#/lake";
+import { keys, WINDOW, type ChangeItem, type ObjectStore } from "#/object-store";
+import { BLOB_BYTES, jsonArrays, MAX_RECORD_BYTES, SMALL_PRODUCT_BYTES, utf8Length } from "#/blob-budget";
+import { RecentChanges, recordRevision, retractionRevision, type PreparedRecord, type RecordContext } from "#/records";
+import { dropAllTables, userTables, type SqlExec } from "#/sqlite-reset";
 
 /**
  * Everything one FeedRunner Durable Object owns, as plain logic over its

@@ -12,7 +12,7 @@ import {
   type ProductDeclaration,
 } from "@open-data-pt/contract";
 
-import { CollectionDeadline } from "./collection-deadline";
+import { CollectionDeadline } from "#/collection-deadline";
 
 export type HeaderFrame = Extract<NormalizedFrame, { type: "header" }>;
 export type CompleteFrame = Extract<NormalizedFrame, { type: "complete" }>;

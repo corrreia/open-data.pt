@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { RequestError } from "../src/errors";
-import { callRegistry, withHistorySlot, type HistorySlots } from "../src/registry-calls";
+import { RequestError } from "#/errors";
+import { callRegistry, withHistorySlot, type HistorySlots } from "#/registry-calls";
 
 const EVICTED = "Connection closed: this Durable Object instance is no longer active.";
 

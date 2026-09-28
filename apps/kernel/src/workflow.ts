@@ -1,11 +1,11 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
 
-import type { FeedRunner } from "./coordinators";
-import { collectionStep, DELIVERY_STEP_BLOBS, drainOutbox, failureFrom, type EngineOutcome, type EnginePorts, type RunnerPort } from "./engine";
-import { gatekeeperOf } from "./gatekeeper";
-import { PipelinesLake, lakeStreams } from "./lake";
-import { ObjectStore } from "./object-store";
-import { R2SnapshotStore } from "./r2-snapshot-store";
+import type { FeedRunner } from "#/coordinators";
+import { collectionStep, DELIVERY_STEP_BLOBS, drainOutbox, failureFrom, type EngineOutcome, type EnginePorts, type RunnerPort } from "#/engine";
+import { gatekeeperOf } from "#/gatekeeper";
+import { PipelinesLake, lakeStreams } from "#/lake";
+import { ObjectStore } from "#/object-store";
+import { R2SnapshotStore } from "#/r2-snapshot-store";
 
 export interface CollectionParams {
   feedId: string;

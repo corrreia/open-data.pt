@@ -1,8 +1,8 @@
 import { NormalizedInputError, UNSTATED_LICENCE, asArrayOrEmpty, asObject, asString, asStringList, isProductSlug, parseJson } from "@open-data-pt/contract";
 import type { JsonObject } from "@open-data-pt/contract";
-import type { ManifestChunk } from "./chunks";
-import { feedDefinition, type Acquisition, type Feed, type FeedStatus, type ProductIndexEntry, type ProductSummary } from "./feed-model";
-import { dropAllTables, userTables, type SqlExec } from "./sqlite-reset";
+import type { ManifestChunk } from "#/chunks";
+import { feedDefinition, type Acquisition, type Feed, type FeedStatus, type ProductIndexEntry, type ProductSummary } from "#/feed-model";
+import { dropAllTables, userTables, type SqlExec } from "#/sqlite-reset";
 
 /**
  * SQLite inside the Registry Durable Object: feed definitions, a

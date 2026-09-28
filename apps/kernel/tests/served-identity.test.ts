@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { servedIdentity } from "../src/chunks";
-import { prepareRecord, servingJson, type RecordContext } from "../src/records";
+import { servedIdentity } from "#/chunks";
+import { prepareRecord, servingJson, type RecordContext } from "#/records";
 
 const context: RecordContext = {
   feedId: "feed_1",

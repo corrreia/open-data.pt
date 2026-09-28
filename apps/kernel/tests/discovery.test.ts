@@ -2,9 +2,9 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import type { JsonObject, JsonValue } from "@open-data-pt/contract";
 import { describe, expect, it } from "vitest";
-import { SKILL_PATH, handleSite, type SiteHost } from "../src/discovery";
-import { prefersMarkdown } from "../src/markdown";
-import { jsonBody } from "./support";
+import { SKILL_PATH, handleSite, type SiteHost } from "#/discovery";
+import { prefersMarkdown } from "#/markdown";
+import { jsonBody } from "#/tests/support";
 
 const ORIGIN = "https://open-data.pt";
 const BROWSER = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";

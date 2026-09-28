@@ -10,7 +10,7 @@ import {
   writeChunk,
   type ChunkSink,
   type ServingRow,
-} from "../src/chunks";
+} from "#/chunks";
 
 describe("chunk list budget", () => {
   const chunk = (index: number) => ({

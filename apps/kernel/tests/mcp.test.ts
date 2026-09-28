@@ -1,8 +1,8 @@
 import type { Executor } from "@cloudflare/codemode";
 import type { JsonObject } from "@open-data-pt/contract";
 import { describe, expect, it } from "vitest";
-import { MAX_READ_BYTES, fromHostedAssistant, handleMcp, limitRuns, mcpClientKey, type McpHost } from "../src/mcp";
-import { jsonBody } from "./support";
+import { MAX_READ_BYTES, fromHostedAssistant, handleMcp, limitRuns, mcpClientKey, type McpHost } from "#/mcp";
+import { jsonBody } from "#/tests/support";
 
 /** Runs sandbox code in the test process: the Dynamic Worker's contract without its isolation. */
 const localExecutor: Executor = {

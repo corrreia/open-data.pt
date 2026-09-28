@@ -1,6 +1,6 @@
 import type { JsonObject } from "@open-data-pt/contract";
 import { describe, expect, it } from "vitest";
-import { ObjectStore } from "../src/object-store";
+import { ObjectStore } from "#/object-store";
 import {
   MAX_SUMMARY_BUCKETS,
   PUBLISHED_AHEAD_MS,
@@ -16,8 +16,8 @@ import {
   type SummaryDeps,
   type SummaryIndex,
   type SummaryMonth,
-} from "../src/summaries";
-import { MemorySnapshots } from "./kernel-harness";
+} from "#/summaries";
+import { MemorySnapshots } from "#/tests/kernel-harness";
 
 /** The kernel's own vars, as its generated `Env` types them from wrangler.jsonc; the token is a test one. */
 const env: Pick<Env, "CATALOG_TOKEN" | "LAKE_BUCKET" | "CLOUDFLARE_ACCOUNT_ID"> = {

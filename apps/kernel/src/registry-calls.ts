@@ -1,4 +1,4 @@
-import { RequestError } from "./errors";
+import { RequestError } from "#/errors";
 
 /**
  * What the public API asks of the Registry Durable Object, and what keeps those

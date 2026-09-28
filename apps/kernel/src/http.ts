@@ -1,18 +1,18 @@
 import type { Acquisition as ApiAcquisition, Coverage, Feed as ApiFeed } from "@open-data-pt/api";
 import { asObject, asString, isJsonString, parseJson, type JsonObject, type JsonValue } from "@open-data-pt/contract";
 
-import { ANALYTICS_WINDOWS, AnalyticsError, analyticsReport } from "./analytics";
-import { CADENCE_HEADER } from "./cache";
-import { REGISTRY_ROOM, type ProductDetail, type Registry } from "./coordinators";
-import { Vocabulary } from "./vocabulary";
-import { NotFoundError, RequestError, type HeaderMap } from "./errors";
-import type { Acquisition, Feed } from "./feed-model";
-import { ObjectStore } from "./object-store";
-import type { SnapshotStore } from "./ports";
-import { MAX_HISTORY_PAGE, QueryError, runLakeQuery } from "./query";
-import { PUBLISHED_AHEAD_MS, readSummaryFile, readSummaryRange, type SummaryResolution } from "./summaries";
-import { callRegistry, withHistorySlot } from "./registry-calls";
-import { ALLOWED_METHODS, MAX_FILTERS, requestIdOf } from "./request-guard";
+import { ANALYTICS_WINDOWS, AnalyticsError, analyticsReport } from "#/analytics";
+import { CADENCE_HEADER } from "#/cache";
+import { REGISTRY_ROOM, type ProductDetail, type Registry } from "#/coordinators";
+import { Vocabulary } from "#/vocabulary";
+import { NotFoundError, RequestError, type HeaderMap } from "#/errors";
+import type { Acquisition, Feed } from "#/feed-model";
+import { ObjectStore } from "#/object-store";
+import type { SnapshotStore } from "#/ports";
+import { MAX_HISTORY_PAGE, QueryError, runLakeQuery } from "#/query";
+import { PUBLISHED_AHEAD_MS, readSummaryFile, readSummaryRange, type SummaryResolution } from "#/summaries";
+import { callRegistry, withHistorySlot } from "#/registry-calls";
+import { ALLOWED_METHODS, MAX_FILTERS, requestIdOf } from "#/request-guard";
 import {
   InvalidQueryError,
   Serving,
@@ -24,7 +24,7 @@ import {
   type RecordQuery,
   type RowFilters,
   type SeriesQuery,
-} from "./serving";
+} from "#/serving";
 
 /** History windows are at most this long; longer spans take one request per window. */
 const MAX_HISTORY_WINDOW_MS = 366 * 86_400_000;

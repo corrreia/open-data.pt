@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { JsonObject } from "@open-data-pt/contract";
-import { LAKE_ROW_BYTES, PipelinesLake, validateLakeRow, type StreamBinding } from "../src/lake";
-import { OutboxBuffer } from "../src/outbox";
+import { LAKE_ROW_BYTES, PipelinesLake, validateLakeRow, type StreamBinding } from "#/lake";
+import { OutboxBuffer } from "#/outbox";
 
 class MemoryStream implements StreamBinding {
   batches: JsonObject[][] = [];

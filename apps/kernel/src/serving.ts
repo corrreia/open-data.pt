@@ -1,12 +1,12 @@
 import type { Product as ApiProduct } from "@open-data-pt/api";
 import { asObject, asString, isJsonArray, isJsonNumber, isJsonObject, type CanonicalField, type CanonicalSchema, type JsonObject, type JsonValue } from "@open-data-pt/contract";
 
-import type { ChunkObject } from "./chunks";
-import type { ProductDetail, ProductView } from "./coordinators";
-import { NotFoundError } from "./errors";
-import type { Feed } from "./feed-model";
-import type { ChangesWindow, ObjectStore, SeriesChangesWindow, SeriesWindow } from "./object-store";
-import type { Vocabulary } from "./vocabulary";
+import type { ChunkObject } from "#/chunks";
+import type { ProductDetail, ProductView } from "#/coordinators";
+import { NotFoundError } from "#/errors";
+import type { Feed } from "#/feed-model";
+import type { ChangesWindow, ObjectStore, SeriesChangesWindow, SeriesWindow } from "#/object-store";
+import type { Vocabulary } from "#/vocabulary";
 
 /** One equality filter on a string, category or identifier field. */
 export interface FieldFilter {

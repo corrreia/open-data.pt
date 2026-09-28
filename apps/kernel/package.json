@@ -13,5 +13,9 @@
     "isbot": "^5.2.2",
     "ts-referer-parser": "^1.1.0",
     "zod": "^4.6.5"
+  },
+  "imports": {
+    "#/tests/*": "./tests/*.ts",
+    "#/*": "./src/*.ts"
   }
 }

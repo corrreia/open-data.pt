@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { CollectionFailed, failureFrom } from "../src/engine";
-import { BACKFILL_RESUME_MS, BACKFILL_START_DELAY_MS, COOLDOWN_BASE_MS, FRESH_DATA_RETRY_MS, MAX_FAILURE_WAIT_SECONDS, nextRunAfter } from "../src/runner-core";
-import { kernelHarness, policy, record, type KernelHarness } from "./kernel-harness";
+import { CollectionFailed, failureFrom } from "#/engine";
+import { BACKFILL_RESUME_MS, BACKFILL_START_DELAY_MS, COOLDOWN_BASE_MS, FRESH_DATA_RETRY_MS, MAX_FAILURE_WAIT_SECONDS, nextRunAfter } from "#/runner-core";
+import { kernelHarness, policy, record, type KernelHarness } from "#/tests/kernel-harness";
 
 const HOUR = 3_600_000;
 const refused = () => failureFrom(new CollectionFailed("invalid-config", false));

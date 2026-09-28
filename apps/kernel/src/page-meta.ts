@@ -7,9 +7,9 @@
  * the same API the page reads in the browser.
  */
 import { UNSTATED_LICENCE, type JsonObject, type JsonValue } from "@open-data-pt/contract";
-import type { SiteHost } from "./discovery";
+import type { SiteHost } from "#/discovery";
 import type { Feed as CatalogFeed, Product as CatalogProduct, Term } from "@open-data-pt/api";
-import { every, pagePath, read, readIfFound, topicLabel } from "./markdown";
+import { every, pagePath, read, readIfFound, topicLabel } from "#/markdown";
 
 const SITE_NAME = "open-data.pt";
 /** What the home page's preview says, rather than the bare site name. */

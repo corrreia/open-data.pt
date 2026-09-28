@@ -1,9 +1,9 @@
 import { readFileSync } from "node:fs";
 import type { JsonObject, JsonValue } from "@open-data-pt/contract";
 import { describe, expect, it } from "vitest";
-import { handleSite, type SiteHost } from "../src/discovery";
-import { PREVIEW_IMAGE } from "../src/page-meta";
-import { jsonAs } from "./support";
+import { handleSite, type SiteHost } from "#/discovery";
+import { PREVIEW_IMAGE } from "#/page-meta";
+import { jsonAs } from "#/tests/support";
 
 const ORIGIN = "https://open-data.pt";
 

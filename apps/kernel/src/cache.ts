@@ -1,4 +1,4 @@
-import { ANALYTICS_TTL_SECONDS } from "./analytics";
+import { ANALYTICS_TTL_SECONDS } from "#/analytics";
 
 /**
  * Public read endpoints that are safe to cache at the edge. Caching them keeps

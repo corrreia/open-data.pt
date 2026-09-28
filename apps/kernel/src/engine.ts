@@ -17,13 +17,13 @@ import {
   type SourceCheckpoint,
 } from "@open-data-pt/contract";
 
-import { BYTES_PER_CODE_UNIT, SMALL_PRODUCT_BYTES, STAGE_BYTES, utf8Length } from "./blob-budget";
-import { buildChunks, chunkListProblem, compareKeys, parseChunkRows, servedIdentity, type ChunkSink, type ServingRow } from "./chunks";
-import { CollectionDeadline } from "./collection-deadline";
-import { keepsHistory, type ProductIndexEntry } from "./feed-model";
-import { readFrames, type CompleteFrame, type FrameScope, type HeaderFrame } from "./frames";
-import { digest, stableStringify } from "./hash";
-import type { LakeTable } from "./lake";
+import { BYTES_PER_CODE_UNIT, SMALL_PRODUCT_BYTES, STAGE_BYTES, utf8Length } from "#/blob-budget";
+import { buildChunks, chunkListProblem, compareKeys, parseChunkRows, servedIdentity, type ChunkSink, type ServingRow } from "#/chunks";
+import { CollectionDeadline } from "#/collection-deadline";
+import { keepsHistory, type ProductIndexEntry } from "#/feed-model";
+import { readFrames, type CompleteFrame, type FrameScope, type HeaderFrame } from "#/frames";
+import { digest, stableStringify } from "#/hash";
+import type { LakeTable } from "#/lake";
 import {
   keys,
   WINDOW,
@@ -34,9 +34,9 @@ import {
   type PointItem,
   type SeriesChangesWindow,
   type SeriesWindow,
-} from "./object-store";
-import { OutboxBuffer } from "./outbox";
-import { RecentChanges, prepareRecord, recordRevision, retractionRevision, revisionId, servingJson, type PreparedRecord, type RecordContext } from "./records";
+} from "#/object-store";
+import { OutboxBuffer } from "#/outbox";
+import { RecentChanges, prepareRecord, recordRevision, retractionRevision, revisionId, servingJson, type PreparedRecord, type RecordContext } from "#/records";
 import {
   SMALL_PRODUCT_ROWS,
   declareProducts,
@@ -52,7 +52,7 @@ import {
   type StagedRecord,
   type StageResult,
   type SweepResult,
-} from "./runner-core";
+} from "#/runner-core";
 
 /**
  * One collection, run by an executor outside the FeedRunner's billed

@@ -1,7 +1,7 @@
 import type { CollectionFailureCode } from "@open-data-pt/contract";
 
-import type { Acquisition, AcquisitionStatus, FeedStatus } from "./feed-model";
-import type { Outage, OutageCause, RegistryStore } from "./registry-store";
+import type { Acquisition, AcquisitionStatus, FeedStatus } from "#/feed-model";
+import type { Outage, OutageCause, RegistryStore } from "#/registry-store";
 
 /**
  * What a runner tells the Registry when an acquisition ends: its status and its

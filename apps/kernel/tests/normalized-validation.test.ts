@@ -10,9 +10,9 @@ import {
   type NormalizedFrame,
   type ResolvedFeed,
 } from "@open-data-pt/contract";
-import { readFrames, type FrameLimits, type FrameScope } from "../src/frames";
+import { readFrames, type FrameLimits, type FrameScope } from "#/frames";
 
-import { checkpoint, scope, limits, header, framed } from "./normalized-fixtures";
+import { checkpoint, scope, limits, header, framed } from "#/tests/normalized-fixtures";
 
 /** Read a whole stream through the kernel's validator and return its completion frame. */
 async function readNormalizedStream(stream: ReadableStream<Uint8Array>, frameLimits: FrameLimits, frameScope: FrameScope): Promise<Extract<NormalizedFrame, { type: "complete" }>> {

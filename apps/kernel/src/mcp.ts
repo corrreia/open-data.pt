@@ -14,9 +14,9 @@ import { openApiMcpServer, type RequestOptions } from "@cloudflare/codemode/mcp"
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { asObject, asString, parseJson, type JsonValue } from "@open-data-pt/contract";
 
-import { mcpCallOf, type McpCall } from "./analytics";
-import { MCP_SERVER_NAME, MCP_SERVER_VERSION } from "./discovery";
-import { openApiDocument } from "./openapi";
+import { mcpCallOf, type McpCall } from "#/analytics";
+import { MCP_SERVER_NAME, MCP_SERVER_VERSION } from "#/discovery";
+import { openApiDocument } from "#/openapi";
 
 /** The largest API answer handed to sandbox code; bigger reads page with a cursor or narrow with filters. */
 export const MAX_READ_BYTES = 8 * 1024 * 1024;

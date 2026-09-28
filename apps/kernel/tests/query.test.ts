@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { QueryError, runLakeQuery, validate } from "../src/query";
+import { QueryError, runLakeQuery, validate } from "#/query";
 
 /** The kernel's own vars, as its generated `Env` types them from wrangler.jsonc; the token is a test one. */
 const env: Pick<Env, "CATALOG_TOKEN" | "LAKE_BUCKET" | "CLOUDFLARE_ACCOUNT_ID"> = {

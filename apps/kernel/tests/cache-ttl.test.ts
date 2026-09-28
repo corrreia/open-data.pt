@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cacheTtl, productTtl } from "../src/cache";
+import { cacheTtl, productTtl } from "#/cache";
 
 const NOW = Date.parse("2026-09-10T12:00:00.000Z");
 const at = (path: string) => cacheTtl(new URL(`https://open-data.pt${path}`), NOW);

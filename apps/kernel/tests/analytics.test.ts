@@ -14,7 +14,7 @@ import {
   surfaceOf,
   usagePoint,
   type UsageEvent,
-} from "../src/analytics";
+} from "#/analytics";
 
 /** The Worker's account, as its generated `Env` types it: the only value the type allows. */
 const ACCOUNT = "cc05ea77c39684419e087c3b78b5177d";

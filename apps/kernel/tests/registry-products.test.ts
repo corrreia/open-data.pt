@@ -1,10 +1,10 @@
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
-import type { ManifestChunk } from "../src/chunks";
-import type { ProductIndexEntry } from "../src/feed-model";
-import { RegistryStore } from "../src/registry-store";
-import { fixtureResolved } from "./kernel-harness";
-import { sqliteStorage } from "./sqlite-storage";
+import type { ManifestChunk } from "#/chunks";
+import type { ProductIndexEntry } from "#/feed-model";
+import { RegistryStore } from "#/registry-store";
+import { fixtureResolved } from "#/tests/kernel-harness";
+import { sqliteStorage } from "#/tests/sqlite-storage";
 
 function entry(slug: string, kind: "record" | "series", chunks: ManifestChunk[] | null): ProductIndexEntry {
   return {

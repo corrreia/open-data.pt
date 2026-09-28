@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { definitionFingerprint, feedDefinition, type Feed, type FeedStatus } from "../src/feed-model";
+import { definitionFingerprint, feedDefinition, type Feed, type FeedStatus } from "#/feed-model";
 
 const DEFINITION: Feed = {
   id: "feed_1",

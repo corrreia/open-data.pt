@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { openApiDocument } from "../src/openapi";
-import { GuardError, MAX_FILTERS, canonicalRoute, isAllowedMethod, requestIdOf, withinRateLimit } from "../src/request-guard";
+import { openApiDocument } from "#/openapi";
+import { GuardError, MAX_FILTERS, canonicalRoute, isAllowedMethod, requestIdOf, withinRateLimit } from "#/request-guard";
 
 const route = (path: string) => canonicalRoute(new URL(`https://open-data.pt${path}`));
 
