@@ -1,7 +1,7 @@
 import { defineFeed } from "#/catalog/define";
 import { runTransformer } from "#/index";
 import { SNIRH_DEPLOYMENT, SNIRH_NORMALIZER, SNIRH_TRANSFORMER, collectSnirhFeed, collectSnirhHistory } from "#/publishers/apa/snirh/index";
-import { SNIRH_MONTHLY_POLICY } from "#/publishers/apa/snirh/feeds";
+import { SNIRH_WELLS_POLICY } from "#/publishers/apa/snirh/feeds";
 
 export const FEED = defineFeed(SNIRH_DEPLOYMENT, {
   slug: "snirh-groundwater-levels-feed",
@@ -12,7 +12,7 @@ export const FEED = defineFeed(SNIRH_DEPLOYMENT, {
   attribution: "SNIRH — Sistema Nacional de Informação de Recursos Hídricos, APA",
   topics: ["environment", "weather"],
   config: { feed: "readings", reading: "groundwater-level" },
-  policy: SNIRH_MONTHLY_POLICY,
+  policy: SNIRH_WELLS_POLICY,
   staleAfterSeconds: 259_200,
   /** Once a day: the groundwater level readings SNIRH's station database exports, from the last one this feed saw. */
   fetch: ({ config, validator, library, fetch, now }) => collectSnirhFeed(config, validator, library.apiOrigin, fetch, now()),

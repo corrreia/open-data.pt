@@ -70,6 +70,8 @@ const RETRY_LIMIT = 3;
  * for a month.
  */
 export const MAX_FAILURE_WAIT_SECONDS = 6 * 60 * 60;
+/** How long a failed run waits to try again while the data it would replace is still within its cadence. */
+export const FRESH_DATA_RETRY_MS = 24 * 60 * 60_000;
 const LOOKUP_BATCH = 2_000;
 /** Superseded serving objects are deleted this long after they stop being selectable: an edge-cached read may still name them. */
 const GARBAGE_GRACE_MS = 60 * 60_000;
@@ -854,15 +856,16 @@ export class RunnerCore {
         this.setRuntime(next);
         return;
       }
-      // A run the data was not due for, that failed, is not retried early and is not the feed failing: what was read
-      // last is still within its cadence, so the next attempt is the regular one. Data read under another configuration
-      // is not this one's: a changed configuration keeps retrying until it has read. A success recorded before the
-      // source was, counts as this configuration's.
+      // A run the data was not due for, that failed, is not the feed failing: what was read last is still within its
+      // cadence. It is not retried at the quick pace either, but once a day at most until it reads, or at the regular
+      // run if that comes first: a monthly feed that hit one bad afternoon must not show as down for a month. Data read
+      // under another configuration is not this one's: a changed configuration keeps retrying until it has read. A
+      // success recorded before the source was, counts as this configuration's.
       const feed = this.requireFeed();
       const sameSource = runtime.lastSuccessSource === undefined || runtime.lastSuccessSource === sourceOf(feed);
       const regular = runtime.lastSuccessAt && sameSource ? Date.parse(nextRunAfter(feed.id, Date.parse(runtime.lastSuccessAt), policy.cadenceSeconds)) : 0;
       if (regular > now) {
-        next.nextRunAt = new Date(regular).toISOString();
+        next.nextRunAt = new Date(Math.min(regular, now + FRESH_DATA_RETRY_MS)).toISOString();
         this.setRuntime(next);
         return;
       }

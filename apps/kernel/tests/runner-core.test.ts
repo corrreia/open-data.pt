@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CollectionFailed, failureFrom } from "../src/engine";
-import { BACKFILL_RESUME_MS, BACKFILL_START_DELAY_MS, COOLDOWN_BASE_MS, MAX_FAILURE_WAIT_SECONDS, nextRunAfter } from "../src/runner-core";
+import { BACKFILL_RESUME_MS, BACKFILL_START_DELAY_MS, COOLDOWN_BASE_MS, FRESH_DATA_RETRY_MS, MAX_FAILURE_WAIT_SECONDS, nextRunAfter } from "../src/runner-core";
 import { kernelHarness, policy, record, type KernelHarness } from "./kernel-harness";
 
 const HOUR = 3_600_000;
@@ -106,9 +106,23 @@ describe("runner schedule and failure handling", () => {
     expect(h.core.takeDue()?.trigger).toBe("scheduled");
   });
 
-  it("does not retry early a run the data was not yet due for, nor count it as the feed failing", async () => {
+  it("retries a run the data was not yet due for once a day at most, without counting it as the feed failing", async () => {
     const monthly = policy({ cadenceSeconds: 30 * 24 * 3600 });
     const h = await kernelHarness({ policy: monthly });
+    h.source.records = [record("a", 1)];
+    await h.collect();
+    h.clock.now += HOUR;
+    const early = h.core.collectNow("scheduled");
+    h.core.markStarted(early.id, "instance-early");
+    h.core.fail(early.id, unreachable());
+    // Not the quick retries of a failing feed, and not a month away either: tomorrow.
+    expect(Date.parse(h.core.runtime().nextRunAt!)).toBe(h.clock.now + FRESH_DATA_RETRY_MS);
+    expect(h.core.runtime().consecutiveFailures).toBe(0);
+    expect(h.core.getAcquisition(early.id)?.status).toBe("failed");
+  });
+
+  it("waits for the regular run instead when it comes sooner than a day", async () => {
+    const h = await kernelHarness({ policy: policy({ cadenceSeconds: 6 * 3600 }) });
     h.source.records = [record("a", 1)];
     await h.collect();
     const lastSuccess = Date.parse(h.core.runtime().lastSuccessAt!);
@@ -116,9 +130,7 @@ describe("runner schedule and failure handling", () => {
     const early = h.core.collectNow("scheduled");
     h.core.markStarted(early.id, "instance-early");
     h.core.fail(early.id, unreachable());
-    expect(h.core.runtime().nextRunAt).toBe(nextRunAfter("feed_1", lastSuccess, 30 * 24 * 3600));
-    expect(h.core.runtime().consecutiveFailures).toBe(0);
-    expect(h.core.getAcquisition(early.id)?.status).toBe("failed");
+    expect(h.core.runtime().nextRunAt).toBe(nextRunAfter("feed_1", lastSuccess, 6 * 3600));
   });
 
   it("keeps a checkpoint only for the configuration and epoch it was read under", async () => {

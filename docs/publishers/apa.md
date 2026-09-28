@@ -23,7 +23,8 @@ index have no archive at all, so their history starts from our first collection.
 No credentials. SNIRH has no API: the `snirh` library reads what its own pages read.
 
 - **Station lists need a session.** The station database keeps its filter in a PHP session. The
-  library posts the form (network, parameter, `f_estado=ATIVA` live, empty for history) to
+  library posts the form (network, parameter, and an empty `f_estado`: every station, since one SNIRH
+  lists as inactive can still report) to
   `/index.php?idMain=2&idItem=1`, then reads `xml_listaestacoes.php` with the `PHPSESSID` it got.
 - **Readings come from the CSV export**, `paraCSV/dados_csv.php?sites=…&pars=…&tmin=dd/mm/yyyy&tmax=…`.
   Its own form allows 50 station–parameter pairs, and at about 500 stations the server times out at
@@ -37,6 +38,18 @@ No credentials. SNIRH has no API: the `snirh` library reads what its own pages r
   is now read at most once every five seconds (`minIntervalSeconds` in APA's `index.ts`), and under a
   common Chrome User-Agent (`userAgent` there) rather than ours. The history walk still runs, at that
   pace.
+- **Refused from most Cloudflare locations, 27 September 2026.** Even under that name, SNIRH answered
+  403 to the first request of about half the collections, by where they left Cloudflare, not by any
+  header: over seven days of sampled requests, Lisbon 320 answered and none refused, Madrid 440 and 40,
+  Marseille 20 and 50, Paris none and 10. The same requests from outside Cloudflare were all answered,
+  and a feed's collections mostly run from the same location, so precipitation, wind speed and
+  groundwater levels never got through. The `snirh` library is therefore `placed`: its collections
+  run in the Gatekeeper's own `fetch` handler, which `placement.hostname` in its Wrangler configuration
+  has Cloudflare run near `snirh.apambiente.pt`, and which the Gatekeeper reaches through a binding to
+  itself (`src/placed.ts`). Placement moves only a `fetch` handler, never an RPC method, and a request
+  to a binding counts against the 32 Worker invocations one request may make, so a whole collection
+  (the wells take about a hundred requests) is one call. Spans record `cloudflare.colo`: SNIRH's
+  requests should all say `LIS`.
 
 ## Quirks
 

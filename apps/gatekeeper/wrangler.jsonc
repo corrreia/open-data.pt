@@ -7,6 +7,11 @@
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": false,
   "preview_urls": false,
+  // SNIRH answers Lisbon and refuses many other Cloudflare locations. Placement moves only this Worker's fetch
+  // handler, near the host it names, and PLACED binds the Worker to itself: a placed library's collection is one
+  // request to that handler (src/placed.ts), so it reads SNIRH from near SNIRH while RPC runs where it always did.
+  "placement": { "hostname": "snirh.apambiente.pt" },
+  "services": [{ "binding": "PLACED", "service": "open-data-pt-gatekeeper" }],
   // A library's vars are declared with their values in its `deployment.ts`; only what varies by deployment is bound here.
   // Secrets (wrangler secret put): ML_CONSUMER_KEY, ML_CONSUMER_SECRET (Metro Lisboa), NASA_FIRMS_MAP_KEY (NASA FIRMS).
   // Declared by name so deploy fails when one is missing and `wrangler types` types them.

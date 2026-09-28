@@ -8,7 +8,7 @@ import { SNIRH_MAX_BYTES } from "./snirh";
  * weather network takes eleven batches plus the station list.
  */
 const COLLECTION = {
-  timeoutSeconds: 600,
+  timeoutSeconds: 900,
   maxBytes: SNIRH_MAX_BYTES,
   maxOutputBytes: 16 * 1024 * 1024,
   maxRecordBytes: 4 * 1024,
@@ -27,3 +27,9 @@ export const SNIRH_DAILY_POLICY: FeedPolicy = { ...COLLECTION, cadenceSeconds: 2
 
 /** Wells read by hand once a month, and bulletins published once a month: once a day is plenty. */
 export const SNIRH_MONTHLY_POLICY: FeedPolicy = { ...COLLECTION, cadenceSeconds: 86_400 };
+
+/**
+ * The wells, daily like the other monthly readings but about a hundred requests at SNIRH's pace of one every five
+ * seconds: 515 seconds on their own, and past fifteen minutes when they share that pace with the other SNIRH feeds.
+ */
+export const SNIRH_WELLS_POLICY: FeedPolicy = { ...COLLECTION, cadenceSeconds: 86_400, timeoutSeconds: 1800 };

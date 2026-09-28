@@ -316,9 +316,9 @@ async function readingsSlice(reading: SnirhReadingName, mode: Mode, session: Ses
     first = addDays(last, -(definition.historyDays - 1));
     next = { before: `${first}T00:00:00.000Z` };
   }
-  // A live collection asks only for stations still in service; a history slice asks for every station that ever
-  // measured the parameter, since one closed since then may have been reporting in the years it walks.
-  const stations = await stationList(definition, mode.kind === "live" ? "ATIVA" : "", session);
+  // Every station that ever measured the parameter, live as well as in history: "active" is SNIRH's word, not what
+  // reports. On 2026-09-28 a river gauge listed as inactive (COTOVIO, 31H/01H) had sent 24 readings in three days.
+  const stations = await stationList(definition, session);
   const tables: SnirhReadingsTable[] = [];
   for (let index = 0; index < stations.length; index += SNIRH_BATCH_STATIONS) {
     const sites = stations.slice(index, index + SNIRH_BATCH_STATIONS).map((station) => station.site);
@@ -395,15 +395,16 @@ export function parseReadingsCsv(text: string): SnirhReadingsCsv {
 }
 
 /**
- * The stations that measure a parameter. The database keeps its filter in a
- * PHP session, so this takes two requests: post the network, parameter and
- * state as its form does, then read the station list that session now holds.
+ * The stations that measure a parameter, whatever their state. The database
+ * keeps its filter in a PHP session, so this takes two requests: post the
+ * network and parameter as its form does, then read the station list that
+ * session now holds.
  */
-async function stationList(definition: SnirhReading, state: "ATIVA" | "", session: Session): Promise<SnirhStation[]> {
+async function stationList(definition: SnirhReading, session: Session): Promise<SnirhStation[]> {
   const form = new URLSearchParams();
   form.set("f_redes_seleccao[]", definition.network);
   form.set("f_parametros_seleccao[]", definition.parameter);
-  form.set("f_estado", state);
+  form.set("f_estado", "");
   form.set("aplicar_filtro", "1");
   const posted = await request(new URL("/index.php?idMain=2&idItem=1", session.origin), session, "SNIRH station filter", {
     method: "POST",
