@@ -3,7 +3,7 @@ import { NormalizedInputError, isJsonObject, parseJson, type CollectionRequest, 
 /*
  * Collections that run where Cloudflare places this Worker's `fetch` handler.
  *
- * Placement (`placement.hostname` in the Worker's configuration) moves only a
+ * Placement (`placement` in the Worker's configuration) moves only a
  * Worker's `fetch` handler, never its RPC methods, and a request to a service
  * binding counts against the 32 Worker invocations one request may make. So a
  * library that must be read from near its source does not send its requests

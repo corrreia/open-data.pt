@@ -44,12 +44,17 @@ No credentials. SNIRH has no API: the `snirh` library reads what its own pages r
   Marseille 20 and 50, Paris none and 10. The same requests from outside Cloudflare were all answered,
   and a feed's collections mostly run from the same location, so precipitation, wind speed and
   groundwater levels never got through. The `snirh` library is therefore `placed`: its collections
-  run in the Gatekeeper's own `fetch` handler, which `placement.hostname` in its Wrangler configuration
-  has Cloudflare run near `snirh.apambiente.pt`, and which the Gatekeeper reaches through a binding to
-  itself (`src/placed.ts`). Placement moves only a `fetch` handler, never an RPC method, and a request
-  to a binding counts against the 32 Worker invocations one request may make, so a whole collection
-  (the wells take about a hundred requests) is one call. Spans record `cloudflare.colo`: SNIRH's
-  requests should all say `LIS`.
+  run in the Gatekeeper's own `fetch` handler, which `placement` in its Wrangler configuration has
+  Cloudflare run near Madrid, and which the Gatekeeper reaches through a binding to itself
+  (`src/placed.ts`). Placement moves only a `fetch` handler, never an RPC method, and a request to a
+  binding counts against the 32 Worker invocations one request may make, so a whole collection (the
+  wells take about a hundred requests) is one call. Spans record `cloudflare.colo`: SNIRH's requests
+  should all say `MAD`.
+- **Placed near Madrid, not near SNIRH, 28 September 2026.** The first placement was
+  `hostname: "snirh.apambiente.pt"`. SNIRH's server is in Portugal (193.136.235.19, announced by FCCN,
+  AS1930), but Cloudflare's probes placed it near Paris, and every collection then left from Paris,
+  which SNIRH refuses. No cloud region is in Portugal; Madrid is the nearest one, and the location
+  SNIRH answered most after Lisbon. Placement cannot name a Cloudflare location itself.
 
 ## Quirks
 
