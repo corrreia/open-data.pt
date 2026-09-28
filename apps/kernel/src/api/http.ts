@@ -3,7 +3,7 @@ import { asObject, asString, isJsonString, parseJson, type JsonObject, type Json
 
 import { ANALYTICS_WINDOWS, AnalyticsError, analyticsReport } from "#/pages/analytics";
 import { CADENCE_HEADER } from "#/api/cache";
-import { REGISTRY_ROOM, type ProductDetail, type Registry } from "#/coordinators";
+import { REGISTRY_ROOM, type ProductDetail, type Registry } from "#/registry/registry";
 import { Vocabulary } from "#/registry/vocabulary";
 import { NotFoundError, RequestError, type HeaderMap } from "#/api/errors";
 import type { Acquisition, Feed } from "#/registry/feed-model";

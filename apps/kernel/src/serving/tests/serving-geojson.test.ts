@@ -1,7 +1,7 @@
 import type { FieldType, JsonObject } from "@open-data-pt/contract";
 import { describe, expect, it } from "vitest";
 import { buildChunks, compareKeys } from "#/serving/chunks";
-import type { ProductDetail } from "#/coordinators";
+import type { ProductDetail } from "#/registry/registry";
 import { ObjectStore, keys, type SeriesWindow } from "#/serving/object-store";
 import { InvalidQueryError, Serving, type RowFilters } from "#/serving/serving";
 import { MemorySnapshots } from "#/tests/kernel-harness";

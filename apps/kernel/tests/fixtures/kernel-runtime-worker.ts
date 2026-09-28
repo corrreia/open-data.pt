@@ -17,7 +17,7 @@ import {
   type FeedKindDescription,
   type ResolvedFeed,
 } from "@open-data-pt/gatekeeper";
-import { REGISTRY_ROOM } from "../../src/coordinators";
+import { REGISTRY_ROOM } from "../../src/registry/registry";
 import { handleApi } from "../../src/api/http";
 import KernelWorker from "../../src/index";
 export { Registry, FeedRunner, CollectionWorkflow } from "../../src/index";

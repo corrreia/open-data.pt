@@ -18,7 +18,8 @@ import {
   type RateLimiters,
 } from "#/api/request-guard";
 
-export { FeedRunner, Registry } from "#/coordinators";
+export { Registry } from "#/registry/registry";
+export { FeedRunner } from "#/runner/feed-runner";
 export { CollectionWorkflow } from "#/collection/workflow";
 
 /** One MCP code run may page through a few history windows; past this it is stopped. */

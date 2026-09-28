@@ -1,6 +1,6 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
 
-import type { FeedRunner } from "#/coordinators";
+import type { FeedRunner } from "#/runner/feed-runner";
 import { collectionStep, DELIVERY_STEP_BLOBS, drainOutbox, failureFrom, type EngineOutcome, type EnginePorts, type RunnerPort } from "#/collection/engine";
 import { gatekeeperOf } from "#/collection/gatekeeper";
 import { PipelinesLake, lakeStreams } from "#/history/lake";

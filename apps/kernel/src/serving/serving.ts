@@ -2,7 +2,7 @@ import type { Product as ApiProduct } from "@open-data-pt/api";
 import { asObject, asString, isJsonArray, isJsonNumber, isJsonObject, type CanonicalField, type CanonicalSchema, type JsonObject, type JsonValue } from "@open-data-pt/contract";
 
 import type { ChunkObject } from "#/serving/chunks";
-import type { ProductDetail, ProductView } from "#/coordinators";
+import type { ProductDetail, ProductView } from "#/registry/registry";
 import { NotFoundError } from "#/api/errors";
 import type { Feed } from "#/registry/feed-model";
 import type { ChangesWindow, ObjectStore, SeriesChangesWindow, SeriesWindow } from "#/serving/object-store";
