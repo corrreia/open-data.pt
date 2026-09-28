@@ -136,8 +136,8 @@ export interface LibraryDeployment<E, C = never> {
   /** The CPU limit one collection needs; the Worker takes the largest any library declares. */
   cpuMs?: number;
   /**
-   * Its collections run in the Worker's own `fetch` handler, which Cloudflare runs near `placement.hostname` in the
-   * Worker's configuration, instead of wherever the kernel asked from: for a source that answers only some of
+   * Its collections run in the Worker's own `fetch` handler, which Cloudflare runs where `placement` in the Worker's
+   * configuration says, instead of wherever the kernel asked from: for a source that answers only some of
    * Cloudflare's locations. One Worker has one placement, so at most one source can need it.
    */
   placed?: boolean;
