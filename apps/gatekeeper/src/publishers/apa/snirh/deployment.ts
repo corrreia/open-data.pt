@@ -6,8 +6,8 @@ export const SNIRH_DEPLOYMENT: LibraryDeployment<{ readonly SNIRH_API_ORIGIN: st
   source: "snirh",
   name: "SNIRH water resources",
   vars: { SNIRH_API_ORIGIN: SNIRH_ORIGIN },
-  // SNIRH refuses many of Cloudflare's locations (Marseille, Paris) and answers Madrid's: its collections run in the
-  // Gatekeeper's fetch handler, placed near Madrid (docs/publishers/apa.md).
+  // SNIRH refuses every Cloudflare location but Lisbon: its collections run in the Gatekeeper's fetch handler, placed
+  // near SNIRH's server (docs/publishers/apa.md).
   placed: true,
   library: (env) => ({
     kinds: Object.values(SNIRH_FEEDS),
