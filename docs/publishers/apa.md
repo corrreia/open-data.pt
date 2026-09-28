@@ -23,7 +23,8 @@ index have no archive at all, so their history starts from our first collection.
 No credentials. SNIRH has no API: the `snirh` library reads what its own pages read.
 
 - **Station lists need a session.** The station database keeps its filter in a PHP session. The
-  library posts the form (network, parameter, `f_estado=ATIVA` live, empty for history) to
+  library posts the form (network, parameter, and an empty `f_estado`: every station, since one SNIRH
+  lists as inactive can still report) to
   `/index.php?idMain=2&idItem=1`, then reads `xml_listaestacoes.php` with the `PHPSESSID` it got.
 - **Readings come from the CSV export**, `paraCSV/dados_csv.php?sites=…&pars=…&tmin=dd/mm/yyyy&tmax=…`.
   Its own form allows 50 station–parameter pairs, and at about 500 stations the server times out at

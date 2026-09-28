@@ -188,7 +188,8 @@ describe("SNIRH live readings", () => {
     const form = new URLSearchParams(String(post?.[1]?.body));
     expect(form.get("f_redes_seleccao[]")).toBe("920123705");
     expect(form.get("f_parametros_seleccao[]")).toBe("1843");
-    expect(form.get("f_estado")).toBe("ATIVA");
+    // Every station, in service or not: SNIRH's "inactive" gauges can still report.
+    expect(form.get("f_estado")).toBe("");
     expect(new Headers(list?.[1]?.headers).get("cookie")).toBe("PHPSESSID=abc123");
   });
 
