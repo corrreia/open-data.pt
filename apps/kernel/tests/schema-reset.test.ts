@@ -1,8 +1,8 @@
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
-import { ObjectStore } from "#/object-store";
-import { RegistryStore, REGISTRY_SCHEMA_VERSION } from "#/registry-store";
-import { RunnerCore } from "#/runner-core";
+import { ObjectStore } from "#/serving/object-store";
+import { RegistryStore, REGISTRY_SCHEMA_VERSION } from "#/registry/store";
+import { RunnerCore } from "#/runner/core";
 import { dropAllTables, userTables } from "#/sqlite-reset";
 import { MemorySnapshots } from "#/tests/kernel-harness";
 import { sqliteStorage } from "#/tests/sqlite-storage";

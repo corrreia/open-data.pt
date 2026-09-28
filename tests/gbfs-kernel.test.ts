@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import type { TransformContext } from "@open-data-pt/contract";
 import { GbfsTransformer } from "@open-data-pt/gatekeeper/formats/gbfs";
-import { prepareRecord } from "../apps/kernel/src/records";
+import { prepareRecord } from "../apps/kernel/src/collection/records";
 
 /** A saved GBFS document, from the fixtures beside the format's own tests. */
 function fixture(name: string): Uint8Array {

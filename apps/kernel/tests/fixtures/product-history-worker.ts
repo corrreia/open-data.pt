@@ -1,6 +1,6 @@
 import { DurableObject } from "cloudflare:workers";
 import { asObject, parseJson, requireString } from "@open-data-pt/contract";
-import type { ApiContext } from "../../src/http";
+import type { ApiContext } from "../../src/api/http";
 import KernelWorker from "../../src/index";
 export { Registry, FeedRunner, CollectionWorkflow } from "../../src/index";
 

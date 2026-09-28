@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createTestHarness } from "wrangler";
-import type { Acquisition, Feed } from "#/feed-model";
-import { openApiDocument } from "#/openapi";
+import type { Acquisition, Feed } from "#/registry/feed-model";
+import { openApiDocument } from "#/api/openapi";
 import type { JsonObject } from "@open-data-pt/contract";
 import { jsonBody } from "#/tests/support";
 

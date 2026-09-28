@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createTestHarness } from "wrangler";
-import type { Feed, ProductIndexEntry } from "#/feed-model";
+import type { Feed, ProductIndexEntry } from "#/registry/feed-model";
 import { fixtureResolved } from "#/tests/kernel-harness";
 import { jsonBody } from "#/tests/support";
 
