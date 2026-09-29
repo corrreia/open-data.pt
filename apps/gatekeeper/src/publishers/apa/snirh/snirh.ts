@@ -153,6 +153,13 @@ export const SNIRH_READINGS = {
 
 export type SnirhReadingName = keyof typeof SNIRH_READINGS;
 
+/** A SNIRH reading InfoÁgua also shows, which a live collection can take from it. */
+export type SnirhLiveReading = Extract<InfoaguaReadingName, SnirhReadingName>;
+
+export function isSnirhLiveReading(value: string | undefined): value is SnirhLiveReading {
+  return isInfoaguaReading(value) && isSnirhReading(value);
+}
+
 export function isSnirhReading(value: string | undefined): value is SnirhReadingName {
   return value !== undefined && Object.hasOwn(SNIRH_READINGS, value);
 }
@@ -233,7 +240,7 @@ export interface SnirhReadingsTable {
 
 export type SnirhDocument =
   | { kind: "readings"; reading: SnirhReadingName; stations: SnirhStation[]; tables: SnirhReadingsTable[]; before?: string }
-  | { kind: "infoagua-readings"; reading: InfoaguaReadingName; stations: InfoaguaStationReadings[]; unreadable: number; before?: string }
+  | { kind: "infoagua-readings"; reading: SnirhLiveReading; stations: InfoaguaStationReadings[]; unreadable: number; before?: string }
   | { kind: "monthly-precipitation"; months: Array<{ month: string; xml: string }>; before?: string }
   | { kind: "reservoir-basins"; years: Array<{ hydrologicalYear: number; html: string }>; before?: string }
   | { kind: "groundwater-state"; months: Array<{ month: string; xml: string }>; before?: string };
@@ -273,7 +280,7 @@ export async function collectSnirhFeed(
 export async function collectSnirhLiveFromInfoagua(config: SourceConfig, checkpoint: SourceValidator | undefined, fetcher: typeof fetch): Promise<SourceFetch> {
   const validated = validateSnirhFeedConfig(config);
   const reading = validated.reading;
-  if (validated.feed !== "readings" || !isInfoaguaReading(reading))
+  if (validated.feed !== "readings" || !isSnirhLiveReading(reading))
     throw new GatekeeperError(`InfoÁgua shows no live ${reading ?? validated.feed ?? "?"} readings`, "invalid-config");
   const read = await readInfoaguaReadings(reading, fetcher);
   const document: SnirhDocument = { kind: "infoagua-readings", reading, stations: read.stations, unreadable: read.unreadable };

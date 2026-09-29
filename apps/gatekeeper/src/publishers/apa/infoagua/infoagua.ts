@@ -23,7 +23,9 @@ import {
  * (`DATA_Stations = [...]`), and this library reads those.
  *
  * Its own feeds are what InfoÁgua alone publishes: the flood alert state of
- * each watched station and the drought index of each basin. It also serves the
+ * each watched station, the drought index of each basin, what each reservoir
+ * holds and is for, and the hourly flow into and out of each watched
+ * reservoir. It also serves the
  * last 48 hours of the readings behind those alerts, which are SNIRH's: SNIRH's
  * river level and precipitation feeds take their live readings from here
  * (`readInfoaguaReadings`), since SNIRH itself answers only from Portugal. The
@@ -48,6 +50,16 @@ export const INFOAGUA_FEEDS = {
     kind: "drought-index",
     semantics: { domainSubject: "observation", defaultProductRole: "summary" },
   },
+  // What each reservoir on InfoÁgua's drought pages is: its capacity, full supply level, uses and monthly historic lows.
+  "reservoirs": {
+    kind: "reservoirs",
+    semantics: { domainSubject: "reference", defaultProductRole: "reference" },
+  },
+  // The hourly flow into and out of each reservoir InfoÁgua watches for floods.
+  "reservoir-flows": {
+    kind: "reservoir-flows",
+    semantics: { domainSubject: "observation", defaultProductRole: "time-series" },
+  },
 } as const satisfies Record<string, FeedKindDescription>;
 
 type InfoaguaFeedName = keyof typeof INFOAGUA_FEEDS;
@@ -61,6 +73,9 @@ interface InfoaguaPage {
 const PAGES = {
   "flood-alerts": { path: FLOOD_LIST_PATH, variable: "DATA_Stations" },
   "drought-index": { path: "/pt/seca", variable: "DATA_AlertsMap" },
+  "reservoirs": { path: "/pt/seca/secas-pesquisa", variable: "DATA_SupStations" },
+  // The flows are read from each reservoir's page; this is the list those pages are found from.
+  "reservoir-flows": { path: FLOOD_LIST_PATH, variable: "DATA_Stations" },
 } as const satisfies Record<InfoaguaFeedName, InfoaguaPage>;
 
 function isInfoaguaFeed(value: string | undefined): value is InfoaguaFeedName {
@@ -80,10 +95,14 @@ export function infoaguaPageUrl(feed: string | undefined, origin: string): URL {
   return new URL(PAGES[feed].path, origin);
 }
 
-/** What a collection hands its transform: the page's own array, cut to the fields that are published. */
+/**
+ * What a collection hands its transform: the page's own array, cut to the fields that are published. For the reservoir
+ * flows, one entry per reservoir and flow, `{ reading, site, values }`, and how many values could not be read.
+ */
 export interface InfoaguaDocument {
   feed: InfoaguaFeedName;
   entries: JsonObject[];
+  unreadable?: number;
 }
 
 export async function collectInfoaguaFeed(config: SourceConfig, checkpoint: SourceValidator | undefined, apiOrigin: string, fetcher: typeof fetch): Promise<SourceFetch> {
@@ -92,11 +111,17 @@ export async function collectInfoaguaFeed(config: SourceConfig, checkpoint: Sour
   const feed = validated.feed as InfoaguaFeedName;
   const origin = fixedOrigin(apiOrigin, INFOAGUA_ORIGIN);
   const url = infoaguaPageUrl(feed, origin);
-  const html = await page(url, fetcher, INFOAGUA_MAX_BYTES);
-  const value = assignedJson(html, PAGES[feed].variable);
-  if (!isJsonArray(value)) throw new GatekeeperError(`InfoÁgua ${PAGES[feed].variable} is not a list`, "invalid-response");
-  const entries = value.map((entry) => (feed === "flood-alerts" ? floodStation(entry) : droughtBasin(entry)));
-  const document: InfoaguaDocument = { feed, entries };
+  let document: InfoaguaDocument;
+  if (feed === "reservoir-flows") {
+    const read = await readInfoaguaStations(["reservoir-inflow", "reservoir-outflow"], fetcher, origin);
+    const entries = read.readings.flatMap(({ reading, stations }) => stations.map((station) => ({ reading, site: station.site, values: station.values })));
+    document = { feed, entries, unreadable: read.unreadable };
+  } else {
+    const value = assignedJson(await page(url, fetcher, INFOAGUA_MAX_BYTES), PAGES[feed].variable);
+    if (!isJsonArray(value)) throw new GatekeeperError(`InfoÁgua ${PAGES[feed].variable} is not a list`, "invalid-response");
+    const entry = feed === "flood-alerts" ? floodStation : feed === "drought-index" ? droughtBasin : reservoir;
+    document = { feed, entries: value.map(entry) };
+  }
   const body = new TextEncoder().encode(JSON.stringify(document));
   // The page changes every hour with its readings; the published fields change far less often, and are what the
   // validator is taken from.
@@ -117,6 +142,9 @@ export const INFOAGUA_READINGS = {
   "river-level": { stationType: "estacao_hidrometrica", parameter: 4, name: "Nível Hidrométrico (m)" },
   // Every 15 minutes, 24 hours back: the rain of the quarter hour ending at each time.
   "precipitation": { stationType: "estacao_meteorologica", parameter: 5, name: "Precipitação acumulada em 15 min. (mm)" },
+  // Hourly, 48 hours back: the flow into a reservoir, and the flow it lets out.
+  "reservoir-inflow": { stationType: "estacao_albufeira", parameter: 6, name: "Caudal Afluente (m3/s)" },
+  "reservoir-outflow": { stationType: "estacao_albufeira", parameter: 2, name: "Caudal Efluente (m3/s)" },
 } as const;
 
 export type InfoaguaReadingName = keyof typeof INFOAGUA_READINGS;
@@ -140,48 +168,63 @@ export interface InfoaguaReadings {
   sourceUrl: string;
 }
 
-/**
- * Every station InfoÁgua watches of the kind that measures the reading, with the values its page shows: the station
- * list, then one page per station, which the publisher's client paces.
- */
+/** Every station InfoÁgua watches of the kind that measures the reading, with the values its page shows. */
 export async function readInfoaguaReadings(reading: InfoaguaReadingName, fetcher: typeof fetch, origin: string = INFOAGUA_ORIGIN): Promise<InfoaguaReadings> {
-  const wanted = INFOAGUA_READINGS[reading];
+  const read = await readInfoaguaStations([reading], fetcher, origin);
+  return { stations: read.readings[0]?.stations ?? [], unreadable: read.unreadable, sourceUrl: read.sourceUrl };
+}
+
+/**
+ * Several readings of the same kind of station, from one pass over their pages: the station list, then one page per
+ * station, which the publisher's client paces.
+ */
+export async function readInfoaguaStations(
+  readings: readonly InfoaguaReadingName[],
+  fetcher: typeof fetch,
+  origin: string = INFOAGUA_ORIGIN,
+): Promise<{ readings: Array<{ reading: InfoaguaReadingName; stations: InfoaguaStationReadings[] }>; unreadable: number; sourceUrl: string }> {
+  const stationType = INFOAGUA_READINGS[readings[0] ?? "river-level"].stationType;
+  if (readings.length === 0 || readings.some((reading) => INFOAGUA_READINGS[reading].stationType !== stationType))
+    throw new GatekeeperError("InfoÁgua readings read together must be of one kind of station", "invalid-config");
   const budget = { remaining: READINGS_MAX_BYTES };
   const listUrl = new URL(FLOOD_LIST_PATH, origin);
   const list = assignedJson(await page(listUrl, fetcher, INFOAGUA_MAX_BYTES, budget), "DATA_Stations");
   if (!isJsonArray(list)) throw new GatekeeperError("InfoÁgua DATA_Stations is not a list", "invalid-response");
   const sites = new Set<string>();
   for (const entry of list) {
-    if (isJsonObject(entry) && entry.station_type_id === wanted.stationType && isJsonNumber(entry.snirh_source_id)) sites.add(String(entry.snirh_source_id));
+    if (isJsonObject(entry) && entry.station_type_id === stationType && isJsonNumber(entry.snirh_source_id)) sites.add(String(entry.snirh_source_id));
   }
-  if (sites.size === 0) throw new GatekeeperError(`InfoÁgua lists no ${wanted.stationType}`, "invalid-response");
-  const stations: InfoaguaStationReadings[] = [];
+  if (sites.size === 0) throw new GatekeeperError(`InfoÁgua lists no ${stationType}`, "invalid-response");
+  const read = readings.map((reading) => ({ reading, stations: new Array<InfoaguaStationReadings>() }));
   let unreadable = 0;
   for (const site of sites) {
     const parameters = assignedJson(await page(new URL(`/pt/cheias/cheia-detalhe/${site}`, origin), fetcher, STATION_PAGE_MAX_BYTES, budget), "DATA_StationParameters");
     if (!isJsonArray(parameters)) throw new GatekeeperError(`InfoÁgua station ${site} has no list of parameters`, "invalid-response");
-    const parameter = parameters.find((entry) => isJsonObject(entry) && entry.id === wanted.parameter);
-    // A station that does not measure it here has nothing to give.
-    if (!isJsonObject(parameter)) continue;
-    const name = isJsonString(parameter.name) ? parameter.name.trim() : "";
-    if (name !== wanted.name) throw new GatekeeperError(`InfoÁgua named parameter ${wanted.parameter} "${name}" where "${wanted.name}" was expected`, "invalid-response");
-    const values: InfoaguaStationReadings["values"] = [];
-    for (const entry of isJsonArray(parameter.values) ? parameter.values : []) {
-      if (!isJsonObject(entry)) {
-        unreadable += 1;
-        continue;
+    for (const target of read) {
+      const wanted = INFOAGUA_READINGS[target.reading];
+      const parameter = parameters.find((entry) => isJsonObject(entry) && entry.id === wanted.parameter);
+      // A station that does not measure it here has nothing to give.
+      if (!isJsonObject(parameter)) continue;
+      const name = isJsonString(parameter.name) ? parameter.name.trim() : "";
+      if (name !== wanted.name) throw new GatekeeperError(`InfoÁgua named parameter ${wanted.parameter} "${name}" where "${wanted.name}" was expected`, "invalid-response");
+      const values: InfoaguaStationReadings["values"] = [];
+      for (const entry of isJsonArray(parameter.values) ? parameter.values : []) {
+        if (!isJsonObject(entry)) {
+          unreadable += 1;
+          continue;
+        }
+        // An hour without a reading is written with an empty value.
+        if (entry.value === null || entry.value === "") continue;
+        if (!isJsonString(entry.moment) || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/u.test(entry.moment) || !isJsonNumber(entry.value)) {
+          unreadable += 1;
+          continue;
+        }
+        values.push({ moment: entry.moment, value: entry.value });
       }
-      // An hour without a reading is written with an empty value.
-      if (entry.value === null || entry.value === "") continue;
-      if (!isJsonString(entry.moment) || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/u.test(entry.moment) || !isJsonNumber(entry.value)) {
-        unreadable += 1;
-        continue;
-      }
-      values.push({ moment: entry.moment, value: entry.value });
+      target.stations.push({ site, values });
     }
-    stations.push({ site, values });
   }
-  return { stations, unreadable, sourceUrl: listUrl.toString() };
+  return { readings: read, unreadable, sourceUrl: listUrl.toString() };
 }
 
 /** One page, whole: InfoÁgua answers every page from its own origin, and a redirect means the page is not there. */
@@ -256,6 +299,40 @@ function floodStation(entry: JsonValue): JsonObject {
   };
 }
 
+/**
+ * A reservoir of the drought pages: its SNIRH code (`snirh_station_symbol`), what it holds and is for, and for each
+ * calendar month the lowest volume on record, with its year. The latest volume is left out: SNIRH's reservoir feeds
+ * carry it. Volumes are in cubic hectometres, levels in metres above sea level.
+ */
+function reservoir(entry: JsonValue): JsonObject {
+  if (!isJsonObject(entry) || !isJsonString(entry.snirh_station_symbol) || !isJsonString(entry.snirh_code))
+    throw new GatekeeperError("InfoÁgua listed a reservoir without its SNIRH code", "invalid-response");
+  const lows: JsonObject[] = [];
+  for (let month = 1; month <= 12; month += 1) {
+    const volume = number(entry[`min_value${month}`]);
+    const year = number(entry[`min_year${month}`]);
+    if (volume !== null && year !== null) lows.push({ month, volumeHm3: volume, year });
+  }
+  return {
+    station: entry.snirh_station_symbol,
+    site: entry.snirh_code,
+    name: text(entry.name),
+    basin: text(entry.basin_name),
+    latitude: coordinate(entry.latitude),
+    longitude: coordinate(entry.longitude),
+    capacityHm3: number(entry.max_volume),
+    usableVolumeHm3: number(entry.usable_volume),
+    fullSupplyLevelM: number(entry.npa),
+    waterSupply: flag(entry.abastecimento),
+    energy: flag(entry.energia),
+    industry: flag(entry.industria),
+    irrigation: flag(entry.rega_agricola),
+    environmentalFlow: flag(entry.caudal_ecologico),
+    floodControl: flag(entry.flood_control),
+    monthlyLows: lows,
+  };
+}
+
 /** A basin's index for one month; the thresholds between states are left out, as InfoÁgua does not say what they bound. */
 function droughtBasin(entry: JsonValue): JsonObject {
   if (!isJsonObject(entry) || !isJsonString(entry.basin_id) || !isJsonNumber(entry.index_year) || !isJsonNumber(entry.index_month))
@@ -279,6 +356,18 @@ function text(value: JsonValue | undefined): string | null {
 function english(value: JsonValue | undefined): string | null {
   if (isJsonObject(value)) return text(value.en) ?? text(value.pt);
   return text(value);
+}
+
+/** A number InfoÁgua writes as a number or as its digits. */
+function number(value: JsonValue | undefined): number | null {
+  const parsed = isJsonNumber(value) ? value : isJsonString(value) && value.trim() !== "" ? Number(value) : Number.NaN;
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+/** InfoÁgua's `"1"` or `1` for yes, `"0"` or `0` for no. */
+function flag(value: JsonValue | undefined): boolean | null {
+  const parsed = number(value);
+  return parsed === null ? null : parsed === 1;
 }
 
 function coordinate(value: JsonValue | undefined): number | null {

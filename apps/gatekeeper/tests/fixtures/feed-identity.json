@@ -1943,6 +1943,14 @@
     "resourceKey": "infoagua:infoagua:flood-alerts:dab7a00683a491487f7a854ec935fc6927164e1265b93039931d523c26e045f7",
     "kind": "infoagua:flood-alerts"
   },
+  "infoagua-reservoir-flows-feed": {
+    "resourceKey": "infoagua:infoagua:reservoir-flows:acd4b1f79b14b8d8947ae6ec6dd6aebbfa4d1a89a5972f1046728603415b5e2d",
+    "kind": "infoagua:reservoir-flows"
+  },
+  "infoagua-reservoirs-feed": {
+    "resourceKey": "infoagua:infoagua:reservoirs:f140c46813a975f1f2e1767e3ae1b88ddfa866de19c03149693039034751a965",
+    "kind": "infoagua:reservoirs"
+  },
   "ioda-digi-pt-as20879-internet-signals-feed": {
     "resourceKey": "ioda:ioda:signals:f6d44019b1b2c9e7ed4fe42fa736c78fb7a5f60eb82bf128caa276eb7bf62c71",
     "kind": "ioda:signals"

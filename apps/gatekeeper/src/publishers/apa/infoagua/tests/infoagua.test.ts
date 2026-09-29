@@ -18,15 +18,35 @@ import { feedCollection, feedsOf } from "#/tests/catalog";
 const page = (name: string): string => readFixture(new URL(`./fixtures/${name}`, import.meta.url));
 const FLOODS = { feed: "flood-alerts" };
 const DROUGHT = { feed: "drought-index" };
+const RESERVOIRS = { feed: "reservoirs" };
+const FLOWS = { feed: "reservoir-flows" };
 
-function infoagua(pages: { floods?: string; drought?: string; answer?: () => Response } = {}) {
+/**
+ * InfoÁgua as its pages answer. A station's page is the saved one for Aguieira, and otherwise the page `stations`
+ * gives for its SNIRH site.
+ */
+function infoagua(pages: { floods?: string; drought?: string; stations?: ReadonlyMap<string, string>; answer?: () => Response } = {}) {
   return vi.fn(async (input: RequestInfo | URL) => {
     if (pages.answer) return pages.answer();
     const url = new URL(input.toString());
     if (url.pathname === "/pt/cheias/cheias-pesquisa") return new Response(pages.floods ?? page("flood-stations.html"));
     if (url.pathname === "/pt/seca") return new Response(pages.drought ?? page("drought.html"));
+    if (url.pathname === "/pt/seca/secas-pesquisa") return new Response(page("reservoirs.html"));
+    const site = /^\/pt\/cheias\/cheia-detalhe\/(\d+)$/u.exec(url.pathname)?.[1] ?? "";
+    const station = pages.stations?.get(site) ?? (site === "1627743384" ? page("station-1627743384.html") : undefined);
+    if (station !== undefined) return new Response(station);
     return new Response("not found", { status: 404 });
   });
+}
+
+/** A reservoir's page as InfoÁgua writes it, with the inflow and outflow given, by time. */
+function reservoirPage(inflow: Array<[moment: string, value: number]>, outflow: Array<[moment: string, value: number]>): string {
+  const values = (entries: Array<[string, number]>) => entries.map(([moment, value]) => ({ moment, value }));
+  const parameters = [
+    { id: 6, name: "Caudal Afluente (m3/s)", unit: "m3/s", values: values(inflow) },
+    { id: 2, name: "Caudal Efluente (m3/s)", unit: "m3/s", values: values(outflow) },
+  ];
+  return `<html><body><script>\n\t\tvar DATA_StationParameters = ${JSON.stringify(parameters)};\n</script></body></html>`;
 }
 
 function bodyOf(fetched: SourceFetch): SourceBody {
@@ -140,6 +160,76 @@ describe("InfoÁgua drought index", () => {
       eventTime: "2026-08-01T00:00:00.000Z",
       payload: { basinId: "9", basin: "Sado", month: "2026-08-01", index: 0.645, state: 6, stateName: "Húmido", stateColor: "#0E90C2" },
     });
+  });
+});
+
+describe("InfoÁgua reservoirs", () => {
+  it("keeps one record per reservoir, keyed by SNIRH code, reading the numbers and flags InfoÁgua writes out as text", async () => {
+    const reservoirs = await records(RESERVOIRS);
+    expect(reservoirs.map((record) => record.entityKey)).toEqual(["02H/01A", "03G/01A"]);
+    const lindoso = reservoirs[0]?.payload;
+    expect(lindoso).toMatchObject({
+      station: "02H/01A",
+      site: "1627743428",
+      name: "ALTO LINDOSO",
+      basin: "Lima",
+      capacityHm3: 379,
+      usableVolumeHm3: 347.91,
+      fullSupplyLevelM: 338,
+      waterSupply: false,
+      energy: true,
+      environmentalFlow: true,
+      floodControl: true,
+    });
+    expect(lindoso?.monthlyLows).toContainEqual({ month: 8, volumeHm3: 60.3, year: 2022 });
+    expect(reservoirs[1]?.payload).toMatchObject({ station: "03G/01A", waterSupply: true });
+  });
+});
+
+describe("InfoÁgua reservoir flows", () => {
+  it("reads each reservoir's page once for both flows, and files both series under SNIRH's code and name", async () => {
+    // Fronhas's place in the list goes to Alcántara, across the border and in no SNIRH station list.
+    const floods = page("flood-stations.html").replace('"snirh_source_id": 1627758668', '"snirh_source_id": 21042');
+    const stations = new Map([
+      ["1627759328", reservoirPage([["2026-09-29 11:00:00", 5]], [["2026-09-29 11:00:00", 7]])],
+      ["21042", reservoirPage([["2026-09-29 11:00:00", 100]], [["2026-09-29 11:00:00", 120]])],
+    ]);
+    const fetcher = infoagua({ floods, stations });
+    const body = bodyOf(await collectInfoaguaFeed(FLOWS, undefined, INFOAGUA_ORIGIN, fetcher)).body;
+    if (!(body instanceof Uint8Array)) throw new Error("InfoÁgua hands over a buffered body");
+    const context = {
+      feed: {
+        slug: "infoagua-reservoir-flows-feed",
+        title: "Test",
+        description: "test feed",
+        config: FLOWS,
+        semantics: { domainSubject: "observation" as const, defaultProductRole: "time-series" as const },
+      },
+      observedAt: "2026-09-29T12:00:00.000Z",
+    };
+    const result = await runTransformer(new InfoaguaTransformer(), body, context);
+
+    const pages = fetcher.mock.calls.map(([input]) => new URL(input.toString()).pathname).filter((path) => path.startsWith("/pt/cheias/cheia-detalhe/"));
+    expect(pages.toSorted()).toEqual(["/pt/cheias/cheia-detalhe/1627743384", "/pt/cheias/cheia-detalhe/1627759328", "/pt/cheias/cheia-detalhe/21042"]);
+    const [inflows, outflows] = result.products;
+    if (inflows?.kind !== "series" || outflows?.kind !== "series") throw new Error("The flows are two series");
+    expect([inflows.slug, outflows.slug]).toEqual(["infoagua-reservoir-inflows", "infoagua-reservoir-outflows"]);
+    expect(inflows.points).toContainEqual({
+      seriesKey: "11H/01A",
+      eventTime: "2026-09-29T11:00:00.000Z",
+      value: 138.85,
+      unit: "m3/s",
+      dimensions: { station: "11H/01A", name: "ALBUFEIRA DA AGUIEIRA (R.E.)" },
+    });
+    expect(outflows.points).toContainEqual({
+      seriesKey: "12H/01A",
+      eventTime: "2026-09-29T11:00:00.000Z",
+      value: 7,
+      unit: "m3/s",
+      dimensions: { station: "12H/01A", name: "ALBUFEIRA DA RAIVA (R.E.)" },
+    });
+    expect(new Set([...inflows.points, ...outflows.points].map((point) => point.seriesKey))).toEqual(new Set(["11H/01A", "12H/01A"]));
+    expect(result.quality.rejectedRecords).toBe(2);
   });
 });
 

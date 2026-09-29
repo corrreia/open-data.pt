@@ -8,6 +8,8 @@ import { FEED as floodMarks } from "./feeds/flood-marks";
 import { FEED as hydrometricStations } from "./feeds/hydrometric-stations";
 import { FEED as droughtIndex } from "./feeds/drought-index";
 import { FEED as floodAlerts } from "./feeds/flood-alerts";
+import { FEED as reservoirFlows } from "./feeds/reservoir-flows";
+import { FEED as reservoirs } from "./feeds/reservoirs";
 import { FEED as meteorologicalStations } from "./feeds/meteorological-stations";
 import { FEED as radnetStations } from "./feeds/radnet-stations";
 import { FEED as sevesoEstablishments } from "./feeds/seveso-establishments";
@@ -51,6 +53,8 @@ export const PUBLISHER: PublisherDefinition = {
     hydrometricStations,
     droughtIndex,
     floodAlerts,
+    reservoirs,
+    reservoirFlows,
     meteorologicalStations,
     radnetStations,
     sevesoEstablishments,

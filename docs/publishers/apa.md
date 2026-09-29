@@ -7,20 +7,36 @@ stations, groundwater, flood alerts, drought), and its reference layers.
 
 APA is read through three libraries, and they are split so that no value is published twice:
 
-| Library    | Where                                                     | What                                                                                         |
-| ---------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `arcgis`   | `sniambgeoogc.apambiente.pt` (SNIAmb)                     | Reference layers: station locations, beaches and their current water quality, flood marks    |
-| `snirh`    | `snirh.apambiente.pt` (SNIRH, the water resources system) | Every measurement, with its history: the station database and three monthly bulletins        |
-| `infoagua` | `infoagua.apambiente.pt` (InfoÁgua, the public water app) | What only InfoÁgua publishes: each watched station's flood alert, each basin's drought index |
+| Library    | Where                                                     | What                                                                                                                                                                                            |
+| ---------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `arcgis`   | `sniambgeoogc.apambiente.pt` (SNIAmb)                     | Reference layers: station locations, beaches and their current water quality, flood marks                                                                                                       |
+| `snirh`    | `snirh.apambiente.pt` (SNIRH, the water resources system) | Every measurement, with its history: the station database and three monthly bulletins                                                                                                           |
+| `infoagua` | `infoagua.apambiente.pt` (InfoÁgua, the public water app) | What only InfoÁgua publishes: each watched station's flood alert, each basin's drought index, each reservoir's capacity and uses, and the hourly flow into and out of each reservoir it watches |
 
 InfoÁgua shows the last day or two of SNIRH's readings at the stations it watches for floods,
 sooner than SNIRH does. Two SNIRH feeds take their **live** readings from it, because SNIRH itself now
 answers only from Portugal (below): river levels (hourly, 48 hours, about 90 stations) and
 precipitation (every 15 minutes, 24 hours, about 90 gauges). They stay SNIRH feeds: same slug, same
 series keyed by SNIRH's station code, and their history walk still reads SNIRH's database. Nothing
-else is read from InfoÁgua's readings, so no value is published twice. Its beach pages repeat the
-ArcGIS `Praias` layer and are not read. Its flood alerts and drought index have no archive at all,
-so their history starts from our first collection.
+else is read from InfoÁgua's readings that SNIRH also publishes, so no value is published twice.
+
+What else InfoÁgua shows, and why each is or is not read (surveyed 29 September 2026):
+
+- **Read:** the reservoirs of its drought pages (`/pt/seca/secas-pesquisa`, `DATA_SupStations`):
+  capacity, usable volume and full supply level, uses, and each calendar month's lowest volume on
+  record; and the hourly inflow and outflow on each watched reservoir's page, which we read from
+  nowhere else. Reservoir levels stay on SNIRH: InfoÁgua watches about 46 of the 84 reservoirs our
+  SNIRH feed carries, so moving it would stop the others.
+- **Not read:** each reservoir's monthly volume (`/pt/seca/seca-detalhe/<site>`), which repeats
+  SNIRH's reservoir storage; the beach pages, which repeat the ArcGIS `Praias` layer but for the date
+  of the last sample; the summary charts (top rainfall, alert counts), which are derived; river flow
+  on the river stations' pages, empty where we looked and not SNIRH's daily mean.
+- **Worth reading next:** each station's flood alert thresholds (`DATA_AlertsHistory` on its page,
+  the water level for each alert level with a note such as a return period), and each basin's
+  monthly mean and historic monthly minimum storage (`DATA_VolumesMap` on `/pt/seca`).
+
+Its flood alerts, drought index and reservoir flows have no archive, so their history starts from
+our first collection.
 
 ## Access
 
@@ -57,8 +73,10 @@ No credentials. SNIRH has no API: the `snirh` library reads what its own pages r
 ## Quirks
 
 - **InfoÁgua's readings.** A station's page is `/pt/cheias/cheia-detalhe/<SNIRH site>`, with
-  `DATA_StationParameters`: InfoÁgua's own parameter identifiers (4 river level, 5 rain in 15 minutes)
-  and names, which the library checks. Times are UTC, as SNIRH's. InfoÁgua names a station only by
+  `DATA_StationParameters`: InfoÁgua's own parameter identifiers (4 river level, 5 rain in 15 minutes,
+  6 reservoir inflow, 2 reservoir outflow)
+  and names, which the library checks. Times are UTC, as SNIRH's: at five river stations whose level
+  changed during those hours, every value matched at the same hour and none an hour either side. InfoÁgua names a station only by
   its SNIRH site; `snirh/stations.ts` pairs each site with the code and name SNIRH's station lists
   print, read from those lists on 27 September 2026. A station missing there (one SNIRH added since,
   or one in Spain, such as Badajoz and Riviera Gata) is rejected. Checked against SNIRH's database on
