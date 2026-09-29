@@ -45,7 +45,7 @@ No credentials. SNIRH has no API: the `snirh` library reads what its own pages r
   and a feed's collections mostly run from the same location, so precipitation, wind speed and
   groundwater levels never got through. The `snirh` library is therefore `placed`: its collections
   run in the Gatekeeper's own `fetch` handler, which `placement` in its Wrangler configuration has
-  Cloudflare run near SNIRH's server, and which the Gatekeeper reaches through a binding to itself
+  Cloudflare run in Lisbon, and which the Gatekeeper reaches through a binding to itself
   (`src/placed.ts`). Placement moves only a `fetch` handler, never an RPC method, and a request to a
   binding counts against the 32 Worker invocations one request may make, so a whole collection (the
   wells take about a hundred requests) is one call. Spans record `cloudflare.colo`: SNIRH's requests
@@ -61,6 +61,13 @@ No credentials. SNIRH has no API: the `snirh` library reads what its own pages r
   which probes SNIRH with TCP connections. The `hostname` probes were HTTP requests, which SNIRH
   refuses from outside Portugal as it refuses us; a TCP connection completes from anywhere, so it
   measures where SNIRH's server is rather than where it answers.
+- **Placed by IPMA's API, 29 September 2026.** The TCP probe placed nothing: over the next 17 hours
+  the placed handler ran wherever the kernel's call arrived (sampled: Lisbon 4, Madrid 3, Marseille
+  3, Milan 2), and 21 of 86 SNIRH collections read, as many as with no placement. Placement is now
+  `hostname: "api.ipma.pt"`: IPMA's API is in Lisbon on FCCN, the network SNIRH is on (a traceroute
+  to SNIRH ends at `Router33.Lisboa.fccn.pt`), which meets Cloudflare only at GigaPIX in Lisbon, and
+  it answers HTTP probes from anywhere. `meo.pt` was the other candidate; it resets HTTPS requests
+  that do not come from a browser.
 
 ## Quirks
 
