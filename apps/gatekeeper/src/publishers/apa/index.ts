@@ -25,6 +25,16 @@ import { FEED as reservoirStorage } from "./feeds/reservoir-storage";
 import { FEED as riverFlows } from "./feeds/river-flows";
 import { FEED as riverLevels } from "./feeds/river-levels";
 import { FEED as windSpeed } from "./feeds/wind-speed";
+import { FEED as radioactivityAir } from "./feeds/radioactivity-air";
+import { FEED as radioactivityWater } from "./feeds/radioactivity-water";
+import { FEED as radioactivityAerosols } from "./feeds/radioactivity-aerosols";
+import { FEED as beachOccupancy } from "./feeds/beach-occupancy";
+import { FEED as landfills } from "./feeds/landfills";
+import { FEED as mediumCombustionPlants } from "./feeds/medium-combustion-plants";
+import { FEED as impactAssessmentProjects } from "./feeds/impact-assessment-projects";
+import { FEED as emasOrganisations } from "./feeds/emas-organisations";
+import { FEED as wasteInfrastructure } from "./feeds/waste-infrastructure";
+import { FEED as wasteOperators } from "./feeds/waste-operators";
 
 export const PUBLISHER: PublisherDefinition = {
   name: "APA · Agência Portuguesa do Ambiente",
@@ -70,5 +80,15 @@ export const PUBLISHER: PublisherDefinition = {
     riverFlows,
     riverLevels,
     windSpeed,
+    radioactivityAir,
+    radioactivityWater,
+    radioactivityAerosols,
+    beachOccupancy,
+    landfills,
+    mediumCombustionPlants,
+    impactAssessmentProjects,
+    emasOrganisations,
+    wasteInfrastructure,
+    wasteOperators,
   ],
 };

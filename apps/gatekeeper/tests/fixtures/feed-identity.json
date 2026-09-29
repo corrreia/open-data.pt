@@ -43,8 +43,16 @@
     "resourceKey": "arcgis:arcgis:layer:bd8bd352dcd712c2cde1f4e88a8c03c57adc09919c3e6a6dce10e60294dccde4",
     "kind": "arcgis:layer"
   },
+  "apa-beach-occupancy-feed": {
+    "resourceKey": "arcgis:arcgis:layer:6041a465606ed889dbbf568a665eecbeaecf055023c8bba356a4a3f92da36566",
+    "kind": "arcgis:layer"
+  },
   "apa-blue-flag-beaches-feed": {
     "resourceKey": "arcgis:arcgis:layer:c2ac80737d8b6b52bf7b582532390c9c2702c60e0957ffc7cee72a890bf554cf",
+    "kind": "arcgis:layer"
+  },
+  "apa-emas-organisations-feed": {
+    "resourceKey": "arcgis:arcgis:layer:d266aaafc020dd88b175dc0ee6c30e5f935496b6ddde8210c4ec00574ae02020",
     "kind": "arcgis:layer"
   },
   "apa-emissions-trading-installations-feed": {
@@ -59,8 +67,32 @@
     "resourceKey": "arcgis:arcgis:layer:c38cc0585dfd2efb5f40d46eb9dee6d514eec63c737b92019fe159b4a7adedbd",
     "kind": "arcgis:layer"
   },
+  "apa-impact-assessment-projects-feed": {
+    "resourceKey": "arcgis:arcgis:layer:644d4d599782eb51cdc0bc6cecf5a8a3467481d4747a852f86825d3acafa7b7d",
+    "kind": "arcgis:layer"
+  },
+  "apa-landfills-feed": {
+    "resourceKey": "arcgis:arcgis:layer:b2e1dc58b2ebbe14deaba6795adc66be11bdc30c323cfcfb193dc33b7cf0ecea",
+    "kind": "arcgis:layer"
+  },
+  "apa-medium-combustion-plants-feed": {
+    "resourceKey": "arcgis:arcgis:layer:37c1890605dedf58ae4acfed7dde59d438a221e324ea827588e3dce4f9883b4b",
+    "kind": "arcgis:layer"
+  },
   "apa-meteorological-stations-feed": {
     "resourceKey": "arcgis:arcgis:layer:9bd008921a09d481d7a4be47af8aca3641f43bc03fd873d3c05495986f7cf227",
+    "kind": "arcgis:layer"
+  },
+  "apa-radioactivity-aerosols-feed": {
+    "resourceKey": "arcgis:arcgis:layer:7b4432a18d69f0c9bcfaf19c88d90c68fa6bbd22d6ec2b87d8b755b434fe5835",
+    "kind": "arcgis:layer"
+  },
+  "apa-radioactivity-air-feed": {
+    "resourceKey": "arcgis:arcgis:layer:0fb43e2976879a3179cfb0aa0a6f4919a7448a6cb260ae0225860d1f3f1bad29",
+    "kind": "arcgis:layer"
+  },
+  "apa-radioactivity-water-feed": {
+    "resourceKey": "arcgis:arcgis:layer:5cf9ca47fba6d98efe9e1f95823d2dbadb466bf923871a754d374150f7b0a539",
     "kind": "arcgis:layer"
   },
   "apa-radnet-stations-feed": {
@@ -69,6 +101,14 @@
   },
   "apa-seveso-establishments-feed": {
     "resourceKey": "arcgis:arcgis:layer:1c7a7a2be7de4f933ccab56cd1a096fc7213f895466ca4aaf9b3a4b310e44ce0",
+    "kind": "arcgis:layer"
+  },
+  "apa-waste-infrastructure-feed": {
+    "resourceKey": "arcgis:arcgis:layer:98195f610b40552a6ca3958ed99ed1ce8f6d1a644a39342483fbc1a474e23d38",
+    "kind": "arcgis:layer"
+  },
+  "apa-waste-operators-feed": {
+    "resourceKey": "arcgis:arcgis:layer:9b1a3fcf0629bfeba5dedf99a3f481324d3a817b96c58af77c43b245ac58a3df",
     "kind": "arcgis:layer"
   },
   "barraqueiro-oeste-lisboa-torres-vedras-feed": {
