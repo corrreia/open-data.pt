@@ -4,7 +4,7 @@ import { INFOAGUA_FEEDS, INFOAGUA_ORIGIN } from "./infoagua";
 
 export const INFOAGUA_DEPLOYMENT: LibraryDeployment<{ readonly INFOAGUA_API_ORIGIN: string }, InfoaguaContext> = {
   source: "infoagua",
-  name: "InfoÁgua flood and drought alerts",
+  name: "InfoÁgua, APA's public water app",
   vars: { INFOAGUA_API_ORIGIN: INFOAGUA_ORIGIN },
   library: (env) => ({
     kinds: Object.values(INFOAGUA_FEEDS),

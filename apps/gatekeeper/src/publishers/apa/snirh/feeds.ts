@@ -25,6 +25,12 @@ export const SNIRH_HOURLY_POLICY: FeedPolicy = { ...COLLECTION, cadenceSeconds: 
 
 export const SNIRH_DAILY_POLICY: FeedPolicy = { ...COLLECTION, cadenceSeconds: 21_600 };
 
+/**
+ * A feed whose live readings come from InfoÁgua: its pages move within the hour, and a collection is about ninety of
+ * them at one a second, so it runs every hour and is done in two minutes. Its history walk still reads SNIRH.
+ */
+export const SNIRH_INFOAGUA_POLICY: FeedPolicy = { ...COLLECTION, cadenceSeconds: 3_600, timeoutSeconds: 600 };
+
 /** Wells read by hand once a month, and bulletins published once a month: once a day is plenty. */
 export const SNIRH_MONTHLY_POLICY: FeedPolicy = { ...COLLECTION, cadenceSeconds: 86_400 };
 

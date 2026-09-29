@@ -15,8 +15,19 @@ import {
   type Transformer,
   type UnstampedResult,
 } from "#/index";
-import { isInfoaguaReading, type InfoaguaReadingName, type InfoaguaStationReadings } from "#/publishers/apa/infoagua/infoagua";
-import { SNIRH_READINGS, decodeEntities, isSnirhReading, parseReadingsCsv, validateSnirhFeedConfig, type SnirhDocument, type SnirhReadingName, type SnirhStation } from "./snirh";
+import type { InfoaguaStationReadings } from "#/publishers/apa/infoagua/infoagua";
+import {
+  SNIRH_READINGS,
+  decodeEntities,
+  isSnirhLiveReading,
+  isSnirhReading,
+  parseReadingsCsv,
+  validateSnirhFeedConfig,
+  type SnirhDocument,
+  type SnirhLiveReading,
+  type SnirhReadingName,
+  type SnirhStation,
+} from "./snirh";
 import { SNIRH_STATIONS } from "./stations";
 
 const SERIES_SCHEMA: CanonicalSchema = {
@@ -181,7 +192,7 @@ function readings(reading: SnirhReadingName, stations: SnirhStation[], tables: A
  * four quarters ending in it (10:15, 10:30, 10:45 and 11:00 make 11:00), and an hour missing a quarter is left out
  * rather than published short.
  */
-function infoaguaReadings(reading: InfoaguaReadingName, stations: InfoaguaStationReadings[], unreadable: number): Built {
+function infoaguaReadings(reading: SnirhLiveReading, stations: InfoaguaStationReadings[], unreadable: number): Built {
   const unit = SNIRH_READINGS[reading].unit;
   const network = reading === "precipitation" ? "meteorological" : "hydrometric";
   const points: SeriesPoint[] = [];
@@ -382,7 +393,7 @@ function parseDocument(value: JsonValue): SnirhDocument {
     }
     case "infoagua-readings": {
       const reading = isJsonString(value.reading) ? value.reading : undefined;
-      if (!isInfoaguaReading(reading) || !isJsonArray(value.stations) || !isJsonNumber(value.unreadable))
+      if (!isSnirhLiveReading(reading) || !isJsonArray(value.stations) || !isJsonNumber(value.unreadable))
         throw new GatekeeperError("SNIRH live readings document is malformed", "invalid-response");
       const stations = value.stations.map((station): InfoaguaStationReadings => {
         if (!isJsonObject(station) || !isJsonString(station.site) || !isJsonArray(station.values))
