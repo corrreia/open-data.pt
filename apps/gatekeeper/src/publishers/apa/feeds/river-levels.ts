@@ -1,7 +1,7 @@
 import { defineFeed } from "#/catalog/define";
 import { runTransformer } from "#/index";
 import { SNIRH_DEPLOYMENT, SNIRH_NORMALIZER, SNIRH_TRANSFORMER, collectSnirhHistory, collectSnirhLiveFromInfoagua } from "#/publishers/apa/snirh/index";
-import { SNIRH_HOURLY_POLICY } from "#/publishers/apa/snirh/feeds";
+import { SNIRH_INFOAGUA_POLICY } from "#/publishers/apa/snirh/feeds";
 
 export const FEED = defineFeed(SNIRH_DEPLOYMENT, {
   slug: "snirh-river-levels-feed",
@@ -12,9 +12,9 @@ export const FEED = defineFeed(SNIRH_DEPLOYMENT, {
   attribution: "SNIRH — Sistema Nacional de Informação de Recursos Hídricos, APA",
   topics: ["environment", "weather"],
   config: { feed: "readings", reading: "river-level" },
-  policy: SNIRH_HOURLY_POLICY,
-  staleAfterSeconds: 172_800,
-  /** Every three hours: the last two days of hourly levels at every river station InfoÁgua watches. */
+  policy: SNIRH_INFOAGUA_POLICY,
+  staleAfterSeconds: 10_800,
+  /** Every hour: the last two days of hourly levels at every river station InfoÁgua watches. */
   fetch: ({ config, validator, fetch }) => collectSnirhLiveFromInfoagua(config, validator, fetch),
   /** Once, walking back: one older slice of the same series at a time, until SNIRH has nothing older. */
   backfill: ({ config, library, fetch }, cursor) => collectSnirhHistory(config, cursor, library.apiOrigin, fetch),
