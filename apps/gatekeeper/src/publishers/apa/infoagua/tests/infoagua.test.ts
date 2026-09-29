@@ -4,7 +4,10 @@ import {
   GatekeeperError,
   NORMALIZED_PROTOCOL,
   collectNormalized,
+  isJsonArray,
+  isJsonObject,
   libraryConfig,
+  parseJsonBytes,
   runTransformer,
   type CanonicalRecord,
   type CollectionRequest,
@@ -25,7 +28,9 @@ const FLOWS = { feed: "reservoir-flows" };
  * InfoÁgua as its pages answer. A station's page is the saved one for Aguieira, and otherwise the page `stations`
  * gives for its SNIRH site.
  */
-function infoagua(pages: { floods?: string; drought?: string; stations?: ReadonlyMap<string, string>; answer?: () => Response } = {}) {
+function infoagua(
+  pages: { floods?: string; drought?: string; stations?: ReadonlyMap<string, string>; stationAnswers?: ReadonlyMap<string, () => Response>; answer?: () => Response } = {},
+) {
   return vi.fn(async (input: RequestInfo | URL) => {
     if (pages.answer) return pages.answer();
     const url = new URL(input.toString());
@@ -33,6 +38,8 @@ function infoagua(pages: { floods?: string; drought?: string; stations?: Readonl
     if (url.pathname === "/pt/seca") return new Response(pages.drought ?? page("drought.html"));
     if (url.pathname === "/pt/seca/secas-pesquisa") return new Response(page("reservoirs.html"));
     const site = /^\/pt\/cheias\/cheia-detalhe\/(\d+)$/u.exec(url.pathname)?.[1] ?? "";
+    const answer = pages.stationAnswers?.get(site);
+    if (answer) return answer();
     const station = pages.stations?.get(site) ?? (site === "1627743384" ? page("station-1627743384.html") : undefined);
     if (station !== undefined) return new Response(station);
     return new Response("not found", { status: 404 });
@@ -195,7 +202,9 @@ describe("InfoÁgua reservoir flows", () => {
       ["21042", reservoirPage([["2026-09-29 11:00:00", 100]], [["2026-09-29 11:00:00", 120]])],
     ]);
     const fetcher = infoagua({ floods, stations });
-    const body = bodyOf(await collectInfoaguaFeed(FLOWS, undefined, INFOAGUA_ORIGIN, fetcher)).body;
+    const fetched = bodyOf(await collectInfoaguaFeed(FLOWS, undefined, INFOAGUA_ORIGIN, fetcher));
+    expect(fetched.completeness).toBe("complete");
+    const body = fetched.body;
     if (!(body instanceof Uint8Array)) throw new Error("InfoÁgua hands over a buffered body");
     const context = {
       feed: {
@@ -230,6 +239,23 @@ describe("InfoÁgua reservoir flows", () => {
     });
     expect(new Set([...inflows.points, ...outflows.points].map((point) => point.seriesKey))).toEqual(new Set(["11H/01A", "12H/01A"]));
     expect(result.quality.rejectedRecords).toBe(2);
+  });
+});
+
+describe("InfoÁgua station pages that fail", () => {
+  it("costs only the station whose page is gone or moved, marks the run partial, and fails it only when none answers", async () => {
+    // Aguieira answers; Raiva's page is not there, and Fronhas's redirects, as InfoÁgua does for a station without one.
+    const stationAnswers = new Map([["1627758668", () => new Response(null, { status: 302, headers: { Location: "/pt/cheias" } })]]);
+    const fetched = bodyOf(await collectInfoaguaFeed(FLOWS, undefined, INFOAGUA_ORIGIN, infoagua({ stationAnswers })));
+    expect(fetched.completeness).toBe("partial");
+    const document = parseJsonBytes(fetched.body instanceof Uint8Array ? fetched.body : new Uint8Array());
+    expect(isJsonObject(document) && isJsonArray(document.entries) ? document.entries.map((entry) => (isJsonObject(entry) ? entry.site : null)) : []).toEqual([
+      "1627743384",
+      "1627743384",
+    ]);
+
+    const noneAnswers = page("flood-stations.html").replace('"snirh_source_id": 1627743384', '"snirh_source_id": 1');
+    await expect(collectInfoaguaFeed(FLOWS, undefined, INFOAGUA_ORIGIN, infoagua({ floods: noneAnswers }))).rejects.toMatchObject({ code: "upstream-error" });
   });
 });
 

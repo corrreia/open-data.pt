@@ -287,7 +287,7 @@ export async function collectSnirhLiveFromInfoagua(config: SourceConfig, checkpo
   const body = new TextEncoder().encode(JSON.stringify(document));
   const validator: SourceValidator = { etag: await contentEtag(body) };
   if (checkpoint?.etag === validator.etag) return { kind: "not-modified", validator };
-  return { kind: "body", body, provenance: { sourceUrl: read.sourceUrl }, completeness: "complete", validator };
+  return { kind: "body", body, provenance: { sourceUrl: read.sourceUrl }, completeness: read.missing > 0 ? "partial" : "complete", validator };
 }
 
 export async function collectSnirhHistory(config: SourceConfig, cursor: HistoryCursor, apiOrigin: string, fetcher: typeof fetch): Promise<SourceFetch> {

@@ -112,10 +112,12 @@ export async function collectInfoaguaFeed(config: SourceConfig, checkpoint: Sour
   const origin = fixedOrigin(apiOrigin, INFOAGUA_ORIGIN);
   const url = infoaguaPageUrl(feed, origin);
   let document: InfoaguaDocument;
+  let partial = false;
   if (feed === "reservoir-flows") {
     const read = await readInfoaguaStations(["reservoir-inflow", "reservoir-outflow"], fetcher, origin);
     const entries = read.readings.flatMap(({ reading, stations }) => stations.map((station) => ({ reading, site: station.site, values: station.values })));
     document = { feed, entries, unreadable: read.unreadable };
+    partial = read.missing > 0;
   } else {
     const value = assignedJson(await page(url, fetcher, INFOAGUA_MAX_BYTES), PAGES[feed].variable);
     if (!isJsonArray(value)) throw new GatekeeperError(`InfoÁgua ${PAGES[feed].variable} is not a list`, "invalid-response");
@@ -127,7 +129,7 @@ export async function collectInfoaguaFeed(config: SourceConfig, checkpoint: Sour
   // validator is taken from.
   const validator: SourceValidator = { etag: await contentEtag(body) };
   if (checkpoint?.etag === validator.etag) return { kind: "not-modified", validator };
-  return { kind: "body", body, provenance: { sourceUrl: url.toString() }, completeness: "complete", validator };
+  return { kind: "body", body, provenance: { sourceUrl: url.toString() }, completeness: partial ? "partial" : "complete", validator };
 }
 
 /* ---------- Readings, for SNIRH's live feeds ---------- */
@@ -164,6 +166,8 @@ export interface InfoaguaReadings {
   stations: InfoaguaStationReadings[];
   /** Values that were there but could not be read: a malformed time, or a value that is not a number. */
   unreadable: number;
+  /** Listed stations whose page could not be read this time. */
+  missing: number;
   /** The page a person can open: the list of watched stations. */
   sourceUrl: string;
 }
@@ -171,18 +175,20 @@ export interface InfoaguaReadings {
 /** Every station InfoÁgua watches of the kind that measures the reading, with the values its page shows. */
 export async function readInfoaguaReadings(reading: InfoaguaReadingName, fetcher: typeof fetch, origin: string = INFOAGUA_ORIGIN): Promise<InfoaguaReadings> {
   const read = await readInfoaguaStations([reading], fetcher, origin);
-  return { stations: read.readings[0]?.stations ?? [], unreadable: read.unreadable, sourceUrl: read.sourceUrl };
+  return { stations: read.readings[0]?.stations ?? [], unreadable: read.unreadable, missing: read.missing, sourceUrl: read.sourceUrl };
 }
 
 /**
  * Several readings of the same kind of station, from one pass over their pages: the station list, then one page per
- * station, which the publisher's client paces.
+ * station, which the publisher's client paces. A station page that is gone, moved or failing costs that station only,
+ * and is counted as missing; the list, the byte budget and a renamed parameter fail the whole read, and so does a read
+ * in which no station page answered.
  */
 export async function readInfoaguaStations(
   readings: readonly InfoaguaReadingName[],
   fetcher: typeof fetch,
   origin: string = INFOAGUA_ORIGIN,
-): Promise<{ readings: Array<{ reading: InfoaguaReadingName; stations: InfoaguaStationReadings[] }>; unreadable: number; sourceUrl: string }> {
+): Promise<{ readings: Array<{ reading: InfoaguaReadingName; stations: InfoaguaStationReadings[] }>; unreadable: number; missing: number; sourceUrl: string }> {
   const stationType = INFOAGUA_READINGS[readings[0] ?? "river-level"].stationType;
   if (readings.length === 0 || readings.some((reading) => INFOAGUA_READINGS[reading].stationType !== stationType))
     throw new GatekeeperError("InfoÁgua readings read together must be of one kind of station", "invalid-config");
@@ -197,9 +203,20 @@ export async function readInfoaguaStations(
   if (sites.size === 0) throw new GatekeeperError(`InfoÁgua lists no ${stationType}`, "invalid-response");
   const read = readings.map((reading) => ({ reading, stations: new Array<InfoaguaStationReadings>() }));
   let unreadable = 0;
+  const missing: string[] = [];
   for (const site of sites) {
-    const parameters = assignedJson(await page(new URL(`/pt/cheias/cheia-detalhe/${site}`, origin), fetcher, STATION_PAGE_MAX_BYTES, budget), "DATA_StationParameters");
-    if (!isJsonArray(parameters)) throw new GatekeeperError(`InfoÁgua station ${site} has no list of parameters`, "invalid-response");
+    let parameters: JsonValue;
+    try {
+      parameters = assignedJson(await page(new URL(`/pt/cheias/cheia-detalhe/${site}`, origin), fetcher, STATION_PAGE_MAX_BYTES, budget), "DATA_StationParameters");
+    } catch (error) {
+      if (!(error instanceof GatekeeperError) || !["upstream-error", "source-denied", "invalid-response"].includes(error.code)) throw error;
+      missing.push(site);
+      continue;
+    }
+    if (!isJsonArray(parameters)) {
+      missing.push(site);
+      continue;
+    }
     for (const target of read) {
       const wanted = INFOAGUA_READINGS[target.reading];
       const parameter = parameters.find((entry) => isJsonObject(entry) && entry.id === wanted.parameter);
@@ -224,7 +241,10 @@ export async function readInfoaguaStations(
       target.stations.push({ site, values });
     }
   }
-  return { readings: read, unreadable, sourceUrl: listUrl.toString() };
+  if (missing.length === sites.size) throw new GatekeeperError(`InfoÁgua answered none of its ${sites.size} ${stationType} pages`, "upstream-error");
+  if (missing.length > 0)
+    console.warn(JSON.stringify({ event: "infoagua_station_pages_missing", stationType, missing: missing.length, of: sites.size, sites: missing.slice(0, 10) }));
+  return { readings: read, unreadable, missing: missing.length, sourceUrl: listUrl.toString() };
 }
 
 /** One page, whole: InfoÁgua answers every page from its own origin, and a redirect means the page is not there. */
