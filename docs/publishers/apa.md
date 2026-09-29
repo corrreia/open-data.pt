@@ -12,6 +12,7 @@ APA is read through three libraries, and they are split so that no value is publ
 | `arcgis`   | `sniambgeoogc.apambiente.pt` (SNIAmb)                     | Reference layers: station locations, beaches and their current water quality, flood marks                                                                                                       |
 | `snirh`    | `snirh.apambiente.pt` (SNIRH, the water resources system) | Every measurement, with its history: the station database and three monthly bulletins                                                                                                           |
 | `infoagua` | `infoagua.apambiente.pt` (InfoÁgua, the public water app) | What only InfoÁgua publishes: each watched station's flood alert, each basin's drought index, each reservoir's capacity and uses, and the hourly flow into and out of each reservoir it watches |
+| `qualar`   | `qualar.apambiente.pt` (QualAr, the air quality system)   | The latest hour of each pollutant at every station of the national air quality network                                                                                                          |
 
 InfoÁgua shows the last day or two of SNIRH's readings at the stations it watches for floods,
 sooner than SNIRH does. Two SNIRH feeds take their **live** readings from it, because SNIRH itself now
@@ -71,6 +72,17 @@ No credentials. SNIRH has no API: the `snirh` library reads what its own pages r
   happens to leave from Lisbon.
 
 ## Quirks
+
+- **QualAr's air quality.** The app reads `/api/app.php?type=…`; the library reads `type=medicoes&data=YYYY-MM-DD`,
+  which answers, for that day, every station with the latest hour of each pollutant (`avg`, `validado`, `hora`,
+  `indice`), in the order of the day's `colunas`, and `N.D.` for an hour without a value. A live collection reads
+  yesterday and today, so the hours that close a day are not missed. `type=dados` has a station's 24 hours of a day
+  (a history walk could use it, at 72 requests a day); `download.php` serves only validated data, a year after. Hours
+  are UTC: QualAr does not say so, but nitrogen dioxide at the Lisbon traffic stations peaks at hour 7 and again at
+  17 to 18 on a working day, the rush hours in Lisbon time in summer, and EU air quality reporting uses local
+  standard time, which in mainland Portugal is UTC. Whether an hour is labelled by its start or its end is not
+  stated; readings are dated by the start of the hour. QualAr is on the same server as SNIRH (193.136.235.19),
+  which refuses most of Cloudflare's locations; whether it refuses QualAr too was not known when the feed was added.
 
 - **InfoÁgua's readings.** A station's page is `/pt/cheias/cheia-detalhe/<SNIRH site>`, with
   `DATA_StationParameters`: InfoÁgua's own parameter identifiers (4 river level, 5 rain in 15 minutes,

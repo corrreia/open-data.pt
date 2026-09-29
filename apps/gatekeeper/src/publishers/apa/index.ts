@@ -25,6 +25,7 @@ import { FEED as reservoirStorage } from "./feeds/reservoir-storage";
 import { FEED as riverFlows } from "./feeds/river-flows";
 import { FEED as riverLevels } from "./feeds/river-levels";
 import { FEED as windSpeed } from "./feeds/wind-speed";
+import { FEED as airQuality } from "./feeds/air-quality";
 
 export const PUBLISHER: PublisherDefinition = {
   name: "APA · Agência Portuguesa do Ambiente",
@@ -33,6 +34,9 @@ export const PUBLISHER: PublisherDefinition = {
     // A live collection of river levels or rain reads about ninety station pages of this small app: one a second.
     { host: "infoagua.apambiente.pt", minIntervalSeconds: 1 },
     "sniambgeoogc.apambiente.pt",
+    // QualAr shares its server with SNIRH, which blocked our name after a busy history walk: at most one request every
+    // five seconds, under our own name.
+    { host: "qualar.apambiente.pt", minIntervalSeconds: 5 },
     // One export of 50 stations takes this PHP site up to 15 seconds, and our history walk once had it answering
     // us nonstop until APA blocked our User-Agent (docs/publishers/apa.md): no more than one request every five
     // seconds, under a common browser's name.
@@ -70,5 +74,6 @@ export const PUBLISHER: PublisherDefinition = {
     riverFlows,
     riverLevels,
     windSpeed,
+    airQuality,
   ],
 };

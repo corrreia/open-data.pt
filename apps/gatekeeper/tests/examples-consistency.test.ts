@@ -97,6 +97,7 @@ describe("libraries and the Worker that carries them", () => {
       "opendatasoft",
       "parliament",
       "peeringdb",
+      "qualar",
       "ren",
       "ripestat",
       "snirh",
