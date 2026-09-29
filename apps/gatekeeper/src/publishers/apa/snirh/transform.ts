@@ -15,7 +15,9 @@ import {
   type Transformer,
   type UnstampedResult,
 } from "#/index";
+import { isInfoaguaReading, type InfoaguaReadingName, type InfoaguaStationReadings } from "#/publishers/apa/infoagua/infoagua";
 import { SNIRH_READINGS, decodeEntities, isSnirhReading, parseReadingsCsv, validateSnirhFeedConfig, type SnirhDocument, type SnirhReadingName, type SnirhStation } from "./snirh";
+import { SNIRH_STATIONS } from "./stations";
 
 const SERIES_SCHEMA: CanonicalSchema = {
   fields: [
@@ -44,6 +46,9 @@ const GROUNDWATER_STATES = new Map([
   ["INF_P20", "Below the 20th percentile"],
 ]);
 
+const HOUR_MS = 3_600_000;
+const QUARTER_MS = 900_000;
+
 const MONTHS = new Map([
   ["OUT", 10],
   ["NOV", 11],
@@ -67,13 +72,16 @@ interface Built {
 
 export class SnirhTransformer implements Transformer {
   readonly id = "snirh";
-  readonly version = "1";
+  readonly version = "2";
 
   transform(bytes: Uint8Array, context: TransformContext): UnstampedResult {
     const config = validateSnirhFeedConfig(context.feed.config);
     const document = parseDocument(parseJsonBytes(bytes));
-    if (document.kind !== config.feed) throw new GatekeeperError(`SNIRH collected ${document.kind} for a ${config.feed ?? "?"} feed`, "invalid-response");
-    if (document.kind === "readings" && document.reading !== config.reading)
+    // A readings feed's live collection may come from InfoÁgua, and lands in the same series as its SNIRH history.
+    const stationReadings = document.kind === "readings" || document.kind === "infoagua-readings";
+    if ((stationReadings ? "readings" : document.kind) !== config.feed)
+      throw new GatekeeperError(`SNIRH collected ${document.kind} for a ${config.feed ?? "?"} feed`, "invalid-response");
+    if (stationReadings && document.reading !== config.reading)
       throw new GatekeeperError(`SNIRH collected ${document.reading} for a ${config.reading ?? "?"} feed`, "invalid-response");
     const built = build(document, context.observedAt.slice(0, 7));
     // A history slice may reach past its cursor, as the source counts in whole days, months or years; what lies past it the
@@ -109,7 +117,7 @@ export class SnirhTransformer implements Transformer {
       .sort()
       .at(-1);
     const product: ProductBuild = {
-      productKey: document.kind === "readings" ? document.reading : document.kind,
+      productKey: stationReadings ? document.reading : document.kind,
       slug,
       title: context.feed.title,
       description: context.feed.description,
@@ -129,6 +137,8 @@ function build(document: SnirhDocument, currentMonth: string): Built {
   switch (document.kind) {
     case "readings":
       return readings(document.reading, document.stations, document.tables);
+    case "infoagua-readings":
+      return infoaguaReadings(document.reading, document.stations, document.unreadable);
     case "monthly-precipitation":
       return precipitation(document.months, currentMonth);
     case "reservoir-basins":
@@ -162,6 +172,62 @@ function readings(reading: SnirhReadingName, stations: SnirhStation[], tables: A
     }
   }
   return { points, rejected };
+}
+
+/**
+ * InfoÁgua's readings under the code and name SNIRH files each station by, so they join the series SNIRH's history walk
+ * builds. A station missing from SNIRH's table (one SNIRH added since, or one across the border) is rejected. River
+ * levels are taken as they are. Rain comes in quarter hours and SNIRH's series is hourly: an hour is the sum of the
+ * four quarters ending in it (10:15, 10:30, 10:45 and 11:00 make 11:00), and an hour missing a quarter is left out
+ * rather than published short.
+ */
+function infoaguaReadings(reading: InfoaguaReadingName, stations: InfoaguaStationReadings[], unreadable: number): Built {
+  const unit = SNIRH_READINGS[reading].unit;
+  const network = reading === "precipitation" ? "meteorological" : "hydrometric";
+  const points: SeriesPoint[] = [];
+  let rejected = unreadable;
+  for (const station of stations) {
+    const identity = SNIRH_STATIONS.get(station.site);
+    if (!identity || identity.network !== network) {
+      rejected += station.values.length;
+      continue;
+    }
+    const point = (eventTime: string, value: number): SeriesPoint => ({
+      seriesKey: identity.code,
+      eventTime,
+      value,
+      unit,
+      dimensions: { station: identity.code, name: identity.name },
+    });
+    if (reading === "river-level") {
+      for (const { moment, value } of station.values) points.push(point(utcTime(moment), value));
+      continue;
+    }
+    const hours = new Map<string, Map<string, number>>();
+    for (const { moment, value } of station.values) {
+      const time = Date.parse(utcTime(moment));
+      if (time % QUARTER_MS !== 0) {
+        rejected += 1;
+        continue;
+      }
+      const hour = new Date(Math.ceil(time / HOUR_MS) * HOUR_MS).toISOString();
+      const quarters = hours.get(hour) ?? new Map<string, number>();
+      quarters.set(moment, value);
+      hours.set(hour, quarters);
+    }
+    for (const [hour, quarters] of hours) {
+      if (quarters.size !== 4) continue;
+      const total = [...quarters.values()].reduce((sum, value) => sum + value, 0);
+      // Quarter values are tenths of a millimetre; summing them in binary leaves digits that are not there.
+      points.push(point(hour, Math.round(total * 100) / 100));
+    }
+  }
+  return { points, rejected };
+}
+
+/** InfoÁgua's `YYYY-MM-DD HH:MM:SS`, which is UTC: its times match SNIRH's to the hour. */
+function utcTime(moment: string): string {
+  return `${moment.replace(" ", "T")}.000Z`;
 }
 
 /**
@@ -313,6 +379,22 @@ function parseDocument(value: JsonValue): SnirhDocument {
         return { sites: table.sites.filter(isJsonString), csv: table.csv };
       });
       return withBefore({ kind: "readings", reading, stations, tables });
+    }
+    case "infoagua-readings": {
+      const reading = isJsonString(value.reading) ? value.reading : undefined;
+      if (!isInfoaguaReading(reading) || !isJsonArray(value.stations) || !isJsonNumber(value.unreadable))
+        throw new GatekeeperError("SNIRH live readings document is malformed", "invalid-response");
+      const stations = value.stations.map((station): InfoaguaStationReadings => {
+        if (!isJsonObject(station) || !isJsonString(station.site) || !isJsonArray(station.values))
+          throw new GatekeeperError("SNIRH live readings document has a malformed station", "invalid-response");
+        const values = station.values.map((entry) => {
+          if (!isJsonObject(entry) || !isJsonString(entry.moment) || !isJsonNumber(entry.value))
+            throw new GatekeeperError("SNIRH live readings document has a malformed value", "invalid-response");
+          return { moment: entry.moment, value: entry.value };
+        });
+        return { site: station.site, values };
+      });
+      return withBefore({ kind: "infoagua-readings", reading, stations, unreadable: value.unreadable });
     }
     case "monthly-precipitation":
     case "groundwater-state": {

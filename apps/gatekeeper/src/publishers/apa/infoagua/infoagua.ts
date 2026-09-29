@@ -22,14 +22,20 @@ import {
  * the server with its data written into the HTML as JavaScript assignments
  * (`DATA_Stations = [...]`), and this library reads those.
  *
- * Only what InfoÁgua alone publishes is read: the flood alert state of each
- * watched station and the drought index of each basin. The readings behind
- * them are SNIRH's and come from the `snirh` library, and the beaches are the
- * ArcGIS `Praias` layer's; InfoÁgua keeps only the last 48 hours of readings.
+ * Its own feeds are what InfoÁgua alone publishes: the flood alert state of
+ * each watched station and the drought index of each basin. It also serves the
+ * last 48 hours of the readings behind those alerts, which are SNIRH's: SNIRH's
+ * river level and precipitation feeds take their live readings from here
+ * (`readInfoaguaReadings`), since SNIRH itself answers only from Portugal. The
+ * beaches are the ArcGIS `Praias` layer's.
  */
 export const INFOAGUA_ORIGIN = "https://infoagua.apambiente.pt";
 /** The flood page is about 300 KB; the ceiling leaves room for a flood with every station in alert. */
 export const INFOAGUA_MAX_BYTES = 4 * 1024 * 1024;
+/** One station's page is about 25 KB; the list and about 90 of them are 2.5 MB. */
+const STATION_PAGE_MAX_BYTES = 256 * 1024;
+const READINGS_MAX_BYTES = 8 * 1024 * 1024;
+const FLOOD_LIST_PATH = "/pt/cheias/cheias-pesquisa";
 
 export const INFOAGUA_FEEDS = {
   // The flood alert level InfoÁgua shows for each river, rain and reservoir station it watches.
@@ -53,7 +59,7 @@ interface InfoaguaPage {
 }
 
 const PAGES = {
-  "flood-alerts": { path: "/pt/cheias/cheias-pesquisa", variable: "DATA_Stations" },
+  "flood-alerts": { path: FLOOD_LIST_PATH, variable: "DATA_Stations" },
   "drought-index": { path: "/pt/seca", variable: "DATA_AlertsMap" },
 } as const satisfies Record<InfoaguaFeedName, InfoaguaPage>;
 
@@ -86,15 +92,7 @@ export async function collectInfoaguaFeed(config: SourceConfig, checkpoint: Sour
   const feed = validated.feed as InfoaguaFeedName;
   const origin = fixedOrigin(apiOrigin, INFOAGUA_ORIGIN);
   const url = infoaguaPageUrl(feed, origin);
-  let response: Response;
-  try {
-    response = await fetcher(url, { headers: { Accept: "text/html" }, redirect: "manual" });
-  } catch (error) {
-    throw new GatekeeperError(`InfoÁgua request failed: ${error instanceof Error ? error.message : "network failure"}`, "upstream-error");
-  }
-  if (response.status >= 300 && response.status < 400) throw new GatekeeperError("InfoÁgua redirects are not allowed", "source-denied");
-  if (!response.ok) throw new GatekeeperError(`InfoÁgua returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
-  const html = new TextDecoder().decode(await readBoundedResponse(response, INFOAGUA_MAX_BYTES, "InfoÁgua page"));
+  const html = await page(url, fetcher, INFOAGUA_MAX_BYTES);
   const value = assignedJson(html, PAGES[feed].variable);
   if (!isJsonArray(value)) throw new GatekeeperError(`InfoÁgua ${PAGES[feed].variable} is not a list`, "invalid-response");
   const entries = value.map((entry) => (feed === "flood-alerts" ? floodStation(entry) : droughtBasin(entry)));
@@ -105,6 +103,101 @@ export async function collectInfoaguaFeed(config: SourceConfig, checkpoint: Sour
   const validator: SourceValidator = { etag: await contentEtag(body) };
   if (checkpoint?.etag === validator.etag) return { kind: "not-modified", validator };
   return { kind: "body", body, provenance: { sourceUrl: url.toString() }, completeness: "complete", validator };
+}
+
+/* ---------- Readings, for SNIRH's live feeds ---------- */
+
+/**
+ * What InfoÁgua shows of a watched station's readings, on its own page (`/pt/cheias/cheia-detalhe/<SNIRH site>`,
+ * `DATA_StationParameters`). `parameter` is InfoÁgua's identifier and `name` exactly what it calls it, checked on every
+ * page, because the name is the only thing tying a list of values to a measurement.
+ */
+export const INFOAGUA_READINGS = {
+  // Hourly, 48 hours back: SNIRH's instantaneous river level, on the same UTC clock.
+  "river-level": { stationType: "estacao_hidrometrica", parameter: 4, name: "Nível Hidrométrico (m)" },
+  // Every 15 minutes, 24 hours back: the rain of the quarter hour ending at each time.
+  "precipitation": { stationType: "estacao_meteorologica", parameter: 5, name: "Precipitação acumulada em 15 min. (mm)" },
+} as const;
+
+export type InfoaguaReadingName = keyof typeof INFOAGUA_READINGS;
+
+export function isInfoaguaReading(value: string | undefined): value is InfoaguaReadingName {
+  return value !== undefined && Object.hasOwn(INFOAGUA_READINGS, value);
+}
+
+/** One watched station's values of one measurement, each at a time InfoÁgua writes `YYYY-MM-DD HH:MM:SS` in UTC. */
+export interface InfoaguaStationReadings {
+  /** The SNIRH site InfoÁgua files the station under (`snirh_source_id`). */
+  site: string;
+  values: Array<{ moment: string; value: number }>;
+}
+
+export interface InfoaguaReadings {
+  stations: InfoaguaStationReadings[];
+  /** Values that were there but could not be read: a malformed time, or a value that is not a number. */
+  unreadable: number;
+  /** The page a person can open: the list of watched stations. */
+  sourceUrl: string;
+}
+
+/**
+ * Every station InfoÁgua watches of the kind that measures the reading, with the values its page shows: the station
+ * list, then one page per station, which the publisher's client paces.
+ */
+export async function readInfoaguaReadings(reading: InfoaguaReadingName, fetcher: typeof fetch, origin: string = INFOAGUA_ORIGIN): Promise<InfoaguaReadings> {
+  const wanted = INFOAGUA_READINGS[reading];
+  const budget = { remaining: READINGS_MAX_BYTES };
+  const listUrl = new URL(FLOOD_LIST_PATH, origin);
+  const list = assignedJson(await page(listUrl, fetcher, INFOAGUA_MAX_BYTES, budget), "DATA_Stations");
+  if (!isJsonArray(list)) throw new GatekeeperError("InfoÁgua DATA_Stations is not a list", "invalid-response");
+  const sites = new Set<string>();
+  for (const entry of list) {
+    if (isJsonObject(entry) && entry.station_type_id === wanted.stationType && isJsonNumber(entry.snirh_source_id)) sites.add(String(entry.snirh_source_id));
+  }
+  if (sites.size === 0) throw new GatekeeperError(`InfoÁgua lists no ${wanted.stationType}`, "invalid-response");
+  const stations: InfoaguaStationReadings[] = [];
+  let unreadable = 0;
+  for (const site of sites) {
+    const parameters = assignedJson(await page(new URL(`/pt/cheias/cheia-detalhe/${site}`, origin), fetcher, STATION_PAGE_MAX_BYTES, budget), "DATA_StationParameters");
+    if (!isJsonArray(parameters)) throw new GatekeeperError(`InfoÁgua station ${site} has no list of parameters`, "invalid-response");
+    const parameter = parameters.find((entry) => isJsonObject(entry) && entry.id === wanted.parameter);
+    // A station that does not measure it here has nothing to give.
+    if (!isJsonObject(parameter)) continue;
+    const name = isJsonString(parameter.name) ? parameter.name.trim() : "";
+    if (name !== wanted.name) throw new GatekeeperError(`InfoÁgua named parameter ${wanted.parameter} "${name}" where "${wanted.name}" was expected`, "invalid-response");
+    const values: InfoaguaStationReadings["values"] = [];
+    for (const entry of isJsonArray(parameter.values) ? parameter.values : []) {
+      if (!isJsonObject(entry)) {
+        unreadable += 1;
+        continue;
+      }
+      // An hour without a reading is written with an empty value.
+      if (entry.value === null || entry.value === "") continue;
+      if (!isJsonString(entry.moment) || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/u.test(entry.moment) || !isJsonNumber(entry.value)) {
+        unreadable += 1;
+        continue;
+      }
+      values.push({ moment: entry.moment, value: entry.value });
+    }
+    stations.push({ site, values });
+  }
+  return { stations, unreadable, sourceUrl: listUrl.toString() };
+}
+
+/** One page, whole: InfoÁgua answers every page from its own origin, and a redirect means the page is not there. */
+async function page(url: URL, fetcher: typeof fetch, maxBytes: number, budget: { remaining: number } = { remaining: maxBytes }): Promise<string> {
+  let response: Response;
+  try {
+    response = await fetcher(url, { headers: { Accept: "text/html" }, redirect: "manual" });
+  } catch (error) {
+    throw new GatekeeperError(`InfoÁgua request failed: ${error instanceof Error ? error.message : "network failure"}`, "upstream-error");
+  }
+  if (response.status >= 300 && response.status < 400) throw new GatekeeperError("InfoÁgua redirects are not allowed", "source-denied");
+  if (!response.ok) throw new GatekeeperError(`InfoÁgua returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+  if (budget.remaining <= 0) throw new GatekeeperError("InfoÁgua pages exceed this collection's byte budget", "response-too-large");
+  const bytes = await readBoundedResponse(response, Math.min(maxBytes, budget.remaining), "InfoÁgua page");
+  budget.remaining -= bytes.byteLength;
+  return new TextDecoder().decode(bytes);
 }
 
 /**

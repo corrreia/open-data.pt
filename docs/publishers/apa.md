@@ -13,10 +13,14 @@ APA is read through three libraries, and they are split so that no value is publ
 | `snirh`    | `snirh.apambiente.pt` (SNIRH, the water resources system) | Every measurement, with its history: the station database and three monthly bulletins        |
 | `infoagua` | `infoagua.apambiente.pt` (InfoÁgua, the public water app) | What only InfoÁgua publishes: each watched station's flood alert, each basin's drought index |
 
-InfoÁgua shows the same readings as SNIRH, sooner. They are not read from it: it keeps only 48
-hours, so a feed built on it could never be backfilled, and the two sources would overlap. Its beach
-pages repeat the ArcGIS `Praias` layer, so those are not read either. Its flood alerts and drought
-index have no archive at all, so their history starts from our first collection.
+InfoÁgua shows the last day or two of SNIRH's readings at the stations it watches for floods,
+sooner than SNIRH does. Two SNIRH feeds take their **live** readings from it, because SNIRH itself now
+answers only from Portugal (below): river levels (hourly, 48 hours, about 90 stations) and
+precipitation (every 15 minutes, 24 hours, about 90 gauges). They stay SNIRH feeds: same slug, same
+series keyed by SNIRH's station code, and their history walk still reads SNIRH's database. Nothing
+else is read from InfoÁgua's readings, so no value is published twice. Its beach pages repeat the
+ArcGIS `Praias` layer and are not read. Its flood alerts and drought index have no archive at all,
+so their history starts from our first collection.
 
 ## Access
 
@@ -38,31 +42,31 @@ No credentials. SNIRH has no API: the `snirh` library reads what its own pages r
   is now read at most once every five seconds (`minIntervalSeconds` in APA's `index.ts`), and under a
   common Chrome User-Agent (`userAgent` there) rather than ours. The history walk still runs, at that
   pace.
-- **Refused from most Cloudflare locations, 27 September 2026.** Even under that name, SNIRH answered
-  403 to the first request of about half the collections, by where they left Cloudflare, not by any
-  header: over seven days of sampled requests, Lisbon 320 answered and none refused, Madrid 440 and 40,
-  Marseille 20 and 50, Paris none and 10. The same requests from outside Cloudflare were all answered,
-  and a feed's collections mostly run from the same location, so precipitation, wind speed and
-  groundwater levels never got through. The `snirh` library is therefore `placed`: its collections
-  run in the Gatekeeper's own `fetch` handler, which `placement` in its Wrangler configuration has
-  Cloudflare run near SNIRH's server, and which the Gatekeeper reaches through a binding to itself
-  (`src/placed.ts`). Placement moves only a `fetch` handler, never an RPC method, and a request to a
-  binding counts against the 32 Worker invocations one request may make, so a whole collection (the
-  wells take about a hundred requests) is one call. Spans record `cloudflare.colo`: SNIRH's requests
-  should all say `LIS`.
-- **Placed near Madrid, not near SNIRH, 28 September 2026.** The first placement was
-  `hostname: "snirh.apambiente.pt"`. SNIRH's server is in Portugal (193.136.235.19, announced by FCCN,
-  AS1930), but Cloudflare's probes placed it near Paris, and every collection then left from Paris,
-  which SNIRH refuses. No cloud region is in Portugal; Madrid is the nearest one, and the location
-  SNIRH answered most after Lisbon. Placement cannot name a Cloudflare location itself.
-- **Only Lisbon, 28 September 2026.** Madrid then stopped answering too: in the day's sampled requests,
-  Lisbon 6 answered, Madrid 15 refused, Marseille 3, Milan 2 and Paris 1. The Madrid placement sent
-  every collection to a location SNIRH refuses. Placement is now `host: "snirh.apambiente.pt:443"`,
-  which probes SNIRH with TCP connections. The `hostname` probes were HTTP requests, which SNIRH
-  refuses from outside Portugal as it refuses us; a TCP connection completes from anywhere, so it
-  measures where SNIRH's server is rather than where it answers.
+- **Only from Portugal, since 27 September 2026.** SNIRH answers 403 to requests from every
+  Cloudflare location but Lisbon (in a day of sampled requests on 28 September: Lisbon 6 answered;
+  Madrid 15, Marseille 3, Milan 2 and Paris 1 refused), and from outside Portugal generally; from a
+  Portuguese connection it answers. A feed's collections mostly leave from the same location, so some
+  SNIRH feeds read and others never do. Three placement hints were tried and removed: `hostname`
+  (Cloudflare's HTTP probes are refused too, and it placed SNIRH near Paris), `region` Madrid (Madrid
+  is refused), and `host` over TCP (it placed nothing). No cloud region is in Portugal, and placement
+  cannot name a Cloudflare location. A tunnel through a Portuguese home connection worked until APA
+  dropped that address at its firewall, on 29 September, within minutes. River levels and
+  precipitation now read live from InfoÁgua instead; the other SNIRH feeds read when a collection
+  happens to leave from Lisbon.
 
 ## Quirks
+
+- **InfoÁgua's readings.** A station's page is `/pt/cheias/cheia-detalhe/<SNIRH site>`, with
+  `DATA_StationParameters`: InfoÁgua's own parameter identifiers (4 river level, 5 rain in 15 minutes)
+  and names, which the library checks. Times are UTC, as SNIRH's. InfoÁgua names a station only by
+  its SNIRH site; `snirh/stations.ts` pairs each site with the code and name SNIRH's station lists
+  print, read from those lists on 27 September 2026. A station missing there (one SNIRH added since,
+  or one in Spain, such as Badajoz and Riviera Gata) is rejected. Checked against SNIRH's database on
+  29 September, 15 river stations over 36 hours: 13 identical; Atrozela (21A/06H) shows 0 where SNIRH
+  has a level below the gauge zero, and Junção das Ribeiras (21A/02H) about 0.05 m where SNIRH has
+  0.10 m. An hour of rain is the sum of the four quarters ending in it; that quarters end at their
+  time (11:00 is 10:45 to 11:00) is InfoÁgua's convention as its pages show it, not yet compared
+  with SNIRH's hourly totals.
 
 - **Columns carry no station.** The export's header names the parameter above each column, never the
   station. Columns follow the order of `sites`, but a station that does not hold the parameter gets
