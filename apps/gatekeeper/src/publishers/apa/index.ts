@@ -28,7 +28,8 @@ export const PUBLISHER: PublisherDefinition = {
   name: "APA · Agência Portuguesa do Ambiente",
   url: "https://apambiente.pt/",
   sources: [
-    "infoagua.apambiente.pt",
+    // A live collection of river levels or rain reads about ninety station pages of this small app: one a second.
+    { host: "infoagua.apambiente.pt", minIntervalSeconds: 1 },
     "sniambgeoogc.apambiente.pt",
     // One export of 50 stations takes this PHP site up to 15 seconds, and our history walk once had it answering
     // us nonstop until APA blocked our User-Agent (docs/publishers/apa.md): no more than one request every five

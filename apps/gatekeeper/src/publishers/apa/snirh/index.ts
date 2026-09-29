@@ -8,6 +8,7 @@ export {
   SNIRH_READINGS,
   collectSnirhFeed,
   collectSnirhHistory,
+  collectSnirhLiveFromInfoagua,
   isSnirhReading,
   parseReadingsCsv,
   parseStationList,

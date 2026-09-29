@@ -20,6 +20,7 @@ import {
   SnirhTransformer,
   collectSnirhFeed,
   collectSnirhHistory,
+  collectSnirhLiveFromInfoagua,
   parseReadingsCsv,
   parseStationList,
   resolveSnirhFeed,
@@ -59,6 +60,28 @@ function snirh(options: SourceOptions = {}) {
     if (url.pathname.endsWith("tabelageral.php")) return new Response(fixture("reservoir-basins-2025.html"));
     return new Response("not found", { status: 404 });
   });
+}
+
+const RAIN = { feed: "readings", reading: "precipitation" };
+const RAIN_PARAMETER = "Precipitação acumulada em 15 min. (mm)";
+
+/**
+ * InfoÁgua as its pages answer: the watched stations (a river station, one across the border, a rain gauge and one
+ * across the border), then each station's page by its SNIRH site. The river pages are saved; rain pages are given.
+ */
+function infoagua(url: URL, stationPages: ReadonlyMap<string, string> = new Map()): Response {
+  if (url.pathname === "/pt/cheias/cheias-pesquisa") return new Response(text("infoagua-stations.html"));
+  const site = /^\/pt\/cheias\/cheia-detalhe\/(\d+)$/u.exec(url.pathname)?.[1] ?? "";
+  const given = stationPages.get(site);
+  if (given !== undefined) return new Response(given);
+  if (site === "1627758998" || site === "6833993048") return new Response(text(`infoagua-station-${site}.html`));
+  return new Response(stationPage(RAIN_PARAMETER, []));
+}
+
+/** A station's page as InfoÁgua writes it, with one parameter's values. */
+function stationPage(name: string, values: Array<[moment: string, value: number]>): string {
+  const parameters = [{ id: 5, name, unit: "mm", values: values.map(([moment, value]) => ({ moment, value })) }];
+  return `<html><body><script>\n\t\tvar DATA_StationParameters = ${JSON.stringify(parameters)};\n\t\tvar DATA_LastHours = 24;\n</script></body></html>`;
 }
 
 function bodyOf(fetched: SourceFetch): SourceBody {
@@ -366,9 +389,60 @@ describe("SNIRH groundwater state", () => {
   });
 });
 
+describe("SNIRH live readings from InfoÁgua", () => {
+  it("sums each hour of rain from the four quarters ending in it, and leaves out an hour missing one", async () => {
+    const pages = new Map([
+      [
+        "920685152",
+        stationPage(RAIN_PARAMETER, [
+          ["2026-09-29 10:00:00", 0.5],
+          ["2026-09-29 10:15:00", 0.1],
+          ["2026-09-29 10:30:00", 0.2],
+          ["2026-09-29 10:45:00", 0.3],
+          ["2026-09-29 11:00:00", 0.4],
+          ["2026-09-29 11:15:00", 1],
+        ]),
+      ],
+      // Riviera Gata, across the border, is in no SNIRH station list.
+      [
+        "1693711528",
+        stationPage(RAIN_PARAMETER, [
+          ["2026-09-29 10:15:00", 1],
+          ["2026-09-29 10:30:00", 1],
+          ["2026-09-29 10:45:00", 1],
+          ["2026-09-29 11:00:00", 1],
+        ]),
+      ],
+    ]);
+    const fetched = await collectSnirhLiveFromInfoagua(RAIN, undefined, async (input) => infoagua(new URL(input.toString()), pages));
+    const context = {
+      feed: {
+        slug: "snirh-precipitation-feed",
+        title: "Test",
+        description: "test feed",
+        config: RAIN,
+        semantics: { domainSubject: "observation" as const, defaultProductRole: "time-series" as const },
+      },
+      observedAt: "2026-09-29T12:00:00.000Z",
+    };
+    const result = await runTransformer(new SnirhTransformer(), bytesOf(fetched), context);
+    expect(result.products.map(pointsOf)).toEqual([
+      [{ seriesKey: "09J/03UG", eventTime: "2026-09-29T11:00:00.000Z", value: 1, unit: "mm", dimensions: { station: "09J/03UG", name: "CALDE" } }],
+    ]);
+    expect(result.quality.rejectedRecords).toBe(4);
+  });
+
+  it("refuses a page whose parameter no longer means what it did", async () => {
+    const pages = new Map([["920685152", stationPage("Precipitação acumulada em 1 hora (mm)", [["2026-09-29 11:00:00", 0.4]])]]);
+    await expect(collectSnirhLiveFromInfoagua(RAIN, undefined, async (input) => infoagua(new URL(input.toString()), pages))).rejects.toMatchObject({ code: "invalid-response" });
+  });
+});
+
 describe("SNIRH through a feed's own file", () => {
-  it("frames a live collection with the feed's fetch, and a history slice with its backfill", async () => {
-    const { resolved, collector } = await feedCollection("snirh-river-levels-feed", { fetcher: snirh(), now: () => new Date("2026-09-22T02:00:00.000Z") });
+  it("frames a live collection from InfoÁgua with the feed's fetch, and a history slice from SNIRH with its backfill", async () => {
+    const fetcher = snirh({ onRequest: (url) => (url.hostname === "infoagua.apambiente.pt" ? infoagua(url) : undefined) });
+    const hosts = (): string[] => fetcher.mock.calls.map(([input]) => new URL(input.toString()).hostname);
+    const { resolved, collector } = await feedCollection("snirh-river-levels-feed", { fetcher, now: () => new Date("2026-09-22T02:00:00.000Z") });
     const live = await collectNormalized(await request({ configHash: resolved.configHash }), collector);
     expect(live.kind).toBe("batch");
     if (live.kind !== "batch") return;
@@ -384,13 +458,24 @@ describe("SNIRH through a feed's own file", () => {
     const complete: JsonObject | undefined = frames.at(-1);
     expect(complete?.type).toBe("complete");
     expect(frames.filter((frame) => frame.type === "record")).toHaveLength(0);
-    expect(frames.filter((frame) => frame.type === "point")).toHaveLength(48);
+    // Ponte Alvalade Sado's two days of hourly levels, under its SNIRH code and name; Badajoz shows none.
+    const points = frames.filter((frame) => frame.type === "point").map((frame) => frame.value);
+    expect(points).toHaveLength(48);
+    expect(points[0]).toEqual({
+      seriesKey: "26G/05H",
+      eventTime: "2026-09-29T11:00:00.000Z",
+      value: 0.53,
+      unit: "m",
+      dimensions: { station: "26G/05H", name: "PONTE ALVALADE SADO" },
+    });
+    expect(new Set(hosts())).toEqual(new Set(["infoagua.apambiente.pt"]));
 
     const history = await collectNormalized(
       await request({ configHash: resolved.configHash, mode: { kind: "history", cursor: { before: "2026-09-21T00:00:00.000Z" } } }),
       collector,
     );
     expect(history.kind).toBe("batch");
+    expect(hosts()).toContain("snirh.apambiente.pt");
   });
 });
 

@@ -10,6 +10,7 @@ import {
   type SourceFetch,
   type SourceValidator,
 } from "#/index";
+import { isInfoaguaReading, readInfoaguaReadings, type InfoaguaReadingName, type InfoaguaStationReadings } from "#/publishers/apa/infoagua/infoagua";
 
 /**
  * SNIRH, APA's national water resources information system. It has no API:
@@ -232,6 +233,7 @@ export interface SnirhReadingsTable {
 
 export type SnirhDocument =
   | { kind: "readings"; reading: SnirhReadingName; stations: SnirhStation[]; tables: SnirhReadingsTable[]; before?: string }
+  | { kind: "infoagua-readings"; reading: InfoaguaReadingName; stations: InfoaguaStationReadings[]; unreadable: number; before?: string }
   | { kind: "monthly-precipitation"; months: Array<{ month: string; xml: string }>; before?: string }
   | { kind: "reservoir-basins"; years: Array<{ hydrologicalYear: number; html: string }>; before?: string }
   | { kind: "groundwater-state"; months: Array<{ month: string; xml: string }>; before?: string };
@@ -261,6 +263,24 @@ export async function collectSnirhFeed(
   now: Date = new Date(),
 ): Promise<SourceFetch> {
   return collect(config, { kind: "live", now }, checkpoint, apiOrigin, fetcher);
+}
+
+/**
+ * A live collection of river levels or precipitation, read from InfoÁgua. APA's public water app shows the last day or
+ * two of the same readings, sooner than the station database does, and answers from anywhere; SNIRH answers only from
+ * Portugal (docs/publishers/apa.md). The history walk still reads SNIRH's station database.
+ */
+export async function collectSnirhLiveFromInfoagua(config: SourceConfig, checkpoint: SourceValidator | undefined, fetcher: typeof fetch): Promise<SourceFetch> {
+  const validated = validateSnirhFeedConfig(config);
+  const reading = validated.reading;
+  if (validated.feed !== "readings" || !isInfoaguaReading(reading))
+    throw new GatekeeperError(`InfoÁgua shows no live ${reading ?? validated.feed ?? "?"} readings`, "invalid-config");
+  const read = await readInfoaguaReadings(reading, fetcher);
+  const document: SnirhDocument = { kind: "infoagua-readings", reading, stations: read.stations, unreadable: read.unreadable };
+  const body = new TextEncoder().encode(JSON.stringify(document));
+  const validator: SourceValidator = { etag: await contentEtag(body) };
+  if (checkpoint?.etag === validator.etag) return { kind: "not-modified", validator };
+  return { kind: "body", body, provenance: { sourceUrl: read.sourceUrl }, completeness: "complete", validator };
 }
 
 export async function collectSnirhHistory(config: SourceConfig, cursor: HistoryCursor, apiOrigin: string, fetcher: typeof fetch): Promise<SourceFetch> {
