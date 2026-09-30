@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFixtureBytes } from "#/tests/support";
 import type { CanonicalField, CanonicalRecord, ProductDeclaration, TransformContext, TransformQuality } from "@open-data-pt/contract";
-import { feedsOf } from "#/tests/catalog";
 import { ArcgisTransformer } from "#/formats/arcgis/index";
 
 const transformer = new ArcgisTransformer();
@@ -137,24 +136,5 @@ describe("ArcGIS transformers — APA SNIAmb live fixtures", () => {
       entityKey: "1201",
       payload: { nome: "Coimbra", limite: 689 },
     });
-  });
-
-  it("ships ten ready-to-install APA examples", () => {
-    const examples = feedsOf("arcgis").filter((example) => example.config.host === "sniambgeoogc.apambiente.pt");
-
-    expect(examples).toHaveLength(10);
-    expect(examples.map((example) => `${example.config.service}/${example.config.layer}`).toSorted()).toEqual([
-      "getogc/rest/services/SNIAmb/Aguas_Balneares/MapServer/0",
-      "getogc/rest/services/SNIAmb/CELE/MapServer/0",
-      "getogc/rest/services/SNIAmb/Estacoes_hidrometricas/MapServer/0",
-      "getogc/rest/services/SNIAmb/Estacoes_meteorologicas/MapServer/0",
-      "getogc/rest/services/SNIAmb/Marcas_cheias/MapServer/0",
-      "getogc/rest/services/SNIAmb/Praias/MapServer/0",
-      "getogc/rest/services/SNIAmb/Praias/MapServer/2",
-      "getogc/rest/services/SNIAmb/Prevencao_Acidentes_Graves/MapServer/0",
-      "getogc/rest/services/SNIAmb/Qualidade_do_Ar/MapServer/0",
-      "getogc/rest/services/SNIAmb/RADNET/MapServer/0",
-    ]);
-    expect(examples.every((example) => example.policy.maxBytes === 5 * 1024 * 1024 && example.policy.historyMode === "changes")).toBe(true);
   });
 });

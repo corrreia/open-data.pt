@@ -7,11 +7,11 @@ stations, groundwater, flood alerts, drought), and its reference layers.
 
 APA is read through three libraries, and they are split so that no value is published twice:
 
-| Library    | Where                                                     | What                                                                                                                                                                                            |
-| ---------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `arcgis`   | `sniambgeoogc.apambiente.pt` (SNIAmb)                     | Reference layers: station locations, beaches and their current water quality, flood marks                                                                                                       |
-| `snirh`    | `snirh.apambiente.pt` (SNIRH, the water resources system) | Every measurement, with its history: the station database and three monthly bulletins                                                                                                           |
-| `infoagua` | `infoagua.apambiente.pt` (InfoÁgua, the public water app) | What only InfoÁgua publishes: each watched station's flood alert, each basin's drought index, each reservoir's capacity and uses, and the hourly flow into and out of each reservoir it watches |
+| Library    | Where                                                     | What                                                                                                                                                                                                                                              |
+| ---------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `arcgis`   | `sniambgeoogc.apambiente.pt` (SNIAmb)                     | Reference layers: station locations, beaches and their current water quality, flood marks, landfills, combustion plants, impact assessments, EMAS sites, waste infrastructure and operators; live beach occupancy; radioactivity readings (SIRAD) |
+| `snirh`    | `snirh.apambiente.pt` (SNIRH, the water resources system) | Every measurement, with its history: the station database and three monthly bulletins                                                                                                                                                             |
+| `infoagua` | `infoagua.apambiente.pt` (InfoÁgua, the public water app) | What only InfoÁgua publishes: each watched station's flood alert, each basin's drought index, each reservoir's capacity and uses, and the hourly flow into and out of each reservoir it watches                                                   |
 
 InfoÁgua shows the last day or two of SNIRH's readings at the stations it watches for floods,
 sooner than SNIRH does. Two SNIRH feeds take their **live** readings from it, because SNIRH itself now
@@ -72,6 +72,20 @@ No credentials. SNIRH has no API: the `snirh` library reads what its own pages r
 
 ## Quirks
 
+- **Radioactivity (SIRAD).** `Visualizador/sirad` holds one layer per measurement (1 gamma dose rate
+  in air, 2 in river water, 5 gamma activity of aerosols; 3, 4 and 6, alpha, beta and iodine, stopped
+  in July 2026 and are not read), each with only the latest reading of every station. The feeds read
+  them every hour through the `arcgis` library and `radioactivity.ts` turns the rows into one series
+  per station, so the history is ours. `data_hora` is an ArcGIS date: ArcGIS keeps dates in UTC and
+  the layer declares no other time zone; the newest reading was 30 to 45 minutes old against UTC when
+  read. Not compared with another source.
+- **Layers left out, 30 September 2026:** the pollutant release register (`SNIAmb/Licenciamento`),
+  which carries each establishment's email, phone and fax, some of them a named person's, and which
+  the `arcgis` library cannot publish without; marine litter (`Visualizador/LixoMarinho`), which
+  refuses queries; noise maps, flood-risk zones and impact-assessment areas, which are large polygons
+  that change every few years; and `Visualizador/SolarFlutuantes`, whose layers are water-supply
+  intakes, not floating solar.
+
 - **InfoÁgua's readings.** A station's page is `/pt/cheias/cheia-detalhe/<SNIRH site>`, with
   `DATA_StationParameters`: InfoÁgua's own parameter identifiers (4 river level, 5 rain in 15 minutes,
   6 reservoir inflow, 2 reservoir outflow)
@@ -108,4 +122,6 @@ No credentials. SNIRH has no API: the `snirh` library reads what its own pages r
 Not asked. SNIRH's footer states: "É permitido o uso dos conteúdos deste site, desde que mencionada a
 sua fonte" (the site's contents may be used if the source is named), which is the `snirh-terms`
 licence. InfoÁgua states no terms of its own (`source-terms`). APA's SNIAmb layers are CC BY 4.0 on
-dados.gov.pt. There is no `robots.txt` on either site.
+dados.gov.pt. The layers added on 30 September 2026 (the `Visualizador` and `AIA` services, and the
+SNIAmb landfill, EMAS and waste layers) are listed there with their licence not specified, so they
+carry `source-terms`. There is no `robots.txt` on either site.
