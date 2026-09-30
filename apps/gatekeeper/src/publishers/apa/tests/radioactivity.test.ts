@@ -22,6 +22,7 @@ function layerDocument(features: JsonValue[]): ReadableStream<Uint8Array> {
 describe("APA radioactivity readings", () => {
   it("puts each station's reading on its own series, dated by when it was measured, in the unit a person reads", async () => {
     const unknownUnit = { type: "Feature", properties: { id_estacao: 9999, nome_estacao: "Test", data_hora: 1790719200000, valor: 1, unidade: "rem" } };
+    const impossibleTime = { type: "Feature", properties: { id_estacao: 9998, nome_estacao: "Test", data_hora: 1e20, valor: 1, unidade: "nsvh" } };
     const context = {
       feed: {
         slug: "apa-radioactivity-air-feed",
@@ -32,7 +33,7 @@ describe("APA radioactivity readings", () => {
       },
       observedAt: "2026-09-30T00:00:00.000Z",
     };
-    const transform = await new RadioactivityTransformer().transform(layerDocument([...savedFeatures(), unknownUnit]), context);
+    const transform = await new RadioactivityTransformer().transform(layerDocument([...savedFeatures(), unknownUnit, impossibleTime]), context);
     const rows: NormalizedRow[] = [];
     for await (const row of transform.rows) rows.push(row);
     const points = rows.flatMap((row) => (row.point ? [row.point] : []));
@@ -41,6 +42,7 @@ describe("APA radioactivity readings", () => {
     expect(new Set(points.map((point) => point.seriesKey)).size).toBe(31);
     // Meimoa, under maintenance, still shows its reading of 13 March 2025: the point keeps that time, not the poll's.
     expect(points).toContainEqual({ seriesKey: "1501", eventTime: "2025-03-13T15:00:00.000Z", value: 63, unit: "nSv/h", dimensions: { station: "1501", name: "Meimoa" } });
-    expect(transform.finish().quality).toEqual({ acceptedRecords: 31, rejectedRecords: 1 });
+    // One reading in a unit it does not know and one at a time no date can hold cost only themselves.
+    expect(transform.finish().quality).toEqual({ acceptedRecords: 31, rejectedRecords: 2 });
   });
 });

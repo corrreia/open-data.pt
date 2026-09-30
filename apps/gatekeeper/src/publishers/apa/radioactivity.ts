@@ -60,7 +60,13 @@ export class RadioactivityTransformer implements StreamingTransformer {
           rejected += 1;
           continue;
         }
-        const eventTime = new Date(time).toISOString();
+        // A time no date can hold is that reading's fault, not the collection's.
+        const measured = new Date(time);
+        if (Number.isNaN(measured.getTime())) {
+          rejected += 1;
+          continue;
+        }
+        const eventTime = measured.toISOString();
         if (watermark === undefined || eventTime > watermark) watermark = eventTime;
         accepted += 1;
         yield {
