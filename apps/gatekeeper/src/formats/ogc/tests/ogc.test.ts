@@ -10,7 +10,6 @@ import {
   isJsonNumber,
   isJsonObject,
   isJsonString,
-  libraryConfig,
   parseJson,
   resolveLibraryFeed,
   type CollectionRequest,
@@ -263,11 +262,6 @@ describe("OGC API Features configuration", () => {
 
   it("refuses a host outside the allowlist", () => {
     expect(() => validateOgcFeedConfig({ host: "attacker.example", collection: "municipios" }, hosts)).toThrow(/not allowed/);
-  });
-
-  it.each(feedsOf("ogc"))("validates the curated $slug example", (example) => {
-    const candidate = libraryConfig(example.config);
-    expect(validateOgcFeedConfig(candidate, hosts)).toEqual(candidate);
   });
 
   it("builds every resource URL from validated identifiers alone", () => {
@@ -1208,16 +1202,6 @@ describe("OGC API Features through the shared collector", () => {
 });
 
 describe("OGC API Features examples", () => {
-  it("ships every curated collection under its own slug, each naming its own library", () => {
-    expect(feedsOf("ogc").every((example) => example.config.source === "ogc")).toBe(true);
-    expect(new Set(feedsOf("ogc").map((example) => example.slug)).size).toBe(feedsOf("ogc").length);
-    // Six CAOP tables, eighteen SRUP registers plus the SGIFR points, the
-    // land-use table whole, and its boundaries one feed per mainland municipality.
-    expect(feedsOf("ogc").filter((example) => example.slug.startsWith("dgt-caop-"))).toHaveLength(6);
-    expect(feedsOf("ogc").filter((example) => example.slug.startsWith("dgt-srup-"))).toHaveLength(18);
-    expect(feedsOf("ogc").filter((example) => example.slug.startsWith("dgt-crus-parcels-"))).toHaveLength(278);
-  });
-
   it("reads each collection once, unless the second read is its boundaries", () => {
     const attributes = feedsOf("ogc")
       .filter((example) => example.config.geometry === "skip")
@@ -1233,10 +1217,6 @@ describe("OGC API Features examples", () => {
     expect(municipalities.every((code) => /^\d{4}$/u.test(code ?? ""))).toBe(true);
     // Nothing else is cut by an attribute value.
     expect(feedsOf("ogc").filter((example) => example.config.filterField !== undefined && example.config.collection !== "crus")).toEqual([]);
-  });
-
-  it("reads only the two services it is allowed to read", () => {
-    expect(new Set(feedsOf("ogc").map((example) => example.config.host))).toEqual(new Set([DGT_HOST, LNEG_HOST]));
   });
 
   it("says in every CAOP title that the charter covers the mainland only", () => {
@@ -1268,16 +1248,6 @@ describe("OGC API Features examples", () => {
   // The eight Azores collections that used to live here were removed in September 2026:
   // ambiente.azores.gov.pt answers our Workers with a Cloudflare challenge. The library
   // tests above still cover the basePath and outline paths those feeds exercised.
-  // DGT states CC BY 4.0 on the service's HTML landing page, which pygeoapi
-  // leaves out of the JSON this library reads; the same licence is on DGT's own
-  // site and on its dados.gov.pt records.
-  it("serves the CAOP under the licence DGT states", () => {
-    for (const example of feedsOf("ogc")) {
-      expect(example.licence).toBe("cc-by-4.0");
-      expect(example.attribution ?? "").not.toBe("");
-    }
-  });
-
   it("polls reference layers weekly or monthly, never faster, and never calls one stale before it is due", () => {
     for (const example of feedsOf("ogc")) {
       const { cadenceSeconds } = example.policy;

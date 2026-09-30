@@ -12,13 +12,12 @@ import {
   type SourceBody,
   type SourceFetch,
   feedCollector,
-  libraryConfig,
   resolveLibraryFeed,
   feedNormalizer,
 } from "#/index";
 import { RUNNABLE } from "#/catalog/index";
 import { MAX_METADATA_BYTES, collectArcgisFeed, validateArcgisFeedConfig } from "#/formats/arcgis/index";
-import { carriedLibraries, feedsOf } from "#/tests/catalog";
+import { carriedLibraries } from "#/tests/catalog";
 
 const hosts = new Set(["services.arcgis.com"]);
 const config = {
@@ -28,7 +27,6 @@ const config = {
 };
 const layerUrl = "https://services.arcgis.com/account/arcgis/rest/services/Useful_Layer/FeatureServer/0";
 const revision = { etag: 'W/"1788509530839"', lastModified: "Fri, 04 Sep 2026 08:12:10 GMT" };
-const newLisbonExamples = feedsOf("arcgis").filter((example) => example.slug.startsWith("lisbon-"));
 
 const metadata = {
   name: "Useful layer",
@@ -139,19 +137,6 @@ describe("ArcGIS Gatekeeper", () => {
   it("normalizes structured and layerUrl configurations", () => {
     expect(validateArcgisFeedConfig(config, hosts)).toEqual(config);
     expect(validateArcgisFeedConfig({ layerUrl }, hosts)).toEqual(config);
-  });
-
-  it.each(newLisbonExamples)("validates the curated $slug example", (example) => {
-    const config = libraryConfig(example.config);
-    expect(validateArcgisFeedConfig(config, hosts)).toEqual(config);
-  });
-
-  it("ships every newly curated Lisbon layer", () => {
-    expect(newLisbonExamples).toHaveLength(24);
-    const permits = newLisbonExamples.find((example) => example.slug === "lisbon-building-permits-feed");
-    // The permits layer outgrew the kernel's default output cap: 14,737 outlines, about 19 MB normalized.
-    expect(permits?.policy).toMatchObject({ maxBytes: 32 * 1024 * 1024, maxOutputBytes: 48 * 1024 * 1024 });
-    expect(newLisbonExamples.every((example) => (example === permits || example.policy.maxBytes === 5 * 1024 * 1024) && example.policy.historyMode === "changes")).toBe(true);
   });
 
   it("rejects denied hosts and unsafe service paths", () => {

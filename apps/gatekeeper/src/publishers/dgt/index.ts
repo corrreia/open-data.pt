@@ -348,6 +348,8 @@ export const PUBLISHER: PublisherDefinition = {
   url: "https://www.dgterritorio.gov.pt/",
   sources: ["geo2.dgterritorio.gov.pt", "ogcapi.dgterritorio.gov.pt", "snit-sgt.dgterritorio.gov.pt"],
   logo: "png",
+  // Their OGC API states CC BY 4.0 on its HTML landing page, which pygeoapi leaves out of the JSON the `ogc` library
+  // reads; the same licence is on DGT's own site and on their dados.gov.pt records.
   feeds: [
     caopAcoresCentralOrientalFreguesias,
     caopAcoresCentralOrientalMunicipios,

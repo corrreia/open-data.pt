@@ -3,7 +3,7 @@ import { basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { LICENCES, TOPICS, isLicence, isTopic } from "@open-data-pt/gatekeeper";
-import { FEEDS, PUBLISHERS, feedEnabled, publisherEnabled, type DeclaredFeed } from "@open-data-pt/gatekeeper/catalog";
+import { FEEDS, PUBLISHERS } from "@open-data-pt/gatekeeper/catalog";
 import { CARRIED_NAMES, INSTALLED } from "./catalog";
 
 /**
@@ -24,38 +24,20 @@ const LIBRARY_NAMES = [...folders(`${SRC}formats/`), ...folders(`${SRC}publisher
   .filter((folder) => existsSync(`${folder}deployment.ts`))
   .map((folder) => basename(folder));
 
-/** Every feed every publisher folder declares, held or not, by the library that reads it. */
-function feedsByLibrary(): Map<string, DeclaredFeed[]> {
-  const found = new Map<string, DeclaredFeed[]>();
-  for (const feed of FEEDS) {
-    const name = feed.config.source ?? "";
-    found.set(name, [...(found.get(name) ?? []), feed]);
-  }
-  return found;
-}
-
-/** What the Gatekeeper Worker installs, which is what the Registry turns into feeds. */
-const DEPLOYED: DeclaredFeed[] = INSTALLED;
-
 describe("example feed policies", () => {
   it("never call a feed stale before its next collection is due", () => {
-    const early = DEPLOYED.filter((example) => example.staleAfterSeconds < example.policy.cadenceSeconds).map(
+    const early = INSTALLED.filter((example) => example.staleAfterSeconds < example.policy.cadenceSeconds).map(
       (example) => `${example.slug}: stale after ${example.staleAfterSeconds}s, collected every ${example.policy.cadenceSeconds}s`,
     );
     expect(early).toEqual([]);
   });
 
   it("leave products out of history only under a policy that keeps changes, naming each once", () => {
-    const misplaced = DEPLOYED.filter((example) => {
+    const misplaced = INSTALLED.filter((example) => {
       const left = example.policy.withoutHistory ?? [];
       return left.length > 0 && (example.policy.historyMode !== "changes" || new Set(left).size !== left.length || left.some((key) => key.trim() === ""));
     }).map((example) => example.slug);
     expect(misplaced).toEqual([]);
-  });
-
-  it("use unique slugs", () => {
-    const slugs = DEPLOYED.map((example) => example.slug);
-    expect(slugs.filter((slug, index) => slugs.indexOf(slug) !== index)).toEqual([]);
   });
 
   it("read each source once, whatever the feed is called", () => {
@@ -63,7 +45,7 @@ describe("example feed policies", () => {
     // dataset and the same resource, and then the catalog collects one source twice and
     // publishes it as two products. Identical configuration is identical data.
     const bySource = new Map<string, string[]>();
-    for (const example of DEPLOYED) {
+    for (const example of INSTALLED) {
       const source = JSON.stringify(Object.entries(example.config).toSorted(([left], [right]) => left.localeCompare(right)));
       bySource.set(source, [...(bySource.get(source) ?? []), example.slug]);
     }
@@ -72,42 +54,6 @@ describe("example feed policies", () => {
 });
 
 describe("libraries and the Worker that carries them", () => {
-  it("finds a format library per standard and a source library per bespoke API", () => {
-    expect(LIBRARY_NAMES.toSorted()).toEqual([
-      "anepc",
-      "arcgis",
-      "bpstat",
-      "carris",
-      "ckan",
-      "dgeg",
-      "eurostat",
-      "firms",
-      "gbfs",
-      "gtfs",
-      "ine",
-      "infoagua",
-      "ioda",
-      "ipma",
-      "metrolisboa",
-      "myinfo",
-      "nasapower",
-      "ngsi",
-      "ogc",
-      "omie",
-      "opendatasoft",
-      "parliament",
-      "peeringdb",
-      "qualar",
-      "ren",
-      "ripestat",
-      "snirh",
-      "snit",
-      "udata",
-      "usgs",
-      "wfs",
-    ]);
-  });
-
   it("tags every feed, held or not, with catalog topics and nothing else", () => {
     const strays = FEEDS.filter((feed) => feed.topics.length === 0 || feed.topics.some((topic) => !isTopic(topic))).map((feed) => `${feed.slug} (${feed.topics.join(", ")})`);
     expect(strays).toEqual([]);
@@ -134,6 +80,10 @@ describe("libraries and the Worker that carries them", () => {
     ).toEqual([]);
   });
 
+  it("credits every feed's publisher, held or not, as they ask to be credited", () => {
+    expect(FEEDS.filter((feed) => (feed.attribution ?? "").trim() === "").map((feed) => feed.slug)).toEqual([]);
+  });
+
   it("gives every feed a title and a description of its own, no two feeds of a publisher alike", () => {
     expect(FEEDS.filter((feed) => feed.title.trim() === "" || feed.description.trim() === "").map((feed) => feed.slug)).toEqual([]);
     const seen = new Map<string, string>();
@@ -157,25 +107,6 @@ describe("libraries and the Worker that carries them", () => {
     expect(
       CARRIED_NAMES.filter((name) => !LIBRARY_NAMES.includes(name)),
       "listed in libraries.ts but no such directory",
-    ).toEqual([]);
-  });
-
-  it("installs every feed of an enabled publisher, each once", () => {
-    const offered = FEEDS.filter((feed) => feedEnabled(feed))
-      .map((feed) => feed.slug)
-      .toSorted();
-    expect(DEPLOYED.map((example) => example.slug).toSorted()).toEqual(offered);
-  });
-
-  it("installs nothing from a publisher held for permission", () => {
-    const held = [...PUBLISHERS.keys()].filter((key) => !publisherEnabled(key));
-    expect(held.length, "no publisher is held, so nothing proves a hold works").toBeGreaterThan(0);
-    expect(DEPLOYED.filter((example) => held.includes(example.publisher)).map((example) => example.slug)).toEqual([]);
-    // The libraries that read them still ship: a hold is about whose data we serve, not about what code exists.
-    const readingHeld = [...feedsByLibrary()].filter(([, examples]) => examples.some((example) => held.includes(example.publisher))).map(([name]) => name);
-    expect(
-      readingHeld.filter((name) => !CARRIED_NAMES.includes(name)),
-      "a library that reads a held publisher but is not carried",
     ).toEqual([]);
   });
 

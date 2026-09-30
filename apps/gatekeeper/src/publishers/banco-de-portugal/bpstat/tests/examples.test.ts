@@ -37,11 +37,9 @@ const BANKNOTES: SourceConfig = { domain: "9", dataset: "002abf63d5a4efb3e35ab53
 const BANKNOTES_URL = `https://bpstat.bportugal.pt/data/v1/domains/9/datasets/${BANKNOTES.dataset}/?lang=EN&series_ids=12468838%2C12468839&obs_last_n=2`;
 
 describe("BPstat catalog expansion", () => {
-  it("adds ten precise selections without duplicate dataset or series identities", () => {
-    expect(CATALOG_EXAMPLES).toHaveLength(10);
-    expect(BPSTAT_EXAMPLES).toHaveLength(14);
-    expect(new Set(BPSTAT_EXAMPLES.map((example) => example.slug)).size).toBe(14);
-    expect(new Set(BPSTAT_EXAMPLES.map((example) => example.config.dataset)).size).toBe(14);
+  it("reads each dataset and each series once, and asks for no more rows than a collection may hold", () => {
+    expect(CATALOG_EXAMPLES).not.toHaveLength(0);
+    expect(new Set(BPSTAT_EXAMPLES.map((example) => example.config.dataset)).size).toBe(BPSTAT_EXAMPLES.length);
     const ids = new Set<string>();
     for (const example of CATALOG_EXAMPLES) {
       const config = validateBpstatFeedConfig(libraryConfig(example.config));

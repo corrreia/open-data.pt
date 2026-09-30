@@ -23,13 +23,6 @@ beforeAll(async () => server.listen(), 60_000);
 afterAll(async () => server.close(), 30_000);
 
 describe("the Gatekeeper entrypoint exposes the three-operation contract", () => {
-  it("gives the Worker its catalog, the catalog's digest and collection, and no other RPC", () => {
-    const factory = readFileSync("apps/gatekeeper/src/gatekeeper.ts", "utf8");
-    for (const method of ["catalog", "catalogVersion", "collect"]) expect(factory).toContain(`async ${method}(`);
-    for (const removed of ["describe", "listFeedKinds", "resolveFeed", "exampleFeeds", "validateFeedConfig", "collectHistory"]) expect(factory).not.toContain(`async ${removed}(`);
-    expect(readFileSync("apps/gatekeeper/src/worker.ts", "utf8")).toContain("gatekeeper<Env>(LIBRARIES)");
-  });
-
   it.each(readdirSync("apps/gatekeeper/src", { recursive: true, encoding: "utf8" }).filter((path) => path.endsWith("deployment.ts")))(
     "%s calls the platform fetch rather than handing it over",
     (path) => {

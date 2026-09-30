@@ -63,6 +63,11 @@ exists. Lifting a hold is deleting one word.
 | `peeringdb` | `peeringdb` | The acceptable-use policy requires permission for reproduction and bulk sharing                       |
 | `ioda`      | `ioda`      | Georgia Tech reserves all rights, and several signals IODA blends carry their own redistribution bars |
 
+A publisher whose terms forbid what this service does is not held but left out, and has no folder. Lime is one:
+the Public GBFS Terms its own feed names in `license_url` forbid redistributing the data, building a dataset from
+it, and storing it for more than ten minutes, so `lime-lisbon` was removed in September 2026. Its saved document
+stays in the GBFS tests as their only GBFS 1.0 sample.
+
 The consistency tests require every library directory to be listed in `libraries.ts`, every feed's
 topic to be a known catalog topic, and nothing of a held publisher's to be installed.
 

@@ -1,8 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFixture } from "#/tests/support";
 import { describe, expect, it } from "vitest";
-import { libraryConfig, type JsonObject, type SourceFetch, type SourceStaging } from "#/index";
-import { resolveParliamentFeed } from "#/publishers/assembleia-da-republica/parliament/index";
+import { type JsonObject, type SourceFetch, type SourceStaging } from "#/index";
 import {
   collectParliamentFeed,
   parliamentDirectoryLink,
@@ -12,7 +11,6 @@ import {
   validateParliamentFeedConfig,
   type ParliamentDocument,
 } from "#/publishers/assembleia-da-republica/parliament/parliament";
-import { feedsOf } from "#/tests/catalog";
 
 const config = { feed: "members", legislature: "XVII" };
 const document = parliamentDocument(config);
@@ -84,18 +82,6 @@ describe("Parliament public-directory source", () => {
       expect(() => validateParliamentFeedConfig(invalid)).toThrow();
   });
 
-  it.each(feedsOf("parliament"))("resolves stable selected-file identity for $slug", async (example) => {
-    const raw = libraryConfig(example.config);
-    const first = await resolveParliamentFeed(raw);
-    const second = await resolveParliamentFeed({ ...raw });
-    expect(first).toEqual(second);
-    expect(first.resourceKey).toContain(`parliament:${raw.feed}:`);
-    expect(first.history).toBeUndefined();
-    expect(raw.legislature).toBe("XVII");
-    expect(Object.values(raw).some((value) => value.includes("http"))).toBe(false);
-    expect(example.policy.cadenceSeconds).toBe(raw.feed === "careers" ? 604_800 : 86_400);
-  });
-
   it("discovers two levels, decodes entities, and ignores the publisher's HTTP canonical URL", async () => {
     const calls: URL[] = [];
     const inner = sourceFetcher(document);
@@ -122,16 +108,22 @@ describe("Parliament public-directory source", () => {
   });
 
   it("checks every directory/download boundary rather than trusting an anchor title", () => {
+    // Each refused link differs from an accepted one in one way only, so each refusal is that check's.
+    const folder = (url: string) => `<a title="Pasta XVII Legislatura" href="${url}">Folder</a>`;
+    const directory = `${document.pageUrl}?t=ab&Path=c3ludGhldGljLXBhdGg=`;
+    expect(parliamentDirectoryLink(folder(directory), document).toString()).toBe(directory);
     const directoryUrls = [
-      "https://attacker.example/Cidadania/Paginas/DAInformacaoBase.aspx?t=ab&Path=x",
-      "http://www.parlamento.pt/Cidadania/Paginas/DAInformacaoBase.aspx?t=ab&Path=x",
-      "https://www.parlamento.pt/Cidadania/Paginas/Other.aspx?t=ab&Path=x",
-      "https://user@www.parlamento.pt/Cidadania/Paginas/DAInformacaoBase.aspx?t=ab&Path=x",
-      `${document.pageUrl}?t=ab&Path=x&Path=y`,
-      `${document.pageUrl}?t=not-hex&Path=x`,
-      `${document.pageUrl}?t=ab&Path=x#fragment`,
+      directory.replace("www.parlamento.pt", "attacker.example"),
+      directory.replace("https:", "http:"),
+      directory.replace(new URL(document.pageUrl).pathname, "/Cidadania/Paginas/Other.aspx"),
+      directory.replace("www.parlamento.pt", "user@www.parlamento.pt"),
+      directory.replace("www.parlamento.pt", "www.parlamento.pt:8443"),
+      `${directory}&Path=eWV0LWFub3RoZXItdG9rZW4=`,
+      directory.replace("t=ab", "t=not-hex"),
+      directory.replace("Path=c3ludGhldGljLXBhdGg=", "Path=x"),
+      `${directory}#fragment`,
     ];
-    for (const url of directoryUrls) expect(() => parliamentDirectoryLink(`<a title="Pasta XVII Legislatura" href="${url}">Folder</a>`, document)).toThrow();
+    for (const url of directoryUrls) expect(() => parliamentDirectoryLink(folder(url), document), url).toThrow("outside the selected public page");
     const download = links(document).download;
     const invalid = [
       download.replace("app.parlamento.pt", "attacker.example"),

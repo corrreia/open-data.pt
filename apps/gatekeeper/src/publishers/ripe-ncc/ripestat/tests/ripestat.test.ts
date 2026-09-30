@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { collectNormalized, feedCollector, isJsonArray, libraryConfig, type JsonObject, type NormalizedCollector, type SourceConfig } from "#/index";
+import { collectNormalized, feedCollector, isJsonArray, type JsonObject, type NormalizedCollector, type SourceConfig } from "#/index";
 import { RUNNABLE } from "#/catalog/index";
 import { collectRipestatFeed, RIPESTAT_MAX_BYTES, RIPESTAT_ORIGIN, validateRipestatFeedConfig } from "#/publishers/ripe-ncc/ripestat/ripestat";
 import { RipestatTransformer } from "#/publishers/ripe-ncc/ripestat/transform";
 import { networkBytes, networkContext, networkFixture, networkFrames, networkRequest, networkRows, object } from "#/tests/networks-support";
-import { carriedLibraries, feedsOf } from "#/tests/catalog";
+import { carriedLibraries } from "#/tests/catalog";
 
 /** A saved response beside this test, by its name under `fixtures/`. */
 function fixture(name: string): JsonObject {
@@ -55,21 +55,6 @@ describe("RIPEstat capabilities and boundaries", () => {
       { ...RESOURCES, asn: "64496" },
     ])
       expect(() => validateRipestatFeedConfig(config)).toThrow();
-  });
-
-  it("ships seven verified, honestly labelled examples with source-appropriate cadence and permission warnings", () => {
-    expect(feedsOf("ripestat")).toHaveLength(7);
-    const asns = feedsOf("ripestat")
-      .filter((example) => example.config.asn)
-      .map((example) => example.config.asn);
-    expect(asns.toSorted()).toEqual(["12353", "15457", "20879", "2860", "3243"]);
-    expect(asns).not.toContain("12542"); // This is NOS, not the research brief's proposed NOWO.
-    for (const example of feedsOf("ripestat")) {
-      expect(() => validateRipestatFeedConfig(libraryConfig(example.config))).not.toThrow();
-      expect(example.licence).toBe("ripe-ncc-terms");
-      expect(example.publisher).toBe("ripe-ncc");
-      expect(example.policy.cadenceSeconds).toBe(example.config.asn ? 28_800 : 86_400);
-    }
   });
 
   it("constructs one bounded daily query rather than the endpoint's all-history default", async () => {

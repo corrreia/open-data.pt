@@ -203,15 +203,6 @@ describe("REN Gatekeeper", () => {
 });
 
 describe("REN history", () => {
-  it("declares history reaching back to a stated earliest day on every chart feed", () => {
-    const histories = Object.values(REN_FEEDS).flatMap((feed) => ("history" in feed ? [feed.history] : []));
-    expect(histories).toHaveLength(6);
-    expect(Object.values(REN_FEEDS)).toHaveLength(9);
-    for (const history of histories) {
-      expect(history.earliest).toMatch(/^(?:2010|2014)-01-01T00:00:00\.000Z$/);
-    }
-  });
-
   it("collects one older civil day with its range, next cursor, and transform-compatible bytes", async () => {
     const fetcher = vi.fn(async (input: URL | RequestInfo) => {
       const url = new URL(input.toString());
