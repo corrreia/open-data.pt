@@ -102,6 +102,7 @@ describe.skipIf(cases.length === 0)("live examples", () => {
       // An active event log is honestly empty when nothing is happening; every other curated example should carry data.
       if (resolved.semantics.defaultProductRole !== "event-log") expect((counts.get("record") ?? 0) + (counts.get("point") ?? 0)).toBeGreaterThan(0);
     },
-    300_000,
+    // A collection may take as long as its feed's policy allows: SNIRH's wells, or QualAr's daily read of every station.
+    Math.max(300_000, ...cases.map(({ example }) => example.policy.timeoutSeconds * 1000 + 30_000)),
   );
 });

@@ -187,7 +187,8 @@ function readings(reading: SnirhReadingName, stations: SnirhStation[], tables: A
 
 /**
  * InfoÁgua's readings under the code and name SNIRH files each station by, so they join the series SNIRH's history walk
- * builds. A station missing from SNIRH's table (one SNIRH added since, or one across the border) is rejected. River
+ * builds. A station missing from SNIRH's table (one SNIRH added since, or one across the border) is left out, and
+ * logged: it was never going to be published, so it is not a rejected reading, which would mark every run partial. River
  * levels are taken as they are. Rain comes in quarter hours and SNIRH's series is hourly: an hour is the sum of the
  * four quarters ending in it (10:15, 10:30, 10:45 and 11:00 make 11:00), and an hour missing a quarter is left out
  * rather than published short.
@@ -197,10 +198,11 @@ function infoaguaReadings(reading: SnirhLiveReading, stations: InfoaguaStationRe
   const network = reading === "precipitation" ? "meteorological" : "hydrometric";
   const points: SeriesPoint[] = [];
   let rejected = unreadable;
+  const unknown: string[] = [];
   for (const station of stations) {
     const identity = SNIRH_STATIONS.get(station.site);
     if (!identity || identity.network !== network) {
-      rejected += station.values.length;
+      if (station.values.length > 0) unknown.push(station.site);
       continue;
     }
     const point = (eventTime: string, value: number): SeriesPoint => ({
@@ -233,6 +235,7 @@ function infoaguaReadings(reading: SnirhLiveReading, stations: InfoaguaStationRe
       points.push(point(hour, Math.round(total * 100) / 100));
     }
   }
+  if (unknown.length > 0) console.warn(JSON.stringify({ event: "infoagua_stations_not_in_snirh", reading, stations: unknown.length, sites: unknown.slice(0, 10) }));
   return { points, rejected };
 }
 
