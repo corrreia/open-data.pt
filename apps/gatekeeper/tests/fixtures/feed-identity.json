@@ -2475,6 +2475,10 @@
     "resourceKey": "udata:udata:distribution:28da9fc3f2ef57ea010d1490b800f70e45180f0c7d3b81ad60c7c8c7bfd41cc2",
     "kind": "udata:distribution"
   },
+  "qualar-air-quality-feed": {
+    "resourceKey": "qualar:qualar:air-quality:71c8d541c8a6ad85ad7cb2cb879673a708380c6e77655c7789feadf069c4e0f8",
+    "kind": "qualar:air-quality"
+  },
   "recognised-startups-feed": {
     "resourceKey": "udata:udata:distribution:b9b5643426cb6b9f5e1884e6b863a2fcb73ed5a5b901744cc6242481ea21f552",
     "kind": "udata:distribution"
