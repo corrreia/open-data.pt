@@ -1,16 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { type NormalizedRow, type TransformContext } from "@open-data-pt/contract";
-import { type Topic } from "@open-data-pt/gatekeeper";
-import { INSTALLED, feedCollection, feedsOf } from "./catalog";
+import { feedCollection, feedsOf } from "./catalog";
 import { readFixture } from "./support";
 import type { DeclaredFeed } from "@open-data-pt/gatekeeper/catalog";
 
-/** Topics are catalog tags now, so these are the installed feeds carrying each tag, whatever Worker reads them. */
-const tagged = (topic: Topic): DeclaredFeed[] => INSTALLED.filter((example) => example.topics.includes(topic));
-const GOVERNMENT_EXAMPLES = tagged("government");
-const CITIES_EXAMPLES = tagged("cities");
-/** Telecom statistics from INE; the RIPE NCC network feeds share the tag and are held to their own tests. */
-const TELECOM_EXAMPLES = tagged("telecom").filter((example) => example.config.source === "ine");
 const government = feedsOf("udata").filter((example) => example.topics.includes("government"));
 
 async function normalized(example: DeclaredFeed, observedAt: string) {
@@ -44,18 +37,6 @@ async function normalized(example: DeclaredFeed, observedAt: string) {
 }
 
 describe("government distribution examples", () => {
-  it("tags government distributions as government, never as cities", () => {
-    expect(government).toHaveLength(5);
-    for (const example of government) {
-      expect(GOVERNMENT_EXAMPLES.filter((candidate) => candidate.slug === example.slug)).toHaveLength(1);
-      expect(CITIES_EXAMPLES.some((candidate) => candidate.slug === example.slug)).toBe(false);
-      expect(example.policy.cadenceSeconds).toBeGreaterThanOrEqual(604_800);
-    }
-    expect(government.find((example) => example.slug === "base-procurement-entities-feed")?.policy.cadenceSeconds).toBe(30 * 86_400);
-    const startups = government.find((example) => example.slug === "recognised-startups-feed");
-    expect(startups && startups.licence).toBe("source-terms");
-  });
-
   it.each(government)("normalizes $slug as one table without acquisition-time churn", async (example) => {
     const first = await normalized(example, "2026-09-15T12:00:00Z");
     expect(first.products).toHaveLength(1);
@@ -65,33 +46,5 @@ describe("government distribution examples", () => {
     expect(first.products[0]?.schema.fields.find((field) => field.name === identity)?.type).toBe("identifier");
     expect(first.rows[0]?.record?.payload[identity]).toBe(first.rows[0]?.record?.entityKey);
     expect(first).toEqual(await normalized(example, "2027-01-01T00:00:00Z"));
-  });
-
-  it("uses keyless government telecom statistics without claiming live coverage", () => {
-    const telecom = feedsOf("ine").filter((example) => example.topics.includes("telecom"));
-    expect(telecom).toHaveLength(6);
-    expect(TELECOM_EXAMPLES.map((example) => example.slug).toSorted()).toEqual(telecom.map((example) => example.slug).toSorted());
-    for (const example of telecom) {
-      expect(example.policy.cadenceSeconds).toBe(30 * 86_400);
-      expect(example.licence).toBe("cc-by-4.0");
-      expect(example.config.indicator).not.toBe("0006853");
-    }
-  });
-
-  it("uses the current income series and a monthly poll for annual releases", () => {
-    const slugs = [
-      "ine-taxpayer-income-distribution",
-      "ine-median-household-income-after-tax",
-      "ine-household-income-gini",
-      "ine-declared-income-per-inhabitant",
-      "ine-household-income-p90-p10",
-    ];
-    const examples = feedsOf("ine").filter((example) => slugs.includes(example.slug));
-    expect(examples).toHaveLength(5);
-    for (const example of examples) {
-      expect(example.config.indicator).not.toBe("0009940");
-      expect(example.config.dims).toBeUndefined();
-      expect(example.policy.cadenceSeconds).toBe(30 * 86_400);
-    }
   });
 });

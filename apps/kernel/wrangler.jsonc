@@ -39,6 +39,7 @@
       "/analytics/*",
       "/operations/*",
       "/contribute/*",
+      "/aup/*",
     ],
   },
   "r2_buckets": [

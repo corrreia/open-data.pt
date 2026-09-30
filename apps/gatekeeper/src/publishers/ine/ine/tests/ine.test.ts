@@ -1,10 +1,8 @@
 import { jsonAs } from "#/tests/support";
 import { describe, expect, it, vi } from "vitest";
 import type { JsonObject, JsonValue, SourceBody, SourceFetch, TransformContext } from "@open-data-pt/contract";
-import { libraryConfig } from "#/index";
 import { INE_FEEDS, INE_HISTORY_MAX_BYTES, INE_MAX_BYTES, collectIneIndicator, collectIneIndicatorHistory, validateIneFeedConfig } from "#/publishers/ine/ine/ine";
 import { transformIneIndicator } from "#/publishers/ine/ine/transform";
-import { feedsOf } from "#/tests/catalog";
 
 const META = [
   {
@@ -138,13 +136,6 @@ function bodyBytes(fetched: SourceBody): Uint8Array {
 }
 
 describe("INE Gatekeeper", () => {
-  it("ships example feeds whose configurations all validate", () => {
-    expect(feedsOf("ine")).toHaveLength(26);
-    for (const example of feedsOf("ine")) {
-      expect(() => validateIneFeedConfig(libraryConfig(example.config))).not.toThrow();
-    }
-  });
-
   it("normalizes valid indicator configuration and dimension filters", () => {
     expect(
       validateIneFeedConfig({

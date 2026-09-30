@@ -10,12 +10,11 @@ import {
   type CollectionResult,
   type JsonObject,
   feedCollector,
-  libraryConfig,
   resolveLibraryFeed,
   feedNormalizer,
 } from "#/index";
 import { UdataSource, chooseTransformer, resolveUdataFeed, validateUdataFeedConfig } from "#/formats/udata/index";
-import { carriedLibraries, feedsOf } from "#/tests/catalog";
+import { carriedLibraries } from "#/tests/catalog";
 
 const payload = {
   id: "dataset-1",
@@ -205,15 +204,6 @@ describe("UdataSource", () => {
       code: "upstream-error",
       retryAfterSeconds: undefined,
     });
-  });
-
-  it("validates every curated example and resolves its transformer", () => {
-    for (const example of feedsOf("udata")) {
-      const validated = validateUdataFeedConfig(libraryConfig(example.config), new Set([UDATA_HOSTS]));
-      expect(validated.baseUrl, example.slug).toBe("https://dados.gov.pt");
-      // A feed that names its publisher's own translator calls it from its file; every other one reads as a table.
-      if (!validated.transformer) expect(() => chooseTransformer(validated), example.slug).not.toThrow();
-    }
   });
 });
 

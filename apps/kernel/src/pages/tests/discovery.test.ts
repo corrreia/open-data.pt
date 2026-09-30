@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import type { JsonObject, JsonValue } from "@open-data-pt/contract";
 import { describe, expect, it } from "vitest";
 import { SKILL_PATH, handleSite, type SiteHost } from "#/pages/discovery";
@@ -117,7 +117,12 @@ interface AiCatalog {
 describe("agent discovery", () => {
   it("runs the Worker before static assets on every page, so metadata and Markdown negotiation are applied", () => {
     const config = readFileSync("apps/kernel/wrangler.jsonc", "utf8");
-    for (const page of ["catalog", "publisher", "licence", "product", "start", "status", "operations", "contribute"]) expect(config).toContain(`"/${page}/*"`);
+    // Every page the site builds is a folder of its own with an index.html; `dist` is the build of them all.
+    const pages = readdirSync("apps/site", { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && entry.name !== "dist" && existsSync(`apps/site/${entry.name}/index.html`))
+      .map((entry) => entry.name);
+    expect(pages).toContain("catalog");
+    expect(pages.filter((page) => !config.includes(`"/${page}/*"`))).toEqual([]);
   });
 
   it("lists every page, publisher and product in a sitemap that robots.txt names", async () => {

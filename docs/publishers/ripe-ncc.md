@@ -30,4 +30,4 @@ without permission, so RIPEstat was held until we asked. Sam van Kampen, RIPE NC
 > your queries (e.g. "sourceapp=open-data.pt") that would be appreciated just so we get a better
 > picture of how the APIs are used.
 
-The licence stays `ripestat-terms`: the terms still apply, and this answer is our permission under them.
+The licence stays `ripe-ncc-terms`: the terms still apply, and this answer is our permission under them.

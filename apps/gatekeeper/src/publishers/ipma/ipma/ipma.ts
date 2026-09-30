@@ -179,7 +179,9 @@ export async function collectIpmaFeed(config: SourceConfig, checkpoint: SourceVa
   const primaryResponse = await fetcher(primaryUrl, { headers: requestHeaders, redirect: "manual" });
   const validator = responseValidator(primaryResponse.headers);
   if (primaryResponse.status === 304) {
-    if (isIpmaDatasetFeed(feed) && !checkpoint?.etag && !checkpoint?.lastModified) {
+    // Only a conditional request can be answered "unchanged". A compound feed never asks, so one component's 304
+    // would otherwise pass off every other component, unread, as unchanged too.
+    if (!requestHeaders.has("If-None-Match") && !requestHeaders.has("If-Modified-Since")) {
       throw new GatekeeperError("IPMA returned unsolicited not-modified", "invalid-response");
     }
     return validator ? { kind: "not-modified", validator } : { kind: "not-modified" };

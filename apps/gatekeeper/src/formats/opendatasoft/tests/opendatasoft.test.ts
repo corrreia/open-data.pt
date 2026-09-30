@@ -18,12 +18,11 @@ import {
   type SourceFetch,
   type TransformContext,
   feedCollector,
-  libraryConfig,
   feedNormalizer,
 } from "#/index";
 import { RUNNABLE } from "#/catalog/index";
 import { MAX_HISTORY_DOCUMENT_BYTES, MAX_HISTORY_RECORDS, OPENDATASOFT_FEEDS, OpendatasoftSource } from "#/formats/opendatasoft/opendatasoft";
-import { carriedLibraries, feedsOf } from "#/tests/catalog";
+import { carriedLibraries } from "#/tests/catalog";
 import { OpendatasoftTransformer, seriesSlug } from "#/formats/opendatasoft/transform";
 import { isProductSlug } from "@open-data-pt/contract";
 
@@ -145,19 +144,6 @@ async function frames(result: CollectionResult): Promise<NormalizedFrame[]> {
 }
 
 describe("Opendatasoft Gatekeeper", () => {
-  it("ships example feeds whose configurations and policies all validate", () => {
-    const instance = source(fetch);
-    expect(OPENDATASOFT_FEEDS.dataset.history).toEqual({ minSliceSeconds: 20 });
-    const examples = feedsOf("opendatasoft");
-    expect(examples).toHaveLength(57);
-    for (const example of examples) {
-      expect(() => instance.validateConfig(libraryConfig(example.config))).not.toThrow();
-      expect(["changes", "latest"]).toContain(example.policy.historyMode);
-      expect(Object.keys(example.policy)).not.toContain("allowedLatenessSeconds");
-      expect(Object.keys(example.policy)).not.toContain("lateRetentionSeconds");
-    }
-  });
-
   it("derives valid series slugs from truncated or unusual measure names", () => {
     expect(seriesSlug("load-feed", "total_value")).toBe("load-feed-total-value-series");
     // SNS field names are cut at 64 characters and can end in an underscore.

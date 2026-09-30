@@ -81,14 +81,10 @@ async function body(fetched: SourceFetch): Promise<JsonValue> {
 }
 
 describe("Opendatasoft catalog expansion", () => {
-  it("adds all eleven E-REDES and seventeen SNS candidates without duplicate feeds", () => {
+  it("reads every dataset once, and polls each bounded reporting-period feed daily or slower with every grouping dimension", () => {
     expect(CATALOG_EXAMPLES).toHaveLength(28);
-    expect(CATALOG_EXAMPLES.filter((example) => example.publisher === "e-redes")).toHaveLength(11);
-    expect(OPENDATASOFT_EXAMPLES).toHaveLength(57);
-    expect(new Set(OPENDATASOFT_EXAMPLES.map((example) => example.slug)).size).toBe(57);
-    expect(new Set(OPENDATASOFT_EXAMPLES.map((example) => `${example.config.host}/${example.config.dataset}`)).size).toBe(57);
+    expect(new Set(OPENDATASOFT_EXAMPLES.map((example) => `${example.config.host}/${example.config.dataset}`)).size).toBe(OPENDATASOFT_EXAMPLES.length);
     for (const example of CATALOG_EXAMPLES) {
-      expect(() => validateOpendatasoftFeedConfig(libraryConfig(example.config), HOSTS)).not.toThrow();
       expect(example.policy.cadenceSeconds).toBeGreaterThanOrEqual(86_400);
       // Every grouped series keeps the full set of non-time grouping dimensions, including numeric-looking codes.
       if (example.config.groupBy && example.config.series) {

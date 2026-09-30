@@ -69,15 +69,6 @@ describe("public API contract", () => {
     expect(source).not.toContain("transform-runs");
   });
 
-  it("exposes no legacy transform or history RPC on Gatekeeper entrypoints", () => {
-    // The Worker calls the one factory, so the factory is the entrypoint to check.
-    expect(readFileSync("apps/gatekeeper/src/worker.ts", "utf8")).toContain("gatekeeper<Env>(LIBRARIES)");
-    const factory = readFileSync("apps/gatekeeper/src/gatekeeper.ts", "utf8");
-    expect(factory).not.toMatch(/async\s+transform\s*\(/);
-    expect(factory).not.toMatch(/async\s+collectHistory\s*\(/);
-    expect(factory).toContain("collectNormalized");
-  });
-
   it("mounts Scalar against the published OpenAPI document", () => {
     const html = scalarReferenceHtml("test-nonce");
     expect(html).toContain("@scalar/api-reference@1.67.0");

@@ -31,22 +31,22 @@ function context(slug: string, language = "en", feed = "status"): TransformConte
 describe("GBFS transformers", () => {
   const transformer = new GbfsTransformer();
 
-  it("transforms a GBFS 1.0 Lime status snapshot into vehicles, availability, and a fleet series", () => {
-    const result = transformer.transform(fixture("lime-lisbon"), context("lime-lisbon"));
+  it("transforms a GBFS 1.0 dockless status snapshot into vehicles, availability, and a fleet series", () => {
+    const result = transformer.transform(fixture("gbfs-v1-scooters"), context("sample-scooters"));
 
     expect(result.transformer).toEqual({ id: "gbfs", version: "3" });
     expect(result.products.map((product) => [product.slug, product.role])).toEqual([
-      ["lime-lisbon-vehicles", "current-state"],
-      ["lime-lisbon-stations", "current-state"],
-      ["lime-lisbon-fleet", "time-series"],
+      ["sample-scooters-vehicles", "current-state"],
+      ["sample-scooters-stations", "current-state"],
+      ["sample-scooters-fleet", "time-series"],
     ]);
     const vehicle = result.products[0]?.records?.[0];
     expect(vehicle).toMatchObject({
-      entityKey: "a4c0e016-e09e-4a9f-a739-efde975cf697",
+      entityKey: "scooter-0001",
       eventTime: "2026-09-07T20:57:00.000Z",
       payload: {
-        latitude: 38.7144,
-        longitude: -9.1442,
+        latitude: 38.71,
+        longitude: -9.14,
         isReserved: false,
         isDisabled: false,
         vehicleType: "scooter:unknown",
@@ -54,8 +54,8 @@ describe("GBFS transformers", () => {
       },
     });
     expect(result.products[1]?.records?.[0]?.payload).toEqual({
-      id: "lisbon",
-      numBikesAvailable: 2548,
+      id: "service-area",
+      numBikesAvailable: 120,
       numDocksAvailable: 999999,
       isInstalled: true,
       isRenting: true,
@@ -66,7 +66,7 @@ describe("GBFS transformers", () => {
       eventTime: "2026-09-07T20:57:00.000Z",
       value: 4,
       unit: "vehicles",
-      dimensions: { system: "lime_lisbon" },
+      dimensions: { system: "sample_scooters" },
     });
     expect(result.products[0]).toMatchObject({
       updateMode: "authoritative-snapshot",
@@ -74,21 +74,21 @@ describe("GBFS transformers", () => {
   });
 
   it("publishes the system and the station descriptions from the reference part alone", () => {
-    const result = transformer.transform(fixture("lime-lisbon"), context("lime-lisbon-reference", "en", "reference"));
+    const result = transformer.transform(fixture("gbfs-v1-scooters"), context("sample-scooters-reference", "en", "reference"));
 
     expect(result.products.map((product) => [product.slug, product.role])).toEqual([
-      ["lime-lisbon-reference-stations", "reference"],
-      ["lime-lisbon-reference-system", "reference"],
+      ["sample-scooters-reference-stations", "reference"],
+      ["sample-scooters-reference-system", "reference"],
     ]);
     expect(result.products[0]?.records?.[0]?.payload).toEqual({
-      id: "lisbon",
-      name: "Lisbon",
-      latitude: 38.6779,
-      longitude: -9.1598,
+      id: "service-area",
+      name: "Service area",
+      latitude: 38.72,
+      longitude: -9.14,
       address: null,
       capacity: null,
     });
-    expect(result.products[1]?.records?.[0]?.payload).toMatchObject({ systemId: "lime_lisbon" });
+    expect(result.products[1]?.records?.[0]?.payload).toMatchObject({ systemId: "sample_scooters" });
   });
 
   it("keeps each value in one part only: no positions in availability, no counts in the reference", () => {

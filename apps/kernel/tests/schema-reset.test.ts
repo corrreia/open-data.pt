@@ -28,6 +28,17 @@ function oldRegistry(): DatabaseSync {
   return database;
 }
 
+/** A feed's runner on this database, with nothing behind it that migrating reaches. */
+function runner(database: DatabaseSync): RunnerCore {
+  return new RunnerCore(sqliteStorage(database), (body) => body(), {
+    objects: new ObjectStore(new MemorySnapshots()),
+    publish: async () => true,
+    claim: async () => undefined,
+    lakeAvailable: true,
+    now: () => 0,
+  });
+}
+
 describe("schema reset", () => {
   it("cannot drop old tables in creation order while their rows reference each other", () => {
     expect(() => oldRegistry().exec("DROP TABLE policies")).toThrow(/FOREIGN KEY/);
@@ -97,16 +108,26 @@ describe("schema reset", () => {
     expect(store.getFeed("feed_3")).toMatchObject({ publisher: "ine", licence: "cc-by-4.0", topics: [] });
   });
 
+  it("resets a runner left by another schema version, or by none, and starts it empty", () => {
+    for (const leftBehind of ["UPDATE meta SET value = 'older' WHERE key = 'schema_version'", "DROP TABLE meta"]) {
+      const database = new DatabaseSync(":memory:");
+      const core = runner(database);
+      core.migrate();
+      const version = database.prepare("SELECT value FROM meta WHERE key = 'schema_version'").get()?.value;
+      core.setState("feed", { id: "feed_1", library: "fixture" });
+      database.exec(`CREATE TABLE manifests (id TEXT PRIMARY KEY); ${leftBehind};`);
+
+      core.migrate();
+
+      expect(core.getState("feed"), leftBehind).toBeUndefined();
+      expect(userTables(sqliteStorage(database)), leftBehind).not.toContain("manifests");
+      expect(database.prepare("SELECT value FROM meta WHERE key = 'schema_version'").get()?.value, leftBehind).toBe(version);
+    }
+  });
+
   it("renames an existing runner's feed library before its first read", () => {
     const database = new DatabaseSync(":memory:");
-    const sql = sqliteStorage(database);
-    const core = new RunnerCore(sql, (body) => body(), {
-      objects: new ObjectStore(new MemorySnapshots()),
-      publish: async () => true,
-      claim: async () => undefined,
-      lakeAvailable: true,
-      now: () => 0,
-    });
+    const core = runner(database);
     core.migrate();
     database.prepare("INSERT INTO state (key, value_json) VALUES ('feed', ?)").run(JSON.stringify({ id: "feed_1", gatekeeperKind: "fixture" }));
 
