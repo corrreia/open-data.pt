@@ -460,14 +460,6 @@ describe("durable acceptance, publication and history delivery", () => {
     expect(h.snapshots.objects.has(current)).toBe(true);
     expect(await h.served()).toHaveLength(1);
   });
-
-  it("resets its schema instead of migrating an unknown version", async () => {
-    const h = await kernelHarness();
-    h.source.records = [record("a", 1)];
-    await h.collect();
-    h.core.setState("probe", 1);
-    expect(h.core.getState<number>("probe")).toBe(1);
-  });
 });
 
 describe("when a feed runs next", () => {

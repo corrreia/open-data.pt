@@ -55,19 +55,11 @@ describe("IPMA Gatekeeper", () => {
     expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
-  it("reports the primary resource as not modified with its validator", async () => {
-    const fetcher = vi.fn(
-      async () =>
-        new Response(null, {
-          status: 304,
-          headers: { ETag: '"mainland-v1"' },
-        }),
-    );
+  it("refuses an unchanged answer to a compound feed, which never asks whether it changed", async () => {
+    const fetcher = vi.fn(async () => new Response(null, { status: 304, headers: { ETag: '"mainland-v1"' } }));
 
-    const fetched = await collectIpmaFeed({ feed: "seismic" }, undefined, ORIGIN, fetcher);
-
-    expect(fetched).toEqual({ kind: "not-modified", validator: { etag: '"mainland-v1"' } });
-    expect(fetcher).toHaveBeenCalledOnce();
+    for (const checkpoint of [undefined, { etag: '"mainland-v1"' }])
+      await expect(collectIpmaFeed({ feed: "seismic" }, checkpoint, ORIGIN, fetcher)).rejects.toMatchObject({ code: "invalid-response" });
   });
 
   it("does not let one validator hide a changed component of a compound feed", async () => {
