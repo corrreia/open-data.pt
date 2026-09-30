@@ -9,6 +9,7 @@ import {
   parseJsonBytes,
   readBoundedResponse,
   retryAfterSeconds,
+  sourceValidator,
   type FeedKindDescription,
   type JsonObject,
   type JsonValue,
@@ -18,18 +19,24 @@ import {
 } from "#/index";
 
 /**
- * QualAr, APA's air quality information system. Its app reads a JSON API (`/api/app.php?type=…`); this library reads
- * `type=medicoes`, which answers, for one day, every station of the national network with the latest hour it has
- * measured of each pollutant: its value, whether it is validated, and its air quality index. The stations are run by
- * the regional coordination commissions (CCDR); APA publishes them.
+ * QualAr, APA's air quality information system. Its app reads a JSON API (`/api/app.php?type=…`), and this library
+ * reads two of its answers. `type=medicoes` answers, for the day under way, every station of the national network
+ * with the latest hour it has measured of each pollutant; for a day that has ended it answers each pollutant's
+ * maximum instead, so the hours that close a day never show there. `type=dados` answers one station's 24 hours of a
+ * day. Every collection reads the first; once a day, the second, for every station and the day before. The stations
+ * are run by the regional coordination commissions (CCDR); APA publishes them.
  *
  * Hours are UTC, which is mainland Portugal's standard time and what EU air quality reporting uses. QualAr does not
  * say so; the traffic stations show it: nitrogen dioxide at Avenida da Liberdade and Entrecampos peaks at hour 7 on a
  * working day, 08:00 in Lisbon in summer, and again at 17 to 18.
  */
 export const QUALAR_ORIGIN = "https://qualar.apambiente.pt";
-/** One day's answer is about 70 KB. */
+/** One day's answer for every station is about 70 KB; one station's day is about 3 KB. */
 const DAY_MAX_BYTES = 1024 * 1024;
+/** A day's last hours reach QualAr about two hours late: the day before is read whole from this hour of the next. */
+const SWEEP_FROM_UTC_HOUR = 3;
+/** How many collections ask for a day that does not answer before it is given up. */
+const SWEEP_TRIES = 3;
 
 export const QUALAR_FEEDS = {
   // The latest hourly reading of each pollutant at every station of the national air quality network.
@@ -46,18 +53,30 @@ export function validateQualarFeedConfig(config: SourceConfig): SourceConfig {
   return { feed: "air-quality" };
 }
 
-/** What a collection hands its transform: each day asked for, with its pollutants and each station's latest hours. */
-export interface QualarDocument {
-  days: Array<{ date: string; pollutants: JsonObject[]; stations: JsonObject[] }>;
+/** One pollutant of an answer: QualAr's identifier and abbreviation, how its value is averaged, and its unit. */
+interface QualarColumn {
+  id: number | null;
+  pollutant: string | null;
+  averaging: string | null;
+  unit: string | null;
 }
 
 /**
- * Today and yesterday, by the UTC calendar: `medicoes` answers only the latest hour of the day asked for, so the hours
- * that close a day are read from the day before until the next one has begun.
+ * What a collection hands its transform: the day under way, with each station's latest hour of each pollutant; and,
+ * on the collection that reads it, the day before, with each station's every hour.
+ */
+export interface QualarDocument {
+  latest: { date: string; pollutants: JsonObject[]; stations: JsonObject[] };
+  day?: { date: string; stations: JsonObject[] };
+}
+
+/**
+ * The latest hours of today, by the UTC calendar, and, the first time each day after 03:00 UTC, all of yesterday's
+ * hours, station by station. `state` says which day was last read whole.
  */
 export async function collectQualarFeed(
   config: SourceConfig,
-  checkpoint: SourceValidator | undefined,
+  state: JsonObject | undefined,
   apiOrigin: string,
   fetcher: typeof fetch,
   now: Date = new Date(),
@@ -66,17 +85,71 @@ export async function collectQualarFeed(
   const origin = fixedOrigin(apiOrigin, QUALAR_ORIGIN);
   const today = now.toISOString().slice(0, 10);
   const yesterday = new Date(Date.parse(`${today}T00:00:00.000Z`) - 86_400_000).toISOString().slice(0, 10);
-  const document: QualarDocument = { days: [] };
-  for (const date of [yesterday, today]) document.days.push({ date, ...(await day(origin, date, fetcher)) });
+  const latest = await answer(origin, `type=medicoes&data=${today}&en=0`, fetcher);
+  if (!isJsonArray(latest.colunas) || !isJsonArray(latest.estacoes)) throw new GatekeeperError("QualAr measurements have no pollutants or no stations", "invalid-response");
+  // Only what is published: the station and each pollutant's latest hour. The rest of a station (its address, its
+  // network) is the air quality stations feed's.
+  const stations = latest.estacoes.filter(isJsonObject).map((station) => ({
+    station: isJsonNumber(station.estacao_id) ? station.estacao_id : null,
+    name: isJsonString(station.estacao_nome) ? station.estacao_nome.trim() : null,
+    readings: isJsonArray(station.medicoes) ? station.medicoes : [],
+  }));
+  const document: QualarDocument = { latest: { date: today, pollutants: latest.colunas.map(column), stations } };
+
+  let sweptDay = isJsonString(state?.sweptDay) ? state.sweptDay : undefined;
+  // How many times the day before was asked for and did not answer well enough to count as read.
+  const tried = isJsonObject(state?.sweepTried) && state.sweepTried.day === yesterday && isJsonNumber(state.sweepTried.times) ? state.sweepTried.times : 0;
+  let attempts = tried;
+  let missing = 0;
+  const sweeping = sweptDay !== yesterday && now.getUTCHours() >= SWEEP_FROM_UTC_HOUR && tried < SWEEP_TRIES;
+  if (sweeping) {
+    const swept: JsonObject[] = [];
+    for (const station of stations) {
+      if (station.station === null) continue;
+      try {
+        const hours = await answer(origin, `type=dados&data=${yesterday}&estacao_id=${station.station}&range=1&en=0`, fetcher);
+        // A day without its columns or its values is not a day with none: that station did not answer.
+        if (!isJsonArray(hours.cols) || !isJsonArray(hours.vals)) throw new GatekeeperError("QualAr answered a station's day without its hours", "invalid-response");
+        swept.push({ station: station.station, name: station.name, pollutants: hours.cols.map(column), values: hours.vals });
+      } catch (error) {
+        // One station's day that does not answer costs that station, not the other seventy.
+        if (!(error instanceof GatekeeperError) || (error.code !== "upstream-error" && error.code !== "invalid-response")) throw error;
+        missing += 1;
+      }
+    }
+    // What answered is published either way, and never at the cost of the latest hours already read. The day counts
+    // as read only when most stations answered; otherwise it is asked for again, a few times and no more, so an
+    // outage does not send seventy-two failing requests every hour.
+    if (swept.length > 0) document.day = { date: yesterday, stations: swept };
+    if (swept.length * 2 >= swept.length + missing) sweptDay = yesterday;
+    else attempts = tried + 1;
+  }
+
   const body = new TextEncoder().encode(JSON.stringify(document));
   const validator: SourceValidator = { etag: await contentEtag(body) };
-  if (checkpoint?.etag === validator.etag) return { kind: "not-modified", validator };
-  return { kind: "body", body, provenance: { sourceUrl: `${origin}/` }, completeness: "complete", validator };
+  // A collection that asked for the day before has state to keep, whatever it found.
+  if (!sweeping && sourceValidator(state)?.etag === validator.etag) return { kind: "not-modified", validator };
+  const next: JsonObject = { validators: { default: { etag: validator.etag ?? "" } } };
+  if (sweptDay) next.sweptDay = sweptDay;
+  if (sweptDay !== yesterday && attempts > 0) next.sweepTried = { day: yesterday, times: attempts };
+  return { kind: "body", body, provenance: { sourceUrl: `${origin}/` }, completeness: missing > 0 ? "partial" : "complete", state: next };
 }
 
-async function day(origin: string, date: string, fetcher: typeof fetch): Promise<{ pollutants: JsonObject[]; stations: JsonObject[] }> {
+function column(value: JsonValue): JsonObject {
+  const entry = isJsonObject(value) ? value : {};
+  const described: QualarColumn = {
+    id: isJsonNumber(entry.poluente_id) ? entry.poluente_id : null,
+    pollutant: isJsonString(entry.poluente_abrev) ? entry.poluente_abrev.trim() : null,
+    averaging: isJsonString(entry.texto) ? entry.texto.trim() : null,
+    unit: isJsonString(entry.unidade) ? entry.unidade.trim() : null,
+  };
+  return { ...described };
+}
+
+/** One answer of QualAr's app API, as the JSON object it is. */
+async function answer(origin: string, query: string, fetcher: typeof fetch): Promise<JsonObject> {
   const url = new URL("/api/app.php", origin);
-  url.search = `?type=medicoes&data=${date}&en=0`;
+  url.search = `?${query}`;
   let response: Response;
   try {
     response = await fetcher(url, { headers: { Accept: "application/json" }, redirect: "manual" });
@@ -87,25 +160,11 @@ async function day(origin: string, date: string, fetcher: typeof fetch): Promise
   if (!response.ok) throw new GatekeeperError(`QualAr returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
   let value: JsonValue;
   try {
-    value = parseJsonBytes(await readBoundedResponse(response, DAY_MAX_BYTES, "QualAr measurements"));
+    value = parseJsonBytes(await readBoundedResponse(response, DAY_MAX_BYTES, "QualAr answer"));
   } catch (error) {
     if (error instanceof GatekeeperError) throw error;
     throw new GatekeeperError("QualAr answered something that is not JSON", "invalid-response");
   }
-  if (!isJsonObject(value) || !isJsonArray(value.colunas) || !isJsonArray(value.estacoes))
-    throw new GatekeeperError("QualAr measurements have no pollutants or no stations", "invalid-response");
-  const pollutants = value.colunas.filter(isJsonObject).map((column) => ({
-    id: isJsonNumber(column.poluente_id) ? column.poluente_id : null,
-    pollutant: isJsonString(column.poluente_abrev) ? column.poluente_abrev.trim() : null,
-    averaging: isJsonString(column.texto) ? column.texto.trim() : null,
-    unit: isJsonString(column.unidade) ? column.unidade.trim() : null,
-  }));
-  // Only what is published: the station and each pollutant's latest hour. The rest of a station (its address, its
-  // network) is the air quality stations feed's.
-  const stations = value.estacoes.filter(isJsonObject).map((station) => ({
-    station: isJsonNumber(station.estacao_id) ? station.estacao_id : null,
-    name: isJsonString(station.estacao_nome) ? station.estacao_nome.trim() : null,
-    readings: isJsonArray(station.medicoes) ? station.medicoes : [],
-  }));
-  return { pollutants, stations };
+  if (!isJsonObject(value)) throw new GatekeeperError("QualAr answered something that is not an object", "invalid-response");
+  return value;
 }

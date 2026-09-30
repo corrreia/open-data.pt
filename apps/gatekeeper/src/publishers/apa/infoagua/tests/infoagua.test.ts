@@ -238,7 +238,8 @@ describe("InfoÁgua reservoir flows", () => {
       dimensions: { station: "12H/01A", name: "ALBUFEIRA DA RAIVA (R.E.)" },
     });
     expect(new Set([...inflows.points, ...outflows.points].map((point) => point.seriesKey))).toEqual(new Set(["11H/01A", "12H/01A"]));
-    expect(result.quality.rejectedRecords).toBe(2);
+    // Alcántara was never going to be published: left out, not rejected, so the run is not marked partial.
+    expect(result.quality.rejectedRecords).toBe(0);
   });
 });
 

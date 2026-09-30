@@ -183,17 +183,22 @@ function reservoirs(entries: readonly JsonValue[], context: TransformContext): U
 /**
  * Each reservoir's flows under the code and name SNIRH files it by, so they sit beside SNIRH's reservoir series. Times
  * are InfoÁgua's `YYYY-MM-DD HH:MM:SS` in UTC. A reservoir missing from SNIRH's table (one in Spain, or one whose SNIRH
- * name we have not seen) is rejected.
+ * name we have not seen) is left out, and logged: it was never going to be published, so it is not a rejected reading.
  */
 function flows(entries: readonly JsonObject[], unreadable: number): UnstampedResult {
   let rejected = unreadable;
+  const unknown = new Set<string>();
   const points = new Map<string, SeriesPoint[]>(FLOWS.map((flow) => [flow.reading, []]));
   for (const entry of entries) {
     const values = isJsonArray(entry.values) ? entry.values.filter(isJsonObject) : [];
     const identity = isJsonString(entry.site) ? SNIRH_STATIONS.get(entry.site) : undefined;
     const series = isJsonString(entry.reading) ? points.get(entry.reading) : undefined;
-    if (!identity || !series) {
+    if (!series) {
       rejected += values.length;
+      continue;
+    }
+    if (!identity) {
+      if (values.length > 0 && isJsonString(entry.site)) unknown.add(entry.site);
       continue;
     }
     for (const value of values) {
@@ -210,6 +215,8 @@ function flows(entries: readonly JsonObject[], unreadable: number): UnstampedRes
       });
     }
   }
+  if (unknown.size > 0)
+    console.warn(JSON.stringify({ event: "infoagua_stations_not_in_snirh", reading: "reservoir-flows", stations: unknown.size, sites: [...unknown].slice(0, 10) }));
   const products = FLOWS.map((flow): ProductBuild => {
     const series = points.get(flow.reading) ?? [];
     const product: ProductBuild = {

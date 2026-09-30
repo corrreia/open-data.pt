@@ -390,7 +390,7 @@ describe("SNIRH groundwater state", () => {
 });
 
 describe("SNIRH live readings from InfoÁgua", () => {
-  it("sums each hour of rain from the four quarters ending in it, and leaves out an hour missing one", async () => {
+  it("sums each hour of rain from the four quarters ending in it, leaving out an hour missing one and a gauge SNIRH does not list", async () => {
     const pages = new Map([
       [
         "920685152",
@@ -429,7 +429,8 @@ describe("SNIRH live readings from InfoÁgua", () => {
     expect(result.products.map(pointsOf)).toEqual([
       [{ seriesKey: "09J/03UG", eventTime: "2026-09-29T11:00:00.000Z", value: 1, unit: "mm", dimensions: { station: "09J/03UG", name: "CALDE" } }],
     ]);
-    expect(result.quality.rejectedRecords).toBe(4);
+    // Riviera Gata was never going to be published: left out, not rejected, so the run is not marked partial.
+    expect(result.quality.rejectedRecords).toBe(0);
   });
 
   it("refuses a page whose parameter no longer means what it did", async () => {

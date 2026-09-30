@@ -83,20 +83,24 @@ No credentials. SNIRH has no API: the `snirh` library reads what its own pages r
 - **Layers left out, 30 September 2026:** the pollutant release register (`SNIAmb/Licenciamento`),
   which carries each establishment's email, phone and fax, some of them a named person's, and which
   the `arcgis` library cannot publish without; marine litter (`Visualizador/LixoMarinho`), which
-  refuses queries; noise maps, flood-risk zones and impact-assessment areas, which are large polygons
-  that change every few years; and `Visualizador/SolarFlutuantes`, whose layers are water-supply
+  returns no features; noise maps, at 5 to 10 MB a municipality, past the size of a record; the
+  impact-assessment areas, which repeat the projects already read as points; and `Visualizador/SolarFlutuantes`, whose layers are water-supply
   intakes, not floating solar.
-- **QualAr's air quality.** The app reads `/api/app.php?type=…`; the library reads `type=medicoes&data=YYYY-MM-DD`,
-  which answers, for that day, every station with the latest hour of each pollutant (`avg`, `validado`, `hora`,
-  `indice`), in the order of the day's `colunas`, and `N.D.` for an hour without a value. A live collection reads
-  yesterday and today, so the hours that close a day are not missed. `type=dados` has a station's 24 hours of a day
-  (a history walk could use it, at 72 requests a day); `download.php` serves only validated data, a year after. Hours
-  are UTC: QualAr does not say so, but nitrogen dioxide at the Lisbon traffic stations peaks at hour 7 and again at
-  17 to 18 on a working day, the rush hours in Lisbon time in summer, and EU air quality reporting uses local
-  standard time, which in mainland Portugal is UTC. Whether an hour is labelled by its start or its end is not
-  stated; readings are dated by the start of the hour. QualAr is on the same server as SNIRH (193.136.235.19),
-  which refuses most of Cloudflare's locations; whether it refuses QualAr too was not known when the feed was added.
-
+- **QualAr's air quality.** The app reads `/api/app.php?type=…`, and the library reads two answers.
+  `type=medicoes&data=YYYY-MM-DD` answers every station with one value per pollutant (`avg`, `hora`,
+  `indice`), in the order of the day's `colunas`, and `N.D.` for none. For the day under way that value
+  is the latest hourly mean. For a day that has ended it is the day's maximum (`Máximo horário`) and,
+  for PM10 and PM2.5, the daily mean, still labelled `Média horária` and filed under hour 0: so when
+  any column is a maximum, nothing of that answer is taken as an hour. The last hours of a day never
+  show there, so once a day, from 03:00 UTC, `type=dados&data=…&estacao_id=…` is read for every
+  station and the day before: its 24 hours (`vals`: column `p`, hour `x`, value `v`, index `i`). That
+  is 72 requests, five seconds apart. The day counts as read when most stations answered; a day that does not answer keeps the hour's latest readings, is asked for again on the next two collections, and is then given up. `download.php` serves only validated data, a year after. Hours
+  are UTC: QualAr does not say so, but nitrogen dioxide at the Lisbon traffic stations peaks at hour 7
+  and again at 17 to 18 on a working day, the rush hours in Lisbon time in summer; EU air quality
+  reporting uses local standard time, which in mainland Portugal is UTC; and at 23:12 UTC, past
+  midnight in Lisbon, the day was still under way. Whether an hour is labelled by its start or its end
+  is not stated; readings are dated by the start. QualAr is on the same server as SNIRH
+  (193.136.235.19), but answers Cloudflare: its first collection read, on 30 September 2026.
 - **InfoÁgua's readings.** A station's page is `/pt/cheias/cheia-detalhe/<SNIRH site>`, with
   `DATA_StationParameters`: InfoÁgua's own parameter identifiers (4 river level, 5 rain in 15 minutes,
   6 reservoir inflow, 2 reservoir outflow)
@@ -104,7 +108,8 @@ No credentials. SNIRH has no API: the `snirh` library reads what its own pages r
   changed during those hours, every value matched at the same hour and none an hour either side. InfoÁgua names a station only by
   its SNIRH site; `snirh/stations.ts` pairs each site with the code and name SNIRH's station lists
   print, read from those lists on 27 September 2026. A station missing there (one SNIRH added since,
-  or one in Spain, such as Badajoz and Riviera Gata) is rejected. Checked against SNIRH's database on
+  or one in Spain, such as Badajoz and Riviera Gata) is left out and logged
+  (`infoagua_stations_not_in_snirh`), not counted as rejected: a rejected reading marks a run partial. Checked against SNIRH's database on
   29 September, 15 river stations over 36 hours: 13 identical; Atrozela (21A/06H) shows 0 where SNIRH
   has a level below the gauge zero, and Junção das Ribeiras (21A/02H) about 0.05 m where SNIRH has
   0.10 m. An hour of rain is the sum of the four quarters ending in it; that quarters end at their
