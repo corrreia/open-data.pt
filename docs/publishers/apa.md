@@ -94,7 +94,7 @@ No credentials. SNIRH has no API: the `snirh` library reads what its own pages r
   any column is a maximum, nothing of that answer is taken as an hour. The last hours of a day never
   show there, so once a day, from 03:00 UTC, `type=dados&data=…&estacao_id=…` is read for every
   station and the day before: its 24 hours (`vals`: column `p`, hour `x`, value `v`, index `i`). That
-  is 72 requests, five seconds apart. `download.php` serves only validated data, a year after. Hours
+  is 72 requests, five seconds apart. The day counts as read when most stations answered; a day that does not answer keeps the hour's latest readings, is asked for again on the next two collections, and is then given up. `download.php` serves only validated data, a year after. Hours
   are UTC: QualAr does not say so, but nitrogen dioxide at the Lisbon traffic stations peaks at hour 7
   and again at 17 to 18 on a working day, the rush hours in Lisbon time in summer; EU air quality
   reporting uses local standard time, which in mainland Portugal is UTC; and at 23:12 UTC, past

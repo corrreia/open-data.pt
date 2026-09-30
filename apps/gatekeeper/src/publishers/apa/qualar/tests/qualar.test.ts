@@ -7,15 +7,17 @@ const AIR = { feed: "air-quality" };
 const saved = (name: string): string => readFixture(new URL(`./fixtures/${name}`, import.meta.url));
 
 /**
- * QualAr as it answered: the 29th while it was under way (`medicoes`), and Entrecampos's 24 hours of the 28th
- * (`dados`). Every other station's day fails, as one that does not answer.
+ * QualAr as it answered: the 29th while it was under way (`medicoes`), and a station's 24 hours of the 28th (`dados`),
+ * which are Entrecampos's, given for every station. `days` says how the stations' days answer: all of them, all but
+ * Ermesinde, whose answer has no hours in it, or none.
  */
-function qualar(answers: { latest?: string } = {}) {
+function qualar(answers: { latest?: string; days?: "all" | "one-malformed" | "none" } = {}) {
   return vi.fn(async (input: RequestInfo | URL) => {
     const query = new URL(input.toString()).searchParams;
     if (query.get("type") === "medicoes") return new Response(answers.latest ?? saved("medicoes-2026-09-29.json"));
-    if (query.get("type") === "dados" && query.get("estacao_id") === "3072") return new Response(saved("dados-3072-2026-09-28.json"));
-    return new Response("down", { status: 502 });
+    if (query.get("type") !== "dados" || answers.days === "none") return new Response("down", { status: 502 });
+    if (answers.days === "one-malformed" && query.get("estacao_id") === "1023") return new Response("{}");
+    return new Response(saved("dados-3072-2026-09-28.json"));
   });
 }
 
@@ -72,11 +74,11 @@ describe("QualAr air quality", () => {
     await collect(early, "2026-09-29T01:00:00.000Z");
     expect(asked(early)).toEqual(["medicoes 2026-09-29"]);
 
-    const fetcher = qualar();
+    const fetcher = qualar({ days: "one-malformed" });
     const { fetched, points } = await collect(fetcher, "2026-09-29T03:10:00.000Z");
     expect(asked(fetcher)).toHaveLength(73);
     expect(asked(fetcher)).toContain("dados 2026-09-28 3072");
-    // Entrecampos's morning rush of the 28th, and its every hour; the 71 stations that did not answer cost only themselves.
+    // Entrecampos's morning rush of the 28th, and its every hour.
     expect(points).toContainEqual({
       seriesKey: "3072:NO2",
       eventTime: "2026-09-28T07:00:00.000Z",
@@ -85,12 +87,33 @@ describe("QualAr air quality", () => {
       dimensions: { station: "3072", name: "Entrecampos", pollutant: "NO2", averaging: "1 h", index: "2" },
     });
     expect(points.filter((point) => point.seriesKey === "3072:NO2" && point.eventTime.startsWith("2026-09-28"))).toHaveLength(24);
+    // Ermesinde answered, but not with its hours: it did not answer, and the run says so.
+    expect(points.some((point) => point.seriesKey.startsWith("1023:") && point.eventTime.startsWith("2026-09-28"))).toBe(false);
     expect(fetched.completeness).toBe("partial");
     expect(fetched.state).toMatchObject({ sweptDay: "2026-09-28" });
 
     const later = qualar();
     await collect(later, "2026-09-29T04:10:00.000Z", fetched.state);
     expect(asked(later)).toEqual(["medicoes 2026-09-29"]);
+  });
+
+  it("keeps the latest hours when no station's day answers, asks again, and gives up after three tries", async () => {
+    let state: JsonObject | undefined;
+    for (const hour of ["03", "04", "05"]) {
+      const fetcher = qualar({ days: "none" });
+      const { fetched, points } = await collect(fetcher, `2026-09-29T${hour}:10:00.000Z`, state);
+      expect(asked(fetcher)).toHaveLength(73);
+      // The hour's own reading is not lost to the day before's.
+      expect(points).toContainEqual(expect.objectContaining({ seriesKey: "3072:NO2", eventTime: "2026-09-29T21:00:00.000Z" }));
+      expect(fetched.completeness).toBe("partial");
+      expect(fetched.state).not.toHaveProperty("sweptDay");
+      state = fetched.state;
+    }
+    // The fourth does not ask for the day before again; with no new hour either, it has nothing to hand over.
+    const fourth = qualar({ days: "none" });
+    const unchanged = await collectQualarFeed(AIR, state, QUALAR_ORIGIN, fourth, new Date("2026-09-29T06:10:00.000Z"));
+    expect(asked(fourth)).toEqual(["medicoes 2026-09-29"]);
+    expect(unchanged.kind).toBe("not-modified");
   });
 
   it("takes nothing from a day QualAr has closed, which it answers with maxima and daily means", async () => {

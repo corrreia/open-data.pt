@@ -35,6 +35,8 @@ export const QUALAR_ORIGIN = "https://qualar.apambiente.pt";
 const DAY_MAX_BYTES = 1024 * 1024;
 /** A day's last hours reach QualAr about two hours late: the day before is read whole from this hour of the next. */
 const SWEEP_FROM_UTC_HOUR = 3;
+/** How many collections ask for a day that does not answer before it is given up. */
+const SWEEP_TRIES = 3;
 
 export const QUALAR_FEEDS = {
   // The latest hourly reading of each pollutant at every station of the national air quality network.
@@ -95,35 +97,41 @@ export async function collectQualarFeed(
   const document: QualarDocument = { latest: { date: today, pollutants: latest.colunas.map(column), stations } };
 
   let sweptDay = isJsonString(state?.sweptDay) ? state.sweptDay : undefined;
+  // How many times the day before was asked for and did not answer well enough to count as read.
+  const tried = isJsonObject(state?.sweepTried) && state.sweepTried.day === yesterday && isJsonNumber(state.sweepTried.times) ? state.sweepTried.times : 0;
+  let attempts = tried;
   let missing = 0;
-  if (sweptDay !== yesterday && now.getUTCHours() >= SWEEP_FROM_UTC_HOUR) {
+  const sweeping = sweptDay !== yesterday && now.getUTCHours() >= SWEEP_FROM_UTC_HOUR && tried < SWEEP_TRIES;
+  if (sweeping) {
     const swept: JsonObject[] = [];
     for (const station of stations) {
       if (station.station === null) continue;
       try {
         const hours = await answer(origin, `type=dados&data=${yesterday}&estacao_id=${station.station}&range=1&en=0`, fetcher);
-        swept.push({
-          station: station.station,
-          name: station.name,
-          pollutants: isJsonArray(hours.cols) ? hours.cols.map(column) : [],
-          values: isJsonArray(hours.vals) ? hours.vals : [],
-        });
+        // A day without its columns or its values is not a day with none: that station did not answer.
+        if (!isJsonArray(hours.cols) || !isJsonArray(hours.vals)) throw new GatekeeperError("QualAr answered a station's day without its hours", "invalid-response");
+        swept.push({ station: station.station, name: station.name, pollutants: hours.cols.map(column), values: hours.vals });
       } catch (error) {
         // One station's day that does not answer costs that station, not the other seventy.
         if (!(error instanceof GatekeeperError) || (error.code !== "upstream-error" && error.code !== "invalid-response")) throw error;
         missing += 1;
       }
     }
-    if (swept.length === 0) throw new GatekeeperError(`QualAr answered no station's hours of ${yesterday}`, "upstream-error");
-    document.day = { date: yesterday, stations: swept };
-    sweptDay = yesterday;
+    // What answered is published either way, and never at the cost of the latest hours already read. The day counts
+    // as read only when most stations answered; otherwise it is asked for again, a few times and no more, so an
+    // outage does not send seventy-two failing requests every hour.
+    if (swept.length > 0) document.day = { date: yesterday, stations: swept };
+    if (swept.length * 2 >= swept.length + missing) sweptDay = yesterday;
+    else attempts = tried + 1;
   }
 
   const body = new TextEncoder().encode(JSON.stringify(document));
   const validator: SourceValidator = { etag: await contentEtag(body) };
-  if (sourceValidator(state)?.etag === validator.etag) return { kind: "not-modified", validator };
+  // A collection that asked for the day before has state to keep, whatever it found.
+  if (!sweeping && sourceValidator(state)?.etag === validator.etag) return { kind: "not-modified", validator };
   const next: JsonObject = { validators: { default: { etag: validator.etag ?? "" } } };
   if (sweptDay) next.sweptDay = sweptDay;
+  if (sweptDay !== yesterday && attempts > 0) next.sweepTried = { day: yesterday, times: attempts };
   return { kind: "body", body, provenance: { sourceUrl: `${origin}/` }, completeness: missing > 0 ? "partial" : "complete", state: next };
 }
 
