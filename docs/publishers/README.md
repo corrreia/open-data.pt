@@ -21,6 +21,7 @@ credential, a proxy, an unusual cadence, a permission, a known habit of the sour
 | [APA](apa.md)                                         | Read through three libraries split so no value repeats, and a site with no API |
 | [RIPE NCC](ripe-ncc.md)                               | Permission to republish RIPEstat, and a `sourceapp` they asked for             |
 | [Banco de Portugal](banco-de-portugal.md)             | Behind their own Cloudflare, and paced so the morning burst is spread out      |
+| [IPMA](ipma.md)                                       | Known to block heavy readers: the fire lists are read a scan at a time         |
 
 ## Writing one
 

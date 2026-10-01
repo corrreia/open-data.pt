@@ -87,12 +87,20 @@ export const IPMA_FEEDS = {
     kind: "shellfish-restrictions",
     semantics: { domainSubject: "feature", defaultProductRole: "current-state" },
   },
+  // Fire pixels from Meteosat's 15-minute scans, read from IPMA's dataservices site rather than the API.
+  "fire-detections": {
+    kind: "fire-detections",
+    semantics: { domainSubject: "event", defaultProductRole: "event-log" },
+  },
 } as const satisfies Record<string, FeedKindDescription>;
 
 export type IpmaFeedName = keyof typeof IPMA_FEEDS;
 
-/** The largest document each IPMA feed may return, in bytes. */
-type FeedLimits = { [Feed in IpmaFeedName]: number };
+/** The feeds read from api.ipma.pt; the fire detections come from mf2.ipma.pt (`fires.ts`). */
+type IpmaApiFeed = Exclude<IpmaFeedName, "fire-detections">;
+
+/** The largest document each IPMA API feed may return, in bytes. */
+type FeedLimits = { [Feed in IpmaApiFeed]: number };
 
 export const IPMA_FEED_LIMITS: FeedLimits = {
   "station-observations": 3 * 1024 * 1024,
@@ -107,8 +115,8 @@ export const IPMA_FEED_LIMITS: FeedLimits = {
   "shellfish-restrictions": 8 * 1024 * 1024,
 };
 
-/** The IPMA paths each feed collects, in the order it reads them. */
-type FeedEndpoints = { [Feed in IpmaFeedName]: readonly string[] };
+/** The IPMA paths each API feed collects, in the order it reads them. */
+type FeedEndpoints = { [Feed in IpmaApiFeed]: readonly string[] };
 
 const ENDPOINTS: FeedEndpoints = {
   "station-observations": ["/open-data/observation/meteorology/stations/observations.json", "/open-data/observation/meteorology/stations/stations.json"],
@@ -161,9 +169,10 @@ export function validateIpmaFeedConfig(config: SourceConfig): SourceConfig {
 
 export async function collectIpmaFeed(config: SourceConfig, checkpoint: SourceValidator | undefined, apiOrigin: string, fetcher: typeof fetch): Promise<SourceFetch> {
   const validated = validateIpmaFeedConfig(config);
+  if (validated.feed === "fire-detections") throw new GatekeeperError("IPMA fire detections are read from mf2.ipma.pt, not the API", "invalid-config");
   // SAFETY: `validateIpmaFeedConfig` has just confirmed `feed` names one of
-  // the feeds IPMA_FEEDS declares.
-  const feed = validated.feed as IpmaFeedName;
+  // the feeds IPMA_FEEDS declares, and the line above that it is an API feed.
+  const feed = validated.feed as IpmaApiFeed;
   const origin = fixedOrigin(apiOrigin, ALLOWED_ORIGIN);
   const paths = ENDPOINTS[feed];
   const requestHeaders = new Headers({ Accept: "application/json, text/csv, application/geo+json" });
@@ -281,7 +290,7 @@ async function readJsonResource(response: Response, url: URL, maximumBytes: numb
   return { bytes, parsed, response, url };
 }
 
-function combinedDocument(feed: Exclude<IpmaFeedName, IpmaDatasetFeed>, resources: Uint8Array[]): Uint8Array {
+function combinedDocument(feed: Exclude<IpmaApiFeed, IpmaDatasetFeed>, resources: Uint8Array[]): Uint8Array {
   switch (feed) {
     case "station-observations":
       return joinJson(['{"stations":', resources[1]!, ',"observations":', resources[0]!, "}"]);
@@ -327,7 +336,7 @@ function joinJson(parts: Array<string | Uint8Array>): Uint8Array {
   return result;
 }
 
-function publishedAt(feed: IpmaFeedName, resources: CollectedResource[]): string | undefined {
+function publishedAt(feed: IpmaApiFeed, resources: CollectedResource[]): string | undefined {
   const stated: string[] = [];
   if (feed === "daily-forecast") {
     for (const resource of resources.slice(0, 3)) {
