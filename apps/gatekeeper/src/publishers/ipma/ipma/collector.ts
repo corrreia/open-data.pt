@@ -2,12 +2,12 @@ import { resolveFeed, type ResolvedFeed, type SourceConfig } from "#/index";
 import { IPMA_FEEDS, validateIpmaFeedConfig } from "./ipma";
 import { IpmaTransformer } from "./transform";
 import { IpmaDatasetTransformer } from "./datasets";
-import { IpmaFireTransformer } from "./fires";
+import { IpmaLightningTransformer } from "./lightning";
 
-/** What an IPMA feed's functions are handed when they run: the origin its API answers on, and its dataservices site's. */
+/** What an IPMA feed's functions are handed when they run: the origin its API answers on, and its website's. */
 export interface IpmaContext {
   apiOrigin: string;
-  mf2Origin: string;
+  webOrigin: string;
 }
 
 /** The translator from IPMA's JSON endpoints into products; every feed but the published files uses it. */
@@ -26,8 +26,8 @@ export function resolveIpmaFeed(config: SourceConfig): Promise<ResolvedFeed> {
   return resolveFeed(config, { library: "ipma", kinds: IPMA_FEEDS, validate: validateIpmaFeedConfig });
 }
 
-/** The translator from Meteosat's fire lists into detections and activity over Portugal. */
-export const IPMA_FIRE_TRANSFORMER = new IpmaFireTransformer();
+/** The streaming translator from the lightning page's discharges into products. */
+export const IPMA_LIGHTNING_TRANSFORMER = new IpmaLightningTransformer();
 
-/** The normalizer the fire detections' collections are stamped with. */
-export const IPMA_FIRE_NORMALIZER = { id: IPMA_FIRE_TRANSFORMER.id, version: IPMA_FIRE_TRANSFORMER.version };
+/** The normalizer the lightning feed's collections are stamped with. */
+export const IPMA_LIGHTNING_NORMALIZER = { id: IPMA_LIGHTNING_TRANSFORMER.id, version: IPMA_LIGHTNING_TRANSFORMER.version };

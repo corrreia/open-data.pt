@@ -87,17 +87,17 @@ export const IPMA_FEEDS = {
     kind: "shellfish-restrictions",
     semantics: { domainSubject: "feature", defaultProductRole: "current-state" },
   },
-  // Fire pixels from Meteosat's 15-minute scans, read from IPMA's dataservices site rather than the API.
-  "fire-detections": {
-    kind: "fire-detections",
+  // Every discharge IPMA's lightning network located in the last 24 hours, read from the website rather than the API.
+  lightning: {
+    kind: "lightning",
     semantics: { domainSubject: "event", defaultProductRole: "event-log" },
   },
 } as const satisfies Record<string, FeedKindDescription>;
 
 export type IpmaFeedName = keyof typeof IPMA_FEEDS;
 
-/** The feeds read from api.ipma.pt; the fire detections come from mf2.ipma.pt (`fires.ts`). */
-type IpmaApiFeed = Exclude<IpmaFeedName, "fire-detections">;
+/** The feeds read from api.ipma.pt; lightning comes from the website (`lightning.ts`). */
+type IpmaApiFeed = Exclude<IpmaFeedName, "lightning">;
 
 /** The largest document each IPMA API feed may return, in bytes. */
 type FeedLimits = { [Feed in IpmaApiFeed]: number };
@@ -169,7 +169,7 @@ export function validateIpmaFeedConfig(config: SourceConfig): SourceConfig {
 
 export async function collectIpmaFeed(config: SourceConfig, checkpoint: SourceValidator | undefined, apiOrigin: string, fetcher: typeof fetch): Promise<SourceFetch> {
   const validated = validateIpmaFeedConfig(config);
-  if (validated.feed === "fire-detections") throw new GatekeeperError("IPMA fire detections are read from mf2.ipma.pt, not the API", "invalid-config");
+  if (validated.feed === "lightning") throw new GatekeeperError("IPMA lightning is read from the website, not the API", "invalid-config");
   // SAFETY: `validateIpmaFeedConfig` has just confirmed `feed` names one of
   // the feeds IPMA_FEEDS declares, and the line above that it is an API feed.
   const feed = validated.feed as IpmaApiFeed;

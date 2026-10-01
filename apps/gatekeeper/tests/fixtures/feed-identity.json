@@ -2031,6 +2031,10 @@
     "resourceKey": "ipma:ipma:fire-risk:f7d7480f663f5bcc7f28235778fc100b37054302550579174bd5071c2ea170c0",
     "kind": "ipma:fire-risk"
   },
+  "ipma-lightning-feed": {
+    "resourceKey": "ipma:ipma:lightning:6f03cf569004fc3bdff1842656a9903e0dc5863f7f5c369efc6fb2d76fb06c37",
+    "kind": "ipma:lightning"
+  },
   "ipma-municipal-precipitation-feed": {
     "resourceKey": "ipma:ipma:municipal-precipitation:3e3e5ac8b9c98d3a3cc44de868b5ca735ff4a314fbbf701bc6c4cb540c9a5676",
     "kind": "ipma:municipal-precipitation"
@@ -2038,10 +2042,6 @@
   "ipma-municipal-temperature-feed": {
     "resourceKey": "ipma:ipma:municipal-temperature:d0c4e891f63735850633590e67350dc14e74dbab4b9ca6cb04c70ad7c8ab12ef",
     "kind": "ipma:municipal-temperature"
-  },
-  "ipma-satellite-fire-detections-feed": {
-    "resourceKey": "ipma:ipma:fire-detections:0e9a12676d8b0e25866d678d82689e42a9d9635de030b0b857bf81c892c8b4c1",
-    "kind": "ipma:fire-detections"
   },
   "ipma-sea-forecast-feed": {
     "resourceKey": "ipma:ipma:sea-forecast:b2f2878ee25234c47fae110d0cffac954f4c42ed1bff3cf2d079cded2eabc7c4",

@@ -1,48 +1,43 @@
 # IPMA
 
 Instituto Português do Mar e da Atmosfera, Portugal's weather, sea and seismic institute. We read ten
-feeds from their open-data API and one, Meteosat fire detections, from their dataservices site.
+feeds from their open-data API and one, lightning, from their website.
 
 ## Source
 
-The `ipma` library (`apps/gatekeeper/src/publishers/ipma/ipma/`) reads both hosts.
+The `ipma` library (`apps/gatekeeper/src/publishers/ipma/ipma/`) reads two hosts.
 
 - `api.ipma.pt`: JSON and CSV files, one or a few per feed, re-read whole on every collection.
-- `mf2.ipma.pt`: the "MF2 – Perigosidade Meteorológica de Fogos Rurais" site, which publishes the
-  EUMETSAT LSA SAF products IPMA makes as files under `/downloads/data/`. We read one of them,
-  FRP-PIXEL (`lsasaf/frp/YYYY/MM/DD/`): the fire pixels of every 15-minute Meteosat scan of the whole
-  disk, as a point shapefile in Web Mercator with each pixel's fire radiative power. Only the `.shp`
-  and `.dbf` of each scan are fetched (`fires.ts`, `shapefile.ts`), and only the pixels that fall on
-  Portugal are kept.
-
-Everything else on mf2 is out of reach on purpose: the AROME, ECMWF and fire-index layers are NetCDF-4
-(HDF5) grids or WMS images, which a Worker cannot read sensibly and which are not records or series;
-the station FWI and RCM files stopped on 19 June 2026; and the map's own `/services/fires/<time>` and
-`/services/fwi-points/<time>` JSON answer empty or 502 for anything but the current day.
+- `www.ipma.pt/pt/otempo/obs.dea/`: the lightning page (`lightning.ts`). It has no API behind it; the
+  map's own script declares, as a JSON object, every discharge IPMA's detection network located in
+  the last 24 hours. The feed reads that object out of the page.
 
 ## Access
 
-No credential. IPMA is known to block readers who ask too much, so mf2 is paced at two seconds
-between requests (`minIntervalSeconds` in their `index.ts`), and the fire feed asks for as little as
-it can:
+No credential. IPMA is known to block heavy readers. The lightning page is one request every 15
+minutes, which IPMA answers from its own cache (`X-Upstream-Cache: HIT`), and the feed sends
+`If-Modified-Since` so an unchanged page costs it no body.
 
-- every 15 minutes, the scans published since its cursor (`nextScan` in its checkpoint): two files of
-  a few kilobytes each, usually one scan;
-- nothing at all when no new scan is due, and a single request when the next one is not written yet;
-- at most four scans a collection, so it catches up after an outage at four times the pace; a cursor
-  more than a day behind restarts at the last hour.
-
-There is no history walk. The archive goes back to 2017, but at two requests per 15-minute scan it is
-over 600,000 requests, which IPMA would rightly refuse; a bounded walk over chosen fire seasons would
-need asking them first.
+**`mf2.ipma.pt` refuses Cloudflare.** Their dataservices site (the "MF2" fire-weather portal, which
+publishes the EUMETSAT LSA SAF products IPMA makes) answers `403 Forbidden` to requests from
+Cloudflare's network, though it answers anywhere else and shares its server (193.137.20.123) with
+`www.ipma.pt`, which does not refuse. A Meteosat fire feed read from it failed every run in production
+on 2026-10-01 and was removed. Do not read mf2 from the Gatekeeper without IPMA allowing it; the same
+kind of fire data is better read from EUMETSAT's Data Store.
 
 ## Quirks
 
-- A scan's list appears about 21 minutes after the scan starts; the feed waits 25. A scan still
-  missing two hours after it was due is a gap in the satellite record and is passed over.
-- The list states pixel centres to 0.01°. Mainland pixels are kept by a 33-point Natural Earth outline
-  of the country, so a pixel within a few kilometres of the Spanish border may fall either side;
-  Madeira and the Azores are kept by a box around each.
-- The detections product holds the scans the last collection read and is replaced by the next; every
-  detection stays in history. The activity series has a point per scan and region, zero when nothing
-  burned, so a quiet scan is told apart from a missing one.
+- **The lightning page's note says its data is cut to 31.5–42.5°N and 19.5–5.5°W**, which would leave
+  the Azores out, but its map reaches 35°W and IPMA's network covers the Azores; the note is taken as
+  older than the network. The page also carries Spain and Morocco. The feed keeps the mainland by a
+  33-point outline of the country and the islands by a box around each group
+  (`apps/gatekeeper/src/portugal.ts`), and counts all three. If Azores hours stay at zero through a
+  storm there, the note was right and their series should go.
+- The page keeps 24 hours, refreshed in 10-minute steps, in UTC; its `update_date` carries no zone
+  and is read as UTC. The hourly counts take only whole hours inside the last 23, so the hour at
+  the window's edge is never counted half-empty and then overwritten.
+- `amplitude` is the peak current in kA, with its sign; `icloud` true is a discharge between clouds,
+  false one to the ground. IPMA states the data are informative and not official for incidents or
+  accidents; the feed's description says so.
+- If the page stops declaring `var data = {…}` before its `dea =` layer, the collection fails as
+  `invalid-response` rather than reporting no lightning.

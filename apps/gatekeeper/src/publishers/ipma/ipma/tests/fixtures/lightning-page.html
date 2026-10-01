@@ -1,0 +1,739 @@
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="pt">
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="author" content="https://www.ipma.pt" />
+  <meta name="keywords" lang="pt" content="Instituto Português do Mar e da Atmosfera, Mar, oceano, atmosfera, Instituto de Meteorologia, IPIMAR, o tempo, previsão do tempo, previsão meteorológica, clima, Portugal, sismologia, sismos" />
+  <meta name="keywords" lang="en" content="forecast, weather, Portugal, climate, seismic, sea, ocean" />
+
+	<title>IPMA - Descargas el&#233;tricas atmosf&#233;ricas</title>
+
+	<link rel="shortcut icon" type="image/x-icon" href="/opencms/bin/icons/favicon.ico" />
+	<link rel="stylesheet" type="text/css" href="/opencms/system/modules/ipma.website/resources/ipma_website.css" />
+	<link rel="stylesheet" type="text/css" href="/export/system/modules/ipma.website/resources/css/font-awesome-4.7.min.css" />
+
+	
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-LXZK2BME2W"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-LXZK2BME2W');
+</script>
+
+
+	<script type="text/javascript" src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+</head>
+
+
+
+
+
+
+
+
+
+
+
+  <body><div id="BG_Bot">
+    <div id="Container">
+    	<!-- START HEADER -->
+    	
+
+
+<div id="Header">
+  <div class="col_esq"><h1><a href="/opencms/pt/index.html" accesskey="h" ><img style="margin: auto 5px;" src="/opencms/system/modules/ipma.website/resources/images/logo-ipma-17.svg" alt="Instituto Portugues do Mar e Atmosfera - Homepage" /></a></h1></div>
+  <div id="Top_h2">
+    <ul id="NavList">
+    <li class=''><a href='/opencms/pt/oipma/quem/'>Quem somos</a>&nbsp;|&nbsp;</li><li class=''><a href='/opencms/pt/oipma/onde/'>Onde estamos</a>&nbsp;|&nbsp;</li><li class=''><a href='/opencms/pt/investigacao/investigadores/'>Conselho científico</a>&nbsp;|&nbsp;</li><li class=''><a href='/opencms/pt/recrutamento/'><span class="text_blue_simb">Recrutamento</span></a>&nbsp;|&nbsp;</li><li class=''><a href='/opencms/pt/formacaoipma/'><span class="text_blue_simb">Formação</span>@<span class="text_blue_simb">IPMA</span></a>&nbsp;|&nbsp;</li><li class=''><a href='/opencms/pt/investigacao/'>Investigação</a>&nbsp;|&nbsp;</li><li class=''><a href='/opencms/pt/publicacoes/'><span style="font-size:14px;" class="text_blue_simb">e</span>Biblioteca</a>&nbsp;|&nbsp;</li><li class=''><a href='/opencms/pt/enciclopedia/index.html'>Enciclopédia<!--<span class="text_blue_simb">ipma</span>--></a>&nbsp;|&nbsp;</li><li class=''><a href='/opencms/pt/siteinfo/contactar.jsp'>Contacto</a>&nbsp;|&nbsp;</li><li class='ic_en'><a href='/opencms/en/index.html'>EN</a></li>
+    </ul>
+  </div>
+
+<div class="pesq">
+  <form method="post" name="searchform" action="/pt/pesquisa/searchresult.jsp" onsubmit="return validateSearch()">
+    <input type="hidden" name="index" value="ipma PT">
+    <input type="hidden" name="field" value="title">
+    <input type="hidden" name="field" value="keywords">
+    <input type="hidden" name="field" value="description">
+    <input type="hidden" name="field" value="content">
+    <label for="query"></label>
+    <input type="text" class="pesq_int_box" id="query" name="query" value="Pesquisa" onfocus="if(this.value=='Pesquisa') this.value=''" onblur="if(this.value=='') this.value='Pesquisa'" >
+    <input type="submit" class="pesq_button" value="ok" >
+  </form>
+</div>
+<script type="text/javascript">
+//	var $j = jQuery.noConflict(); 
+	$(document).ready(function(){ 
+		$('ul#mainnav li').hover( function(){
+      $(this).addClass('hover');
+      $( 'ul.subnav', this ).css('visibility', 'visible');        
+    }, function(){
+      $(this).removeClass('hover');
+      $( 'ul.subnav', this ).css('visibility', 'hidden');
+    });
+  });
+</script>
+<div>
+  <ul id="mainnav">
+    <li><span>Tempo</span><ul class='subnav'>
+<li><a title='Previsão significativa' href='/opencms/pt/otempo/prev.significativa/'>Previsão significativa</a></li>
+<li><a title='Previsão 10 dias e horária' href='/opencms/pt/otempo/prev.localidade.hora/'>Previsão 10 dias e horária</a></li>
+<li><a title='Previsão descritiva' href='/opencms/pt/otempo/prev.descritiva/'>Previsão descritiva</a></li>
+<li><a title='Avisos Meteorológicos' href='/opencms/pt/otempo/prev-sam/'>Avisos Meteorológicos</a></li>
+<li><a title='Cartas meteorológicas' href='/opencms/pt/otempo/prev.numerica/'>Cartas meteorológicas</a></li>
+<li><a title='Perfis verticais' href='/opencms/pt/otempo/obs.sondagens/'>Perfis verticais</a></li>
+<li><a title='Imagens satélite' href='/opencms/pt/otempo/obs.satelite/'>Imagens satélite</a></li>
+<li><a title='Imagens radar' href='/opencms/pt/otempo/obs.remote/'>Imagens radar</a></li>
+<li><a title='Descargas elétricas' href='/opencms/pt/otempo/obs.dea/'>Descargas elétricas</a></li>
+<li><a title='Estações Online' href='/opencms/pt/otempo/obs.superficie/'>Estações Online</a></li>
+<li><a title='Radiação Solar' href='/opencms/pt/otempo/obs.radiacao/'>Radiação Solar</a></li>
+<li><a title='Previsão no mundo' href='/opencms/pt/otempo/prev.mundo/'>Previsão no mundo</a></li>
+<li><a title='Previsão período alargado' href='/opencms/pt/otempo/prev.alargado/'>Previsão período alargado</a></li>
+<li><a title='Previsão sazonal' href='/opencms/pt/otempo/prev.sazonal/'>Previsão sazonal</a></li>
+<li><a title='Previsão ciclones tropicais' href='/opencms/pt/otempo/prev.ciclones/'>Previsão ciclones tropicais</a></li>
+<li><a title='Testemunhou um fenómeno meteorológico?' href='/opencms/pt/otempo/observar/'>Testemunhou um fenómeno meteorológico?</a></li>
+</ul></li>
+<li><span>Mar</span><ul class='subnav'>
+<li><a title='Praias e Portos' href='/opencms/pt/maritima/costeira/'>Praias e Portos</a></li>
+<li><a title='Previsão para navegação' href='/opencms/pt/maritima/boletins/'>Previsão para navegação</a></li>
+<li><a title='Previsão altura significativa' href='/opencms/pt/maritima/hs/'>Previsão altura significativa</a></li>
+<li><a title='Previsão período de pico' href='/opencms/pt/maritima/tp/'>Previsão período de pico</a></li>
+<li><a title='Previsão de corrente' href='/opencms/pt/maritima/currents/'>Previsão de corrente</a></li>
+<li><a title='Previsão de temperatura' href='/opencms/pt/maritima/sst/'>Previsão de temperatura</a></li>
+<li><a title='Previsão da elevação' href='/opencms/pt/maritima/ssh/'>Previsão da elevação</a></li>
+</ul></li>
+<li><span>Sismos</span><ul class='subnav'>
+<li><a title='Atividade sísmica' href='/opencms/pt/geofisica/sismicidade/'>Atividade sísmica</a></li>
+<li><a title='Shakemap' href='/opencms/pt/geofisica/shakemap/'>Shakemap</a></li>
+<li><a title='Sentiu um sismo?' href='/opencms/pt/geofisica/informe/'>Sentiu um sismo?</a></li>
+<li><a title='Comunicados' href='/opencms/pt/geofisica/comunicados/'>Comunicados</a></li>
+<li><a title='Tensor Momento Sísmico' href='/opencms/pt/geofisica/tensor/'>Tensor Momento Sísmico</a></li>
+<li><a title='Escalas sísmicas' href='/opencms/pt/geofisica/escalas/'>Escalas sísmicas</a></li>
+<li><a title='Rede sísmica' href='/opencms/pt/geofisica/redes/'>Rede sísmica</a></li>
+<li><a title='Medidas em caso sismo' href='/opencms/pt/geofisica/medidas/'>Medidas em caso sismo</a></li>
+<li><a title='Projetos' href='/opencms/pt/geofisica/projetos/'>Projetos</a></li>
+<li><a title='Boletins' href='/opencms/pt/geofisica/boletins/'>Boletins</a></li>
+</ul></li>
+<li><span>Clima</span><ul class='subnav'>
+<li><a title='Acompanhamento do clima' href='/opencms/pt/oclima/monitorizacao/'>Acompanhamento do clima</a></li>
+<li><a title='Extremos climatológicos' href='/opencms/pt/oclima/extremos.clima/'>Extremos climatológicos</a></li>
+<li><a title='Normais climatológicas' href='/opencms/pt/oclima/normais.clima/'>Normais climatológicas</a></li>
+<li><a title='Dataclima' href='/opencms/pt/oclima/dataclima/'>Dataclima</a></li>
+<li><a title='Séries longas' href='/opencms/pt/oclima/series.longas/'>Séries longas</a></li>
+<li><a title='Monitorização diária' href='/opencms/pt/oclima/monitoriza.dia/'>Monitorização diária</a></li>
+<li><a title='Monitorização mensal' href='/opencms/pt/oclima/monitoriza.mensal/'>Monitorização mensal</a></li>
+<li><a title='Monitorização da Seca' href='/opencms/pt/oclima/observatorio.secas/'>Monitorização da Seca</a></li>
+<li><a title='Ondas de Calor' href='/opencms/pt/oclima/ondascalor/'>Ondas de Calor</a></li>
+<li><a title='Indíces NAO e EA' href='/opencms/pt/oclima/nao.ea/'>Indíces NAO e EA</a></li>
+<li><a title='Boletins climatológicos' href='/opencms/pt/oclima/boletins/'>Boletins climatológicos</a></li>
+<li><a title='Gases com efeito estufa' href='/opencms/pt/oclima/gases.estufa/'>Gases com efeito estufa</a></li>
+<li><a title='Portal do Clima' href='/opencms/pt/oclima/portaldoclima/'>Portal do Clima</a></li>
+<li><a title='Serviços de Clima' href='/opencms/pt/oclima/servicos.clima/'>Serviços de Clima</a></li>
+</ul></li>
+<li><span>Bivalves</span><ul class='subnav'>
+<li><a title='Bivalves - ponto situação' href='/opencms/pt/bivalves/index.jsp'>Bivalves - ponto situação</a></li>
+<li><a title='Zonas de Produção' href='/opencms/pt/bivalves/zonas/'>Zonas de Produção</a></li>
+<li><a title='Documentos e Legislação' href='/opencms/pt/bivalves/docs/'>Documentos e Legislação</a></li>
+<li><a title='Biotoxinas' href='/opencms/pt/bivalves/biotox/'>Biotoxinas</a></li>
+<li><a title='Fitoplâncton Nocivo' href='/opencms/pt/bivalves/fito/'>Fitoplâncton Nocivo</a></li>
+<li><a title='Metais  Contaminantes' href='/opencms/pt/bivalves/metais/'>Metais  Contaminantes</a></li>
+<li><a title='Microbiologia' href='/opencms/pt/bivalves/micro/'>Microbiologia</a></li>
+<li><a title='Histórico interdições' href='/opencms/pt/bivalves/historico/'>Histórico interdições</a></li>
+</ul></li>
+<li><span>Pescas e aquacultura</span><ul class='subnav'>
+<li><a title='Recursos Vivos' href='/opencms/pt/pescas/recursos/'>Recursos Vivos</a></li>
+<li><a title='Estação Piscicultura de Olhão' href='/opencms/pt/pescas/eppo/'>Estação Piscicultura de Olhão</a></li>
+<li><a title='Estação Moluscicultura de Tavira' href='/opencms/pt/pescas/eemt/'>Estação Moluscicultura de Tavira</a></li>
+<li><a title='Estação Oceanográfica Cascais' href='/opencms/pt/pescas/cascaiswatch/'>Estação Oceanográfica Cascais</a></li>
+<li><a title='Projectos' href='/opencms/pt/pescas/projetos/'>Projectos</a></li>
+<li><a title='Divulgação' href='/opencms/pt/pescas/divulgacao/'>Divulgação</a></li>
+<li><a title='Espaço Aquicultura' href='/opencms/pt/pescas/aquicultura/'>Espaço Aquicultura</a></li>
+<li><a title='ICES' href='/opencms/pt/pescas/ICES'>ICES</a></li>
+</ul></li>
+<li><span>Aeronáutica</span><ul class='subnav'>
+<li><a title='Mensagens TAF e METAR' href='/opencms/pt/aeronautica/taf.metar/'>Mensagens TAF e METAR</a></li>
+<li><a title='Selfbriefing' href='/opencms/pt/aeronautica/selfbriefing/'>Selfbriefing</a></li>
+<li><a title='Política da Qualidade' href='/opencms/pt/aeronautica/politica.qualidade/'>Política da Qualidade</a></li>
+<li><a title='Saber mais, aeronáutica.' href='/opencms/pt/aeronautica/saber.mais/'>Saber mais, aeronáutica.</a></li>
+</ul></li>
+<li><span>Agricultura</span><ul class='subnav'>
+<li><a title='Percentagem água solo' href='/opencms/pt/agrometeorologia/smi/'>Percentagem água solo</a></li>
+<li><a title='Vegetation Health Index (VHI)' href='/opencms/pt/agrometeorologia/vhi/'>Vegetation Health Index (VHI)</a></li>
+<li><a title='Fração radiação absorvida (FAPAR)' href='/opencms/pt/agrometeorologia/fapar/'>Fração radiação absorvida (FAPAR)</a></li>
+<li><a title='Boletins agrometeo' href='/opencms/pt/agrometeorologia/boletins/'>Boletins agrometeo</a></li>
+<li><a title='Mais informação' href='/opencms/pt/agrometeorologia/info/'>Mais informação</a></li>
+<li><a title='Plataforma agroclimática' href='/opencms/pt/agrometeorologia/agroclima.html'>Plataforma agroclimática</a></li>
+</ul></li>
+<li><span>Saúde</span><ul class='subnav'>
+<li><a title='Índice ultravioleta' href='/opencms/pt/saude/prev.uv/'>Índice ultravioleta</a></li>
+<li><a title='Ozono' href='/opencms/pt/saude/ozono/'>Ozono</a></li>
+<li><a title='Pólens' href='/opencms/pt/saude/polens/'>Pólens</a></li>
+</ul></li>
+<li><span>Navios</span><ul class='subnav'>
+<li><a title='Enquadramento' href='/opencms/pt/navios/index.jsp'>Enquadramento</a></li>
+<li><a title='NI Mário Ruivo' href='/opencms/pt/navios/mario-ruivo/'>NI Mário Ruivo</a></li>
+<li><a title='NI Diplodus' href='/opencms/pt/navios/diplodus/'>NI Diplodus</a></li>
+<li><a title='Maris' href='/opencms/pt/navios/maris/'>Maris</a></li>
+<li><a title='Recife II' href='/opencms/pt/navios/recife/'>Recife II</a></li>
+<li><a title='Cardium' href='/opencms/pt/navios/cardium/'>Cardium</a></li>
+</ul></li>
+<li><span>Espaço</span><ul class='subnav'>
+<li><a title='Satélite MSG' href='/opencms/pt/espaco/msg/'>Satélite MSG</a></li>
+<li><a title='Imagens do sol' href='/opencms/pt/espaco/sol/'>Imagens do sol</a></li>
+</ul></li>
+<li><span>Fogos Rurais</span><ul class='subnav'>
+<li><a title='Perigo de Incêndio Continente' href='/opencms/pt/riscoincendio/rcm.pt/'>Perigo de Incêndio Continente</a></li>
+<li><a title='Perigo de Incêndio Madeira' href='/opencms/pt/riscoincendio/rcm.md/'>Perigo de Incêndio Madeira</a></li>
+<li><a title='FWI e Probabilidade de Extremos' href='/opencms/pt/riscoincendio/fwi/'>FWI e Probabilidade de Extremos</a></li>
+<li><a title='Relatórios Perigo de Incêndio' href='/opencms/pt/riscoincendio/relatorios/'>Relatórios Perigo de Incêndio</a></li>
+</ul></li>
+
+  </ul>
+</div>
+
+
+
+
+
+
+    	<!-- END HEADER -->
+    	<!-- START MAIN -->
+    	<div id="MainContent">
+        	<!-- START BREAD -->
+        	<div id="BreadFull">
+     		  	
+
+
+
+
+
+<!--TEMPLATE MAIN CONTAINER WITH NO SEARCH-->
+
+
+<span class="bread_lks"><a href="/opencms/pt/">IPMA</a><span>&gt;</span><a href="/opencms/pt/otempo/">Tempo</a><span>&gt;</span><a href="/opencms/pt/otempo/obs.dea/">Descargas elétricas</a></span>
+
+
+
+<!--TEMPLATE FOR PRINT PAGE-->
+
+
+        	</div>
+        	<!-- END BREAD -->
+        	<!-- FULL CONTENT -->        
+		<div id="FullContent"><a name="contenttop"></a>
+
+
+
+
+
+<style type="text/css">
+  #RightCol_container {width: 200px;}
+  #LeftCol-container {width: 785px;}
+  .full-maincol {	width: 100%; }
+  #RightCol2_container { width: 22%; padding: unset;}      
+  #mymap { height: 620px; width: 100%; position: relative; }
+  .info { padding: 10px; background: rgba(255, 255, 255, 0.8); box-shadow: 0 0 15px rgba(0, 0, 0, 0.2); border-radius: 5px; }
+  .info h4 { margin: 0 0 5px; color: #065581; }
+  .legend {color: #555;}
+  .legend i { width: 18px;height: 18px; float: left; margin-right: 8px;opacity: 0.7; }
+  .message { line-height: 25px; font-size: 16px; color: #555; top: 40%; left: 45%; text-align: center; position: absolute; z-index: 1001; }
+  .message i { width: 200px; height: 60px; margin-right: 8px; opacity: 0.9; }
+  #bar { width: 784px; }
+  #bar .fleft { float: left; display: inline-block; margin:0; padding: 0; border-left: solid 1px #ccc; }
+  #bar .fright { float: right; display: inline-block; margin:0; padding: 0; }
+  .leaflet-bar-timecontrol { width: auto; border: solid 1px #ccc !important; border-radius: 0 !important; box-shadow: none !important; }
+  .leaflet-bar-timecontrol .leaflet-control-timecontrol:last-child { border: none; }
+  .leaflet-bar-timecontrol .timecontrol-dateslider .slider { width: 100px !important; }
+  .descTooltip { line-height: 18px; border-color: #a0a0a0 !important; color: #505050 !important; font-size: 12px !important; }
+  .descTooltip h4, .descTooltip h5 { font-size: 11px !important; }
+  .fa-plus-circle { color: red !important; }
+  .fa-minus-circle { color: #23466b !important; }
+  .ground { opacity: 0.9; font-size: 11px; color: #333 !important; }
+  .cloud { opacity: 0.4; font-size: 8px; color: #333 !important; margin-left: 1px; }
+  .nodata { line-height: 28px; margin: 0 5px; font-weight: bold; }
+	/* Begin Navigation Bar Styling */
+	.nav-sis { width: 100%; float: left; margin: 0px 0px; padding: 0; list-style: none; background-color: #f2f2f2; border-bottom: 1px solid #ccc; border-top: 1px solid #ccc; border-left: 1px solid #ccc; }
+	.nav-sis li { float: right; }
+	.nav-sis li a { display: block; padding: 4px 10px; text-decoration: none; font-weight: bold; color: #069; border-right: 1px solid #ccc; }
+	.nav-sis li a:hover { color: black; background-color: #fff; }
+  .box_border { text-align:center; }
+	/* End navigation bar styling. */
+
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.5.1/dist/leaflet.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.control.min.css" />
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css" integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt" crossorigin="anonymous"/>
+
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leaflet@1.5.1/dist/leaflet.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/iso8601-js-period@0.2.1/iso8601.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/moment@2.30.1/moment.min.js"></script>
+
+
+<!--<script type="text/javascript" src="https://cdn.rawgit.com/nezasa/iso8601-js-period/master/iso8601.min.js"></script>
+<script type="text/javascript" src="https://cdn.rawgit.com/socib/Leaflet.TimeDimension/master/dist/leaflet.timedimension.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.1/moment.min.js"></script>-->
+
+<div id="RightCol_container">
+  <h2 class="bckg_generic bdtop-blues-2px" >Legenda</h2>
+  <ul class="none">
+    <li><i class="fa fa-minus-circle" aria-hidden="true"></i>
+      Descarga sinal negativo (kAmp)
+    </li>
+    <li><i class="fa fa-plus-circle" aria-hidden="true"></i>
+      Descarga sinal positivo (kAmp)
+    </li>
+    <li><i class="fa fa-circle ground" aria-hidden="true"></i>
+      Nuvem - Solo
+    </li>
+    <li><i class="fa fa-circle cloud" aria-hidden="true"></i>
+      Entre nuvens
+    </li>    
+  </ul>
+  <h3 class="bckg_generic bdtop-blues-2px martop10">Mais informação</h3>
+<p><img alt="icon enciclipedia" src="/export/sites/ipma/bin/icons/ic_enciclipedia_p.gif" style="vertical-align: middle" />&nbsp;&nbsp;<a target="_self" href="/opencms/pt/enciclopedia/otempo/observacao.remota/index.html?page=dea.xml">Descargas elétricas atmosféricas?</a></p>
+  <h3 class="bckg_generic bdtop-blues-2px martop10">Importante</h3><p>A informação aqui disponibilizada tem caracter informativo, pelo que não deverá ser utilizada como oficial nos casos de incidentes ou acidentes relacionados com condições meteorológicas. </p><p>Por motivo de gestão do volume de informação só estarão visiveis (tempo-quase real) as últimas <b>24 horas</b>.</p><p>A informação disponibilizada, relativa às DEA, foi condicionada à área definida pelos pontos de latitude e longitude <b>([42.5,-5.5],[31.5,-19.5])</b> e integrada em intervalos de 10 minutos.</p><p>A referência horária utilizada é UTC.</p>
+  <h3 class="bckg_blue martop10">Cofinanciado por:</h3>
+  <div class="box_border pad5">
+      <img style="vertical-align:middle; width:190px" src="/opencms/bin/icons/logos/poseur-logo.png" alt="simb poseur" />
+      <a href="/bin/docs/organizacionais/POSEUR-02-1708-FC-000035.pdf" target="_blank">POSEUR-02-1708-FC-000035</a> <img class='valignmiddle' alt='icon pdf' src='/opencms/bin/icons/ic_pdf.gif' /><br/>
+      <a href="/bin/docs/organizacionais/POSEUR-02-1708-FC-000036.pdf" target="_blank">POSEUR-02-1708-FC-000036</a> <img class='valignmiddle' alt='icon pdf' src='/opencms/bin/icons/ic_pdf.gif' />
+  </div>
+</div>
+
+<div id="LeftCol-container">
+	<div class="full-maincol">
+    <h2 class="bckg_generic bdtop-blues-2px" style="margin-bottom:0px !important;">Descargas elétricas atmosféricas [DEA's]</h2>
+    <div id="bar">
+      <div class="fleft"></div>
+      <div class="fright">
+        <ul id="map-navigation" class="map-navigation nav-sis">
+          <li>
+            <a style="cursor: pointer" href="javascript:void(0)" data-zoom="6.9" data-position="32.6,-16.8" class="none" title="zoom para">Madeira</a>
+          </li>
+          <li>
+            <a style="cursor: pointer" href="javascript:void(0)" data-zoom="6.2" data-position="38.0,-26.5" class="none" title="zoom para">Açores</a>
+          </li>
+          <li>
+            <a style="cursor: pointer" href="javascript:void(0)" data-zoom="6.7" data-position="39.6,-8.7" class="none" title="zoom para">Continente</a>
+          </li>
+          <li>
+            <a style="cursor: pointer" href="javascript:void(0)" data-zoom="5" data-position="39.3, -17.73" class="none" title="zoom para">Atlântico</a>
+          </li>
+        </ul>      
+      </div>
+    </div>
+    <div id="mymap">
+      <div class="info message">A carregar dados...</div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+  var d = new Date();
+
+  var end_date = moment.utc();
+  var start_date = end_date.clone().subtract(1,'day');
+
+  var commonText = '<img height="10px" title="IPMA" src="//www.ipma.pt/export/sites/ipma/bin/icons/logos/logo_ipma_leaflet_170x40.png" /> &copy; ' + d.getFullYear() + ' | ';
+
+  var __tile_data__ = {
+    'Esri_OceanBaseAttr': commonText + 'Tiles &copy; Esri &mdash; | GEBCO, IHO-IOC GEBCO, NGS, Esri, DeLorme',
+    'Esri_OceanBaseUrl': 'https://services.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}',
+    'Esri_OceanReferenceAttr': commonText + 'Tiles &copy; Esri &mdash; | GEBCO, IHO-IOC GEBCO, NGS, Esri, DeLorme',
+    'Esri_OceanReferenceUrl': 'https://services.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}',
+    'Esri_GrayAttr': commonText + 'Imagery © <a href="https://esri.com">ESRI</a>',
+    'Esri_GrayUrl': 'https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    'osmAttr': commonText + 'Imagery © <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    'osmUrl': 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  };
+
+  var esrigray = L.tileLayer(__tile_data__.Esri_GrayUrl, {attribution: __tile_data__.Esri_GrayAttr, maxZoom: 11, minZoom: 5});
+  var esriocean = L.tileLayer(__tile_data__.Esri_OceanBaseUrl, { attribution: __tile_data__.Esri_OceanBaseAttr, maxZoom: 13, minZoom: 2 });
+  var esrioceanref = L.tileLayer(__tile_data__.Esri_OceanReferenceUrl, { attribution: __tile_data__.Esri_OceanReferenceAttr, maxZoom: 13, minZoom: 2 });
+  var osm = L.tileLayer(__tile_data__.osmUrl, {styleId: 22677, attribution: __tile_data__.osmAttr, maxZoom: 11, minZoom: 5});
+
+  var baseLayers = {"ESRI Ocean": (esriocean, esrioceanref), "ESRI Gray": esrigray,  "OSM": osm };
+
+
+  var workarea = [[50,2],[28,-35]];
+
+  var mymap = L.map('mymap', {
+    zoomControl: false,
+    zoomSnap: 0.1,
+    zoomDelta: 0.1,
+    maxBounds: L.latLngBounds(workarea),
+    center: L.latLng(39.3, -17.73),
+    zoom: 5,
+    minZoom: 5,
+    maxZoom: 10,
+    layers: [esriocean, esrioceanref],
+  });
+  mymap.createPane('labels');
+  mymap.getPane('labels').style.zIndex = 650;
+  mymap.getPane('labels').style.pointerEvents = 'none';
+  var positronLabels = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png', {
+        attribution: '©OpenStreetMap, ©CartoDB',
+        pane: 'labels'
+  }).addTo(mymap);
+  /*
+  mymap.on('zoomend', function() {
+    console.log(mymap.getZoom(), mymap.getBounds(), mymap.getCenter());
+  }).on("moveend", function() {
+    console.log(mymap.getZoom(), mymap.getBounds(), mymap.getCenter());
+  });
+  */
+
+  L.control.zoom({position:'topleft'}).addTo(mymap);
+  L.control.layers(baseLayers).addTo(mymap);
+  L.control.scale({ options: { position: 'bottomright', maxWidth: 100, metric: true, imperial: false, updateWhenIdle: false } }).addTo(mymap);
+
+  mymap.on('layeradd', hideMessage);
+
+  function formatTime(time) {
+    return moment(time).format("YYYY-MM-DD HH:mm:ss");
+  }
+
+  function hideMessage() {
+    $(".info.message").hide();
+  }
+
+  function formatCardinal(data, type) {
+    var val = parseFloat(data).toFixed(2);
+    if (type == "lat") {
+      var cardeal = " &deg;N";
+      if (val < 0) {
+          cardeal = " &deg;S";
+          val = val*-1;
+      }
+      return val + cardeal;
+    } else if (type == "lon") {
+      var cardeal = " &deg;E";
+      if (val < 0) {
+          cardeal = " &deg;W";
+          val = val*-1;
+      }
+      return val + cardeal;
+    }          
+  }    
+
+  $('#map-navigation li a').click(function () {
+    var pos = this.getAttribute('data-position');
+    var zoom = this.getAttribute('data-zoom');
+    if (pos && zoom) {
+      if (pos == "workarea") {
+        mymap.flyToBounds(workarea);
+      } else {
+        pos = pos.split(",");
+        var locat = L.latLng(pos[0], pos[1]);
+        var zoom = parseFloat(zoom);
+        mymap.flyTo(locat, zoom);
+      }
+    }
+    this.blur();
+  });
+        
+  var dea = null, timeDimension = null;
+  var positive = 0, negative = 0;
+  var data = {"features": [{"properties": {"time": "2026-09-30T17:58:51+00:00", "icloud": true, "amplitude": 3.17}, "geometry": {"type": "Point", "coordinates": [-6.9658, 37.817]}, "type": "Feature", "id": 89002410}, {"properties": {"time": "2026-10-01T12:59:11+00:00", "icloud": true, "amplitude": -20.71}, "geometry": {"type": "Point", "coordinates": [-5.6586, 32.6177]}, "type": "Feature", "id": 89005254}, {"properties": {"time": "2026-10-01T14:13:57+00:00", "icloud": false, "amplitude": -27.24}, "geometry": {"type": "Point", "coordinates": [-5.6864, 32.1001]}, "type": "Feature", "id": 89006739}, {"properties": {"time": "2026-10-01T14:12:30+00:00", "icloud": false, "amplitude": -21.4}, "geometry": {"type": "Point", "coordinates": [-8.2441, 39.5512]}, "type": "Feature", "id": 89009001}, {"properties": {"time": "2026-10-01T14:47:05+00:00", "icloud": true, "amplitude": 6.8}, "geometry": {"type": "Point", "coordinates": [-7.9093, 38.5714]}, "type": "Feature", "id": 89009002}, {"properties": {"time": "2026-10-01T15:03:59+00:00", "icloud": false, "amplitude": -35.2}, "geometry": {"type": "Point", "coordinates": [-16.9241, 32.6669]}, "type": "Feature", "id": 89009003}], "type": "FeatureCollection", "update_date": "2026-10-01T16:08:01.478513"};
+  dea = L.timeDimension.layer.geoJson(
+    L.geoJSON(data, {
+        //attribution: 'ipma',
+        pointToLayer: function(feature, latLng) {
+            L.DeaIcon = L.Icon.extend({
+                options: {
+                    backColor: 'Transparent',
+                    fontWeight: 'normal'
+                },
+                initialize: function(letter, options) {
+                    this._letter = letter;
+                    L.setOptions(this, options);
+                },
+                createIcon: function() {
+                    var div = document.createElement('div');
+                    var width = this.options.width / 2;
+                    var height = this.options.height / 2;
+                    div.innerHTML = this._letter;
+                    div.style.fontSize = this.options.fontSize + 'px';
+                    div.style.color = this.options.fontColor;
+                    div.style.fontWeight = this.options.fontWeight;
+                    div.style.backgroundColor = this.options.backColor;
+                    div.style.opacity = this.options.opacity;
+                    div.style.marginLeft = '-' + width + 'px';
+                    div.style.marginTop = '-' + height + 'px';
+                    this._setIconStyles(div, 'icon');
+                    return div;
+                },
+                createShadow: function() {
+                    return null;
+                }
+            });
+
+            L.deaIcon = function(letter, options) {
+                return new L.DeaIcon(letter, options);
+            };
+
+            var tipoDEA, icoptions, dea = feature.properties;    
+            var icodiv = '<i class="fa fa-plus-circle" aria-hidden="true"></i>';
+            if (dea.hasOwnProperty('amplitude')) {
+                if (dea.amplitude < 0) {
+                  icodiv = '<i class="fa fa-minus-circle" aria-hidden="true"></i>';
+                  negative ++;
+                } else {
+                  positive ++;
+                }
+
+                if (dea.icloud) { 
+                  tipoDEA = "Entre nuvens";
+                  icoptions = { width: 20, height: 20, tooltipAnchor: [10, 10], opacity:'0.4', fontSize: 9 };
+                } else {
+                  tipoDEA = "Nuvem - Solo";					
+                  icoptions = { width: 20, height: 20, tooltipAnchor: [10, 10], opacity:'0.9', fontSize: 12 };	
+                }
+
+                var descObs = '<h4>' + moment.utc(dea.time).format('YYYY/MM/DD HH:mm:ss') + 
+                  ' UTC</h4><h5>Amp: ' + icodiv + ' ' +  dea.amplitude + ' kA<br/>Lat: ' + formatCardinal(latLng.lat, "lat") + ' | Long: ' + formatCardinal(latLng.lng, "lon") +
+                  '<br/>' + tipoDEA + '</h5>';
+                return new L.Marker(latLng, {
+                    icon: L.deaIcon(icodiv, icoptions)
+                }).bindTooltip(descObs, {
+                    sticky: true,
+                    permanent: false,
+                    className: 'descTooltip'
+                });
+            }
+            return L.circleMarker(latLng);
+          }
+      }),
+      { addlastPoint: true, waitForReady: true, duration: 'PT10M' }
+  );
+
+  $(document).ready(function(){
+    if (positive === 0 && negative === 0) {
+      $(".info.message").html('Não foram detectadas descargas nas últimas 24 horas');
+      $(".info.message").css("left", "23%");
+      $("#bar .fleft").html('<p class="nodata">Não foram detectadas descargas nas últimas 24 horas</p>');
+    } else {
+      timeDimension = new L.TimeDimension({
+        timeInterval: start_date.toISOString() + "/" + end_date.toISOString(),
+        period: "PT10M",
+        currentTime: end_date
+      });
+
+      mymap.timeDimension = timeDimension;
+      var player = new L.TimeDimension.Player({
+        transitionTime: 400,
+        loop: false,
+        startOver: true
+      }, timeDimension);
+
+      var timeDimensionControlOptions = {
+        player: player,
+        timeDimension: timeDimension,
+        position: 'bottomleft',
+        autoPlay: false,
+        loopButton: false,
+        backwardButton: true,
+        forwardButton: true,
+        minSpeed: 1,
+        speedStep: 1,
+        maxSpeed: 4,
+        timeSliderDragUpdate: true
+      };
+
+      L.Control.TimeDimensionCustom = L.Control.TimeDimension.extend({
+        _getDisplayDateFormat: function(date) {
+          return moment.utc(date).format('YYYY/MM/DD HH:mm:ss (UTC)');
+        }
+      });
+
+      var timeDimensionControl = new L.Control.TimeDimensionCustom(timeDimensionControlOptions);
+      mymap.addControl(timeDimensionControl);
+      $('#bar .fleft').append($('.leaflet-bar.leaflet-bar-horizontal.leaflet-bar-timecontrol.leaflet-control'));
+      
+      dea.addTo(mymap);
+    }
+
+    var legend = L.control({position: 'bottomright'});
+    legend.onAdd = function (mymap) {
+        var div = L.DomUtil.create('div', 'info legend');
+        div.innerHTML +='<h4>Total DEA, área definida e em 24H</h4><p>'+ positive +' DEA positivas <i class="fa fa-plus-circle" aria-hidden="true" style="color:red"></i></p><p>' + negative + ' DEA negativas <i class="fa fa-minus-circle" aria-hidden="true"></i></p>'
+        return div;
+    };
+    legend.addTo(mymap);
+  });
+</script>
+
+
+
+        		</div>
+        		<!-- END CENTRAL & RIGHT CONTENT  -->
+        		<div class="brclearall">&nbsp;</div>
+      		<!--</div>-->
+	</div>      	
+	<!-- END MAIN CONTENT  -->        
+      	<!-- START FOOTER CONTENT  -->        
+	
+
+
+	
+
+
+
+
+<div class="brclearall">&nbsp;</div>
+  <div id="FooterMenu">       
+    <div class="nav_footer" >
+      <ul class="nav_map">
+
+<li><h2>Media</h2><ul class='nav'><li class='news'><a href='/opencms/pt/media/noticias/index.jsp' target='_self'>Notícias</a></li><li class='comunication'><a href='/opencms/pt/geofisica/comunicados/' target='_self'>Comunicados</a></li><li class='seminar'><a href='/opencms/pt/media/divulgacao/' target='_self'>Palestras / formações</a></li><li class='press'><a href='/opencms/pt/media/comunicados.imprensa/' target='_self'>Comunicados Imprensa</a></li><li class='youtube'><a href='https://www.youtube.com/ipmaPT' target='_blank'>YouTube</a></li><li class='educast'><a href='https://educast.fccn.pt/vod/channels/s7zp6tupt?locale=pt' target='_blank'>Canal IPMA Educast</a></li></ul></li><li><h2>Redes Sociais</h2><ul class='nav'><li class='facebook'><a href='https://www.facebook.com/ipma.pt' target='_blank'>Facebook</a></li><li class='facebook'><a href='https://www.facebook.com/dra.ipma.pt/' target='_blank'>Facebook - Açores</a></li><li class='twitter'><a href='https://twitter.com/ipma_pt' target='_blank'>Twitter</a></li><li class='instagram'><a href='https://www.instagram.com/ipma.pt/' target='_blank'>Instagram</a></li></ul></li><li><h2>Serviços</h2><ul class='nav'><li class='services'><a href='/opencms/pt/produtoseservicos/index.jsp' target='_self'>Produtos e serviços</a></li><li class='rss'><a href='/opencms/pt/produtoseservicos/index.jsp?page=rss.xml' target='_self'>RSS</a></li><li class='apps_android'><a href='https://play.google.com/store/apps/details?id=pt.ipma.meteo&amp;hl=pt_PT' target='_blank'>Apps Android</a></li><li class='apps_apple'><a href='https://itunes.apple.com/pt/app/meteo-ipma/id889918105?ls=1&amp;mt=8' target='_blank'>Apps Apple</a></li></ul></li><li><h2>Informações</h2><ul class='nav'><li class='contacts'><a href='/opencms/pt/siteinfo/contactar.jsp' target='_self'>Contacto</a></li><li class='links'><a href='/opencms/pt/siteinfo/index.html?page=links.xml' target='_self'>Links úteis</a></li><li class='scholarship'><a href='/opencms/pt/recrutamento/bolsas/index.jsp' target='_self'>Bolsas de investigação</a></li><li class='eeagrants'><a href='/opencms/pt/investigacao/eeagrants/index.jsp' target='_self'>Projetos EEA Grants</a></li><li class='links'><a href='https://www.ecmwf.int/' target='_blank'>ECMWF</a></li></ul></li><li><h2>Sobre o Site</h2><ul class='nav'><li class='acess'><a href='/opencms/pt/siteinfo/index.html?page=acessibilidade.xml' target='_self'>Acessibilidade</a></li><li class='legal'><a href='/opencms/pt/siteinfo/index.html?page=index.xml' target='_self'>Avisos legais</a></li><li class='sitemap'><a href='/opencms/pt/siteinfo/sitemap.jsp' target='_self'>Mapa do site</a></li><li class='whistle'><a href='/opencms/pt/oipma/oque/denuncia/index.jsp' target='_self'>Portal da Denúncia</a></li></ul></li><li><h2>Projectos WEB</h2><ul class='nav'><li class='metglobal'><a href='https://observar.ipma.pt' target='_blank'>Observar</a></li><li class='subs'><a href='http://subscricoes.ipma.pt' target='_blank'>Subscrições</a></li><li class='quest'><a href='https://survey.ipma.pt' target='_blank'>Inquéritos</a></li><li class='shakemap'><a href='http://shakemap.ipma.pt' target='_blank'>Shakemap</a></li></ul></li>
+			</ul>
+		</div>
+	</div>
+
+
+
+	
+
+
+    <div class="brclearall">&nbsp;</div>
+    <div class="nav_credits">
+      <ul class="">
+        <li class="cert"><a href="https://apcergroup.com" target="_blank"><img height="60px" src="/opencms/system/modules/ipma.website/resources/images/apcer-aero.svg" alt="Apcer - A marca da Certifica&ccedil;&atilde;o"/></a></li>
+        <li class="credits"> 
+Lisboa: <div class="clock" id="localClock"></div> &nbsp; &nbsp; 
+UTC: <div class="clock" id="utcClock"></div>
+
+<br/>Copyright © <strong>Instituto Português do Mar e da Atmosfera&nbsp;</strong>2026<br/><em></em>
+<!--<br/><a href="https://eportugal.gov.pt/" target="_blank"><img src="/export/sites/ipma/bin/images.destaques/estamos-on-banner-610x80.jpg" alt="Estamos ON"/></a>-->
+        </li>
+        <li class="ministerio">
+		<a href="https://www.portugal.gov.pt/pt/gc25/area-de-governo/agricultura-e-mar" target="_blank"><img class="block120w" src="/opencms/bin/icons/svg/logo-gc25-magrim.svg" alt="Ministério da Agricultura e Mar"/></a>
+<!--		<a href="https://www.portugal.gov.pt/pt/gc24/area-de-governo/economia" target="_blank"><img class="block120w" src="/opencms/bin/icons/svg/logo-gc24-me.svg" alt="Ministério da Economia"/></a>
+		<a href="https://www.portugal.gov.pt/pt/gc24/area-de-governo/agricultura-e-pescas" target="_blank"><img class="block120w" src="/opencms/bin/icons/svg/logo-gc24-map.svg" alt="Ministério Agricultura e Pescas"/></a>-->
+	</li>
+
+      </ul>
+    </div>
+
+
+<script type="text/javascript">
+<!--
+var nhourslocal = parseInt('17',10);
+var nminslocal = parseInt('09',10);
+var nsecslocal = parseInt('06',10);
+
+var nhoursutc = parseInt('16',10);
+var nminsutc = parseInt('09',10);
+var nsecsutc = parseInt('06',10);
+
+function startLocalClock(){
+	if(++nsecslocal > 59){
+		nsecslocal = 0;
+		if(++nminslocal > 59 ){
+			nminslocal = 0;
+			if (++nhourslocal > 23){
+				nhourslocal = 0;
+				nminslocal = 0;
+				nsecslocal = 0;
+			}
+		}
+	}
+
+	var strSecs = nsecslocal < 10 ? "0" + nsecslocal : nsecslocal;
+	var strMins = nminslocal < 10 ? "0" + nminslocal : nminslocal;
+	var strHours = nhourslocal < 10 ? "0" + nhourslocal : nhourslocal;
+
+	document.getElementById("localClock").innerHTML=strHours+"h"+strMins+"m";
+	setTimeout('startLocalClock()',1000);
+}
+
+function startUtcClock(){
+	if(++nsecsutc > 59){
+		nsecsutc = 0;
+		if(++nminsutc > 59 ){
+			nminsutc = 0;
+			if (++nhoursutc > 23){
+				nhoursutc = 0;
+				nminsutc = 0;
+				nsecsutc = 0;
+			}
+		}
+	}
+
+	var strSecs = nsecsutc < 10 ? "0" + nsecsutc : nsecsutc;
+	var strMins = nminsutc < 10 ? "0" + nminsutc : nminsutc;
+	var strHours = nhoursutc < 10 ? "" + nhoursutc : nhoursutc;
+
+	document.getElementById("utcClock").innerHTML=strHours+"h"+strMins+"m";
+	setTimeout('startUtcClock()',1000);
+}
+
+ startLocalClock();
+ startUtcClock();
+//-->
+</script>
+
+
+
+<!-- END MAIN CONTENT  -->
+</div>
+</div>
+
+</body>
+</html>
