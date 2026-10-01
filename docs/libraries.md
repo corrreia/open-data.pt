@@ -33,7 +33,7 @@ Today, 30 libraries: 28 read the 702 installed feeds, and two read only publishe
 | `firms`        | NASA FIRMS thermal anomalies            | 3     |
 | `ine`          | INE, Statistics Portugal                | 26    |
 | `infoagua`     | InfoÁgua flood and drought alerts       | 2     |
-| `ipma`         | IPMA weather and sea                    | 10    |
+| `ipma`         | IPMA weather and sea                    | 11    |
 | `metrolisboa`  | Metro Lisboa                            | 4     |
 | `myinfo`       | Card4B MYINFO operator portals          | 16    |
 | `nasapower`    | NASA POWER daily analysis               | 3     |
