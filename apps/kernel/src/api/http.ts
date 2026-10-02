@@ -225,7 +225,23 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
       return withCadence(json({ data: view === "series" ? await service.series(product, input) : await service.seriesChanges(product, input) }), product);
     }
 
-    return problem(404, "Not found", "The requested endpoint does not exist.");
+    // Assistants and scripts guess /api/{slug}: when the name is a product's, say where it is read.
+    const guessed = /^\/api\/([a-z0-9][a-z0-9-]*)(?:\/|$)/.exec(url.pathname)?.[1];
+    const product = guessed ? await serving().product(guessed) : undefined;
+    if (product) {
+      const rows = `/api/products/${product.slug}/${product.role === "time-series" ? "series" : "records"}`;
+      return problem(
+        404,
+        "Not found",
+        `${url.pathname} is not an endpoint. ${product.slug} is a ${product.role} product: read it with GET ${rows}, and describe it with GET /api/products/${product.slug}. Lists answer as an object: { data: [...], nextCursor }.`,
+        { Link: `<${rows}>; rel="alternate"` },
+      );
+    }
+    return problem(
+      404,
+      "Not found",
+      "The requested endpoint does not exist. Products are read under /api/products/{slug}; GET /api/products lists them, and /openapi.json describes every endpoint.",
+    );
   } catch (error) {
     if (error instanceof NotFoundError) return problem(404, "Not found", error.message);
     if (error instanceof RequestError) return problem(error.status, error.status === 429 ? "Too many requests" : "Invalid request", error.message, error.headers);
