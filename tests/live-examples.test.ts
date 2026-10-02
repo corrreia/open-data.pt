@@ -40,6 +40,8 @@ const MIB = 1024 * 1024;
 /** The wiring the Worker deploys, from the same declarations and vars, with the real fetch. */
 const LIBRARIES: Array<{ libraries: GatekeeperLibraries; examples: readonly DeclaredFeed[] }> = CARRIED.map((library) => ({
   libraries: carriedLibraries(library.deployment.source, {
+    EUMETSAT_CONSUMER_KEY: process.env.EUMETSAT_CONSUMER_KEY,
+    EUMETSAT_CONSUMER_SECRET: process.env.EUMETSAT_CONSUMER_SECRET,
     ML_CONSUMER_KEY: process.env.ML_CONSUMER_KEY,
     ML_CONSUMER_SECRET: process.env.ML_CONSUMER_SECRET,
     NASA_FIRMS_MAP_KEY: process.env.NASA_FIRMS_MAP_KEY,

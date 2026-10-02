@@ -1823,6 +1823,10 @@
     "resourceKey": "wfs:wfs:events:86e500f5fdd850e3a253a475b7f33302d4c22f09266851120f40ceceb9978e1f",
     "kind": "wfs:events"
   },
+  "eumetsat-active-fires-feed": {
+    "resourceKey": "datastore:datastore:active-fires:8e084edbce13bf019d6c2806487027219d7b17ebf672045f7671d524a46d2b23",
+    "kind": "datastore:active-fires"
+  },
   "eurostat-portugal-economic-sentiment": {
     "resourceKey": "eurostat:eurostat:dataset:6043fff7c00362162d097fd5c8a075084b9ffd5e42d766b6a93f1dc7104eb9ef",
     "kind": "eurostat:dataset"
