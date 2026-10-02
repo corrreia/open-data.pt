@@ -1307,7 +1307,7 @@ function r2SqlSection(report: Report): string[] {
       perUnit(row.latencyMs, row.queries, 0),
     ]);
   return [
-    "## R2 SQL per UTC day",
+    "## Basin SQL per UTC day",
     "",
     "Measured: `r2sqlOperationsAdaptiveGroups` `count` and `sum.r2BytesRead` (compressed bytes read from R2). " +
       "Estimated: the billing floor column applies the 10 MB per-query minimum as max(bytes read, queries × 10 MB); the exact billed-bytes definition is not exposed.",
@@ -1375,7 +1375,7 @@ function workflowsAndCatalogSection(report: Report): string[] {
     "## Workflows per UTC day (account-wide)",
     "",
     ...markdownTable(["UTC day", "Workflow", "Events", "Steps", "All steps", "CPU ms", "GB-s"], workflows, 2),
-    "## R2 Data Catalog operations per UTC day",
+    "## Basin Catalog operations per UTC day",
     "",
     "Measured (`r2CatalogDataOperationsAdaptiveGroups`, `r2CatalogTableMaintenanceAdaptiveGroups`) for open-data-pt warehouses.",
     "",

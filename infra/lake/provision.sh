@@ -2,7 +2,12 @@
 # Provision the normalized-history lake in fresh v2 resources. This intentionally
 # does not migrate or reuse the retired raw/delta deployment.
 #
-# Prerequisite: CATALOG_TOKEN with R2 Data Catalog, R2 Storage, and R2 SQL edit/read.
+# The lake is Cloudflare Basin: Basin Pipelines ingest the kernel's rows into Iceberg
+# tables in Basin Catalog, and the kernel reads them back with Basin SQL.
+#
+# Prerequisite: CATALOG_TOKEN with Basin Catalog, R2 Storage, and Basin SQL edit/read.
+# Safe to run again: it creates only what is missing, and re-applies the catalog's
+# maintenance settings.
 set -euo pipefail
 
 : "${CATALOG_TOKEN:?Set CATALOG_TOKEN (for example: set -a; . ./.env; set +a)}"
@@ -18,10 +23,15 @@ fi
 if ! grep -q "name: *$BUCKET" <<<"$buckets"; then
   pnpm exec wrangler r2 bucket create "$BUCKET"
 fi
-pnpm exec wrangler r2 bucket catalog enable "$BUCKET" >/dev/null 2>&1 || true
+pnpm exec wrangler basin catalog enable "$BUCKET" >/dev/null 2>&1 || true
 # Sinks roll a file every 300 s per table; without compaction a two-month history
 # query reads thousands of small files. 128 MB suits streaming ingest.
-pnpm exec wrangler r2 bucket catalog compaction enable "$BUCKET" --target-size 128 --token "$CATALOG_TOKEN"
+pnpm exec wrangler basin catalog compaction enable "$BUCKET" --target-size 128 --token "$CATALOG_TOKEN"
+# Every roll and every compaction is a new snapshot, and a snapshot keeps the files it
+# referenced, so without expiry the files compaction replaced are never deleted. History
+# reads revisions by their own timestamps, never by snapshot, so a week of snapshots is
+# only a margin for undoing a mistake.
+pnpm exec wrangler basin catalog snapshot-expiration enable "$BUCKET" --older-than-days 7 --retain-last 5 --token "$CATALOG_TOKEN"
 
 # Only revisions are history. The retired open_data_v2_acquisitions stream, sink and
 # pipeline are no longer bound by the kernel and may be deleted by the operator.
@@ -30,14 +40,14 @@ for table in records points; do
   sink="${PREFIX}_${table}_sink"
   pipeline="${PREFIX}_${table}_pipeline"
 
-  if ! pnpm exec wrangler pipelines streams get "$stream" >/dev/null 2>&1; then
-    pnpm exec wrangler pipelines streams create "$stream" \
+  if ! pnpm exec wrangler basin pipelines streams get "$stream" >/dev/null 2>&1; then
+    pnpm exec wrangler basin pipelines streams create "$stream" \
       --schema-file "infra/lake/${table}.schema.json" \
       --http-enabled false
   fi
 
-  if ! pnpm exec wrangler pipelines sinks get "$sink" >/dev/null 2>&1; then
-    pnpm exec wrangler pipelines sinks create "$sink" \
+  if ! pnpm exec wrangler basin pipelines sinks get "$sink" >/dev/null 2>&1; then
+    pnpm exec wrangler basin pipelines sinks create "$sink" \
       --type r2-data-catalog \
       --bucket "$BUCKET" \
       --namespace "$NAMESPACE" \
@@ -48,8 +58,8 @@ for table in records points; do
   fi
 
   # `pipelines get <name>` does not find an existing pipeline by name, so look it up in the list.
-  if ! pnpm exec wrangler pipelines list 2>/dev/null | grep -qw -- "$pipeline"; then
-    pnpm exec wrangler pipelines create "$pipeline" \
+  if ! pnpm exec wrangler basin pipelines list 2>/dev/null | grep -qw -- "$pipeline"; then
+    pnpm exec wrangler basin pipelines create "$pipeline" \
       --sql "INSERT INTO $sink SELECT * FROM $stream"
   fi
 done

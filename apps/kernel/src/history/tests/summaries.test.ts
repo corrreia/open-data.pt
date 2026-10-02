@@ -28,7 +28,7 @@ const env: Pick<Env, "CATALOG_TOKEN" | "LAKE_BUCKET" | "CLOUDFLARE_ACCOUNT_ID"> 
 const products = new Set(["power-series", "big-series", "gas-series"]);
 const NOW = Date.parse("2026-09-12T12:00:00Z");
 
-/** R2 SQL writes microseconds. */
+/** Basin SQL writes microseconds. */
 const lakeHour = (instant: number) => new Date(instant).toISOString().replace(".000Z", ".000000Z");
 /** A Lisbon-day bucket as the late pass's SQL returns it: the wall-clock date at midnight. */
 const lakeDay = (day: string) => `${day}T00:00:00.000000Z`;
@@ -78,12 +78,12 @@ function bigRows(day: string): JsonObject[] {
 
 const freshOnly: Rows = (kind, day) => (kind === "fresh" ? powerRows(day) : []);
 
-/** A row's place in R2 SQL's order: product, series, then its bucket time (milliseconds, as the keyset carries it). */
+/** A row's place in Basin SQL's order: product, series, then its bucket time (milliseconds, as the keyset carries it). */
 const order = (row: JsonObject, column: string) => `${String(row.product_slug)}|${String(row.series_key)}|${String(row[column]).replace(/(\.\d{3})\d+/, "$1")}`;
 
 /**
  * A lake that answers the first-ingest probe and every summary query, paging by
- * product, series and bucket as R2 SQL would. Fresh queries are keyed by their
+ * product, series and bucket as Basin SQL would. Fresh queries are keyed by their
  * event day, late ones by their ingest day.
  */
 function fakeLake(rowsFor: Rows) {

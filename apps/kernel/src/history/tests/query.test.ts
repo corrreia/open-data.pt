@@ -8,7 +8,7 @@ const env: Pick<Env, "CATALOG_TOKEN" | "LAKE_BUCKET" | "CLOUDFLARE_ACCOUNT_ID"> 
   CLOUDFLARE_ACCOUNT_ID: "cc05ea77c39684419e087c3b78b5177d",
 };
 
-describe("internal R2 SQL client", () => {
+describe("internal Basin SQL client", () => {
   it("returns rows and the provider's scan metric", async () => {
     let requested = "";
     const result = await runLakeQuery(env, "SELECT 1 AS n LIMIT 1", "test", async (input, init) => {

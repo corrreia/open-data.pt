@@ -207,7 +207,7 @@ function lastSunday(year: number, month: number): string {
   return day.toISOString().slice(0, 10);
 }
 
-/** SQL for Lisbon's wall-clock time of `event_time`: an hour ahead of UTC in summer. R2 SQL has no time zones. */
+/** SQL for Lisbon's wall-clock time of `event_time`: an hour ahead of UTC in summer. Basin SQL has no time zones. */
 function lisbonWallClockSql(fromYear: number, toYear: number): string {
   const summers: string[] = [];
   for (let year = fromYear; year <= toYear; year += 1) {
@@ -817,7 +817,7 @@ export function isClosedMonth(month: string, now: number): boolean {
 
 /* ---------- Small helpers ---------- */
 
-/** R2 SQL writes timestamps with microseconds; keep milliseconds, as everywhere else. */
+/** Basin SQL writes timestamps with microseconds; keep milliseconds, as everywhere else. */
 function lakeTime(value: string): string {
   return new Date(value.replace(/(\.\d{3})\d+/, "$1")).toISOString();
 }

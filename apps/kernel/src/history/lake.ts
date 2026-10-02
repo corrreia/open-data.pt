@@ -2,7 +2,7 @@ import { NormalizedInputError, isJsonNumber, isJsonObject, isJsonString, type Js
 
 /**
  * The history plane: append-only revision rows written through Cloudflare
- * Pipelines into Iceberg tables in R2 Data Catalog. Pipelines documents
+ * Pipelines into Iceberg tables in Basin Catalog. Pipelines documents
  * exactly-once delivery to R2 once `send()` resolves; revision IDs are stable,
  * so a resend after an ambiguous timeout is deduplicated when history is read.
  */

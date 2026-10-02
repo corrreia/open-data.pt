@@ -1,7 +1,7 @@
 import { asObject, asArray, asNumber, asString, isJsonObject, parseJson, type JsonObject } from "@open-data-pt/contract";
 
 /**
- * Internal R2 SQL client used only by typed, bounded HTTP handlers and the
+ * Internal Basin SQL client used only by typed, bounded HTTP handlers and the
  * Registry's daily lake audit. The SQL token and SQL text are never exposed as
  * a public query capability.
  */
@@ -47,7 +47,7 @@ export async function runLakeQuery(
     console.log(JSON.stringify(line));
   };
   const aborter = new AbortController();
-  const timer = setTimeout(() => aborter.abort("R2 SQL query deadline exceeded"), QUERY_DEADLINE_SECONDS * 1000);
+  const timer = setTimeout(() => aborter.abort("Basin SQL query deadline exceeded"), QUERY_DEADLINE_SECONDS * 1000);
   try {
     let status: number;
     let text: string;
@@ -62,15 +62,15 @@ export async function runLakeQuery(
       text = await response.text();
     } catch (error) {
       report(aborter.signal.aborted ? "timeout" : "unreachable");
-      if (aborter.signal.aborted) throw new QueryError(`R2 SQL did not answer within ${QUERY_DEADLINE_SECONDS} seconds`, "timeout");
-      throw new QueryError(`R2 SQL could not be reached: ${error instanceof Error ? error.message : String(error)}`, "store");
+      if (aborter.signal.aborted) throw new QueryError(`Basin SQL did not answer within ${QUERY_DEADLINE_SECONDS} seconds`, "timeout");
+      throw new QueryError(`Basin SQL could not be reached: ${error instanceof Error ? error.message : String(error)}`, "store");
     }
     let payload: JsonObject | undefined;
     try {
       payload = asObject(parseJson(text));
     } catch {
       report(`unreadable-${status}`);
-      throw new QueryError(`R2 SQL answered HTTP ${status} with something other than JSON`, status < 400 ? "unreadable" : "store");
+      throw new QueryError(`Basin SQL answered HTTP ${status} with something other than JSON`, status < 400 ? "unreadable" : "store");
     }
     const result = asObject(payload?.result);
     const bytesScanned = Math.max(0, asNumber(asObject(result?.metrics)?.bytes_scanned) ?? 0);
@@ -80,13 +80,13 @@ export async function runLakeQuery(
         asArray(payload?.errors)
           ?.map((error) => asString(asObject(error)?.message))
           .filter(Boolean)
-          .join("; ") || `R2 SQL returned HTTP ${status}`;
+          .join("; ") || `Basin SQL returned HTTP ${status}`;
       throw new QueryError(message, "store");
     }
     const rows = asArray(result?.rows);
     if (!rows || !rows.every(isJsonObject)) {
       report("invalid-result", asObject(result?.metrics));
-      throw new QueryError("R2 SQL returned an invalid result", "unreadable");
+      throw new QueryError("Basin SQL returned an invalid result", "unreadable");
     }
     report("answered", asObject(result?.metrics));
     return { rows, rowCount: rows.length, bytesScanned, durationMs: Date.now() - started, sql: cleaned };
@@ -153,8 +153,8 @@ function withoutStringLiterals(sql: string): string | undefined {
 /**
  * Why a lake query failed: lake queries are not configured here (`disabled`),
  * the query failed this module's own guard (`refused`, a bug in whatever built
- * it), R2 SQL refused, failed or could not be reached (`store`), it ran past the
- * deadline (`timeout`), or R2 SQL answered with something unreadable (`unreadable`).
+ * it), Basin SQL refused, failed or could not be reached (`store`), it ran past the
+ * deadline (`timeout`), or Basin SQL answered with something unreadable (`unreadable`).
  */
 export type QueryFailure = "disabled" | "refused" | "store" | "timeout" | "unreadable";
 

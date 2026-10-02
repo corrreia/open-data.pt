@@ -18,7 +18,7 @@ const LAKE: Pick<Env, "CATALOG_TOKEN" | "CLOUDFLARE_ACCOUNT_ID" | "LAKE_BUCKET">
   LAKE_BUCKET: "open-data-pt-history",
 };
 
-/** Run the real HTTP handler and R2 SQL client, replacing only provider transport. */
+/** Run the real HTTP handler and Basin SQL client, replacing only provider transport. */
 export default class ProductHistoryTestWorker extends KernelWorker {
   private readonly historyFixture: DurableObjectNamespace<HistoryFixture>;
   constructor(ctx: ExecutionContext, env: HistoryTestEnv) {
