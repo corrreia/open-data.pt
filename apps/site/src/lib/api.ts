@@ -22,8 +22,10 @@ function problemDetail(text: string): string | undefined {
 }
 
 /** One read from this site's own API. Errors carry the problem document's detail. */
-export async function apiGet<T>(path: string): Promise<T> {
-  const response = await fetch(path, { headers: { accept: "application/json" } });
+export async function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> {
+  const init: RequestInit = { headers: { accept: "application/json" } };
+  if (signal) init.signal = signal;
+  const response = await fetch(path, init);
   const text = await response.text();
   if (!response.ok) throw new ApiError(problemDetail(text) ?? `Request failed with HTTP ${response.status}`, response.status);
   // SAFETY: every /api path answers with the JSON its OpenAPI contract declares, and each caller names that contract as T.
