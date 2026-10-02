@@ -319,4 +319,16 @@ describe("a read-only, public-only API", () => {
     expect((await server.fetch("/api/feeds/no-such-feed")).status).toBe(404);
     expect((await server.fetch("/api/products/no-such-product")).status).toBe(404);
   });
+
+  it.each([
+    ["/api/shared-series", "time-series", "/api/products/shared-series/series"],
+    ["/api/shared-events/records", "event-log", "/api/products/shared-events/records"],
+  ])("points %s, a product's name guessed as an endpoint, at where it is read", async (path, role, rows) => {
+    const response = await server.fetch(path);
+    expect(response.status).toBe(404);
+    expect(response.headers.get("link")).toBe(`<${rows}>; rel="alternate"`);
+    const { detail } = await jsonBody<{ detail: string }>(response);
+    expect(detail).toContain(`is a ${role} product: read it with GET ${rows}`);
+    expect(detail).toContain("{ data: [...], nextCursor }");
+  });
 });

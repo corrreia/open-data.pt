@@ -47,6 +47,7 @@ const CORS = {
 /** Appended to the execute tool's description: what the API holds and how to read it well. */
 const GUIDE = `open-data.pt is a free, keyless, read-only JSON API over Portuguese public data: energy, mobility, weather and environment, health, economy, society and culture, government, telecommunications, cities. Only GET requests to paths under /api work.
 
+- Every product is read under /api/products/{slug}; there is no /api/{slug}. Every list answers as an object, { data: [...], nextCursor }: read .data, not the answer itself.
 - Start with GET /api/products: every product's slug, title, description, role, schema, rowCount, cadence and freshness. Filter that list in your code; do not return it whole.
 - The role says how to read a product. reference, current-state, event-log and summary: GET /api/products/{slug}/records (limit up to 500; pass nextCursor back as cursor), or /records/all for every row at once. time-series: GET /api/products/{slug}/series (seriesKey, from, to, limit up to 1000).
 - Filter records with where=field:value (up to five, all must match) and bbox=minLon,minLat,maxLon,maxLat. Pass several where filters as an array: query: { where: ["line:1", "status:open"] }.
