@@ -452,7 +452,7 @@ function ingestFloor(feed: Feed, from: string): string {
 /**
  * When history begins: the first ingest day the lake's tables hold, 2026-09-09
  * for both, which coverage reports. It was asked of the lake on every fresh
- * isolate (`MIN(__ingest_ts)`, a whole R2 SQL query before the one asked for),
+ * isolate (`MIN(__ingest_ts)`, a whole Basin SQL query before the one asked for),
  * to clamp windows to it; but the lake has no files before it, so the clamp
  * pruned nothing, and it is a date that does not move.
  */
@@ -623,7 +623,7 @@ function historyCursor(url: URL): { time: string; key: string; revision: string 
   }
 }
 
-/** A lake JSON field, whether R2 SQL returned JSON text or an object. */
+/** A lake JSON field, whether Basin SQL returned JSON text or an object. */
 function lakeObject(value: JsonValue | undefined): JsonObject | null {
   if (isJsonString(value)) {
     try {

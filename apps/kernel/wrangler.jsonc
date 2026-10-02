@@ -102,7 +102,7 @@
     // `pnpm dev` sets it with --var.
     "DEV_MIN_CADENCE_SECONDS": "",
   },
-  // Secrets (wrangler secret put): CATALOG_TOKEN, for R2 SQL, and ANALYTICS_TOKEN
+  // Secrets (wrangler secret put): CATALOG_TOKEN, for Basin SQL, and ANALYTICS_TOKEN
   // (Account Analytics: Read), for the Analytics Engine SQL API. The API is
   // read-only; nothing takes an operator credential.
   "secrets": { "required": ["CATALOG_TOKEN", "ANALYTICS_TOKEN"] },

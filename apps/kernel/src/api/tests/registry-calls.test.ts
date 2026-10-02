@@ -94,10 +94,10 @@ describe("a Registry evicted between calls does not fail a public read", () => {
       withHistorySlot(
         () => target,
         async () => {
-          throw new Error("R2 SQL could not be reached");
+          throw new Error("Basin SQL could not be reached");
         },
       ),
-    ).rejects.toThrow(/R2 SQL/);
+    ).rejects.toThrow(/Basin SQL/);
     expect(target.finishes).toBe(1);
   });
 

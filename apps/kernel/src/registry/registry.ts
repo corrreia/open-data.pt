@@ -386,7 +386,7 @@ export class Registry extends DurableObject<Env> {
   }
 
   /**
-   * Daily, instead of two R2 SQL queries per batch: compare yesterday's
+   * Daily, instead of two Basin SQL queries per batch: compare yesterday's
    * committed history row counts with what the lake tables hold, for a sample
    * of batches, in two queries. Mismatches are reported, never silently fixed.
    */

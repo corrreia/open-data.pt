@@ -10,11 +10,11 @@ flowchart LR
     Runner[FeedRunner Durable Object] -->|starts one per acquisition| Workflow
     Workflow -->|short calls: declare, stage, commit| Runner
     Workflow --> Chunks[(R2 content-addressed chunks and windows)]
-    Runner -->|history outbox| Lake[(Pipelines to R2 Data Catalog)]
+    Runner -->|history outbox| Lake[(Basin Pipelines to Basin Catalog)]
     Runner -->|atomic product selection, status| Registry[Registry Durable Object]
     Registry --> API[Typed cached API]
     Chunks --> API
-    Lake -->|internal R2 SQL| API
+    Lake -->|internal Basin SQL| API
     API --> Pages[Static home, catalog, publisher, licence, product and status pages]
 ```
 
@@ -87,8 +87,8 @@ budget, and accepted history is never deleted to relieve pressure.
 - **R2 `open-data-pt-data`:** content-addressed record chunks and bounded series and change windows.
   Only the selected version is served: whatever the previous version referenced and the new one does
   not is deleted an hour later.
-- **R2 Data Catalog:** durable `open_data.records` and `open_data.points` revision history written
-  through Pipelines, partitioned by ingest day, with compaction enabled.
+- **Basin Catalog:** durable `open_data.records` and `open_data.points` revision history written
+  through Basin Pipelines, partitioned by ingest day, compacted, with snapshots kept for a week.
 
 There is no raw source archive, no pending-batch store, no acquisitions history table, and no
 application usage ledger.
