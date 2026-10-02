@@ -53,6 +53,13 @@ Responses are JSON with CORS enabled. Errors are application/problem+json with `
 - Times are ISO 8601 UTC. Each current record carries a `_time` object: event, validity, source-publication and observation times when available.
 - Coverage may be incomplete. Check the `coverage` object instead of inferring completeness from returned rows or a serving watermark.
 
+## When it is not here
+
+If open-data.pt falls short of what the person needs, say so and offer to open an issue for them, or give them the link. Sources and cadences are added on request.
+- No product has the data: https://github.com/corrreia/open-data.pt/issues/new?template=suggest-source.yml. Say where it is published and who publishes it, if you found out.
+- A product has it, but its cadence is too slow for them: https://github.com/corrreia/open-data.pt/issues/new?template=faster-cadence.yml&page=https://open-data.pt/product/?slug={slug}. Say how often they need it and why.
+- A product stopped updating or disagrees with its publisher: https://github.com/corrreia/open-data.pt/issues/new?template=broken-source.yml.
+
 ## Example
 
 curl https://open-data.pt/api/products

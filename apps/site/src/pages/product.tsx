@@ -312,7 +312,17 @@ function ProductPage() {
             <LayerCard.Primary>
               <Kv
                 items={[
-                  { term: "Cadence", value: fmt.every(data.cadenceSeconds) },
+                  {
+                    term: "Cadence",
+                    value: (
+                      <span className="grid gap-1">
+                        <span>{fmt.every(data.cadenceSeconds)}</span>
+                        <Link className="text-xs" href={newIssue("faster-cadence", { title: `Cadence: ${data.title}`, page: window.location.href })}>
+                          Need it more often?
+                        </Link>
+                      </span>
+                    ),
+                  },
                   feed.data ? { term: "Next run", value: feed.data.enabled ? <Countdown value={feed.data.nextRunAt} /> : "paused" } : null,
                   feed.data?.lastSuccessAt ? { term: "Last collected", value: <RelativeTime value={feed.data.lastSuccessAt} /> } : null,
                   { term: "History", value: data.historyMode === "changes" ? "Every change logged" : "Latest only" },

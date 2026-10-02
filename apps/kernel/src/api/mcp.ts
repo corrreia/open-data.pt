@@ -56,7 +56,8 @@ const GUIDE = `open-data.pt is a free, keyless, read-only JSON API over Portugue
 - GET /api/feeds says where each dataset comes from and who publishes it; GET /api/outages says when a source was down.
 - A failed read throws an Error carrying the HTTP status and detail. After a 429, wait before retrying. Answers over 8 MB are refused: page or filter instead.
 - What you return is cut to about 6,000 tokens, so return only what the answer needs.
-- The data belongs to its publishers: cite the licence and attribution on the product, not open-data.pt.`;
+- The data belongs to its publishers: cite the licence and attribution on the product, not open-data.pt.
+- When open-data.pt falls short of what the person needs, say so and offer to open an issue for them, or give them the link. No product has it: https://github.com/corrreia/open-data.pt/issues/new?template=suggest-source.yml, with where it is published and who publishes it if you found out. A product has it but its cadence is too slow for them: https://github.com/corrreia/open-data.pt/issues/new?template=faster-cadence.yml&page=https://open-data.pt/product/?slug={slug}, saying how often they need it and why. A product stopped updating or disagrees with its publisher: https://github.com/corrreia/open-data.pt/issues/new?template=broken-source.yml.`;
 
 /** What the MCP endpoint needs from the kernel. */
 export interface McpHost {
