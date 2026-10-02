@@ -442,6 +442,7 @@ async function contribute(): Promise<PageText> {
     "",
     `- **Suggest a source** (no code): ${REPOSITORY}/issues/new?template=suggest-source.yml`,
     `- **Report a broken source** (no code): ${REPOSITORY}/issues/new?template=broken-source.yml`,
+    `- **Ask for a faster cadence** (no code): ${REPOSITORY}/issues/new?template=faster-cadence.yml`,
     `- **Add a dataset** (one feed file of TypeScript): ${CONTRIBUTING}#a-new-feed-from-a-source-we-already-read`,
     `- **Add a source or a format** (TypeScript, with tests): ${CONTRIBUTING}#a-new-bespoke-source`,
     "",

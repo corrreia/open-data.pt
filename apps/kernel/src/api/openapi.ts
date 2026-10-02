@@ -13,6 +13,8 @@ export function openApiDocument(origin: string) {
         "",
         "Every endpoint answers GET, HEAD and OPTIONS, and nothing here changes anything: the platform collects its sources by itself. An unknown query parameter is a `400`, errors are `application/problem+json`, and a read the cache cannot answer is rate limited per client with `Retry-After`.",
         "",
+        "Missing a source, or need one collected more often? Sources and cadences are added on request: `/llms.txt` links the issue forms for both.",
+        "",
         "The API is unversioned while the platform is in development.",
       ].join("\n"),
       license: {

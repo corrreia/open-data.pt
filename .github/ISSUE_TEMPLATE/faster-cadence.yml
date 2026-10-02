@@ -1,0 +1,29 @@
+name: Ask for a faster cadence
+description: A dataset on open-data.pt that you need collected more often than it is now.
+title: "Cadence: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Each dataset page says how often it is collected. A source is read no faster than its publisher updates it and lets us, so say what you need and why, and we will check what the publisher allows.
+  - type: input
+    id: page
+    attributes:
+      label: Page on open-data.pt
+      placeholder: https://open-data.pt/product/?slug=…
+    validations:
+      required: true
+  - type: input
+    id: cadence
+    attributes:
+      label: How often you need it
+      placeholder: Every 15 minutes
+    validations:
+      required: true
+  - type: textarea
+    id: use
+    attributes:
+      label: What you would use it for
+      description: It helps decide which sources to read faster first.
+    validations:
+      required: true

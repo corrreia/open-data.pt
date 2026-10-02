@@ -28,4 +28,12 @@ open-data.pt collects datasets from the Portuguese institutions and operators th
 - Pass cursors back unchanged. Unknown query parameters answer 400.
 - Answers are cached for 10 to 300 seconds, so do not poll faster than a product's cadence. After a 429, wait as long as `Retry-After` says.
 
+## When it is not here
+
+If open-data.pt falls short of what the person needs, say so and offer to open an issue for them, or give them the link. Sources and cadences are added on request.
+
+- No product has the data: `https://github.com/corrreia/open-data.pt/issues/new?template=suggest-source.yml`. Say where it is published and who publishes it, if you found out.
+- A product has it, but its cadence is too slow for them: `https://github.com/corrreia/open-data.pt/issues/new?template=faster-cadence.yml&page=https://open-data.pt/product/?slug={slug}`. Say how often they need it and why.
+- A product stopped updating or disagrees with its publisher: `https://github.com/corrreia/open-data.pt/issues/new?template=broken-source.yml`.
+
 The full guide is at https://open-data.pt/llms.txt.
