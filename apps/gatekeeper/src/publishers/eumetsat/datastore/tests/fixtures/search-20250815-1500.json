@@ -1,0 +1,321 @@
+{
+ "id": "https://api.eumetsat.int/data/search-products/1.0.0/os?pi=EO:EUM:DAT:0801&dtstart=2025-08-15T15%3A00%3A00Z&dtend=2025-08-15T15%3A20%3A00Z&sort=start,time,1&c=3&",
+ "type": "FeatureCollection",
+ "totalResults": 2,
+ "itemsPerPage": 2,
+ "startIndex": 0,
+ "queries": {
+  "request": [
+   {
+    "count": 3,
+    "eo:parentIdentifier": "EO:EUM:DAT:0801",
+    "sru:sortKeys": "start,time,1",
+    "time:start": "2025-08-15T15:00:00Z",
+    "time:end": "2025-08-15T15:20:00Z"
+   }
+  ]
+ },
+ "properties": {
+  "type": "Properties",
+  "title": "EUMETSAT EOP OpenSearch (EOPOS) results feed for EO:EUM:DAT:0801",
+  "subTitle": "Search results for your query pi=EO:EUM:DAT:0801&dtstart=2025-08-15T15%3A00%3A00Z&dtend=2025-08-15T15%3A20%3A00Z&sort=start,time,1&c=3&",
+  "rights": "Copyright",
+  "updated": "2026-10-02T17:32:20.537Z",
+  "subject": "climatologyMeteorologyAtmosphere",
+  "creator": "EUMETSAT",
+  "lang": "en",
+  "parameters": [
+   {
+    "name": "sat",
+    "value": "platformShortName",
+    "title": "Mission / Satellite",
+    "minimum": 0,
+    "options": [
+     {
+      "value": "MTI1",
+      "results": 4
+     }
+    ]
+   },
+   {
+    "name": "type",
+    "value": "productType",
+    "title": "Product Type",
+    "minimum": 0,
+    "options": [
+     {
+      "value": "MTIFCI2FIRC",
+      "results": 4
+     }
+    ]
+   },
+   {
+    "name": "dtstart",
+    "value": "start",
+    "title": "Temporal Start",
+    "minimum": 0,
+    "minInclusive": "2025-08-15T14:50:00.000Z",
+    "maxInclusive": "2025-08-15T15:20:00.000Z"
+   },
+   {
+    "name": "dtend",
+    "value": "end",
+    "title": "Temporal End",
+    "minimum": 0,
+    "minInclusive": "2025-08-15T15:00:00.000Z",
+    "maxInclusive": "2025-08-15T15:30:00.000Z"
+   },
+   {
+    "name": "publication",
+    "value": "publicationDate",
+    "title": "publication date",
+    "minimum": 0,
+    "minInclusive": "2025-08-15T15:08:45.486Z",
+    "maxInclusive": "2025-08-15T15:38:34.589Z"
+   },
+   {
+    "name": "coverage",
+    "value": "coverage",
+    "title": "Coverage",
+    "minimum": 0,
+    "options": [
+     {
+      "value": "FD",
+      "results": 4
+     }
+    ]
+   },
+   {
+    "name": "repeatCycleIdentifier",
+    "value": "eum:repeatCycleIdentifier",
+    "title": "Repeat Cycle",
+    "minimum": 0,
+    "minInclusive": 90
+   },
+   {
+    "name": "centerOfLongitude",
+    "value": "centerOfLongitude",
+    "title": "Sub Sat Longitude",
+    "minimum": 0,
+    "options": [
+     {
+      "value": "0.0",
+      "results": 4
+     }
+    ]
+   }
+  ],
+  "links": {
+   "type": "Links",
+   "search": {
+    "type": "application/opensearchdescription+xml",
+    "href": "https://api.eumetsat.int/data/search-products/1.0.0/osdd?pi=EO:EUM:DAT:0801",
+    "title": "OpenSearch Description Document"
+   },
+   "self": {
+    "type": "application/json",
+    "href": "https://api.eumetsat.int/data/search-products/1.0.0/os?pi=EO:EUM:DAT:0801&dtstart=2025-08-15T15%3A00%3A00Z&dtend=2025-08-15T15%3A20%3A00Z&sort=start,time,1&c=3&format=json",
+    "title": "this search"
+   },
+   "next": {
+    "type": "application/json",
+    "href": "https://api.eumetsat.int/data/search-products/1.0.0/os?pi=EO:EUM:DAT:0801&dtstart=2025-08-15T15%3A00%3A00Z&dtend=2025-08-15T15%3A20%3A00Z&sort=start,time,1&si=3&c=3&format=json",
+    "title": "next result page"
+   },
+   "first": {
+    "type": "application/json",
+    "href": "https://api.eumetsat.int/data/search-products/1.0.0/os?pi=EO:EUM:DAT:0801&dtstart=2025-08-15T15%3A00%3A00Z&dtend=2025-08-15T15%3A20%3A00Z&sort=start,time,1&c=3&format=json",
+    "title": "first result page"
+   },
+   "last": {
+    "type": "application/json",
+    "href": "https://api.eumetsat.int/data/search-products/1.0.0/os?pi=EO:EUM:DAT:0801&dtstart=2025-08-15T15%3A00%3A00Z&dtend=2025-08-15T15%3A20%3A00Z&sort=start,time,1&si=3&c=3&format=json",
+    "title": "last result page"
+   }
+  },
+  "profiles": [
+   {
+    "href": "http://www.opengis.net/spec/owc-geojson/1.0/req/core"
+   },
+   {
+    "href": "http://www.opengis.net/spec/os-geojson/1.0/req/core"
+   }
+  ]
+ },
+ "features": [
+  {
+   "type": "Feature",
+   "id": "W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-2-FIR--FD------CAP_C_EUMT_20250815151518_L2PF_OPE_20250815150000_20250815151000_N__C_0091_0000",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     0,
+     0
+    ]
+   },
+   "properties": {
+    "type": "Properties",
+    "identifier": "W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-2-FIR--FD------CAP_C_EUMT_20250815151518_L2PF_OPE_20250815150000_20250815151000_N__C_0091_0000",
+    "parentIdentifier": "EO:EUM:DAT:0801",
+    "title": "W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-2-FIR--FD------CAP_C_EUMT_20250815151518_L2PF_OPE_20250815150000_20250815151000_N__C_0091_0000",
+    "date": "2025-08-15T15:00:00Z/2025-08-15T15:10:00Z",
+    "updated": "2025-08-15T15:18:27.562Z",
+    "acquisitionInformation": [
+     {
+      "platform": {
+       "platformShortName": "MTI1"
+      },
+      "instrument": {
+       "instrumentShortName": "FCI"
+      },
+      "acquisitionParameters": {
+       "mtgCoverage": {
+        "majorRegionCoverage": "FD",
+        "repeatCycleIdentifier": "0091"
+       }
+      }
+     }
+    ],
+    "productInformation": {
+     "productType": "MTIFCI2FIRC",
+     "size": 17
+    },
+    "extraInformation": {
+     "md5": "2d38e501be14240adbfa472808c54e9f"
+    },
+    "links": {
+     "type": "Links",
+     "data": [
+      {
+       "type": "Link",
+       "href": "https://api.eumetsat.int/data/download/1.0.0/collections/EO%3AEUM%3ADAT%3A0801/products/W_XX-EUMETSAT-Darmstadt%2CIMG%2BSAT%2CMTI1%2BFCI-2-FIR--FD------CAP_C_EUMT_20250815151518_L2PF_OPE_20250815150000_20250815151000_N__C_0091_0000",
+       "mediaType": "application/zip",
+       "title": "Product download"
+      }
+     ],
+     "alternates": [
+      {
+       "type": "Link",
+       "href": "https://api.eumetsat.int/data/download/1.0.0/collections/EO%3AEUM%3ADAT%3A0801/products/W_XX-EUMETSAT-Darmstadt%2CIMG%2BSAT%2CMTI1%2BFCI-2-FIR--FD------CAP_C_EUMT_20250815151518_L2PF_OPE_20250815150000_20250815151000_N__C_0091_0000/metadata",
+       "mediaType": "application/xml",
+       "title": "Metadata"
+      },
+      {
+       "type": "Link",
+       "href": "https://api.eumetsat.int/data/download/1.0.0/collections/EO%3AEUM%3ADAT%3A0801/products/W_XX-EUMETSAT-Darmstadt%2CIMG%2BSAT%2CMTI1%2BFCI-2-FIR--FD------CAP_C_EUMT_20250815151518_L2PF_OPE_20250815150000_20250815151000_N__C_0091_0000/metadata?format=json",
+       "mediaType": "application/json",
+       "title": "Metadata in JSON format"
+      }
+     ],
+     "sip-entries": [
+      {
+       "type": "Link",
+       "href": "https://api.eumetsat.int/data/download/1.0.0/collections/EO%3AEUM%3ADAT%3A0801/products/W_XX-EUMETSAT-Darmstadt%2CIMG%2BSAT%2CMTI1%2BFCI-2-FIR--FD------CAP_C_EUMT_20250815151518_L2PF_OPE_20250815150000_20250815151000_N__C_0091_0000/entry?name=EOPMetadata.xml",
+       "mediaType": "application/xml",
+       "title": "EOPMetadata.xml"
+      },
+      {
+       "type": "Link",
+       "href": "https://api.eumetsat.int/data/download/1.0.0/collections/EO%3AEUM%3ADAT%3A0801/products/W_XX-EUMETSAT-Darmstadt%2CIMG%2BSAT%2CMTI1%2BFCI-2-FIR--FD------CAP_C_EUMT_20250815151518_L2PF_OPE_20250815150000_20250815151000_N__C_0091_0000/entry?name=W_XX-EUMETSAT-Darmstadt%2CIMG%2BSAT%2CMTI1%2BFCI-2-FIR--FD------CAP_C_EUMT_20250815151518_L2PF_OPE_20250815150000_20250815151000_N__C_0091_0000.xml",
+       "mediaType": "application/xml",
+       "title": "W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-2-FIR--FD------CAP_C_EUMT_20250815151518_L2PF_OPE_20250815150000_20250815151000_N__C_0091_0000.xml"
+      },
+      {
+       "type": "Link",
+       "href": "https://api.eumetsat.int/data/download/1.0.0/collections/EO%3AEUM%3ADAT%3A0801/products/W_XX-EUMETSAT-Darmstadt%2CIMG%2BSAT%2CMTI1%2BFCI-2-FIR--FD------CAP_C_EUMT_20250815151518_L2PF_OPE_20250815150000_20250815151000_N__C_0091_0000/entry?name=manifest.xml",
+       "mediaType": "application/xml",
+       "title": "manifest.xml"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-2-FIR--FD------CAP_C_EUMT_20250815152731_L2PF_OPE_20250815151000_20250815152000_N__C_0092_0000",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     0,
+     0
+    ]
+   },
+   "properties": {
+    "type": "Properties",
+    "identifier": "W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-2-FIR--FD------CAP_C_EUMT_20250815152731_L2PF_OPE_20250815151000_20250815152000_N__C_0092_0000",
+    "parentIdentifier": "EO:EUM:DAT:0801",
+    "title": "W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-2-FIR--FD------CAP_C_EUMT_20250815152731_L2PF_OPE_20250815151000_20250815152000_N__C_0092_0000",
+    "date": "2025-08-15T15:10:00Z/2025-08-15T15:20:00Z",
+    "updated": "2025-08-15T15:28:12.066Z",
+    "acquisitionInformation": [
+     {
+      "platform": {
+       "platformShortName": "MTI1"
+      },
+      "instrument": {
+       "instrumentShortName": "FCI"
+      },
+      "acquisitionParameters": {
+       "mtgCoverage": {
+        "majorRegionCoverage": "FD",
+        "repeatCycleIdentifier": "0092"
+       }
+      }
+     }
+    ],
+    "productInformation": {
+     "productType": "MTIFCI2FIRC",
+     "size": 16
+    },
+    "extraInformation": {
+     "md5": "b56d92d9a725fc9bbfba24b3ed55a743"
+    },
+    "links": {
+     "type": "Links",
+     "data": [
+      {
+       "type": "Link",
+       "href": "https://api.eumetsat.int/data/download/1.0.0/collections/EO%3AEUM%3ADAT%3A0801/products/W_XX-EUMETSAT-Darmstadt%2CIMG%2BSAT%2CMTI1%2BFCI-2-FIR--FD------CAP_C_EUMT_20250815152731_L2PF_OPE_20250815151000_20250815152000_N__C_0092_0000",
+       "mediaType": "application/zip",
+       "title": "Product download"
+      }
+     ],
+     "alternates": [
+      {
+       "type": "Link",
+       "href": "https://api.eumetsat.int/data/download/1.0.0/collections/EO%3AEUM%3ADAT%3A0801/products/W_XX-EUMETSAT-Darmstadt%2CIMG%2BSAT%2CMTI1%2BFCI-2-FIR--FD------CAP_C_EUMT_20250815152731_L2PF_OPE_20250815151000_20250815152000_N__C_0092_0000/metadata",
+       "mediaType": "application/xml",
+       "title": "Metadata"
+      },
+      {
+       "type": "Link",
+       "href": "https://api.eumetsat.int/data/download/1.0.0/collections/EO%3AEUM%3ADAT%3A0801/products/W_XX-EUMETSAT-Darmstadt%2CIMG%2BSAT%2CMTI1%2BFCI-2-FIR--FD------CAP_C_EUMT_20250815152731_L2PF_OPE_20250815151000_20250815152000_N__C_0092_0000/metadata?format=json",
+       "mediaType": "application/json",
+       "title": "Metadata in JSON format"
+      }
+     ],
+     "sip-entries": [
+      {
+       "type": "Link",
+       "href": "https://api.eumetsat.int/data/download/1.0.0/collections/EO%3AEUM%3ADAT%3A0801/products/W_XX-EUMETSAT-Darmstadt%2CIMG%2BSAT%2CMTI1%2BFCI-2-FIR--FD------CAP_C_EUMT_20250815152731_L2PF_OPE_20250815151000_20250815152000_N__C_0092_0000/entry?name=manifest.xml",
+       "mediaType": "application/xml",
+       "title": "manifest.xml"
+      },
+      {
+       "type": "Link",
+       "href": "https://api.eumetsat.int/data/download/1.0.0/collections/EO%3AEUM%3ADAT%3A0801/products/W_XX-EUMETSAT-Darmstadt%2CIMG%2BSAT%2CMTI1%2BFCI-2-FIR--FD------CAP_C_EUMT_20250815152731_L2PF_OPE_20250815151000_20250815152000_N__C_0092_0000/entry?name=W_XX-EUMETSAT-Darmstadt%2CIMG%2BSAT%2CMTI1%2BFCI-2-FIR--FD------CAP_C_EUMT_20250815152731_L2PF_OPE_20250815151000_20250815152000_N__C_0092_0000.xml",
+       "mediaType": "application/xml",
+       "title": "W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-2-FIR--FD------CAP_C_EUMT_20250815152731_L2PF_OPE_20250815151000_20250815152000_N__C_0092_0000.xml"
+      },
+      {
+       "type": "Link",
+       "href": "https://api.eumetsat.int/data/download/1.0.0/collections/EO%3AEUM%3ADAT%3A0801/products/W_XX-EUMETSAT-Darmstadt%2CIMG%2BSAT%2CMTI1%2BFCI-2-FIR--FD------CAP_C_EUMT_20250815152731_L2PF_OPE_20250815151000_20250815152000_N__C_0092_0000/entry?name=EOPMetadata.xml",
+       "mediaType": "application/xml",
+       "title": "EOPMetadata.xml"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

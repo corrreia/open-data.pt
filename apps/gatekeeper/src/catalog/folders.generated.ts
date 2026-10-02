@@ -29,6 +29,7 @@ import { PUBLISHER as dgs } from "#/publishers/dgs/index";
 import { PUBLISHER as dgt } from "#/publishers/dgt/index";
 import { PUBLISHER as e_redes } from "#/publishers/e-redes/index";
 import { PUBLISHER as effis_jrc } from "#/publishers/effis-jrc/index";
+import { PUBLISHER as eumetsat } from "#/publishers/eumetsat/index";
 import { PUBLISHER as eurostat } from "#/publishers/eurostat/index";
 import { PUBLISHER as fertagus } from "#/publishers/fertagus/index";
 import { PUBLISHER as horarios_do_funchal } from "#/publishers/horarios-do-funchal/index";
@@ -91,6 +92,7 @@ export const PUBLISHER_FOLDERS: readonly PublisherFolder[] = [
   { id: "dgt", publisher: dgt },
   { id: "e-redes", publisher: e_redes },
   { id: "effis-jrc", publisher: effis_jrc },
+  { id: "eumetsat", publisher: eumetsat },
   { id: "eurostat", publisher: eurostat },
   { id: "fertagus", publisher: fertagus },
   { id: "horarios-do-funchal", publisher: horarios_do_funchal },

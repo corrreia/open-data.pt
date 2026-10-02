@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<alert xmlns="urn:oasis:names:tc:emergency:cap:1.1">
+   <identifier>urn:oid:2.49.0.3.1.1.70</identifier>
+   <sender>urn:oid:2.49.0.2.1</sender>
+   <sent>2025-08-15T15:18:15+00:00</sent>
+   <status>Actual</status>
+   <msgType>Alert</msgType>
+   <scope>Public</scope>
+   <info>
+      <category>Geo</category>
+      <event>FIRE</event>
+      <responseType>Assess</responseType>
+      <responseType>Monitor</responseType>
+      <urgency>Immediate</urgency>
+      <severity>Moderate</severity>
+      <certainty>Likely</certainty>
+      <effective>2025-08-15T15:00:00+00:00</effective>
+      <expires>2025-08-15T15:20:00+00:00</expires>
+      <senderName>EUMETSAT</senderName>
+      <headline>Fire detection report</headline>
+      <description>Fire detection. This is a computer generated report and has not been reviewed by a human.</description>
+      <web>TBD</web>
+      <area>
+         <areaDesc>List of detected fires (latitude, longitude, radius)</areaDesc>
+         <circle>-23.401,31.217 1.274</circle>
+         <circle>39.336,-6.645 1.302</circle>
+         <circle>40.068,-8.234 1.320</circle>
+         <circle>40.068,-8.209 1.320</circle>
+         <circle>40.096,-8.237 1.321</circle>
+      </area>
+   </info>
+   <info>
+      <category>Geo</category>
+      <event>FIRE</event>
+      <responseType>Assess</responseType>
+      <responseType>Monitor</responseType>
+      <urgency>Immediate</urgency>
+      <severity>Moderate</severity>
+      <certainty>Possible</certainty>
+      <effective>2025-08-15T15:00:00+00:00</effective>
+      <expires>2025-08-15T15:20:00+00:00</expires>
+      <senderName>EUMETSAT</senderName>
+      <headline>Fire detection report</headline>
+      <description>Fire detection. This is a computer generated report and has not been reviewed by a human.</description>
+      <web>TBD</web>
+      <area>
+         <areaDesc>List of detected fires (latitude, longitude, radius)</areaDesc>
+         <circle>38.378,-6.664 1.284</circle>
+         <circle>40.226,-7.883 1.322</circle>
+      </area>
+   </info>
+</alert>
