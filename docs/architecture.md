@@ -121,3 +121,34 @@ restoration. They do not open WebSockets or continuously poll.
 The MCP server at `/mcp` is built with Cloudflare Code Mode (`apps/kernel/src/api/mcp.ts`): a `search`
 tool over the OpenAPI document and an `execute` tool against the API, each run in a Dynamic Worker
 with no network access.
+
+Every page also carries the site's agent, a panel in the corner that answers questions about the
+data and draws charts, maps and tables. It is a second consumer of the MCP server: the same
+`openApiMcpServer`, with the same `search` and `execute` tools and the same guide
+(`packages/api/src/mcp.ts`), runs inside the visitor's browser (`apps/site/src/lib/ask.ts`). The
+model's code runs in Code Mode's `IframeSandboxExecutor`, an `allow-scripts` iframe whose CSP allows
+no network, instead of on a Dynamic Worker, and its `codemode.request()` reads `/api` from the page.
+Only there does the code also get `ui.chart`, `ui.map` and `ui.table`; `/mcp` offers assistants
+exactly what it did before.
+
+The model runs on the visitor's own Cloudflare account. They sign in with Cloudflare, an OAuth 2.0
+authorization code flow with PKCE against a public client, and grant `ai.read`, `ai.write` and
+`offline_access`; sign-in returns them to the page they started from with the agent open. The
+browser runs the conversation and sends each model step to `POST /ask/chat`, which passes it to the
+visitor's Workers AI (`/ai/v1/chat/completions`, streamed) with their token
+(`apps/kernel/src/ask/ask.ts`). It passes through only because Cloudflare's API answers no browser
+preflight. The tokens live in an httpOnly cookie, which Workers Logs records as `REDACTED`; the
+kernel stores nothing and pays for no inference and no code run. `GET /ask/session` answers from the
+cookie alone, since every page asks it; the conversation is kept in the tab's `sessionStorage`, so
+it follows the visitor from page to page.
+
+Cloudflare's own chat agent class, `AIChatAgent`, was the alternative. It would keep each
+conversation in a Durable Object on our account over a WebSocket, and its code runs would be
+Dynamic Workers we pay for.
+
+The OAuth client is the owner's to create, once, as a **public** client of the account (making a
+client public cannot be undone, and needs the domain verified). Its scopes are the three above and
+its redirect URIs are `https://open-data.pt/ask/callback` and `http://localhost:8787/ask/callback`.
+Its ID goes in `ASK_OAUTH_CLIENT_ID` in the kernel's `wrangler.jsonc`; it is not a secret. While that
+is empty the agent does not appear. `pnpm dev` runs the kernel with
+`--local-upstream localhost:<port>`, so a local sign-in comes back to the local kernel.

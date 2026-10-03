@@ -9,6 +9,7 @@
  * storage carries chunk lists, checkpoints and policy identifiers that the API
  * never serves. Nothing here is a Gatekeeper concern — that is the contract.
  */
+export { MCP_GUIDE, MCP_SERVER_NAME, MCP_SERVER_VERSION } from "./mcp";
 import type { CanonicalSchema, Completeness, JsonObject, JsonValue, ProductRole, TransformQuality } from "@open-data-pt/contract/data";
 
 export type { CanonicalField as Field, CanonicalSchema, FieldDisplay, FieldType, JsonObject, JsonValue, ProductRole as Role } from "@open-data-pt/contract/data";

@@ -12,10 +12,10 @@
 import type { ExecuteResult, Executor } from "@cloudflare/codemode";
 import { openApiMcpServer, type RequestOptions } from "@cloudflare/codemode/mcp";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import { MCP_GUIDE, MCP_SERVER_NAME, MCP_SERVER_VERSION } from "@open-data-pt/api";
 import { asObject, asString, parseJson, type JsonValue } from "@open-data-pt/contract";
 
 import { mcpCallOf, type McpCall } from "#/pages/analytics";
-import { MCP_SERVER_NAME, MCP_SERVER_VERSION } from "#/pages/discovery";
 import { openApiDocument } from "#/api/openapi";
 
 /** The largest API answer handed to sandbox code; bigger reads page with a cursor or narrow with filters. */
@@ -43,21 +43,6 @@ const CORS = {
   "Access-Control-Expose-Headers": "Mcp-Session-Id",
   "Access-Control-Max-Age": "86400",
 };
-
-/** Appended to the execute tool's description: what the API holds and how to read it well. */
-const GUIDE = `open-data.pt is a free, keyless, read-only JSON API over Portuguese public data: energy, mobility, weather and environment, health, economy, society and culture, government, telecommunications, cities. Only GET requests to paths under /api work.
-
-- Every product is read under /api/products/{slug}; there is no /api/{slug}. Every list answers as an object, { data: [...], nextCursor }: read .data, not the answer itself.
-- Start with GET /api/products: every product's slug, title, description, role, schema, rowCount, cadence and freshness. Filter that list in your code; do not return it whole.
-- The role says how to read a product. reference, current-state, event-log and summary: GET /api/products/{slug}/records (limit up to 500; pass nextCursor back as cursor), or /records/all for every row at once. time-series: GET /api/products/{slug}/series (seriesKey, from, to, limit up to 1000).
-- Filter records with where=field:value (up to five, all must match) and bbox=minLon,minLat,maxLon,maxLat. Pass several where filters as an array: query: { where: ["line:1", "status:open"] }.
-- History: /events, /series/range, /changes/range and /series/changes/range take from and to (ISO 8601, at most 366 days apart), page with nextCursor, and report their coverage.
-- For a time series over weeks, months or years, prefer GET /api/products/{slug}/series/summary?from&to: count, mean, min and max per hour, Lisbon day or Lisbon month, read from summary files, so it is fast and cheap. Name series with seriesKey (repeatable, up to ten).
-- GET /api/feeds says where each dataset comes from and who publishes it; GET /api/outages says when a source was down.
-- A failed read throws an Error carrying the HTTP status and detail. After a 429, wait before retrying. Answers over 8 MB are refused: page or filter instead.
-- What you return is cut to about 6,000 tokens, so return only what the answer needs.
-- The data belongs to its publishers: cite the licence and attribution on the product, not open-data.pt.
-- When open-data.pt falls short of what the person needs, say so and offer to open an issue for them, or give them the link. No product has it: https://github.com/corrreia/open-data.pt/issues/new?template=suggest-source.yml, with where it is published and who publishes it if you found out. A product has it but its cadence is too slow for them: https://github.com/corrreia/open-data.pt/issues/new?template=faster-cadence.yml&page=https://open-data.pt/product/?slug={slug}, saying how often they need it and why. A product stopped updating or disagrees with its publisher: https://github.com/corrreia/open-data.pt/issues/new?template=broken-source.yml.`;
 
 /** What the MCP endpoint needs from the kernel. */
 export interface McpHost {
@@ -94,7 +79,7 @@ export async function handleMcp(request: Request, host: McpHost): Promise<Respon
     version: MCP_SERVER_VERSION,
     spec: openApiDocument(url.origin),
     executor: host.executor,
-    description: GUIDE,
+    description: MCP_GUIDE,
     request: async (options) => apiRead(options, request, host),
   });
   // No session ID generator: the transport is stateless.

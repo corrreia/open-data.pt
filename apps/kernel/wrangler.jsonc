@@ -40,6 +40,8 @@
       "/operations/*",
       "/contribute/*",
       "/aup/*",
+      // The agent's sign-in and model pass-through; it has no page of its own.
+      "/ask/*",
     ],
   },
   "r2_buckets": [
@@ -101,6 +103,10 @@
     // once and then leaves it alone. Empty in a deployment, where each policy's own cadence stands;
     // `pnpm dev` sets it with --var.
     "DEV_MIN_CADENCE_SECONDS": "",
+    // The public Cloudflare OAuth client the site's agent signs people in with, so they ask the data
+    // on their own Workers AI. It is an ID, not a secret: PKCE stands in for one. Empty turns the agent off.
+    // Its redirect URIs are https://open-data.pt/ask/callback and, for `pnpm dev`, http://localhost:8787/ask/callback.
+    "ASK_OAUTH_CLIENT_ID": "",
   },
   // Secrets (wrangler secret put): CATALOG_TOKEN, for Basin SQL, and ANALYTICS_TOKEN
   // (Account Analytics: Read), for the Analytics Engine SQL API. The API is

@@ -178,8 +178,12 @@ function main(): void {
     ["dev", "--config", GATEKEEPER_CONFIG, "--port", GATEKEEPER_PORT, "--inspector-port", GATEKEEPER_INSPECTOR_PORT, "--var", `GATEKEEPER_LIBRARIES:${only.join(",")}`],
     () => stop(1),
   );
-  const kernel = supervise("kernel", ["dev", "--config", KERNEL_CONFIG, "--ip", "0.0.0.0", "--port", port, "--var", `DEV_MIN_CADENCE_SECONDS:${floor}`, ...passthrough], () =>
-    stop(1),
+  // Without --local-upstream the kernel sees every request at the route's host, http://open-data.pt, and /ask/'s
+  // sign-in would send Cloudflare's callback there and refuse the page's own posts as coming from another site.
+  const kernel = supervise(
+    "kernel",
+    ["dev", "--config", KERNEL_CONFIG, "--ip", "0.0.0.0", "--port", port, "--local-upstream", `localhost:${port}`, "--var", `DEV_MIN_CADENCE_SECONDS:${floor}`, ...passthrough],
+    () => stop(1),
   );
 
   let stopping = false;

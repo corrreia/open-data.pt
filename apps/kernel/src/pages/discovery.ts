@@ -5,14 +5,11 @@
  * for text/markdown. All of it is public and read-only, built on each read
  * from the same API any client reads and from the site's own files.
  */
+import { MCP_SERVER_NAME, MCP_SERVER_VERSION } from "@open-data-pt/api";
 import { sha256Hex } from "#/hash";
 import type { HeaderMap } from "#/api/errors";
 import { isPage, pageMarkdown, prefersMarkdown, productPage, publisherPage, readCatalog } from "#/pages/markdown";
 import { withPageMeta } from "#/pages/page-meta";
-
-/** The MCP server's name and version: what /mcp answers initialize with, and what its Server Card says. */
-export const MCP_SERVER_NAME = "open-data.pt";
-export const MCP_SERVER_VERSION = "0.1.0";
 
 /** The one Agent Skill: a static file of the site build, so the index hashes the bytes clients download. */
 export const SKILL_PATH = "/.well-known/agent-skills/open-data-pt/SKILL.md";
