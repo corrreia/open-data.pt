@@ -32,6 +32,7 @@ import { METROLISBOA_DEPLOYMENT } from "./publishers/metropolitano-de-lisboa/met
 import { MYINFO_DEPLOYMENT } from "./formats/myinfo";
 import { NASA_POWER_DEPLOYMENT } from "./publishers/nasa-power/nasapower";
 import { OMIE_DEPLOYMENT } from "./publishers/omie/omie";
+import { PARQUET_DEPLOYMENT } from "./publishers/ookla/parquet";
 import { PARLIAMENT_DEPLOYMENT } from "./publishers/assembleia-da-republica/parliament";
 import { PEERINGDB_DEPLOYMENT } from "./publishers/peeringdb/peeringdb";
 import { PICASSO_DEPLOYMENT } from "./publishers/fccn/picasso";
@@ -68,6 +69,7 @@ export const LIBRARIES: readonly Library[] = [
   { deployment: MYINFO_DEPLOYMENT },
   { deployment: NASA_POWER_DEPLOYMENT },
   { deployment: OMIE_DEPLOYMENT },
+  { deployment: PARQUET_DEPLOYMENT },
   { deployment: PARLIAMENT_DEPLOYMENT },
   { deployment: PEERINGDB_DEPLOYMENT },
   { deployment: PICASSO_DEPLOYMENT },

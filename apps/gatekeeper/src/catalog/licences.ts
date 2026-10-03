@@ -29,6 +29,12 @@ export const LICENCES = {
     name: "Creative Commons Attribution (CC BY)",
     summary: "Creative Commons Attribution, version not stated by the publisher: reuse for any purpose, crediting the publisher.",
   },
+  "cc-by-nc-sa-4.0": {
+    name: "CC BY-NC-SA 4.0",
+    url: "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+    summary:
+      "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International: reuse and adapt for non-commercial purposes only, crediting the publisher, and share what you make from it under the same licence.",
+  },
   "cc0-1.0": {
     name: "CC0 1.0",
     url: "https://creativecommons.org/publicdomain/zero/1.0/",

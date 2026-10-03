@@ -46,6 +46,7 @@ import { PUBLISHER as metropolitano_de_lisboa } from "#/publishers/metropolitano
 import { PUBLISHER as nasa_firms } from "#/publishers/nasa-firms/index";
 import { PUBLISHER as nasa_power } from "#/publishers/nasa-power/index";
 import { PUBLISHER as omie } from "#/publishers/omie/index";
+import { PUBLISHER as ookla } from "#/publishers/ookla/index";
 import { PUBLISHER as peeringdb } from "#/publishers/peeringdb/index";
 import { PUBLISHER as porto_digital } from "#/publishers/porto-digital/index";
 import { PUBLISHER as ren } from "#/publishers/ren/index";
@@ -111,6 +112,7 @@ export const PUBLISHER_FOLDERS: readonly PublisherFolder[] = [
   { id: "nasa-firms", publisher: nasa_firms },
   { id: "nasa-power", publisher: nasa_power },
   { id: "omie", publisher: omie },
+  { id: "ookla", publisher: ookla },
   { id: "peeringdb", publisher: peeringdb },
   { id: "porto-digital", publisher: porto_digital },
   { id: "ren", publisher: ren },

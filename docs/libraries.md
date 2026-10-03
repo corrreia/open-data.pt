@@ -39,6 +39,7 @@ Today, 30 libraries: 28 read the 702 installed feeds, and two read only publishe
 | `myinfo`       | Card4B MYINFO operator portals          | 16    |
 | `nasapower`    | NASA POWER daily analysis               | 3     |
 | `omie`         | OMIE electricity market                 | 2     |
+| `parquet`      | Ookla's Parquet tiles on S3             | 2     |
 | `parliament`   | Assembleia da República                 | 7     |
 | `picasso`      | Picasso, FCCN's network statistics      | 2     |
 | `ren`          | REN electricity grid                    | 8     |

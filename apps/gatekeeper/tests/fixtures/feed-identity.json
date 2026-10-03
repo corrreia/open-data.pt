@@ -2479,6 +2479,14 @@
     "resourceKey": "omie:omie:prices:c7aae5f88a2fd932b319ce7510df878c0af85c6332b339b2c4079316d4622f74",
     "kind": "omie:prices"
   },
+  "ookla-fixed-broadband-performance-feed": {
+    "resourceKey": "parquet:parquet:tiles:4cf6547d0126a4c62d333d05d0ab679471cfe6b21bccb07b4167d70697d84495",
+    "kind": "parquet:tiles"
+  },
+  "ookla-mobile-network-performance-feed": {
+    "resourceKey": "parquet:parquet:tiles:1541c2424dd003a89546f8fb98e78d17304979a3677635f886dd583db706018b",
+    "kind": "parquet:tiles"
+  },
   "parliament-activities-xvii-feed": {
     "resourceKey": "parliament:parliament:activities:eaf4cb3af4135474adbcc67b859fa29114f0f3011484590239c5687d12c1c7fb",
     "kind": "parliament:activities"
