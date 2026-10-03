@@ -1,6 +1,5 @@
 import { IODA_MAX_BYTES, IODA_PAGE_LIMIT } from "./ioda";
 
-// IODA's measurements: republishing them needs IODA's permission.
 const COLLECTION = {
   timeoutSeconds: 60,
   maxBytes: IODA_MAX_BYTES,

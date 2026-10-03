@@ -1,0 +1,14 @@
+{
+  "@odata.context": "https://stat.anacom.pt/_api/$metadata#cr8db_stat_popupfileses(cr8db_stat_popupfilesid,cr8db_indicador,cr8db_fileen_name)",
+  "@Microsoft.Dynamics.CRM.totalrecordcount": -1,
+  "@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded": false,
+  "@Microsoft.Dynamics.CRM.globalmetadataversion": "97340750",
+  "value": [
+    {
+      "@odata.etag": "W/\"97240286\"",
+      "cr8db_indicador": "IndI_P123",
+      "cr8db_fileen_name": "IndI_P123_EN.zip",
+      "cr8db_stat_popupfilesid": "2008449f-a447-f011-8779-6045bddd5fd0"
+    }
+  ]
+}

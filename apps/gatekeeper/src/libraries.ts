@@ -20,6 +20,7 @@ import { ANEPC_DEPLOYMENT } from "./publishers/anepc/anepc";
 import { BPSTAT_DEPLOYMENT } from "./publishers/banco-de-portugal/bpstat";
 import { CARRIS_DEPLOYMENT } from "./publishers/carris-metropolitana/carris";
 import { DATASTORE_DEPLOYMENT } from "./publishers/eumetsat/datastore";
+import { DATAVERSE_DEPLOYMENT } from "./publishers/anacom/dataverse";
 import { DGEG_DEPLOYMENT } from "./publishers/dgeg/dgeg";
 import { EUROSTAT_DEPLOYMENT } from "./publishers/eurostat/eurostat";
 import { FIRMS_DEPLOYMENT } from "./publishers/nasa-firms/firms";
@@ -31,8 +32,10 @@ import { METROLISBOA_DEPLOYMENT } from "./publishers/metropolitano-de-lisboa/met
 import { MYINFO_DEPLOYMENT } from "./formats/myinfo";
 import { NASA_POWER_DEPLOYMENT } from "./publishers/nasa-power/nasapower";
 import { OMIE_DEPLOYMENT } from "./publishers/omie/omie";
+import { PARQUET_DEPLOYMENT } from "./publishers/ookla/parquet";
 import { PARLIAMENT_DEPLOYMENT } from "./publishers/assembleia-da-republica/parliament";
 import { PEERINGDB_DEPLOYMENT } from "./publishers/peeringdb/peeringdb";
+import { PICASSO_DEPLOYMENT } from "./publishers/fccn/picasso";
 import { QUALAR_DEPLOYMENT } from "./publishers/apa/qualar";
 import { REN_DEPLOYMENT } from "./publishers/ren/ren";
 import { RIPESTAT_DEPLOYMENT } from "./publishers/ripe-ncc/ripestat";
@@ -54,6 +57,7 @@ export const LIBRARIES: readonly Library[] = [
   { deployment: BPSTAT_DEPLOYMENT },
   { deployment: CARRIS_DEPLOYMENT },
   { deployment: DATASTORE_DEPLOYMENT },
+  { deployment: DATAVERSE_DEPLOYMENT },
   { deployment: DGEG_DEPLOYMENT },
   { deployment: EUROSTAT_DEPLOYMENT },
   { deployment: FIRMS_DEPLOYMENT },
@@ -65,8 +69,10 @@ export const LIBRARIES: readonly Library[] = [
   { deployment: MYINFO_DEPLOYMENT },
   { deployment: NASA_POWER_DEPLOYMENT },
   { deployment: OMIE_DEPLOYMENT },
+  { deployment: PARQUET_DEPLOYMENT },
   { deployment: PARLIAMENT_DEPLOYMENT },
   { deployment: PEERINGDB_DEPLOYMENT },
+  { deployment: PICASSO_DEPLOYMENT },
   { deployment: QUALAR_DEPLOYMENT },
   { deployment: REN_DEPLOYMENT },
   { deployment: RIPESTAT_DEPLOYMENT },

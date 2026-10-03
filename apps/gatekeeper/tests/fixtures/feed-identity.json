@@ -27,6 +27,74 @@
     "resourceKey": "ckan:ckan:resource:001a90e1380bd938b8097e20cca0815273329171ec18f3c89e3d46eb8116fb7c",
     "kind": "ckan:resource"
   },
+  "anacom-bundle-subscriber-shares": {
+    "resourceKey": "dataverse:dataverse:indicator:1efb33d16078dae2d640dd6cde97fe67266eb49e2c59c178fd9d26d5ed968060",
+    "kind": "dataverse:indicator"
+  },
+  "anacom-bundle-subscribers": {
+    "resourceKey": "dataverse:dataverse:indicator:1efaabda56dcb82849e54c6bae2ef2e62b0aa388e1d86c2325441ddd8c87c141",
+    "kind": "dataverse:indicator"
+  },
+  "anacom-fixed-broadband-accesses": {
+    "resourceKey": "dataverse:dataverse:indicator:9d1047f424d848c40a17450205ca93c0b6b01839dd10e95e1404af4d5e09d348",
+    "kind": "dataverse:indicator"
+  },
+  "anacom-fixed-broadband-shares": {
+    "resourceKey": "dataverse:dataverse:indicator:3aeb083720dd0fbb745c26e673b758b496926c92ff37d5ba976c8c6a2d978db1",
+    "kind": "dataverse:indicator"
+  },
+  "anacom-fixed-telephone-accesses": {
+    "resourceKey": "dataverse:dataverse:indicator:406d797be7fa68246c7976411779f839dddfe9675c2c3366f02eec2a1b1ae02e",
+    "kind": "dataverse:indicator"
+  },
+  "anacom-fixed-telephone-shares": {
+    "resourceKey": "dataverse:dataverse:indicator:6eaa0684b73dd3002551432b84259a0437e01d0b467800738dc5e12aea9f8c43",
+    "kind": "dataverse:indicator"
+  },
+  "anacom-mail-boxes": {
+    "resourceKey": "arcgis:arcgis:layer:ddd814fb32de5c20f5e60e0776448e67783961308a49d51510fbe9c0df264a3c",
+    "kind": "arcgis:layer"
+  },
+  "anacom-mobile-access-shares": {
+    "resourceKey": "dataverse:dataverse:indicator:b5ff6130ef5f4f16001c6fff8b6e8dd6961a1e849120798283cb6c50e76bc933",
+    "kind": "dataverse:indicator"
+  },
+  "anacom-mobile-accesses": {
+    "resourceKey": "dataverse:dataverse:indicator:9473e72ecb94d928de36d34dea4e8a3cdc132169b65616a8f7813e368b3fce9c",
+    "kind": "dataverse:indicator"
+  },
+  "anacom-mobile-data-traffic": {
+    "resourceKey": "dataverse:dataverse:indicator:b2ae536b51077761b3714091975cfaad2e5cb1a555f182b7491c6eb253b85a9a",
+    "kind": "dataverse:indicator"
+  },
+  "anacom-mobile-data-traffic-shares": {
+    "resourceKey": "dataverse:dataverse:indicator:366e62b51c20fdd259a9b395776ec6629cb436026666def8386d26faad61bea1",
+    "kind": "dataverse:indicator"
+  },
+  "anacom-pay-tv-accesses": {
+    "resourceKey": "dataverse:dataverse:indicator:907c3aa92ac3c840a7da6c63b8aea4912c509798dc8a4d1dfc2cda29792bc2b9",
+    "kind": "dataverse:indicator"
+  },
+  "anacom-pay-tv-shares": {
+    "resourceKey": "dataverse:dataverse:indicator:09e68f4d46aacb15fd0c7615647be71b63c8765e3586d290b5718fc90273a1fe",
+    "kind": "dataverse:indicator"
+  },
+  "anacom-post-offices": {
+    "resourceKey": "arcgis:arcgis:layer:c48e8a6e049ccc2b12e5c8387574fcc6135d3cff3e0f6dd85893be9083d53345",
+    "kind": "arcgis:layer"
+  },
+  "anacom-postal-agencies": {
+    "resourceKey": "arcgis:arcgis:layer:13a989dd2b27073fce01ac4459d4a77dec712e6fb9bcd6f1428cf5ecbee8e16d",
+    "kind": "arcgis:layer"
+  },
+  "anacom-retail-revenue-shares": {
+    "resourceKey": "dataverse:dataverse:indicator:3981d2ca72bac8009fd3396dfc221869ae39f6264f8a52c9be5ff203834eec8f",
+    "kind": "dataverse:indicator"
+  },
+  "anacom-retail-revenues": {
+    "resourceKey": "dataverse:dataverse:indicator:541711a8255926e66da2fd54f09e868fac7c97610481cab615707d4a16546eef",
+    "kind": "dataverse:indicator"
+  },
   "anepc-active-occurrences-feed": {
     "resourceKey": "anepc:anepc:active-occurrences:25b42e8ed9cbca528e8057ab8717bc9c4d1a068a6919540cf2c471e13ebda7ee",
     "kind": "anepc:active-occurrences"
@@ -1867,6 +1935,14 @@
     "resourceKey": "eurostat:eurostat:dataset:d6bd3139f35bd9174563d534ed7a608dfb97dc41d470e6e91dd8bd21604c9fac",
     "kind": "eurostat:dataset"
   },
+  "fccn-gigapix-daily-peak-traffic-feed": {
+    "resourceKey": "picasso:picasso:traffic:5ce70ea2992fc2a3abe90534ce2494acb02ee523982e618c492aa82bcc786d1a",
+    "kind": "picasso:traffic"
+  },
+  "fccn-gigapix-traffic-feed": {
+    "resourceKey": "picasso:picasso:traffic:78e36b6a83bd55a2693f2bcd914dab0b202d4e0015541d53ab13dd56b4ee1b97",
+    "kind": "picasso:traffic"
+  },
   "fertagus-gtfs-feed": {
     "resourceKey": "gtfs:gtfs:static:d2be0d78dcf3d90df37148f574c6c1d6479657205ac718e56cbec59428b99bcf",
     "kind": "gtfs:static"
@@ -2402,6 +2478,14 @@
   "omie-seven-day-day-ahead-prices-feed": {
     "resourceKey": "omie:omie:prices:c7aae5f88a2fd932b319ce7510df878c0af85c6332b339b2c4079316d4622f74",
     "kind": "omie:prices"
+  },
+  "ookla-fixed-broadband-performance-feed": {
+    "resourceKey": "parquet:parquet:tiles:4cf6547d0126a4c62d333d05d0ab679471cfe6b21bccb07b4167d70697d84495",
+    "kind": "parquet:tiles"
+  },
+  "ookla-mobile-network-performance-feed": {
+    "resourceKey": "parquet:parquet:tiles:1541c2424dd003a89546f8fb98e78d17304979a3677635f886dd583db706018b",
+    "kind": "parquet:tiles"
   },
   "parliament-activities-xvii-feed": {
     "resourceKey": "parliament:parliament:activities:eaf4cb3af4135474adbcc67b859fa29114f0f3011484590239c5687d12c1c7fb",

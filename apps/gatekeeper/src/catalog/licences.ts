@@ -29,6 +29,12 @@ export const LICENCES = {
     name: "Creative Commons Attribution (CC BY)",
     summary: "Creative Commons Attribution, version not stated by the publisher: reuse for any purpose, crediting the publisher.",
   },
+  "cc-by-nc-sa-4.0": {
+    name: "CC BY-NC-SA 4.0",
+    url: "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+    summary:
+      "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International: reuse and adapt for non-commercial purposes only, crediting the publisher, and share what you make from it under the same licence.",
+  },
   "cc0-1.0": {
     name: "CC0 1.0",
     url: "https://creativecommons.org/publicdomain/zero/1.0/",
@@ -100,7 +106,8 @@ export const LICENCES = {
   "ioda-all-rights-reserved": {
     name: "IODA, all rights reserved",
     url: "https://api.ioda.inetintel.cc.gatech.edu/v2/datasources/",
-    summary: "Georgia Tech Research Corporation reserves all rights; republication needs permission, which is why the source is held.",
+    summary:
+      "Georgia Tech Research Corporation states no licence for IODA, only a copyright notice reserving all rights in every response: ask Georgia Tech before reusing the data.",
   },
   "ripe-ncc-terms": {
     name: "RIPEstat Service Terms and Conditions",
@@ -111,6 +118,12 @@ export const LICENCES = {
     name: "PeeringDB Acceptable Use Policy",
     url: "https://www.peeringdb.com/aup",
     summary: "PeeringDB requires permission for reproduction and bulk sharing outside its approved uses, which is why the source is held.",
+  },
+  "anacom-terms": {
+    name: "ANACOM terms and conditions",
+    url: "https://stat.anacom.pt/pt-PT/Termos-e-Condi%C3%A7%C3%B5es/",
+    summary:
+      "ANACOM allows its information to be copied and distributed unmodified, for informational, personal and non-commercial use, with a reference to the original on www.anacom.pt and its copyright notice; modified or derived uses need ANACOM's prior written authorisation, and any use is to be notified to ANACOM.",
   },
   [UNSTATED_LICENCE]: {
     name: "No licence stated",
