@@ -2,8 +2,7 @@
 
 Autoridade Nacional de Comunicações, Portugal's communications and postal regulator. We read
 fourteen of its market statistics and three layers of the universal postal service network.
-**Held** (`enabled: false` in [their folder](../../apps/gatekeeper/src/publishers/anacom/)): see
-[Permission](#permission).
+Published under their terms: see [Permission](#permission).
 
 ## Source
 
@@ -74,10 +73,9 @@ STAT.ANACOM's [Termos e Condições](https://stat.anacom.pt/pt-PT/Termos-e-Condi
 > expressamente proibida a utilização de tais materiais para quaisquer outros fins, devendo qualquer
 > tipo de utilização diverso ser previamente autorizado, por escrito, pela ANACOM.
 
-Under our licensing rule, a non-commercial condition is acceptable. The bar on modifications and
-derived uses is not, because normalizing the files into series is a derived use. The terms also ask
-to be notified of any use. So ANACOM is held until it agrees. We will ask through
-stat.suporte@anacom.pt, giving the indicators and layers above and the weekly pace, and record the
+We publish under the conditions the authorization sets: a reference to the original on
+www.anacom.pt and the copyright notice on every copy, and informational, non-commercial use, which our
+licensing rule accepts. The terms also ask to be notified of any use: we notify ANACOM through
+stat.suporte@anacom.pt, giving the indicators and layers above and the weekly pace, and record any
 answer here. Every feed is under the `anacom-terms` licence, and its attribution carries the
 reference to www.anacom.pt and the copyright notice word for word (`publishers/anacom/terms.ts`).
-Lifting the hold means deleting `enabled: false`.

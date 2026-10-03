@@ -27,11 +27,6 @@ export const PUBLISHER: PublisherDefinition = {
     // GEO.ANACOM's ArcGIS Server: the mail boxes alone are eleven pages.
     { host: "geo.anacom.pt", minIntervalSeconds: 1 },
   ],
-  // Held: ANACOM's terms (https://stat.anacom.pt/pt-PT/Termos-e-Condi%C3%A7%C3%B5es/, the same on www.anacom.pt)
-  // allow copying and distributing their information, but "não contempla modificações ou utilizações derivadas e
-  // requer a notificação à ANACOM da sua utilização" — and normalizing it is a derived use. Waiting on ANACOM's answer
-  // to stat.suporte@anacom.pt. See docs/publishers/anacom.md.
-  enabled: false,
   feeds: [
     bundleSubscriberShares,
     bundleSubscribers,

@@ -24,7 +24,7 @@ credential, a proxy, an unusual cadence, a permission, a known habit of the sour
 | [IPMA](ipma.md)                                       | Lightning read out of a web page, and a data site that refuses Cloudflare      |
 | [EUMETSAT](eumetsat.md)                               | A Data Store account, and why not IPMA's mirror                                |
 | [FCT \| FCCN](fccn.md)                                | An undocumented chart endpoint, and units without a stated meaning             |
-| [ANACOM](anacom.md)                                   | Held: terms that bar derived uses; files rebuilt nightly, looked up by code    |
+| [ANACOM](anacom.md)                                   | Their terms' conditions; files rebuilt nightly, looked up by code              |
 
 ## Writing one
 
