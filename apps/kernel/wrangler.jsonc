@@ -106,7 +106,7 @@
     // The public Cloudflare OAuth client the site's agent signs people in with, so they ask the data
     // on their own Workers AI. It is an ID, not a secret: PKCE stands in for one. Empty turns the agent off.
     // Its redirect URIs are https://open-data.pt/ask/callback and, for `pnpm dev`, http://localhost:8787/ask/callback.
-    "ASK_OAUTH_CLIENT_ID": "",
+    "ASK_OAUTH_CLIENT_ID": "21c009b4df55f4416b91413c9d00d926",
   },
   // Secrets (wrangler secret put): CATALOG_TOKEN, for Basin SQL, and ANALYTICS_TOKEN
   // (Account Analytics: Read), for the Analytics Engine SQL API. The API is
