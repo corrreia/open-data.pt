@@ -105,7 +105,15 @@ function MapVisual({ spec }: { spec: MapSpec }) {
   useEffect(() => {
     if (!element.current) return;
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const map = L.map(element.current, { preferCanvas: true, zoomAnimation: !still, fadeAnimation: !still, markerZoomAnimation: !still, scrollWheelZoom: false });
+    // Inside a scrolling conversation a swipe or the wheel scrolls the conversation: on a touch screen the map zooms with a pinch or its buttons, and does not pan.
+    const map = L.map(element.current, {
+      preferCanvas: true,
+      zoomAnimation: !still,
+      fadeAnimation: !still,
+      markerZoomAnimation: !still,
+      scrollWheelZoom: false,
+      dragging: !L.Browser.mobile,
+    });
     L.tileLayer(OSM, { maxZoom: 19, attribution: ATTRIBUTION, referrerPolicy: "strict-origin-when-cross-origin", crossOrigin: true }).addTo(map);
     const drawn = L.featureGroup().addTo(map);
 

@@ -1,6 +1,6 @@
 import { Banner, Button, Input, LinkButton, Loader, Select } from "@cloudflare/kumo";
 import { ArrowUpIcon, CheckCircleIcon, CloudIcon, PlusIcon, SignOutIcon, StopIcon, WarningCircleIcon, WarningIcon, XIcon } from "@phosphor-icons/react";
-import { lazy, Suspense, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from "react";
 import Markdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -23,6 +23,12 @@ import { fmt } from "../../lib/format";
 const Visuals = lazy(() => import("./Visuals"));
 
 const LINK = "font-medium text-kumo-link hover:underline";
+
+/** Fingers rather than a mouse: buttons get the larger size, and opening the panel does not raise the keyboard by itself. */
+const TOUCH = window.matchMedia("(pointer: coarse)").matches;
+const ICON_SIZE = TOUCH ? "lg" : "sm";
+/** Below Tailwind's sm breakpoint the panel fills the screen. */
+const PHONE = window.matchMedia("(max-width: 639px)");
 const ACCOUNT_ID = /^[0-9a-f]{32}$/;
 
 const SUGGESTIONS = [
@@ -234,7 +240,16 @@ function SignIn({ failure }: { failure: string | undefined }) {
 
 /* ---------- The conversation ---------- */
 
-function Chat({ session, accounts, onSignedOut }: { session: AskSession; accounts: AskAccounts["accounts"]; onSignedOut: () => void }) {
+interface ChatProps {
+  session: AskSession;
+  accounts: AskAccounts["accounts"];
+  /** Whether the panel is showing; docked, the conversation carries on out of sight. */
+  open: boolean;
+  onSignedOut: () => void;
+  onRunning: (running: boolean) => void;
+}
+
+function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
   const [accountId, setAccountId] = useState(() => {
     const saved = remembered(ACCOUNT_KEY);
     return accounts.some((account) => account.id === saved) || (!accounts.length && ACCOUNT_ID.test(saved)) ? saved : (accounts[0]?.id ?? "");
@@ -256,9 +271,12 @@ function Chat({ session, accounts, onSignedOut }: { session: AskSession; account
   const accountReady = ACCOUNT_ID.test(accountId);
 
   useEffect(() => {
-    input.current?.focus();
-  }, []);
+    if (open && !TOUCH) input.current?.focus();
+  }, [open]);
   useEffect(() => () => abort.current?.abort(), []);
+  useEffect(() => {
+    onRunning(running);
+  }, [running, onRunning]);
   // Follow the answer as it grows, unless the visitor has scrolled up to read something.
   useEffect(() => {
     const element = scroller.current;
@@ -380,8 +398,8 @@ function Chat({ session, accounts, onSignedOut }: { session: AskSession; account
           />
         ) : null}
         <div className="ml-auto flex gap-1">
-          <Button variant="ghost" size="sm" icon={<PlusIcon />} onClick={restart} disabled={!exchanges.length} aria-label="New conversation" title="New conversation" />
-          <Button variant="ghost" size="sm" icon={<SignOutIcon />} onClick={() => void leave()} aria-label="Sign out" title="Sign out" />
+          <Button variant="ghost" size={ICON_SIZE} icon={<PlusIcon />} onClick={restart} disabled={!exchanges.length} aria-label="New conversation" title="New conversation" />
+          <Button variant="ghost" size={ICON_SIZE} icon={<SignOutIcon />} onClick={() => void leave()} aria-label="Sign out" title="Sign out" />
         </div>
       </div>
       {!accounts.length ? (
@@ -389,7 +407,12 @@ function Chat({ session, accounts, onSignedOut }: { session: AskSession; account
           Cloudflare did not list your accounts to us. Paste the account ID from your dashboard's address, dash.cloudflare.com/&lt;account ID&gt;.
           <Input
             size="sm"
-            className="font-mono"
+            // 16px on phones: iOS Safari zooms the page into any field with smaller text.
+            className="font-mono text-base sm:text-sm"
+            inputMode="text"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
             value={accountId}
             onChange={(event) => setAccountId(event.target.value.trim().toLowerCase())}
             placeholder="32 hexadecimal characters"
@@ -397,7 +420,7 @@ function Chat({ session, accounts, onSignedOut }: { session: AskSession; account
         </label>
       ) : null}
 
-      <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+      <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4">
         <section aria-label="Conversation" aria-live="polite" className="grid gap-5">
           {exchanges.length ? (
             exchanges.map((exchange, index) => (
@@ -434,7 +457,7 @@ function Chat({ session, accounts, onSignedOut }: { session: AskSession; account
         </p>
       ) : null}
       <form
-        className="flex items-end gap-2 border-t border-kumo-line p-2"
+        className="flex items-end gap-2 border-t border-kumo-line px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
         onSubmit={(event) => {
           event.preventDefault();
           void ask(draft);
@@ -443,7 +466,9 @@ function Chat({ session, accounts, onSignedOut }: { session: AskSession; account
         <textarea
           ref={input}
           aria-label="Your question"
-          className="max-h-40 min-h-10 flex-1 resize-none bg-transparent px-2 py-2 text-sm text-kumo-strong outline-none placeholder:text-kumo-inactive"
+          // 16px on phones: iOS Safari zooms the page into any field with smaller text.
+          className="max-h-40 min-h-11 flex-1 resize-none bg-transparent px-2 py-2.5 text-base text-kumo-strong outline-none placeholder:text-kumo-inactive sm:min-h-10 sm:py-2 sm:text-sm"
+          enterKeyHint="send"
           rows={1}
           value={draft}
           placeholder={accountReady ? "Ask about Portuguese public data…" : "Paste your account ID first"}
@@ -452,9 +477,9 @@ function Chat({ session, accounts, onSignedOut }: { session: AskSession; account
           disabled={!accountReady}
         />
         {running ? (
-          <Button variant="secondary" icon={<StopIcon weight="fill" />} aria-label="Stop" onClick={() => abort.current?.abort()} />
+          <Button variant="secondary" size={TOUCH ? "lg" : "base"} icon={<StopIcon weight="fill" />} aria-label="Stop" onClick={() => abort.current?.abort()} />
         ) : (
-          <Button type="submit" variant="primary" icon={<ArrowUpIcon weight="bold" />} aria-label="Ask" disabled={!draft.trim() || !accountReady} />
+          <Button type="submit" variant="primary" size={TOUCH ? "lg" : "base"} icon={<ArrowUpIcon weight="bold" />} aria-label="Ask" disabled={!draft.trim() || !accountReady} />
         )}
       </form>
     </>
@@ -463,7 +488,58 @@ function Chat({ session, accounts, onSignedOut }: { session: AskSession; account
 
 /* ---------- The panel ---------- */
 
-export default function AskPanel({ failure, onClose }: { failure: string | undefined; onClose: () => void }) {
+interface AskPanelProps {
+  /** Docked when false: hidden and out of reach, but still running. */
+  open: boolean;
+  failure: string | undefined;
+  onClose: () => void;
+  onRunning: (running: boolean) => void;
+}
+
+/**
+ * On a phone the panel takes the visible part of the screen, which shrinks when the keyboard opens:
+ * sized to the layout viewport, the box being typed in would sit under the keyboard.
+ */
+function useVisibleViewport(panel: RefObject<HTMLDivElement | null>, open: boolean) {
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    const element = panel.current;
+    if (!open || !viewport || !element) return;
+    const fit = () => {
+      element.style.setProperty("--ask-height", `${viewport.height}px`);
+      element.style.setProperty("--ask-top", `${viewport.offsetTop}px`);
+    };
+    fit();
+    viewport.addEventListener("resize", fit);
+    viewport.addEventListener("scroll", fit);
+    return () => {
+      viewport.removeEventListener("resize", fit);
+      viewport.removeEventListener("scroll", fit);
+    };
+  }, [panel, open]);
+}
+
+/** While the panel fills a phone's screen, the page behind it stays still instead of scrolling along. */
+function usePhoneScrollLock(open: boolean) {
+  useEffect(() => {
+    if (!open) return;
+    const root = document.documentElement;
+    const lock = () => {
+      root.style.overflow = PHONE.matches ? "hidden" : "";
+    };
+    lock();
+    PHONE.addEventListener("change", lock);
+    return () => {
+      PHONE.removeEventListener("change", lock);
+      root.style.overflow = "";
+    };
+  }, [open]);
+}
+
+export default function AskPanel({ open, failure, onClose, onRunning }: AskPanelProps) {
+  const panel = useRef<HTMLDivElement>(null);
+  useVisibleViewport(panel, open);
+  usePhoneScrollLock(open);
   const [session, setSession] = useState<AskSession | undefined>();
   const [accounts, setAccounts] = useState<AskAccounts["accounts"] | undefined>();
   const [failed, setFailed] = useState<string | undefined>();
@@ -493,17 +569,20 @@ export default function AskPanel({ failure, onClose }: { failure: string | undef
       </span>
     );
   else if (!session.signedIn) content = <SignIn failure={failure ? (SIGNIN_FAILURES.get(failure) ?? SIGNIN_FAILURES.get("failed")) : undefined} />;
-  else content = <Chat session={session} accounts={accounts ?? []} onSignedOut={() => setSession({ ...session, signedIn: false })} />;
+  else content = <Chat session={session} accounts={accounts ?? []} open={open} onSignedOut={() => setSession({ ...session, signedIn: false })} onRunning={onRunning} />;
 
   return (
     <div
+      ref={panel}
       role="dialog"
       aria-modal="false"
       aria-labelledby="ask-title"
+      // Docked, the panel stays in the page, so an answer carries on, but nothing in it can be reached.
+      inert={!open}
       onKeyDown={(event) => {
         if (event.key === "Escape") onClose();
       }}
-      className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-kumo-base sm:inset-auto sm:bottom-4 sm:right-4 sm:h-[min(46rem,calc(100dvh-2rem))] sm:w-[28rem] sm:rounded-2xl sm:border sm:border-kumo-line sm:shadow-md"
+      className={`fixed inset-x-0 top-[var(--ask-top,0px)] z-40 flex h-[var(--ask-height,100dvh)] flex-col overflow-hidden bg-kumo-base motion-safe:transition-[opacity,transform,visibility] motion-safe:duration-200 sm:inset-x-auto sm:top-auto sm:bottom-4 sm:right-4 sm:h-[min(46rem,calc(100dvh-2rem))] sm:w-[28rem] sm:rounded-2xl sm:border sm:border-kumo-line sm:shadow-md ${open ? "visible opacity-100" : "invisible translate-y-3 opacity-0"}`}
     >
       <header className="flex items-center gap-2 border-b border-kumo-line px-4 py-3">
         <div className="grid min-w-0 flex-1">
@@ -512,7 +591,7 @@ export default function AskPanel({ failure, onClose }: { failure: string | undef
           </h2>
           <span className="text-xs text-kumo-subtle">On your own Cloudflare account</span>
         </div>
-        <Button variant="ghost" size="sm" icon={<XIcon />} onClick={onClose} aria-label="Close the agent" title="Close" />
+        <Button variant="ghost" size={ICON_SIZE} icon={<XIcon />} onClick={onClose} aria-label="Close the agent; it keeps answering" title="Close" />
       </header>
       {content}
     </div>
