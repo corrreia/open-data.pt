@@ -112,6 +112,12 @@ export const LICENCES = {
     url: "https://www.peeringdb.com/aup",
     summary: "PeeringDB requires permission for reproduction and bulk sharing outside its approved uses, which is why the source is held.",
   },
+  "anacom-terms": {
+    name: "ANACOM terms and conditions",
+    url: "https://stat.anacom.pt/pt-PT/Termos-e-Condi%C3%A7%C3%B5es/",
+    summary:
+      "ANACOM allows its information to be copied and distributed for informational, personal and non-commercial use, with its copyright notice and a reference to www.anacom.pt, but not modified or put to derived uses, which is why the source is held until ANACOM agrees.",
+  },
   [UNSTATED_LICENCE]: {
     name: "No licence stated",
     summary: "The publisher states no reuse licence. Check its site before you reuse the data: it is served here under whatever terms the publisher holds it.",

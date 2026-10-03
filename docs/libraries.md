@@ -28,6 +28,7 @@ Today, 30 libraries: 28 read the 702 installed feeds, and two read only publishe
 | `anepc`        | ANEPC civil-protection occurrences      | 1     |
 | `bpstat`       | BPstat, Banco de Portugal               | 14    |
 | `carris`       | Carris Metropolitana                    | 5     |
+| `dataverse`    | STAT.ANACOM indicator files (held)      | 14    |
 | `dgeg`         | DGEG fuel prices                        | 6     |
 | `eurostat`     | Eurostat                                | 10    |
 | `firms`        | NASA FIRMS thermal anomalies            | 3     |
@@ -59,10 +60,11 @@ what we are waiting for. None of their feeds is installed, so nothing of theirs 
 The library that reads them still ships: a hold is about whose data we serve, not about what code
 exists. Lifting a hold is deleting one word.
 
-| Publisher   | Read by     | Held because                                                                                          |
-| ----------- | ----------- | ----------------------------------------------------------------------------------------------------- |
-| `peeringdb` | `peeringdb` | The acceptable-use policy requires permission for reproduction and bulk sharing                       |
-| `ioda`      | `ioda`      | Georgia Tech reserves all rights, and several signals IODA blends carry their own redistribution bars |
+| Publisher   | Read by               | Held because                                                                                          |
+| ----------- | --------------------- | ----------------------------------------------------------------------------------------------------- |
+| `peeringdb` | `peeringdb`           | The acceptable-use policy requires permission for reproduction and bulk sharing                       |
+| `ioda`      | `ioda`                | Georgia Tech reserves all rights, and several signals IODA blends carry their own redistribution bars |
+| `anacom`    | `dataverse`, `arcgis` | ANACOM's terms bar modifications and derived uses, and ask to be notified of any use                  |
 
 A publisher whose terms forbid what this service does is not held but left out, and has no folder. Lime is one:
 the Public GBFS Terms its own feed names in `license_url` forbid redistributing the data, building a dataset from

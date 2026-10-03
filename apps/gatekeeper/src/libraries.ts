@@ -20,6 +20,7 @@ import { ANEPC_DEPLOYMENT } from "./publishers/anepc/anepc";
 import { BPSTAT_DEPLOYMENT } from "./publishers/banco-de-portugal/bpstat";
 import { CARRIS_DEPLOYMENT } from "./publishers/carris-metropolitana/carris";
 import { DATASTORE_DEPLOYMENT } from "./publishers/eumetsat/datastore";
+import { DATAVERSE_DEPLOYMENT } from "./publishers/anacom/dataverse";
 import { DGEG_DEPLOYMENT } from "./publishers/dgeg/dgeg";
 import { EUROSTAT_DEPLOYMENT } from "./publishers/eurostat/eurostat";
 import { FIRMS_DEPLOYMENT } from "./publishers/nasa-firms/firms";
@@ -55,6 +56,7 @@ export const LIBRARIES: readonly Library[] = [
   { deployment: BPSTAT_DEPLOYMENT },
   { deployment: CARRIS_DEPLOYMENT },
   { deployment: DATASTORE_DEPLOYMENT },
+  { deployment: DATAVERSE_DEPLOYMENT },
   { deployment: DGEG_DEPLOYMENT },
   { deployment: EUROSTAT_DEPLOYMENT },
   { deployment: FIRMS_DEPLOYMENT },
