@@ -165,10 +165,26 @@ describe("asking a model", () => {
       status: 400,
     },
     { refusal: "no sign-in", request: chatRequest("", CHAT), status: 401 },
+    {
+      // A body built from a string carries no Content-Length here, so the cap must hold while it is read.
+      refusal: "a conversation over 1 MB that does not say its length",
+      request: chatRequest(sessionCookie({ a: "access-1", e: NOW + 3_600_000 }), { ...CHAT, messages: [{ role: "user", content: "x".repeat(1024 * 1024) }] }),
+      status: 413,
+    },
   ])("refuses $refusal without reaching Cloudflare", async ({ request, status }) => {
     const { host, sent } = cloudflare(() => new Response(stream));
     expect((await handleAsk(request, host)).status).toBe(status);
     expect(sent).toEqual([]);
+  });
+
+  it("names a model the account's plan does not include, so the agent can move to a free one", async () => {
+    const { host } = cloudflare(() => Response.json({ success: false, errors: [{ code: 5035, message: "This model requires the Workers Paid plan" }] }, { status: 403 }));
+    const response = await handleAsk(chatRequest(sessionCookie({ a: "access-1", e: NOW + 3_600_000 }), CHAT), host);
+    expect(response.status).toBe(403);
+    expect(await jsonBody<{ type: string; detail: string }>(response)).toMatchObject({
+      type: "https://open-data.pt/ask/problems/paid-model",
+      detail: expect.stringContaining("Gemma 4 26B"),
+    });
   });
 
   it("signs the person out when Cloudflare no longer accepts their token", async () => {
@@ -176,5 +192,31 @@ describe("asking a model", () => {
     const response = await handleAsk(chatRequest(sessionCookie({ a: "revoked", e: NOW + 3_600_000 }), CHAT), host);
     expect(response.status).toBe(401);
     expect(cookiesOf(response).get("__Host-ask-session")).toBe("");
+  });
+});
+
+describe("when Cloudflare answers badly", () => {
+  it("signs the person out here even when revoking the token fails", async () => {
+    const { host } = cloudflare(() => {
+      throw new TypeError("network connection lost");
+    });
+    const request = new Request(`${ORIGIN}/ask/signout`, { method: "POST", headers: { Origin: ORIGIN, Cookie: sessionCookie({ a: "access-1", e: NOW + 3_600_000 }) } });
+    const response = await handleAsk(request, host);
+    expect(response.status).toBe(204);
+    expect(cookiesOf(response).get("__Host-ask-session")).toBe("");
+  });
+
+  it("sends the person back with a failed sign-in, not an error page, when the token answer is not JSON", async () => {
+    const { host } = cloudflare(() => new Response("<html>maintenance</html>", { status: 200 }));
+    const flow = cookiesOf(await handleAsk(new Request(`${ORIGIN}/ask/signin?return=%2Fstatus%2F`), host));
+    const [state] = (flow.get("__Host-ask-flow") ?? "").split(".");
+    const back = await handleAsk(new Request(`${ORIGIN}/ask/callback?code=code-1&state=${state}`, { headers: { Cookie: cookieHeader(flow) } }), host);
+    expect(back.headers.get("Location")).toBe(`${ORIGIN}/status/#ask-signin=failed`);
+  });
+
+  it("lists no accounts, rather than failing, when the account list is not JSON", async () => {
+    const { host } = cloudflare(() => new Response("<html>maintenance</html>", { status: 200 }));
+    const response = await handleAsk(new Request(`${ORIGIN}/ask/accounts`, { headers: { Cookie: sessionCookie({ a: "access-1", e: NOW + 3_600_000 }) } }), host);
+    expect(await jsonBody<{ signedIn: boolean; accounts: Array<{ id: string }> }>(response)).toEqual({ signedIn: true, accounts: [] });
   });
 });

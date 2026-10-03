@@ -17,30 +17,36 @@ import type { JsonValue } from "./types";
 
 /* ---------- The kernel's routes ---------- */
 
-const MODEL = z.object({ id: z.string(), name: z.string(), note: z.string() });
+const MODEL = z.object({ id: z.string(), name: z.string(), free: z.boolean(), note: z.string() });
 const SESSION = z.object({ enabled: z.boolean(), signedIn: z.boolean(), models: z.array(MODEL) });
 const ACCOUNTS = z.object({ signedIn: z.boolean(), accounts: z.array(z.object({ id: z.string(), name: z.string() })) });
-const PROBLEM = z.object({ detail: z.string() });
+const PROBLEM = z.object({ type: z.string().optional(), detail: z.string() });
+
+/** The kernel's problem type for a model the visitor's plan does not include. */
+const PAID_MODEL_PROBLEM = "https://open-data.pt/ask/problems/paid-model";
 
 export type AskSession = z.infer<typeof SESSION>;
+export type AskModel = z.infer<typeof MODEL>;
 export type AskAccounts = z.infer<typeof ACCOUNTS>;
 
 /** Whether the agent is on here and this browser is signed in; the kernel answers from the cookie alone. */
 export async function readSession(): Promise<AskSession> {
   const response = await fetch("/ask/session", { headers: { accept: "application/json" } });
-  if (!response.ok) throw new AskError(await problemDetail(response), response.status);
+  if (!response.ok) throw await askError(response);
   return SESSION.parse(await response.json());
 }
 
 /** The accounts the visitor's token reaches. */
 export async function readAccounts(): Promise<AskAccounts> {
   const response = await fetch("/ask/accounts", { headers: { accept: "application/json" } });
-  if (!response.ok) throw new AskError(await problemDetail(response), response.status);
+  if (!response.ok) throw await askError(response);
   return ACCOUNTS.parse(await response.json());
 }
 
+/** Revokes the sign-in and clears its cookie; throws when the kernel did not, so the panel never claims a sign-out that did not happen. */
 export async function signOut(): Promise<void> {
-  await fetch("/ask/signout", { method: "POST" });
+  const response = await fetch("/ask/signout", { method: "POST" });
+  if (!response.ok) throw await askError(response);
 }
 
 /** Where sign-in starts, coming back to this page with the agent open. */
@@ -50,6 +56,8 @@ export class AskError extends Error {
   constructor(
     message: string,
     readonly status: number,
+    /** The problem type the kernel named, when it named one. */
+    readonly type?: string,
   ) {
     super(message);
     this.name = "AskError";
@@ -152,17 +160,41 @@ async function apiRead(options: RequestOptions): Promise<JsonValue> {
   }
   const target = `GET ${url.pathname}${url.search}`;
   const response = await fetch(url, { headers: { accept: "application/json" } });
-  if (Number(response.headers.get("Content-Length")) > MAX_READ_BYTES) {
-    await response.body?.cancel();
-    throw new Error(`${target} is larger than 8 MB; read it in pages with /records and nextCursor, or narrow it with where or bbox`);
-  }
-  const text = await response.text();
+  const text = await boundedText(response, target);
   if (!response.ok) {
     const detail = problemText(text);
     const retry = response.status === 429 ? ` Retry after ${response.headers.get("Retry-After") ?? 60} seconds.` : "";
     throw new Error(`${target} answered ${response.status}${detail ? `: ${detail}` : ""}${retry}`);
   }
   return parseJsonValue(text);
+}
+
+/**
+ * A response body as text, refused past MAX_READ_BYTES as it streams in, as on /mcp: /records/all
+ * streams every chunk of a product with no Content-Length, and a large one would fill the tab's memory.
+ */
+async function boundedText(response: Response, target: string): Promise<string> {
+  const tooLarge = () => new Error(`${target} is larger than 8 MB; read it in pages with /records and nextCursor, or narrow it with where or bbox`);
+  if (Number(response.headers.get("Content-Length")) > MAX_READ_BYTES) {
+    await response.body?.cancel();
+    throw tooLarge();
+  }
+  if (!response.body) return "";
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let bytes = 0;
+  let text = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    bytes += value.byteLength;
+    if (bytes > MAX_READ_BYTES) {
+      await reader.cancel();
+      throw tooLarge();
+    }
+    text += decoder.decode(value, { stream: true });
+  }
+  return text + decoder.decode();
 }
 
 /** A model-facing tool, in the Chat Completions format Workers AI speaks. */
@@ -253,6 +285,8 @@ export interface AssistantTurn {
   error?: string;
   /** Workers AI's unit of cost, as its stream reports it; the free allowance is 10,000 a day. */
   neurons: number;
+  /** Something the visitor should know about how it was answered, such as a change of model. */
+  notice?: string;
 }
 
 /** Model calls in one answer before the agent stops it. */
@@ -350,7 +384,11 @@ export async function readReply(body: ReadableStream<Uint8Array>, onText: (text:
 
 export interface Conversation {
   accountId: string;
-  model: string;
+  model: AskModel;
+  /** Where to turn when the visitor's plan does not include `model`: the first model that works on Workers Free. */
+  freeModel: AskModel | undefined;
+  /** Told when the agent moves to `freeModel`, so the next question starts there. */
+  onModelChange: (model: AskModel) => void;
   /** The transcript so far, system prompt first; the new question is already on it. */
   messages: ChatMessage[];
   signal: AbortSignal;
@@ -361,7 +399,8 @@ export interface Conversation {
  * Answers the last question: model step, tool calls, model step, until the model writes an answer
  * without calling anything. The transcript grows in place, so the next question continues it.
  */
-export async function answer({ accountId, model, messages, signal, onUpdate }: Conversation): Promise<void> {
+export async function answer({ accountId, model: asked, freeModel, onModelChange, messages, signal, onUpdate }: Conversation): Promise<void> {
+  let model = asked;
   const turn: AssistantTurn = { steps: [], visuals: [], text: "", thinking: true, done: false, neurons: 0 };
   const show = () => onUpdate({ ...turn, steps: turn.steps.map((step) => ({ ...step })), visuals: [...turn.visuals] });
   show();
@@ -370,10 +409,21 @@ export async function answer({ accountId, model, messages, signal, onUpdate }: C
     const response = await fetch("/ask/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json", accept: "text/event-stream" },
-      body: JSON.stringify({ accountId, model, messages, tools: server.tools }),
+      body: JSON.stringify({ accountId, model: model.id, messages, tools: server.tools }),
       signal,
     });
-    if (!response.ok || !response.body) throw new AskError(await problemDetail(response), response.status);
+    if (!response.ok || !response.body) {
+      const error = await askError(response);
+      // The strongest models need the Workers Paid plan; a free-plan account carries on with a free model.
+      if (error.type === PAID_MODEL_PROBLEM && freeModel && freeModel.id !== model.id) {
+        turn.notice = `${model.name} needs the Workers Paid plan or AI Gateway credits, so ${freeModel.name} answered instead.`;
+        model = freeModel;
+        onModelChange(freeModel);
+        step -= 1;
+        continue;
+      }
+      throw error;
+    }
     const reply = await readReply(response.body, (text, thinking) => {
       turn.text = text;
       turn.thinking = thinking;
@@ -446,15 +496,19 @@ function parseJsonValue(text: string): JsonValue {
   return JSON.parse(text) as JsonValue;
 }
 
-async function problemDetail(response: Response): Promise<string> {
-  return problemText(await response.text()) ?? `Request failed with HTTP ${response.status}`;
+/** A failed answer from the kernel, with its problem's detail and type when it sent one. */
+async function askError(response: Response): Promise<AskError> {
+  const problem = parseProblem(await response.text());
+  return new AskError(problem?.detail ?? `Request failed with HTTP ${response.status}`, response.status, problem?.type);
 }
 
-/** The detail of an application/problem+json answer, if that is what came back. */
-function problemText(text: string): string | undefined {
+function parseProblem(text: string): z.infer<typeof PROBLEM> | undefined {
   try {
-    return PROBLEM.safeParse(parseJsonValue(text)).data?.detail;
+    return PROBLEM.safeParse(parseJsonValue(text)).data;
   } catch {
     return undefined;
   }
 }
+
+/** The detail of an application/problem+json answer, if that is what came back. */
+const problemText = (text: string) => parseProblem(text)?.detail;

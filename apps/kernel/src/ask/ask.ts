@@ -24,14 +24,31 @@ const API = "https://api.cloudflare.com/client/v4";
 const ASK_SCOPES = ["ai.read", "ai.write", "offline_access"];
 
 /** The models the page offers, in the order it lists them; the first is the default. */
+/**
+ * The models the agent offers, in the order it lists them; the first is the default. Since July 2026
+ * the strongest Workers AI models need the Workers Paid plan or prepaid AI Gateway credits, so a
+ * free-plan account that asks one is moved to the first model marked free.
+ */
 const ASK_MODELS = [
   {
     id: "@cf/zai-org/glm-5.3-flash",
     name: "GLM 5.3 Flash",
-    note: "Fast and cheap: a question takes about 700 to 1,500 neurons, so Workers AI's free 10,000 a day covers about ten.",
+    free: false,
+    note: "The best at reading the data. Needs the Workers Paid plan or AI Gateway credits; a question takes about 700 to 1,500 neurons.",
   },
-  { id: "@cf/moonshotai/kimi-k2.6", name: "Kimi K2.6", note: "Larger and slower, at six to eight times the price per token." },
+  {
+    id: "@cf/google/gemma-4-26b-a4b-it",
+    name: "Gemma 4 26B",
+    free: true,
+    note: "Works on the Workers Free plan, whose 10,000 neurons a day cover about ten questions. Less careful than GLM 5.3 Flash.",
+  },
+  { id: "@cf/moonshotai/kimi-k2.6", name: "Kimi K2.6", free: false, note: "Larger and slower, at six to eight times GLM 5.3 Flash's price. Needs the Workers Paid plan." },
 ];
+
+/** Workers AI's error for a model the account's plan does not include (https://developers.cloudflare.com/workers-ai/platform/errors/). */
+const NEEDS_PAID_PLAN = 5035;
+/** The problem type the agent reads to move to a free model. */
+const PAID_MODEL_PROBLEM = "https://open-data.pt/ask/problems/paid-model";
 
 /** Room for the model to think and then answer; a reply cut short past this says so. */
 const MAX_OUTPUT_TOKENS = 4096;
@@ -95,8 +112,8 @@ const NO_STORE = { "Cache-Control": "no-store" };
  * An application/problem+json answer, as the API's, but with no CORS header:
  * these routes act on the person's sign-in, so no other site may read them.
  */
-function problem(status: number, title: string, detail: string, headers: Record<string, string>): Response {
-  return Response.json({ type: "about:blank", title, status, detail }, { status, headers: { ...headers, "Content-Type": "application/problem+json" } });
+function problem(status: number, title: string, detail: string, headers: Record<string, string>, type = "about:blank"): Response {
+  return Response.json({ type, title, status, detail }, { status, headers: { ...headers, "Content-Type": "application/problem+json" } });
 }
 
 /* ---------- Signing in ---------- */
@@ -175,7 +192,7 @@ async function accounts(request: Request, host: AskHost): Promise<Response> {
   const response = await host.fetch(`${API}/accounts?per_page=50`, { headers: { Authorization: `Bearer ${current.session.accessToken}` } });
   if (response.status === 401) return Response.json({ signedIn: false, accounts: [] }, { headers: { ...NO_STORE, "Set-Cookie": cookie(SESSION_COOKIE, "", 0) } });
   // A token that reaches no account listing still runs models; the agent then asks for the account ID.
-  const listed = response.ok ? accountsOf(parseJson(await response.text())) : [];
+  const listed = response.ok ? accountsOf(await response.text()) : [];
   const headers = new Headers(NO_STORE);
   if (current.refreshed) headers.append("Set-Cookie", sessionCookie(current.session));
   return Response.json({ signedIn: true, accounts: listed }, { headers });
@@ -188,9 +205,14 @@ async function signOut(request: Request, url: URL, host: AskHost): Promise<Respo
   const saved = readSession(request);
   if (saved) {
     const token = saved.refreshToken ?? saved.accessToken;
-    const revoke = await host.fetch(REVOKE_URL, { method: "POST", headers: FORM, body: new URLSearchParams({ token, client_id: host.clientId }) });
-    if (!revoke.ok) console.warn(JSON.stringify({ event: "ask_revoke_failed", status: revoke.status }));
-    await revoke.body?.cancel();
+    // The cookie goes whatever Cloudflare says: a revocation that fails still signs this browser out.
+    try {
+      const revoke = await host.fetch(REVOKE_URL, { method: "POST", headers: FORM, body: new URLSearchParams({ token, client_id: host.clientId }) });
+      if (!revoke.ok) console.warn(JSON.stringify({ event: "ask_revoke_failed", status: revoke.status }));
+      await revoke.body?.cancel();
+    } catch (error) {
+      console.warn(JSON.stringify({ event: "ask_revoke_failed", error: error instanceof Error ? error.message : String(error) }));
+    }
   }
   return new Response(null, { status: 204, headers: { ...NO_STORE, "Set-Cookie": cookie(SESSION_COOKIE, "", 0) } });
 }
@@ -208,10 +230,8 @@ async function chat(request: Request, url: URL, host: AskHost): Promise<Response
   const current = await currentSession(request, host);
   if (!current) return problem(401, "Not signed in", "Sign in with Cloudflare to ask.", signedOutHeaders(request));
 
-  const length = Number(request.headers.get("Content-Length"));
-  if (length > MAX_CHAT_BYTES) return problem(413, "Conversation too long", "Start a new conversation.", NO_STORE);
-  const text = await request.text();
-  if (text.length > MAX_CHAT_BYTES) return problem(413, "Conversation too long", "Start a new conversation.", NO_STORE);
+  const text = await boundedText(request);
+  if (text === undefined) return problem(413, "Conversation too long", "Start a new conversation.", NO_STORE);
   let body: JsonValue;
   try {
     body = parseJson(text);
@@ -231,8 +251,18 @@ async function chat(request: Request, url: URL, host: AskHost): Promise<Response
   // Cloudflare's own headers, its bot cookie among them, stay behind; only the stream goes on.
   if (upstream.ok && upstream.body) return new Response(upstream.body, { headers });
 
-  const detail = upstreamError(await upstream.text());
-  console.warn(JSON.stringify({ event: "ask_model_refused", status: upstream.status, detail }));
+  const { code, detail } = upstreamError(await upstream.text());
+  console.warn(JSON.stringify({ event: "ask_model_refused", status: upstream.status, code, detail }));
+  if (upstream.status === 403 && code === NEEDS_PAID_PLAN) {
+    const free = ASK_MODELS.find((offered) => offered.free);
+    return problem(
+      403,
+      "Model needs Workers Paid",
+      `This account's plan does not include ${call.model}${free ? `; ${free.name} works on the Workers Free plan` : ""}.`,
+      NO_STORE,
+      PAID_MODEL_PROBLEM,
+    );
+  }
   if (upstream.status === 401)
     return problem(401, "Signed out", "Cloudflare no longer accepts this sign-in. Sign in again.", { ...NO_STORE, "Set-Cookie": cookie(SESSION_COOKIE, "", 0) });
   if (upstream.status === 403) return problem(403, "Not allowed", `This account did not allow Workers AI for open-data.pt${detail ? `: ${detail}` : "."}`, NO_STORE);
@@ -294,7 +324,13 @@ async function requestTokens(host: AskHost, form: Record<string, string>): Promi
     console.warn(JSON.stringify({ event: "ask_token_refused", grant: form.grant_type, status: response.status, error: oauthError(text) }));
     return undefined;
   }
-  const tokens = asObject(parseJson(text));
+  let tokens: JsonObject | undefined;
+  try {
+    tokens = asObject(parseJson(text));
+  } catch {
+    console.warn(JSON.stringify({ event: "ask_token_refused", grant: form.grant_type, status: response.status, error: "not JSON" }));
+    return undefined;
+  }
   const accessToken = asString(tokens?.access_token);
   if (!accessToken) return undefined;
   const lifetime = asNumber(tokens?.expires_in) ?? 3600;
@@ -360,8 +396,14 @@ function redirect(location: string, cookies: string[]): Response {
   return new Response(null, { status: 302, headers });
 }
 
-/** The accounts a token reaches, by ID and name. */
-function accountsOf(body: JsonValue): Array<{ id: string; name: string }> {
+/** The accounts a token reaches, by ID and name; none when Cloudflare's answer is not the JSON it documents. */
+function accountsOf(text: string): Array<{ id: string; name: string }> {
+  let body: JsonValue;
+  try {
+    body = parseJson(text);
+  } catch {
+    return [];
+  }
   return (asArray(asObject(body)?.result) ?? []).flatMap((entry) => {
     const account = asObject(entry);
     const id = asString(account?.id);
@@ -369,14 +411,44 @@ function accountsOf(body: JsonValue): Array<{ id: string; name: string }> {
   });
 }
 
-/** The first message of a Cloudflare API error, cut short. */
-function upstreamError(text: string): string | undefined {
+/** The first error of a Cloudflare API answer. */
+interface UpstreamError {
+  code: number | undefined;
+  /** Its message, cut short. */
+  detail: string | undefined;
+}
+
+function upstreamError(text: string): UpstreamError {
   try {
     const first = asObject(asArray(asObject(parseJson(text))?.errors)?.[0]);
-    return asString(first?.message)?.slice(0, 300);
+    return { code: asNumber(first?.code), detail: asString(first?.message)?.slice(0, 300) };
   } catch {
-    return text.slice(0, 300) || undefined;
+    return { code: undefined, detail: text.slice(0, 300) || undefined };
   }
+}
+
+/**
+ * A request body as text, refused past MAX_CHAT_BYTES as it streams in: the
+ * Content-Length a client sends is not trusted, so a large body is never held whole.
+ */
+async function boundedText(request: Request): Promise<string | undefined> {
+  if (Number(request.headers.get("Content-Length")) > MAX_CHAT_BYTES) return undefined;
+  if (!request.body) return "";
+  const reader = request.body.getReader();
+  const decoder = new TextDecoder();
+  let bytes = 0;
+  let text = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    bytes += value.byteLength;
+    if (bytes > MAX_CHAT_BYTES) {
+      await reader.cancel();
+      return undefined;
+    }
+    text += decoder.decode(value, { stream: true });
+  }
+  return text + decoder.decode();
 }
 
 function oauthError(text: string): string | undefined {

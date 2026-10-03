@@ -90,12 +90,21 @@ function savedConversation(): Saved {
         neurons: 0,
         error: "Stopped when you left the page.",
       };
-      saved.transcript.splice(saved.transcript.findLastIndex((message) => message.role === "user"));
+      dropLastQuestion(saved.transcript);
     }
     return saved;
   } catch {
     return { exchanges: [], transcript: [] };
   }
+}
+
+/**
+ * Takes the last question and everything after it out of what the model reads, so a question that
+ * failed part-way leaves no tool call unanswered. A transcript with no question is left as it is.
+ */
+function dropLastQuestion(transcript: ChatMessage[]) {
+  const asked = transcript.findLastIndex((message) => message.role === "user");
+  if (asked >= 0) transcript.splice(asked);
 }
 
 function saveConversation(saved: Saved) {
@@ -180,6 +189,7 @@ function Answer({ turn }: { turn: AssistantTurn | undefined }) {
           <Loader size="sm" /> Thinking…
         </span>
       ) : null}
+      {turn.notice ? <p className="text-xs text-kumo-subtle">{turn.notice}</p> : null}
       {turn.error ? <p className="text-sm text-kumo-danger">{turn.error}</p> : null}
       {turn.done && turn.neurons > 0 ? <p className="text-xs text-kumo-subtle">About {fmt.int(Math.ceil(turn.neurons))} neurons of Workers AI on your account</p> : null}
     </div>
@@ -198,7 +208,10 @@ function SignIn({ failure }: { failure: string | undefined }) {
       <ol className="grid list-decimal gap-2 pl-5 text-sm leading-relaxed text-kumo-subtle">
         <li>Cloudflare asks whether open-data.pt may use Workers AI on your account. It asks for nothing else.</li>
         <li>You come back to this page, with the agent open.</li>
-        <li>The model runs on your account, so Cloudflare bills its use to you. Workers AI's free 10,000 neurons a day cover about ten questions.</li>
+        <li>
+          The model runs on your account, so Cloudflare bills its use to you. On the Workers Free plan the agent uses a free model, and its 10,000 neurons a day cover about ten
+          questions; Workers Paid unlocks a stronger one.
+        </li>
       </ol>
       <p className="text-xs leading-relaxed text-kumo-subtle">
         We keep no conversation and no account details: your sign-in is a cookie in this browser, and signing out revokes it.
@@ -234,6 +247,7 @@ function Chat({ session, accounts, onSignedOut }: { session: AskSession; account
   const [exchanges, setExchanges] = useState<Exchange[]>(initial.exchanges);
   const [draft, setDraft] = useState("");
   const [running, setRunning] = useState(false);
+  const [notice, setNotice] = useState<string | undefined>();
   const transcript = useRef<ChatMessage[]>(initial.transcript);
   const abort = useRef<AbortController | undefined>(undefined);
   const scroller = useRef<HTMLDivElement>(null);
@@ -258,7 +272,8 @@ function Chat({ session, accounts, onSignedOut }: { session: AskSession; account
 
   const ask = async (question: string) => {
     const text = question.trim();
-    if (!text || running || !accountReady) return;
+    const asked = session.models.find((offered) => offered.id === model) ?? session.models[0];
+    if (!text || running || !accountReady || !asked) return;
     if (!transcript.current.length) transcript.current.push({ role: "system", content: systemPrompt(lisbonToday()) });
     transcript.current.push({ role: "user", content: withPage(text, document.title, `${window.location.pathname}${window.location.search}`) });
     const index = exchanges.length;
@@ -267,11 +282,23 @@ function Chat({ session, accounts, onSignedOut }: { session: AskSession; account
     setRunning(true);
     remember(ACCOUNT_KEY, accountId);
     remember(MODEL_KEY, model);
+    setNotice(undefined);
     const controller = new AbortController();
     abort.current = controller;
     const update = (turn: AssistantTurn) => setExchanges((current) => current.map((exchange, at) => (at === index ? { ...exchange, turn } : exchange)));
     try {
-      await answer({ accountId, model, messages: transcript.current, signal: controller.signal, onUpdate: update });
+      await answer({
+        accountId,
+        model: asked,
+        freeModel: session.models.find((offered) => offered.free),
+        onModelChange: (changed) => {
+          setModel(changed.id);
+          remember(MODEL_KEY, changed.id);
+        },
+        messages: transcript.current,
+        signal: controller.signal,
+        onUpdate: update,
+      });
     } catch (error) {
       if (error instanceof AskError && error.status === 401) {
         onSignedOut();
@@ -297,7 +324,7 @@ function Chat({ session, accounts, onSignedOut }: { session: AskSession; account
         ),
       );
       // A question that failed part-way leaves its tool calls unanswered; drop it so the next one starts clean.
-      transcript.current.splice(transcript.current.findLastIndex((message) => message.role === "user"));
+      dropLastQuestion(transcript.current);
     } finally {
       setRunning(false);
       abort.current = undefined;
@@ -313,9 +340,14 @@ function Chat({ session, accounts, onSignedOut }: { session: AskSession; account
 
   const leave = async () => {
     abort.current?.abort();
+    try {
+      await signOut();
+    } catch (error) {
+      setNotice(`Not signed out: ${error instanceof Error ? error.message : String(error)}`);
+      return;
+    }
     transcript.current = [];
     setExchanges([]);
-    await signOut();
     onSignedOut();
   };
 
@@ -396,6 +428,11 @@ function Chat({ session, accounts, onSignedOut }: { session: AskSession; account
         </section>
       </div>
 
+      {notice ? (
+        <p role="alert" className="border-t border-kumo-line px-4 py-2 text-xs text-kumo-danger">
+          {notice}
+        </p>
+      ) : null}
       <form
         className="flex items-end gap-2 border-t border-kumo-line p-2"
         onSubmit={(event) => {
