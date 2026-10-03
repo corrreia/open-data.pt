@@ -11,7 +11,7 @@ are iframes from Picasso, FCCN's network statistics service (`picasso.netop.fccn
 Their script reads `/api/data/query?db=<database>&q=gigapix&m=<mode>&p=`, which the `picasso` library in
 [their folder](../../apps/gatekeeper/src/publishers/fccn/) reads the same way: the yearly chart
 (`db=ixp-hist`, a `sum_max` per UTC day) once a day, and the daily chart (`db=ixp`, a `sum_mean` per
-five minutes over the last 24 hours) every six hours. That is six requests a day of about 15 KB each.
+five minutes over the last 24 hours) every six hours. That is five requests a day of about 15 KB each.
 
 ## Quirks
 

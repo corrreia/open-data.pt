@@ -123,7 +123,7 @@ export const LICENCES = {
     name: "ANACOM terms and conditions",
     url: "https://stat.anacom.pt/pt-PT/Termos-e-Condi%C3%A7%C3%B5es/",
     summary:
-      "ANACOM allows its information to be copied and distributed for informational, personal and non-commercial use, with a reference to the original on www.anacom.pt and its copyright notice.",
+      "ANACOM allows its information to be copied and distributed unmodified, for informational, personal and non-commercial use, with a reference to the original on www.anacom.pt and its copyright notice; modified or derived uses need ANACOM's prior written authorisation, and any use is to be notified to ANACOM.",
   },
   [UNSTATED_LICENCE]: {
     name: "No licence stated",
