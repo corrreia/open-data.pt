@@ -18,12 +18,13 @@ const REVOKE_URL = `${DASHBOARD}/oauth2/revoke`;
 const API = "https://api.cloudflare.com/client/v4";
 
 /**
- * Workers AI on the person's account, and a refresh token so the sign-in lasts.
- * Cloudflare's REST API docs ask for both Workers AI Read and Edit to run models.
+ * Workers AI on the person's account, the accounts they belong to (so they can
+ * pick one rather than paste its ID), and a refresh token so the sign-in lasts.
+ * Cloudflare's REST API docs ask for both Workers AI Read and Edit to run models;
+ * without Memberships Read a token lists no accounts.
  */
-const ASK_SCOPES = ["ai.read", "ai.write", "offline_access"];
+const ASK_SCOPES = ["ai.read", "ai.write", "memberships.read", "offline_access"];
 
-/** The models the page offers, in the order it lists them; the first is the default. */
 /**
  * The models the agent offers, in the order it lists them; the first is the default. Since July 2026
  * the strongest Workers AI models need the Workers Paid plan or prepaid AI Gateway credits, so a
@@ -185,14 +186,24 @@ async function session(request: Request, host: AskHost): Promise<Response> {
   return Response.json({ enabled: host.clientId !== "", signedIn: host.clientId !== "" && usable, models: ASK_MODELS }, { headers: NO_STORE });
 }
 
-/** The accounts the person's token reaches; the agent asks once, when it opens. */
+/**
+ * The accounts the person belongs to; the agent asks once, when it opens. Their
+ * memberships, which Memberships Read allows, then /accounts for a sign-in made
+ * before that scope was asked for.
+ */
 async function accounts(request: Request, host: AskHost): Promise<Response> {
   const current = await currentSession(request, host);
   if (!current) return Response.json({ signedIn: false, accounts: [] }, { headers: signedOutHeaders(request) });
-  const response = await host.fetch(`${API}/accounts?per_page=50`, { headers: { Authorization: `Bearer ${current.session.accessToken}` } });
-  if (response.status === 401) return Response.json({ signedIn: false, accounts: [] }, { headers: { ...NO_STORE, "Set-Cookie": cookie(SESSION_COOKIE, "", 0) } });
+  const authorization = { Authorization: `Bearer ${current.session.accessToken}` };
+  let listed: Array<{ id: string; name: string }> = [];
+  for (const path of ["/memberships?status=accepted&per_page=50", "/accounts?per_page=50"]) {
+    const response = await host.fetch(`${API}${path}`, { headers: authorization });
+    if (response.status === 401) return Response.json({ signedIn: false, accounts: [] }, { headers: { ...NO_STORE, "Set-Cookie": cookie(SESSION_COOKIE, "", 0) } });
+    if (!response.ok) await response.body?.cancel();
+    listed = response.ok ? accountsOf(await response.text()) : [];
+    if (listed.length) break;
+  }
   // A token that reaches no account listing still runs models; the agent then asks for the account ID.
-  const listed = response.ok ? accountsOf(await response.text()) : [];
   const headers = new Headers(NO_STORE);
   if (current.refreshed) headers.append("Set-Cookie", sessionCookie(current.session));
   return Response.json({ signedIn: true, accounts: listed }, { headers });
@@ -396,7 +407,11 @@ function redirect(location: string, cookies: string[]): Response {
   return new Response(null, { status: 302, headers });
 }
 
-/** The accounts a token reaches, by ID and name; none when Cloudflare's answer is not the JSON it documents. */
+/**
+ * The accounts in a /memberships or /accounts answer, by ID and name: a membership
+ * names its account, an account is itself. None when the answer is not the JSON
+ * Cloudflare documents.
+ */
 function accountsOf(text: string): Array<{ id: string; name: string }> {
   let body: JsonValue;
   try {
@@ -405,7 +420,7 @@ function accountsOf(text: string): Array<{ id: string; name: string }> {
     return [];
   }
   return (asArray(asObject(body)?.result) ?? []).flatMap((entry) => {
-    const account = asObject(entry);
+    const account = asObject(asObject(entry)?.account) ?? asObject(entry);
     const id = asString(account?.id);
     return id ? [{ id, name: asString(account?.name) ?? id }] : [];
   });

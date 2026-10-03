@@ -132,8 +132,8 @@ Only there does the code also get `ui.chart`, `ui.map` and `ui.table`; `/mcp` of
 exactly what it did before.
 
 The model runs on the visitor's own Cloudflare account. They sign in with Cloudflare, an OAuth 2.0
-authorization code flow with PKCE against a public client, and grant `ai.read`, `ai.write` and
-`offline_access`; sign-in returns them to the page they started from with the agent open. The
+authorization code flow with PKCE against a public client, and grant `ai.read`, `ai.write`, `memberships.read` (so the agent can list their
+accounts) and `offline_access`; sign-in returns them to the page they started from with the agent open. The
 browser runs the conversation and sends each model step to `POST /ask/chat`, which passes it to the
 visitor's Workers AI (`/ai/v1/chat/completions`, streamed) with their token
 (`apps/kernel/src/ask/ask.ts`). It passes through only because Cloudflare's API answers no browser
