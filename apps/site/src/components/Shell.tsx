@@ -16,6 +16,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { fetchFeeds, fetchProducts } from "../lib/catalog";
 import { REPOSITORY } from "../lib/project";
 import { prefetch } from "../lib/query";
+import { AskLauncher } from "./ask/AskLauncher";
 import { Mark } from "./Mark";
 import { SearchPalette } from "./SearchPalette";
 
@@ -191,6 +192,7 @@ export function Shell({ section, children }: { section: Section; children: React
       </div>
       <NavDrawer current={current} />
       <SearchPalette open={searching} onOpenChange={setSearching} />
+      <AskLauncher />
     </Sidebar.Provider>
   );
 }

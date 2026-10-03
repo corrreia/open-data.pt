@@ -2,6 +2,7 @@ import { WorkerEntrypoint } from "cloudflare:workers";
 import { UsageRecorder, isOwnPageFetch, surfaceOf, type CacheOutcome, type McpCall } from "#/pages/analytics";
 import { CADENCE_HEADER, cacheTtl, productTtl } from "#/api/cache";
 import { handleSite, type SiteHost } from "#/pages/discovery";
+import { handleAsk, isAskRoute } from "#/ask/ask";
 import { handleApi, problem, type ApiContext } from "#/api/http";
 import type { McpHost } from "#/api/mcp";
 import { openApiDocument, scalarReferenceHtml } from "#/api/openapi";
@@ -81,6 +82,15 @@ export default class KernelWorker extends WorkerEntrypoint<Env> {
         served.response = problem(500, "Request failed", `Something went wrong on our side. Request ${requestId}.`, { "X-Request-Id": requestId });
       }
       return served;
+    }
+    if (isAskRoute(url.pathname)) {
+      try {
+        return { response: await handleAsk(request, { clientId: this.env.ASK_OAUTH_CLIENT_ID, fetch: (input, init) => fetch(input, init), now: Date.now }), cache: "none" };
+      } catch (error) {
+        const requestId = requestIdOf(request);
+        console.error(JSON.stringify({ event: "ask_request_failed", requestId, path: url.pathname, error: error instanceof Error ? error.message : String(error) }));
+        return { response: problem(500, "Request failed", `Something went wrong on our side. Request ${requestId}.`, { "X-Request-Id": requestId }), cache: "none" };
+      }
     }
     if (!url.pathname.startsWith("/api/") && url.pathname !== "/api") {
       try {
