@@ -1867,6 +1867,14 @@
     "resourceKey": "eurostat:eurostat:dataset:d6bd3139f35bd9174563d534ed7a608dfb97dc41d470e6e91dd8bd21604c9fac",
     "kind": "eurostat:dataset"
   },
+  "fccn-gigapix-daily-peak-traffic-feed": {
+    "resourceKey": "picasso:picasso:traffic:5ce70ea2992fc2a3abe90534ce2494acb02ee523982e618c492aa82bcc786d1a",
+    "kind": "picasso:traffic"
+  },
+  "fccn-gigapix-traffic-feed": {
+    "resourceKey": "picasso:picasso:traffic:78e36b6a83bd55a2693f2bcd914dab0b202d4e0015541d53ab13dd56b4ee1b97",
+    "kind": "picasso:traffic"
+  },
   "fertagus-gtfs-feed": {
     "resourceKey": "gtfs:gtfs:static:d2be0d78dcf3d90df37148f574c6c1d6479657205ac718e56cbec59428b99bcf",
     "kind": "gtfs:static"

@@ -33,6 +33,7 @@ import { NASA_POWER_DEPLOYMENT } from "./publishers/nasa-power/nasapower";
 import { OMIE_DEPLOYMENT } from "./publishers/omie/omie";
 import { PARLIAMENT_DEPLOYMENT } from "./publishers/assembleia-da-republica/parliament";
 import { PEERINGDB_DEPLOYMENT } from "./publishers/peeringdb/peeringdb";
+import { PICASSO_DEPLOYMENT } from "./publishers/fccn/picasso";
 import { QUALAR_DEPLOYMENT } from "./publishers/apa/qualar";
 import { REN_DEPLOYMENT } from "./publishers/ren/ren";
 import { RIPESTAT_DEPLOYMENT } from "./publishers/ripe-ncc/ripestat";
@@ -67,6 +68,7 @@ export const LIBRARIES: readonly Library[] = [
   { deployment: OMIE_DEPLOYMENT },
   { deployment: PARLIAMENT_DEPLOYMENT },
   { deployment: PEERINGDB_DEPLOYMENT },
+  { deployment: PICASSO_DEPLOYMENT },
   { deployment: QUALAR_DEPLOYMENT },
   { deployment: REN_DEPLOYMENT },
   { deployment: RIPESTAT_DEPLOYMENT },

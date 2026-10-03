@@ -31,6 +31,7 @@ import { PUBLISHER as e_redes } from "#/publishers/e-redes/index";
 import { PUBLISHER as effis_jrc } from "#/publishers/effis-jrc/index";
 import { PUBLISHER as eumetsat } from "#/publishers/eumetsat/index";
 import { PUBLISHER as eurostat } from "#/publishers/eurostat/index";
+import { PUBLISHER as fccn } from "#/publishers/fccn/index";
 import { PUBLISHER as fertagus } from "#/publishers/fertagus/index";
 import { PUBLISHER as horarios_do_funchal } from "#/publishers/horarios-do-funchal/index";
 import { PUBLISHER as impic } from "#/publishers/impic/index";
@@ -94,6 +95,7 @@ export const PUBLISHER_FOLDERS: readonly PublisherFolder[] = [
   { id: "effis-jrc", publisher: effis_jrc },
   { id: "eumetsat", publisher: eumetsat },
   { id: "eurostat", publisher: eurostat },
+  { id: "fccn", publisher: fccn },
   { id: "fertagus", publisher: fertagus },
   { id: "horarios-do-funchal", publisher: horarios_do_funchal },
   { id: "impic", publisher: impic },

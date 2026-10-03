@@ -39,6 +39,7 @@ Today, 30 libraries: 28 read the 702 installed feeds, and two read only publishe
 | `nasapower`    | NASA POWER daily analysis               | 3     |
 | `omie`         | OMIE electricity market                 | 2     |
 | `parliament`   | Assembleia da República                 | 7     |
+| `picasso`      | Picasso, FCCN's network statistics      | 2     |
 | `ren`          | REN electricity grid                    | 8     |
 | `ripestat`     | RIPEstat, RIPE NCC                      | 7     |
 | `snirh`        | SNIRH water resources                   | 12    |
