@@ -106,7 +106,8 @@ export const LICENCES = {
   "ioda-all-rights-reserved": {
     name: "IODA, all rights reserved",
     url: "https://api.ioda.inetintel.cc.gatech.edu/v2/datasources/",
-    summary: "Georgia Tech Research Corporation reserves all rights; republication needs permission, which is why the source is held.",
+    summary:
+      "Georgia Tech Research Corporation states no licence for IODA, only a copyright notice reserving all rights in every response: ask Georgia Tech before reusing the data.",
   },
   "ripe-ncc-terms": {
     name: "RIPEstat Service Terms and Conditions",
