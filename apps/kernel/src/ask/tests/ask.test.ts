@@ -69,7 +69,9 @@ describe("signing in with Cloudflare", () => {
     const { host, sent } = cloudflare((url) => {
       if (url === "https://dash.cloudflare.com/oauth2/token")
         return Response.json({ access_token: "access-1", refresh_token: "refresh-1", expires_in: 3600, token_type: "bearer" });
-      if (url.startsWith("https://api.cloudflare.com/client/v4/accounts")) return Response.json({ success: true, result: [{ id: ACCOUNT, name: "Tomás" }] });
+      // A membership names its account; Memberships Read is what lets the token list them.
+      if (url.startsWith("https://api.cloudflare.com/client/v4/memberships"))
+        return Response.json({ success: true, result: [{ id: "membership-1", status: "accepted", account: { id: ACCOUNT, name: "Tomás" } }] });
       return new Response(null, { status: 404 });
     });
 
@@ -79,7 +81,7 @@ describe("signing in with Cloudflare", () => {
     expect(`${consent.origin}${consent.pathname}`).toBe("https://dash.cloudflare.com/oauth2/auth");
     expect(consent.searchParams.get("client_id")).toBe(CLIENT_ID);
     expect(consent.searchParams.get("redirect_uri")).toBe(`${ORIGIN}/ask/callback`);
-    expect(consent.searchParams.get("scope")).toBe("ai.read ai.write offline_access");
+    expect(consent.searchParams.get("scope")).toBe("ai.read ai.write memberships.read offline_access");
     expect(consent.searchParams.get("code_challenge_method")).toBe("S256");
     const flow = cookiesOf(start);
     const [state, verifier = ""] = (flow.get("__Host-ask-flow") ?? "").split(".");
