@@ -63,6 +63,8 @@ function isTypingIn(target: EventTarget | null) {
 
 export function Shell({ section, children }: { section: Section; children: ReactNode }) {
   const [searching, setSearching] = useState(false);
+  // The agent's panel fills a phone's screen and is modal there; like the palette, it takes the page out of reach.
+  const [agentModal, setAgentModal] = useState(false);
 
   // ⌘K or Ctrl+K anywhere, or "/" outside a text field, opens the search.
   useEffect(() => {
@@ -93,7 +95,7 @@ export function Shell({ section, children }: { section: Section; children: React
        * portals to the end of <body>, always paint above it. While the palette is open the page
        * behind it is inert: Tab stays in the palette and screen readers read only the palette.
        */}
-      <div id="site-page" className="isolate flex min-h-screen w-full flex-col" inert={searching}>
+      <div className="isolate flex min-h-screen w-full flex-col" inert={searching || agentModal}>
         <a className="skip-link" href="#content">
           Skip to content
         </a>
@@ -192,7 +194,7 @@ export function Shell({ section, children }: { section: Section; children: React
       </div>
       <NavDrawer current={current} />
       <SearchPalette open={searching} onOpenChange={setSearching} />
-      <AskLauncher />
+      <AskLauncher onModalChange={setAgentModal} />
     </Sidebar.Provider>
   );
 }

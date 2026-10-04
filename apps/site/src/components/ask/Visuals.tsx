@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import { z } from "zod";
 import type { ChartSpec, MapSpec, TableSpec, Visual } from "../../lib/ask";
 import { echarts } from "../../lib/echarts";
-import { fmt, isNumber } from "../../lib/format";
+import { fmt, isNumber, isRecord } from "../../lib/format";
 import { SERIES_COLORS } from "../../lib/palette";
 import { useDarkMode } from "../common";
 
@@ -215,8 +215,10 @@ const MAX_TABLE_ROWS = 500;
 
 /** A chart's points as rows: one per time or category, one column per series. */
 function chartTable(spec: ChartSpec): TableSpec {
-  const xs = [...new Set(spec.series.flatMap((each) => each.points.map(([x]) => x)))];
-  const bySeries = spec.series.map((each) => new Map(each.points.map(([x, y]) => [x, y])));
+  // A bar chart groups categories by their text, so 1 and "1" are one bar and must be one row.
+  const key = (x: string | number) => (spec.kind === "bar" ? String(x) : x);
+  const xs = [...new Set(spec.series.flatMap((each) => each.points.map(([x]) => key(x))))];
+  const bySeries = spec.series.map((each) => new Map(each.points.map(([x, y]) => [key(x), y])));
   return {
     title: spec.title,
     columns: [spec.kind === "line" ? "Time" : "Category", ...spec.series.map((each) => (spec.unit ? `${each.name} (${spec.unit})` : each.name))],
@@ -224,15 +226,31 @@ function chartTable(spec: ChartSpec): TableSpec {
   };
 }
 
-/** A map's points as rows: what each is, its value when it has one, and where it is. */
+/** A map's points as rows (what each is, its value when it has one, and where it is), then its GeoJSON features. */
 function mapTable(spec: MapSpec): TableSpec | undefined {
   const points = spec.points ?? [];
-  if (!points.length) return undefined;
+  const features = (spec.geojson?.features ?? []).flatMap(drawableFeature);
+  if (!points.length) return features.length ? featureTable(spec.title, features) : undefined;
   const valued = points.some((point) => point.value !== undefined);
   return {
     title: spec.title,
     columns: valued ? ["Place", "Value", "Latitude", "Longitude"] : ["Place", "Latitude", "Longitude"],
     rows: points.map((point) => (valued ? [point.label ?? "", point.value ?? null, point.lat, point.lon] : [point.label ?? "", point.lat, point.lon])),
+  };
+}
+
+/** A feature's own words, as far as a table cell goes: its name, then a few of its properties. */
+function featureTable(title: string, features: GeoJSON.Feature[]): TableSpec {
+  const describe = (properties: GeoJSON.GeoJsonProperties) =>
+    Object.entries(properties ?? {})
+      .filter(([, value]) => value !== null && value !== undefined && !Array.isArray(value) && !isRecord(value))
+      .slice(0, 4)
+      .map(([name, value]) => `${name}: ${String(value)}`)
+      .join(" · ");
+  return {
+    title,
+    columns: ["Name", "Shape", "Details"],
+    rows: features.map((feature) => [String(feature.properties?.name ?? feature.properties?.title ?? feature.id ?? ""), feature.geometry.type, describe(feature.properties)]),
   };
 }
 

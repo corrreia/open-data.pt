@@ -69,7 +69,8 @@ function signInFailure(): string | undefined {
   return /^#ask-signin=(\w+)$/.exec(window.location.hash)?.[1];
 }
 
-export function AskLauncher() {
+/** Told when the open panel fills a phone's screen, so the Shell can take the page behind it out of reach. */
+export function AskLauncher({ onModalChange }: { onModalChange: (modal: boolean) => void }) {
   const [enabled, setEnabled] = useState(() => {
     const known = readKey(ENABLED_KEY);
     return known === null ? undefined : known === "1";
@@ -117,9 +118,12 @@ export function AskLauncher() {
     setUnread(false);
   };
   const dock = useCallback(() => setOpen(false), []);
+  const wasRunning = useRef(false);
   const onRunning = useCallback((now: boolean) => {
+    // Only an answer that was running and has finished is news; the panel reporting "not running" as it mounts is not.
+    if (wasRunning.current && !now && !openNow.current) setUnread(true);
+    wasRunning.current = now;
     setRunning(now);
-    if (!now && !openNow.current) setUnread(true);
   }, []);
 
   useEffect(() => {
@@ -143,7 +147,7 @@ export function AskLauncher() {
             </div>
           }
         >
-          <AskPanel open={open} failure={failure} onClose={dock} onRunning={onRunning} />
+          <AskPanel open={open} failure={failure} onClose={dock} onRunning={onRunning} onModalChange={onModalChange} />
         </Suspense>
       ) : null}
       {open ? null : (

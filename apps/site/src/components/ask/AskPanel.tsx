@@ -358,24 +358,7 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
         return;
       }
       const message = controller.signal.aborted ? "Stopped." : error instanceof Error ? readableError(error) : String(error);
-      setExchanges((current) =>
-        current.map((exchange, at) =>
-          at === index
-            ? {
-                ...exchange,
-                turn: {
-                  steps: exchange.turn?.steps ?? [],
-                  visuals: exchange.turn?.visuals ?? [],
-                  text: exchange.turn?.text ?? "",
-                  thinking: false,
-                  done: true,
-                  error: message,
-                  neurons: 0,
-                },
-              }
-            : exchange,
-        ),
-      );
+      setExchanges((current) => current.map((exchange, at) => (at === index ? { ...exchange, turn: endedTurn(exchange.turn, message) } : exchange)));
       // A question that failed part-way leaves its tool calls unanswered; drop it so the next one starts clean.
       dropLastQuestion(transcript.current);
     } finally {
@@ -385,8 +368,15 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
   };
 
   const restart = () => {
+    // Cleared mid-answer, the snapshot keeps that answer as stopped and its question out of the transcript,
+    // as the abort would have left them, so Undo never brings back a question that is still unanswered.
+    const kept = { exchanges, transcript: [...transcript.current] };
+    if (running) {
+      dropLastQuestion(kept.transcript);
+      kept.exchanges = exchanges.map((exchange, at) => (at === exchanges.length - 1 ? { ...exchange, turn: endedTurn(exchange.turn, "Stopped.") } : exchange));
+    }
     abort.current?.abort();
-    setCleared({ exchanges, transcript: transcript.current });
+    setCleared(kept);
     transcript.current = [];
     setExchanges([]);
     input.current?.focus();
@@ -483,7 +473,7 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
       <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4">
         {/* One short status line is announced, not the whole conversation as it streams in. */}
         <span className="sr-only" role="status">
-          {running ? "Answering…" : exchanges.at(-1)?.turn?.done ? "Answer ready." : ""}
+          {running ? "Answering…" : exchanges.at(-1)?.turn?.error ? `No answer: ${exchanges.at(-1)?.turn?.error}` : exchanges.at(-1)?.turn?.done ? "Answer ready." : ""}
         </span>
         <section aria-label="Conversation" className="grid gap-5">
           {exchanges.length ? (
@@ -564,6 +554,7 @@ interface AskPanelProps {
   failure: string | undefined;
   onClose: () => void;
   onRunning: (running: boolean) => void;
+  onModalChange: (modal: boolean) => void;
 }
 
 /**
@@ -596,22 +587,26 @@ function subscribePhone(listener: () => void) {
 const usePhone = () => useSyncExternalStore(subscribePhone, () => PHONE.matches);
 
 /**
- * On a phone the open panel covers the page, so it is modal: the page behind it is inert (out of
- * the tab order and the screen reader's reach) and stays still instead of scrolling along.
+ * On a phone the open panel covers the page, so it is modal: the Shell makes the page behind it
+ * inert (out of the tab order and the screen reader's reach), and it stays still instead of
+ * scrolling along.
  */
-function usePhoneModal(modal: boolean) {
+function usePhoneModal(modal: boolean, onModalChange: (modal: boolean) => void) {
   useEffect(() => {
     if (!modal) return;
     const root = document.documentElement;
-    const page = document.getElementById("site-page");
-    const pageWasInert = page?.inert ?? false;
     root.style.overflow = "hidden";
-    if (page) page.inert = true;
+    onModalChange(true);
     return () => {
       root.style.overflow = "";
-      if (page) page.inert = pageWasInert;
+      onModalChange(false);
     };
-  }, [modal]);
+  }, [modal, onModalChange]);
+}
+
+/** An answer that ended without finishing: what it had read, drawn and written so far, and why it ended. */
+function endedTurn(turn: AssistantTurn | undefined, error: string): AssistantTurn {
+  return { steps: turn?.steps ?? [], visuals: turn?.visuals ?? [], text: turn?.text ?? "", thinking: false, done: true, error, neurons: turn?.neurons ?? 0 };
 }
 
 /** A failure as the visitor can act on it: the kernel's own words, or what a network failure means. */
@@ -621,11 +616,11 @@ function readableError(error: Error): string {
   return error.message;
 }
 
-export default function AskPanel({ open, failure, onClose, onRunning }: AskPanelProps) {
+export default function AskPanel({ open, failure, onClose, onRunning, onModalChange }: AskPanelProps) {
   const panel = useRef<HTMLDivElement>(null);
   const phone = usePhone();
   useVisibleViewport(panel, open);
-  usePhoneModal(open && phone);
+  usePhoneModal(open && phone, onModalChange);
   const [session, setSession] = useState<AskSession | undefined>();
   const [accounts, setAccounts] = useState<AskAccounts["accounts"] | undefined>();
   const [failed, setFailed] = useState<string | undefined>();
