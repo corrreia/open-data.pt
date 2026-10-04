@@ -105,7 +105,7 @@ export type Visual = { kind: "chart"; spec: ChartSpec } | { kind: "map"; spec: M
 /** What the execute tool's description adds here, after the guide /mcp gives every assistant. */
 const UI_GUIDE = `In this chat, your code also has \`ui\`, which draws under your answer:
 - ui.chart({ title, kind: "line" | "bar", unit?, series: [{ name, points: [[x, y], …] }] }): line takes x as ISO 8601 times, bar takes x as category names. At most 12 series and 5,000 points each.
-- ui.map({ title, points?: [{ lat, lon, label?, value? }], geojson? }): value colours the points from low to high; geojson is a FeatureCollection, such as /api/products/{slug}.geojson. At most 3,000 points or features.
+- ui.map({ title, points?: [{ lat, lon, label?, value? }], geojson? }): value colours the points from low (light yellow) to high (dark violet), and a legend under the map shows the scale, so do not name colours in the title; geojson is a FeatureCollection, such as /api/products/{slug}.geojson. At most 3,000 points or features.
 - ui.table({ title, columns, rows }): at most 20 columns and 500 rows.
 Draw when a trend, a comparison or places say more than words. Build the drawing in the same code that reads the data, so the points never pass through your reply. The person sees it, so do not repeat its numbers one by one.`;
 
@@ -499,7 +499,7 @@ function parseJsonValue(text: string): JsonValue {
 /** A failed answer from the kernel, with its problem's detail and type when it sent one. */
 async function askError(response: Response): Promise<AskError> {
   const problem = parseProblem(await response.text());
-  return new AskError(problem?.detail ?? `Request failed with HTTP ${response.status}`, response.status, problem?.type);
+  return new AskError(problem?.detail ?? `open-data.pt answered with an error (HTTP ${response.status}). Try again in a moment.`, response.status, problem?.type);
 }
 
 function parseProblem(text: string): z.infer<typeof PROBLEM> | undefined {

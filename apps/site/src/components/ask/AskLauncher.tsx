@@ -28,12 +28,49 @@ function writeKey(key: string, value: string) {
   }
 }
 
+/** The gap kept between the corner button and the footer once the footer scrolls into view. */
+const FOOTER_GAP_PX = 12;
+
+/**
+ * How far the site's footer reaches up into the window, in pixels: 0 until it scrolls into view.
+ * The corner button rises by as much, so it sits just above the footer instead of over its links.
+ */
+function useFooterRise(): number {
+  const [rise, setRise] = useState(0);
+  useEffect(() => {
+    const footer = document.getElementById("site-footer");
+    if (!footer) return;
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      setRise(Math.max(0, Math.round(window.innerHeight - footer.getBoundingClientRect().top)));
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(measure);
+    };
+    measure();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    // Pages that load their content after the first paint move the footer without any scrolling.
+    const resized = new ResizeObserver(schedule);
+    resized.observe(document.body);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      resized.disconnect();
+    };
+  }, []);
+  return rise;
+}
+
 /** Why sign-in came back without a session, when the callback says so in the address's fragment. */
 function signInFailure(): string | undefined {
   return /^#ask-signin=(\w+)$/.exec(window.location.hash)?.[1];
 }
 
-export function AskLauncher() {
+/** Told when the open panel fills a phone's screen, so the Shell can take the page behind it out of reach. */
+export function AskLauncher({ onModalChange }: { onModalChange: (modal: boolean) => void }) {
   const [enabled, setEnabled] = useState(() => {
     const known = readKey(ENABLED_KEY);
     return known === null ? undefined : known === "1";
@@ -71,6 +108,9 @@ export function AskLauncher() {
   const [unread, setUnread] = useState(false);
   const openNow = useRef(open);
   const button = useRef<HTMLButtonElement>(null);
+  const rise = useFooterRise();
+  // Clear of the home indicator, and of the footer once it is in view.
+  const corner = { bottom: `max(1rem, env(safe-area-inset-bottom), ${rise + FOOTER_GAP_PX}px)` };
 
   const show = () => {
     setMounted(true);
@@ -78,9 +118,12 @@ export function AskLauncher() {
     setUnread(false);
   };
   const dock = useCallback(() => setOpen(false), []);
+  const wasRunning = useRef(false);
   const onRunning = useCallback((now: boolean) => {
+    // Only an answer that was running and has finished is news; the panel reporting "not running" as it mounts is not.
+    if (wasRunning.current && !now && !openNow.current) setUnread(true);
+    wasRunning.current = now;
     setRunning(now);
-    if (!now && !openNow.current) setUnread(true);
   }, []);
 
   useEffect(() => {
@@ -96,12 +139,15 @@ export function AskLauncher() {
       {mounted ? (
         <Suspense
           fallback={
-            <div className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 flex items-center gap-2 rounded-full border border-kumo-line bg-kumo-base px-4 py-3 text-sm text-kumo-subtle shadow-md">
+            <div
+              style={corner}
+              className="fixed right-4 z-40 flex items-center gap-2 rounded-full border border-kumo-line bg-kumo-base px-4 py-3 text-sm text-kumo-subtle shadow-md"
+            >
               <Loader size="sm" /> Opening…
             </div>
           }
         >
-          <AskPanel open={open} failure={failure} onClose={dock} onRunning={onRunning} />
+          <AskPanel open={open} failure={failure} onClose={dock} onRunning={onRunning} onModalChange={onModalChange} />
         </Suspense>
       ) : null}
       {open ? null : (
@@ -111,14 +157,15 @@ export function AskLauncher() {
           onClick={show}
           aria-haspopup="dialog"
           aria-expanded="false"
-          className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 flex min-h-11 items-center gap-2 rounded-full bg-kumo-brand px-4 py-3 text-sm font-medium text-white shadow-md transition-transform hover:scale-[1.03] focus-visible:outline-2 focus-visible:outline-offset-2 motion-reduce:transition-none motion-reduce:hover:scale-100"
+          style={corner}
+          className="fixed right-4 z-40 flex min-h-11 items-center gap-2 rounded-full bg-kumo-brand px-4 py-3 text-sm font-medium text-kumo-inverse shadow-md transition-transform hover:scale-[1.03] focus-visible:outline-2 focus-visible:outline-offset-2 motion-reduce:transition-none motion-reduce:hover:scale-100"
         >
           {running ? (
             <Loader size="sm" />
           ) : (
             <span className="relative">
               <ChatsCircleIcon size={20} weight="fill" aria-hidden="true" />
-              {unread ? <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full border-2 border-kumo-brand bg-white" aria-hidden="true" /> : null}
+              {unread ? <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full border-2 border-kumo-brand bg-current" aria-hidden="true" /> : null}
             </span>
           )}
           {running ? "Answering…" : unread ? "Answer ready" : "Ask the data"}

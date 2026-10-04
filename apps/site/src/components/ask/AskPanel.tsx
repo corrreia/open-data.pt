@@ -1,6 +1,6 @@
-import { Banner, Button, Input, LinkButton, Loader, Select } from "@cloudflare/kumo";
+import { Banner, Button, Input, LinkButton, Loader, Popover, Select } from "@cloudflare/kumo";
 import { ArrowUpIcon, CheckCircleIcon, CloudIcon, PlusIcon, SignOutIcon, StopIcon, WarningCircleIcon, WarningIcon, XIcon } from "@phosphor-icons/react";
-import { lazy, Suspense, useEffect, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode, type RefObject } from "react";
 import Markdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -27,9 +27,13 @@ const LINK = "font-medium text-kumo-link hover:underline";
 /** Fingers rather than a mouse: buttons get the larger size, and opening the panel does not raise the keyboard by itself. */
 const TOUCH = window.matchMedia("(pointer: coarse)").matches;
 const ICON_SIZE = TOUCH ? "lg" : "sm";
+/** Selects, fields and suggestions: touch-sized on a touch screen, compact with a mouse. */
+const CONTROL_SIZE = TOUCH ? "lg" : "sm";
 /** Below Tailwind's sm breakpoint the panel fills the screen. */
 const PHONE = window.matchMedia("(max-width: 639px)");
 const ACCOUNT_ID = /^[0-9a-f]{32}$/;
+/** The account-ID field's id, which a question asked without one moves focus to. */
+const ACCOUNT_FIELD = "ask-account";
 
 const SUGGESTIONS = [
   "Mapa dos postos de gasóleo mais baratos em Lisboa",
@@ -167,7 +171,7 @@ function Steps({ turn }: { turn: AssistantTurn }) {
   );
 }
 
-function Answer({ turn }: { turn: AssistantTurn | undefined }) {
+function Answer({ turn, onRetry }: { turn: AssistantTurn | undefined; onRetry: (() => void) | undefined }) {
   if (!turn) return null;
   return (
     <div className="grid gap-3">
@@ -196,7 +200,16 @@ function Answer({ turn }: { turn: AssistantTurn | undefined }) {
         </span>
       ) : null}
       {turn.notice ? <p className="text-xs text-kumo-subtle">{turn.notice}</p> : null}
-      {turn.error ? <p className="text-sm text-kumo-danger">{turn.error}</p> : null}
+      {turn.error ? (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <p className="text-sm text-kumo-danger">{turn.error}</p>
+          {onRetry ? (
+            <Button variant="secondary" size={CONTROL_SIZE} onClick={onRetry}>
+              Try again
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
       {turn.done && turn.neurons > 0 ? <p className="text-xs text-kumo-subtle">About {fmt.int(Math.ceil(turn.neurons))} neurons of Workers AI on your account</p> : null}
     </div>
   );
@@ -263,6 +276,9 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
   const [draft, setDraft] = useState("");
   const [running, setRunning] = useState(false);
   const [notice, setNotice] = useState<string | undefined>();
+  const [accountError, setAccountError] = useState(false);
+  // What "New conversation" cleared, until the visitor asks again or undoes it.
+  const [cleared, setCleared] = useState<Saved | undefined>();
   const transcript = useRef<ChatMessage[]>(initial.transcript);
   const abort = useRef<AbortController | undefined>(undefined);
   const scroller = useRef<HTMLDivElement>(null);
@@ -270,13 +286,25 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
 
   const accountReady = ACCOUNT_ID.test(accountId);
 
-  useEffect(() => {
-    if (open && !TOUCH) input.current?.focus();
-  }, [open]);
   useEffect(() => () => abort.current?.abort(), []);
   useEffect(() => {
     onRunning(running);
   }, [running, onRunning]);
+  // Reopened, the panel shows the start of the newest answer rather than wherever it was left.
+  useEffect(() => {
+    if (open) scroller.current?.querySelector("[data-exchange]:last-child")?.scrollIntoView({ block: "start" });
+  }, [open]);
+  // The question box grows with what is typed, up to its maximum height, and shrinks back once sent.
+  useEffect(() => {
+    const element = input.current;
+    if (!element) return;
+    element.style.height = "auto";
+    element.style.height = `${element.scrollHeight}px`;
+  }, [draft]);
+  // A new question scrolls into view, so its answer starts where the visitor is looking.
+  useEffect(() => {
+    if (exchanges.length) scroller.current?.querySelector("[data-exchange]:last-child")?.scrollIntoView({ block: "start" });
+  }, [exchanges.length]);
   // Follow the answer as it grows, unless the visitor has scrolled up to read something.
   useEffect(() => {
     const element = scroller.current;
@@ -288,15 +316,22 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
     return () => window.clearTimeout(timer);
   }, [exchanges]);
 
-  const ask = async (question: string) => {
+  /** Asks a question; `retrying` replaces the last exchange, which failed, instead of adding one. */
+  const ask = async (question: string, retrying = false) => {
     const text = question.trim();
     const asked = session.models.find((offered) => offered.id === model) ?? session.models[0];
-    if (!text || running || !accountReady || !asked) return;
+    if (!text || running || !asked) return;
+    if (!accountReady) {
+      setAccountError(true);
+      document.getElementById(ACCOUNT_FIELD)?.focus();
+      return;
+    }
+    setCleared(undefined);
     if (!transcript.current.length) transcript.current.push({ role: "system", content: systemPrompt(lisbonToday()) });
     transcript.current.push({ role: "user", content: withPage(text, document.title, `${window.location.pathname}${window.location.search}`) });
-    const index = exchanges.length;
-    setExchanges((current) => [...current, { question: text, turn: undefined }]);
-    setDraft("");
+    const index = retrying ? exchanges.length - 1 : exchanges.length;
+    setExchanges((current) => [...(retrying ? current.slice(0, -1) : current), { question: text, turn: undefined }]);
+    if (!retrying) setDraft("");
     setRunning(true);
     remember(ACCOUNT_KEY, accountId);
     remember(MODEL_KEY, model);
@@ -322,25 +357,8 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
         onSignedOut();
         return;
       }
-      const message = controller.signal.aborted ? "Stopped." : error instanceof Error ? error.message : String(error);
-      setExchanges((current) =>
-        current.map((exchange, at) =>
-          at === index
-            ? {
-                ...exchange,
-                turn: {
-                  steps: exchange.turn?.steps ?? [],
-                  visuals: exchange.turn?.visuals ?? [],
-                  text: exchange.turn?.text ?? "",
-                  thinking: false,
-                  done: true,
-                  error: message,
-                  neurons: 0,
-                },
-              }
-            : exchange,
-        ),
-      );
+      const message = controller.signal.aborted ? "Stopped." : error instanceof Error ? readableError(error) : String(error);
+      setExchanges((current) => current.map((exchange, at) => (at === index ? { ...exchange, turn: endedTurn(exchange.turn, message) } : exchange)));
       // A question that failed part-way leaves its tool calls unanswered; drop it so the next one starts clean.
       dropLastQuestion(transcript.current);
     } finally {
@@ -350,10 +368,25 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
   };
 
   const restart = () => {
+    // Cleared mid-answer, the snapshot keeps that answer as stopped and its question out of the transcript,
+    // as the abort would have left them, so Undo never brings back a question that is still unanswered.
+    const kept = { exchanges, transcript: [...transcript.current] };
+    if (running) {
+      dropLastQuestion(kept.transcript);
+      kept.exchanges = exchanges.map((exchange, at) => (at === exchanges.length - 1 ? { ...exchange, turn: endedTurn(exchange.turn, "Stopped.") } : exchange));
+    }
     abort.current?.abort();
+    setCleared(kept);
     transcript.current = [];
     setExchanges([]);
     input.current?.focus();
+  };
+
+  const undoRestart = () => {
+    if (!cleared) return;
+    transcript.current = cleared.transcript;
+    setExchanges(cleared.exchanges);
+    setCleared(undefined);
   };
 
   const leave = async () => {
@@ -361,7 +394,7 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
     try {
       await signOut();
     } catch (error) {
-      setNotice(`Not signed out: ${error instanceof Error ? error.message : String(error)}`);
+      setNotice(`You are still signed in: ${error instanceof Error ? readableError(error) : String(error)}`);
       return;
     }
     transcript.current = [];
@@ -381,7 +414,7 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
       <div className="flex flex-wrap items-center gap-2 border-b border-kumo-line px-4 py-2">
         <Select
           aria-label="Model"
-          size="sm"
+          size={CONTROL_SIZE}
           className="w-40"
           value={model}
           onValueChange={(value: string | null) => setModel(value ?? "")}
@@ -390,23 +423,35 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
         {accounts.length > 1 ? (
           <Select
             aria-label="Cloudflare account"
-            size="sm"
+            size={CONTROL_SIZE}
             className="w-40"
             value={accountId}
             onValueChange={(value: string | null) => setAccountId(value ?? "")}
             items={accounts.map((account) => ({ value: account.id, label: account.name }))}
           />
         ) : null}
-        <div className="ml-auto flex gap-1">
+        <div className="ml-auto flex gap-3">
           <Button variant="ghost" size={ICON_SIZE} icon={<PlusIcon />} onClick={restart} disabled={!exchanges.length} aria-label="New conversation" title="New conversation" />
-          <Button variant="ghost" size={ICON_SIZE} icon={<SignOutIcon />} onClick={() => void leave()} aria-label="Sign out" title="Sign out" />
+          {/* Signing out clears the conversation and revokes open-data.pt's access, so it asks first. */}
+          <Popover>
+            <Popover.Trigger render={<Button variant="ghost" size={ICON_SIZE} icon={<SignOutIcon />} aria-label="Sign out" title="Sign out" />} />
+            <Popover.Content className="grid w-72 max-w-[90vw] gap-3 p-3 text-sm">
+              <p className="text-kumo-default">Sign out? This clears the conversation and revokes open-data.pt's access to Workers AI on your account.</p>
+              <Button variant="destructive" size={CONTROL_SIZE} onClick={() => void leave()}>
+                Sign out and clear
+              </Button>
+            </Popover.Content>
+          </Popover>
         </div>
       </div>
       {!accounts.length ? (
         <label className="grid gap-1 border-b border-kumo-line px-4 py-2 text-xs text-kumo-subtle">
           Cloudflare did not list your accounts to us. Paste the account ID from your dashboard's address, dash.cloudflare.com/&lt;account ID&gt;.
           <Input
-            size="sm"
+            id={ACCOUNT_FIELD}
+            size={CONTROL_SIZE}
+            aria-invalid={accountError && !accountReady}
+            aria-describedby={accountError && !accountReady ? `${ACCOUNT_FIELD}-error` : undefined}
             // 16px on phones: iOS Safari zooms the page into any field with smaller text.
             className="font-mono text-base sm:text-sm"
             inputMode="text"
@@ -417,16 +462,25 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
             onChange={(event) => setAccountId(event.target.value.trim().toLowerCase())}
             placeholder="32 hexadecimal characters"
           />
+          {accountError && !accountReady ? (
+            <span id={`${ACCOUNT_FIELD}-error`} className="text-kumo-danger">
+              That is not an account ID. Use the 32 characters after dash.cloudflare.com/ in your dashboard's address.
+            </span>
+          ) : null}
         </label>
       ) : null}
 
       <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4">
-        <section aria-label="Conversation" aria-live="polite" className="grid gap-5">
+        {/* One short status line is announced, not the whole conversation as it streams in. */}
+        <span className="sr-only" role="status">
+          {running ? "Answering…" : exchanges.at(-1)?.turn?.error ? `No answer: ${exchanges.at(-1)?.turn?.error}` : exchanges.at(-1)?.turn?.done ? "Answer ready." : ""}
+        </span>
+        <section aria-label="Conversation" className="grid gap-5">
           {exchanges.length ? (
             exchanges.map((exchange, index) => (
-              <div key={index} className="grid gap-3">
+              <div key={index} data-exchange className="grid scroll-mt-4 gap-3">
                 <p className="ml-auto max-w-[85%] whitespace-pre-wrap rounded-2xl bg-kumo-tint px-3.5 py-2 text-sm text-kumo-strong">{exchange.question}</p>
-                <Answer turn={exchange.turn} />
+                <Answer turn={exchange.turn} onRetry={index === exchanges.length - 1 && exchange.turn?.error && !running ? () => void ask(exchange.question, true) : undefined} />
               </div>
             ))
           ) : (
@@ -437,10 +491,9 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
                   <Button
                     key={suggestion}
                     variant="secondary"
-                    size="sm"
-                    className="h-auto whitespace-normal py-1.5 text-left"
+                    size={CONTROL_SIZE}
+                    className="h-auto min-h-8 whitespace-normal py-1.5 text-left"
                     onClick={() => void ask(suggestion)}
-                    disabled={!accountReady}
                   >
                     {suggestion}
                   </Button>
@@ -456,6 +509,14 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
           {notice}
         </p>
       ) : null}
+      {cleared ? (
+        <div role="status" className="flex items-center justify-between gap-3 border-t border-kumo-line px-4 py-2 text-xs text-kumo-subtle">
+          Conversation cleared.
+          <Button variant="secondary" size={CONTROL_SIZE} onClick={undoRestart}>
+            Undo
+          </Button>
+        </div>
+      ) : null}
       <form
         className="flex items-end gap-2 border-t border-kumo-line px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
         onSubmit={(event) => {
@@ -467,19 +528,18 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
           ref={input}
           aria-label="Your question"
           // 16px on phones: iOS Safari zooms the page into any field with smaller text.
-          className="max-h-40 min-h-11 flex-1 resize-none bg-transparent px-2 py-2.5 text-base text-kumo-strong outline-none placeholder:text-kumo-inactive sm:min-h-10 sm:py-2 sm:text-sm"
+          className="max-h-40 min-h-11 flex-1 resize-none bg-transparent px-2 py-2.5 text-base text-kumo-strong outline-none placeholder:text-kumo-placeholder sm:min-h-10 sm:py-2 sm:text-sm"
           enterKeyHint="send"
           rows={1}
           value={draft}
-          placeholder={accountReady ? "Ask about Portuguese public data…" : "Paste your account ID first"}
+          placeholder="Ask about the data…"
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={onKeyDown}
-          disabled={!accountReady}
         />
         {running ? (
           <Button variant="secondary" size={TOUCH ? "lg" : "base"} icon={<StopIcon weight="fill" />} aria-label="Stop" onClick={() => abort.current?.abort()} />
         ) : (
-          <Button type="submit" variant="primary" size={TOUCH ? "lg" : "base"} icon={<ArrowUpIcon weight="bold" />} aria-label="Ask" disabled={!draft.trim() || !accountReady} />
+          <Button type="submit" variant="primary" size={TOUCH ? "lg" : "base"} icon={<ArrowUpIcon weight="bold" />} aria-label="Ask" disabled={!draft.trim()} />
         )}
       </form>
     </>
@@ -494,6 +554,7 @@ interface AskPanelProps {
   failure: string | undefined;
   onClose: () => void;
   onRunning: (running: boolean) => void;
+  onModalChange: (modal: boolean) => void;
 }
 
 /**
@@ -519,47 +580,86 @@ function useVisibleViewport(panel: RefObject<HTMLDivElement | null>, open: boole
   }, [panel, open]);
 }
 
-/** While the panel fills a phone's screen, the page behind it stays still instead of scrolling along. */
-function usePhoneScrollLock(open: boolean) {
+function subscribePhone(listener: () => void) {
+  PHONE.addEventListener("change", listener);
+  return () => PHONE.removeEventListener("change", listener);
+}
+const usePhone = () => useSyncExternalStore(subscribePhone, () => PHONE.matches);
+
+/**
+ * On a phone the open panel covers the page, so it is modal: the Shell makes the page behind it
+ * inert (out of the tab order and the screen reader's reach), and it stays still instead of
+ * scrolling along.
+ */
+function usePhoneModal(modal: boolean, onModalChange: (modal: boolean) => void) {
   useEffect(() => {
-    if (!open) return;
+    if (!modal) return;
     const root = document.documentElement;
-    const lock = () => {
-      root.style.overflow = PHONE.matches ? "hidden" : "";
-    };
-    lock();
-    PHONE.addEventListener("change", lock);
+    root.style.overflow = "hidden";
+    onModalChange(true);
     return () => {
-      PHONE.removeEventListener("change", lock);
       root.style.overflow = "";
+      onModalChange(false);
     };
-  }, [open]);
+  }, [modal, onModalChange]);
 }
 
-export default function AskPanel({ open, failure, onClose, onRunning }: AskPanelProps) {
+/** An answer that ended without finishing: what it had read, drawn and written so far, and why it ended. */
+function endedTurn(turn: AssistantTurn | undefined, error: string): AssistantTurn {
+  return { steps: turn?.steps ?? [], visuals: turn?.visuals ?? [], text: turn?.text ?? "", thinking: false, done: true, error, neurons: turn?.neurons ?? 0 };
+}
+
+/** A failure as the visitor can act on it: the kernel's own words, or what a network failure means. */
+function readableError(error: Error): string {
+  // fetch rejects with a TypeError ("Failed to fetch", "Load failed") when the request never got an answer.
+  if (error instanceof TypeError) return "Could not reach open-data.pt. Check your connection, then try again.";
+  return error.message;
+}
+
+export default function AskPanel({ open, failure, onClose, onRunning, onModalChange }: AskPanelProps) {
   const panel = useRef<HTMLDivElement>(null);
+  const phone = usePhone();
   useVisibleViewport(panel, open);
-  usePhoneScrollLock(open);
+  usePhoneModal(open && phone, onModalChange);
   const [session, setSession] = useState<AskSession | undefined>();
   const [accounts, setAccounts] = useState<AskAccounts["accounts"] | undefined>();
   const [failed, setFailed] = useState<string | undefined>();
 
-  useEffect(() => {
-    const load = async () => {
+  const load = useCallback(() => {
+    setFailed(undefined);
+    const read = async () => {
       const current = await readSession();
       if (!current.signedIn) return setSession(current);
       const listed = await readAccounts();
       setAccounts(listed.accounts);
       setSession({ ...current, signedIn: listed.signedIn });
     };
-    load().catch((error: Error) => setFailed(error.message));
+    read().catch((error: Error) => setFailed(readableError(error)));
   }, []);
+  useEffect(load, [load]);
+
+  // Focus moves into the panel on every open, once it is visible and no longer inert: to the question
+  // box with a keyboard, to the panel itself on a touch screen so the keyboard does not spring up.
+  const ready = session?.signedIn === true;
+  useEffect(() => {
+    if (!open) return;
+    const frame = requestAnimationFrame(() => {
+      const box = TOUCH ? null : panel.current?.querySelector("textarea");
+      (box ?? panel.current)?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [open, ready]);
 
   let content: ReactNode;
   if (failed)
     content = (
-      <div className="p-4">
+      <div className="grid gap-3 p-4">
         <Banner variant="error" icon={<WarningCircleIcon weight="fill" />} title="The agent could not start" description={failed} />
+        <div>
+          <Button variant="secondary" size={CONTROL_SIZE} onClick={load}>
+            Try again
+          </Button>
+        </div>
       </div>
     );
   else if (!session)
@@ -575,14 +675,16 @@ export default function AskPanel({ open, failure, onClose, onRunning }: AskPanel
     <div
       ref={panel}
       role="dialog"
-      aria-modal="false"
+      aria-modal={open && phone}
       aria-labelledby="ask-title"
+      tabIndex={-1}
       // Docked, the panel stays in the page, so an answer carries on, but nothing in it can be reached.
+      // It turns visible at once when it opens, so focus can move into it, and hidden only once it has faded out.
       inert={!open}
       onKeyDown={(event) => {
         if (event.key === "Escape") onClose();
       }}
-      className={`fixed inset-x-0 top-[var(--ask-top,0px)] z-40 flex h-[var(--ask-height,100dvh)] flex-col overflow-hidden bg-kumo-base motion-safe:transition-[opacity,transform,visibility] motion-safe:duration-200 sm:inset-x-auto sm:top-auto sm:bottom-4 sm:right-4 sm:h-[min(46rem,calc(100dvh-2rem))] sm:w-[28rem] sm:rounded-2xl sm:border sm:border-kumo-line sm:shadow-md ${open ? "visible opacity-100" : "invisible translate-y-3 opacity-0"}`}
+      className={`fixed inset-x-0 top-[var(--ask-top,0px)] z-40 flex outline-none h-[var(--ask-height,100dvh)] flex-col overflow-hidden bg-kumo-base sm:inset-x-auto sm:top-auto sm:bottom-4 sm:right-4 sm:h-[min(46rem,calc(100dvh-2rem))] sm:w-[28rem] sm:rounded-2xl sm:border sm:border-kumo-line sm:shadow-md ${open ? "visible opacity-100 motion-safe:[transition:opacity_200ms,transform_200ms,visibility_0s]" : "invisible translate-y-3 opacity-0 motion-safe:[transition:opacity_200ms,transform_200ms,visibility_0s_200ms]"}`}
     >
       <header className="flex items-center gap-2 border-b border-kumo-line px-4 py-3">
         <div className="grid min-w-0 flex-1">
@@ -591,7 +693,7 @@ export default function AskPanel({ open, failure, onClose, onRunning }: AskPanel
           </h2>
           <span className="text-xs text-kumo-subtle">On your own Cloudflare account</span>
         </div>
-        <Button variant="ghost" size={ICON_SIZE} icon={<XIcon />} onClick={onClose} aria-label="Close the agent; it keeps answering" title="Close" />
+        <Button variant="ghost" size={ICON_SIZE} icon={<XIcon />} onClick={onClose} aria-label="Close" title="Close" />
       </header>
       {content}
     </div>
