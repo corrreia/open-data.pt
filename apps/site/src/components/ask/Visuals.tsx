@@ -76,8 +76,13 @@ function ChartVisual({ spec }: { spec: ChartSpec }) {
 const OSM = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
-/** Low to high, for points the model gave a value: green through amber to red. */
-const RAMP = ["#1b7a4f", "#5b8a1e", "#8f6c12", "#c46a1b", "#b3405e"];
+/**
+ * Low to high, for points the model gave a value: viridis, light yellow to dark violet. Its lightness
+ * falls steadily, so low and high stay apart without telling hues apart, colour blindness included.
+ */
+const RAMP = ["#fde725", "#5ec962", "#21918c", "#3b528b", "#440154"];
+/** A dark rim, so the lightest points stand out from light map tiles too. */
+const RIM = "#1f2421";
 
 /** A label as plain text inside a popup: Leaflet sets popups as HTML, so the model's words are escaped. */
 const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (character) => `&#${character.charCodeAt(0)};`);
@@ -126,7 +131,7 @@ function MapVisual({ spec }: { spec: MapSpec }) {
       return RAMP[Math.min(RAMP.length - 1, Math.floor(((value - low) / (high - low)) * RAMP.length))];
     };
     for (const point of points) {
-      const marker = L.circleMarker([point.lat, point.lon], { radius: 6, weight: 1, color: "#ffffff", fillColor: colourOf(point.value), fillOpacity: 0.9 });
+      const marker = L.circleMarker([point.lat, point.lon], { radius: 6, weight: 1, color: RIM, fillColor: colourOf(point.value), fillOpacity: 0.9 });
       const label = [point.label, point.value === undefined ? undefined : fmt.cell(point.value, "number")].filter(Boolean).join(" · ");
       if (label) marker.bindPopup(escapeHtml(label));
       marker.addTo(drawn);
@@ -134,8 +139,8 @@ function MapVisual({ spec }: { spec: MapSpec }) {
     if (spec.geojson) {
       const collection: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: spec.geojson.features.flatMap(drawableFeature) };
       L.geoJSON(collection, {
-        style: { color: RAMP[0], weight: 2, fillOpacity: 0.2 },
-        pointToLayer: (_, at) => L.circleMarker(at, { radius: 5, weight: 1, color: "#ffffff", fillColor: RAMP[0], fillOpacity: 0.9 }),
+        style: { color: RAMP[2], weight: 2, fillOpacity: 0.2 },
+        pointToLayer: (_, at) => L.circleMarker(at, { radius: 5, weight: 1, color: RIM, fillColor: RAMP[2], fillOpacity: 0.9 }),
         onEachFeature: (feature, layer) => {
           const name = feature.properties?.name ?? feature.properties?.title;
           if (name) layer.bindPopup(escapeHtml(String(name)));
@@ -153,12 +158,19 @@ function MapVisual({ spec }: { spec: MapSpec }) {
   const values = (spec.points ?? []).flatMap((point) => (point.value === undefined ? [] : [point.value]));
   return (
     <div className="grid gap-1.5">
-      <div ref={element} className="h-64 w-full overflow-hidden rounded-lg border border-kumo-line" role="img" aria-label={spec.title} />
+      {/* Leaflet's own zoom buttons and attribution links stay reachable; the figure's caption names the map. */}
+      <div ref={element} className="h-64 w-full overflow-hidden rounded-lg border border-kumo-line" />
       {values.length ? (
-        <div className="flex items-center gap-2 text-xs text-kumo-subtle" aria-hidden="true">
-          <span>{fmt.cell(Math.min(...values), "number")}</span>
-          <span className="h-2 flex-1 rounded-full" style={{ background: `linear-gradient(to right, ${RAMP.join(", ")})` }} />
-          <span>{fmt.cell(Math.max(...values), "number")}</span>
+        <div className="flex items-center gap-2 text-xs text-kumo-subtle">
+          <span>
+            <span className="sr-only">Colour runs from low, </span>
+            {fmt.cell(Math.min(...values), "number")}
+          </span>
+          <span className="h-2 flex-1 rounded-full" aria-hidden="true" style={{ background: `linear-gradient(to right, ${RAMP.join(", ")})` }} />
+          <span>
+            <span className="sr-only">to high, </span>
+            {fmt.cell(Math.max(...values), "number")}
+          </span>
         </div>
       ) : null}
     </div>
@@ -196,13 +208,72 @@ function TableVisual({ spec }: { spec: TableSpec }) {
   );
 }
 
+/* ---------- Every drawing as a table too ---------- */
+
+/** Rows a "Show as a table" lists; a longer drawing says how many it left out. */
+const MAX_TABLE_ROWS = 500;
+
+/** A chart's points as rows: one per time or category, one column per series. */
+function chartTable(spec: ChartSpec): TableSpec {
+  const xs = [...new Set(spec.series.flatMap((each) => each.points.map(([x]) => x)))];
+  const bySeries = spec.series.map((each) => new Map(each.points.map(([x, y]) => [x, y])));
+  return {
+    title: spec.title,
+    columns: [spec.kind === "line" ? "Time" : "Category", ...spec.series.map((each) => (spec.unit ? `${each.name} (${spec.unit})` : each.name))],
+    rows: xs.map((x) => [spec.kind === "line" ? fmt.dateTime(instant(x)) : String(x), ...bySeries.map((values) => values.get(x) ?? null)]),
+  };
+}
+
+/** A map's points as rows: what each is, its value when it has one, and where it is. */
+function mapTable(spec: MapSpec): TableSpec | undefined {
+  const points = spec.points ?? [];
+  if (!points.length) return undefined;
+  const valued = points.some((point) => point.value !== undefined);
+  return {
+    title: spec.title,
+    columns: valued ? ["Place", "Value", "Latitude", "Longitude"] : ["Place", "Latitude", "Longitude"],
+    rows: points.map((point) => (valued ? [point.label ?? "", point.value ?? null, point.lat, point.lon] : [point.label ?? "", point.lat, point.lon])),
+  };
+}
+
+/** The values behind a chart or map, for anyone who cannot point at them: screen readers, keyboards, cut-off labels. */
+function AsTable({ spec }: { spec: TableSpec | undefined }) {
+  if (!spec?.rows.length) return null;
+  const shown = spec.rows.length > MAX_TABLE_ROWS ? { ...spec, rows: spec.rows.slice(0, MAX_TABLE_ROWS) } : spec;
+  return (
+    <details className="text-xs">
+      <summary className="cursor-pointer py-1 text-kumo-subtle hover:text-kumo-strong">Show as a table</summary>
+      <div className="mt-2 grid gap-1">
+        <TableVisual spec={shown} />
+        {shown !== spec ? (
+          <p className="text-kumo-subtle">
+            The first {fmt.int(MAX_TABLE_ROWS)} of {fmt.int(spec.rows.length)} rows.
+          </p>
+        ) : null}
+      </div>
+    </details>
+  );
+}
+
 export default function Visuals({ visuals }: { visuals: Visual[] }) {
   return (
     <div className="grid gap-4">
       {visuals.map((visual, index) => (
         <figure key={index} className="grid gap-1.5">
           <figcaption className="text-xs font-medium text-kumo-strong">{visual.spec.title}</figcaption>
-          {visual.kind === "chart" ? <ChartVisual spec={visual.spec} /> : visual.kind === "map" ? <MapVisual spec={visual.spec} /> : <TableVisual spec={visual.spec} />}
+          {visual.kind === "chart" ? (
+            <>
+              <ChartVisual spec={visual.spec} />
+              <AsTable spec={chartTable(visual.spec)} />
+            </>
+          ) : visual.kind === "map" ? (
+            <>
+              <MapVisual spec={visual.spec} />
+              <AsTable spec={mapTable(visual.spec)} />
+            </>
+          ) : (
+            <TableVisual spec={visual.spec} />
+          )}
         </figure>
       ))}
     </div>

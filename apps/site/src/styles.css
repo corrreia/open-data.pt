@@ -158,6 +158,22 @@ h2 {
 }
 
 /*
+ * Kumo fills a primary button with the brand green mixed with 30% white and labels it white, in an
+ * inline style. On the dark theme's lighter green that measured 2.4 to 3.2:1, under the 4.5:1 the
+ * label needs. A darker fill keeps the white label above 5:1; the brand token itself stays light
+ * enough for bars and badges on dark surfaces. The selector matches that inline recipe, so only
+ * primary buttons change.
+ */
+:root[data-mode="dark"] [style*="var(--color-kumo-brand), white"] {
+  --kumo-button-emphasis-bg: oklch(0.52 0.12 158) !important;
+}
+
+/* Destructive buttons use the same recipe on the danger red, which fails in both themes: 3.4:1 light, worse dark. */
+[style*="var(--color-kumo-danger), white"] {
+  --kumo-button-emphasis-bg: oklch(0.5 0.16 27) !important;
+}
+
+/*
  * Leaflet sits inside a Kumo card: its controls follow the theme. Its panes and controls carry
  * z-index 200 to 1000; `isolation` keeps them inside the map's own stacking context, so dropdowns,
  * tooltips and the sticky header always paint above the map.

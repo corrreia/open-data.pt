@@ -93,7 +93,7 @@ export function Shell({ section, children }: { section: Section; children: React
        * portals to the end of <body>, always paint above it. While the palette is open the page
        * behind it is inert: Tab stays in the palette and screen readers read only the palette.
        */}
-      <div className="isolate flex min-h-screen w-full flex-col" inert={searching}>
+      <div id="site-page" className="isolate flex min-h-screen w-full flex-col" inert={searching}>
         <a className="skip-link" href="#content">
           Skip to content
         </a>
@@ -149,7 +149,7 @@ export function Shell({ section, children }: { section: Section; children: React
           {children}
         </main>
 
-        <footer className="border-t border-kumo-line">
+        <footer id="site-footer" className="border-t border-kumo-line">
           <div className="mx-auto flex w-full max-w-7xl flex-wrap justify-between gap-x-6 gap-y-2 px-4 py-6 text-xs text-kumo-subtle sm:px-6">
             <span>open-data.pt · data from its publishers, under their licences</span>
             <span className="flex flex-wrap gap-x-4 gap-y-1 [&>a]:inline-flex [&>a]:min-h-6 [&>a]:items-center">
