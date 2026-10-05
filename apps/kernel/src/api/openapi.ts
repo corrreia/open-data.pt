@@ -68,7 +68,7 @@ export function openApiDocument(origin: string) {
           tags: ["Platform"],
           summary: "How open-data.pt is used: requests to the site, the API and the MCP server, by client, route, dataset and country",
           description:
-            "Counts from Cloudflare Workers Analytics Engine, one data point per request, kept for 90 days. No IP address, cookie or visitor identifier is recorded. `surface` is `web` (pages), `api` (API requests from outside this site), `mcp` (MCP messages), `mcp-read` (API reads made by MCP code runs), `docs` (the API reference and OpenAPI document) or `discovery` (sitemap and .well-known documents). Clients are classified by User-Agent into `browser`, `library`, `ai-agent`, `crawler` and `unknown`. The API reads this site's own pages make are not counted, since the page view already is. Cached for 30 minutes.",
+            "Counts from Cloudflare Workers Analytics Engine, one data point per request, kept for 90 days. No IP address, cookie or visitor identifier is recorded. `surface` is `web` (pages), `api` (API requests from outside this site), `mcp` (MCP messages), `mcp-read` (API reads made by MCP code runs), `ask` (model steps of this site's own agent), `ask-read` (API reads made by that agent's code), `docs` (the API reference and OpenAPI document) or `discovery` (sitemap and .well-known documents). Clients are classified by User-Agent into `browser`, `library`, `ai-agent`, `crawler` and `unknown`. The API reads this site's own pages make are not counted, since the page view already is, except the agent's. Cached for 30 minutes.",
           parameters: [
             {
               name: "days",

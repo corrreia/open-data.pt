@@ -3,7 +3,9 @@ import {
   AnalyticsError,
   UsageRecorder,
   analyticsReport,
+  askCallOf,
   classifyClient,
+  countedSurface,
   isOwnPageFetch,
   mcpCallOf,
   referrerOf,
@@ -94,6 +96,38 @@ describe("who sent a request", () => {
     const view = { "Sec-Fetch-Site": "same-origin", "Sec-Fetch-Mode": "cors", "X-Page-View": "1" };
     expect(isOwnPageFetch(new Request("https://open-data.pt/product/?slug=fuel", { method: "HEAD", headers: view }))).toBe(false);
     expect(isOwnPageFetch(new Request("https://open-data.pt/api/products", { headers: view }))).toBe(true);
+  });
+
+  it("counts the site's agent, which the site's own fetches would otherwise hide", () => {
+    const own = { "Sec-Fetch-Site": "same-origin", "Sec-Fetch-Mode": "cors" };
+    const counted = (path: string, init: RequestInit = {}) => countedSurface(new Request(`https://open-data.pt${path}`, init), site(path));
+    expect(counted("/ask/chat", { method: "POST", headers: own, body: "{}" })).toBe("ask");
+    expect(counted("/ask/chat", { headers: own })).toBeUndefined();
+    expect(counted("/ask/session", { headers: own })).toBeUndefined();
+    expect(counted("/api/products", { headers: { ...own, "X-Ask-Read": "1" } })).toBe("ask-read");
+    expect(counted("/api/products", { headers: own })).toBeUndefined();
+    // The mark means nothing from another site: that read is an API request like any other.
+    expect(counted("/api/products", { headers: { "Sec-Fetch-Site": "cross-site", "X-Ask-Read": "1" } })).toBe("api");
+    expect(counted("/api/products", { method: "OPTIONS" })).toBeUndefined();
+  });
+
+  it("tells a new question to the agent from a step after its tool calls", () => {
+    expect(
+      askCallOf("@cf/zai-org/glm-5.3-flash", [
+        { role: "system", content: "" },
+        { role: "user", content: "How full are the reservoirs?" },
+      ]),
+    ).toEqual({
+      turn: "question",
+      model: "@cf/zai-org/glm-5.3-flash",
+    });
+    expect(
+      askCallOf("@cf/zai-org/glm-5.3-flash", [
+        { role: "user", content: "?" },
+        { role: "assistant", content: "" },
+        { role: "tool", content: "{}" },
+      ]).turn,
+    ).toBe("step");
   });
 });
 
@@ -188,8 +222,15 @@ describe("the data point", () => {
     expect(point.blobs?.slice(6)).toEqual(["429", "none", "tools/call execute", "", "problem"]);
   });
 
-  it("does not credit an MCP code run's reads to a referrer", () => {
+  it("does not credit an MCP code run's or the agent's reads to a referrer", () => {
     expect(usagePoint(event({ surface: "mcp-read" })).blobs?.[5]).toBe("");
+    expect(usagePoint(event({ surface: "ask-read" })).blobs?.[5]).toBe("");
+  });
+
+  it("records the agent's model steps where the MCP calls go", () => {
+    const point = usagePoint(event({ surface: "ask", url: site("/ask/chat"), cache: "none", ask: { turn: "question", model: "@cf/zai-org/glm-5.3-flash" } }));
+    expect(point.indexes).toEqual(["ask"]);
+    expect(point.blobs?.slice(8, 10)).toEqual(["question", "@cf/zai-org/glm-5.3-flash"]);
   });
 
   it("writes at most 200 points a request, and never throws", () => {
@@ -233,7 +274,7 @@ describe("the report", () => {
     };
     const report = await analyticsReport({ ANALYTICS_TOKEN: "test-token", CLOUDFLARE_ACCOUNT_ID: ACCOUNT }, 7, now, fetcher);
 
-    expect(sent).toHaveLength(8);
+    expect(sent).toHaveLength(9);
     for (const sql of sent) {
       expect(sql).toContain("FROM open_data_pt_usage WHERE timestamp >= toDateTime('2026-09-13 00:00:00')");
       expect(sql).toContain("SUM(_sample_interval) AS requests");
@@ -241,7 +282,7 @@ describe("the report", () => {
     }
     expect(report.timeline).toEqual([{ time: "2026-09-19T00:00:00.000Z", surface: "api", kind: "library", requests: 42 }]);
     expect(report.routes).toEqual([{ surface: "api", route: "/api/products", requests: 7, meanMs: 18 }]);
-    expect(report).toMatchObject({ days: 7, resolution: "day", from: "2026-09-13T00:00:00.000Z", retentionDays: 90, clients: [], mcp: [] });
+    expect(report).toMatchObject({ days: 7, resolution: "day", from: "2026-09-13T00:00:00.000Z", retentionDays: 90, clients: [], mcp: [], ask: [] });
   });
 
   it("says when it is not enabled, and when Analytics Engine fails", async () => {

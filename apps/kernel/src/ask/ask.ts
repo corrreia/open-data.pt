@@ -74,6 +74,8 @@ export interface AskHost {
   clientId: string;
   fetch: typeof fetch;
   now: () => number;
+  /** Told of each model step the agent asks for, so the usage count can say what was asked of which model. */
+  onChat?: (model: string, messages: JsonValue[]) => void;
 }
 
 /** The person's tokens, as the session cookie carries them. */
@@ -251,6 +253,7 @@ async function chat(request: Request, url: URL, host: AskHost): Promise<Response
   }
   const call = chatCallOf(body);
   if ("refused" in call) return problem(400, "Bad request", call.refused, NO_STORE);
+  host.onChat?.(call.model, call.messages);
 
   const upstream = await host.fetch(`${API}/accounts/${call.accountId}/ai/v1/chat/completions`, {
     method: "POST",

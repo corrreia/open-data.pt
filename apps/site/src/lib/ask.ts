@@ -11,7 +11,7 @@ import { IframeSandboxExecutor, type ExecuteResult, type Executor, type Resolved
 import { openApiMcpServer, type RequestOptions } from "@cloudflare/codemode/mcp";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { MCP_GUIDE, MCP_SERVER_NAME, MCP_SERVER_VERSION } from "@open-data-pt/api";
+import { ASK_READ_HEADER, MCP_GUIDE, MCP_SERVER_NAME, MCP_SERVER_VERSION } from "@open-data-pt/api";
 import { z } from "zod";
 import type { JsonValue } from "./types";
 
@@ -159,7 +159,8 @@ async function apiRead(options: RequestOptions): Promise<JsonValue> {
     for (const item of Array.isArray(value) ? value : [value]) url.searchParams.append(name, String(item));
   }
   const target = `GET ${url.pathname}${url.search}`;
-  const response = await fetch(url, { headers: { accept: "application/json" } });
+  // Marked as the agent's, so the analytics count it as such and not as one of this page's own reads.
+  const response = await fetch(url, { headers: { accept: "application/json", [ASK_READ_HEADER]: "1" } });
   const text = await boundedText(response, target);
   if (!response.ok) {
     const detail = problemText(text);
