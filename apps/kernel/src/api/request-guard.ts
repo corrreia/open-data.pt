@@ -15,6 +15,8 @@ interface RouteRule {
   repeatable?: readonly string[];
   /** Routes that scan the lake or stream a whole product get the stricter limit. */
   costly?: boolean;
+  /** Parameters that make a request scan on through a product, and so count it against the stricter limit too. */
+  costlyWith?: readonly string[];
 }
 
 const HISTORY_WINDOW = ["from", "to", "cursor", "limit"] as const;
@@ -32,7 +34,14 @@ const ROUTES: readonly RouteRule[] = [
   { pattern: /^\/api\/feeds\/[^/]+$/, template: "/api/feeds/{feedId}", params: [] },
   { pattern: /^\/api\/products\/[^/]+\.geojson$/, template: "/api/products/{slug}.geojson", params: ["where", "bbox"], repeatable: ["where"], costly: true },
   { pattern: /^\/api\/products\/[^/]+\/records\/all$/, template: "/api/products/{slug}/records/all", params: ["where", "bbox"], repeatable: ["where"], costly: true },
-  { pattern: /^\/api\/products\/[^/]+\/records$/, template: "/api/products/{slug}/records", params: ["limit", "cursor", "validAt", "where", "bbox"], repeatable: ["where"] },
+  {
+    pattern: /^\/api\/products\/[^/]+\/records$/,
+    template: "/api/products/{slug}/records",
+    params: ["limit", "cursor", "validAt", "where", "bbox"],
+    repeatable: ["where"],
+    // A filtered page reads on until it fills, up to a few hundred chunks: much of a product, as /records/all reads all of it.
+    costlyWith: ["validAt", "where", "bbox"],
+  },
   { pattern: /^\/api\/products\/[^/]+\/changes$/, template: "/api/products/{slug}/changes", params: ["knownAt", "limit"] },
   { pattern: /^\/api\/products\/[^/]+\/series$/, template: "/api/products/{slug}/series", params: ["seriesKey", "from", "to", "limit"] },
   { pattern: /^\/api\/products\/[^/]+\/series\/changes$/, template: "/api/products/{slug}/series/changes", params: ["seriesKey", "from", "to", "limit"] },
@@ -104,7 +113,8 @@ export function canonicalRoute(url: URL): CanonicalRoute | undefined {
   for (const name of [...seen.keys()].sort()) {
     for (const value of [...seen.get(name)!].sort()) canonical.searchParams.append(name, value);
   }
-  return { url: canonical, template: rule.template, costly: rule.costly === true };
+  const scans = rule.costlyWith?.some((name) => seen.has(name)) === true;
+  return { url: canonical, template: rule.template, costly: rule.costly === true || scans };
 }
 
 /** The request methods the read-only API answers; everything else is 405. */
@@ -125,7 +135,7 @@ export const RATE_LIMIT_RETRY_SECONDS = 60;
 
 /**
  * Whether this client may make one more uncached request. Keyed on the client
- * IP; history and GeoJSON also count against the stricter limit.
+ * IP; history, GeoJSON and filtered record pages also count against the stricter limit.
  */
 export async function withinRateLimit(limiters: RateLimiters, request: Request, costly: boolean): Promise<boolean> {
   const key = request.headers.get("cf-connecting-ip") ?? "anonymous";

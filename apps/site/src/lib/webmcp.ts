@@ -126,13 +126,14 @@ const TOOLS: WebMcpTool[] = [
     name: "read_rows",
     title: "Read rows",
     description:
-      "A product's current rows, or a time series' latest points, as JSON. Filter records with where: field:value pairs that must all match. Cite the licence and attribution that get_product returns.",
+      "A product's current rows, or a time series' latest points, as JSON. Filter records with where: field:value pairs that must all match. A filtered answer can hold no rows and still carry a nextCursor: that is not the end, so pass it back as cursor until none comes back. Cite the licence and attribution that get_product returns.",
     inputSchema: {
       type: "object",
       properties: {
         slug: SLUG,
         limit: { type: "integer", minimum: 1, maximum: MAX_ROWS, description: "At most this many rows; 20 when not given." },
         where: { type: "array", items: { type: "string" }, maxItems: 5, description: "Record filters such as 'line:1'. Time series ignore them." },
+        cursor: { type: "string", description: "The nextCursor of the previous answer, with the same slug and filters, for the next page of records." },
       },
       required: ["slug"],
     },
@@ -143,6 +144,8 @@ const TOOLS: WebMcpTool[] = [
       const query = new URLSearchParams({ limit: String(count(input.limit, 20, MAX_ROWS)) });
       if (product.role === "time-series") return apiGet<JsonValue>(productPath(slug, `/series?${query}`), call?.signal);
       for (const filter of Array.isArray(input.where) ? input.where : []) query.append("where", text(filter));
+      const cursor = text(input.cursor);
+      if (cursor) query.set("cursor", cursor);
       return apiGet<JsonValue>(productPath(slug, `/records?${query}`), call?.signal);
     },
   },

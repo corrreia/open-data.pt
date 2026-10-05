@@ -16,7 +16,7 @@ open-data.pt collects datasets from the Portuguese institutions and operators th
 
 1. `GET /api/products` lists every product: slug, title, description, role, schema, rowCount, cadence and freshness. Choose by title and description; filter the list in code instead of printing it whole.
 2. The role says how to read a product:
-   - `reference`, `current-state`, `event-log` and `summary`: `GET /api/products/{slug}/records?limit=500`, passing `nextCursor` back as `cursor`, or `/records/all` for every row at once. Filter with `where=field:value` (up to five, all must match) and `bbox=minLon,minLat,maxLon,maxLat`.
+   - `reference`, `current-state`, `event-log` and `summary`: `GET /api/products/{slug}/records?limit=500`, passing `nextCursor` back as `cursor`, or `/records/all` for every row at once. Filter with `where=field:value` (up to five, all must match) and `bbox=minLon,minLat,maxLon,maxLat`. A filtered page can come back with an empty `data` and a `nextCursor` on a large product: that is not the end, so follow `nextCursor` until it is absent before concluding nothing matches.
    - `time-series`: `GET /api/products/{slug}/series` with `seriesKey`, `from`, `to` and `limit` (up to 1000).
 3. History: `/events`, `/series/range`, `/changes/range` and `/series/changes/range` take `from` and `to` (ISO 8601 UTC, at most 366 days apart), page with `nextCursor`, and report their `coverage`.
 4. `GET /api/feeds` says where each dataset comes from and who publishes it; `GET /api/outages` says when a source was down.

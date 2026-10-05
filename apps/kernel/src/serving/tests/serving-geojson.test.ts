@@ -1,26 +1,31 @@
 import type { FieldType, JsonObject } from "@open-data-pt/contract";
 import { describe, expect, it } from "vitest";
-import { buildChunks, compareKeys } from "#/serving/chunks";
+import { buildChunks, compareKeys, writeChunk, type ChunkSink, type ServingRow } from "#/serving/chunks";
 import type { ProductDetail } from "#/registry/registry";
 import { ObjectStore, keys, type SeriesWindow } from "#/serving/object-store";
-import { InvalidQueryError, Serving, type RowFilters } from "#/serving/serving";
+import { InvalidQueryError, RECORD_SCAN_BUDGET, Serving, type RecordQuery, type RowFilters } from "#/serving/serving";
 import { MemorySnapshots } from "#/tests/kernel-harness";
 import { jsonAs } from "#/tests/support";
 
-/** One product published over real content-addressed chunks, listed on its entry. */
-async function serving(schemaFields: Array<{ name: string; type: FieldType }>, records: JsonObject[]) {
+/**
+ * One product published over real content-addressed chunks, listed on its entry. With
+ * `rowsPerChunk` the chunks are cut every that many rows instead of where keys say, so a test can
+ * lay out hundreds of chunks from a few thousand rows.
+ */
+async function serving(schemaFields: Array<{ name: string; type: FieldType }>, records: JsonObject[], rowsPerChunk?: number) {
   const snapshots = new MemorySnapshots();
   const objects = new ObjectStore(snapshots);
   const rows = records
     .map((record) => ({ key: String(record.id), json: JSON.stringify({ ...record, _hash: "h", _time: { validFrom: record.validFrom ?? null, validTo: record.validTo ?? null } }) }))
     .sort((a, b) => compareKeys(a.key, b.key));
-  const chunks = await buildChunks(rows, {
+  const sink: ChunkSink = {
     prefix: keys.prefix("feed_1", "places"),
     known: new Set(),
     put: async (key, body) => {
       await objects.writeText(key, body);
     },
-  });
+  };
+  const chunks = rowsPerChunk ? await fixedChunks(rows, rowsPerChunk, sink) : await buildChunks(rows, sink);
   const product: ProductDetail = {
     id: "prd_1",
     slug: "places",
@@ -54,6 +59,24 @@ async function serving(schemaFields: Array<{ name: string; type: FieldType }>, r
   };
   const service = new Serving({ listProducts: async () => [product], getProduct: async (slug) => (slug === "places" ? product : undefined) }, objects);
   return { serving: service, product, chunks, objects };
+}
+
+async function fixedChunks(rows: ServingRow[], rowsPerChunk: number, sink: ChunkSink) {
+  const chunks = [];
+  for (let start = 0; start < rows.length; start += rowsPerChunk) chunks.push(await writeChunk(sink, rows.slice(start, start + rowsPerChunk)));
+  return chunks;
+}
+
+/** Every page of a records query, following its cursors to the end. */
+async function pages(service: Serving, product: ProductDetail, query: RecordQuery) {
+  const all = [];
+  let cursor: string | undefined;
+  do {
+    const page = await service.records(product, cursor ? { ...query, cursor } : query);
+    all.push(page);
+    cursor = page.nextCursor;
+  } while (cursor);
+  return all;
 }
 
 async function geojson(service: Serving, product: ProductDetail, filters?: RowFilters) {
@@ -213,6 +236,52 @@ describe("record filters are checked against the schema and applied while readin
     await expect(service.records(product, { limit: 5, filters: { where: [{ field: "n", value: "1" }] } })).rejects.toThrow(/number field/);
     const plain = await serving([{ name: "name", type: "string" }], [{ id: "a", name: "x" }]);
     await expect(plain.serving.records(plain.product, { limit: 5, filters: { bbox: { west: 0, south: 0, east: 1, north: 1 } } })).rejects.toThrow(/latitude and longitude/);
+  });
+
+  /** Ten rows to a chunk; `kind` is "bus" where `bus` says so and "tram" everywhere else. */
+  const fleet = (count: number, bus: (index: number) => boolean) =>
+    Array.from({ length: count }, (_, index) => ({ id: `r${String(index).padStart(5, "0")}`, kind: bus(index) ? "bus" : "tram" }));
+  const kind: Array<{ name: string; type: FieldType }> = [{ name: "kind", type: "category" }];
+  const buses: RowFilters = { where: [{ field: "kind", value: "bus" }] };
+
+  it("reads on past chunks with no match, and answers a match in a late chunk in one page", async () => {
+    // Forty chunks, the only matches in the 31st: an empty page with a cursor is read as "none" and the reader stops.
+    const records = fleet(400, (index) => index >= 305 && index < 308);
+    const { serving: service, product, chunks } = await serving(kind, records, 10);
+    expect(chunks).toHaveLength(40);
+    const page = await service.records(product, { limit: 5, filters: buses });
+    expect(page.data.map((row) => row.id)).toEqual(["r00305", "r00306", "r00307"]);
+    expect(page.nextCursor).toBeUndefined();
+  });
+
+  it("fills every page across chunk boundaries, and its cursors resume mid-chunk without skipping or repeating a row", async () => {
+    // Matches scattered through the first and last ten chunks, a run in the middle, and ten chunks with none either side of it.
+    const records = fleet(400, (index) => ((index < 100 || index >= 300) && index % 7 === 3) || (index >= 200 && index < 216));
+    const { serving: service, product } = await serving(kind, records, 10);
+    const expected = records.filter((record) => record.kind === "bus").map((record) => record.id);
+    const answered = await pages(service, product, { limit: 4, filters: buses });
+    expect(answered.flatMap((page) => page.data.map((row) => row.id))).toEqual(expected);
+    // Only the last page may be short: no page stops while matches remain.
+    expect(answered.slice(0, -1).every((page) => page.data.length === 4)).toBe(true);
+  });
+
+  it("ends a product with no match in one empty page with no cursor", async () => {
+    const { serving: service, product } = await serving(
+      kind,
+      fleet(400, () => false),
+      10,
+    );
+    expect(await service.records(product, { limit: 5, filters: buses })).toEqual({ data: [] });
+  });
+
+  it("stops at its chunk budget with a cursor, empty when nothing matched, and the cursor carries on to the match", async () => {
+    const count = (RECORD_SCAN_BUDGET.chunks + 4) * 2;
+    const records = fleet(count, (index) => index === count - 1);
+    const { serving: service, product, chunks } = await serving(kind, records, 2);
+    expect(chunks.length).toBeGreaterThan(RECORD_SCAN_BUDGET.chunks);
+    const answered = await pages(service, product, { limit: 5, filters: buses });
+    expect(answered.map((page) => page.data.map((row) => row.id))).toEqual([[], [records.at(-1)!.id]]);
+    expect(answered[0]!.nextCursor).toBeDefined();
   });
 
   it("filters the GeoJSON export too, leaving numberMatched out", async () => {

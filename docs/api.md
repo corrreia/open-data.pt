@@ -43,7 +43,11 @@ days, and answers with an opaque `nextCursor`, freshness and explicit coverage.
 
 - The API is **read-only**: every other method answers `405`.
 - `/records` accepts `where=field:value` (up to five) and, for located products,
-  `bbox=minLon,minLat,maxLon,maxLat`.
+  `bbox=minLon,minLat,maxLon,maxLat`. A filtered page reads on through the product until it holds
+  `limit` rows or the product ends, within a bounded amount of work per request; on a large product a
+  page that reaches that bound comes back short, or with an empty `data`, and a `nextCursor`. An empty
+  page with a `nextCursor` is not the end: follow the cursor until it is absent. Filtered pages count
+  against the stricter rate limit, like `/records/all` and the GeoJSON export.
 - An unknown query parameter answers `400`. Requests are rate limited per client (`429` with
   `Retry-After`).
 - A product's current data is cached at the edge for a quarter of its feed's cadence, between 15

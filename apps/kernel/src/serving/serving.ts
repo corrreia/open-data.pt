@@ -70,8 +70,33 @@ export interface ProductCatalog {
   getProduct(slug: string): Promise<ProductDetail | undefined>;
 }
 
-/** A page never reads more than this many chunks, even when a filter rejects most rows. */
-const MAX_CHUNKS_PER_PAGE = 8;
+/**
+ * How much of a product one records page may read while a filter rejects its rows. A page reads
+ * on, chunk after chunk, until it has `limit` rows or the product ends, and stops early only here,
+ * with a cursor where it stopped.
+ *
+ * Eight chunks used to be the whole budget, and a filter on one municipality of the 234,768-row
+ * CRUS (about 115 chunks) answered eleven empty pages before its first row: clients and agents read
+ * an empty page as "no such records" and stopped. These numbers let a page cover such a product in
+ * one request, and still bound the request whatever the filter:
+ * - chunks: every chunk is one R2 read, a subrequest and a Class B operation. 256 is a fortieth of
+ *   the 10,000 subrequests a Workers Paid invocation may make
+ *   (https://developers.cloudflare.com/workers/platform/limits/#subrequests).
+ * - chars: parsing chunk text is the CPU a page spends, and its wall time. 256 Mi characters is
+ *   more than the whole CRUS (some 160 million), or about 128 of the largest chunks
+ *   (CHUNK_LIMITS.maxChars): a second or two of JSON parsing against the kernel's 120,000 ms CPU
+ *   limit (wrangler.jsonc).
+ * Memory does not grow with the budget: rows that fail the filter are dropped as each chunk is
+ * read, and only READ_AHEAD chunks' text is held besides the one being filtered.
+ */
+export const RECORD_SCAN_BUDGET = { chunks: 256, chars: 256 * 1024 * 1024 } as const;
+
+/**
+ * Chunks a filtered page keeps in flight once it has read past its first: R2 latency, not parsing,
+ * is most of a chunk's cost, so a scan of a hundred chunks takes about a quarter of the time. At most
+ * this many reads are wasted when the page fills; an unfiltered page never reads ahead.
+ */
+const READ_AHEAD = 4;
 
 /**
  * Public reads. A request looks its product up once, in the Registry, which
@@ -94,9 +119,9 @@ export class Serving {
   }
 
   /**
-   * One page of records. Filters are applied while reading chunks, and a page
-   * still reads at most MAX_CHUNKS_PER_PAGE chunks, so a selective filter can
-   * return fewer rows than asked together with a cursor to continue.
+   * One page of records. Filters are applied while reading chunks, and a page reads on past chunks
+   * with no match until it has `limit` rows or the product ends. Only a page that spends its
+   * RECORD_SCAN_BUDGET first comes back short, or empty, with a cursor to continue from.
    */
   async records(product: ProductDetail, input: RecordQuery): Promise<RecordPage> {
     const matches = rowMatcher(product.schema, input.filters);
@@ -106,13 +131,30 @@ export class Serving {
     if (cursor && cursor.version !== product.version) {
       throw new InvalidQueryError(`cursor belongs to version ${cursor.version}, and the product is now at version ${product.version}; start again without a cursor`);
     }
+    const filtered = matches !== undefined || input.validAt !== undefined;
     const data: JsonObject[] = [];
-    let chunk = cursor?.chunk ?? 0;
+    const first = cursor?.chunk ?? 0;
+    const end = Math.min(chunks.length, first + RECORD_SCAN_BUDGET.chunks);
+    const reads = new Map<number, Promise<string>>();
+    const read = (index: number) => {
+      let text = reads.get(index);
+      if (!text) {
+        text = this.chunkText(chunks[index]!.key);
+        // A read ahead that the page never reaches must not fail the request unseen; the one awaited still throws.
+        void text.catch(() => undefined);
+        reads.set(index, text);
+      }
+      return text;
+    };
+    let chunk = first;
     let offset = cursor?.offset ?? 0;
-    let reads = 0;
-    while (chunk < chunks.length && data.length < input.limit && reads < MAX_CHUNKS_PER_PAGE) {
-      const rows = await this.chunkRows(chunks[chunk]!.key);
-      reads += 1;
+    let chars = 0;
+    while (chunk < end && data.length < input.limit && chars < RECORD_SCAN_BUDGET.chars) {
+      if (filtered && chunk > first) for (let ahead = chunk + 1; ahead < Math.min(end, chunk + 1 + READ_AHEAD); ahead += 1) void read(ahead);
+      const text = await read(chunk);
+      reads.delete(chunk);
+      chars += text.length;
+      const rows = chunkRowsOf(text);
       while (offset < rows.length && data.length < input.limit) {
         const { _hash: _h, ...record } = rows[offset]!;
         offset += 1;
@@ -268,10 +310,19 @@ export class Serving {
   }
 
   private async chunkRows(key: string): Promise<JsonObject[]> {
-    const chunk = await this.objects.read<ChunkObject>(key);
-    if (!chunk) throw new NotFoundError("A chunk of this product is missing; retry shortly");
-    return chunk.rows;
+    return chunkRowsOf(await this.chunkText(key));
   }
+
+  private async chunkText(key: string): Promise<string> {
+    const text = await this.objects.readText(key);
+    if (text === undefined) throw new NotFoundError("A chunk of this product is missing; retry shortly");
+    return text;
+  }
+}
+
+function chunkRowsOf(text: string): JsonObject[] {
+  // SAFETY: chunk objects are written only by writeChunk, as `{"rows":[...]}` of JSON objects.
+  return (JSON.parse(text) as ChunkObject).rows;
 }
 
 /**

@@ -270,11 +270,14 @@ export function openApiDocument(origin: string) {
           tags: ["Products"],
           summary: "Read the current reference, state, summary, or event records",
           description:
-            "A page reads a bounded number of chunks. With a selective filter a page can hold fewer rows than `limit`, or none, and still carry `nextCursor`; follow it until it is absent.",
+            "A filtered page (`where`, `bbox` or `validAt`) reads on through the product until it holds `limit` rows or the product ends, up to a bounded amount of work per request. A page that reaches that bound before it fills comes back with fewer rows than `limit`, or with none, and still carries `nextCursor`: an empty `data` with a `nextCursor` is not the end and does not mean nothing matches. Follow `nextCursor` until it is absent. Filtered pages count against the stricter rate limit.",
           parameters: [
             pathParameter("slug", "Stable product slug"),
             integerParameter("limit", 50, 1, 500),
-            queryParameter("cursor", "Opaque continuation key from the previous response."),
+            queryParameter(
+              "cursor",
+              "Opaque continuation key from the previous response's `nextCursor`. A filtered page can be short or empty and still carry one; keep following it until a response has none.",
+            ),
             timeParameter("validAt", "Only records valid at this RFC 3339 time."),
             whereParameter(),
             bboxParameter(),

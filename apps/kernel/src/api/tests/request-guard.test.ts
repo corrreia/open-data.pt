@@ -20,12 +20,15 @@ describe("canonical routes", () => {
     expect(() => route(`/api/products/stops/records?${filters}`)).toThrow(/At most/);
   });
 
-  it("marks history windows and GeoJSON as costly, and leaves unknown paths to the 404", () => {
+  it("marks history windows, GeoJSON and filtered record pages as costly, and leaves unknown paths to the 404", () => {
     expect(route("/api/products/stops/events?from=a&to=b")?.costly).toBe(true);
     expect(route("/api/products/stops/series/changes/range?from=a&to=b")?.costly).toBe(true);
     expect(route("/api/products/stops.geojson")?.costly).toBe(true);
     expect(route("/api/products/stops/records/all")?.costly).toBe(true);
-    expect(route("/api/products/stops/records")?.costly).toBe(false);
+    expect(route("/api/products/stops/records?limit=500&cursor=abc")?.costly).toBe(false);
+    // A filtered page reads on through the product until it fills.
+    for (const filter of ["where=kind%3Abus", "bbox=-9.2,38.7,-9.1,38.8", "validAt=2026-09-01T00:00:00Z"])
+      expect(route(`/api/products/stops/records?${filter}`)?.costly, filter).toBe(true);
     expect(route("/api/config")).toBeUndefined();
     // The API serves data and collection status, not the platform's own machinery.
     for (const path of ["/api/usage", "/api/sync", "/api/policies", "/api/gatekeepers", "/api/feed-kinds", "/api/activity", "/api/feeds/f1/acquisitions", "/api/feeds/f1/backfill"])
