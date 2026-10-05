@@ -10,6 +10,7 @@
  */
 import { asArray, asNumber, asObject, asString, isJsonObject, parseJson, type JsonObject, type JsonValue } from "@open-data-pt/contract";
 
+import { PAGE_VIEW_HEADER } from "@open-data-pt/api";
 import { isbot } from "isbot";
 import { parse as parseReferrer } from "ts-referer-parser";
 
@@ -303,9 +304,11 @@ export function referrerSource(host: string): ReferrerSource {
 /**
  * Requests this site's own pages make with fetch(): API reads for a page
  * already counted as a page view. Counting them again would make the API look
- * busy with its own website.
+ * busy with its own website. The one fetch that is a page view is the site
+ * asking for a page it has just shown in place, which it marks so.
  */
 export function isOwnPageFetch(request: Request): boolean {
+  if (request.headers.has(PAGE_VIEW_HEADER) && surfaceOf(new URL(request.url)) === "web") return false;
   return request.headers.get("Sec-Fetch-Site") === "same-origin" && request.headers.get("Sec-Fetch-Mode") !== "navigate";
 }
 

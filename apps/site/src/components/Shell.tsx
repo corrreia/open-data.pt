@@ -12,13 +12,13 @@ import {
   ScalesIcon,
   type Icon,
 } from "@phosphor-icons/react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useContext, useEffect, useState, type ReactNode } from "react";
 import { fetchFeeds, fetchProducts } from "../lib/catalog";
 import { REPOSITORY } from "../lib/project";
 import { prefetch } from "../lib/query";
-import { AskLauncher } from "./ask/AskLauncher";
 import { Mark } from "./Mark";
 import { SearchPalette } from "./SearchPalette";
+import { AgentModal } from "./Site";
 
 export type Section = "home" | "catalog" | "publishers" | "licences" | "status" | "analytics" | "start" | "operations" | "product" | "contribute" | "aup";
 
@@ -64,7 +64,7 @@ function isTypingIn(target: EventTarget | null) {
 export function Shell({ section, children }: { section: Section; children: ReactNode }) {
   const [searching, setSearching] = useState(false);
   // The agent's panel fills a phone's screen and is modal there; like the palette, it takes the page out of reach.
-  const [agentModal, setAgentModal] = useState(false);
+  const agentModal = useContext(AgentModal);
 
   // ⌘K or Ctrl+K anywhere, or "/" outside a text field, opens the search.
   useEffect(() => {
@@ -147,7 +147,12 @@ export function Shell({ section, children }: { section: Section; children: React
           </div>
         </header>
 
-        <main id="content" className="mx-auto grid w-full min-w-0 max-w-7xl flex-1 grid-cols-[minmax(0,1fr)] content-start gap-14 px-4 pb-24 pt-6 sm:px-6">
+        {/* Focus lands here when a link opens another page in place, as it would at the top of a new page. */}
+        <main
+          id="content"
+          tabIndex={-1}
+          className="mx-auto grid w-full min-w-0 max-w-7xl flex-1 grid-cols-[minmax(0,1fr)] content-start gap-14 px-4 pb-24 pt-6 outline-none sm:px-6"
+        >
           {children}
         </main>
 
@@ -194,7 +199,6 @@ export function Shell({ section, children }: { section: Section; children: React
       </div>
       <NavDrawer current={current} />
       <SearchPalette open={searching} onOpenChange={setSearching} />
-      <AskLauncher onModalChange={setAgentModal} />
     </Sidebar.Provider>
   );
 }

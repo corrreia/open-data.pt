@@ -1,7 +1,6 @@
 import { LayerCard } from "@cloudflare/kumo";
 import type { ReactNode } from "react";
 import { PageHead, SectionHead } from "../components/common";
-import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { CONTACT_EMAIL, REPOSITORY, newIssue } from "../lib/project";
 
@@ -111,4 +110,4 @@ function Aup() {
   );
 }
 
-mountPage(<Aup />);
+export default Aup;

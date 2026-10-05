@@ -90,6 +90,10 @@ describe("who sent a request", () => {
     expect(isOwnPageFetch(clicked)).toBe(false);
     expect(isOwnPageFetch(elsewhere)).toBe(false);
     expect(isOwnPageFetch(new Request("https://open-data.pt/api/products"))).toBe(false);
+    // A page the site shows in place counts as the visit it is; the mark does nothing for an API read.
+    const view = { "Sec-Fetch-Site": "same-origin", "Sec-Fetch-Mode": "cors", "X-Page-View": "1" };
+    expect(isOwnPageFetch(new Request("https://open-data.pt/product/?slug=fuel", { method: "HEAD", headers: view }))).toBe(false);
+    expect(isOwnPageFetch(new Request("https://open-data.pt/api/products", { headers: view }))).toBe(true);
   });
 });
 

@@ -2,7 +2,6 @@ import { Badge, Breadcrumbs, Button, LayerCard, Link, Loader, Tabs, Tooltip } fr
 import { ArrowClockwiseIcon, ArrowRightIcon, CheckCircleIcon, CircleNotchIcon, ClockIcon, CompassIcon, MinusCircleIcon, XCircleIcon, type Icon } from "@phosphor-icons/react";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Countdown, ErrorNote, Eyebrow, Kv, PageHead, RelativeTime, RoleBadge, ToneBadge, bodyRows, cardRows } from "../components/common";
-import { mountPage } from "../components/mount";
 import { ChangesView, CorrectionsView, EventHistoryView } from "../components/product/HistoryViews";
 import { SchemaView } from "../components/product/SchemaView";
 import { RecordsView } from "../components/product/RecordsView";
@@ -12,6 +11,7 @@ import { ApiError, apiGet, productPath } from "../lib/api";
 import { PublisherMark } from "../components/PublisherMark";
 import { ROLE, freshness, licenceHref, openableUrl, publisherHref, throughOf } from "../lib/catalog";
 import { fmt } from "../lib/format";
+import { navigate, replaceAddress } from "../lib/navigation";
 import { newIssue } from "../lib/project";
 import { invalidate, useQuery } from "../lib/query";
 import type { Acquisition, AcquisitionStatus, Feed, Product } from "../lib/types";
@@ -20,8 +20,6 @@ import type { Acquisition, AcquisitionStatus, Feed, Product } from "../lib/types
 const MapView = lazy(() => import("../components/product/MapView"));
 const SeriesView = lazy(() => import("../components/product/SeriesView"));
 const ApiView = lazy(() => import("../components/product/ApiView"));
-
-const slug = new URLSearchParams(window.location.search).get("slug");
 
 interface RunLook {
   icon: Icon;
@@ -75,6 +73,8 @@ function Description({ text }: { text: string }) {
 }
 
 function ProductPage() {
+  // Read as the page opens: the same page shows another dataset once a link changes the address.
+  const [slug] = useState(() => new URLSearchParams(window.location.search).get("slug"));
   const product = useQuery(slug ? `product:${slug}` : null, () => apiGet<Product>(productPath(slug ?? "")));
   const feedId = product.data?.feedId;
   const feed = useQuery(feedId ? `feed:${feedId}` : null, () => apiGet<{ data: Feed }>(`/api/feeds/${encodeURIComponent(feedId ?? "")}`).then((result) => result.data));
@@ -85,7 +85,7 @@ function ProductPage() {
   const [tab, setTab] = useState<string | undefined>(() => window.location.hash.slice(1) || undefined);
   const openTab = (value: string) => {
     setTab(value);
-    history.replaceState(null, "", `${window.location.pathname}${window.location.search}#${value}`);
+    replaceAddress(`${window.location.pathname}${window.location.search}#${value}`);
   };
   const [refreshKey, setRefreshKey] = useState(0);
   const version = useRef<number | undefined>(undefined);
@@ -149,7 +149,7 @@ function ProductPage() {
           )}
         </PageHead>
         <div>
-          <Button variant="primary" icon={<CompassIcon />} onClick={() => window.location.assign("/catalog/")}>
+          <Button variant="primary" icon={<CompassIcon />} onClick={() => navigate("/catalog/")}>
             Open the catalog
           </Button>
         </div>
@@ -461,4 +461,4 @@ function Step({ n, label, title, last = false, children }: { n: number; label: s
   );
 }
 
-mountPage(<ProductPage />);
+export default ProductPage;

@@ -2,7 +2,6 @@ import { Badge, Banner, Button, LayerCard, Loader, Meter } from "@cloudflare/kum
 import { ArrowSquareOutIcon, CaretRightIcon, CheckCircleIcon, WarningCircleIcon, WarningIcon } from "@phosphor-icons/react";
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { ErrorNote, PageHead, SectionHead } from "../components/common";
-import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { apiGet, productHref } from "../lib/api";
 import { fetchFeeds, fetchProducts, publisherHref } from "../lib/catalog";
@@ -662,4 +661,4 @@ function Incidents({
   );
 }
 
-mountPage(<StatusPage />);
+export default StatusPage;

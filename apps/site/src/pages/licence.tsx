@@ -1,16 +1,14 @@
 import { Breadcrumbs, Button, Empty, LayerCard, Link } from "@cloudflare/kumo";
 import { ArrowRightIcon, ScalesIcon } from "@phosphor-icons/react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { ListingRows } from "../components/ListingRows";
 import { PublisherMark } from "../components/PublisherMark";
 import { ErrorNote, PageHead, Placeholder, StatTile, bodyRows, cardRows } from "../components/common";
-import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { buildLicences, buildListings, fetchFeeds, fetchProducts, licenceHref, publisherHref, topicsOf, type Licence, emptyLast } from "../lib/catalog";
 import { fmt, plural } from "../lib/format";
+import { navigate } from "../lib/navigation";
 import { useQuery } from "../lib/query";
-
-const wanted = new URLSearchParams(window.location.search).get("id");
 
 /** How many of this licence's tables and series one publisher accounts for. */
 const listingsOf = (licence: Licence, publisherId: string) => licence.listings.filter((listing) => listing.publisher.id === publisherId).length;
@@ -142,6 +140,7 @@ function LicencePage({ licence }: { licence: Licence }) {
 }
 
 function Licences() {
+  const [wanted] = useState(() => new URLSearchParams(window.location.search).get("id"));
   const products = useQuery("products", fetchProducts);
   const feeds = useQuery("feeds", fetchFeeds);
   const licences = useMemo(() => (products.data && feeds.data ? buildLicences(buildListings(products.data, feeds.data)) : undefined), [products.data, feeds.data]);
@@ -167,7 +166,7 @@ function Licences() {
           title="Licence not found"
           description="Nothing on open-data.pt is served under terms by that name."
           contents={
-            <Button variant="primary" onClick={() => window.location.assign("/licence/")}>
+            <Button variant="primary" onClick={() => navigate("/licence/")}>
               All licences
             </Button>
           }
@@ -181,4 +180,4 @@ function Licences() {
   );
 }
 
-mountPage(<Licences />);
+export default Licences;

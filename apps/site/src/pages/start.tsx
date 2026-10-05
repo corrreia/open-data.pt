@@ -2,7 +2,6 @@ import { Button, ClipboardText, LayerCard, LinkButton, TableOfContents, useTable
 import { ArrowRightIcon, BracketsCurlyIcon, CheckIcon, CopyIcon, GiftIcon, KeyIcon, SealCheckIcon } from "@phosphor-icons/react";
 import { useMemo, type ReactNode } from "react";
 import { PageHead, RoleBadge, SectionHead, bodyRows, cardRows } from "../components/common";
-import { mountPage } from "../components/mount";
 import { CommandBlock, useCopy } from "../components/ops/CommandBlock";
 import { useHashLanding } from "../components/ops/useHashLanding";
 import { Shell } from "../components/Shell";
@@ -487,4 +486,4 @@ function Start() {
   );
 }
 
-mountPage(<Start />);
+export default Start;

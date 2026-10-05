@@ -2,6 +2,7 @@ import { CommandPalette } from "@cloudflare/kumo";
 import { BookOpenIcon, BuildingsIcon, ChartLineIcon, CompassIcon, DatabaseIcon, HandHeartIcon, HeartbeatIcon, MapPinIcon, TableIcon, ScalesIcon } from "@phosphor-icons/react";
 import { useMemo, useState, type ReactNode } from "react";
 import { productHref } from "../lib/api";
+import { navigate } from "../lib/navigation";
 import { buildListings, buildPublishers, fetchFeeds, fetchProducts, publisherHref, topicLabel } from "../lib/catalog";
 import { useQuery } from "../lib/query";
 
@@ -95,7 +96,7 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
 
   const go = (href: string, newTab = false) => {
     if (newTab) window.open(href, "_blank", "noopener");
-    else window.location.assign(href);
+    else navigate(href);
     onOpenChange(false);
   };
 

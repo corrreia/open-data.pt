@@ -10,6 +10,12 @@
  * never serves. Nothing here is a Gatekeeper concern — that is the contract.
  */
 export { MCP_GUIDE, MCP_SERVER_NAME, MCP_SERVER_VERSION } from "./mcp";
+
+/**
+ * Marks the site's request for a page it has just shown in place, without loading it: the kernel
+ * counts it as the page view a page load would have been, where it leaves the site's other reads out.
+ */
+export const PAGE_VIEW_HEADER = "X-Page-View";
 import type { CanonicalSchema, Completeness, JsonObject, JsonValue, ProductRole, TransformQuality } from "@open-data-pt/contract/data";
 
 export type { CanonicalField as Field, CanonicalSchema, FieldDisplay, FieldType, JsonObject, JsonValue, ProductRole as Role } from "@open-data-pt/contract/data";
