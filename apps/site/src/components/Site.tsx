@@ -69,7 +69,7 @@ export function Site({ initial }: { initial: ComponentType }) {
   return (
     <AgentModal value={agentModal}>
       <shown.Page key={shown.mount} />
-      <AskLauncher onModalChange={setAgentModal} />
+      <AskLauncher drawn={shown.mount} onModalChange={setAgentModal} />
     </AgentModal>
   );
 }

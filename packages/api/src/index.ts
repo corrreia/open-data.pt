@@ -16,6 +16,8 @@ export { MCP_GUIDE, MCP_SERVER_NAME, MCP_SERVER_VERSION } from "./mcp";
  * counts it as the page view a page load would have been, where it leaves the site's other reads out.
  */
 export const PAGE_VIEW_HEADER = "X-Page-View";
+/** Marks an API read the site's agent makes for the code its model wrote, so the kernel counts it as the agent's. */
+export const ASK_READ_HEADER = "X-Ask-Read";
 import type { CanonicalSchema, Completeness, JsonObject, JsonValue, ProductRole, TransformQuality } from "@open-data-pt/contract/data";
 
 export type { CanonicalField as Field, CanonicalSchema, FieldDisplay, FieldType, JsonObject, JsonValue, ProductRole as Role } from "@open-data-pt/contract/data";
@@ -325,4 +327,6 @@ export interface AnalyticsReport {
   referrers: Array<{ surface: string; referrer: string; medium: string; requests: number }>;
   outcomes: Array<{ surface: string; status: string; cache: string; format: string; requests: number }>;
   mcp: Array<{ call: string; client: string; requests: number }>;
+  /** The site's agent: model steps by `turn` (`question` begins one, `step` follows tool results), model and status class. */
+  ask: Array<{ turn: string; model: string; status: string; requests: number }>;
 }

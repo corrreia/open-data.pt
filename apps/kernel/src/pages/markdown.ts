@@ -358,6 +358,8 @@ const SURFACE_LABEL = new Map([
   ["api", "API requests"],
   ["mcp", "MCP messages"],
   ["mcp-read", "API reads by MCP code runs"],
+  ["ask", "Model steps of the site's agent (Ask the data)"],
+  ["ask-read", "API reads by the site's agent"],
   ["docs", "API reference"],
   ["discovery", "Discovery documents"],
 ]);
@@ -368,7 +370,7 @@ async function analytics(url: URL, host: SiteHost): Promise<PageText> {
   const head = [
     "# Analytics",
     "",
-    `How open-data.pt is used: requests to the website, the API and the MCP server, counted by Cloudflare Workers Analytics Engine. No IP address, cookie or visitor identifier is kept. The same as JSON: ${url.origin}/api/analytics?days=${days} (also days=1, 30 or 90).`,
+    `How open-data.pt is used: requests to the website, the API, the MCP server and the site's agent, counted by Cloudflare Workers Analytics Engine. No IP address, cookie or visitor identifier is kept. The same as JSON: ${url.origin}/api/analytics?days=${days} (also days=1, 30 or 90).`,
     "",
   ];
   if (response.status === 503) return found([...head, "Usage analytics are not enabled on this deployment."]);
@@ -378,9 +380,11 @@ async function analytics(url: URL, host: SiteHost): Promise<PageText> {
   const total = (rows: Array<{ surface: string; requests: number }>, surface: string) => rows.filter((row) => row.surface === surface).reduce((sum, row) => sum + row.requests, 0);
   const top = <T extends { requests: number }>(rows: T[], count: number) => [...rows].sort((a, b) => b.requests - a.requests).slice(0, count);
   const sum = new Map<string, number>();
-  for (const row of report.clients.filter((each) => each.surface !== "mcp-read")) sum.set(`${row.kind}|${row.name}`, (sum.get(`${row.kind}|${row.name}`) ?? 0) + row.requests);
+  for (const row of report.clients.filter((each) => each.surface !== "mcp-read" && each.surface !== "ask-read"))
+    sum.set(`${row.kind}|${row.name}`, (sum.get(`${row.kind}|${row.name}`) ?? 0) + row.requests);
   const countries = new Map<string, number>();
-  for (const row of report.countries.filter((each) => each.surface !== "mcp-read")) countries.set(row.country, (countries.get(row.country) ?? 0) + row.requests);
+  for (const row of report.countries.filter((each) => each.surface !== "mcp-read" && each.surface !== "ask-read"))
+    countries.set(row.country, (countries.get(row.country) ?? 0) + row.requests);
   return found([
     ...head,
     `## The last ${days} days (since ${report.from})`,

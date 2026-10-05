@@ -10,7 +10,7 @@
  */
 import { asArray, asNumber, asObject, asString, isJsonObject, parseJson, type JsonObject, type JsonValue } from "@open-data-pt/contract";
 
-import { PAGE_VIEW_HEADER } from "@open-data-pt/api";
+import { ASK_READ_HEADER, PAGE_VIEW_HEADER } from "@open-data-pt/api";
 import { isbot } from "isbot";
 import { parse as parseReferrer } from "ts-referer-parser";
 
@@ -31,9 +31,10 @@ export const ANALYTICS_TTL_SECONDS = 1800;
 /**
  * Where a request arrived. `mcp-read` is an API read made by an MCP code run:
  * it tells which data assistants read, and is counted apart from the MCP
- * messages that caused it.
+ * messages that caused it. `ask` is one model step of the site's own agent,
+ * and `ask-read` an API read its code made from the visitor's page.
  */
-export type Surface = "api" | "web" | "mcp" | "mcp-read" | "docs" | "discovery";
+export type Surface = "api" | "web" | "mcp" | "mcp-read" | "ask" | "ask-read" | "docs" | "discovery";
 
 /** What sent a request, as far as its User-Agent tells. */
 export type ClientKind = "browser" | "library" | "ai-agent" | "crawler" | "unknown";
@@ -50,6 +51,12 @@ export interface McpCall {
   client: string;
 }
 
+/** One model step of the site's agent: whether it starts a new question or carries on after tool results, and the model asked. */
+export interface AskCall {
+  turn: "question" | "step";
+  model: string;
+}
+
 export type CacheOutcome = "hit" | "miss" | "none";
 
 /** One answered request, as the recorder sees it. */
@@ -62,6 +69,7 @@ export interface UsageEvent {
   durationMs: number;
   cache: CacheOutcome;
   mcp?: McpCall | undefined;
+  ask?: AskCall | undefined;
 }
 
 /** Longest client, referrer or subject name kept; longer ones are cut. */
@@ -78,6 +86,7 @@ export function surfaceOf(url: URL): Surface | undefined {
   const path = url.pathname;
   if (path === "/api" || path.startsWith("/api/")) return "api";
   if (path === "/mcp") return "mcp";
+  if (path === "/ask/chat") return "ask";
   if (path === "/docs" || path === "/docs/" || path === "/openapi.json") return "docs";
   if (DISCOVERY.test(path)) return "discovery";
   if (isPage(path)) return "web";
@@ -86,18 +95,20 @@ export function surfaceOf(url: URL): Surface | undefined {
 
 /** The route a request took, named as the OpenAPI document or the site names it; never the raw URL. */
 export function routeOf(surface: Surface, url: URL): string {
-  if (surface === "api" || surface === "mcp-read") return routeTemplate(url.pathname) ?? "(unknown)";
+  if (isApiRead(surface)) return routeTemplate(url.pathname) ?? "(unknown)";
   if (surface === "web") return pagePath(url.pathname);
   if (surface === "docs") return url.pathname === "/docs/" ? "/docs" : url.pathname;
   // Any /.well-known/ path counts as discovery, including made-up ones of any length.
   return clip(url.pathname);
 }
 
+const isApiRead = (surface: Surface) => surface === "api" || surface === "mcp-read" || surface === "ask-read";
+
 const SUBJECT_IN_PATH = /^\/api\/(?:products|feeds)\/([^/]+?)(?:\.geojson|\/.*)?$/;
 
 /** The product, feed, publisher, licence or topic a request is about, when it names one. */
 export function subjectOf(surface: Surface, url: URL): string {
-  if (surface === "api" || surface === "mcp-read") {
+  if (isApiRead(surface)) {
     const match = SUBJECT_IN_PATH.exec(url.pathname);
     return match?.[1] ? clip(safeDecode(match[1])) : "";
   }
@@ -312,6 +323,26 @@ export function isOwnPageFetch(request: Request): boolean {
   return request.headers.get("Sec-Fetch-Site") === "same-origin" && request.headers.get("Sec-Fetch-Mode") !== "navigate";
 }
 
+/**
+ * The surface a request is counted under, or undefined when it is not counted: files that are not
+ * pages, preflights, and the site's own fetches. Two of those are counted after all: the agent's model
+ * steps, and the API reads its code makes, which the site marks as the agent's. A step counts only
+ * when the agent's route took it for one (`ask`): a request it refused before asking a model was none.
+ */
+export function countedSurface(request: Request, url: URL, ask?: AskCall): Surface | undefined {
+  const surface = surfaceOf(url);
+  if (!surface || request.method === "OPTIONS") return undefined;
+  if (surface === "ask") return ask ? surface : undefined;
+  if (!isOwnPageFetch(request)) return surface;
+  return surface === "api" && request.headers.has(ASK_READ_HEADER) ? "ask-read" : undefined;
+}
+
+/** A model step of the site's agent, from the conversation it sends: a question when the visitor wrote last. */
+export function askCallOf(model: string, messages: JsonValue[]): AskCall {
+  const last = asObject(messages.at(-1));
+  return { turn: last?.role === "user" ? "question" : "step", model: clip(model) };
+}
+
 /** The first message of an MCP POST: its method, the tool it calls, and the client's name on initialize. */
 export function mcpCallOf(body: JsonValue): McpCall | undefined {
   const messages = Array.isArray(body) ? body : [body];
@@ -344,11 +375,11 @@ export function usagePoint(event: UsageEvent): AnalyticsEngineDataPoint {
       client.kind,
       client.name,
       country === undefined ? "" : String(country),
-      event.surface === "mcp-read" ? "" : referrerOf(event.request, event.url),
+      event.surface === "mcp-read" || event.surface === "ask-read" ? "" : referrerOf(event.request, event.url),
       statusClass(event.response.status),
       event.cache,
-      event.mcp ? (event.mcp.tool ? `${event.mcp.method} ${event.mcp.tool}` : event.mcp.method) : "",
-      event.mcp?.client ?? "",
+      event.mcp ? (event.mcp.tool ? `${event.mcp.method} ${event.mcp.tool}` : event.mcp.method) : (event.ask?.turn ?? ""),
+      event.mcp?.client ?? event.ask?.model ?? "",
       formatOf(event.response.headers.get("Content-Type")),
     ],
     doubles: [Math.max(0, event.durationMs)],
@@ -409,10 +440,12 @@ export interface AnalyticsReport {
   referrers: Array<{ surface: string; referrer: string; medium: string; requests: number }>;
   outcomes: Array<{ surface: string; status: string; cache: string; format: string; requests: number }>;
   mcp: Array<{ call: string; client: string; requests: number }>;
+  /** The site's agent: model steps by whether each began a question, the model, and how it went. */
+  ask: Array<{ turn: string; model: string; status: string; requests: number }>;
 }
 
 /** The report's parts, each one query. */
-type ReportPart = "timeline" | "clients" | "routes" | "subjects" | "countries" | "referrers" | "outcomes" | "mcp";
+type ReportPart = "timeline" | "clients" | "routes" | "subjects" | "countries" | "referrers" | "outcomes" | "mcp" | "ask";
 
 /** Why the report could not be built: no token on this deployment, or Analytics Engine did not answer. */
 export class AnalyticsError extends Error {
@@ -474,6 +507,10 @@ export function reportQueries(from: Date, resolution: "hour" | "day"): Map<Repor
       `SELECT index1 AS surface, blob7 AS status, blob8 AS cache, blob11 AS format, ${REQUESTS} FROM ${table} ${where} GROUP BY surface, status, cache, format ORDER BY requests DESC LIMIT 500`,
     ],
     ["mcp", `SELECT blob9 AS call, blob10 AS client, ${REQUESTS} FROM ${table} ${where} AND index1 = 'mcp' GROUP BY call, client ORDER BY requests DESC LIMIT 200`],
+    [
+      "ask",
+      `SELECT blob9 AS turn, blob10 AS model, blob7 AS status, ${REQUESTS} FROM ${table} ${where} AND index1 = 'ask' GROUP BY turn, model, status ORDER BY requests DESC LIMIT 200`,
+    ],
   ]);
 }
 
@@ -515,6 +552,7 @@ export async function analyticsReport(
       requests: count(row, "requests"),
     })),
     mcp: rows("mcp").map((row) => ({ call: text(row, "call"), client: text(row, "client"), requests: count(row, "requests") })),
+    ask: rows("ask").map((row) => ({ turn: text(row, "turn"), model: text(row, "model"), status: text(row, "status"), requests: count(row, "requests") })),
   };
 }
 

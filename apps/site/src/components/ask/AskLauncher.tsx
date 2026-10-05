@@ -1,7 +1,6 @@
 import { Loader } from "@cloudflare/kumo";
 import { ChatsCircleIcon } from "@phosphor-icons/react";
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { useSiteLocation } from "../../lib/navigation";
 
 // The agent in the corner of every page. This part is all every page loads: whether the agent is on
 // here, and a button. The panel, the model's sandbox and the MCP server load when it first opens, and
@@ -35,17 +34,18 @@ const FOOTER_GAP_PX = 12;
 /**
  * How far the site's footer reaches up into the window, in pixels: 0 until it scrolls into view.
  * The corner button rises by as much, so it sits just above the footer instead of over its links.
- * Each page draws a footer of its own, so it is found again whenever the page changes.
+ * Each page draws a footer of its own, so the footer is looked up on every measure: one kept from
+ * the page before measures as if at the top of the window and would lift the button out of sight.
+ * `drawn` changes whenever a new page has drawn, to measure its footer at once.
  */
-function useFooterRise(page: string): number {
+function useFooterRise(drawn: number): number {
   const [rise, setRise] = useState(0);
   useEffect(() => {
-    const footer = document.getElementById("site-footer");
-    if (!footer) return;
     let frame = 0;
     const measure = () => {
       frame = 0;
-      setRise(Math.max(0, Math.round(window.innerHeight - footer.getBoundingClientRect().top)));
+      const footer = document.getElementById("site-footer");
+      setRise(footer ? Math.max(0, Math.round(window.innerHeight - footer.getBoundingClientRect().top)) : 0);
     };
     const schedule = () => {
       if (!frame) frame = requestAnimationFrame(measure);
@@ -62,7 +62,7 @@ function useFooterRise(page: string): number {
       window.removeEventListener("resize", schedule);
       resized.disconnect();
     };
-  }, [page]);
+  }, [drawn]);
   return rise;
 }
 
@@ -71,8 +71,11 @@ function signInFailure(): string | undefined {
   return /^#ask-signin=(\w+)$/.exec(window.location.hash)?.[1];
 }
 
-/** Told when the open panel fills a phone's screen, so the Shell can take the page behind it out of reach. */
-export function AskLauncher({ onModalChange }: { onModalChange: (modal: boolean) => void }) {
+/**
+ * Told when the open panel fills a phone's screen, so the Shell can take the page behind it out of reach.
+ * `drawn` counts the pages the site has drawn in this tab.
+ */
+export function AskLauncher({ drawn, onModalChange }: { drawn: number; onModalChange: (modal: boolean) => void }) {
   const [enabled, setEnabled] = useState(() => {
     const known = readKey(ENABLED_KEY);
     return known === null ? undefined : known === "1";
@@ -110,7 +113,7 @@ export function AskLauncher({ onModalChange }: { onModalChange: (modal: boolean)
   const [unread, setUnread] = useState(false);
   const openNow = useRef(open);
   const button = useRef<HTMLButtonElement>(null);
-  const rise = useFooterRise(useSiteLocation().page);
+  const rise = useFooterRise(drawn);
   // Clear of the home indicator, and of the footer once it is in view.
   const corner = { bottom: `max(1rem, env(safe-area-inset-bottom), ${rise + FOOTER_GAP_PX}px)` };
 

@@ -1,5 +1,5 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
-import { UsageRecorder, isOwnPageFetch, surfaceOf, type CacheOutcome, type McpCall } from "#/pages/analytics";
+import { UsageRecorder, askCallOf, countedSurface, type AskCall, type CacheOutcome, type McpCall } from "#/pages/analytics";
 import { CADENCE_HEADER, cacheTtl, productTtl } from "#/api/cache";
 import { handleSite, type SiteHost } from "#/pages/discovery";
 import { handleAsk, isAskRoute } from "#/ask/ask";
@@ -31,6 +31,7 @@ interface Served {
   response: Response;
   cache: CacheOutcome;
   mcp?: McpCall;
+  ask?: AskCall;
 }
 
 export default class KernelWorker extends WorkerEntrypoint<Env> {
@@ -40,10 +41,8 @@ export default class KernelWorker extends WorkerEntrypoint<Env> {
     const url = new URL(request.url);
     const usage = new UsageRecorder(this.env.USAGE);
     const served = await this.serve(request, url, usage);
-    const surface = surfaceOf(url);
-    if (surface && request.method !== "OPTIONS" && !isOwnPageFetch(request)) {
-      usage.record({ surface, url, request, response: served.response, durationMs: Date.now() - started, cache: served.cache, mcp: served.mcp });
-    }
+    const surface = countedSurface(request, url, served.ask);
+    if (surface) usage.record({ surface, url, request, response: served.response, durationMs: Date.now() - started, cache: served.cache, mcp: served.mcp, ask: served.ask });
     return served.response;
   }
 
@@ -84,12 +83,22 @@ export default class KernelWorker extends WorkerEntrypoint<Env> {
       return served;
     }
     if (isAskRoute(url.pathname)) {
+      const served: Served = { response: new Response(null), cache: "none" };
       try {
-        return { response: await handleAsk(request, { clientId: this.env.ASK_OAUTH_CLIENT_ID, fetch: (input, init) => fetch(input, init), now: Date.now }), cache: "none" };
+        served.response = await handleAsk(request, {
+          clientId: this.env.ASK_OAUTH_CLIENT_ID,
+          fetch: (input, init) => fetch(input, init),
+          now: Date.now,
+          onChat: (model, messages) => {
+            served.ask = askCallOf(model, messages);
+          },
+        });
+        return served;
       } catch (error) {
         const requestId = requestIdOf(request);
         console.error(JSON.stringify({ event: "ask_request_failed", requestId, path: url.pathname, error: error instanceof Error ? error.message : String(error) }));
-        return { response: problem(500, "Request failed", `Something went wrong on our side. Request ${requestId}.`, { "X-Request-Id": requestId }), cache: "none" };
+        served.response = problem(500, "Request failed", `Something went wrong on our side. Request ${requestId}.`, { "X-Request-Id": requestId });
+        return served;
       }
     }
     if (!url.pathname.startsWith("/api/") && url.pathname !== "/api") {

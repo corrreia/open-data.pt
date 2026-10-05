@@ -33,13 +33,14 @@ const WINDOWS = [
   { value: "90", label: "90 days" },
 ];
 
-type View = "all" | "web" | "api" | "mcp";
+type View = "all" | "web" | "api" | "mcp" | "ask";
 
 const VIEWS: { value: View; label: string }[] = [
   { value: "all", label: "Everything" },
   { value: "web", label: "Website" },
   { value: "api", label: "API" },
   { value: "mcp", label: "MCP" },
+  { value: "ask", label: "Ask the data" },
 ];
 
 /** Each line keeps its colour whatever else is drawn: surfaces on the overview, kinds of client on one surface. */
@@ -66,6 +67,7 @@ const SURFACE_LINES: Line[] = [
   { id: "web", label: "Page views", slot: 0, takes: (row) => row.surface === "web" || row.surface === "docs" },
   { id: "api", label: "API requests", slot: 1, takes: (row) => row.surface === "api" },
   { id: "mcp", label: "MCP messages", slot: 2, takes: (row) => row.surface === "mcp" },
+  { id: "ask", label: "Agent model steps", slot: 3, takes: (row) => row.surface === "ask" },
 ];
 
 const KIND_LINES: Line[] = [
@@ -104,6 +106,7 @@ const SURFACE_NAME = new Map([
   ["web", "website"],
   ["api", "API"],
   ["mcp-read", "MCP"],
+  ["ask-read", "Ask the data"],
 ]);
 
 /** Rows each list shows before "Show all". */
@@ -120,12 +123,14 @@ interface ViewSurfaces {
 /**
  * The API reference is a page of the website. Discovery documents (sitemap,
  * .well-known) are read almost only by crawlers and are left out of the page;
- * /api/analytics still has them. MCP's reads are the API calls its code runs made.
+ * /api/analytics still has them. MCP's reads are the API calls its code runs made,
+ * and the agent's the API calls its model's code made.
  */
 function surfacesOf(view: View): ViewSurfaces {
-  if (view === "all") return { counts: ["web", "docs", "api", "mcp"], reads: ["web", "docs", "api", "mcp-read"] };
+  if (view === "all") return { counts: ["web", "docs", "api", "mcp", "ask"], reads: ["web", "docs", "api", "mcp-read", "ask-read"] };
   if (view === "web") return { counts: ["web", "docs"], reads: ["web", "docs"] };
   if (view === "mcp") return { counts: ["mcp"], reads: ["mcp-read"] };
+  if (view === "ask") return { counts: ["ask"], reads: ["ask-read"] };
   return { counts: [view], reads: [view] };
 }
 
@@ -173,9 +178,9 @@ function AnalyticsPage() {
   return (
     <Shell section="analytics">
       <PageHead eyebrow="Analytics" title="How open-data.pt is used">
-        Requests to the website, the API and the MCP server, counted as they are answered. No cookies, no IP addresses and no visitor identifiers are kept: only what was asked for,
-        by what kind of client, from which country. The numbers are refreshed every half hour and go back {report.data?.retentionDays ?? 90} days. The same data is at{" "}
-        <a href={`/api/analytics?days=${days}`}>/api/analytics</a>.
+        Requests to the website, the API, the MCP server and the site&rsquo;s own agent, Ask the data, counted as they are answered. No cookies, no IP addresses and no visitor
+        identifiers are kept: only what was asked for, by what kind of client, from which country. The numbers are refreshed every half hour and go back{" "}
+        {report.data?.retentionDays ?? 90} days. The same data is at <a href={`/api/analytics?days=${days}`}>/api/analytics</a>.
       </PageHead>
 
       <section aria-label="What to show" className="flex flex-wrap items-end justify-between gap-4">
@@ -227,7 +232,7 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
     (row) => `${row.route}|${row.subject}`,
   );
   const routes = read(report.routes)
-    .filter((row) => view !== "all" || row.surface !== "mcp-read")
+    .filter((row) => view !== "all" || (row.surface !== "mcp-read" && row.surface !== "ask-read"))
     .sort((a, b) => b.requests - a.requests);
   const countries = tally(counted(report.countries), (row) => row.country);
   const referrers = tally(counted(report.referrers), (row) => row.referrer);
@@ -239,10 +244,14 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
   const limited = sum(outcomes.filter((row) => row.status === "429"));
   const markdown = sum(outcomes.filter((row) => row.surface === "web" && row.format === "markdown"));
   const total = sum(counted(report.timeline));
+  // A question that was answered: a visitor on the Workers Free plan asking a paid model is refused once and asks again.
+  const questions = sum(report.ask.filter((row) => row.turn === "question" && row.status === "2xx"));
+  const steps = sum(report.timeline.filter((row) => row.surface === "ask"));
+  const agentReads = sum(report.timeline.filter((row) => row.surface === "ask-read"));
 
   return (
     <>
-      <section aria-label="Totals" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <section aria-label="Totals" className={`grid grid-cols-2 gap-3 ${view === "all" ? "lg:grid-cols-5" : "lg:grid-cols-4"}`}>
         {view === "all" ? (
           <>
             <StatTile label="Page views" value={fmt.int(sum(report.timeline.filter((row) => row.surface === "web" || row.surface === "docs")))} note={`over the last ${window}`} />
@@ -252,6 +261,7 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
               value={fmt.int(sum(report.timeline.filter((row) => row.surface === "mcp")))}
               note={`and ${fmt.int(sum(report.timeline.filter((row) => row.surface === "mcp-read")))} API reads from MCP code runs`}
             />
+            <StatTile label="Questions to the agent" value={fmt.int(questions)} note={`Ask the data: ${fmt.int(steps)} model steps, ${fmt.int(agentReads)} API reads`} />
             <StatTile
               label="People and machines"
               value={total ? `${Math.round((people / total) * 100)}%` : "—"}
@@ -260,7 +270,11 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
           </>
         ) : (
           <>
-            <StatTile label={view === "web" ? "Page views" : view === "api" ? "Requests" : "Messages"} value={fmt.int(total)} note={`over the last ${window}`} />
+            <StatTile
+              label={view === "web" ? "Page views" : view === "api" ? "Requests" : view === "ask" ? "Model steps" : "Messages"}
+              value={fmt.int(total)}
+              note={view === "ask" ? "a question takes one, and one more after each tool call" : `over the last ${window}`}
+            />
             <StatTile label="Clients" value={fmt.int(clients.length)} note={`${fmt.int(kinds.length)} kinds`} />
             {view === "api" ? (
               <StatTile
@@ -270,6 +284,8 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
               />
             ) : view === "web" ? (
               <StatTile label="Read as Markdown" value={fmt.int(markdown)} note="pages fetched by agents asking for text/markdown" />
+            ) : view === "ask" ? (
+              <StatTile label="Questions answered" value={fmt.int(questions)} note={`${fmt.int(agentReads)} API reads by the code the model wrote`} />
             ) : (
               <StatTile label="API reads from code runs" value={fmt.int(sum(report.timeline.filter((row) => row.surface === "mcp-read")))} note="each code run can read several" />
             )}
@@ -277,7 +293,7 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
               label="Server errors"
               value={fmt.int(failed)}
               tone={failed ? "warn" : undefined}
-              note={total ? `${((failed / total) * 100).toFixed(2)}% of ${view === "web" ? "page views" : "requests"}` : undefined}
+              note={total ? `${((failed / total) * 100).toFixed(2)}% of ${view === "web" ? "page views" : view === "ask" ? "model steps" : "requests"}` : undefined}
             />
           </>
         )}
@@ -322,6 +338,17 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
                 })}
               />
             ) : null}
+            {view === "all" || view === "ask" ? (
+              <Ranked
+                title="Agent models"
+                note="Questions answered by each Workers AI model, run on the visitor's own Cloudflare account."
+                rows={tally(
+                  report.ask.filter((row) => row.turn === "question" && row.status === "2xx"),
+                  (row) => row.model,
+                ).map(({ key, requests }) => ({ key, label: key, mono: true, icon: <Logo fallback={SparkleIcon} />, requests }))}
+                empty="Nobody asked the agent in this window."
+              />
+            ) : null}
           </div>
         </div>
       </section>
@@ -330,9 +357,11 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
         <SectionHead eyebrow="What" title="Datasets and routes" id="what-title">
           {view === "mcp"
             ? "What MCP code runs read from the API."
-            : view === "all"
-              ? "Datasets opened on the website, read through the API or read by MCP code runs."
-              : "What was asked for most."}
+            : view === "ask"
+              ? "What the agent's code read from the API."
+              : view === "all"
+                ? "Datasets opened on the website, read through the API, or read by MCP code runs and the site's agent."
+                : "What was asked for most."}
         </SectionHead>
         <div className="grid gap-4 lg:grid-cols-2">
           <Ranked title="Datasets" rows={datasets.map(({ key, requests }) => ({ key, label: titles.get(key) ?? key, href: productHref(key), requests }))} />
@@ -462,7 +491,7 @@ function Timeline({ report, lines, view, counts }: { report: AnalyticsReport; li
   return (
     <section aria-labelledby="when-title">
       <SectionHead eyebrow="When" title={`Requests per ${per}`} id="when-title">
-        {view === "all" ? "Page views, API requests and MCP messages." : "By kind of client."}
+        {view === "all" ? "Page views, API requests, MCP messages and the agent's model steps." : "By kind of client."}
         {report.resolution === "day" ? " Days are UTC days." : " Hours in your local time."}
       </SectionHead>
       <LayerCard>
@@ -474,7 +503,9 @@ function Timeline({ report, lines, view, counts }: { report: AnalyticsReport; li
               </li>
             ))}
           </ul>
+          {/* Drawn anew for each view: ECharts merges a new set of lines into the old, and a line the view no longer has would stay. */}
           <TimeseriesChart
+            key={view}
             echarts={echarts}
             isDarkMode={dark}
             height={300}

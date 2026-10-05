@@ -144,10 +144,14 @@ describe("asking a model", () => {
       if (url === "https://dash.cloudflare.com/oauth2/token") return Response.json({ access_token: "access-2", expires_in: 3600 });
       return new Response(stream, { headers: { "Content-Type": "text/event-stream", "Set-Cookie": "__cf_bm=bot; Domain=api.cloudflare.com" } });
     });
+    const told: Array<{ model: string; messages: number }> = [];
+    host.onChat = (model, messages) => void told.push({ model, messages: messages.length });
     const expiring = sessionCookie({ a: "access-1", r: "refresh-1", e: NOW + 30_000 });
     const response = await handleAsk(chatRequest(expiring, { ...CHAT, temperature: 2 }), host);
 
     expect(response.status).toBe(200);
+    // The usage count hears of the step, with the model and the conversation it asked.
+    expect(told).toEqual([{ model: CHAT.model, messages: CHAT.messages.length }]);
     expect(await response.text()).toBe(stream);
     expect(Object.fromEntries(new URLSearchParams(sent[0]?.body))).toEqual({ grant_type: "refresh_token", refresh_token: "refresh-1", client_id: CLIENT_ID });
     expect(sent[1]).toMatchObject({ url: `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/ai/v1/chat/completions`, authorization: "Bearer access-2" });
@@ -175,8 +179,13 @@ describe("asking a model", () => {
     },
   ])("refuses $refusal without reaching Cloudflare", async ({ request, status }) => {
     const { host, sent } = cloudflare(() => new Response(stream));
+    let told = false;
+    host.onChat = () => {
+      told = true;
+    };
     expect((await handleAsk(request, host)).status).toBe(status);
     expect(sent).toEqual([]);
+    expect(told).toBe(false);
   });
 
   it("names a model the account's plan does not include, so the agent can move to a free one", async () => {
