@@ -5,7 +5,7 @@ import { Kv } from "../common";
 import { useCopy } from "../ops/CommandBlock";
 import { fmt, humanize, isRecord } from "../../lib/format";
 import type { Field, JsonRecord, JsonValue } from "../../lib/types";
-import { Cell, isText } from "./cells";
+import { Cell, LinkValue, isText } from "./cells";
 
 const TIME_LABEL = new Map([
   ["event", "Event"],
@@ -86,7 +86,9 @@ function RecordValue({ record, field }: { record: JsonRecord; field: Field }) {
   if (Array.isArray(value) || isRecord(value)) {
     return <Structured value={value} summary={field.type === "geometry" ? <span>{<Cell record={record} field={field} />}</span> : undefined} />;
   }
-  if (isText(value) && value.length > LONG_TEXT && field.type !== "url") return <LongText text={value} />;
+  // A link in full, however long: the table may cut one, the record never does.
+  if (field.type === "url" && isText(value) && URL.canParse(value.trim())) return <LinkValue value={value} />;
+  if (isText(value) && value.length > LONG_TEXT) return <LongText text={value} />;
   return <Cell record={record} field={field} />;
 }
 

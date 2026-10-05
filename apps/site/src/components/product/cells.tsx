@@ -1,5 +1,5 @@
 import { Link } from "@cloudflare/kumo";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { fmt, humanize, isRecord } from "../../lib/format";
 import type { Field, Geometry, JsonRecord, JsonValue, SeriesPoint } from "../../lib/types";
 
@@ -56,14 +56,35 @@ export function Cell({ record, field }: { record: JsonRecord; field: Field }): R
       return positions ? `${geometry.type} · ${fmt.int(positions)} points` : geometry.type;
     }
   }
-  if (field.type === "url" && isText(value) && URL.canParse(value)) {
-    return (
-      <Link href={value} target="_blank" rel="noopener noreferrer">
-        {value.replace(/^https?:\/\//, "").slice(0, 48)}
-      </Link>
-    );
-  }
+  if (field.type === "url" && isText(value) && URL.canParse(value.trim())) return <LinkValue value={value} max={TABLE_LINK} />;
   return fmt.cell(value, field.type);
+}
+
+/** The longest link a table cell shows, as for any text: past it, the cell ends in an ellipsis and the whole address is its tooltip. */
+const TABLE_LINK = 120;
+
+/**
+ * A link as the publisher wrote it, without its scheme: "snit-mais.dgterritorio.gov.pt/SRUP/DL 222_98.pdf". Spaces
+ * and other characters an address cannot hold are encoded in the link itself. The text may break after each "/", so
+ * a narrow column wraps it between the parts of its path, and inside one only when a part alone is too wide. Cut
+ * only when `max` says so, and then with an ellipsis.
+ */
+export function LinkValue({ value, max }: { value: string; max?: number }) {
+  const address = value.trim();
+  const text = address.replace(/^https?:\/\//, "");
+  const cut = max !== undefined && text.length > max;
+  const parts = (cut ? `${text.slice(0, max - 1)}…` : text).split(/(?<=\/)/);
+  return (
+    <Link href={new URL(address).href} target="_blank" rel="noopener noreferrer" title={cut ? address : undefined} className="[overflow-wrap:break-word]">
+      {parts.map((part, index) => (
+        // The parts of one address never move, so their position names them.
+        <Fragment key={index}>
+          {index ? <wbr /> : null}
+          {part}
+        </Fragment>
+      ))}
+    </Link>
+  );
 }
 
 /** What a sortable column compares for a record field. */
