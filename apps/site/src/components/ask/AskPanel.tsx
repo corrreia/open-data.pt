@@ -17,7 +17,8 @@ import {
   type AssistantTurn,
   type ChatMessage,
 } from "../../lib/ask";
-import { fmt } from "../../lib/format";
+import { localHref } from "../../lib/locale";
+import { ASK } from "../../text/ask";
 
 // The agent's panel. Charts and maps load only when an answer has one.
 const Visuals = lazy(() => import("./Visuals"));
@@ -35,18 +36,13 @@ const ACCOUNT_ID = /^[0-9a-f]{32}$/;
 /** The account-ID field's id, which a question asked without one moves focus to. */
 const ACCOUNT_FIELD = "ask-account";
 
-const SUGGESTIONS = [
-  "Mapa dos postos de gasóleo mais baratos em Lisboa",
-  "Was there an earthquake in Portugal this week?",
-  "Chart Portugal's electricity consumption over the last week",
-  "Há avisos meteorológicos do IPMA para o Porto?",
-];
+const SUGGESTIONS = ASK.suggestions;
 
 /** Why sign-in came back without a session, as the callback names it. */
 const SIGNIN_FAILURES = new Map([
-  ["denied", "You did not allow Workers AI, so nothing was connected."],
-  ["expired", "The sign-in took too long or was started in another tab. Try again."],
-  ["failed", "Cloudflare did not complete the sign-in. Try again."],
+  ["denied", ASK.signInFailures.denied],
+  ["expired", ASK.signInFailures.expired],
+  ["failed", ASK.signInFailures.failed],
 ]);
 
 /* ---------- What this browser keeps ---------- */
@@ -98,7 +94,7 @@ function savedConversation(): Saved {
         thinking: false,
         done: true,
         neurons: 0,
-        error: "Stopped when you left the page.",
+        error: ASK.stoppedOnLeaving,
       };
       dropLastQuestion(saved.transcript);
     }
@@ -152,16 +148,16 @@ const PROSE =
 function Steps({ turn }: { turn: AssistantTurn }) {
   if (!turn.steps.length) return null;
   return (
-    <ul className="grid gap-1 text-xs text-kumo-subtle" aria-label="What the agent read">
+    <ul className="grid gap-1 text-xs text-kumo-subtle" aria-label={ASK.whatItRead}>
       {turn.steps.map((step) => (
         <li key={step.id} className="flex items-start gap-2">
           <span className="mt-0.5 shrink-0">
             {step.state === "running" ? (
               <Loader size="sm" />
             ) : step.state === "done" ? (
-              <CheckCircleIcon size={14} className="text-kumo-success" aria-label="Done" />
+              <CheckCircleIcon size={14} className="text-kumo-success" aria-label={ASK.stepDone} />
             ) : (
-              <WarningCircleIcon size={14} className="text-kumo-warning" aria-label="Failed, and tried again" />
+              <WarningCircleIcon size={14} className="text-kumo-warning" aria-label={ASK.stepFailed} />
             )}
           </span>
           <span className="min-w-0 break-words">{step.label}</span>
@@ -180,7 +176,7 @@ function Answer({ turn, onRetry }: { turn: AssistantTurn | undefined; onRetry: (
         <Suspense
           fallback={
             <span className="flex items-center gap-2 text-xs text-kumo-subtle">
-              <Loader size="sm" /> Drawing…
+              <Loader size="sm" /> {ASK.drawing}
             </span>
           }
         >
@@ -196,7 +192,7 @@ function Answer({ turn, onRetry }: { turn: AssistantTurn | undefined; onRetry: (
       ) : null}
       {turn.thinking && !turn.done ? (
         <span className="flex items-center gap-2 text-xs text-kumo-subtle">
-          <Loader size="sm" /> Thinking…
+          <Loader size="sm" /> {ASK.thinking}
         </span>
       ) : null}
       {turn.notice ? <p className="text-xs text-kumo-subtle">{turn.notice}</p> : null}
@@ -205,12 +201,12 @@ function Answer({ turn, onRetry }: { turn: AssistantTurn | undefined; onRetry: (
           <p className="text-sm text-kumo-danger">{turn.error}</p>
           {onRetry ? (
             <Button variant="secondary" size={CONTROL_SIZE} onClick={onRetry}>
-              Try again
+              {ASK.tryAgain}
             </Button>
           ) : null}
         </div>
       ) : null}
-      {turn.done && turn.neurons > 0 ? <p className="text-xs text-kumo-subtle">About {fmt.int(Math.ceil(turn.neurons))} neurons of Workers AI on your account</p> : null}
+      {turn.done && turn.neurons > 0 ? <p className="text-xs text-kumo-subtle">{ASK.neurons(Math.ceil(turn.neurons))}</p> : null}
     </div>
   );
 }
@@ -220,32 +216,25 @@ function Answer({ turn, onRetry }: { turn: AssistantTurn | undefined; onRetry: (
 function SignIn({ failure }: { failure: string | undefined }) {
   return (
     <div className="grid content-start gap-4 p-4">
-      {failure ? <Banner variant="alert" icon={<WarningIcon weight="fill" />} title="Not signed in" description={failure} /> : null}
-      <p className="text-sm leading-relaxed text-kumo-default">
-        Ask about Portuguese public data in your own words. The agent reads open-data.pt, answers with the datasets it used, and draws charts and maps when they help.
-      </p>
+      {failure ? <Banner variant="alert" icon={<WarningIcon weight="fill" />} title={ASK.notSignedIn} description={failure} /> : null}
+      <p className="text-sm leading-relaxed text-kumo-default">{ASK.signInIntro}</p>
       <ol className="grid list-decimal gap-2 pl-5 text-sm leading-relaxed text-kumo-subtle">
-        <li>Cloudflare asks whether open-data.pt may use Workers AI on your account. It asks for nothing else.</li>
-        <li>You come back to this page, with the agent open.</li>
-        <li>
-          The model runs on your account, so Cloudflare bills its use to you. On the Workers Free plan the agent uses a free model, and its 10,000 neurons a day cover about ten
-          questions; Workers Paid unlocks a stronger one.
-        </li>
+        {ASK.signInSteps.map((step) => (
+          <li key={step}>{step}</li>
+        ))}
       </ol>
-      <p className="text-xs leading-relaxed text-kumo-subtle">
-        We keep no conversation and no account details: your sign-in is a cookie in this browser, and signing out revokes it.
-      </p>
+      <p className="text-xs leading-relaxed text-kumo-subtle">{ASK.keepNothing}</p>
       <div>
         <LinkButton href={signInHref()} variant="primary" icon={<CloudIcon />}>
-          Sign in with Cloudflare
+          {ASK.signIn}
         </LinkButton>
       </div>
       <p className="text-xs text-kumo-subtle">
-        No Cloudflare account? Claude, ChatGPT and other assistants can read the same data through our{" "}
-        <a className={LINK} href="/start/#mcp">
-          MCP server
-        </a>
-        , on your own subscription.
+        {ASK.noAccount((text) => (
+          <a className={LINK} href={localHref("/start/#mcp")}>
+            {text}
+          </a>
+        ))}
       </p>
     </div>
   );
@@ -357,7 +346,7 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
         onSignedOut();
         return;
       }
-      const message = controller.signal.aborted ? "Stopped." : error instanceof Error ? readableError(error) : String(error);
+      const message = controller.signal.aborted ? ASK.stopped : error instanceof Error ? readableError(error) : String(error);
       setExchanges((current) => current.map((exchange, at) => (at === index ? { ...exchange, turn: endedTurn(exchange.turn, message) } : exchange)));
       // A question that failed part-way leaves its tool calls unanswered; drop it so the next one starts clean.
       dropLastQuestion(transcript.current);
@@ -373,7 +362,7 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
     const kept = { exchanges, transcript: [...transcript.current] };
     if (running) {
       dropLastQuestion(kept.transcript);
-      kept.exchanges = exchanges.map((exchange, at) => (at === exchanges.length - 1 ? { ...exchange, turn: endedTurn(exchange.turn, "Stopped.") } : exchange));
+      kept.exchanges = exchanges.map((exchange, at) => (at === exchanges.length - 1 ? { ...exchange, turn: endedTurn(exchange.turn, ASK.stopped) } : exchange));
     }
     abort.current?.abort();
     setCleared(kept);
@@ -394,7 +383,7 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
     try {
       await signOut();
     } catch (error) {
-      setNotice(`You are still signed in: ${error instanceof Error ? readableError(error) : String(error)}`);
+      setNotice(ASK.stillSignedIn(error instanceof Error ? readableError(error) : String(error)));
       return;
     }
     transcript.current = [];
@@ -413,7 +402,7 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
     <>
       <div className="flex flex-wrap items-center gap-2 border-b border-kumo-line px-4 py-2">
         <Select
-          aria-label="Model"
+          aria-label={ASK.model}
           size={CONTROL_SIZE}
           className="w-40"
           value={model}
@@ -422,7 +411,7 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
         />
         {accounts.length > 1 ? (
           <Select
-            aria-label="Cloudflare account"
+            aria-label={ASK.account}
             size={CONTROL_SIZE}
             className="w-40"
             value={accountId}
@@ -431,14 +420,22 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
           />
         ) : null}
         <div className="ml-auto flex gap-3">
-          <Button variant="ghost" size={ICON_SIZE} icon={<PlusIcon />} onClick={restart} disabled={!exchanges.length} aria-label="New conversation" title="New conversation" />
+          <Button
+            variant="ghost"
+            size={ICON_SIZE}
+            icon={<PlusIcon />}
+            onClick={restart}
+            disabled={!exchanges.length}
+            aria-label={ASK.newConversation}
+            title={ASK.newConversation}
+          />
           {/* Signing out clears the conversation and revokes open-data.pt's access, so it asks first. */}
           <Popover>
-            <Popover.Trigger render={<Button variant="ghost" size={ICON_SIZE} icon={<SignOutIcon />} aria-label="Sign out" title="Sign out" />} />
+            <Popover.Trigger render={<Button variant="ghost" size={ICON_SIZE} icon={<SignOutIcon />} aria-label={ASK.signOut} title={ASK.signOut} />} />
             <Popover.Content className="grid w-72 max-w-[90vw] gap-3 p-3 text-sm">
-              <p className="text-kumo-default">Sign out? This clears the conversation and revokes open-data.pt's access to Workers AI on your account.</p>
+              <p className="text-kumo-default">{ASK.signOutQuestion}</p>
               <Button variant="destructive" size={CONTROL_SIZE} onClick={() => void leave()}>
-                Sign out and clear
+                {ASK.signOutAndClear}
               </Button>
             </Popover.Content>
           </Popover>
@@ -446,7 +443,7 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
       </div>
       {!accounts.length ? (
         <label className="grid gap-1 border-b border-kumo-line px-4 py-2 text-xs text-kumo-subtle">
-          Cloudflare did not list your accounts to us. Paste the account ID from your dashboard's address, dash.cloudflare.com/&lt;account ID&gt;.
+          {ASK.accountIdHelp}
           <Input
             id={ACCOUNT_FIELD}
             size={CONTROL_SIZE}
@@ -460,11 +457,11 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
             spellCheck={false}
             value={accountId}
             onChange={(event) => setAccountId(event.target.value.trim().toLowerCase())}
-            placeholder="32 hexadecimal characters"
+            placeholder={ASK.accountIdPlaceholder}
           />
           {accountError && !accountReady ? (
             <span id={`${ACCOUNT_FIELD}-error`} className="text-kumo-danger">
-              That is not an account ID. Use the 32 characters after dash.cloudflare.com/ in your dashboard's address.
+              {ASK.accountIdError}
             </span>
           ) : null}
         </label>
@@ -473,9 +470,9 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
       <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4">
         {/* One short status line is announced, not the whole conversation as it streams in. */}
         <span className="sr-only" role="status">
-          {running ? "Answering…" : exchanges.at(-1)?.turn?.error ? `No answer: ${exchanges.at(-1)?.turn?.error}` : exchanges.at(-1)?.turn?.done ? "Answer ready." : ""}
+          {running ? ASK.answering : exchanges.at(-1)?.turn?.error ? ASK.noAnswer(exchanges.at(-1)?.turn?.error ?? "") : exchanges.at(-1)?.turn?.done ? ASK.answerReadyShort : ""}
         </span>
-        <section aria-label="Conversation" className="grid gap-5">
+        <section aria-label={ASK.conversation} className="grid gap-5">
           {exchanges.length ? (
             exchanges.map((exchange, index) => (
               <div key={index} data-exchange className="grid scroll-mt-4 gap-3">
@@ -485,7 +482,7 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
             ))
           ) : (
             <div className="grid gap-3">
-              <p className="text-sm text-kumo-subtle">Ask in Portuguese or English. It can draw charts and maps. Try:</p>
+              <p className="text-sm text-kumo-subtle">{ASK.tryThese}</p>
               <div className="flex flex-wrap gap-2">
                 {SUGGESTIONS.map((suggestion) => (
                   <Button
@@ -511,9 +508,9 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
       ) : null}
       {cleared ? (
         <div role="status" className="flex items-center justify-between gap-3 border-t border-kumo-line px-4 py-2 text-xs text-kumo-subtle">
-          Conversation cleared.
+          {ASK.cleared}
           <Button variant="secondary" size={CONTROL_SIZE} onClick={undoRestart}>
-            Undo
+            {ASK.undo}
           </Button>
         </div>
       ) : null}
@@ -526,20 +523,20 @@ function Chat({ session, accounts, open, onSignedOut, onRunning }: ChatProps) {
       >
         <textarea
           ref={input}
-          aria-label="Your question"
+          aria-label={ASK.yourQuestion}
           // 16px on phones: iOS Safari zooms the page into any field with smaller text.
           className="max-h-40 min-h-11 flex-1 resize-none bg-transparent px-2 py-2.5 text-base text-kumo-strong outline-none placeholder:text-kumo-placeholder sm:min-h-10 sm:py-2 sm:text-sm"
           enterKeyHint="send"
           rows={1}
           value={draft}
-          placeholder="Ask about the data…"
+          placeholder={ASK.askPlaceholder}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={onKeyDown}
         />
         {running ? (
-          <Button variant="secondary" size={TOUCH ? "lg" : "base"} icon={<StopIcon weight="fill" />} aria-label="Stop" onClick={() => abort.current?.abort()} />
+          <Button variant="secondary" size={TOUCH ? "lg" : "base"} icon={<StopIcon weight="fill" />} aria-label={ASK.stop} onClick={() => abort.current?.abort()} />
         ) : (
-          <Button type="submit" variant="primary" size={TOUCH ? "lg" : "base"} icon={<ArrowUpIcon weight="bold" />} aria-label="Ask" disabled={!draft.trim()} />
+          <Button type="submit" variant="primary" size={TOUCH ? "lg" : "base"} icon={<ArrowUpIcon weight="bold" />} aria-label={ASK.ask} disabled={!draft.trim()} />
         )}
       </form>
     </>
@@ -612,7 +609,7 @@ function endedTurn(turn: AssistantTurn | undefined, error: string): AssistantTur
 /** A failure as the visitor can act on it: the kernel's own words, or what a network failure means. */
 function readableError(error: Error): string {
   // fetch rejects with a TypeError ("Failed to fetch", "Load failed") when the request never got an answer.
-  if (error instanceof TypeError) return "Could not reach open-data.pt. Check your connection, then try again.";
+  if (error instanceof TypeError) return ASK.unreachable;
   return error.message;
 }
 
@@ -654,10 +651,10 @@ export default function AskPanel({ open, failure, onClose, onRunning, onModalCha
   if (failed)
     content = (
       <div className="grid gap-3 p-4">
-        <Banner variant="error" icon={<WarningCircleIcon weight="fill" />} title="The agent could not start" description={failed} />
+        <Banner variant="error" icon={<WarningCircleIcon weight="fill" />} title={ASK.couldNotStart} description={failed} />
         <div>
           <Button variant="secondary" size={CONTROL_SIZE} onClick={load}>
-            Try again
+            {ASK.tryAgain}
           </Button>
         </div>
       </div>
@@ -665,7 +662,7 @@ export default function AskPanel({ open, failure, onClose, onRunning, onModalCha
   else if (!session)
     content = (
       <span className="flex items-center gap-2 p-4 text-sm text-kumo-subtle">
-        <Loader size="sm" /> Loading…
+        <Loader size="sm" /> {ASK.loading}
       </span>
     );
   else if (!session.signedIn) content = <SignIn failure={failure ? (SIGNIN_FAILURES.get(failure) ?? SIGNIN_FAILURES.get("failed")) : undefined} />;
@@ -689,11 +686,11 @@ export default function AskPanel({ open, failure, onClose, onRunning, onModalCha
       <header className="flex items-center gap-2 border-b border-kumo-line px-4 py-3">
         <div className="grid min-w-0 flex-1">
           <h2 id="ask-title" className="font-display text-lg leading-tight text-kumo-strong">
-            Ask the data
+            {ASK.askTheData}
           </h2>
-          <span className="text-xs text-kumo-subtle">On your own Cloudflare account</span>
+          <span className="text-xs text-kumo-subtle">{ASK.onYourAccount}</span>
         </div>
-        <Button variant="ghost" size={ICON_SIZE} icon={<XIcon />} onClick={onClose} aria-label="Close" title="Close" />
+        <Button variant="ghost" size={ICON_SIZE} icon={<XIcon />} onClick={onClose} aria-label={ASK.close} title={ASK.close} />
       </header>
       {content}
     </div>

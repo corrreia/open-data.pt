@@ -12,9 +12,11 @@ import { ApiError, apiGet, productPath } from "../lib/api";
 import { PublisherMark } from "../components/PublisherMark";
 import { ROLE, freshness, licenceHref, openableUrl, publisherHref, throughOf } from "../lib/catalog";
 import { fmt } from "../lib/format";
+import { localHref } from "../lib/locale";
 import { newIssue } from "../lib/project";
 import { invalidate, useQuery } from "../lib/query";
 import type { Acquisition, AcquisitionStatus, Feed, Product } from "../lib/types";
+import { LOADING, PRODUCT } from "../text/product";
 
 // The heavy views load when their tab is opened: Leaflet for the map, ECharts for the chart, Shiki for the curl example.
 const MapView = lazy(() => import("../components/product/MapView"));
@@ -36,13 +38,10 @@ const RUN_LOOK = {
   running: { icon: CircleNotchIcon, className: "text-kumo-info" },
   queued: { icon: ClockIcon, className: "text-kumo-subtle" },
 } satisfies { [status in AcquisitionStatus]: RunLook };
-const RUN_LABEL = { succeeded: "Published", unchanged: "Unchanged", failed: "Failed", running: "Running", queued: "Queued" } satisfies { [status in AcquisitionStatus]: string };
+const RUN_LABEL = PRODUCT.runLabel;
 
 /** What a run's completeness means to a reader. */
-const COMPLETENESS = new Map([
-  ["partial", "the source returned only part of its data"],
-  ["complete", "the whole source"],
-]);
+const COMPLETENESS = new Map(Object.entries(PRODUCT.completeness));
 
 interface TabDef {
   value: string;
@@ -54,7 +53,7 @@ interface TabDef {
 function Pending() {
   return (
     <div className="flex items-center gap-2 py-10 text-sm text-kumo-subtle">
-      <Loader size="sm" /> Loading…
+      <Loader size="sm" aria-label={LOADING} /> {PRODUCT.loading}
     </div>
   );
 }
@@ -67,7 +66,7 @@ function Description({ text }: { text: string }) {
       <p className={`max-w-[38rem] text-base leading-relaxed text-kumo-subtle sm:text-lg ${long && !open ? "line-clamp-3" : ""}`}>{text}</p>
       {long ? (
         <Button size="sm" variant="ghost" className="-ml-2 justify-self-start" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
-          {open ? "Show less" : "Show more"}
+          {open ? PRODUCT.showLess : PRODUCT.showMore}
         </Button>
       ) : null}
     </div>
@@ -121,47 +120,43 @@ function ProductPage() {
       data.schema.fields.some((field) => field.type === "geometry") ||
       (data.schema.fields.some((field) => field.type === "latitude") && data.schema.fields.some((field) => field.type === "longitude"));
     // Data with places opens on its map, the same rows one tab away as a table; while the source lists nothing, the table says so first.
-    const mapTab: TabDef = { value: "map", label: "Map", render: () => <MapView product={data} refreshKey={refreshKey} /> };
+    const mapTab: TabDef = { value: "map", label: PRODUCT.tabs.map, render: () => <MapView product={data} refreshKey={refreshKey} /> };
     if (mappable && data.rowCount > 0) list.push(mapTab);
     if (data.role === "time-series")
-      list.push({ value: "series", label: "Series", render: () => <SeriesView product={data} refreshKey={refreshKey} withHistory={data.exposeHistory} /> });
-    else list.push({ value: "records", label: "Records", count: data.rowCount, render: () => <RecordsView product={data} refreshKey={refreshKey} /> });
+      list.push({ value: "series", label: PRODUCT.tabs.series, render: () => <SeriesView product={data} refreshKey={refreshKey} withHistory={data.exposeHistory} /> });
+    else list.push({ value: "records", label: PRODUCT.tabs.records, count: data.rowCount, render: () => <RecordsView product={data} refreshKey={refreshKey} /> });
     if (mappable && data.rowCount === 0) list.push(mapTab);
-    if (data.hasChanges && data.exposeHistory) list.push({ value: "changes", label: "Changes", render: () => <ChangesView product={data} refreshKey={refreshKey} /> });
-    if (data.role === "time-series") list.push({ value: "corrections", label: "Corrections", render: () => <CorrectionsView product={data} refreshKey={refreshKey} /> });
-    if (data.role === "event-log" && data.exposeHistory) list.push({ value: "history", label: "Event history", render: () => <EventHistoryView product={data} /> });
-    list.push({ value: "schema", label: "Schema", count: data.schema.fields.length, render: () => <SchemaView product={data} /> });
-    list.push({ value: "api", label: "API", render: () => <ApiView product={data} /> });
+    if (data.hasChanges && data.exposeHistory) list.push({ value: "changes", label: PRODUCT.tabs.changes, render: () => <ChangesView product={data} refreshKey={refreshKey} /> });
+    if (data.role === "time-series") list.push({ value: "corrections", label: PRODUCT.tabs.corrections, render: () => <CorrectionsView product={data} refreshKey={refreshKey} /> });
+    if (data.role === "event-log" && data.exposeHistory) list.push({ value: "history", label: PRODUCT.tabs.history, render: () => <EventHistoryView product={data} /> });
+    list.push({ value: "schema", label: PRODUCT.tabs.schema, count: data.schema.fields.length, render: () => <SchemaView product={data} /> });
+    list.push({ value: "api", label: PRODUCT.tabs.api, render: () => <ApiView product={data} /> });
     return list;
   }, [data, refreshKey]);
 
   // A dataset that does not exist and one that failed to load are different problems, with different ways out.
   const missing = !slug || (product.error instanceof ApiError && product.error.status === 404);
   if (missing) {
-    document.title = "Dataset not found · open-data.pt";
+    document.title = PRODUCT.notFoundTitle;
     return (
       <Shell section="product">
-        <PageHead eyebrow="Dataset" title={slug ? "No dataset at this address" : "No dataset chosen"}>
-          {slug ? (
-            <>Nothing on open-data.pt has the name “{slug}”. The link may be mistyped or out of date: find the dataset in the catalog.</>
-          ) : (
-            "This page shows one dataset. Choose one from the catalog."
-          )}
+        <PageHead eyebrow={PRODUCT.eyebrow} title={slug ? PRODUCT.noDatasetHere : PRODUCT.noDatasetChosen}>
+          {slug ? PRODUCT.nothingNamed(slug) : PRODUCT.chooseOne}
         </PageHead>
         <div>
-          <Button variant="primary" icon={<CompassIcon />} onClick={() => window.location.assign("/catalog/")}>
-            Open the catalog
+          <Button variant="primary" icon={<CompassIcon />} onClick={() => window.location.assign(localHref("/catalog/"))}>
+            {PRODUCT.openCatalog}
           </Button>
         </div>
       </Shell>
     );
   }
   if (product.error) {
-    document.title = "Dataset unavailable · open-data.pt";
+    document.title = PRODUCT.unavailableTitle;
     return (
       <Shell section="product">
-        <PageHead eyebrow="Dataset" title="This dataset could not be loaded" />
-        <ErrorNote error={product.error} what="the dataset" onRetry={() => void product.refetch()} />
+        <PageHead eyebrow={PRODUCT.eyebrow} title={PRODUCT.couldNotLoad} />
+        <ErrorNote error={product.error} what={PRODUCT.theDataset} onRetry={() => void product.refetch()} />
       </Shell>
     );
   }
@@ -184,7 +179,7 @@ function ProductPage() {
     <Shell section="product">
       <header className="grid gap-4 pt-2">
         <Breadcrumbs size="sm">
-          <Breadcrumbs.Link href="/catalog/">Catalog</Breadcrumbs.Link>
+          <Breadcrumbs.Link href={localHref("/catalog/")}>{PRODUCT.catalog}</Breadcrumbs.Link>
           <Breadcrumbs.Separator />
           {feed.data ? (
             <>
@@ -197,8 +192,8 @@ function ProductPage() {
         <div className="flex flex-wrap items-center gap-2">
           <RoleBadge role={data.role} />
           <ToneBadge tone={fresh.tone}>{fresh.label}</ToneBadge>
-          {data.rowCount === 0 ? <Badge variant="outline">Empty at the source</Badge> : null}
-          <Badge variant="outline">version {fmt.int(data.version)}</Badge>
+          {data.rowCount === 0 ? <Badge variant="outline">{PRODUCT.emptyAtSource}</Badge> : null}
+          <Badge variant="outline">{PRODUCT.version(fmt.int(data.version))}</Badge>
           <Button
             size="sm"
             variant="ghost"
@@ -211,7 +206,7 @@ function ProductPage() {
               setRefreshKey((key) => key + 1);
             }}
           >
-            Check for updates
+            {PRODUCT.checkForUpdates}
           </Button>
         </div>
         <h1 className={`font-display leading-[1.08] text-kumo-strong ${data.title.length > 60 ? "max-w-[46ch] text-3xl" : "max-w-[24ch] text-4xl sm:text-5xl"}`}>{data.title}</h1>
@@ -222,7 +217,7 @@ function ProductPage() {
           // a phone five lines before the data.
           <p className="flex flex-wrap items-baseline gap-x-5 gap-y-1 text-sm text-kumo-subtle">
             <span className="inline-flex flex-wrap items-center gap-x-1.5">
-              Published by
+              {PRODUCT.publishedBy}
               <a
                 href={publisherHref(feed.data.publisher.id)}
                 className="inline-flex items-center gap-1.5 font-medium text-kumo-strong underline decoration-kumo-line underline-offset-4 hover:decoration-kumo-strong"
@@ -231,13 +226,13 @@ function ProductPage() {
                 {feed.data.publisher.name}
               </a>
             </span>
-            <Link href={newIssue("broken-source", { title: `Broken: ${data.title}`, page: window.location.href })}>Report a problem</Link>
+            <Link href={newIssue("broken-source", { title: `Broken: ${data.title}`, page: window.location.href })}>{PRODUCT.reportProblem}</Link>
           </p>
         ) : null}
       </header>
 
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_19rem]">
-        <section aria-label="Views of this dataset" className="grid min-w-0 gap-5">
+        <section aria-label={PRODUCT.views} className="grid min-w-0 gap-5">
           <Tabs
             variant="underline"
             value={active?.value}
@@ -260,16 +255,16 @@ function ProductPage() {
           </div>
         </section>
 
-        <aside aria-label="About this dataset" className="grid gap-3 lg:sticky lg:top-20">
+        <aside aria-label={PRODUCT.about} className="grid gap-3 lg:sticky lg:top-20">
           <LayerCard>
-            <LayerCard.Secondary>Where it comes from</LayerCard.Secondary>
+            <LayerCard.Secondary>{PRODUCT.whereFrom}</LayerCard.Secondary>
             <LayerCard.Primary>
               <Kv
                 items={[
                   // No publisher row: the heading above names them, and this card is the source and its terms.
                   source
                     ? {
-                        term: "Original",
+                        term: PRODUCT.original,
                         value: (
                           <Link href={source.href} target="_blank" rel="noopener noreferrer">
                             {source.hostname} <Link.ExternalIcon />
@@ -277,9 +272,9 @@ function ProductPage() {
                         ),
                       }
                     : null,
-                  feed.data ? { term: "Shared", value: throughOf(feed.data) } : null,
+                  feed.data ? { term: PRODUCT.shared, value: throughOf(feed.data) } : null,
                   {
-                    term: "Licence",
+                    term: PRODUCT.licence,
                     value: data.licence ? (
                       <span className="flex flex-wrap items-baseline gap-x-2">
                         <a href={licenceHref(data.licence.id)} className="text-kumo-link hover:underline">
@@ -287,48 +282,48 @@ function ProductPage() {
                         </a>
                         {data.licence.url ? (
                           <Link href={data.licence.url} target="_blank" rel="noopener noreferrer">
-                            Text <Link.ExternalIcon />
+                            {PRODUCT.licenceText} <Link.ExternalIcon />
                           </Link>
                         ) : null}
                       </span>
                     ) : (
-                      "As stated by the publisher"
+                      PRODUCT.asStated
                     ),
                   },
-                  data.attribution ? { term: "Attribution", value: data.attribution } : null,
+                  data.attribution ? { term: PRODUCT.attribution, value: data.attribution } : null,
                 ]}
               />
             </LayerCard.Primary>
           </LayerCard>
           <LayerCard>
-            <LayerCard.Secondary>What this is</LayerCard.Secondary>
+            <LayerCard.Secondary>{PRODUCT.whatThisIs}</LayerCard.Secondary>
             <LayerCard.Primary className="grid gap-3">
-              <Kv items={[{ term: "Kind", value: ROLE[data.role].label }]} />
+              <Kv items={[{ term: PRODUCT.kind, value: ROLE[data.role].label }]} />
               <p className="text-xs leading-relaxed text-kumo-subtle">{ROLE[data.role].description}</p>
             </LayerCard.Primary>
           </LayerCard>
           <LayerCard>
-            <LayerCard.Secondary>How it is collected</LayerCard.Secondary>
+            <LayerCard.Secondary>{PRODUCT.howCollected}</LayerCard.Secondary>
             <LayerCard.Primary>
               <Kv
                 items={[
                   {
-                    term: "Cadence",
+                    term: PRODUCT.cadence,
                     value: (
                       <span className="grid gap-1">
                         <span>{fmt.every(data.cadenceSeconds)}</span>
                         <Link className="text-xs" href={newIssue("faster-cadence", { title: `Cadence: ${data.title}`, page: window.location.href })}>
-                          Need it more often?
+                          {PRODUCT.moreOften}
                         </Link>
                       </span>
                     ),
                   },
-                  feed.data ? { term: "Next run", value: feed.data.enabled ? <Countdown value={feed.data.nextRunAt} /> : "paused" } : null,
-                  feed.data?.lastSuccessAt ? { term: "Last collected", value: <RelativeTime value={feed.data.lastSuccessAt} /> } : null,
-                  { term: "History", value: data.historyMode === "changes" ? "Every change logged" : "Latest only" },
+                  feed.data ? { term: PRODUCT.nextRun, value: feed.data.enabled ? <Countdown value={feed.data.nextRunAt} /> : PRODUCT.paused } : null,
+                  feed.data?.lastSuccessAt ? { term: PRODUCT.lastCollected, value: <RelativeTime value={feed.data.lastSuccessAt} /> } : null,
+                  { term: PRODUCT.history, value: data.historyMode === "changes" ? PRODUCT.everyChange : PRODUCT.latestOnly },
                   acquisitions.data?.length
                     ? {
-                        term: "Recent runs",
+                        term: PRODUCT.recentRuns,
                         value: (
                           <span className="grid gap-1">
                             <span className="flex flex-wrap">
@@ -345,12 +340,12 @@ function ProductPage() {
                                 );
                               })}
                             </span>
-                            <span className="text-xs text-kumo-subtle">Newest first. Tap, point at or focus one for its time.</span>
+                            <span className="text-xs text-kumo-subtle">{PRODUCT.runsHint}</span>
                           </span>
                         ),
                       }
                     : null,
-                  { term: "Catalog entry", value: <Link href="/api/catalog.dcat.json">DCAT JSON-LD</Link> },
+                  { term: PRODUCT.catalogEntry, value: <Link href="/api/catalog.dcat.json">DCAT JSON-LD</Link> },
                 ]}
               />
             </LayerCard.Primary>
@@ -360,34 +355,44 @@ function ProductPage() {
 
       <section aria-labelledby="lineage-title" className="grid gap-4">
         <div className="grid gap-1.5">
-          <Eyebrow>Lineage</Eyebrow>
+          <Eyebrow>{PRODUCT.lineage}</Eyebrow>
           <h2 id="lineage-title" className="font-display text-2xl text-kumo-strong sm:text-3xl">
-            How the current version was built
+            {PRODUCT.lineageTitle}
           </h2>
-          <p className="max-w-[42rem] text-sm text-kumo-subtle">From the publisher’s source to what this page serves: when it was read, checked and published.</p>
+          <p className="max-w-[42rem] text-sm text-kumo-subtle">{PRODUCT.lineageIntro}</p>
         </div>
         {/* Two columns before four: four only once each card is wide enough for a publisher's full name. */}
         <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Step
             n={1}
-            label="Source"
+            label={PRODUCT.stepSource}
             title={
               feed.data ? (
                 <a href={publisherHref(feed.data.publisher.id)} className="hover:underline">
                   {feed.data.publisher.name}
                 </a>
               ) : (
-                <Loader size="sm" />
+                <Loader size="sm" aria-label={LOADING} />
               )
             }
           >
             {/* Where it was read from is stated once, in the card above; this step is when they published it. */}
-            {current?.sourcePublishedAt ? <span>Source published {fmt.dateTime(current.sourcePublishedAt)}</span> : null}
+            {current?.sourcePublishedAt ? <span>{PRODUCT.sourcePublished(fmt.dateTime(current.sourcePublishedAt))}</span> : null}
           </Step>
           <Step
             n={2}
-            label="Read"
-            title={current ? <RelativeTime value={current.observedAt} /> : acquisitions.loading ? <Loader size="sm" /> : data.version > 0 ? "Earlier" : "Not yet"}
+            label={PRODUCT.stepRead}
+            title={
+              current ? (
+                <RelativeTime value={current.observedAt} />
+              ) : acquisitions.loading ? (
+                <Loader size="sm" aria-label={LOADING} />
+              ) : data.version > 0 ? (
+                PRODUCT.earlier
+              ) : (
+                PRODUCT.notYet
+              )
+            }
           >
             {current ? (
               <>
@@ -395,41 +400,33 @@ function ProductPage() {
                   {fmt.dateTime(current.observedAt)}
                   {current.completeness ? `, ${COMPLETENESS.get(current.completeness) ?? current.completeness}` : ""}
                 </span>
-                {current.revisions !== undefined ? (
-                  <span>
-                    {fmt.int(current.rows ?? 0)} rows read · {fmt.int(current.revisions)} changes logged
-                  </span>
-                ) : null}
+                {current.revisions !== undefined ? <span>{PRODUCT.rowsRead(fmt.int(current.rows ?? 0), fmt.int(current.revisions))}</span> : null}
               </>
             ) : acquisitions.loading ? null : (
-              <span>
-                {data.version > 0 ? "This version came from an earlier run, no longer in the recent list; newer runs found nothing new." : "No successful collection yet."}
-              </span>
+              <span>{data.version > 0 ? PRODUCT.earlierRun : PRODUCT.noCollectionYet}</span>
             )}
           </Step>
-          <Step n={3} label="Checked" title={current?.normalizer ? `Checked by ${current.normalizer.id}` : data.version > 0 ? "Earlier" : "Not yet"}>
+          <Step n={3} label={PRODUCT.stepChecked} title={current?.normalizer ? PRODUCT.checkedBy(current.normalizer.id) : data.version > 0 ? PRODUCT.earlier : PRODUCT.notYet}>
             {current?.normalizer ? (
               <>
                 <span className="flex flex-wrap items-center gap-2">
-                  code version {current.normalizer.version} <Badge variant={current.status === "failed" ? "error" : "success"}>{RUN_LABEL[current.status]}</Badge>
+                  {PRODUCT.codeVersion(current.normalizer.version)} <Badge variant={current.status === "failed" ? "error" : "success"}>{RUN_LABEL[current.status]}</Badge>
                 </span>
                 {current.quality ? (
                   <span>
-                    {fmt.int(current.quality.acceptedRecords)} kept
-                    {current.quality.rejectedRecords ? ` · ${fmt.int(current.quality.rejectedRecords)} source rows left out, because they did not pass the checks` : ""}
+                    {PRODUCT.kept(fmt.int(current.quality.acceptedRecords))}
+                    {current.quality.rejectedRecords ? PRODUCT.leftOut(fmt.int(current.quality.rejectedRecords)) : ""}
                   </span>
                 ) : null}
               </>
             ) : (
-              <span>{data.version > 0 ? "Checked by the same earlier run." : "Nothing has been checked yet."}</span>
+              <span>{data.version > 0 ? PRODUCT.checkedEarlier : PRODUCT.nothingChecked}</span>
             )}
           </Step>
-          <Step n={4} label="Published" title={<RelativeTime value={data.updatedAt} />} last>
-            <span>
-              version {fmt.int(data.version)} · {fmt.int(data.rowCount)} {data.role === "time-series" ? "points" : "records"}
-            </span>
-            {data.watermark ? <span>data through {fmt.dateTime(data.watermark)}</span> : null}
-            <span>stale after {fmt.span(data.staleAfterSeconds)} without a refresh</span>
+          <Step n={4} label={PRODUCT.stepPublished} title={<RelativeTime value={data.updatedAt} />} last>
+            <span>{PRODUCT.versionRows(fmt.int(data.version), fmt.int(data.rowCount), data.role === "time-series")}</span>
+            {data.watermark ? <span>{PRODUCT.dataThrough(fmt.dateTime(data.watermark))}</span> : null}
+            <span>{PRODUCT.staleAfter(fmt.span(data.staleAfterSeconds))}</span>
           </Step>
         </ol>
       </section>

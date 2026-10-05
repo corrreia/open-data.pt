@@ -5,68 +5,33 @@ import { PageHead, SectionHead, bodyRows, cardRows } from "../components/common"
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { CONTRIBUTING, REPOSITORY, newIssue } from "../lib/project";
+import { CONTRIBUTE, type WayText } from "../text/contribute";
 
 const LINK = "font-medium text-kumo-link hover:underline";
 
 interface Way {
   id: string;
   icon: ReactNode;
-  title: string;
-  /** What it takes, in a few words. */
-  needs: string;
-  body: string;
-  action: string;
+  text: WayText;
   href: string;
 }
 
 const WAYS: Way[] = [
-  {
-    id: "suggest",
-    icon: <LightbulbIcon size={22} />,
-    title: "Suggest a source",
-    needs: "No code",
-    body: "A Portuguese institution or operator publishes data we do not collect yet. Say where it is and who publishes it.",
-    action: "Suggest a source",
-    href: newIssue("suggest-source"),
-  },
-  {
-    id: "report",
-    icon: <BugIcon size={22} />,
-    title: "Report a broken source",
-    needs: "No code",
-    body: "A dataset stopped updating, came back empty, or disagrees with what its publisher shows. Every dataset page links here with its address filled in.",
-    action: "Report a broken source",
-    href: newIssue("broken-source"),
-  },
-  {
-    id: "dataset",
-    icon: <PlusCircleIcon size={22} />,
-    title: "Add a dataset",
-    needs: "One file of TypeScript",
-    body: "A dataset from a source we already read is one feed file in its publisher's folder: its slug, title, licence, where it lives and how often to collect it. The platform installs it, collects it and gives each of its tables a page.",
-    action: "How to add a dataset",
-    href: `${CONTRIBUTING}#a-new-feed-from-a-source-we-already-read`,
-  },
-  {
-    id: "source",
-    icon: <StackIcon size={22} />,
-    title: "Add a source or a format",
-    needs: "TypeScript, with tests",
-    body: "A publisher with its own API gets a library in their folder; a standard we do not read yet gets one under formats/. Each comes with fixture tests built from saved responses.",
-    action: "How to add a source",
-    href: `${CONTRIBUTING}#a-new-bespoke-source`,
-  },
+  { id: "suggest", icon: <LightbulbIcon size={22} />, text: CONTRIBUTE.ways.suggest, href: newIssue("suggest-source") },
+  { id: "report", icon: <BugIcon size={22} />, text: CONTRIBUTE.ways.report, href: newIssue("broken-source") },
+  { id: "dataset", icon: <PlusCircleIcon size={22} />, text: CONTRIBUTE.ways.dataset, href: `${CONTRIBUTING}#a-new-feed-from-a-source-we-already-read` },
+  { id: "source", icon: <StackIcon size={22} />, text: CONTRIBUTE.ways.source, href: `${CONTRIBUTING}#a-new-bespoke-source` },
 ];
 
 function Contribute() {
   return (
     <Shell section="contribute">
-      <PageHead eyebrow="Contribute" title="Help collect Portugal’s public data">
-        open-data.pt is open source. Anyone can suggest a source or report one that broke, and a new dataset from a source we already read is often a single entry of code.
+      <PageHead eyebrow={CONTRIBUTE.eyebrow} title={CONTRIBUTE.title}>
+        {CONTRIBUTE.intro}
       </PageHead>
 
       <section aria-labelledby="ways-title">
-        <SectionHead eyebrow="Ways to help" title="Pick what fits" id="ways-title" />
+        <SectionHead eyebrow={CONTRIBUTE.waysEyebrow} title={CONTRIBUTE.waysTitle} id="ways-title" />
         {/* Two by two: four cards never leave one alone on a row. */}
         <div className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-2">
           {WAYS.map((way) => (
@@ -76,15 +41,15 @@ function Contribute() {
                   <span aria-hidden="true" className="text-kumo-brand">
                     {way.icon}
                   </span>
-                  <span className="font-medium text-kumo-strong">{way.title}</span>
+                  <span className="font-medium text-kumo-strong">{way.text.title}</span>
                 </span>
-                <span className="text-xs text-kumo-subtle">{way.needs}</span>
+                <span className="text-xs text-kumo-subtle">{way.text.needs}</span>
               </LayerCard.Secondary>
               <LayerCard.Primary className={`gap-4 ${bodyRows(2)}`}>
-                <p className="text-sm leading-relaxed text-kumo-default">{way.body}</p>
+                <p className="text-sm leading-relaxed text-kumo-default">{way.text.body}</p>
                 <div>
                   <LinkButton href={way.href} variant="secondary">
-                    {way.action}
+                    {way.text.action}
                   </LinkButton>
                 </div>
               </LayerCard.Primary>
@@ -94,33 +59,34 @@ function Contribute() {
       </section>
 
       <section aria-labelledby="landing-title">
-        <SectionHead eyebrow="Before a pull request" title="How changes land" id="landing-title" />
+        <SectionHead eyebrow={CONTRIBUTE.landingEyebrow} title={CONTRIBUTE.landingTitle} id="landing-title" />
         <ol className="grid max-w-[34rem] list-decimal gap-3 pl-5 text-sm leading-relaxed text-kumo-default marker:text-kumo-subtle">
           <li>
-            Read{" "}
-            <a className={LINK} href={CONTRIBUTING}>
-              CONTRIBUTING.md
-            </a>
-            : where code lives, and what a library may send.
+            {CONTRIBUTE.readContributing(
+              <a className={LINK} href={CONTRIBUTING}>
+                CONTRIBUTING.md
+              </a>,
+            )}
           </li>
-          <li>Run a new example against the real source, as CONTRIBUTING.md shows, so the pull request is known to collect.</li>
-          <li>Run the checks: lint, types and tests. Unit tests use saved responses, never the network.</li>
-          <li>The maintainer reviews and deploys. A pull request never needs secrets or access to Cloudflare.</li>
+          {CONTRIBUTE.steps.map((step) => (
+            <li key={step}>{step}</li>
+          ))}
         </ol>
       </section>
 
       <section aria-labelledby="code-title">
-        <SectionHead eyebrow="The code" title="One repository" id="code-title" />
+        <SectionHead eyebrow={CONTRIBUTE.codeEyebrow} title={CONTRIBUTE.codeTitle} id="code-title" />
         <p className="max-w-[34rem] text-sm leading-relaxed text-kumo-default">
-          The Gatekeeper that collects, the kernel that stores and serves, and this site all live in{" "}
-          <a className={LINK} href={REPOSITORY}>
-            github.com/corrreia/open-data.pt
-          </a>
-          , under the{" "}
-          <a className={LINK} href={`${REPOSITORY}/blob/main/LICENSE`}>
-            MIT licence
-          </a>
-          . The data is not: it belongs to its publishers, under their licences, and open-data.pt republishes it.
+          {CONTRIBUTE.code(
+            <a className={LINK} href={REPOSITORY}>
+              github.com/corrreia/open-data.pt
+            </a>,
+            (text) => (
+              <a className={LINK} href={`${REPOSITORY}/blob/main/LICENSE`}>
+                {text}
+              </a>
+            ),
+          )}
         </p>
       </section>
     </Shell>

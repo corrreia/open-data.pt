@@ -14,7 +14,7 @@ import { isbot } from "isbot";
 import { parse as parseReferrer } from "ts-referer-parser";
 
 import { isPage, pagePath } from "#/pages/markdown";
-import { NAMING_PARAMETER } from "#/pages/page-meta";
+import { NAMING_PARAMETER, englishPath } from "#/pages/page-meta";
 import { routeTemplate } from "#/api/request-guard";
 
 /** The dataset every data point is written to; wrangler.jsonc binds it as USAGE. */
@@ -79,13 +79,14 @@ export function surfaceOf(url: URL): Surface | undefined {
   if (path === "/mcp") return "mcp";
   if (path === "/docs" || path === "/docs/" || path === "/openapi.json") return "docs";
   if (DISCOVERY.test(path)) return "discovery";
-  if (isPage(path)) return "web";
+  if (isPage(englishPath(path))) return "web";
   return undefined;
 }
 
 /** The route a request took, named as the OpenAPI document or the site names it; never the raw URL. */
 export function routeOf(surface: Surface, url: URL): string {
   if (surface === "api" || surface === "mcp-read") return routeTemplate(url.pathname) ?? "(unknown)";
+  // A Portuguese page keeps its /pt/ route, so the report shows how much each language is read.
   if (surface === "web") return pagePath(url.pathname);
   if (surface === "docs") return url.pathname === "/docs/" ? "/docs" : url.pathname;
   // Any /.well-known/ path counts as discovery, including made-up ones of any length.
@@ -101,7 +102,7 @@ export function subjectOf(surface: Surface, url: URL): string {
     return match?.[1] ? clip(safeDecode(match[1])) : "";
   }
   if (surface === "web") {
-    const parameter = NAMING_PARAMETER.get(pagePath(url.pathname));
+    const parameter = NAMING_PARAMETER.get(pagePath(englishPath(url.pathname)));
     return parameter ? clip(url.searchParams.get(parameter) ?? "") : "";
   }
   return "";

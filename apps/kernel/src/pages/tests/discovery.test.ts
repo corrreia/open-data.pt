@@ -130,10 +130,14 @@ describe("agent discovery", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("Content-Type")).toBe("application/xml; charset=utf-8");
     const sitemap = await response.text();
-    expect(sitemap).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
+    expect(sitemap).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">');
     for (const page of ["/", "/catalog/", "/publisher/", "/licence/", "/start/", "/status/", "/contribute/", "/docs"]) expect(sitemap).toContain(`<loc>${ORIGIN}${page}</loc>`);
     expect(sitemap).toContain(`<loc>${ORIGIN}/product/?slug=fuel-stations</loc><lastmod>2026-09-15T10:00:00.000Z</lastmod>`);
     expect(sitemap).toContain(`<loc>${ORIGIN}/publisher/?id=dgeg</loc><lastmod>2026-09-15T10:00:00.000Z</lastmod>`);
+    // Each page is there in Portuguese too, both entries naming the other; the API reference has one language.
+    expect(sitemap).toContain(`<loc>${ORIGIN}/pt/product/?slug=fuel-stations</loc><lastmod>2026-09-15T10:00:00.000Z</lastmod>`);
+    expect(sitemap).toContain(`<xhtml:link rel="alternate" hreflang="pt-PT" href="${ORIGIN}/pt/catalog/"/>`);
+    expect(sitemap).not.toContain(`${ORIGIN}/pt/docs`);
 
     const robots = readFileSync("apps/site/public/robots.txt", "utf8");
     expect(robots).toContain(`Sitemap: ${ORIGIN}/sitemap.xml`);

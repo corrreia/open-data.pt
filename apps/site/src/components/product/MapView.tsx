@@ -10,6 +10,8 @@ import { fmt, humanize, isNumber, isRecord } from "../../lib/format";
 import { useQuery } from "../../lib/query";
 import type { Feature, FeatureCollection, Field, Geometry, JsonRecord, JsonValue, Product } from "../../lib/types";
 import { isText } from "./cells";
+import { MAP } from "../../text/map";
+import { LOADING } from "../../text/product";
 
 /*
  * Basemap: OpenStreetMap's standard tiles, which need no key. Their usage policy asks for a Referer,
@@ -18,7 +20,7 @@ import { isText } from "./cells";
  * tile cache.
  */
 const OSM = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
-const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+const ATTRIBUTION = MAP.attribution;
 
 /** Above this many points, positions jump to their new place instead of gliding there. */
 const GLIDE_LIMIT = 5000;
@@ -56,7 +58,7 @@ function colourFields(fields: Field[], features: Feature[]) {
  * category, which "No value" itself could; that string is only its label.
  */
 const NO_VALUE = "\u0000no-value";
-const NO_VALUE_LABEL = "No value";
+const NO_VALUE_LABEL = MAP.noValue;
 const categoryLabel = (category: string) => (category === NO_VALUE ? NO_VALUE_LABEL : category);
 
 const GEOMETRY_TYPES = new Set(["Point", "MultiPoint", "LineString", "MultiLineString", "Polygon", "MultiPolygon"]);
@@ -330,10 +332,11 @@ export default function MapView({ product, refreshKey }: { product: Product; ref
     if (!element) return undefined;
     // With reduced motion asked for, zooming and panning jump instead of gliding.
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const map = L.map(element, { preferCanvas: true, zoomControl: true, zoomAnimation: !still, fadeAnimation: !still, markerZoomAnimation: !still, inertia: !still }).setView(
+    const map = L.map(element, { preferCanvas: true, zoomControl: false, zoomAnimation: !still, fadeAnimation: !still, markerZoomAnimation: !still, inertia: !still }).setView(
       [39.5, -8.0],
       6,
     );
+    L.control.zoom({ zoomInTitle: MAP.zoomIn, zoomOutTitle: MAP.zoomOut }).addTo(map);
     L.control.scale({ imperial: false }).addTo(map);
     L.tileLayer(OSM, { maxZoom: 19, attribution: ATTRIBUTION, referrerPolicy: "strict-origin-when-cross-origin", crossOrigin: true }).addTo(map);
     const points = new PointLayer().addTo(map);
@@ -453,7 +456,7 @@ export default function MapView({ product, refreshKey }: { product: Product; ref
     const event = time && isRecord(time) ? time.event : undefined;
     return isText(event) && event > latest ? event : latest;
   }, "");
-  const noun = outlines === features.length && outlines > 0 ? "shapes" : outlines > 0 ? "features" : "points";
+  const noun = outlines === features.length && outlines > 0 ? MAP.noun.areas : outlines > 0 ? MAP.noun.features : MAP.noun.points;
 
   return (
     <div className="grid gap-3">
@@ -461,15 +464,16 @@ export default function MapView({ product, refreshKey }: { product: Product; ref
         <p className="text-sm text-kumo-subtle">
           {geojson.loading ? (
             <span className="inline-flex items-center gap-2">
-              <Loader size="sm" /> Loading the map{product.rowCount > 5000 ? `: ${fmt.int(product.rowCount)} records, this can take a few seconds` : ""}…
+              <Loader size="sm" aria-label={LOADING} /> {MAP.loading}
+              {product.rowCount > 5000 ? MAP.loadingMany(fmt.int(product.rowCount)) : ""}…
             </span>
           ) : (
             <>
-              {fmt.int(features.length)} {noun} · fetched <RelativeTime value={fetchedAt} />
+              {fmt.int(features.length)} {noun} · {MAP.fetched} <RelativeTime value={fetchedAt} />
               {newest ? (
                 <>
                   {" "}
-                  · positions as of <RelativeTime value={newest} />
+                  · {MAP.positionsAsOf} <RelativeTime value={newest} />
                 </>
               ) : null}
             </>
@@ -478,17 +482,14 @@ export default function MapView({ product, refreshKey }: { product: Product; ref
         <div className="flex flex-wrap items-center gap-2">
           {choices.length ? (
             <Select
-              aria-label="Colour by"
+              aria-label={MAP.colourBy}
               className="w-52"
               value={field}
               onValueChange={(value: string | null) => {
                 setColourBy(value ?? "");
                 setHidden(new Set());
               }}
-              items={Object.fromEntries([
-                ["", "No colours"],
-                ...choices.map((choice) => [choice.name, `Colour by ${humanize(choice.name).replace(/ ID$/, "").toLocaleLowerCase()}`]),
-              ])}
+              items={Object.fromEntries([["", MAP.noColours], ...choices.map((choice) => [choice.name, MAP.colourByField(humanize(choice.name).replace(/ ID$/, ""))])])}
             />
           ) : null}
           <Button
@@ -499,13 +500,13 @@ export default function MapView({ product, refreshKey }: { product: Product; ref
               mapRef.current?.fitBounds(boundsRef.current, { padding: [24, 24], maxZoom: 17, animate: !window.matchMedia("(prefers-reduced-motion: reduce)").matches })
             }
           >
-            Fit to data
+            {MAP.fitToData}
           </Button>
         </div>
       </div>
 
       {field && categories.length > 1 ? (
-        <div role="group" aria-label="Categories on the map" className="flex flex-wrap gap-1.5">
+        <div role="group" aria-label={MAP.categories} className="flex flex-wrap gap-1.5">
           {categories.map((category) => {
             const on = !hidden.has(category);
             return (
@@ -531,16 +532,9 @@ export default function MapView({ product, refreshKey }: { product: Product; ref
         </div>
       ) : null}
 
-      <ErrorNote error={geojson.error} what="the map" onRetry={() => void geojson.refetch()} />
-      <div
-        ref={container}
-        role="region"
-        aria-label={`${product.title} on a map`}
-        className="h-[min(70vh,36rem)] min-h-80 w-full overflow-hidden rounded-xl ring-1 ring-kumo-line"
-      />
-      <p className="text-xs text-kumo-subtle">
-        Shapes come straight from the current records. Select one for its details, switch a category off in the legend, or open the Records tab for the same rows as text.
-      </p>
+      <ErrorNote error={geojson.error} what={MAP.theMap} onRetry={() => void geojson.refetch()} />
+      <div ref={container} role="region" aria-label={MAP.onAMap(product.title)} className="h-[min(70vh,36rem)] min-h-80 w-full overflow-hidden rounded-xl ring-1 ring-kumo-line" />
+      <p className="text-xs text-kumo-subtle">{MAP.note}</p>
     </div>
   );
 }

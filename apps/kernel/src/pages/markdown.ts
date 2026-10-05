@@ -3,7 +3,7 @@
  * text/markdown. The pages draw themselves in the browser from the API; these
  * say the same from the same reads, as text an agent can use directly.
  */
-import type { Feed as CatalogFeed, Outage, Product as CatalogProduct, Term } from "@open-data-pt/api";
+import { topicName, type Feed as CatalogFeed, type Outage, type Product as CatalogProduct, type Term } from "@open-data-pt/api";
 import type { JsonObject, JsonValue } from "@open-data-pt/contract";
 import type { SiteHost } from "#/pages/discovery";
 
@@ -536,7 +536,7 @@ export function every(seconds: number): string {
   return count === 1 ? `every ${unit}` : `every ${count} ${unit}s`;
 }
 
-export const topicLabel = (topic: string) => topic.charAt(0).toLocaleUpperCase() + topic.slice(1).replaceAll("-", " ");
+export const topicLabel = (topic: string) => topicName(topic, "en");
 const plural = (count: number, word: string, many = `${word}s`) => `${count} ${count === 1 ? word : many}`;
 /** Text for inside a link's brackets. */
 const linkText = (text: string) => text.replace(/[[\]\\]/g, "\\$&");

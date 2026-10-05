@@ -6,10 +6,24 @@ import { PublisherMark } from "../components/PublisherMark";
 import { ErrorNote, PageHead, Placeholder } from "../components/common";
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
-import { ROLE, UPDATES, buildListings, buildPublishers, fetchFeeds, fetchProducts, publisherHref, topicLabel, type Listing, emptyLast } from "../lib/catalog";
-import { fmt, plural } from "../lib/format";
+import {
+  ROLE,
+  UPDATES,
+  buildListings,
+  buildPublishers,
+  fetchFeeds,
+  fetchProducts,
+  listingHaystack,
+  publisherHref,
+  searchWords,
+  topicLabel,
+  type Listing,
+  emptyLast,
+} from "../lib/catalog";
 import { useQuery } from "../lib/query";
 import type { Role } from "../lib/types";
+import { CATALOG_PAGE } from "../text/catalog-page";
+import { LISTINGS } from "../text/listings";
 
 type FacetId = "topic" | "publisher" | "licence" | "kind" | "updates" | "format";
 type SortOrder = "publisher" | "recent" | "name";
@@ -27,15 +41,15 @@ const ROLE_IDS = new Set<string>(Object.keys(ROLE));
 const isRole = (value: string): value is Role => ROLE_IDS.has(value);
 
 const FACETS: Facet[] = [
-  { id: "topic", label: "Topic", values: (listing) => listing.topics },
-  { id: "publisher", label: "Publisher", values: (listing) => [listing.publisher.id], collapsed: 8 },
-  { id: "licence", label: "Licence", values: (listing) => [listing.licence.id], collapsed: 6 },
-  { id: "kind", label: "Kind of data", values: (listing) => [listing.role] },
-  { id: "updates", label: "Updates", values: (listing) => [listing.updates], order: UPDATES.map((bucket) => bucket.id) },
-  { id: "format", label: "How it is published", values: (listing) => [listing.format] },
+  { id: "topic", label: CATALOG_PAGE.facets.topic, values: (listing) => listing.topics },
+  { id: "publisher", label: CATALOG_PAGE.facets.publisher, values: (listing) => [listing.publisher.id], collapsed: 8 },
+  { id: "licence", label: CATALOG_PAGE.facets.licence, values: (listing) => [listing.licence.id], collapsed: 6 },
+  { id: "kind", label: CATALOG_PAGE.facets.kind, values: (listing) => [listing.role] },
+  { id: "updates", label: CATALOG_PAGE.facets.updates, values: (listing) => [listing.updates], order: UPDATES.map((bucket) => bucket.id) },
+  { id: "format", label: CATALOG_PAGE.facets.format, values: (listing) => [listing.format] },
 ];
 
-const SORTS = { publisher: "Grouped by publisher", recent: "Recently updated first", name: "By name" };
+const SORTS = CATALOG_PAGE.sorts;
 const isSort = (value: string | null): value is SortOrder => value === "publisher" || value === "recent" || value === "name";
 
 function readUrl() {
@@ -81,22 +95,10 @@ function Catalog() {
     window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
   }, [q, sort, selected]);
 
-  const words = q.toLocaleLowerCase().split(/\s+/).filter(Boolean);
+  const words = searchWords(q);
   const matchesQuery = (listing: Listing) => {
     if (words.length === 0) return true;
-    // The feed is never shown, but its name is often what someone searches for: "fuel prices" finds the station prices.
-    const haystack = [
-      listing.title,
-      listing.description,
-      listing.id,
-      listing.feed.title,
-      listing.feed.description,
-      listing.publisher.name,
-      listing.format,
-      ...listing.topics.map(topicLabel),
-    ]
-      .join(" ")
-      .toLocaleLowerCase();
+    const haystack = listingHaystack(listing);
     return words.every((word) => haystack.includes(word));
   };
   const matchesFacets = (listing: Listing, except?: FacetId) =>
@@ -161,7 +163,7 @@ function Catalog() {
             ))}
             {hidden > 0 ? (
               <Button variant="ghost" size="sm" className="justify-self-start" onClick={() => setExpanded((current) => new Set(current).add(facet.id))}>
-                Show all {counts.size}
+                {CATALOG_PAGE.showAll(counts.size)}
               </Button>
             ) : null}
           </fieldset>
@@ -172,23 +174,22 @@ function Catalog() {
 
   return (
     <Shell section="catalog">
-      <PageHead eyebrow="Catalog" title="Every dataset, and who publishes it">
-        Filter by topic, publisher, kind of data, how often it changes, or how the publisher shares it. Every table and series keeps its publisher’s licence and links back to their
-        source.
+      <PageHead eyebrow={CATALOG_PAGE.eyebrow} title={CATALOG_PAGE.title}>
+        {CATALOG_PAGE.intro}
       </PageHead>
 
       <div className="grid items-start gap-8 lg:grid-cols-[15.5rem_minmax(0,1fr)]">
         {/* The filters scroll with the page: a capped, separately scrolling column hid its last groups behind a second scrollbar. */}
-        <aside aria-label="Filters" className="min-w-0">
+        <aside aria-label={CATALOG_PAGE.filtersLabel} className="min-w-0">
           <Collapsible.Root open={filtersOpen} onOpenChange={setFiltersOpen}>
             <Collapsible.Trigger render={<Button variant="secondary" size="sm" icon={<FunnelSimpleIcon />} className="lg:hidden" />}>
-              {filtersOpen ? "Hide filters" : `Filters${active.length ? ` (${active.length})` : ""}`}
+              {filtersOpen ? CATALOG_PAGE.hideFilters : CATALOG_PAGE.filters(active.length)}
             </Collapsible.Trigger>
             <Collapsible.Panel className="mt-4 lg:mt-0">{facetPanel}</Collapsible.Panel>
           </Collapsible.Root>
         </aside>
 
-        <section aria-label="Tables and series" className="grid min-w-0 gap-4">
+        <section aria-label={LISTINGS.tablesAndSeries} className="grid min-w-0 gap-4">
           <div className="flex flex-wrap items-center gap-3">
             <div className="min-w-0 flex-1 basis-72">
               <InputGroup>
@@ -198,14 +199,14 @@ function Catalog() {
                 <InputGroup.Input
                   value={q}
                   onChange={(event) => setQ(event.target.value)}
-                  placeholder="Search tables, series and publishers…"
-                  aria-label="Search the catalog"
+                  placeholder={CATALOG_PAGE.searchPlaceholder}
+                  aria-label={CATALOG_PAGE.searchLabel}
                   autoFocus={Boolean(initial.q)}
                 />
               </InputGroup>
             </div>
             <span className="flex items-center gap-2 text-sm text-kumo-subtle">
-              <span id="sort-label">Order</span>
+              <span id="sort-label">{CATALOG_PAGE.order}</span>
               <Select
                 aria-labelledby="sort-label"
                 className="w-56"
@@ -218,11 +219,7 @@ function Catalog() {
 
           <div className="flex min-h-8 flex-wrap items-center gap-2">
             <p className="text-sm text-kumo-subtle" role="status" aria-live="polite">
-              {listings.length === 0
-                ? products.error || feeds.error
-                  ? ""
-                  : "Loading the catalog…"
-                : `${plural(visible.length, "table or series", "tables and series")}${visible.length !== listings.length ? `, of ${fmt.int(listings.length)}` : ""}`}
+              {listings.length === 0 ? (products.error || feeds.error ? "" : CATALOG_PAGE.loading) : CATALOG_PAGE.shown(visible.length, listings.length)}
             </p>
             {active.map((item) => (
               <Button
@@ -230,7 +227,7 @@ function Catalog() {
                 size="sm"
                 variant="secondary"
                 icon={<XIcon />}
-                aria-label={`Remove filter ${nameOf(item.facet, item.value)}`}
+                aria-label={CATALOG_PAGE.removeFilter(nameOf(item.facet, item.value))}
                 onClick={() =>
                   choose(
                     item.facet,
@@ -243,28 +240,28 @@ function Catalog() {
             ))}
             {active.length > 1 || (active.length > 0 && q) ? (
               <Button size="sm" variant="ghost" onClick={clearAll}>
-                Clear all
+                {CATALOG_PAGE.clearAll}
               </Button>
             ) : null}
           </div>
 
           <ErrorNote
             error={products.error ?? feeds.error}
-            what="the catalog"
+            what={CATALOG_PAGE.errorWhat}
             onRetry={() => {
               void products.refetch();
               void feeds.refetch();
             }}
           />
-          {listings.length === 0 && !products.error && !feeds.error ? <Placeholder rows={4} label="Loading the catalog" /> : null}
+          {listings.length === 0 && !products.error && !feeds.error ? <Placeholder rows={4} label={CATALOG_PAGE.loadingLabel} /> : null}
           {listings.length > 0 && visible.length === 0 ? (
             <Empty
               icon={<MagnifyingGlassIcon size={40} className="text-kumo-inactive" />}
-              title="Nothing matches"
-              description="Try another word, or remove a filter."
+              title={CATALOG_PAGE.nothingMatches}
+              description={CATALOG_PAGE.tryAnother}
               contents={
                 <Button variant="primary" onClick={clearAll}>
-                  Clear search and filters
+                  {CATALOG_PAGE.clearSearchAndFilters}
                 </Button>
               }
             />
@@ -282,7 +279,7 @@ function Catalog() {
                         {group[0]?.publisher.name ?? id}
                       </a>
                     </h2>
-                    <Badge variant="secondary">{plural(group.length, "table or series", "tables and series")}</Badge>
+                    <Badge variant="secondary">{LISTINGS.count(group.length)}</Badge>
                   </div>
                   <ListingRows listings={group} underPublisher />
                 </div>

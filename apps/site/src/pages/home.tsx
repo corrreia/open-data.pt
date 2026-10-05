@@ -23,9 +23,12 @@ import { PublisherMark } from "../components/PublisherMark";
 import { Shell } from "../components/Shell";
 import { apiGet, productHref } from "../lib/api";
 import { buildListings, buildPublishers, fetchFeeds, fetchProducts, publisherHref, topicLabel, type Listing, emptyLast } from "../lib/catalog";
-import { fmt, plural } from "../lib/format";
+import { fmt } from "../lib/format";
 import { useQuery } from "../lib/query";
+import { localHref } from "../lib/locale";
 import type { OutagesResponse } from "../lib/types";
+import { HOME } from "../text/home";
+import { LISTINGS } from "../text/listings";
 
 const TOPIC_ICON = new Map<string, ReactNode>([
   ["cities", <BuildingsIcon size={22} />],
@@ -78,61 +81,53 @@ function Home() {
     <Shell section="home">
       <section aria-labelledby="hero-title" className="grid items-center gap-10 pt-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:pt-14">
         <div className="grid gap-6">
-          <Eyebrow>Portuguese public data</Eyebrow>
+          <Eyebrow>{HOME.eyebrow}</Eyebrow>
           <h1 id="hero-title" className="font-display text-5xl leading-[1.02] text-kumo-strong sm:text-6xl">
-            Public data from Portugal, <em className="text-kumo-brand">in one place</em>.
+            {HOME.heading.before}
+            <em className="text-kumo-brand">{HOME.heading.emphasis}</em>
+            {HOME.heading.after}
           </h1>
-          <p className="max-w-[36rem] text-lg leading-relaxed text-kumo-subtle">
-            Datasets published by Portuguese institutions and operators, collected from where they publish them and served in one consistent format. Free to use, with no key and no
-            account. Every dataset names its publisher and links back to the source.
-          </p>
-          <form action="/catalog/" method="get" role="search" className="flex max-w-xl flex-wrap gap-2">
-            <Input
-              name="q"
-              size="lg"
-              className="min-w-0 flex-1 basis-64"
-              placeholder="Search datasets: metro, fuel prices, population…"
-              aria-label="Search datasets"
-              autoComplete="off"
-            />
+          <p className="max-w-[36rem] text-lg leading-relaxed text-kumo-subtle">{HOME.intro}</p>
+          <form action={localHref("/catalog/")} method="get" role="search" className="flex max-w-xl flex-wrap gap-2">
+            <Input name="q" size="lg" className="min-w-0 flex-1 basis-64" placeholder={HOME.searchPlaceholder} aria-label={HOME.searchLabel} autoComplete="off" />
             <Button type="submit" variant="primary" size="lg" icon={<MagnifyingGlassIcon />}>
-              Search
+              {HOME.search}
             </Button>
           </form>
           <p className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-kumo-subtle">
-            <a href="/catalog/" className="font-medium text-kumo-link">
-              Browse the whole catalog
+            <a href={localHref("/catalog/")} className="font-medium text-kumo-link">
+              {HOME.browse}
             </a>
-            <a href="/start/" className="font-medium text-kumo-link">
-              Use the API
+            <a href={localHref("/start/")} className="font-medium text-kumo-link">
+              {HOME.useApi}
             </a>
-            <a href="/start/#mcp" className="font-medium text-kumo-link">
-              Connect an AI assistant
+            <a href={localHref("/start/#mcp")} className="font-medium text-kumo-link">
+              {HOME.connectAssistant}
             </a>
             <span className="hidden sm:inline">
-              or press <kbd className="rounded border border-kumo-line bg-kumo-base px-1.5 font-mono text-xs">⌘K</kbd> anywhere
+              {HOME.pressBefore} <kbd className="rounded border border-kumo-line bg-kumo-base px-1.5 font-mono text-xs">⌘K</kbd> {HOME.pressAfter}
             </span>
           </p>
         </div>
 
         {/* The first thing a visitor sees moving: what arrived in the last minutes. */}
-        <LayerCard aria-label="Collected in the last minutes">
+        <LayerCard aria-label={HOME.liveLabel}>
           <LayerCard.Secondary className="flex items-center justify-between">
             <span className="flex items-center gap-2">
               <span className="relative flex size-2">
                 <span className="absolute inline-flex size-full animate-ping rounded-full bg-kumo-success opacity-60 motion-reduce:hidden" />
                 <span className="relative inline-flex size-2 rounded-full bg-kumo-success" />
               </span>
-              Right now
+              {HOME.rightNow}
             </span>
-            <a href="/status/" className="text-xs text-kumo-subtle hover:text-kumo-strong">
-              {failing === undefined ? "Checking collection…" : failing === 0 ? "Everything collecting" : `${plural(failing, "source")} not collecting`}
+            <a href={localHref("/status/")} className="text-xs text-kumo-subtle hover:text-kumo-strong">
+              {failing === undefined ? HOME.checking : failing === 0 ? HOME.everythingCollecting : HOME.sourcesNotCollecting(failing)}
             </a>
           </LayerCard.Secondary>
           <LayerCard.Primary className="p-0">
             {live.length === 0 ? (
               <div className="flex items-center gap-2 p-4 text-sm text-kumo-subtle">
-                <Loader size="sm" /> Loading live data…
+                <Loader size="sm" /> {HOME.loadingLive}
               </div>
             ) : (
               <ul className="divide-y divide-kumo-hairline">
@@ -155,27 +150,27 @@ function Home() {
         </LayerCard>
       </section>
 
-      <section aria-label="At a glance" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatTile label="Tables and series" value={listings.length ? fmt.int(listings.length) : "—"} note={`from ${plural(publishers.length, "publisher")}`} />
-        <StatTile label="Publishers" value={publishers.length ? fmt.int(publishers.length) : "—"} note="institutions and operators" />
-        <StatTile label="Near real time" value={live.length ? fmt.int(live.length) : "—"} note="collected several times an hour" />
+      <section aria-label={HOME.atAGlance} className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatTile label={LISTINGS.tablesAndSeries} value={listings.length ? fmt.int(listings.length) : "—"} note={HOME.fromPublishers(publishers.length)} />
+        <StatTile label={HOME.publishers} value={publishers.length ? fmt.int(publishers.length) : "—"} note={HOME.institutionsAndOperators} />
+        <StatTile label={HOME.nearRealTime} value={live.length ? fmt.int(live.length) : "—"} note={HOME.severalTimesAnHour} />
         <StatTile
-          label="Collection"
+          label={HOME.collection}
           tone={failing === undefined ? undefined : failing === 0 ? "ok" : "warn"}
           value={
-            <a href="/status/" className="no-underline">
-              {failing === undefined ? "—" : failing === 0 ? "All collecting" : `${fmt.int(failing)} not collecting`}
+            <a href={localHref("/status/")} className="no-underline">
+              {failing === undefined ? "—" : failing === 0 ? HOME.allCollecting : HOME.notCollecting(failing)}
             </a>
           }
-          note={failing === 0 ? "everything is being collected" : "see the status page"}
+          note={failing === 0 ? HOME.everythingCollected : HOME.seeStatus}
         />
       </section>
 
       <section aria-labelledby="topics-title">
-        <SectionHead eyebrow="Topics" title="Browse by topic" id="topics-title" />
+        <SectionHead eyebrow={HOME.topicsEyebrow} title={HOME.topicsTitle} id="topics-title" />
         <div className="grid grid-cols-[repeat(auto-fill,minmax(min(15rem,100%),1fr))] gap-3">
           {topics.map(([topic, entry]) => (
-            <a key={topic} href={`/catalog/?topic=${encodeURIComponent(topic)}`} className="group rounded-lg no-underline">
+            <a key={topic} href={localHref(`/catalog/?topic=${encodeURIComponent(topic)}`)} className="group rounded-lg no-underline">
               <LayerCard className="flex h-full flex-col transition-[box-shadow] group-hover:ring-kumo-focus/40">
                 <LayerCard.Primary className="grid flex-1 content-start gap-2">
                   <span className="flex items-center justify-between text-kumo-brand">
@@ -183,7 +178,7 @@ function Home() {
                     <ArrowRightIcon size={16} className="text-kumo-subtle transition-transform group-hover:translate-x-0.5" />
                   </span>
                   <span className="font-display text-xl text-kumo-strong">{topicLabel(topic)}</span>
-                  <span className="font-mono text-xs text-kumo-subtle">{plural(entry.listings, "table or series", "tables and series")}</span>
+                  <span className="font-mono text-xs text-kumo-subtle">{LISTINGS.count(entry.listings)}</span>
                   <TopicPublishers publishers={entry.publishers} />
                 </LayerCard.Primary>
               </LayerCard>
@@ -195,16 +190,16 @@ function Home() {
       <section aria-labelledby="recent-title">
         {/* What changes several times an hour is the panel at the top of this page; these are the rest,
             newest first, so nobody reads the same rows twice on one page. */}
-        <SectionHead eyebrow="Recently updated" title="New from the publishers" id="recent-title">
-          Tables and series whose publisher released new or changed data most recently. What changes several times an hour is at the top of this page.
+        <SectionHead eyebrow={HOME.recentEyebrow} title={HOME.recentTitle} id="recent-title">
+          {HOME.recentIntro}
         </SectionHead>
         <ListingRows listings={recent} />
       </section>
 
       <section aria-labelledby="publishers-title">
-        <SectionHead eyebrow="Publishers" title="Where the data comes from" id="publishers-title">
-          <a href="/publisher/" className="font-medium text-kumo-link">
-            All publishers
+        <SectionHead eyebrow={HOME.publishers} title={HOME.publishersTitle} id="publishers-title">
+          <a href={localHref("/publisher/")} className="font-medium text-kumo-link">
+            {HOME.allPublishers}
           </a>
         </SectionHead>
         <ul className="flex flex-wrap gap-2">
@@ -223,7 +218,7 @@ function Home() {
         </ul>
         {publishers.length === 0 && !products.error ? (
           <Badge variant="neutral" appearance="dot">
-            Loading
+            {HOME.loading}
           </Badge>
         ) : null}
       </section>
@@ -237,7 +232,7 @@ function TopicPublishers({ publishers }: { publishers: Map<string, number> }) {
   return (
     <span className="line-clamp-2 text-xs text-kumo-subtle" title={ranked.join(" · ")}>
       {ranked.slice(0, 3).join(" · ")}
-      {ranked.length > 3 ? ` · +${ranked.length - 3} more` : ""}
+      {ranked.length > 3 ? LISTINGS.more(ranked.length - 3) : ""}
     </span>
   );
 }

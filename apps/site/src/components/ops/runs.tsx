@@ -2,8 +2,8 @@
 
 import { Badge } from "@cloudflare/kumo";
 import { apiGet } from "../../lib/api";
-import { plural } from "../../lib/format";
 import type { Acquisition, AcquisitionDay, AcquisitionStatus } from "../../lib/types";
+import { OPERATIONS } from "../../text/operations";
 
 /** The newest hundred acquisitions, of one feed or of all; the live log and the table share the unfiltered read. */
 export const acquisitionsKey = (feedId: string) => `acquisitions:${feedId || "all"}`;
@@ -20,11 +20,11 @@ export interface StatusMeta {
 }
 
 export const RUN_STATUS = {
-  queued: { label: "Queued", badge: "neutral" },
-  running: { label: "Running", badge: "info" },
-  unchanged: { label: "Unchanged", badge: "neutral" },
-  succeeded: { label: "Published", badge: "success" },
-  failed: { label: "Failed", badge: "error" },
+  queued: { label: OPERATIONS.runStatus.queued, badge: "neutral" },
+  running: { label: OPERATIONS.runStatus.running, badge: "info" },
+  unchanged: { label: OPERATIONS.runStatus.unchanged, badge: "neutral" },
+  succeeded: { label: OPERATIONS.runStatus.succeeded, badge: "success" },
+  failed: { label: OPERATIONS.runStatus.failed, badge: "error" },
 } satisfies { [status in AcquisitionStatus]: StatusMeta };
 
 /** The words for a status, falling back to the raw value should the API add one. */
@@ -66,13 +66,16 @@ export const runFromAcquisition = (acquisition: Acquisition): RunRow => ({
 });
 
 /** Scheduled runs are the norm; only a manual run or a history backfill is worth naming. */
-export const triggerLabel = (trigger: string) => (trigger === "manual" || trigger === "history" ? trigger : "schedule");
+export const triggerKind = (trigger: string): "manual" | "history" | "schedule" => (trigger === "manual" ? "manual" : trigger === "history" ? "history" : "schedule");
+
+/** The trigger in the page's words. */
+export const triggerLabel = (trigger: string) => OPERATIONS.trigger[triggerKind(trigger)];
 
 /** What a run left behind, in a few words. */
 export function runOutcome(run: RunRow) {
   if (run.error) return run.error;
-  if (run.status === "unchanged") return "Source unchanged";
+  if (run.status === "unchanged") return OPERATIONS.sourceUnchanged;
   if (run.status === "running" || run.status === "queued") return "";
-  const parts = [run.rows === undefined ? "" : plural(run.rows, "row"), run.revisions === undefined ? "" : plural(run.revisions, "change")];
+  const parts = [run.rows === undefined ? "" : OPERATIONS.rows(run.rows), run.revisions === undefined ? "" : OPERATIONS.changes(run.revisions)];
   return parts.filter(Boolean).join(" · ");
 }

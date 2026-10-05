@@ -40,6 +40,9 @@
       "/operations/*",
       "/contribute/*",
       "/aup/*",
+      // Every page again in Portuguese, from the same files.
+      "/pt",
+      "/pt/*",
       // The agent's sign-in and model pass-through; it has no page of its own.
       "/ask/*",
     ],

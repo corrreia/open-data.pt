@@ -105,6 +105,7 @@ describe("where and what", () => {
     expect(surfaceOf(site("/"))).toBe("web");
     expect(surfaceOf(site("/product/index.html"))).toBe("web");
     expect(surfaceOf(site("/analytics/"))).toBe("web");
+    expect(surfaceOf(site("/pt/catalog/"))).toBe("web");
     expect(surfaceOf(site("/assets/index-abc.js"))).toBeUndefined();
   });
 
@@ -113,6 +114,8 @@ describe("where and what", () => {
     expect(routeOf("mcp-read", site("/api/products/carris-stops.geojson"))).toBe("/api/products/{slug}.geojson");
     expect(routeOf("api", site("/api/nothing-here"))).toBe("(unknown)");
     expect(routeOf("web", site("/product/index.html"))).toBe("/product/");
+    // Each language is its own route, so the report shows how much each is read.
+    expect(routeOf("web", site("/pt/product/"))).toBe("/pt/product/");
     expect(routeOf("docs", site("/docs/"))).toBe("/docs");
     // Any made-up /.well-known/ path is discovery; its route is cut to fit a blob.
     expect(routeOf("discovery", site(`/.well-known/${"x".repeat(5000)}`)).length).toBe(64);
@@ -123,6 +126,7 @@ describe("where and what", () => {
     expect(subjectOf("api", site("/api/products/carris-stops.geojson"))).toBe("carris-stops");
     expect(subjectOf("api", site("/api/feeds/feed_abc"))).toBe("feed_abc");
     expect(subjectOf("api", site("/api/products"))).toBe("");
+    expect(subjectOf("web", site("/pt/product/?slug=carris-stops"))).toBe("carris-stops");
     expect(subjectOf("web", site("/product/?slug=ipma-warnings&tab=map"))).toBe("ipma-warnings");
     expect(subjectOf("web", site("/catalog/?topic=energy"))).toBe("energy");
     expect(subjectOf("web", site("/status/"))).toBe("");

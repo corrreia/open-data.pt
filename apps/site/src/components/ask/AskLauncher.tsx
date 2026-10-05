@@ -1,6 +1,7 @@
 import { Loader } from "@cloudflare/kumo";
 import { ChatsCircleIcon } from "@phosphor-icons/react";
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { ASK } from "../../text/ask";
 
 // The agent in the corner of every page. This part is all every page loads: whether the agent is on
 // here, and a button. The panel, the model's sandbox and the MCP server load when it first opens, and
@@ -133,7 +134,7 @@ export function AskLauncher({ onModalChange }: { onModalChange: (modal: boolean)
   }, [open]);
 
   if (!enabled) return null;
-  const status = running ? "The agent is still answering." : unread ? "The agent's answer is ready." : "";
+  const status = running ? ASK.stillAnswering : unread ? ASK.answerReadyStatus : "";
   return (
     <>
       {mounted ? (
@@ -143,7 +144,7 @@ export function AskLauncher({ onModalChange }: { onModalChange: (modal: boolean)
               style={corner}
               className="fixed right-4 z-40 flex items-center gap-2 rounded-full border border-kumo-line bg-kumo-base px-4 py-3 text-sm text-kumo-subtle shadow-md"
             >
-              <Loader size="sm" /> Opening…
+              <Loader size="sm" /> {ASK.opening}
             </div>
           }
         >
@@ -168,7 +169,7 @@ export function AskLauncher({ onModalChange }: { onModalChange: (modal: boolean)
               {unread ? <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full border-2 border-kumo-brand bg-current" aria-hidden="true" /> : null}
             </span>
           )}
-          {running ? "Answering…" : unread ? "Answer ready" : "Ask the data"}
+          {running ? ASK.answering : unread ? ASK.answerReady : ASK.askTheData}
         </button>
       )}
       <span className="sr-only" role="status">

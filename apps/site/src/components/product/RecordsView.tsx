@@ -6,8 +6,10 @@ import { DataTable, type Column } from "../DataTable";
 import { apiGet, productPath } from "../../lib/api";
 import { fmt, humanize } from "../../lib/format";
 import type { CursorPage, Field, JsonRecord, Product } from "../../lib/types";
+import { RECORDS } from "../../text/records";
 import { Cell, isText, sortValue } from "./cells";
 import { RecordDialog } from "./RecordDialog";
+import { LOADING } from "../../text/product";
 
 /**
  * Datasets up to this many rows load whole, so search, sorting, downloads and the summaries cover
@@ -127,7 +129,7 @@ export function RecordsView({ product, refreshKey }: { product: Product; refresh
   if (loading) {
     return (
       <div className="flex items-center gap-2 py-10 text-sm text-kumo-subtle">
-        <Loader size="sm" /> {wantAll.current ? `Loading all ${fmt.int(product.rowCount)} records…` : `Loading the first ${fmt.int(PREVIEW)} records…`}
+        <Loader size="sm" aria-label={LOADING} /> {wantAll.current ? RECORDS.loadingAll(fmt.int(product.rowCount)) : RECORDS.loadingFirst(fmt.int(PREVIEW))}
       </div>
     );
   }
@@ -135,7 +137,7 @@ export function RecordsView({ product, refreshKey }: { product: Product; refresh
     return (
       <ErrorNote
         error={error}
-        what="the records"
+        what={RECORDS.theRecords}
         onRetry={() => {
           setError(undefined);
           setLoading(true);
@@ -143,14 +145,7 @@ export function RecordsView({ product, refreshKey }: { product: Product; refresh
         }}
       />
     );
-  if (rows.length === 0)
-    return (
-      <Empty
-        icon={<TableIcon size={40} className="text-kumo-inactive" />}
-        title="Empty at the source"
-        description="The latest collection returned no records. The source is still read on its usual schedule, and records appear here as soon as it lists any."
-      />
-    );
+  if (rows.length === 0) return <Empty icon={<TableIcon size={40} className="text-kumo-inactive" />} title={RECORDS.emptyTitle} description={RECORDS.emptyText} />;
 
   const remaining = product.rowCount - rows.length;
 
@@ -159,18 +154,16 @@ export function RecordsView({ product, refreshKey }: { product: Product; refresh
       {loaded.complete ? null : (
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl bg-kumo-recessed p-4 ring-1 ring-kumo-line">
           <div className="grid max-w-prose gap-1">
-            <p className="font-medium text-kumo-strong">
-              Showing the first {fmt.int(rows.length)} of {fmt.int(product.rowCount)} records
-            </p>
-            <p className="text-sm text-kumo-subtle">Search, sorting, downloads and the summaries cover only these rows until you load the other {fmt.int(remaining)}.</p>
+            <p className="font-medium text-kumo-strong">{RECORDS.showingFirst(fmt.int(rows.length), fmt.int(product.rowCount))}</p>
+            <p className="text-sm text-kumo-subtle">{RECORDS.onlyThese(fmt.int(remaining))}</p>
             {error ? (
               <p role="alert" className="text-sm text-kumo-danger">
-                Could not load every record ({error.message}). Select Load all records to try again.
+                {RECORDS.couldNotLoadAll(error.message)}
               </p>
             ) : null}
           </div>
           <Button variant="primary" icon={<DownloadSimpleIcon />} loading={loadingAll} onClick={loadAll}>
-            Load all {fmt.int(product.rowCount)} records{loaded.estimatedBytes ? ` (about ${fmt.bytes(loaded.estimatedBytes)})` : ""}
+            {RECORDS.loadAll(fmt.int(product.rowCount), loaded.estimatedBytes ? fmt.bytes(loaded.estimatedBytes) : undefined)}
           </Button>
         </div>
       )}
@@ -189,7 +182,7 @@ export function RecordsView({ product, refreshKey }: { product: Product; refresh
                     <dl className="grid grid-cols-3 gap-2 text-center">
                       {(["min", "median", "max"] as const).map((key) => (
                         <div key={key}>
-                          <dt className="text-xs text-kumo-subtle">{key}</dt>
+                          <dt className="text-xs text-kumo-subtle">{RECORDS.glance[key]}</dt>
                           <dd className="font-mono text-sm text-kumo-strong">{fmt.cell(glance[key], "number")}</dd>
                         </div>
                       ))}
@@ -210,12 +203,12 @@ export function RecordsView({ product, refreshKey }: { product: Product; refresh
               </LayerCard>
             ))}
           </div>
-          <p className="text-xs text-kumo-subtle">{loaded.complete ? `From all ${fmt.int(rows.length)} records.` : `From the first ${fmt.int(rows.length)} records only.`}</p>
+          <p className="text-xs text-kumo-subtle">{loaded.complete ? RECORDS.fromAll(fmt.int(rows.length)) : RECORDS.fromFirst(fmt.int(rows.length))}</p>
         </div>
       ) : null}
 
       <DataTable
-        label={`${product.title} records`}
+        label={RECORDS.tableLabel(product.title)}
         rows={rows}
         columns={columns}
         rowKey={(record, index) => (isText(record.id) || Number.isFinite(record.id) ? String(record.id) : String(index))}
@@ -224,7 +217,7 @@ export function RecordsView({ product, refreshKey }: { product: Product; refresh
         downloadName={product.slug}
         footer={
           <span>
-            {loaded.complete ? `All ${fmt.int(rows.length)} records` : `First ${fmt.int(rows.length)} of ${fmt.int(product.rowCount)} records`} · select a row for every field
+            {loaded.complete ? RECORDS.footerAll(fmt.int(rows.length)) : RECORDS.footerFirst(fmt.int(rows.length), fmt.int(product.rowCount))} · {RECORDS.selectRow}
           </span>
         }
       />

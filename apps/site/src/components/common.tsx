@@ -4,6 +4,7 @@ import { useSyncExternalStore, type ReactNode } from "react";
 import { ROLE, type Tone } from "../lib/catalog";
 import { fmt } from "../lib/format";
 import type { Role } from "../lib/types";
+import { COMMON } from "../text/common";
 
 /* ---------- One clock for the page: every relative time and countdown ticks together ---------- */
 
@@ -217,20 +218,20 @@ export function Placeholder({ rows = 3, label }: { rows?: number; label: string 
   );
 }
 
-export function ErrorNote({ error, what = "this", onRetry }: { error: Error | undefined; what?: string; onRetry?: () => void }) {
+export function ErrorNote({ error, what = COMMON.this, onRetry }: { error: Error | undefined; what?: string; onRetry?: () => void }) {
   if (!error) return null;
   return (
     <div role="alert" className="flex flex-wrap items-start gap-x-4 gap-y-2 rounded-lg bg-kumo-danger-tint px-3 py-2.5 text-sm text-kumo-danger">
       <WarningCircleIcon aria-hidden="true" size={18} className="mt-px shrink-0" />
       <div className="min-w-0 flex-1">
-        <p className="font-medium">Could not load {what}.</p>
+        <p className="font-medium">{COMMON.couldNotLoad(what)}</p>
         <p className="wrap-anywhere">
-          {error.message}. {onRetry ? "Try again, or reload the page." : "Reload the page to try again."}
+          {error.message}. {onRetry ? COMMON.tryAgainOrReload : COMMON.reloadToTryAgain}
         </p>
       </div>
       {onRetry ? (
         <Button size="sm" variant="secondary" icon={<ArrowClockwiseIcon />} onClick={onRetry}>
-          Try again
+          {COMMON.tryAgain}
         </Button>
       ) : null}
     </div>

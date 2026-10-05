@@ -9,13 +9,15 @@ import type { Change, CursorPage, HistoryPage, JsonRecord, Product, SeriesChange
 import { Cell, OPERATION_BADGE, isText, seriesLabel, sortValue } from "./cells";
 import { RecordDialog, RowDialog } from "./RecordDialog";
 import { pointRecord } from "./SeriesView";
+import { HISTORY } from "../../text/records";
+import { LOADING } from "../../text/product";
 
 const when = (value: string | null | undefined) => (value ? fmt.dateTime(value) : "—");
 
 function Loading({ what }: { what: string }) {
   return (
     <div className="flex items-center gap-2 py-10 text-sm text-kumo-subtle">
-      <Loader size="sm" /> Loading {what}…
+      <Loader size="sm" aria-label={LOADING} /> {HISTORY.loading(what)}
     </div>
   );
 }
@@ -32,25 +34,25 @@ export function ChangesView({ product, refreshKey }: { product: Product; refresh
     () => [
       {
         key: "operation",
-        header: "Operation",
-        cell: (change) => <Badge variant={OPERATION_BADGE.get(change.operation) ?? "neutral"}>{change.operation}</Badge>,
+        header: HISTORY.operation,
+        cell: (change) => <Badge variant={OPERATION_BADGE.get(change.operation) ?? "neutral"}>{HISTORY.operations.get(change.operation) ?? change.operation}</Badge>,
         sort: (change) => change.operation,
       },
-      { key: "entity", header: "Entity", cell: (change) => change.entityKey, sort: (change) => change.entityKey, mono: true },
-      { key: "eventTime", header: "Event time", cell: (change) => when(change.eventTime), sort: (change) => change.eventTime, mono: true },
-      { key: "validFrom", header: "Valid from", cell: (change) => when(change.validFrom), sort: (change) => change.validFrom, mono: true },
-      { key: "sourcePublished", header: "Source published", cell: (change) => when(change.sourcePublishedAt), sort: (change) => change.sourcePublishedAt, mono: true },
-      { key: "observed", header: "Observed", cell: (change) => <RelativeTime value={change.observedAt} />, sort: (change) => change.observedAt, mono: true },
+      { key: "entity", header: HISTORY.entity, cell: (change) => change.entityKey, sort: (change) => change.entityKey, mono: true },
+      { key: "eventTime", header: HISTORY.eventTime, cell: (change) => when(change.eventTime), sort: (change) => change.eventTime, mono: true },
+      { key: "validFrom", header: HISTORY.validFrom, cell: (change) => when(change.validFrom), sort: (change) => change.validFrom, mono: true },
+      { key: "sourcePublished", header: HISTORY.sourcePublished, cell: (change) => when(change.sourcePublishedAt), sort: (change) => change.sourcePublishedAt, mono: true },
+      { key: "observed", header: HISTORY.observed, cell: (change) => <RelativeTime value={change.observedAt} />, sort: (change) => change.observedAt, mono: true },
     ],
     [],
   );
 
-  if (changes.loading) return <Loading what="changes" />;
-  if (changes.error) return <ErrorNote error={changes.error} what="the changes" onRetry={() => void changes.refetch()} />;
+  if (changes.loading) return <Loading what={HISTORY.changes} />;
+  if (changes.error) return <ErrorNote error={changes.error} what={HISTORY.theChanges} onRetry={() => void changes.refetch()} />;
   return (
     <>
       <DataTable
-        label={`${product.title} changes`}
+        label={HISTORY.changesLabel(product.title)}
         rows={changes.data ?? []}
         columns={columns}
         rowKey={(change) => change.id}
@@ -66,8 +68,8 @@ export function ChangesView({ product, refreshKey }: { product: Product; refresh
           payload: change.payload ?? null,
         })}
         downloadName={`${product.slug}-changes`}
-        empty="No changes recorded yet: changes are logged when a record is created, updated, corrected, retracted or deleted between collections."
-        footer={<span>Every row keeps its own event, validity, source and observation clocks. Select one to read what it wrote.</span>}
+        empty={HISTORY.noChanges}
+        footer={<span>{HISTORY.changesFooter}</span>}
       />
       <RecordDialog
         record={selected?.payload ?? null}
@@ -90,25 +92,25 @@ export function CorrectionsView({ product, refreshKey }: { product: Product; ref
   }, [refreshKey]);
   const columns = useMemo<Column<SeriesChange>[]>(
     () => [
-      { key: "series", header: "Series", cell: (point) => seriesLabel(point), sort: (point) => seriesLabel(point) },
-      { key: "eventTime", header: "Event time", cell: (point) => fmt.dateTime(point.eventTime), sort: (point) => point.eventTime, mono: true },
-      { key: "value", header: "Value", cell: (point) => fmt.cell(point.value, "number"), sort: (point) => point.value, align: "end" },
-      { key: "ingested", header: "Corrected", cell: (point) => <RelativeTime value={point.ingestedAt} />, sort: (point) => point.ingestedAt, mono: true },
+      { key: "series", header: HISTORY.series, cell: (point) => seriesLabel(point), sort: (point) => seriesLabel(point) },
+      { key: "eventTime", header: HISTORY.eventTime, cell: (point) => fmt.dateTime(point.eventTime), sort: (point) => point.eventTime, mono: true },
+      { key: "value", header: HISTORY.value, cell: (point) => fmt.cell(point.value, "number"), sort: (point) => point.value, align: "end" },
+      { key: "ingested", header: HISTORY.corrected, cell: (point) => <RelativeTime value={point.ingestedAt} />, sort: (point) => point.ingestedAt, mono: true },
     ],
     [],
   );
-  if (corrections.loading) return <Loading what="corrections" />;
-  if (corrections.error) return <ErrorNote error={corrections.error} what="the corrections" onRetry={() => void corrections.refetch()} />;
+  if (corrections.loading) return <Loading what={HISTORY.corrections} />;
+  if (corrections.error) return <ErrorNote error={corrections.error} what={HISTORY.theCorrections} onRetry={() => void corrections.refetch()} />;
   return (
     <>
       <DataTable
-        label={`${product.title} corrections`}
+        label={HISTORY.correctionsLabel(product.title)}
         rows={corrections.data ?? []}
         columns={columns}
         rowKey={(point) => `${point.seriesKey}|${point.eventTime}|${point.ingestedAt ?? ""}`}
         initialSort={{ key: "ingested", direction: "desc" }}
-        empty="No corrections: one is logged when a later collection changes a point that was already published."
-        footer={<span>A point that was published and later revised, with the moment the correction arrived.</span>}
+        empty={HISTORY.noCorrections}
+        footer={<span>{HISTORY.correctionsFooter}</span>}
         onRowClick={(point) => setOpened({ row: pointRecord(point), title: seriesLabel(point) })}
       />
       <RowDialog row={opened?.row ?? null} title={opened?.title} onClose={() => setOpened(null)} />
@@ -161,7 +163,7 @@ export function EventHistoryView({ product }: { product: Product }) {
       })),
       {
         key: "eventTime",
-        header: "Event time",
+        header: HISTORY.eventTime,
         cell: (record) => (isText(record.eventTime) ? fmt.dateTime(record.eventTime) : "—"),
         sort: (record) => sortValue(record.eventTime),
         mono: true,
@@ -170,12 +172,12 @@ export function EventHistoryView({ product }: { product: Product }) {
     [fields],
   );
 
-  if (loading && rows.length === 0) return <Loading what="the last 30 days" />;
+  if (loading && rows.length === 0) return <Loading what={HISTORY.last30Days} />;
   if (error && rows.length === 0)
     return (
       <ErrorNote
         error={error}
-        what="the event history"
+        what={HISTORY.theEventHistory}
         onRetry={() => {
           setError(undefined);
           void load();
@@ -185,7 +187,7 @@ export function EventHistoryView({ product }: { product: Product }) {
   return (
     <>
       <DataTable
-        label={`${product.title} event history`}
+        label={HISTORY.eventHistoryLabel(product.title)}
         rows={rows}
         columns={columns}
         rowKey={(record, index) => (isText(record.revisionId) ? record.revisionId : String(index))}
@@ -193,15 +195,13 @@ export function EventHistoryView({ product }: { product: Product }) {
         onRowClick={setSelected}
         exportRow={(record) => record}
         downloadName={`${product.slug}-events`}
-        empty="No events in the last 30 days."
+        empty={HISTORY.noEvents}
         footer={
           <>
-            <span>
-              {fmt.int(rows.length)} events in the last 30 days · coverage {complete ? "complete" : "may be incomplete"}
-            </span>
+            <span>{HISTORY.eventsFooter(fmt.int(rows.length), complete)}</span>
             {cursor ? (
               <Button size="sm" variant="secondary" loading={loading} onClick={() => load(cursor)}>
-                Load more
+                {HISTORY.loadMore}
               </Button>
             ) : null}
           </>

@@ -1,6 +1,9 @@
 // Datasets built from the product and feed lists, the facets they filter by, and the words the catalog uses.
 
+import { topicName } from "@open-data-pt/api";
+import { CATALOG } from "../text/catalog";
 import { apiGet } from "./api";
+import { LOCALE, localHref } from "./locale";
 import type { Feed, Product, Role, Term } from "./types";
 
 export interface RoleMeta {
@@ -9,35 +12,34 @@ export interface RoleMeta {
   description: string;
 }
 
-export const ROLE = {
-  reference: {
-    label: "Reference",
-    short: "Reference",
-    description: "A complete set that changes slowly, such as stops or stations. Each collection replaces the whole set.",
-  },
-  "current-state": {
-    label: "Current state",
-    short: "Current",
-    description: "The latest known state of each thing, such as where a vehicle is now. Each collection replaces it.",
-  },
-  "event-log": {
-    label: "Events",
-    short: "Events",
-    description: "Things that happened, such as service alerts. When the publisher corrects or withdraws one, the change is kept beside the original.",
-  },
-  "time-series": {
-    label: "Time series",
-    short: "Series",
-    description: "Numbers measured over time, one series per thing measured. When the publisher corrects a point, the correction is logged.",
-  },
-  summary: {
-    label: "Summary",
-    short: "Summary",
-    description: "Totals worked out from another table in the same dataset, updated whenever that table is.",
-  },
-} satisfies { [role in Role]: RoleMeta };
+export const ROLE = CATALOG.roles satisfies { [role in Role]: RoleMeta };
 
-export const topicLabel = (topic: string) => topic.charAt(0).toLocaleUpperCase() + topic.slice(1).replaceAll("-", " ");
+export const topicLabel = (topic: string) => topicName(topic, LOCALE);
+
+/**
+ * Text as search compares it: without case or accents, so "agua" finds "Água" and "eletricidade"
+ * finds "Electricidade". Portuguese is written with and without them, before and after the 1990
+ * spelling agreement, and nobody types every one into a search box.
+ */
+export const searchable = (text: string) =>
+  text
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLocaleLowerCase("pt-PT");
+
+/** The words of a search, each of which a match has to contain. */
+export const searchWords = (query: string) => searchable(query).split(/\s+/).filter(Boolean);
+
+/**
+ * Everything a dataset can be found by, in both languages whichever the page is in: someone on the
+ * English page may well search in Portuguese. The feed is never shown, but its name is often what
+ * someone searches for: "fuel prices" finds the station prices.
+ */
+export function listingHaystack(listing: Listing): string {
+  const { product, feed, title, description, publisher, topics, format } = listing;
+  const topicNames = topics.flatMap((topic) => [topicName(topic, "en"), topicName(topic, "pt")]);
+  return searchable([title, description, product.slug, feed.title, feed.description, publisher.name, format, ...topicNames].join(" "));
+}
 
 /** How the publisher makes the data available. Standards get their name; a publisher's own interface is just that. */
 const FORMAT_LABEL = new Map([
@@ -48,14 +50,14 @@ const FORMAT_LABEL = new Map([
   ["gbfs", "GBFS"],
   ["udata", "dados.gov.pt"],
 ]);
-export const formatOf = (feed: Feed | undefined) => FORMAT_LABEL.get(feed?.format ?? "") ?? "Own API";
-export const throughOf = (feed: Feed | undefined) => (FORMAT_LABEL.has(feed?.format ?? "") ? `through ${formatOf(feed)}` : "through the publisher’s own API");
+export const formatOf = (feed: Feed | undefined) => FORMAT_LABEL.get(feed?.format ?? "") ?? CATALOG.ownApi;
+export const throughOf = (feed: Feed | undefined) => (FORMAT_LABEL.has(feed?.format ?? "") ? CATALOG.through(formatOf(feed)) : CATALOG.throughOwnApi);
 
 export type UpdatesBucket = "live" | "daily" | "slower";
 export const UPDATES: { id: UpdatesBucket; label: string }[] = [
-  { id: "live", label: "Several times an hour" },
-  { id: "daily", label: "Hourly to daily" },
-  { id: "slower", label: "Less often than daily" },
+  { id: "live", label: CATALOG.updates.live },
+  { id: "daily", label: CATALOG.updates.daily },
+  { id: "slower", label: CATALOG.updates.slower },
 ];
 const updatesOf = (seconds: number): UpdatesBucket => (seconds < 3600 ? "live" : seconds <= 86_400 ? "daily" : "slower");
 
@@ -67,8 +69,8 @@ export function slugify(name: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 }
-export const publisherHref = (id: string) => `/publisher/?id=${encodeURIComponent(id)}`;
-export const licenceHref = (id: string) => `/licence/?id=${encodeURIComponent(id)}`;
+export const publisherHref = (id: string) => localHref(`/publisher/?id=${encodeURIComponent(id)}`);
+export const licenceHref = (id: string) => localHref(`/licence/?id=${encodeURIComponent(id)}`);
 
 /** A web address a person can open, or nothing: the page never links another scheme. */
 export function openableUrl(value: string | undefined) {
@@ -86,13 +88,13 @@ export interface Freshness {
 }
 
 export function freshness(product: Product, feed: Feed | undefined): Freshness {
-  if (product.status === "failed") return { tone: "bad", label: "Last rebuild failed" };
-  if (product.stale) return { tone: "warn", label: "Late" };
+  if (product.status === "failed") return { tone: "bad", label: CATALOG.rebuildFailed };
+  if (product.stale) return { tone: "warn", label: CATALOG.late };
   if (feed?.lastSuccessAt && feed.staleAfterSeconds) {
     const age = (Date.now() - new Date(feed.lastSuccessAt).getTime()) / 1000;
-    if (age > feed.staleAfterSeconds) return { tone: "warn", label: "Late" };
+    if (age > feed.staleAfterSeconds) return { tone: "warn", label: CATALOG.late };
   }
-  return { tone: "ok", label: "Current" };
+  return { tone: "ok", label: CATALOG.current };
 }
 
 /**
