@@ -69,20 +69,32 @@ export interface SiteLocation {
 }
 
 interface EntryState {
+  /** Names the entry, so where it was scrolled can be kept while it is the current one. */
+  id?: string;
   scroll?: number;
 }
 
-/** What this site keeps in a history entry; anything else there is someone else's. */
-function entryState(state: EntryState | null): EntryState {
-  return state !== null && Number.isFinite(state.scroll) ? state : {};
+/** What this site keeps in the current history entry; anything else there is someone else's. */
+function entryState(): EntryState {
+  // SAFETY: entries are written by this module, or by the browser as null.
+  const state = window.history.state as EntryState | null;
+  return state ?? {};
 }
+
+/**
+ * How far down each entry of this tab was last scrolled, kept as the visitor scrolls. The back and
+ * forward buttons change the entry before the site hears of it, too late to note where the one being
+ * left was; this already knows.
+ */
+const positions = new Map<string, number>();
 
 let entries = 0;
 
 function read(arrival: Arrival): SiteLocation {
   const { pathname, search, hash } = window.location;
-  // SAFETY: entries are written by this module, or by the browser as null.
-  const scroll = entryState(window.history.state as EntryState | null).scroll ?? 0;
+  const state = entryState();
+  const kept = state.id === undefined ? undefined : positions.get(state.id);
+  const scroll = kept ?? (Number.isFinite(state.scroll) ? (state.scroll ?? 0) : 0);
   if (arrival === "link" || arrival === "history") entries += 1;
   return { pathname, search, hash, page: `${pagePath(pathname)}${search}`, arrival, scroll, entry: entries };
 }
@@ -110,10 +122,12 @@ function subscribe(listener: () => void) {
 /** The address the tab is at, which changes without a new page loading. */
 export const useSiteLocation = () => useSyncExternalStore(subscribe, locationNow);
 
-/** Remembers how far down this entry was read, so coming back to it returns there. */
+/** Writes how far down this entry was read into the entry itself, which outlives the page: a reload, or leaving the site and coming back. */
 function keepScroll() {
   window.history.replaceState({ ...window.history.state, scroll: window.scrollY }, "");
 }
+
+const newEntry = (): EntryState => ({ id: crypto.randomUUID(), scroll: 0 });
 
 /**
  * Goes to an address: one of the site's pages in place, anything else as a normal page load.
@@ -126,8 +140,9 @@ export function navigate(href: string, replace = false) {
     return;
   }
   keepScroll();
-  if (replace) window.history.replaceState({ scroll: 0 }, "", url.href);
-  else window.history.pushState({ scroll: 0 }, "", url.href);
+  if (isMalformed(url.hash)) url.hash = "";
+  if (replace) window.history.replaceState(newEntry(), "", url.href);
+  else window.history.pushState(newEntry(), "", url.href);
   settle("link");
 }
 
@@ -158,13 +173,26 @@ export function startNavigation() {
   started = true;
   // The site puts the window where it belongs once a page has drawn; the browser would do it too early.
   window.history.scrollRestoration = "manual";
+  dropMalformedFragment();
+  if (entryState().id === undefined) window.history.replaceState({ ...window.history.state, id: crypto.randomUUID() }, "");
+  window.addEventListener(
+    "scroll",
+    () => {
+      const { id } = entryState();
+      if (id !== undefined) positions.set(id, window.scrollY);
+    },
+    { passive: true },
+  );
   document.addEventListener("click", (event) => {
     const link = event.target instanceof Element ? event.target.closest("a") : null;
     if (!link || !followsInPlace(event, link)) return;
     event.preventDefault();
     navigate(link.href);
   });
-  window.addEventListener("popstate", () => settle("history"));
+  window.addEventListener("popstate", () => {
+    dropMalformedFragment();
+    settle("history");
+  });
   // Leaving the site, or reloading, the entry keeps where the visitor was.
   window.addEventListener("pagehide", keepScroll);
 }
@@ -190,6 +218,12 @@ export function reloadForUpdate(): boolean {
 /** How long a page is given to grow tall enough for the place it is scrolled to. */
 const SCROLL_PATIENCE_MS = 1500;
 
+/** What the visitor does that means they are scrolling on their own, and placing the window stops. */
+const VISITOR_INPUT = ["wheel", "touchmove", "keydown"] as const;
+
+/** Stops the placing still trying, when a newer page arrives before it is done. */
+let cancelPlacement: () => void = () => undefined;
+
 /**
  * Puts the window where the visitor expects it on a page that has just drawn: at the section a link
  * names, back where they were with the back and forward buttons, or at the top. Pages draw what they
@@ -197,27 +231,48 @@ const SCROLL_PATIENCE_MS = 1500;
  * exists, and stops as soon as the visitor scrolls on their own.
  */
 export function placeWindow(location: SiteLocation) {
+  cancelPlacement();
   // Back where the visitor was with the back and forward buttons; at the section a link names, or the top, otherwise.
   const returning = location.arrival === "history";
-  const section = !returning && location.hash ? decodeURIComponent(location.hash.slice(1)) : "";
+  const section = returning ? "" : sectionOf(location.hash);
   const target = returning ? location.scroll : 0;
   const deadline = Date.now() + SCROLL_PATIENCE_MS;
-  let moved = false;
-  const stop = () => {
-    moved = true;
+  let frame = 0;
+  const done = () => {
+    cancelAnimationFrame(frame);
+    for (const input of VISITOR_INPUT) window.removeEventListener(input, done);
+    cancelPlacement = () => undefined;
   };
-  window.addEventListener("wheel", stop, { once: true, passive: true });
-  window.addEventListener("touchmove", stop, { once: true, passive: true });
-  window.addEventListener("keydown", stop, { once: true });
+  cancelPlacement = done;
+  for (const input of VISITOR_INPUT) window.addEventListener(input, done, { passive: true });
   const attempt = () => {
-    if (moved) return;
     const element = section ? document.getElementById(section) : null;
     if (element) element.scrollIntoView({ block: "start" });
     else window.scrollTo(0, section ? 0 : target);
     const placed = section ? element !== null : Math.abs(window.scrollY - target) < 2;
-    if (!placed && Date.now() < deadline) requestAnimationFrame(attempt);
+    if (placed || Date.now() >= deadline) done();
+    else frame = requestAnimationFrame(attempt);
   };
   attempt();
+}
+
+/**
+ * A fragment that is not valid percent-encoding names nothing, and code that decodes it throws: Kumo's
+ * table of contents does, on the start page. The site drops one from the address before any page reads it.
+ */
+const isMalformed = (hash: string) => hash.length > 1 && sectionOf(hash) === "";
+
+function dropMalformedFragment() {
+  if (isMalformed(window.location.hash)) window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}`);
+}
+
+/** The element a fragment names, or none for a fragment that is not valid percent-encoding. */
+export function sectionOf(hash: string): string {
+  try {
+    return decodeURIComponent(hash.slice(1));
+  } catch {
+    return "";
+  }
 }
 
 /**

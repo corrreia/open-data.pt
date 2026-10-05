@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { sectionOf } from "../../lib/navigation";
 
 /**
  * React draws the page after the browser has already tried to scroll to `#section`, so the page lands
@@ -7,7 +8,7 @@ import { useEffect } from "react";
  */
 export function useHashLanding(ready: boolean) {
   useEffect(() => {
-    const id = decodeURIComponent(window.location.hash.slice(1));
+    const id = sectionOf(window.location.hash);
     if (!id) return undefined;
     let cancelled = false;
     const land = () => {
