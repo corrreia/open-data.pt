@@ -41,7 +41,7 @@ export default class KernelWorker extends WorkerEntrypoint<Env> {
     const url = new URL(request.url);
     const usage = new UsageRecorder(this.env.USAGE);
     const served = await this.serve(request, url, usage);
-    const surface = countedSurface(request, url);
+    const surface = countedSurface(request, url, served.ask);
     if (surface) usage.record({ surface, url, request, response: served.response, durationMs: Date.now() - started, cache: served.cache, mcp: served.mcp, ask: served.ask });
     return served.response;
   }

@@ -326,12 +326,13 @@ export function isOwnPageFetch(request: Request): boolean {
 /**
  * The surface a request is counted under, or undefined when it is not counted: files that are not
  * pages, preflights, and the site's own fetches. Two of those are counted after all: the agent's model
- * steps, and the API reads its code makes, which the site marks as the agent's.
+ * steps, and the API reads its code makes, which the site marks as the agent's. A step counts only
+ * when the agent's route took it for one (`ask`): a request it refused before asking a model was none.
  */
-export function countedSurface(request: Request, url: URL): Surface | undefined {
+export function countedSurface(request: Request, url: URL, ask?: AskCall): Surface | undefined {
   const surface = surfaceOf(url);
   if (!surface || request.method === "OPTIONS") return undefined;
-  if (surface === "ask") return request.method === "POST" ? surface : undefined;
+  if (surface === "ask") return ask ? surface : undefined;
   if (!isOwnPageFetch(request)) return surface;
   return surface === "api" && request.headers.has(ASK_READ_HEADER) ? "ask-read" : undefined;
 }

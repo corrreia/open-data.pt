@@ -81,7 +81,7 @@ export function openApiDocument(origin: string) {
           responses: {
             "200": jsonResponse("Request counts over the window", {
               type: "object",
-              required: ["days", "resolution", "from", "to", "retentionDays", "timeline", "clients", "routes", "subjects", "countries", "referrers", "outcomes", "mcp"],
+              required: ["days", "resolution", "from", "to", "retentionDays", "timeline", "clients", "routes", "subjects", "countries", "referrers", "outcomes", "mcp", "ask"],
               properties: {
                 days: { type: "integer" },
                 resolution: { type: "string", enum: ["hour", "day"] },
@@ -111,6 +111,11 @@ export function openApiDocument(origin: string) {
                 mcp: countsOf({
                   call: { type: "string", description: "JSON-RPC method, with the tool for tools/call." },
                   client: { type: "string", description: "The MCP client's own name, on initialize." },
+                }),
+                ask: countsOf({
+                  turn: { type: "string", enum: ["question", "step"], description: "`question` begins one; `step` is a model call after tool results." },
+                  model: { type: "string", description: "The Workers AI model asked, on the visitor's own account." },
+                  status: { type: "string", description: "The answer's status class, such as 2xx, 4xx or 429." },
                 }),
               },
             }),

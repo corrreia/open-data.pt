@@ -101,7 +101,10 @@ describe("who sent a request", () => {
   it("counts the site's agent, which the site's own fetches would otherwise hide", () => {
     const own = { "Sec-Fetch-Site": "same-origin", "Sec-Fetch-Mode": "cors" };
     const counted = (path: string, init: RequestInit = {}) => countedSurface(new Request(`https://open-data.pt${path}`, init), site(path));
-    expect(counted("/ask/chat", { method: "POST", headers: own, body: "{}" })).toBe("ask");
+    const step = { turn: "question", model: "@cf/zai-org/glm-5.3-flash" } as const;
+    expect(countedSurface(new Request("https://open-data.pt/ask/chat", { method: "POST", headers: own, body: "{}" }), site("/ask/chat"), step)).toBe("ask");
+    // Refused before a model was asked (not signed in, a bad body): no model step to count.
+    expect(counted("/ask/chat", { method: "POST", headers: own, body: "{}" })).toBeUndefined();
     expect(counted("/ask/chat", { headers: own })).toBeUndefined();
     expect(counted("/ask/session", { headers: own })).toBeUndefined();
     expect(counted("/api/products", { headers: { ...own, "X-Ask-Read": "1" } })).toBe("ask-read");
