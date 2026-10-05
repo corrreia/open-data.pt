@@ -1,7 +1,9 @@
 import { TooltipProvider } from "@cloudflare/kumo";
-import { StrictMode, type ReactNode } from "react";
+import { StrictMode, type ComponentType } from "react";
 import { createRoot } from "react-dom/client";
+import { reloadForUpdate, startNavigation } from "../lib/navigation";
 import { registerSiteTools } from "../lib/webmcp";
+import { Site } from "./Site";
 import "../styles.css";
 
 // Every page offers the same tools to an agent in the browser.
@@ -20,23 +22,19 @@ darkQuery.addEventListener("change", () => {
 // A deploy replaces the on-demand view files; a page opened before it cannot fetch the old ones.
 // Reload once to pick up the new build; the flag stops a loop if the file is missing for another reason.
 window.addEventListener("vite:preloadError", (event) => {
-  try {
-    if (sessionStorage.getItem("reloaded-for-update") === window.location.href) return;
-    sessionStorage.setItem("reloaded-for-update", window.location.href);
-  } catch {
-    return;
-  }
-  event.preventDefault();
-  window.location.reload();
+  if (reloadForUpdate()) event.preventDefault();
 });
 
-/** Render a page into the entry's root element. */
-export function mountPage(page: ReactNode) {
+/** Starts the site in the entry's root element, on the page whose file the tab loaded. */
+export function startSite(page: ComponentType) {
+  startNavigation();
   const root = document.getElementById("root");
   if (!root) throw new Error("The page has no #root element");
   createRoot(root).render(
     <StrictMode>
-      <TooltipProvider delay={250}>{page}</TooltipProvider>
+      <TooltipProvider delay={250}>
+        <Site initial={page} />
+      </TooltipProvider>
     </StrictMode>,
   );
 }

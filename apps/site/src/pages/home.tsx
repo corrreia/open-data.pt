@@ -18,7 +18,6 @@ import {
 import { useMemo, type ReactNode } from "react";
 import { ListingRows } from "../components/ListingRows";
 import { Eyebrow, RelativeTime, SectionHead, StatTile } from "../components/common";
-import { mountPage } from "../components/mount";
 import { PublisherMark } from "../components/PublisherMark";
 import { Shell } from "../components/Shell";
 import { apiGet, productHref } from "../lib/api";
@@ -242,4 +241,4 @@ function TopicPublishers({ publishers }: { publishers: Map<string, number> }) {
   );
 }
 
-mountPage(<Home />);
+export default Home;

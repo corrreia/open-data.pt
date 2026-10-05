@@ -17,6 +17,7 @@ import {
   type AssistantTurn,
   type ChatMessage,
 } from "../../lib/ask";
+import { useSiteLocation } from "../../lib/navigation";
 import { fmt } from "../../lib/format";
 
 // The agent's panel. Charts and maps load only when an answer has one.
@@ -621,6 +622,15 @@ export default function AskPanel({ open, failure, onClose, onRunning, onModalCha
   const phone = usePhone();
   useVisibleViewport(panel, open);
   usePhoneModal(open && phone, onModalChange);
+  // On a phone the panel covers the page: following a link from it, or going back, docks it so the page shows.
+  // The answer carries on, and the corner button says when it is ready.
+  const { entry } = useSiteLocation();
+  const entrySeen = useRef(entry);
+  useEffect(() => {
+    if (entry === entrySeen.current) return;
+    entrySeen.current = entry;
+    if (open && phone) onClose();
+  }, [entry, open, phone, onClose]);
   const [session, setSession] = useState<AskSession | undefined>();
   const [accounts, setAccounts] = useState<AskAccounts["accounts"] | undefined>();
   const [failed, setFailed] = useState<string | undefined>();

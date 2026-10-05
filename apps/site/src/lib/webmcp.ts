@@ -3,6 +3,7 @@
 // public API the pages do.
 
 import { apiGet, productHref, productPath } from "./api";
+import { navigate } from "./navigation";
 import { buildListings, fetchFeeds, fetchProducts, topicLabel } from "./catalog";
 import type { Feed, JsonRecord, JsonValue, Product } from "./types";
 
@@ -153,8 +154,8 @@ const TOOLS: WebMcpTool[] = [
     annotations: { readOnlyHint: false, untrustedContentHint: false },
     async execute(input) {
       const href = productHref(text(input.slug));
-      // Leaving the page ends this document's tools, so the agent is answered first and the tab moves after.
-      setTimeout(() => window.location.assign(href), 0);
+      // The page changes in place, so this document and its tools stay.
+      navigate(href);
       return { opened: absolute(href) };
     },
   },

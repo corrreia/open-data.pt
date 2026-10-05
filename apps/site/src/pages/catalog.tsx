@@ -4,10 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { ListingRows } from "../components/ListingRows";
 import { PublisherMark } from "../components/PublisherMark";
 import { ErrorNote, PageHead, Placeholder } from "../components/common";
-import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { ROLE, UPDATES, buildListings, buildPublishers, fetchFeeds, fetchProducts, publisherHref, topicLabel, type Listing, emptyLast } from "../lib/catalog";
 import { fmt, plural } from "../lib/format";
+import { replaceAddress } from "../lib/navigation";
 import { useQuery } from "../lib/query";
 import type { Role } from "../lib/types";
 
@@ -78,7 +78,7 @@ function Catalog() {
     if (sort !== "publisher") next.set("sort", sort);
     for (const facet of FACETS) for (const value of selected.get(facet.id) ?? []) next.append(facet.id, value);
     const query = next.toString();
-    window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
+    replaceAddress(query ? `?${query}` : window.location.pathname);
   }, [q, sort, selected]);
 
   const words = q.toLocaleLowerCase().split(/\s+/).filter(Boolean);
@@ -297,4 +297,4 @@ function Catalog() {
   );
 }
 
-mountPage(<Catalog />);
+export default Catalog;

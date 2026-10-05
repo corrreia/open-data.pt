@@ -2,7 +2,6 @@ import { LayerCard, LinkButton } from "@cloudflare/kumo";
 import { BugIcon, LightbulbIcon, PlusCircleIcon, StackIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import { PageHead, SectionHead, bodyRows, cardRows } from "../components/common";
-import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { CONTRIBUTING, REPOSITORY, newIssue } from "../lib/project";
 
@@ -127,4 +126,4 @@ function Contribute() {
   );
 }
 
-mountPage(<Contribute />);
+export default Contribute;

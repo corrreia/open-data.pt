@@ -16,7 +16,6 @@ import {
 } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ErrorNote, PageHead, SectionHead, StatTile, useDarkMode } from "../components/common";
-import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { ApiError, apiGet, productHref } from "../lib/api";
 import { fetchProducts, licenceHref, publisherHref } from "../lib/catalog";
@@ -599,4 +598,4 @@ function Ranked({ title, rows, note, empty = "Nothing counted in this window." }
   );
 }
 
-mountPage(<AnalyticsPage />);
+export default AnalyticsPage;

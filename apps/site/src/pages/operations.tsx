@@ -3,7 +3,6 @@ import { ArrowClockwiseIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import { DataTable, type Column } from "../components/DataTable";
 import { Countdown, ErrorNote, PageHead, RelativeTime, SectionHead } from "../components/common";
-import { mountPage } from "../components/mount";
 import { Activity, type FeedLookup } from "../components/ops/Activity";
 import { HealthBadge, HealthWord, feedHealth, healthLabel, type Health } from "../components/ops/health";
 import { RunBadge, acquisitionsKey, fetchAcquisitions, runStatus, triggerLabel } from "../components/ops/runs";
@@ -456,4 +455,4 @@ function Operations() {
   );
 }
 
-mountPage(<Operations />);
+export default Operations;

@@ -1,16 +1,14 @@
 import { Badge, Breadcrumbs, Button, Empty, LayerCard, Link } from "@cloudflare/kumo";
 import { ArrowRightIcon, BuildingsIcon, HeartbeatIcon } from "@phosphor-icons/react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { ListingRows } from "../components/ListingRows";
 import { ErrorNote, Kv, PageHead, Placeholder, StatTile, TagRow, bodyRows, cardRows } from "../components/common";
 import { PublisherMark, PublisherWatermark } from "../components/PublisherMark";
-import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { buildListings, buildPublishers, fetchFeeds, fetchProducts, licenceHref, publisherHref, topicsOf, type Publisher, emptyLast } from "../lib/catalog";
 import { fmt, plural } from "../lib/format";
+import { navigate } from "../lib/navigation";
 import { useQuery } from "../lib/query";
-
-const wanted = new URLSearchParams(window.location.search).get("id");
 
 function PublisherIndex({ publishers }: { publishers: Publisher[] }) {
   const listings = publishers.reduce((sum, publisher) => sum + publisher.listings.length, 0);
@@ -153,7 +151,7 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
             note={late === 0 ? "every one within its update window" : "past their expected update"}
           />
           <div className="col-span-2">
-            <Button variant="secondary" icon={<HeartbeatIcon />} className="w-full" onClick={() => window.location.assign(`/status/#pub-${publisher.id}`)}>
+            <Button variant="secondary" icon={<HeartbeatIcon />} className="w-full" onClick={() => navigate(`/status/#pub-${publisher.id}`)}>
               See collection status by hour
             </Button>
           </div>
@@ -175,6 +173,7 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
 }
 
 function Publishers() {
+  const [wanted] = useState(() => new URLSearchParams(window.location.search).get("id"));
   const products = useQuery("products", fetchProducts);
   const feeds = useQuery("feeds", fetchFeeds);
   const publishers = useMemo(() => (products.data && feeds.data ? buildPublishers(buildListings(products.data, feeds.data)) : undefined), [products.data, feeds.data]);
@@ -200,7 +199,7 @@ function Publishers() {
           title="Publisher not found"
           description="Nothing on open-data.pt comes from a publisher by that name."
           contents={
-            <Button variant="primary" onClick={() => window.location.assign("/publisher/")}>
+            <Button variant="primary" onClick={() => navigate("/publisher/")}>
               All publishers
             </Button>
           }
@@ -214,4 +213,4 @@ function Publishers() {
   );
 }
 
-mountPage(<Publishers />);
+export default Publishers;

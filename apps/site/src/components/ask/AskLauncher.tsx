@@ -1,6 +1,7 @@
 import { Loader } from "@cloudflare/kumo";
 import { ChatsCircleIcon } from "@phosphor-icons/react";
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useSiteLocation } from "../../lib/navigation";
 
 // The agent in the corner of every page. This part is all every page loads: whether the agent is on
 // here, and a button. The panel, the model's sandbox and the MCP server load when it first opens, and
@@ -34,8 +35,9 @@ const FOOTER_GAP_PX = 12;
 /**
  * How far the site's footer reaches up into the window, in pixels: 0 until it scrolls into view.
  * The corner button rises by as much, so it sits just above the footer instead of over its links.
+ * Each page draws a footer of its own, so it is found again whenever the page changes.
  */
-function useFooterRise(): number {
+function useFooterRise(page: string): number {
   const [rise, setRise] = useState(0);
   useEffect(() => {
     const footer = document.getElementById("site-footer");
@@ -60,7 +62,7 @@ function useFooterRise(): number {
       window.removeEventListener("resize", schedule);
       resized.disconnect();
     };
-  }, []);
+  }, [page]);
   return rise;
 }
 
@@ -108,7 +110,7 @@ export function AskLauncher({ onModalChange }: { onModalChange: (modal: boolean)
   const [unread, setUnread] = useState(false);
   const openNow = useRef(open);
   const button = useRef<HTMLButtonElement>(null);
-  const rise = useFooterRise();
+  const rise = useFooterRise(useSiteLocation().page);
   // Clear of the home indicator, and of the footer once it is in view.
   const corner = { bottom: `max(1rem, env(safe-area-inset-bottom), ${rise + FOOTER_GAP_PX}px)` };
 
