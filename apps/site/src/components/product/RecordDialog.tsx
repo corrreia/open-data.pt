@@ -5,16 +5,10 @@ import { Kv } from "../common";
 import { useCopy } from "../ops/CommandBlock";
 import { fmt, humanize, isRecord } from "../../lib/format";
 import type { Field, JsonRecord, JsonValue } from "../../lib/types";
+import { RECORD_DIALOG } from "../../text/records";
 import { Cell, isText } from "./cells";
 
-const TIME_LABEL = new Map([
-  ["event", "Event"],
-  ["validFrom", "Valid from"],
-  ["validTo", "Valid to"],
-  ["sourcePublished", "Source published"],
-  ["observed", "Observed"],
-  ["ingested", "Ingested"],
-]);
+const TIME_LABEL = new Map(Object.entries(RECORD_DIALOG.clocks));
 
 /** Longer than a line or two: shown in a box of its own that scrolls, rather than cut with an ellipsis. */
 const LONG_TEXT = 160;
@@ -32,7 +26,7 @@ function CopyValue({ text }: { text: string }) {
       variant="ghost"
       icon={copied ? <CheckIcon /> : <CopyIcon />}
       onClick={copy}
-      aria-label={copied ? "Copied" : "Copy this value"}
+      aria-label={copied ? RECORD_DIALOG.copied : RECORD_DIALOG.copyValue}
     />
   );
 }
@@ -49,12 +43,12 @@ function LongText({ text }: { text: string }) {
 
 /** What a structured value holds, before anyone opens it. */
 function preview(value: JsonValue): string {
-  if (Array.isArray(value)) return value.length === 1 ? "1 item" : `${fmt.int(value.length)} items`;
+  if (Array.isArray(value)) return RECORD_DIALOG.items(value.length, fmt.int(value.length));
   if (isRecord(value)) {
     const keys = Object.keys(value);
-    return keys.length <= 4 ? keys.join(", ") : `${keys.slice(0, 4).join(", ")} and ${fmt.int(keys.length - 4)} more`;
+    return keys.length <= 4 ? keys.join(", ") : RECORD_DIALOG.andMore(keys.slice(0, 4).join(", "), fmt.int(keys.length - 4));
   }
-  return "value";
+  return RECORD_DIALOG.value;
 }
 
 /**
@@ -111,10 +105,10 @@ export function RecordDialog({ record, fields, title, onClose }: { record: JsonR
     <Dialog.Root open={record !== null} onOpenChange={(open: boolean) => (open ? undefined : onClose())}>
       <Dialog size="xl" className="max-h-[85vh] overflow-y-auto p-6">
         <div className="mb-4 flex items-start justify-between gap-4">
-          <Dialog.Title className="font-display text-2xl text-kumo-strong">{title ?? (isText(name) ? name : "Record")}</Dialog.Title>
+          <Dialog.Title className="font-display text-2xl text-kumo-strong">{title ?? (isText(name) ? name : RECORD_DIALOG.record)}</Dialog.Title>
           <div className="flex shrink-0 items-center gap-1">
             {record ? <CopyRecord text={whole} /> : null}
-            <Dialog.Close aria-label="Close" render={(props) => <Button {...props} variant="ghost" size="sm" icon={<XIcon />} aria-label="Close" />} />
+            <Dialog.Close aria-label={RECORD_DIALOG.close} render={(props) => <Button {...props} variant="ghost" size="sm" icon={<XIcon />} aria-label={RECORD_DIALOG.close} />} />
           </div>
         </div>
         {record ? (
@@ -130,7 +124,7 @@ export function RecordDialog({ record, fields, title, onClose }: { record: JsonR
             />
             {clocks.length ? (
               <div className="grid gap-2 rounded-lg bg-kumo-recessed p-4">
-                <p className="font-mono text-xs uppercase tracking-[0.08em] text-kumo-subtle">Clocks</p>
+                <p className="font-mono text-xs uppercase tracking-[0.08em] text-kumo-subtle">{RECORD_DIALOG.clocksHeading}</p>
                 <Kv
                   items={clocks.map(([key, value]) => ({ term: TIME_LABEL.get(key) ?? humanize(key), value: isText(value) ? fmt.dateTime(value) : <ExtraValue value={value} /> }))}
                 />
@@ -148,7 +142,7 @@ function CopyRecord({ text }: { text: string }) {
   const { copied, copy } = useCopy(text);
   return (
     <Button variant="ghost" size="sm" icon={copied ? <CheckIcon /> : <CopyIcon />} onClick={copy}>
-      {copied ? "Copied" : "Copy JSON"}
+      {copied ? RECORD_DIALOG.copied : RECORD_DIALOG.copyJson}
     </Button>
   );
 }

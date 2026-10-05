@@ -66,7 +66,7 @@ function NavDrawer({ current }: { current: Section | "api" }) {
         <Sidebar.Header>
           <Mark size={24} />
           <span className="font-display text-base">open-data.pt</span>
-          <Sidebar.Close className="ml-auto" />
+          <Sidebar.Close className="ml-auto" aria-label={SHELL.closeMenu} />
         </Sidebar.Header>
         <Sidebar.Content>
           <Sidebar.Menu>

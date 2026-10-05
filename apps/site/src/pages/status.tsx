@@ -6,7 +6,8 @@ import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { apiGet, productHref } from "../lib/api";
 import { fetchFeeds, fetchProducts, publisherHref } from "../lib/catalog";
-import { fmt, plural } from "../lib/format";
+import { fmt } from "../lib/format";
+import { INTL_LOCALE, localHref } from "../lib/locale";
 import { useQuery } from "../lib/query";
 import {
   STATUS_DAYS as DAYS,
@@ -21,6 +22,7 @@ import {
   type StatusMember as Member,
 } from "../lib/status-history";
 import type { Feed, Outage, OutageCause, OutagesResponse, Product } from "../lib/types";
+import { STATUS } from "../text/status";
 
 const INCIDENTS_SHOWN = 25;
 /** Incidents read out per hour; the tooltip shows four. */
@@ -30,18 +32,14 @@ const DAY_MS = 86_400_000;
 const STALL_MS = 10 * 60_000;
 
 const LEVELS: { level: Level; label: string }[] = [
-  { level: "ok", label: "No recorded issues" },
-  { level: "major", label: "Partly affected" },
-  { level: "severe", label: "All tracked time affected" },
-  { level: "none", label: "Not tracked" },
+  { level: "ok", label: STATUS.levels.ok },
+  { level: "major", label: STATUS.levels.major },
+  { level: "severe", label: STATUS.levels.severe },
+  { level: "none", label: STATUS.levels.none },
 ];
 
 /** Why an outage happened, as the middle of a sentence: publisher names keep their capitals. */
-const CAUSE_CLAUSE = {
-  source: (publisher) => `${publisher ?? "the publisher"}’s service did not answer`,
-  collection: () => "collection failed on this site’s side",
-  platform: () => "open-data.pt was not running collections",
-} satisfies { [cause in OutageCause]: (publisher: string | undefined) => string };
+const CAUSE_CLAUSE = STATUS.causeClause satisfies { [cause in OutageCause]: (publisher: string | undefined) => string };
 
 /** The same, starting a sentence; the site's name stays lower case. */
 const causeSentence = (cause: OutageCause, publisher: string | undefined) => {
@@ -49,7 +47,7 @@ const causeSentence = (cause: OutageCause, publisher: string | undefined) => {
   return clause.startsWith("open-data.pt") ? clause : `${clause.charAt(0).toLocaleUpperCase()}${clause.slice(1)}`;
 };
 const CAUSE_BADGE = { source: "warning", collection: "error", platform: "neutral" } as const;
-const CAUSE_LABEL = { source: "Source unavailable", collection: "Collection error", platform: "Platform paused" } as const;
+const CAUSE_LABEL = STATUS.causeLabel satisfies { [cause in OutageCause]: string };
 
 function feedMember(feed: Feed, outages: Outage[]): Member {
   const member: Member = { label: feed.title, outages };
@@ -58,10 +56,12 @@ function feedMember(feed: Feed, outages: Outage[]): Member {
   return member;
 }
 
+const PERCENT = new Intl.NumberFormat(INTL_LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false });
+
 function uptimeText(uptime: number | null) {
-  if (uptime === null) return "no record yet";
-  if (uptime >= 0.99995) return "100% issue-free";
-  return `${(Math.floor(uptime * 10_000) / 100).toFixed(2)}% issue-free`;
+  if (uptime === null) return STATUS.noRecord;
+  if (uptime >= 0.99995) return STATUS.issueFree("100");
+  return STATUS.issueFree(PERCENT.format(Math.floor(uptime * 10_000) / 100));
 }
 
 /* ---------- One tooltip for every bar on the page ---------- */
@@ -72,16 +72,16 @@ interface TipState {
   content: ReactNode;
 }
 
-const HOUR_LABEL = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "shortOffset" });
+const HOUR_LABEL = new Intl.DateTimeFormat(INTL_LOCALE, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "shortOffset" });
 
 function hourLabel(bar: Bar): string {
-  return `${HOUR_LABEL.format(bar.hour.start)} to ${HOUR_LABEL.format(bar.hour.end)}`;
+  return STATUS.hourSpan(HOUR_LABEL.format(bar.hour.start), HOUR_LABEL.format(bar.hour.end));
 }
 
 function hourSummary(bar: Bar): string {
-  if (bar.level === "none") return "No tracked collection history";
-  if (bar.level === "ok") return "No recorded collection issues during tracked time";
-  return `${bar.affected} of ${bar.trackedMembers} tracked sources affected, up to ${fmt.duration(bar.longest)} in this hour`;
+  if (bar.level === "none") return STATUS.hourUntracked;
+  if (bar.level === "ok") return STATUS.hourClean;
+  return STATUS.hourAffected(bar.affected, bar.trackedMembers, fmt.duration(bar.longest));
 }
 
 interface BarNotes {
@@ -100,8 +100,8 @@ function barNotes(bar: Bar, describe: (incident: Incident) => string, now: numbe
 /** A bounded, spoken form of the tooltip's details, or undefined when there is nothing beyond the label. */
 function barDescription(bar: Bar, describe: (incident: Incident) => string, now: number): string | undefined {
   const { partlyTracked, lines } = barNotes(bar, describe, now);
-  const spoken = [...(partlyTracked ? ["Tracking began during this hour."] : []), ...lines.slice(0, SPOKEN_INCIDENTS)];
-  if (lines.length > SPOKEN_INCIDENTS) spoken.push(`and ${lines.length - SPOKEN_INCIDENTS} more`);
+  const spoken = [...(partlyTracked ? [STATUS.trackingBegan] : []), ...lines.slice(0, SPOKEN_INCIDENTS)];
+  if (lines.length > SPOKEN_INCIDENTS) spoken.push(STATUS.andMore(lines.length - SPOKEN_INCIDENTS));
   return spoken.length > 0 ? spoken.join(". ") : undefined;
 }
 
@@ -110,15 +110,15 @@ function barTip(bar: Bar, describe: (incident: Incident) => string, now: number)
   return (
     <>
       <strong className="text-kumo-strong">{hourLabel(bar)}</strong>
-      {bar.hour.end > now ? <span>Current hour, in progress</span> : null}
+      {bar.hour.end > now ? <span>{STATUS.currentHour}</span> : null}
       <span>{hourSummary(bar)}</span>
-      {partlyTracked ? <span>Tracking began during this hour.</span> : null}
+      {partlyTracked ? <span>{STATUS.trackingBegan}</span> : null}
       {lines.slice(0, 4).map((line, index) => (
         <span key={index} className="text-kumo-subtle">
           {line}
         </span>
       ))}
-      {lines.length > 4 ? <span className="text-kumo-subtle">and {lines.length - 4} more</span> : null}
+      {lines.length > 4 ? <span className="text-kumo-subtle">{STATUS.andMore(lines.length - 4)}</span> : null}
     </>
   );
 }
@@ -150,7 +150,7 @@ function Bars({
   return (
     <span>
       <span id={instructions} className="sr-only">
-        One bar per hour. Use left and right arrows to inspect hours, Home and End to jump, and Escape to dismiss details.
+        {STATUS.barsInstructions}
       </span>
       {descriptions.map((description, index) =>
         description ? (
@@ -164,7 +164,7 @@ function Bars({
         role="group"
         data-status-timeline
         aria-describedby={instructions}
-        aria-label={`${label}: ${uptimeText(measured.uptime)} over ${STATUS_HOURS} hourly slots`}
+        aria-label={STATUS.barsLabel(label, uptimeText(measured.uptime), STATUS_HOURS)}
         className={`flex ${height} items-end gap-px sm:gap-[2px]`}
         onPointerLeave={(event) => {
           if (event.pointerType === "mouse" && !root.current?.contains(document.activeElement)) onTip(null);
@@ -200,7 +200,7 @@ function Bars({
             data-level={bar.level}
             data-hour-start={bar.hour.start}
             data-current={bar.hour.end > now}
-            aria-label={`${hourLabel(bar)}: ${hourSummary(bar)}${bar.hour.end > now ? "; current hour in progress" : ""}`}
+            aria-label={`${hourLabel(bar)}: ${hourSummary(bar)}${bar.hour.end > now ? STATUS.currentHourSuffix : ""}`}
             aria-describedby={descriptions[index] ? `${detailsPrefix}-${index}` : undefined}
             onPointerEnter={(event) => {
               if (event.pointerType === "mouse") show(event.currentTarget, bar);
@@ -286,7 +286,7 @@ function StatusPage() {
       byFeed,
       openOf,
       rows,
-      platform: measure([{ label: "Collection", outages: platform }], hours, now, tracked),
+      platform: measure([{ label: STATUS.collection, outages: platform }], hours, now, tracked),
       lastAttempt: enabled
         .map((feed) => feed.lastAttemptAt)
         .filter((value): value is string => Boolean(value))
@@ -321,11 +321,11 @@ function StatusPage() {
   return (
     <Shell section="status">
       <section className="grid gap-5">
-        <PageHead eyebrow="Status" title="Is everything being collected?" />
+        <PageHead eyebrow={STATUS.eyebrow} title={STATUS.title} />
         {/* One state at a time: the error, or the wait, or the answer. */}
         <ErrorNote
           error={outages.error ?? feeds.error}
-          what="the collection status"
+          what={STATUS.what}
           onRetry={() => {
             void outages.refetch();
             void feeds.refetch();
@@ -335,44 +335,39 @@ function StatusPage() {
           <StateBanner model={model} now={now} counted={counted} />
         ) : outages.error || feeds.error ? null : (
           <div className="flex items-center gap-2 text-sm text-kumo-subtle">
-            <Loader size="sm" /> Checking collection…
+            <Loader size="sm" /> {STATUS.checking}
           </div>
         )}
         {outages.data ? (
-          <p className="text-xs text-kumo-subtle">
-            {outages.data.trackedSince
-              ? `Collection incidents have been recorded since ${fmt.dateTime(outages.data.trackedSince)}; earlier hours are not tracked. Updated every minute.`
-              : "No collection history has been recorded yet."}
-          </p>
+          <p className="text-xs text-kumo-subtle">{outages.data.trackedSince ? STATUS.trackedSince(fmt.dateTime(outages.data.trackedSince)) : STATUS.noHistory}</p>
         ) : null}
       </section>
 
       {model ? (
         <>
           <section aria-labelledby="platform-title">
-            <SectionHead eyebrow="Platform" title="Collection on open-data.pt" id="platform-title">
-              Whether this site was running its collections at all. When it stops, nothing updates.
+            <SectionHead eyebrow={STATUS.platformEyebrow} title={STATUS.platformTitle} id="platform-title">
+              {STATUS.platformBody}
             </SectionHead>
             <LayerCard>
               <LayerCard.Primary className="grid gap-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-semibold text-kumo-strong">Collection runs</span>
+                  <span className="font-semibold text-kumo-strong">{STATUS.collectionRuns}</span>
                   <span className="flex items-center gap-3">
                     <Badge variant="success" appearance="dot">
-                      Running
+                      {STATUS.running}
                     </Badge>
                     <span className="font-mono text-xs text-kumo-subtle">{uptimeText(model.platform.uptime)}</span>
                   </span>
                 </div>
-                <Bars now={now} measured={model.platform} label="Collection runs" onTip={setTip} describe={(incident) => `Stopped for ${fmt.duration(incident.ms)}`} />
+                <Bars now={now} measured={model.platform} label={STATUS.collectionRuns} onTip={setTip} describe={(incident) => STATUS.stoppedFor(fmt.duration(incident.ms))} />
               </LayerCard.Primary>
             </LayerCard>
           </section>
 
           <section aria-labelledby="sources-title">
-            <SectionHead eyebrow="Sources" title="Each publisher, hour by hour" id="sources-title">
-              One bar per hour across {DAYS} days, including the current hour in progress. Hours with a recorded collection issue are drawn full height and in warmer colours. These
-              are collection records, not checks of the publishers’ websites. Percentages leave out untracked time.
+            <SectionHead eyebrow={STATUS.sourcesEyebrow} title={STATUS.sourcesTitle} id="sources-title">
+              {STATUS.sourcesBody(DAYS)}
             </SectionHead>
             <Legend start={model.hours[0]?.start ?? now} />
             <LayerCard className="overflow-hidden p-0">
@@ -396,7 +391,7 @@ function StatusPage() {
                           </button>
                           <a
                             href={publisherHref(row.slug)}
-                            aria-label={`${row.name}’s tables and series`}
+                            aria-label={STATUS.publisherLink(row.name)}
                             className="grid size-6 place-items-center rounded text-kumo-subtle hover:text-kumo-strong"
                           >
                             <ArrowSquareOutIcon size={14} aria-hidden="true" />
@@ -404,11 +399,11 @@ function StatusPage() {
                           <span className="ml-auto flex items-center gap-3">
                             {row.failing.length ? (
                               <Badge variant="warning" appearance="dot">
-                                {row.failing.length} of {row.members.length} not collecting
+                                {STATUS.notCollecting(row.failing.length, row.members.length)}
                               </Badge>
                             ) : (
                               <Badge variant="success" appearance="dot">
-                                Collecting
+                                {STATUS.collecting}
                               </Badge>
                             )}
                             <span className="hidden font-mono text-xs text-kumo-subtle sm:inline">{uptimeText(row.measured.uptime)}</span>
@@ -426,7 +421,7 @@ function StatusPage() {
                         <div className="grid grid-cols-[minmax(0,1fr)] gap-4 border-t border-kumo-hairline bg-kumo-recessed px-4 py-4 sm:pl-9">
                           {row.measured.uptime !== null ? (
                             <Meter
-                              label={`${row.name} over the last ${DAYS} days`}
+                              label={STATUS.overLastDays(row.name, DAYS)}
                               value={Math.round(row.measured.uptime * 10_000) / 100}
                               customValue={uptimeText(row.measured.uptime)}
                               indicatorClassName="from-kumo-success via-kumo-success to-kumo-success"
@@ -454,7 +449,7 @@ function StatusPage() {
                                         </Badge>
                                       ) : (
                                         <Badge variant="success" appearance="dot">
-                                          Collecting
+                                          {STATUS.collecting}
                                         </Badge>
                                       )}
                                       <span className="hidden font-mono text-xs text-kumo-subtle sm:inline">{uptimeText(measured.uptime)}</span>
@@ -482,10 +477,10 @@ function StatusPage() {
           </section>
 
           <section aria-labelledby="incidents-title">
-            <SectionHead eyebrow="History" title="Past incidents" id="incidents-title">
-              The last {DAYS} days, newest first.{" "}
-              <a href="/operations/#activity" className="font-medium text-kumo-link">
-                Every run, as it happens
+            <SectionHead eyebrow={STATUS.historyEyebrow} title={STATUS.historyTitle} id="incidents-title">
+              {STATUS.lastDays(DAYS)}{" "}
+              <a href={localHref("/operations/#activity")} className="font-medium text-kumo-link">
+                {STATUS.everyRun}
               </a>
             </SectionHead>
             <Incidents outages={outages.data?.data ?? []} feeds={feeds.data ?? []} firstProduct={firstProduct} now={now} showAll={showAll} onShowAll={() => setShowAll(true)} />
@@ -517,12 +512,7 @@ function StateBanner({ model, now, counted }: { model: Model; now: number; count
   const failing = counted.filter(model.openOf);
   if (model.lastAttempt && now - Date.parse(model.lastAttempt) > STALL_MS) {
     return (
-      <Banner
-        variant="error"
-        icon={<WarningCircleIcon weight="fill" />}
-        title="Collection seems to have stopped."
-        description={`Nothing has been collected since ${fmt.dateTime(model.lastAttempt)}. Data already published stays available.`}
-      />
+      <Banner variant="error" icon={<WarningCircleIcon weight="fill" />} title={STATUS.stoppedTitle} description={STATUS.stoppedDescription(fmt.dateTime(model.lastAttempt))} />
     );
   }
   if (failing.length > 0) {
@@ -531,8 +521,8 @@ function StateBanner({ model, now, counted }: { model: Model; now: number; count
       <Banner
         variant="alert"
         icon={<WarningIcon weight="fill" />}
-        title={`${fmt.int(failing.length)} of ${fmt.int(counted.length)} sources ${failing.length === 1 ? "is" : "are"} not being collected right now.`}
-        description={`Affected: ${publishers.join(", ")}. Their last published data stays available and collection retries by itself.`}
+        title={STATUS.failingTitle(failing.length, counted.length)}
+        description={STATUS.failingDescription(publishers.join(", "))}
       />
     );
   }
@@ -540,8 +530,8 @@ function StateBanner({ model, now, counted }: { model: Model; now: number; count
     <div className="flex items-start gap-3 rounded-xl bg-kumo-success-tint px-4 py-3.5 ring-1 ring-kumo-success/25">
       <CheckCircleIcon weight="fill" size={22} className="mt-0.5 shrink-0 text-kumo-success" />
       <div className="grid gap-0.5">
-        <p className="font-display text-xl text-kumo-success">All {fmt.int(counted.length)} sources are being collected.</p>
-        <p className="text-sm text-kumo-subtle">Every source answered its last collection.</p>
+        <p className="font-display text-xl text-kumo-success">{STATUS.allCollected(counted.length)}</p>
+        <p className="text-sm text-kumo-subtle">{STATUS.everyAnswered}</p>
       </div>
     </div>
   );
@@ -561,7 +551,7 @@ function Legend({ start }: { start: number }) {
           </span>
         ))}
       </span>
-      <span>Now · {STATUS_HOURS} hourly bars</span>
+      <span>{STATUS.legendNow(STATUS_HOURS)}</span>
     </div>
   );
 }
@@ -590,7 +580,7 @@ function Incidents({
     return (
       <LayerCard>
         <LayerCard.Primary className="flex items-center gap-2 text-sm text-kumo-subtle">
-          <CheckCircleIcon className="text-kumo-success" /> No incidents in the last {DAYS} days.
+          <CheckCircleIcon className="text-kumo-success" /> {STATUS.noIncidents(DAYS)}
         </LayerCard.Primary>
       </LayerCard>
     );
@@ -614,10 +604,10 @@ function Incidents({
             return (
               <LayerCard key={`${outage.feedId}-${outage.startedAt}`} className={ongoing ? "ring-2 ring-kumo-warning/40" : undefined}>
                 <LayerCard.Secondary className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span className="tabular-nums">{ongoing ? `Since ${fmt.time(outage.startedAt)}` : `${fmt.time(outage.startedAt)} to ${fmt.time(outage.endedAt)}`}</span>
+                  <span className="tabular-nums">{ongoing ? STATUS.since(fmt.time(outage.startedAt)) : STATUS.span(fmt.time(outage.startedAt), fmt.time(outage.endedAt))}</span>
                   <span className="flex items-center gap-2">
                     <Badge variant={CAUSE_BADGE[outage.cause]}>{CAUSE_LABEL[outage.cause]}</Badge>
-                    <Badge variant={ongoing ? "warning" : "outline"}>{ongoing ? `ongoing, ${fmt.duration(end - start)} so far` : fmt.duration(end - start)}</Badge>
+                    <Badge variant={ongoing ? "warning" : "outline"}>{ongoing ? STATUS.ongoing(fmt.duration(end - start)) : fmt.duration(end - start)}</Badge>
                   </span>
                 </LayerCard.Secondary>
                 <LayerCard.Primary className="grid gap-1">
@@ -637,12 +627,12 @@ function Incidents({
                         )}
                       </>
                     ) : (
-                      "All sources"
+                      STATUS.allSources
                     )}
                   </p>
                   <p className="text-sm text-kumo-subtle">
                     {causeSentence(outage.cause, feed?.publisher.name)}
-                    {outage.failures > 1 ? ` (${plural(outage.failures, "attempt")})` : ""}.
+                    {outage.failures > 1 ? ` (${STATUS.attempts(outage.failures)})` : ""}.
                   </p>
                   {outage.lastError ? (
                     <p className="wrap-anywhere font-mono text-xs text-kumo-subtle">{outage.lastError.length > 180 ? `${outage.lastError.slice(0, 177)}…` : outage.lastError}</p>
@@ -655,7 +645,7 @@ function Incidents({
       ))}
       {recent.length > shown.length ? (
         <Button variant="secondary" className="justify-self-start" onClick={onShowAll}>
-          Show all {recent.length} incidents
+          {STATUS.showAll(recent.length)}
         </Button>
       ) : null}
     </div>

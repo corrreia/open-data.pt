@@ -1,0 +1,43 @@
+import { inLocale } from "../lib/locale";
+
+/** The map tab: the basemap's credit, the controls and the legend. */
+export const MAP = inLocale({
+  en: {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    zoomIn: "Zoom in",
+    zoomOut: "Zoom out",
+    noValue: "No value",
+    loading: "Loading the map",
+    loadingMany: (count: string) => `: ${count} records, this can take a few seconds`,
+    noun: { areas: "shapes", features: "features", points: "points" },
+    fetched: "fetched",
+    positionsAsOf: "positions as of",
+    colourBy: "Colour by",
+    noColours: "No colours",
+    colourByField: (field: string) => `Colour by ${field.toLocaleLowerCase()}`,
+    fitToData: "Fit to data",
+    categories: "Categories on the map",
+    theMap: "the map",
+    onAMap: (title: string) => `${title} on a map`,
+    note: "Shapes come straight from the current records. Select one for its details, switch a category off in the legend, or open the Records tab for the same rows as text.",
+  },
+  pt: {
+    attribution: '&copy; Contribuidores do <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    zoomIn: "Aproximar",
+    zoomOut: "Afastar",
+    noValue: "Sem valor",
+    loading: "A carregar o mapa",
+    loadingMany: (count: string) => `: ${count} registos, pode demorar alguns segundos`,
+    noun: { areas: "formas", features: "elementos", points: "pontos" },
+    fetched: "obtidos",
+    positionsAsOf: "posições de",
+    colourBy: "Colorir por",
+    noColours: "Sem cores",
+    colourByField: (field: string) => `Colorir por ${field.toLocaleLowerCase("pt-PT")}`,
+    fitToData: "Ajustar aos dados",
+    categories: "Categorias no mapa",
+    theMap: "o mapa",
+    onAMap: (title: string) => `${title} num mapa`,
+    note: "As formas vêm diretamente dos registos atuais. Escolha uma para ver os detalhes, desligue uma categoria na legenda ou abra o separador Registos para ver as mesmas linhas em texto.",
+  },
+});

@@ -1,6 +1,7 @@
 import { Button } from "@cloudflare/kumo";
 import { CheckIcon, CopyIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
+import { OPERATIONS } from "../../text/operations";
 
 /** Copies `text` to the clipboard; `copied` stays true for a moment afterwards. */
 export function useCopy(text: string) {
@@ -49,7 +50,7 @@ export function CommandBlock({ command, highlight, label }: { command: string; h
       {/* Icon only; the text is for screen readers (Kumo's square variant trips the repo's naming rule). */}
       <Button variant="ghost" size="sm" icon={copied ? <CheckIcon /> : <CopyIcon />} onClick={copy} className="absolute right-1.5 top-1.5 gap-0 px-1.5">
         <span className="sr-only" aria-live="polite">
-          {copied ? "Copied" : `Copy ${label ?? "command"}`}
+          {copied ? OPERATIONS.copied : OPERATIONS.copy(label)}
         </span>
       </Button>
     </div>

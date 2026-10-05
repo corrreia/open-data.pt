@@ -1,0 +1,63 @@
+import { fmt } from "../lib/format";
+import { inLocale } from "../lib/locale";
+import { LISTINGS } from "./listings";
+
+/** The publishers' index and each publisher's page. */
+export const PUBLISHER = inLocale({
+  en: {
+    indexEyebrow: "Publishers",
+    indexTitle: "Who publishes the data",
+    indexIntro: (publishers: number, listings: number) =>
+      `${fmt.int(publishers)} institutions and operators, ${LISTINGS.count(listings)}. Each is collected from where its publisher shares it, keeps their licence, and links back to their source.`,
+    breadcrumb: "Publishers",
+    eyebrow: "Publisher",
+    collectedFrom: (name: string) => `Collected from where ${name} shares them, and served under the terms they state.`,
+    about: "About this publisher’s data",
+    topics: "Topics",
+    site: "Site",
+    publishedAt: "Published at",
+    licences: "Licences",
+    updates: "Updates",
+    liveUpdates: (count: number) => `${LISTINGS.count(count)} ${count === 1 ? "changes" : "change"} several times an hour`,
+    hourlyOrLess: "Hourly or less often",
+    freshness: "Freshness",
+    allCurrent: "all current",
+    late: (count: number) => `${fmt.int(count)} late`,
+    withinWindow: "every one within its update window",
+    pastExpected: "past their expected update",
+    seeStatus: "See collection status by hour",
+    errorWhat: "the publishers",
+    loading: "Loading the publishers",
+    notFound: "Publisher not found",
+    notFoundDescription: "Nothing on open-data.pt comes from a publisher by that name.",
+    all: "All publishers",
+  },
+  pt: {
+    indexEyebrow: "Entidades publicadoras",
+    indexTitle: "Quem publica os dados",
+    indexIntro: (publishers: number, listings: number) =>
+      `${fmt.int(publishers)} instituições e operadores, ${LISTINGS.count(listings)}. Cada uma é recolhida onde a entidade publicadora a disponibiliza, mantém a licença dela e tem uma ligação para a origem.`,
+    breadcrumb: "Entidades publicadoras",
+    eyebrow: "Entidade publicadora",
+    collectedFrom: (name: string) => `Dados publicados por ${name}, recolhidos onde são disponibilizados e servidos nos termos declarados.`,
+    about: "Sobre os dados desta entidade",
+    topics: "Temas",
+    site: "Site",
+    publishedAt: "Publicado em",
+    licences: "Licenças",
+    updates: "Atualizações",
+    liveUpdates: (count: number) => `${LISTINGS.count(count)} ${count === 1 ? "muda" : "mudam"} várias vezes por hora`,
+    hourlyOrLess: "De hora a hora ou com menos frequência",
+    freshness: "Atualidade",
+    allCurrent: "tudo em dia",
+    late: (count: number) => `${fmt.int(count)} ${count === 1 ? "atrasada" : "atrasadas"}`,
+    withinWindow: "todas dentro do prazo de atualização",
+    pastExpected: "passaram a hora de atualização prevista",
+    seeStatus: "Ver o estado da recolha por hora",
+    errorWhat: "as entidades publicadoras",
+    loading: "A carregar as entidades publicadoras",
+    notFound: "Entidade publicadora não encontrada",
+    notFoundDescription: "Nada no open-data.pt vem de uma entidade publicadora com esse nome.",
+    all: "Todas as entidades publicadoras",
+  },
+});

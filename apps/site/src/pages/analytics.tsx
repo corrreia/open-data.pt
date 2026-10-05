@@ -23,24 +23,26 @@ import { fetchProducts, licenceHref, publisherHref } from "../lib/catalog";
 import { brandIcon } from "../lib/client-icons";
 import { echarts } from "../lib/echarts";
 import { fmt } from "../lib/format";
+import { INTL_LOCALE, localHref } from "../lib/locale";
 import { SERIES_COLORS } from "../lib/palette";
 import { useQuery } from "../lib/query";
 import type { AnalyticsReport } from "../lib/types";
+import { ANALYTICS } from "../text/analytics";
 
 const WINDOWS = [
-  { value: "1", label: "24 hours" },
-  { value: "7", label: "7 days" },
-  { value: "30", label: "30 days" },
-  { value: "90", label: "90 days" },
+  { value: "1", label: ANALYTICS.windows["1"] },
+  { value: "7", label: ANALYTICS.windows["7"] },
+  { value: "30", label: ANALYTICS.windows["30"] },
+  { value: "90", label: ANALYTICS.windows["90"] },
 ];
 
 type View = "all" | "web" | "api" | "mcp";
 
 const VIEWS: { value: View; label: string }[] = [
-  { value: "all", label: "Everything" },
-  { value: "web", label: "Website" },
-  { value: "api", label: "API" },
-  { value: "mcp", label: "MCP" },
+  { value: "all", label: ANALYTICS.views.all },
+  { value: "web", label: ANALYTICS.views.web },
+  { value: "api", label: ANALYTICS.views.api },
+  { value: "mcp", label: ANALYTICS.views.mcp },
 ];
 
 /** Each line keeps its colour whatever else is drawn: surfaces on the overview, kinds of client on one surface. */
@@ -53,35 +55,22 @@ interface Line {
 }
 
 /** MCP's JSON-RPC methods in words; the method stays beside it for anyone who knows the protocol. */
-const CALL_LABEL = new Map([
-  ["initialize", "Connected"],
-  ["notifications/initialized", "Connection confirmed"],
-  ["tools/list", "Listed the tools"],
-  ["tools/call execute", "Ran code against the API"],
-  ["tools/call search", "Searched the API description"],
-  ["ping", "Checked the server is up"],
-]);
-const callLabel = (call: string) => (call ? `${CALL_LABEL.get(call) ?? "Other request"} (${call})` : "Other request");
+const CALL_LABEL = new Map<string, string>(Object.entries(ANALYTICS.calls));
+const callLabel = (call: string) => (call ? `${CALL_LABEL.get(call) ?? ANALYTICS.otherRequest} (${call})` : ANALYTICS.otherRequest);
 
 const SURFACE_LINES: Line[] = [
-  { id: "web", label: "Page views", slot: 0, takes: (row) => row.surface === "web" || row.surface === "docs" },
-  { id: "api", label: "API requests", slot: 1, takes: (row) => row.surface === "api" },
-  { id: "mcp", label: "MCP messages", slot: 2, takes: (row) => row.surface === "mcp" },
+  { id: "web", label: ANALYTICS.lines.web, slot: 0, takes: (row) => row.surface === "web" || row.surface === "docs" },
+  { id: "api", label: ANALYTICS.lines.api, slot: 1, takes: (row) => row.surface === "api" },
+  { id: "mcp", label: ANALYTICS.lines.mcp, slot: 2, takes: (row) => row.surface === "mcp" },
 ];
 
 const KIND_LINES: Line[] = [
-  { id: "browsers", label: "Browsers", slot: 0, takes: (row) => row.kind === "browser" },
-  { id: "scripts", label: "Scripts and apps", slot: 1, takes: (row) => row.kind === "library" || row.kind === "unknown" },
-  { id: "machines", label: "AI agents and crawlers", slot: 2, takes: (row) => row.kind === "ai-agent" || row.kind === "crawler" },
+  { id: "browsers", label: ANALYTICS.lines.browsers, slot: 0, takes: (row) => row.kind === "browser" },
+  { id: "scripts", label: ANALYTICS.lines.scripts, slot: 1, takes: (row) => row.kind === "library" || row.kind === "unknown" },
+  { id: "machines", label: ANALYTICS.lines.machines, slot: 2, takes: (row) => row.kind === "ai-agent" || row.kind === "crawler" },
 ];
 
-const KIND_LABEL = new Map([
-  ["browser", "Browser"],
-  ["library", "Script"],
-  ["ai-agent", "AI agent"],
-  ["crawler", "Crawler"],
-  ["unknown", "Unknown"],
-]);
+const KIND_LABEL = new Map<string, string>(Object.entries(ANALYTICS.kinds));
 
 /** Drawn where a client has no logo of its own. */
 const KIND_ICON = new Map<string, Icon>([
@@ -94,18 +83,20 @@ const KIND_ICON = new Map<string, Icon>([
 
 /** A referrer's medium, as the kernel names it: a badge, and the icon drawn where the source has no logo. */
 const MEDIUM = new Map<string, { label: string; icon: Icon }>([
-  ["search", { label: "Search", icon: MagnifyingGlassIcon }],
-  ["social", { label: "Social", icon: ChatsCircleIcon }],
-  ["email", { label: "Email", icon: EnvelopeSimpleIcon }],
-  ["chatbot", { label: "AI assistant", icon: SparkleIcon }],
-  ["paid", { label: "Ad", icon: MegaphoneIcon }],
+  ["search", { label: ANALYTICS.mediums.search, icon: MagnifyingGlassIcon }],
+  ["social", { label: ANALYTICS.mediums.social, icon: ChatsCircleIcon }],
+  ["email", { label: ANALYTICS.mediums.email, icon: EnvelopeSimpleIcon }],
+  ["chatbot", { label: ANALYTICS.mediums.chatbot, icon: SparkleIcon }],
+  ["paid", { label: ANALYTICS.mediums.paid, icon: MegaphoneIcon }],
 ]);
 
-const SURFACE_NAME = new Map([
-  ["web", "website"],
-  ["api", "API"],
-  ["mcp-read", "MCP"],
-]);
+const SURFACE_NAME = new Map<string, string>(Object.entries(ANALYTICS.surfaces));
+
+/** A topic, publisher or licence row's tag, from the page it was read on ("/catalog/" is a topic). */
+const SUBJECT_TAG = new Map<string, string>(Object.entries(ANALYTICS.subjectTags));
+
+/** A page's route in either language as its English one: "/pt/catalog/" counts with "/catalog/". */
+const pageRoute = (route: string) => route.replace(/^\/pt(?=\/)/, "");
 
 /** Rows each list shows before "Show all". */
 const SHOWN = 10;
@@ -130,6 +121,9 @@ function surfacesOf(view: View): ViewSurfaces {
   return { counts: [view], reads: [view] };
 }
 
+/** A share of all requests, to two decimal places. */
+const SHARE = new Intl.NumberFormat(INTL_LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false });
+
 const sum = (rows: { requests: number }[]) => rows.reduce((total, row) => total + row.requests, 0);
 
 /** Rows summed under a key, largest first. */
@@ -141,7 +135,7 @@ function tally<T extends { requests: number }>(rows: T[], keyOf: (row: T) => str
 
 const regionNames = (() => {
   try {
-    return new Intl.DisplayNames(undefined, { type: "region" });
+    return new Intl.DisplayNames(INTL_LOCALE, { type: "region" });
   } catch {
     return undefined;
   }
@@ -154,8 +148,8 @@ function localMidnight(time: number): number {
 }
 
 function countryName(code: string): string {
-  if (code === "T1") return "Tor network";
-  if (code === "XX") return "Unknown";
+  if (code === "T1") return ANALYTICS.torNetwork;
+  if (code === "XX") return ANALYTICS.unknown;
   try {
     return regionNames?.of(code) ?? code;
   } catch {
@@ -173,16 +167,14 @@ function AnalyticsPage() {
 
   return (
     <Shell section="analytics">
-      <PageHead eyebrow="Analytics" title="How open-data.pt is used">
-        Requests to the website, the API and the MCP server, counted as they are answered. No cookies, no IP addresses and no visitor identifiers are kept: only what was asked for,
-        by what kind of client, from which country. The numbers are refreshed every half hour and go back {report.data?.retentionDays ?? 90} days. The same data is at{" "}
-        <a href={`/api/analytics?days=${days}`}>/api/analytics</a>.
+      <PageHead eyebrow={ANALYTICS.eyebrow} title={ANALYTICS.title}>
+        {ANALYTICS.intro(report.data?.retentionDays ?? 90, <a href={`/api/analytics?days=${days}`}>/api/analytics</a>)}
       </PageHead>
 
-      <section aria-label="What to show" className="flex flex-wrap items-end justify-between gap-4">
+      <section aria-label={ANALYTICS.whatToShow} className="flex flex-wrap items-end justify-between gap-4">
         <Tabs variant="underline" value={view} onValueChange={(value) => setView(VIEWS.find((each) => each.value === value)?.value ?? "all")} tabs={VIEWS} />
         {/* A choice of window, not a place to go: buttons that say which one is pressed, as the series view's time span does. */}
-        <div role="group" aria-label="Time window" className="flex flex-wrap gap-2">
+        <div role="group" aria-label={ANALYTICS.timeWindow} className="flex flex-wrap gap-2">
           {WINDOWS.map((each) => (
             <Button key={each.value} size="sm" variant={days === each.value ? "primary" : "secondary"} aria-pressed={days === each.value} onClick={() => setDays(each.value)}>
               {each.label}
@@ -192,9 +184,9 @@ function AnalyticsPage() {
       </section>
 
       {disabled ? (
-        <Empty icon={<ChartBarIcon size={32} />} title="Analytics are not switched on yet" description="This deployment does not count its requests yet. Check back later." />
+        <Empty icon={<ChartBarIcon size={32} />} title={ANALYTICS.disabledTitle} description={ANALYTICS.disabledDescription} />
       ) : report.error ? (
-        <ErrorNote error={report.error} what="the usage numbers" onRetry={() => void report.refetch()} />
+        <ErrorNote error={report.error} what={ANALYTICS.what} onRetry={() => void report.refetch()} />
       ) : !report.data ? (
         <div className="grid place-items-center py-16">
           <Loader size="lg" />
@@ -212,7 +204,7 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
   const { counts, reads } = surfacesOf(view);
   const counted = <T extends { surface: string }>(rows: T[]) => rows.filter((row) => counts.includes(row.surface));
   const read = <T extends { surface: string }>(rows: T[]) => rows.filter((row) => reads.includes(row.surface));
-  const window = WINDOWS.find((each) => Number(each.value) === report.days)?.label ?? `${report.days} days`;
+  const overLast = ANALYTICS.overLast(report.days);
 
   const clients = counted(report.clients);
   const kinds = tally(clients, (row) => row.kind);
@@ -220,12 +212,12 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
   const machines = sum(clients.filter((row) => row.kind === "ai-agent" || row.kind === "crawler"));
 
   const datasets = tally(
-    read(report.subjects).filter((row) => row.route === "/product/" || row.route.startsWith("/api/products/")),
+    read(report.subjects).filter((row) => pageRoute(row.route) === "/product/" || row.route.startsWith("/api/products/")),
     (row) => row.subject,
   );
   const topics = tally(
-    read(report.subjects).filter((row) => row.route === "/catalog/" || row.route === "/publisher/" || row.route === "/licence/"),
-    (row) => `${row.route}|${row.subject}`,
+    read(report.subjects).filter((row) => ["/catalog/", "/publisher/", "/licence/"].includes(pageRoute(row.route))),
+    (row) => `${pageRoute(row.route)}|${row.subject}`,
   );
   const routes = read(report.routes)
     .filter((row) => view !== "all" || row.surface !== "mcp-read")
@@ -243,42 +235,38 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
 
   return (
     <>
-      <section aria-label="Totals" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <section aria-label={ANALYTICS.totals} className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {view === "all" ? (
           <>
-            <StatTile label="Page views" value={fmt.int(sum(report.timeline.filter((row) => row.surface === "web" || row.surface === "docs")))} note={`over the last ${window}`} />
-            <StatTile label="API requests" value={fmt.int(sum(report.timeline.filter((row) => row.surface === "api")))} note="from outside this website" />
+            <StatTile label={ANALYTICS.pageViews} value={fmt.int(sum(report.timeline.filter((row) => row.surface === "web" || row.surface === "docs")))} note={overLast} />
+            <StatTile label={ANALYTICS.apiRequests} value={fmt.int(sum(report.timeline.filter((row) => row.surface === "api")))} note={ANALYTICS.fromOutside} />
             <StatTile
-              label="MCP messages"
+              label={ANALYTICS.mcpMessages}
               value={fmt.int(sum(report.timeline.filter((row) => row.surface === "mcp")))}
-              note={`and ${fmt.int(sum(report.timeline.filter((row) => row.surface === "mcp-read")))} API reads from MCP code runs`}
+              note={ANALYTICS.mcpReadsNote(fmt.int(sum(report.timeline.filter((row) => row.surface === "mcp-read"))))}
             />
             <StatTile
-              label="People and machines"
+              label={ANALYTICS.peopleAndMachines}
               value={total ? `${Math.round((people / total) * 100)}%` : "—"}
-              note={`from browsers; ${total ? Math.round((machines / total) * 100) : 0}% from AI agents and crawlers`}
+              note={ANALYTICS.peopleNote(total ? Math.round((machines / total) * 100) : 0)}
             />
           </>
         ) : (
           <>
-            <StatTile label={view === "web" ? "Page views" : view === "api" ? "Requests" : "Messages"} value={fmt.int(total)} note={`over the last ${window}`} />
-            <StatTile label="Clients" value={fmt.int(clients.length)} note={`${fmt.int(kinds.length)} kinds`} />
+            <StatTile label={view === "web" ? ANALYTICS.pageViews : view === "api" ? ANALYTICS.requests : ANALYTICS.messages} value={fmt.int(total)} note={overLast} />
+            <StatTile label={ANALYTICS.clients} value={fmt.int(clients.length)} note={ANALYTICS.kindsNote(fmt.int(kinds.length))} />
             {view === "api" ? (
-              <StatTile
-                label="Served from the edge cache"
-                value={cacheable ? `${Math.round((cached / cacheable) * 100)}%` : "—"}
-                note={`${fmt.int(limited)} refused by the rate limit`}
-              />
+              <StatTile label={ANALYTICS.edgeCache} value={cacheable ? `${Math.round((cached / cacheable) * 100)}%` : "—"} note={ANALYTICS.rateLimited(fmt.int(limited))} />
             ) : view === "web" ? (
-              <StatTile label="Read as Markdown" value={fmt.int(markdown)} note="pages fetched by agents asking for text/markdown" />
+              <StatTile label={ANALYTICS.markdown} value={fmt.int(markdown)} note={ANALYTICS.markdownNote} />
             ) : (
-              <StatTile label="API reads from code runs" value={fmt.int(sum(report.timeline.filter((row) => row.surface === "mcp-read")))} note="each code run can read several" />
+              <StatTile label={ANALYTICS.codeRunReads} value={fmt.int(sum(report.timeline.filter((row) => row.surface === "mcp-read")))} note={ANALYTICS.codeRunReadsNote} />
             )}
             <StatTile
-              label="Server errors"
+              label={ANALYTICS.serverErrors}
               value={fmt.int(failed)}
               tone={failed ? "warn" : undefined}
-              note={total ? `${((failed / total) * 100).toFixed(2)}% of ${view === "web" ? "page views" : "requests"}` : undefined}
+              note={total ? ANALYTICS.errorShare(SHARE.format((failed / total) * 100), view === "web") : undefined}
             />
           </>
         )}
@@ -287,12 +275,12 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
       <Timeline report={report} lines={view === "all" ? SURFACE_LINES : KIND_LINES} view={view} counts={counts} />
 
       <section aria-labelledby="who-title">
-        <SectionHead eyebrow="Who" title="Clients" id="who-title">
-          Named from each request’s User-Agent. Scripts are HTTP libraries and command-line tools; AI agents fetch for an assistant or train one.
+        <SectionHead eyebrow={ANALYTICS.whoEyebrow} title={ANALYTICS.whoTitle} id="who-title">
+          {ANALYTICS.whoBody}
         </SectionHead>
         <div className="grid gap-4 lg:grid-cols-2">
           <Ranked
-            title="Clients"
+            title={ANALYTICS.clients}
             rows={tally(clients, (row) => `${row.kind}|${row.name}`).map(({ key, requests }) => {
               const [kind = "", name = ""] = key.split("|");
               return { key, label: name, tag: KIND_LABEL.get(kind) ?? kind, icon: <Logo name={name} fallback={KIND_ICON.get(kind) ?? QuestionIcon} />, requests };
@@ -300,7 +288,7 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
           />
           <div className="grid content-start gap-4">
             <Ranked
-              title="Kinds of client"
+              title={ANALYTICS.kindsOfClient}
               rows={kinds.map(({ key, requests }) => ({
                 key,
                 label: KIND_LABEL.get(key) ?? key,
@@ -310,8 +298,8 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
             />
             {view === "all" || view === "mcp" ? (
               <Ranked
-                title="MCP calls"
-                note="What assistants asked the MCP server for, and the names clients gave when they connected."
+                title={ANALYTICS.mcpCalls}
+                note={ANALYTICS.mcpCallsNote}
                 rows={tally(report.mcp, (row) => `${row.call}|${row.client}`).map(({ key, requests }) => {
                   const [call = "", client = ""] = key.split("|");
                   return {
@@ -328,18 +316,14 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
       </section>
 
       <section aria-labelledby="what-title">
-        <SectionHead eyebrow="What" title="Datasets and routes" id="what-title">
-          {view === "mcp"
-            ? "What MCP code runs read from the API."
-            : view === "all"
-              ? "Datasets opened on the website, read through the API or read by MCP code runs."
-              : "What was asked for most."}
+        <SectionHead eyebrow={ANALYTICS.whatEyebrow} title={ANALYTICS.whatTitle} id="what-title">
+          {view === "mcp" ? ANALYTICS.whatMcp : view === "all" ? ANALYTICS.whatAll : ANALYTICS.whatMost}
         </SectionHead>
         <div className="grid gap-4 lg:grid-cols-2">
-          <Ranked title="Datasets" rows={datasets.map(({ key, requests }) => ({ key, label: titles.get(key) ?? key, href: productHref(key), requests }))} />
+          <Ranked title={ANALYTICS.datasets} rows={datasets.map(({ key, requests }) => ({ key, label: titles.get(key) ?? key, href: productHref(key), requests }))} />
           <Ranked
-            title={view === "web" ? "Pages" : "Routes"}
-            note="Mean time to answer beside each."
+            title={view === "web" ? ANALYTICS.pages : ANALYTICS.routes}
+            note={ANALYTICS.meanTime}
             rows={routes.map((row) => ({
               key: `${row.surface}|${row.route}`,
               label: row.route,
@@ -351,11 +335,12 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
           />
           {topics.length ? (
             <Ranked
-              title="Topics, publishers and licences"
+              title={ANALYTICS.subjects}
               rows={topics.map(({ key, requests }) => {
                 const [route = "", id = ""] = key.split("|");
-                const href = route === "/publisher/" ? publisherHref(id) : route === "/licence/" ? licenceHref(id) : `/catalog/?topic=${encodeURIComponent(id)}`;
-                return { key, label: id, tag: route.replaceAll("/", ""), href, requests };
+                const href = route === "/publisher/" ? publisherHref(id) : route === "/licence/" ? licenceHref(id) : localHref(`/catalog/?topic=${encodeURIComponent(id)}`);
+                const page = route.replaceAll("/", "");
+                return { key, label: id, tag: SUBJECT_TAG.get(page) ?? page, href, requests };
               })}
             />
           ) : null}
@@ -363,21 +348,21 @@ function Report({ report, view, titles }: { report: AnalyticsReport; view: View;
       </section>
 
       <section aria-labelledby="where-title">
-        <SectionHead eyebrow="Where" title="Countries and referrers" id="where-title">
-          Countries as Cloudflare locates each client. Referrers are the sites visitors followed a link from, named with what kind of site they are.
+        <SectionHead eyebrow={ANALYTICS.whereEyebrow} title={ANALYTICS.whereTitle} id="where-title">
+          {ANALYTICS.whereBody}
         </SectionHead>
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="grid content-start gap-4">
             <WorldMap countries={countries} />
-            <Ranked title="Countries" rows={countries.map(({ key, requests }) => ({ key, label: countryName(key), icon: <Flag code={key} />, requests }))} />
+            <Ranked title={ANALYTICS.countries} rows={countries.map(({ key, requests }) => ({ key, label: countryName(key), icon: <Flag code={key} />, requests }))} />
           </div>
           <Ranked
-            title="Referrers"
+            title={ANALYTICS.referrers}
             rows={referrers.map(({ key, requests }) => {
               const medium = MEDIUM.get(mediums.get(key) ?? "");
               return { key, label: key, tag: medium?.label, icon: <Logo name={key} fallback={medium?.icon ?? LinkSimpleIcon} />, requests };
             })}
-            empty="No request came with a link from another site."
+            empty={ANALYTICS.noReferrers}
           />
         </div>
       </section>
@@ -412,7 +397,7 @@ function WorldMap({ countries }: { countries: { key: string; requests: number }[
   return (
     <LayerCard>
       <LayerCard.Secondary className="flex items-baseline justify-between gap-3">
-        <span>Where the requests came from</span>
+        <span>{ANALYTICS.mapTitle}</span>
         <span className="font-mono text-xs text-kumo-subtle">{fmt.int(rows.length)}</span>
       </LayerCard.Secondary>
       <LayerCard.Primary>
@@ -427,8 +412,8 @@ function WorldMap({ countries }: { countries: { key: string; requests: number }[
             nameProperty="iso_a2"
             colorRange={dark ? ["#1f3a2c", "#276b48", "#2f9463", "#42b97e", "#7fd9a9"] : ["#d9efe3", "#9ad3b6", "#5fb68a", "#2f9463", "#1b7a4f"]}
             height={260}
-            valueFormat={(value) => `${fmt.int(value)} requests`}
-            tooltipFormatter={(row) => `${countryName(row.key)}: ${fmt.int(row.requests)} requests`}
+            valueFormat={(value) => ANALYTICS.requestCount(value)}
+            tooltipFormatter={(row) => `${countryName(row.key)}: ${ANALYTICS.requestCount(row.requests)}`}
           />
         ) : (
           <div className="grid h-[260px] place-items-center text-sm text-kumo-subtle">
@@ -451,7 +436,7 @@ function Timeline({ report, lines, view, counts }: { report: AnalyticsReport; li
     for (let time = Date.parse(report.from); time <= Date.parse(report.to); time += step) times.push(time);
     return times;
   }, [report.from, report.to, step]);
-  const per = report.resolution === "hour" ? "hour" : "day";
+  const perTitle = report.resolution === "hour" ? ANALYTICS.perHour : ANALYTICS.perDay;
   // A day bucket starts at UTC midnight; drawn at local midnight of the same date, the chart and table name the day it counts wherever the reader is.
   const shown = (time: number) => (report.resolution === "hour" ? time : localMidnight(time));
   const series = lines.map((line) => {
@@ -462,13 +447,13 @@ function Timeline({ report, lines, view, counts }: { report: AnalyticsReport; li
 
   return (
     <section aria-labelledby="when-title">
-      <SectionHead eyebrow="When" title={`Requests per ${per}`} id="when-title">
-        {view === "all" ? "Page views, API requests and MCP messages." : "By kind of client."}
-        {report.resolution === "day" ? " Days are UTC days." : " Hours in your local time."}
+      <SectionHead eyebrow={ANALYTICS.whenEyebrow} title={perTitle} id="when-title">
+        {view === "all" ? ANALYTICS.whenAll : ANALYTICS.whenKinds}
+        {report.resolution === "day" ? ANALYTICS.utcDays : ANALYTICS.localHours}
       </SectionHead>
       <LayerCard>
         <LayerCard.Primary className="grid gap-3">
-          <ul className="flex flex-wrap gap-x-6 gap-y-1.5" aria-label="Legend">
+          <ul className="flex flex-wrap gap-x-6 gap-y-1.5" aria-label={ANALYTICS.legend}>
             {series.map(({ line, points }) => (
               <li key={line.id}>
                 <ChartLegend.SmallItem name={line.label} color={palette[line.slot] ?? "#1b7a4f"} value={fmt.int(points.reduce((total, [, value]) => total + value, 0))} />
@@ -479,18 +464,18 @@ function Timeline({ report, lines, view, counts }: { report: AnalyticsReport; li
             echarts={echarts}
             isDarkMode={dark}
             height={300}
-            tooltipValueFormat={(value: number) => `${fmt.int(value)} requests`}
+            tooltipValueFormat={(value: number) => ANALYTICS.requestCount(value)}
             yAxisTickFormat={(value: number) => fmt.compact(value)}
-            ariaDescription={`Requests per ${per}: ${series.map(({ line }) => line.label).join(", ")}`}
+            ariaDescription={`${perTitle}: ${series.map(({ line }) => line.label).join(", ")}`}
             data={series.map(({ line, points }) => ({ name: line.label, color: palette[line.slot] ?? "#1b7a4f", data: points }))}
           />
           <details className="text-sm">
-            <summary className="cursor-pointer text-kumo-subtle hover:text-kumo-strong">Show as a table</summary>
+            <summary className="cursor-pointer text-kumo-subtle hover:text-kumo-strong">{ANALYTICS.showTable}</summary>
             <div className="mt-3 max-h-80 overflow-auto">
               <table className="w-full text-left tabular-nums">
                 <thead className="sticky top-0 bg-kumo-base text-kumo-subtle">
                   <tr>
-                    <th className="py-1 pr-4 font-medium">{report.resolution === "hour" ? "Hour" : "Day"}</th>
+                    <th className="py-1 pr-4 font-medium">{report.resolution === "hour" ? ANALYTICS.hour : ANALYTICS.day}</th>
                     {series.map(({ line }) => (
                       <th key={line.id} className="py-1 pr-4 text-right font-medium">
                         {line.label}
@@ -547,7 +532,7 @@ function Flag({ code }: { code: string }) {
 }
 
 /** A ranked list: each row's count, with a bar scaled to the largest. */
-function Ranked({ title, rows, note, empty = "Nothing counted in this window." }: { title: string; rows: RankedRow[]; note?: ReactNode; empty?: string }) {
+function Ranked({ title, rows, note, empty = ANALYTICS.nothingCounted }: { title: string; rows: RankedRow[]; note?: ReactNode; empty?: string }) {
   const [all, setAll] = useState(false);
   const top = rows[0]?.requests ?? 0;
   const shown = all ? rows : rows.slice(0, SHOWN);
@@ -591,7 +576,7 @@ function Ranked({ title, rows, note, empty = "Nothing counted in this window." }
         )}
         {rows.length > SHOWN ? (
           <button type="button" onClick={() => setAll(!all)} className="justify-self-start text-sm text-kumo-subtle hover:text-kumo-strong">
-            {all ? "Show fewer" : `Show all ${fmt.int(rows.length)}`}
+            {all ? ANALYTICS.showFewer : ANALYTICS.showAll(fmt.int(rows.length))}
           </button>
         ) : null}
       </LayerCard.Primary>

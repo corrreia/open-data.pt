@@ -12,9 +12,11 @@ import { Shell } from "../components/Shell";
 import { RowDialog } from "../components/product/RecordDialog";
 import { productHref } from "../lib/api";
 import { fetchFeeds, fetchProducts, formatOf } from "../lib/catalog";
-import { fmt, plural } from "../lib/format";
+import { fmt } from "../lib/format";
+import { localHref } from "../lib/locale";
 import { useQuery } from "../lib/query";
 import type { Acquisition, Feed, JsonRecord, Product } from "../lib/types";
+import { OPERATIONS } from "../text/operations";
 
 interface PageSection {
   id: string;
@@ -22,9 +24,9 @@ interface PageSection {
 }
 
 const SECTIONS: PageSection[] = [
-  { id: "activity", label: "Activity" },
-  { id: "feeds", label: "Feeds" },
-  { id: "acquisitions", label: "Acquisitions" },
+  { id: "activity", label: OPERATIONS.sections.activity },
+  { id: "feeds", label: OPERATIONS.sections.feeds },
+  { id: "acquisitions", label: OPERATIONS.sections.acquisitions },
 ];
 
 function groupBy<T>(items: T[], key: (item: T) => string) {
@@ -42,7 +44,7 @@ interface Named {
 }
 
 /** A few names inline; the rest behind a "+N" popover, so a policy used by twenty feeds keeps its card short. */
-function NameList({ items, shown = 2, noun }: { items: Named[]; shown?: number; noun: string }) {
+function NameList({ items, shown = 2, more }: { items: Named[]; shown?: number; more: (count: number) => string }) {
   if (items.length === 0) return <span className="text-kumo-subtle">—</span>;
   const rest = items.slice(shown);
   const name = (item: Named) =>
@@ -66,7 +68,7 @@ function NameList({ items, shown = 2, noun }: { items: Named[]; shown?: number; 
       ))}
       {rest.length ? (
         <Popover>
-          <Popover.Trigger render={<Button variant="secondary" size="sm" aria-label={`${plural(rest.length, `more ${noun}`)}`} />}>+{rest.length}</Popover.Trigger>
+          <Popover.Trigger render={<Button variant="secondary" size="sm" aria-label={more(rest.length)} />}>+{rest.length}</Popover.Trigger>
           <Popover.Content className="max-h-72 w-72 max-w-[90vw] overflow-y-auto p-3">
             <ul className="grid gap-1.5 text-sm">
               {rest.map((item) => (
@@ -104,7 +106,7 @@ interface FeedRow {
 const FEED_COLUMNS: Column<FeedRow>[] = [
   {
     key: "feed",
-    header: "Feed",
+    header: OPERATIONS.columns.feed,
     sort: (row) => row.feed.title,
     text: (row) => `${row.feed.title} ${row.feed.publisher.name} ${row.source}`,
     className: "min-w-[16rem] whitespace-normal",
@@ -117,10 +119,17 @@ const FEED_COLUMNS: Column<FeedRow>[] = [
       </span>
     ),
   },
-  { key: "cadence", header: "Cadence", className: "whitespace-nowrap", sort: (row) => row.cadence, text: (row) => fmt.every(row.cadence), cell: (row) => fmt.every(row.cadence) },
+  {
+    key: "cadence",
+    header: OPERATIONS.columns.cadence,
+    className: "whitespace-nowrap",
+    sort: (row) => row.cadence,
+    text: (row) => fmt.every(row.cadence),
+    cell: (row) => fmt.every(row.cadence),
+  },
   {
     key: "lastSuccess",
-    header: "Last success",
+    header: OPERATIONS.columns.lastSuccess,
     mono: true,
     className: "whitespace-nowrap",
     sort: (row) => row.feed.lastSuccessAt,
@@ -128,20 +137,20 @@ const FEED_COLUMNS: Column<FeedRow>[] = [
   },
   {
     key: "nextRun",
-    header: "Next run",
+    header: OPERATIONS.columns.nextRun,
     mono: true,
     className: "whitespace-nowrap",
     sort: (row) => (row.feed.enabled ? row.feed.nextRunAt : undefined),
     text: () => "",
-    cell: (row) => (row.feed.enabled ? <Countdown value={row.feed.nextRunAt} /> : <span className="text-kumo-subtle">paused</span>),
+    cell: (row) => (row.feed.enabled ? <Countdown value={row.feed.nextRunAt} /> : <span className="text-kumo-subtle">{OPERATIONS.paused}</span>),
   },
-  { key: "health", header: "Status", sort: (row) => row.label, cell: (row) => <HealthBadge feed={row.feed} health={row.health} /> },
+  { key: "health", header: OPERATIONS.columns.status, sort: (row) => row.label, cell: (row) => <HealthBadge feed={row.feed} health={row.health} /> },
   {
     key: "products",
-    header: "Products",
+    header: OPERATIONS.columns.products,
     text: (row) => row.products.map((product) => product.title).join(" "),
     className: "min-w-[15rem] whitespace-normal",
-    cell: (row) => <NameList items={productLinks(row.products)} noun="products" />,
+    cell: (row) => <NameList items={productLinks(row.products)} more={OPERATIONS.moreProducts} />,
   },
 ];
 
@@ -170,12 +179,12 @@ function FeedsSection({ feeds, productsByFeed, loading }: { feeds: Feed[]; produ
 
   return (
     <section id="feeds" aria-labelledby="feeds-title">
-      <SectionHead eyebrow="Feeds" title="What is being collected" id="feeds-title">
-        Every collection job, the publisher it reads from, how often it runs and how it is doing. Each feed publishes one or more products.
+      <SectionHead eyebrow={OPERATIONS.feedsEyebrow} title={OPERATIONS.feedsTitle} id="feeds-title">
+        {OPERATIONS.feedsBody}
       </SectionHead>
       <div className="grid gap-4">
         {rows.length ? (
-          <p className="flex flex-wrap items-center gap-2 text-sm" aria-label="Feeds by status">
+          <p className="flex flex-wrap items-center gap-2 text-sm" aria-label={OPERATIONS.feedsByStatus}>
             {HEALTH_ORDER.filter((health) => counts.has(health)).map((health) => (
               <span key={health} className="inline-flex items-center gap-1.5">
                 <HealthWord health={health} />
@@ -186,18 +195,18 @@ function FeedsSection({ feeds, productsByFeed, loading }: { feeds: Feed[]; produ
         ) : null}
         {loading && rows.length === 0 ? (
           <div className="flex items-center gap-2 text-sm text-kumo-subtle">
-            <Loader size="sm" /> Loading feeds…
+            <Loader size="sm" /> {OPERATIONS.loadingFeeds}
           </div>
         ) : (
           <DataTable
-            label="Feeds"
+            label={OPERATIONS.feedsLabel}
             rows={rows}
             columns={FEED_COLUMNS}
             rowKey={(row) => row.feed.id}
-            filterPlaceholder="Filter by feed, publisher, status…"
+            filterPlaceholder={OPERATIONS.filterFeeds}
             downloadName="feeds"
             maxHeight="min(65vh, 34rem)"
-            empty="No feeds yet. Feeds install themselves within minutes of a deploy."
+            empty={OPERATIONS.noFeeds}
             exportRow={(row) => ({
               id: row.feed.id,
               slug: row.feed.slug,
@@ -249,56 +258,56 @@ const tookOf = (acquisition: Acquisition) =>
 
 function outcomeOf(acquisition: Acquisition) {
   if (acquisition.error) return acquisition.error;
-  if (acquisition.status === "unchanged") return "Source unchanged";
-  return acquisition.eventTime ? `data through ${fmt.dateTime(acquisition.eventTime)}` : "";
+  if (acquisition.status === "unchanged") return OPERATIONS.sourceUnchanged;
+  return acquisition.eventTime ? OPERATIONS.dataThrough(fmt.dateTime(acquisition.eventTime)) : "";
 }
 
 const ACQUISITION_COLUMNS: Column<AcquisitionRow>[] = [
   {
     key: "status",
-    header: "Status",
+    header: OPERATIONS.columns.status,
     sort: (row) => runStatus(row.acquisition.status).label,
     text: (row) => `${runStatus(row.acquisition.status).label} ${row.acquisition.status}`,
     cell: (row) => <RunBadge status={row.acquisition.status} />,
   },
   {
     key: "feed",
-    header: "Feed",
+    header: OPERATIONS.columns.feed,
     sort: (row) => row.feedTitle,
     className: "min-w-[14rem] whitespace-normal",
     cell: (row) => <span className="font-medium text-kumo-strong">{row.feedTitle}</span>,
   },
   {
     key: "requested",
-    header: "Requested",
+    header: OPERATIONS.columns.requested,
     mono: true,
     className: "whitespace-nowrap",
     sort: (row) => row.acquisition.requestedAt,
     text: () => "",
     cell: (row) => <RelativeTime value={row.acquisition.requestedAt} />,
   },
-  { key: "took", header: "Took", align: "end", className: "whitespace-nowrap", sort: (row) => row.took, cell: (row) => fmt.took(row.took) },
+  { key: "took", header: OPERATIONS.columns.took, align: "end", className: "whitespace-nowrap", sort: (row) => row.took, cell: (row) => fmt.took(row.took) },
   {
     key: "observed",
-    header: "Observed",
+    header: OPERATIONS.columns.observed,
     mono: true,
     className: "whitespace-nowrap",
     sort: (row) => row.acquisition.observedAt,
     text: () => "",
     cell: (row) => fmt.dateTime(row.acquisition.observedAt),
   },
-  { key: "completeness", header: "Completeness", sort: (row) => row.acquisition.completeness, cell: (row) => row.acquisition.completeness ?? "—" },
-  { key: "rows", header: "Rows", align: "end", sort: (row) => row.acquisition.rows, cell: (row) => fmt.int(row.acquisition.rows) },
-  { key: "changes", header: "Changes", align: "end", sort: (row) => row.acquisition.revisions, cell: (row) => fmt.int(row.acquisition.revisions) },
+  { key: "completeness", header: OPERATIONS.columns.completeness, sort: (row) => row.acquisition.completeness, cell: (row) => row.acquisition.completeness ?? "—" },
+  { key: "rows", header: OPERATIONS.columns.rows, align: "end", sort: (row) => row.acquisition.rows, cell: (row) => fmt.int(row.acquisition.rows) },
+  { key: "changes", header: OPERATIONS.columns.changes, align: "end", sort: (row) => row.acquisition.revisions, cell: (row) => fmt.int(row.acquisition.revisions) },
   {
     key: "trigger",
-    header: "Trigger",
+    header: OPERATIONS.columns.trigger,
     sort: (row) => triggerLabel(row.acquisition.trigger),
     cell: (row) => <span className="text-kumo-subtle">{triggerLabel(row.acquisition.trigger)}</span>,
   },
   {
     key: "outcome",
-    header: "Outcome",
+    header: OPERATIONS.columns.outcome,
     sort: (row) => row.outcome,
     className: "min-w-[16rem] whitespace-normal",
     cell: (row) => (
@@ -326,37 +335,37 @@ function AcquisitionsSection({ feeds, feedsById }: { feeds: Feed[]; feedsById: M
     [acquisitions.data, feedsById],
   );
   const items = useMemo(
-    () => [{ label: "All feeds", value: ALL_FEEDS }, ...[...feeds].sort((a, b) => a.title.localeCompare(b.title)).map((feed) => ({ label: feed.title, value: feed.id }))],
+    () => [{ label: OPERATIONS.allFeeds, value: ALL_FEEDS }, ...[...feeds].sort((a, b) => a.title.localeCompare(b.title)).map((feed) => ({ label: feed.title, value: feed.id }))],
     [feeds],
   );
 
   return (
     <section id="acquisitions" aria-labelledby="acquisitions-title">
-      <SectionHead eyebrow="Acquisitions" title="Every attempt, including the failed ones" id="acquisitions-title">
-        The newest hundred attempts the runners made, of every feed or of one. Sort by how long one took, or filter for the failures.
+      <SectionHead eyebrow={OPERATIONS.acquisitionsEyebrow} title={OPERATIONS.acquisitionsTitle} id="acquisitions-title">
+        {OPERATIONS.acquisitionsBody}
       </SectionHead>
       <div className="grid gap-3">
-        <ErrorNote error={acquisitions.error} what="the runs" onRetry={() => void acquisitions.refetch()} />
+        <ErrorNote error={acquisitions.error} what={OPERATIONS.runsWhat} onRetry={() => void acquisitions.refetch()} />
         <DataTable
-          label="Acquisitions"
+          label={OPERATIONS.acquisitionsLabel}
           rows={rows}
           columns={ACQUISITION_COLUMNS}
           rowKey={(row) => row.acquisition.id}
           initialSort={{ key: "requested", direction: "desc" }}
-          filterPlaceholder="Filter by feed, status, error…"
+          filterPlaceholder={OPERATIONS.filterAcquisitions}
           downloadName={feedId ? `acquisitions-${feedsById.get(feedId)?.slug ?? feedId}` : "acquisitions"}
-          empty={acquisitions.loading ? "Loading acquisitions…" : "No runs yet. Collection starts within minutes of a deploy."}
+          empty={acquisitions.loading ? OPERATIONS.loadingAcquisitions : OPERATIONS.noRuns}
           toolbar={
             <>
               <Select
-                aria-label="Filter by feed"
+                aria-label={OPERATIONS.filterByFeed}
                 className="w-64 max-w-full"
                 value={feedId || ALL_FEEDS}
                 onValueChange={(value: string | null) => setFeedId(!value || value === ALL_FEEDS ? "" : value)}
                 items={items}
               />
               <Button variant="ghost" icon={<ArrowClockwiseIcon />} loading={acquisitions.fetching} onClick={() => void acquisitions.refetch()}>
-                Refresh
+                {OPERATIONS.refresh}
               </Button>
             </>
           }
@@ -420,15 +429,14 @@ function Operations() {
   return (
     <Shell section="operations">
       <div className="grid gap-6">
-        <PageHead eyebrow="Operations" title="Every feed, every attempt.">
-          Nobody starts or stops anything: feeds install themselves, collect on their own cadence, and retry by themselves when something breaks. This page shows what each feed
-          collects and what every run produced. The{" "}
-          <a href="/status/" className="font-medium text-kumo-link">
-            status page
-          </a>{" "}
-          shows collection hour by hour over the last three days.
+        <PageHead eyebrow={OPERATIONS.eyebrow} title={OPERATIONS.title}>
+          {OPERATIONS.intro(
+            <a href={localHref("/status/")} className="font-medium text-kumo-link">
+              {OPERATIONS.statusPage}
+            </a>,
+          )}
         </PageHead>
-        <nav aria-label="On this page" className="flex flex-wrap gap-1.5">
+        <nav aria-label={OPERATIONS.onThisPage} className="flex flex-wrap gap-1.5">
           {SECTIONS.map((section) => (
             <a
               key={section.id}
@@ -441,7 +449,7 @@ function Operations() {
         </nav>
         <ErrorNote
           error={feeds.error ?? products.error}
-          what="the feeds"
+          what={OPERATIONS.feedsWhat}
           onRetry={() => {
             void feeds.refetch();
             void products.refetch();

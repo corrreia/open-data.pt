@@ -3,6 +3,8 @@ import { BarChart, LineChart, MapChart, ScatterChart } from "echarts/charts";
 import { AriaComponent, DataZoomComponent, GridComponent, LegendComponent, MarkLineComponent, TooltipComponent, VisualMapComponent } from "echarts/components";
 import * as echarts from "echarts/core";
 import { CanvasRenderer } from "echarts/renderers";
+import { ECHARTS_PT } from "../text/echarts";
+import { LOCALE } from "./locale";
 
 echarts.use([
   LineChart,
@@ -44,6 +46,13 @@ interface StyledOption {
   animation?: boolean;
   tooltip?: StyledTooltip | StyledTooltip[];
 }
+
+/*
+ * Kumo's charts call `echarts.init` without a locale, so every chart takes ECharts' default, which
+ * is English. On a Portuguese page the Portuguese words are registered under that default's name:
+ * month names on time axes and what the accessibility layer reads out follow the page.
+ */
+if (LOCALE === "pt") echarts.registerLocale("EN", ECHARTS_PT);
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 

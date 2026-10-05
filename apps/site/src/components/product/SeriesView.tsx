@@ -9,10 +9,14 @@ import { echarts } from "../../lib/echarts";
 import { SERIES_COLORS } from "../../lib/palette";
 import { fmt } from "../../lib/format";
 import { periodStart } from "../../lib/lisbon";
+import { INTL_LOCALE } from "../../lib/locale";
 import { useQuery } from "../../lib/query";
 import type { CursorPage, JsonRecord, Product, SeriesPoint, SeriesSummary, SummaryBucket, SummaryResolution } from "../../lib/types";
 import { seriesLabel } from "./cells";
 import { RowDialog } from "./RecordDialog";
+import { DATE_PICKER } from "../../text/date-picker";
+import { SERIES } from "../../text/series";
+import { LOADING } from "../../text/product";
 
 const CHARTED = 10;
 const BARS = 25;
@@ -34,11 +38,11 @@ interface Preset {
 }
 
 const PRESETS: Preset[] = [
-  { id: "7d", label: "7 days", ms: 7 * DAY },
-  { id: "30d", label: "30 days", ms: 30 * DAY },
-  { id: "1y", label: "1 year", ms: 365 * DAY },
+  { id: "7d", label: SERIES.presets["7d"], ms: 7 * DAY },
+  { id: "30d", label: SERIES.presets["30d"], ms: 30 * DAY },
+  { id: "1y", label: SERIES.presets["1y"], ms: 365 * DAY },
   // By month, summaries reach back decades; the chart starts where the product's history does.
-  { id: "all", label: "All", ms: 40 * 365 * DAY },
+  { id: "all", label: SERIES.presets.all, ms: 40 * 365 * DAY },
 ];
 
 interface TimeWindow {
@@ -57,12 +61,10 @@ function windowOf(span: Span): TimeWindow | undefined {
   return { from: new Date(to - span.preset.ms).toISOString(), to: new Date(to).toISOString() };
 }
 
-const RESOLUTION_LABEL = { hour: "Hourly averages", day: "Daily averages, Lisbon days", month: "Monthly averages, Lisbon months" } satisfies {
-  [resolution in SummaryResolution]: string;
-};
+const RESOLUTION_LABEL = SERIES.resolution;
 
-const lisbonDate = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Lisbon", day: "numeric", month: "short", year: "numeric" });
-const lisbonMonth = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Lisbon", month: "short", year: "numeric" });
+const lisbonDate = new Intl.DateTimeFormat(INTL_LOCALE, { timeZone: "Europe/Lisbon", day: "numeric", month: "short", year: "numeric" });
+const lisbonMonth = new Intl.DateTimeFormat(INTL_LOCALE, { timeZone: "Europe/Lisbon", month: "short", year: "numeric" });
 const dayLabel = (value: string | number) => lisbonDate.format(new Date(value));
 
 function periodLabel(start: string, resolution: SummaryResolution) {
@@ -145,7 +147,8 @@ function summaryOptions(lines: SummaryLine[], palette: readonly string[], unit: 
           const line = Math.floor((item.seriesIndex ?? 0) / 3);
           const row = rows[line]?.[item.dataIndex];
           if (!row) return "";
-          const range = row[4] > 1 ? ` <span style="opacity:.7">(${fmt.cell(row[2], "number")}–${fmt.cell(row[3], "number")}, ${fmt.int(row[4])} points)</span>` : "";
+          const range =
+            row[4] > 1 ? ` <span style="opacity:.7">(${fmt.cell(row[2], "number")}–${fmt.cell(row[3], "number")}, ${escapeHtml(SERIES.points(fmt.int(row[4])))})</span>` : "";
           return `${item.marker ?? ""}${escapeHtml(item.seriesName ?? "")}: <b>${fmt.cell(row[1], "number")}${escapeHtml(suffix)}</b>${range}`;
         });
         return [heading, ...lines].filter(Boolean).join("<br/>");
@@ -157,7 +160,7 @@ function summaryOptions(lines: SummaryLine[], palette: readonly string[], unit: 
       return [
         // The band: the lowest value, then the height up to the highest, stacked and shaded.
         {
-          name: `${line.label} low`,
+          name: SERIES.low(line.label),
           type: "line",
           stack: `band-${index}`,
           data: bucketRows.map((row) => [row[0], row[2]]),
@@ -166,7 +169,7 @@ function summaryOptions(lines: SummaryLine[], palette: readonly string[], unit: 
           silent: true,
         },
         {
-          name: `${line.label} range`,
+          name: SERIES.range(line.label),
           type: "line",
           stack: `band-${index}`,
           data: bucketRows.map((row) => [row[0], row[3] - row[2]]),
@@ -290,23 +293,23 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
 
   const columns = useMemo<Column<SeriesPoint>[]>(
     () => [
-      { key: "series", header: "Series", cell: (point) => seriesLabel(point), sort: (point) => seriesLabel(point) },
-      { key: "eventTime", header: "Event time", cell: (point) => fmt.dateTime(point.eventTime), sort: (point) => point.eventTime, mono: true },
-      { key: "value", header: mixed ? "Value" : `Value${unit ? ` (${unit})` : ""}`, cell: (point) => fmt.cell(point.value, "number"), sort: (point) => point.value, align: "end" },
-      ...(mixed ? [{ key: "unit", header: "Unit", cell: (point: SeriesPoint) => point.unit, sort: (point: SeriesPoint) => point.unit }] : []),
-      { key: "observedAt", header: "Observed", cell: (point) => <RelativeTime value={point.observedAt} />, sort: (point) => point.observedAt, mono: true },
+      { key: "series", header: SERIES.series, cell: (point) => seriesLabel(point), sort: (point) => seriesLabel(point) },
+      { key: "eventTime", header: SERIES.eventTime, cell: (point) => fmt.dateTime(point.eventTime), sort: (point) => point.eventTime, mono: true },
+      { key: "value", header: mixed ? SERIES.value : SERIES.valueIn(unit), cell: (point) => fmt.cell(point.value, "number"), sort: (point) => point.value, align: "end" },
+      ...(mixed ? [{ key: "unit", header: SERIES.unit, cell: (point: SeriesPoint) => point.unit, sort: (point: SeriesPoint) => point.unit }] : []),
+      { key: "observedAt", header: SERIES.observed, cell: (point) => <RelativeTime value={point.observedAt} />, sort: (point) => point.observedAt, mono: true },
     ],
     [unit, mixed],
   );
   const resolution = summary.data?.resolution ?? "hour";
   const summaryColumns = useMemo<Column<SummaryRow>[]>(
     () => [
-      { key: "series", header: "Series", cell: (row) => row.label, sort: (row) => row.label },
-      { key: "start", header: "Period", cell: (row) => periodLabel(row.start, resolution), sort: (row) => row.start, mono: true },
-      { key: "mean", header: `Average${unit ? ` (${unit})` : ""}`, cell: (row) => fmt.cell(row.mean, "number"), sort: (row) => row.mean, align: "end" },
-      { key: "min", header: "Lowest", cell: (row) => fmt.cell(row.min, "number"), sort: (row) => row.min, align: "end" },
-      { key: "max", header: "Highest", cell: (row) => fmt.cell(row.max, "number"), sort: (row) => row.max, align: "end" },
-      { key: "count", header: "Points", cell: (row) => fmt.int(row.count), sort: (row) => row.count, align: "end" },
+      { key: "series", header: SERIES.series, cell: (row) => row.label, sort: (row) => row.label },
+      { key: "start", header: SERIES.period, cell: (row) => periodLabel(row.start, resolution), sort: (row) => row.start, mono: true },
+      { key: "mean", header: SERIES.average(unit), cell: (row) => fmt.cell(row.mean, "number"), sort: (row) => row.mean, align: "end" },
+      { key: "min", header: SERIES.lowest, cell: (row) => fmt.cell(row.min, "number"), sort: (row) => row.min, align: "end" },
+      { key: "max", header: SERIES.highest, cell: (row) => fmt.cell(row.max, "number"), sort: (row) => row.max, align: "end" },
+      { key: "count", header: SERIES.pointsHeader, cell: (row) => fmt.int(row.count), sort: (row) => row.count, align: "end" },
     ],
     [unit, resolution],
   );
@@ -314,15 +317,12 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
   if (current.loading) {
     return (
       <div className="flex items-center gap-2 py-10 text-sm text-kumo-subtle">
-        <Loader size="sm" /> Loading series…
+        <Loader size="sm" aria-label={LOADING} /> {SERIES.loading}
       </div>
     );
   }
-  if (current.error && points.length === 0) return <ErrorNote error={current.error} what="the series" onRetry={() => void current.refetch()} />;
-  if (points.length === 0)
-    return (
-      <Empty icon={<ChartLineIcon size={40} className="text-kumo-inactive" />} title="No points yet" description="Series points appear after the first successful collection." />
-    );
+  if (current.error && points.length === 0) return <ErrorNote error={current.error} what={SERIES.theSeries} onRetry={() => void current.refetch()} />;
+  if (points.length === 0) return <Empty icon={<ChartLineIcon size={40} className="text-kumo-inactive" />} title={SERIES.noPoints} description={SERIES.noPointsText} />;
 
   const oldest = shown.flatMap((each) => each.points.map((point) => point.eventTime)).sort()[0];
   const coverage = summary.data?.coverage;
@@ -334,25 +334,21 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
   const shownFrom = timeWindow && firstStart && Date.parse(firstStart) - Date.parse(timeWindow.from) > 31 * DAY ? firstStart : undefined;
   const coverageNote = (() => {
     if (!timeWindow)
-      return snapshot
-        ? `Latest value of the ${Math.min(BARS, bars.length)} largest series`
-        : shown.length > CHARTED
-          ? `${CHARTED} of ${fmt.int(shown.length)} series drawn; the table has all of them`
-          : "Hover for values";
-    if (summary.error) return `Could not load this span: ${summary.error.message}`;
+      return snapshot ? SERIES.latestOfLargest(Math.min(BARS, bars.length)) : shown.length > CHARTED ? SERIES.someDrawn(CHARTED, fmt.int(shown.length)) : SERIES.hover;
+    if (summary.error) return SERIES.spanFailed(summary.error.message);
     if (!coverage) return "";
-    if (!coverage.through) return "Summaries appear a day after each day ends; until then the chart shows live points.";
-    if (tail.error) return `Could not load the latest points: ${tail.error.message}`;
-    return lines.some((line) => line.live) ? "The last day or two come from live points" : "";
+    if (!coverage.through) return SERIES.summariesLater;
+    if (tail.error) return SERIES.latestFailed(tail.error.message);
+    return lines.some((line) => line.live) ? SERIES.fromLive : "";
   })();
 
   return (
     <div className="grid gap-5">
       {withHistory ? (
         <div className="grid gap-3">
-          <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Time span">
+          <div className="flex flex-wrap items-center gap-2" role="group" aria-label={SERIES.timeSpan}>
             <Button size="sm" variant={span.kind === "live" ? "primary" : "secondary"} aria-pressed={span.kind === "live"} onClick={() => choose({ kind: "live" })}>
-              Live
+              {SERIES.live}
             </Button>
             {PRESETS.map((preset) => {
               const active = span.kind === "preset" && span.preset.id === preset.id;
@@ -369,19 +365,28 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
               aria-expanded={picking}
               onClick={() => setPicking((open) => !open)}
             >
-              {span.kind === "custom" ? `${dayLabel(span.window.from)} – ${dayLabel(Date.parse(span.window.to) - DAY)}` : "Dates…"}
+              {span.kind === "custom" ? `${dayLabel(span.window.from)} – ${dayLabel(Date.parse(span.window.to) - DAY)}` : SERIES.dates}
             </Button>
           </div>
           {picking ? (
             <LayerCard>
               <LayerCard.Primary className="grid justify-items-start gap-3">
-                <DatePicker mode="range" selected={picked} onChange={setPicked} numberOfMonths={window.innerWidth >= 640 ? 2 : 1} disabled={{ after: new Date() }} />
+                <DatePicker
+                  mode="range"
+                  selected={picked}
+                  onChange={setPicked}
+                  numberOfMonths={window.innerWidth >= 640 ? 2 : 1}
+                  disabled={{ after: new Date() }}
+                  weekStartsOn={DATE_PICKER.weekStartsOn}
+                  formatters={DATE_PICKER.formatters}
+                  labels={DATE_PICKER.labels}
+                />
                 <div className="flex flex-wrap gap-2">
                   <Button size="sm" variant="primary" disabled={!picked?.from || !picked.to} onClick={apply}>
-                    Show these dates
+                    {SERIES.showDates}
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => setPicking(false)}>
-                    Cancel
+                    {SERIES.cancel}
                   </Button>
                 </div>
               </LayerCard.Primary>
@@ -391,10 +396,10 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
       ) : null}
 
       {mixed ? (
-        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Unit">
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label={SERIES.unitGroup}>
           {units.map((each) => (
             <Button key={each} size="sm" variant={each === unit ? "primary" : "secondary"} aria-pressed={each === unit} onClick={() => setPickedUnit(each)}>
-              {each || "No unit"}
+              {each || SERIES.noUnit}
             </Button>
           ))}
         </div>
@@ -404,8 +409,8 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
         <LayerCard.Secondary className="flex flex-wrap items-center justify-between gap-2 text-xs">
           <span>
             {timeWindow
-              ? `${summary.data ? RESOLUTION_LABEL[summary.data.resolution] : "Loading"} · ${shownFrom ? periodLabel(shownFrom, resolution === "month" ? "month" : "day") : dayLabel(timeWindow.from)} – ${dayLabel(Date.parse(timeWindow.to) - 1)}${unit ? ` · ${unit}` : ""}`
-              : `${unit || "Value"} · ${fmt.int(shown.reduce((total, each) => total + each.points.length, 0))} points in ${fmt.int(shown.length)} series${oldest ? ` · since ${fmt.date(oldest)}` : ""}`}
+              ? `${summary.data ? RESOLUTION_LABEL[summary.data.resolution] : SERIES.loadingShort} · ${shownFrom ? periodLabel(shownFrom, resolution === "month" ? "month" : "day") : dayLabel(timeWindow.from)} – ${dayLabel(Date.parse(timeWindow.to) - 1)}${unit ? ` · ${unit}` : ""}`
+              : `${unit || SERIES.value} · ${SERIES.pointsIn(fmt.int(shown.reduce((total, each) => total + each.points.length, 0)), fmt.int(shown.length))}${oldest ? ` · ${SERIES.since(fmt.date(oldest))}` : ""}`}
           </span>
           <span className="text-kumo-subtle">{coverageNote}</span>
         </LayerCard.Secondary>
@@ -413,14 +418,10 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
           {timeWindow ? (
             summary.loading ? (
               <div className="flex h-[380px] items-center justify-center gap-2 text-sm text-kumo-subtle">
-                <Loader size="sm" /> Loading this span…
+                <Loader size="sm" aria-label={LOADING} /> {SERIES.loadingSpan}
               </div>
             ) : lines.length === 0 ? (
-              <Empty
-                icon={<ChartLineIcon size={40} className="text-kumo-inactive" />}
-                title="Nothing in this span"
-                description="No summarised or live points fall between these dates."
-              />
+              <Empty icon={<ChartLineIcon size={40} className="text-kumo-inactive" />} title={SERIES.nothingInSpan} description={SERIES.nothingInSpanText} />
             ) : (
               <Chart echarts={echarts} isDarkMode={dark} height={380} options={summaryOptions(lines, palette, unit, summary.data?.resolution ?? "hour")} />
             )
@@ -474,7 +475,7 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
 
       {timeWindow && summaryRows.length > 0 ? (
         <DataTable
-          label={`${product.title} summaries`}
+          label={SERIES.summaries(product.title)}
           rows={summaryRows}
           columns={summaryColumns}
           rowKey={(row) => `${row.key}|${row.start}`}
@@ -500,7 +501,7 @@ export default function SeriesView({ product, refreshKey, withHistory }: { produ
         />
       ) : (
         <DataTable
-          label={`${product.title} points`}
+          label={SERIES.pointsLabel(product.title)}
           rows={points}
           columns={columns}
           rowKey={pointKey}

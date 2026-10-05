@@ -7,6 +7,7 @@ import type { ChartSpec, MapSpec, TableSpec, Visual } from "../../lib/ask";
 import { echarts } from "../../lib/echarts";
 import { fmt, isNumber, isRecord } from "../../lib/format";
 import { SERIES_COLORS } from "../../lib/palette";
+import { ASK } from "../../text/ask";
 import { useDarkMode } from "../common";
 
 // What the agent's code drew with ui.chart, ui.map and ui.table, under its answer. The model wrote
@@ -74,7 +75,7 @@ function ChartVisual({ spec }: { spec: ChartSpec }) {
  * for a Referer, so the layer sets its own referrer policy.
  */
 const OSM = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
-const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+const ATTRIBUTION = `&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> ${ASK.mapAttribution}`;
 
 /**
  * Low to high, for points the model gave a value: viridis, light yellow to dark violet. Its lightness
@@ -118,7 +119,10 @@ function MapVisual({ spec }: { spec: MapSpec }) {
       markerZoomAnimation: !still,
       scrollWheelZoom: false,
       dragging: !L.Browser.mobile,
+      // Leaflet's own buttons are in English; these say the same in the page's language.
+      zoomControl: false,
     });
+    L.control.zoom({ zoomInTitle: ASK.zoomIn, zoomOutTitle: ASK.zoomOut }).addTo(map);
     L.tileLayer(OSM, { maxZoom: 19, attribution: ATTRIBUTION, referrerPolicy: "strict-origin-when-cross-origin", crossOrigin: true }).addTo(map);
     const drawn = L.featureGroup().addTo(map);
 
@@ -163,12 +167,12 @@ function MapVisual({ spec }: { spec: MapSpec }) {
       {values.length ? (
         <div className="flex items-center gap-2 text-xs text-kumo-subtle">
           <span>
-            <span className="sr-only">Colour runs from low, </span>
+            <span className="sr-only">{ASK.colourFromLow}</span>
             {fmt.cell(Math.min(...values), "number")}
           </span>
           <span className="h-2 flex-1 rounded-full" aria-hidden="true" style={{ background: `linear-gradient(to right, ${RAMP.join(", ")})` }} />
           <span>
-            <span className="sr-only">to high, </span>
+            <span className="sr-only">{ASK.toHigh}</span>
             {fmt.cell(Math.max(...values), "number")}
           </span>
         </div>
@@ -221,7 +225,7 @@ function chartTable(spec: ChartSpec): TableSpec {
   const bySeries = spec.series.map((each) => new Map(each.points.map(([x, y]) => [key(x), y])));
   return {
     title: spec.title,
-    columns: [spec.kind === "line" ? "Time" : "Category", ...spec.series.map((each) => (spec.unit ? `${each.name} (${spec.unit})` : each.name))],
+    columns: [spec.kind === "line" ? ASK.time : ASK.category, ...spec.series.map((each) => (spec.unit ? `${each.name} (${spec.unit})` : each.name))],
     rows: xs.map((x) => [spec.kind === "line" ? fmt.dateTime(instant(x)) : String(x), ...bySeries.map((values) => values.get(x) ?? null)]),
   };
 }
@@ -234,7 +238,7 @@ function mapTable(spec: MapSpec): TableSpec | undefined {
   const valued = points.some((point) => point.value !== undefined);
   return {
     title: spec.title,
-    columns: valued ? ["Place", "Value", "Latitude", "Longitude"] : ["Place", "Latitude", "Longitude"],
+    columns: valued ? [ASK.place, ASK.value, ASK.latitude, ASK.longitude] : [ASK.place, ASK.latitude, ASK.longitude],
     rows: points.map((point) => (valued ? [point.label ?? "", point.value ?? null, point.lat, point.lon] : [point.label ?? "", point.lat, point.lon])),
   };
 }
@@ -249,7 +253,7 @@ function featureTable(title: string, features: GeoJSON.Feature[]): TableSpec {
       .join(" · ");
   return {
     title,
-    columns: ["Name", "Shape", "Details"],
+    columns: [ASK.name, ASK.geometry, ASK.details],
     rows: features.map((feature) => [String(feature.properties?.name ?? feature.properties?.title ?? feature.id ?? ""), feature.geometry.type, describe(feature.properties)]),
   };
 }
@@ -260,14 +264,10 @@ function AsTable({ spec }: { spec: TableSpec | undefined }) {
   const shown = spec.rows.length > MAX_TABLE_ROWS ? { ...spec, rows: spec.rows.slice(0, MAX_TABLE_ROWS) } : spec;
   return (
     <details className="text-xs">
-      <summary className="cursor-pointer py-1 text-kumo-subtle hover:text-kumo-strong">Show as a table</summary>
+      <summary className="cursor-pointer py-1 text-kumo-subtle hover:text-kumo-strong">{ASK.showAsTable}</summary>
       <div className="mt-2 grid gap-1">
         <TableVisual spec={shown} />
-        {shown !== spec ? (
-          <p className="text-kumo-subtle">
-            The first {fmt.int(MAX_TABLE_ROWS)} of {fmt.int(spec.rows.length)} rows.
-          </p>
-        ) : null}
+        {shown !== spec ? <p className="text-kumo-subtle">{ASK.firstRows(MAX_TABLE_ROWS, spec.rows.length)}</p> : null}
       </div>
     </details>
   );

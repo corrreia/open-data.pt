@@ -3,7 +3,9 @@ import { CaretDownIcon, CaretUpDownIcon, CaretUpIcon, DownloadSimpleIcon, Magnif
 import { useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
 import { searchable, searchWords } from "../lib/catalog";
 import { fmt } from "../lib/format";
+import { INTL_LOCALE } from "../lib/locale";
 import type { JsonRecord, JsonValue } from "../lib/types";
+import { TABLE } from "../text/records";
 
 export type SortValue = string | number | null | undefined;
 
@@ -51,7 +53,7 @@ function compare(a: SortValue, b: SortValue) {
   if (a === null || a === undefined || a === "") return 1;
   if (b === null || b === undefined || b === "") return -1;
   if (Number.isFinite(a) && Number.isFinite(b)) return Number(a) - Number(b);
-  return String(a).localeCompare(String(b), undefined, { numeric: true });
+  return String(a).localeCompare(String(b), INTL_LOCALE, { numeric: true });
 }
 
 function csvValue(value: JsonValue | undefined) {
@@ -141,13 +143,13 @@ export function DataTable<Row>(props: DataTableProps<Row>) {
               setFilter(event.target.value);
               setPage(1);
             }}
-            placeholder={props.filterPlaceholder ?? "Filter rows…"}
-            aria-label={`Filter ${props.label}`}
+            placeholder={props.filterPlaceholder ?? TABLE.filterRows}
+            aria-label={TABLE.filter(props.label)}
           />
         </InputGroup>
         <div className="flex flex-wrap items-center gap-2">
           {props.toolbar}
-          <span className="font-mono text-xs text-kumo-subtle">{filter ? `${fmt.int(sorted.length)} of ${fmt.int(rows.length)}` : fmt.int(rows.length)} rows</span>
+          <span className="font-mono text-xs text-kumo-subtle">{TABLE.rows(filter ? fmt.int(sorted.length) : undefined, fmt.int(rows.length))}</span>
           {exportRow ? (
             <>
               <Button variant="ghost" icon={<DownloadSimpleIcon />} onClick={downloadCsv}>
@@ -212,16 +214,21 @@ export function DataTable<Row>(props: DataTableProps<Row>) {
               ))}
             </Table.Body>
           </Table>
-          {sorted.length === 0 ? (
-            <div className="p-6 text-center text-sm text-kumo-subtle">{rows.length === 0 ? (props.empty ?? "Nothing to show.") : "No row matches that filter."}</div>
-          ) : null}
+          {sorted.length === 0 ? <div className="p-6 text-center text-sm text-kumo-subtle">{rows.length === 0 ? (props.empty ?? TABLE.nothingToShow) : TABLE.noMatch}</div> : null}
         </div>
       </LayerCard>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3 text-xs text-kumo-subtle">{props.footer}</div>
         {sorted.length > pageSize ? (
-          <Pagination page={page} setPage={setPage} perPage={pageSize} totalCount={sorted.length} labels={{ navigation: `${props.label} pages` }} />
+          <Pagination
+            page={page}
+            setPage={setPage}
+            perPage={pageSize}
+            totalCount={sorted.length}
+            labels={{ ...TABLE.pagination, navigation: TABLE.pagination.navigation(props.label) }}
+            text={({ pageShowingRange, totalCount }) => TABLE.showing(pageShowingRange, fmt.int(totalCount))}
+          />
         ) : null}
       </div>
     </div>

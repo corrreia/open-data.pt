@@ -3,7 +3,10 @@ import { BookOpenIcon, BuildingsIcon, ChartLineIcon, CompassIcon, DatabaseIcon, 
 import { useMemo, useState, type ReactNode } from "react";
 import { productHref } from "../lib/api";
 import { buildListings, buildPublishers, fetchFeeds, fetchProducts, listingHaystack, publisherHref, searchable, searchWords } from "../lib/catalog";
+import { localHref } from "../lib/locale";
 import { useQuery } from "../lib/query";
+import { LISTINGS } from "../text/listings";
+import { SEARCH } from "../text/search";
 
 interface SearchItem {
   id: string;
@@ -20,27 +23,50 @@ interface SearchGroup {
   items: SearchItem[];
 }
 
+/** The site's pages, found by their words in either language whichever the page is in, as `searchable` writes them. */
 const PAGES: SearchItem[] = [
-  { id: "page-catalog", title: "Catalog", detail: "Every dataset, with filters", href: "/catalog/", icon: <CompassIcon />, haystack: "catalog datasets browse" },
-  { id: "page-publishers", title: "Publishers", detail: "Who publishes the data", href: "/publisher/", icon: <BuildingsIcon />, haystack: "publishers institutions" },
-  { id: "page-licences", title: "Licences", detail: "The terms the data is served under", href: "/licence/", icon: <ScalesIcon />, haystack: "licences licenses terms reuse" },
-  { id: "page-status", title: "Status", detail: "Is everything being collected", href: "/status/", icon: <HeartbeatIcon />, haystack: "status uptime downtime incidents" },
-  { id: "page-start", title: "Start here", detail: "Use the API in three requests", href: "/start/", icon: <BookOpenIcon />, haystack: "start api docs curl" },
+  {
+    id: "page-catalog",
+    ...SEARCH.pages.catalog,
+    href: localHref("/catalog/"),
+    icon: <CompassIcon />,
+    haystack: "catalog datasets browse catalogo conjuntos dados explorar",
+  },
+  {
+    id: "page-publishers",
+    ...SEARCH.pages.publishers,
+    href: localHref("/publisher/"),
+    icon: <BuildingsIcon />,
+    haystack: "publishers institutions entidades publicadoras instituicoes",
+  },
+  {
+    id: "page-licences",
+    ...SEARCH.pages.licences,
+    href: localHref("/licence/"),
+    icon: <ScalesIcon />,
+    haystack: "licences licenses terms reuse licencas termos reutilizacao",
+  },
+  {
+    id: "page-status",
+    ...SEARCH.pages.status,
+    href: localHref("/status/"),
+    icon: <HeartbeatIcon />,
+    haystack: "status uptime downtime incidents estado disponibilidade falhas incidentes",
+  },
+  { id: "page-start", ...SEARCH.pages.start, href: localHref("/start/"), icon: <BookOpenIcon />, haystack: "start api docs curl comecar documentacao" },
   {
     id: "page-operations",
-    title: "Operations",
-    detail: "Every feed, run and rule",
-    href: "/operations/",
+    ...SEARCH.pages.operations,
+    href: localHref("/operations/"),
     icon: <DatabaseIcon />,
-    haystack: "operations feeds runs policies usage",
+    haystack: "operations feeds runs policies usage operacoes fontes recolhas regras utilizacao",
   },
   {
     id: "page-contribute",
-    title: "Contribute",
-    detail: "Suggest a source, add a dataset, report a problem",
-    href: "/contribute/",
+    ...SEARCH.pages.contribute,
+    href: localHref("/contribute/"),
     icon: <HandHeartIcon />,
-    haystack: "contribute help github source code open source suggest report",
+    haystack: "contribute help github source code open source suggest report contribuir ajudar codigo fonte aberto sugerir avisar problema",
   },
 ];
 
@@ -77,7 +103,7 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
     const publisherItems: SearchItem[] = buildPublishers(listings).map((publisher) => ({
       id: `publisher-${publisher.id}`,
       title: publisher.name,
-      detail: `${publisher.listings.length} ${publisher.listings.length === 1 ? "table or series" : "tables and series"}`,
+      detail: LISTINGS.count(publisher.listings.length),
       href: publisherHref(publisher.id),
       icon: <BuildingsIcon />,
       haystack: searchable(publisher.name),
@@ -90,9 +116,9 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
     const matches = (item: SearchItem) => words.every((word) => item.haystack.includes(word) || searchable(item.title).includes(word));
     const pick = (items: SearchItem[]) => (words.length ? items.filter(matches) : items).slice(0, PER_GROUP);
     return [
-      { id: "listings", label: "Tables and series", items: pick(index.listings) },
-      { id: "publishers", label: "Publishers", items: pick(index.publishers) },
-      { id: "pages", label: "Pages", items: pick(PAGES) },
+      { id: "listings", label: SEARCH.groups.listings, items: pick(index.listings) },
+      { id: "publishers", label: SEARCH.groups.publishers, items: pick(index.publishers) },
+      { id: "pages", label: SEARCH.groups.pages, items: pick(PAGES) },
     ].filter((group) => group.items.length > 0);
   }, [index, search]);
 
@@ -113,12 +139,12 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
       onSelect={(item: SearchItem, details: { newTab: boolean }) => go(item.href, details.newTab)}
       getSelectableItems={(all: SearchGroup[]) => all.flatMap((group) => group.items)}
     >
-      <CommandPalette.Input aria-label="Search datasets, publishers and pages" placeholder="Search datasets, publishers and pages…" />
+      <CommandPalette.Input aria-label={SEARCH.inputLabel} placeholder={SEARCH.placeholder} />
       <CommandPalette.List>
         {/* Page results can match while the catalog is still failing, and Empty never renders then. */}
         {failed ? (
           <p role="alert" className="px-3 py-2 text-sm text-kumo-danger">
-            Could not load the catalog ({failed.message}). Datasets and publishers are missing from these results; close the search and open it again to retry.
+            {SEARCH.failed(failed.message)}
           </p>
         ) : null}
         <CommandPalette.Results>
@@ -144,19 +170,13 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
             </CommandPalette.Group>
           )}
         </CommandPalette.Results>
-        <CommandPalette.Empty>
-          {failed
-            ? "No page matches that search either."
-            : products.loading || feeds.loading
-              ? "Loading the catalog…"
-              : `No dataset, publisher or page matches “${search.trim()}”.`}
-        </CommandPalette.Empty>
+        <CommandPalette.Empty>{failed ? SEARCH.noPageEither : products.loading || feeds.loading ? SEARCH.loading : SEARCH.noMatch(search.trim())}</CommandPalette.Empty>
       </CommandPalette.List>
       <CommandPalette.Footer>
         <span className="flex items-center gap-2 text-xs">
-          <kbd className="rounded border border-kumo-hairline bg-kumo-base px-1.5 py-0.5 text-xs">↑↓</kbd> Move
-          <kbd className="ml-2 rounded border border-kumo-hairline bg-kumo-base px-1.5 py-0.5 text-xs">↵</kbd> Open
-          <kbd className="ml-2 rounded border border-kumo-hairline bg-kumo-base px-1.5 py-0.5 text-xs">esc</kbd> Close
+          <kbd className="rounded border border-kumo-hairline bg-kumo-base px-1.5 py-0.5 text-xs">↑↓</kbd> {SEARCH.move}
+          <kbd className="ml-2 rounded border border-kumo-hairline bg-kumo-base px-1.5 py-0.5 text-xs">↵</kbd> {SEARCH.open}
+          <kbd className="ml-2 rounded border border-kumo-hairline bg-kumo-base px-1.5 py-0.5 text-xs">esc</kbd> {SEARCH.close}
         </span>
       </CommandPalette.Footer>
     </CommandPalette.Root>

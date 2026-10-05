@@ -7,8 +7,11 @@ import { PublisherMark, PublisherWatermark } from "../components/PublisherMark";
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
 import { buildListings, buildPublishers, fetchFeeds, fetchProducts, licenceHref, publisherHref, topicsOf, type Publisher, emptyLast } from "../lib/catalog";
-import { fmt, plural } from "../lib/format";
+import { fmt } from "../lib/format";
+import { localHref } from "../lib/locale";
 import { useQuery } from "../lib/query";
+import { LISTINGS } from "../text/listings";
+import { PUBLISHER } from "../text/publisher";
 
 const wanted = new URLSearchParams(window.location.search).get("id");
 
@@ -16,16 +19,15 @@ function PublisherIndex({ publishers }: { publishers: Publisher[] }) {
   const listings = publishers.reduce((sum, publisher) => sum + publisher.listings.length, 0);
   return (
     <>
-      <PageHead eyebrow="Publishers" title="Who publishes the data">
-        {fmt.int(publishers.length)} institutions and operators, {plural(listings, "table or series", "tables and series")}. Each is collected from where its publisher shares it,
-        keeps their licence, and links back to their source.
+      <PageHead eyebrow={PUBLISHER.indexEyebrow} title={PUBLISHER.indexTitle}>
+        {PUBLISHER.indexIntro(publishers.length, listings)}
       </PageHead>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(min(19rem,100%),1fr))] gap-3">
         {publishers.map((publisher) => (
           <a key={publisher.id} href={publisherHref(publisher.id)} className={`group rounded-lg no-underline ${cardRows(4)}`}>
             <LayerCard className={`transition-[box-shadow] group-hover:ring-kumo-focus/40 ${cardRows(4)}`}>
               <LayerCard.Secondary className="flex items-center justify-between text-xs">
-                <span>{plural(publisher.listings.length, "table or series", "tables and series")}</span>
+                <span>{LISTINGS.count(publisher.listings.length)}</span>
                 <ArrowRightIcon size={14} className="text-kumo-subtle transition-transform group-hover:translate-x-0.5" />
               </LayerCard.Secondary>
               {/* The mark is the card's background rather than a tile beside the name: publishers
@@ -59,14 +61,14 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
       <div className="relative isolate grid gap-4 overflow-hidden">
         <PublisherWatermark publisher={publisher} height={224} />
         <Breadcrumbs>
-          <Breadcrumbs.Link href="/publisher/" icon={<BuildingsIcon size={15} />}>
-            Publishers
+          <Breadcrumbs.Link href={localHref("/publisher/")} icon={<BuildingsIcon size={15} />}>
+            {PUBLISHER.breadcrumb}
           </Breadcrumbs.Link>
           <Breadcrumbs.Separator />
           <Breadcrumbs.Current>{publisher.name}</Breadcrumbs.Current>
         </Breadcrumbs>
         <PageHead
-          eyebrow="Publisher"
+          eyebrow={PUBLISHER.eyebrow}
           title={
             <span className="flex flex-wrap items-center gap-3">
               <PublisherMark publisher={publisher} size={52} />
@@ -74,18 +76,18 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
             </span>
           }
         >
-          Collected from where {publisher.name} shares them, and served under the terms they state.
+          {PUBLISHER.collectedFrom(publisher.name)}
         </PageHead>
       </div>
 
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <LayerCard>
-          <LayerCard.Secondary>About this publisher’s data</LayerCard.Secondary>
+          <LayerCard.Secondary>{PUBLISHER.about}</LayerCard.Secondary>
           <LayerCard.Primary>
             <Kv
               items={[
                 {
-                  term: "Topics",
+                  term: PUBLISHER.topics,
                   value: (
                     <span className="flex flex-wrap gap-1.5">
                       {topicsOf(publisher).map((topic) => (
@@ -98,7 +100,7 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
                 },
                 publisher.url
                   ? {
-                      term: "Site",
+                      term: PUBLISHER.site,
                       value: (
                         <Link href={publisher.url} target="_blank" rel="noopener noreferrer">
                           {new URL(publisher.url).hostname} <Link.ExternalIcon />
@@ -110,7 +112,7 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
                 // own data had the same link twice, once as "Site" and once here.
                 elsewhere.length > 0
                   ? {
-                      term: "Published at",
+                      term: PUBLISHER.publishedAt,
                       value: (
                         <span className="flex flex-wrap gap-x-4 gap-y-1">
                           {elsewhere.map(([host, href]) => (
@@ -123,7 +125,7 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
                     }
                   : null,
                 {
-                  term: "Licences",
+                  term: PUBLISHER.licences,
                   value: (
                     <ul className="grid gap-1.5">
                       {[...publisher.licences.values()].map((licence) => (
@@ -137,24 +139,24 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
                   ),
                 },
                 {
-                  term: "Updates",
-                  value: live ? `${plural(live, "table or series", "tables and series")} ${live === 1 ? "changes" : "change"} several times an hour` : "Hourly or less often",
+                  term: PUBLISHER.updates,
+                  value: live ? PUBLISHER.liveUpdates(live) : PUBLISHER.hourlyOrLess,
                 },
               ]}
             />
           </LayerCard.Primary>
         </LayerCard>
         <div className="grid grid-cols-2 content-start gap-3">
-          <StatTile label="Tables and series" value={fmt.int(publisher.listings.length)} note={topicsOf(publisher).join(" · ")} />
+          <StatTile label={LISTINGS.tablesAndSeries} value={fmt.int(publisher.listings.length)} note={topicsOf(publisher).join(" · ")} />
           <StatTile
-            label="Freshness"
-            value={late === 0 ? "all current" : `${late} late`}
+            label={PUBLISHER.freshness}
+            value={late === 0 ? PUBLISHER.allCurrent : PUBLISHER.late(late)}
             tone={late === 0 ? "ok" : "warn"}
-            note={late === 0 ? "every one within its update window" : "past their expected update"}
+            note={late === 0 ? PUBLISHER.withinWindow : PUBLISHER.pastExpected}
           />
           <div className="col-span-2">
-            <Button variant="secondary" icon={<HeartbeatIcon />} className="w-full" onClick={() => window.location.assign(`/status/#pub-${publisher.id}`)}>
-              See collection status by hour
+            <Button variant="secondary" icon={<HeartbeatIcon />} className="w-full" onClick={() => window.location.assign(localHref(`/status/#pub-${publisher.id}`))}>
+              {PUBLISHER.seeStatus}
             </Button>
           </div>
         </div>
@@ -163,10 +165,10 @@ function PublisherPage({ publisher }: { publisher: Publisher }) {
       <section aria-labelledby="listings-title" className="grid gap-3">
         <div className="flex flex-wrap items-end justify-between gap-2">
           <h2 id="listings-title" className="font-display text-2xl text-kumo-strong">
-            Tables and series
+            {LISTINGS.tablesAndSeries}
           </h2>
           {/* A long list is searched and filtered where every list is: the catalog, narrowed to them. */}
-          <Link href={`/catalog/?publisher=${encodeURIComponent(publisher.id)}`}>Search and filter in the catalog</Link>
+          <Link href={localHref(`/catalog/?publisher=${encodeURIComponent(publisher.id)}`)}>{LISTINGS.searchInCatalog}</Link>
         </div>
         <ListingRows listings={[...publisher.listings].sort((a, b) => emptyLast(a, b) || a.title.localeCompare(b.title))} underPublisher />
       </section>
@@ -186,22 +188,22 @@ function Publishers() {
     <Shell section="publishers">
       <ErrorNote
         error={products.error ?? feeds.error}
-        what="the publishers"
+        what={PUBLISHER.errorWhat}
         onRetry={() => {
           void products.refetch();
           void feeds.refetch();
         }}
       />
       {!publishers && !(products.error ?? feeds.error) ? (
-        <Placeholder rows={4} label="Loading the publishers" />
+        <Placeholder rows={4} label={PUBLISHER.loading} />
       ) : !publishers ? null : wanted && !publisher ? (
         <Empty
           icon={<BuildingsIcon size={40} className="text-kumo-inactive" />}
-          title="Publisher not found"
-          description="Nothing on open-data.pt comes from a publisher by that name."
+          title={PUBLISHER.notFound}
+          description={PUBLISHER.notFoundDescription}
           contents={
-            <Button variant="primary" onClick={() => window.location.assign("/publisher/")}>
-              All publishers
+            <Button variant="primary" onClick={() => window.location.assign(localHref("/publisher/"))}>
+              {PUBLISHER.all}
             </Button>
           }
         />

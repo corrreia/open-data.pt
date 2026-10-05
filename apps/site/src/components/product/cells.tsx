@@ -2,6 +2,7 @@ import { Link } from "@cloudflare/kumo";
 import type { ReactNode } from "react";
 import { fmt, humanize, isRecord } from "../../lib/format";
 import type { Field, Geometry, JsonRecord, JsonValue, SeriesPoint } from "../../lib/types";
+import { SCHEMA } from "../../text/product";
 
 export function isText(value: JsonValue | undefined): value is string {
   return typeof value === "string";
@@ -53,7 +54,7 @@ export function Cell({ record, field }: { record: JsonRecord; field: Field }): R
     const geometry = geometryOf(value);
     if (geometry) {
       const positions = countPositions(geometry);
-      return positions ? `${geometry.type} · ${fmt.int(positions)} points` : geometry.type;
+      return positions ? `${geometry.type} · ${SCHEMA.points(fmt.int(positions))}` : geometry.type;
     }
   }
   if (field.type === "url" && isText(value) && URL.canParse(value)) {
@@ -76,7 +77,7 @@ export function sortValue(value: JsonValue | undefined): string | number | null 
 }
 
 export function seriesLabel(point: SeriesPoint): string {
-  if (point.seriesKey === "all") return "Whole network";
+  if (point.seriesKey === "all") return SCHEMA.wholeNetwork;
   const dimensions = Object.entries(point.dimensions ?? {});
   if (dimensions.length === 0) return point.seriesKey;
   // A value that reads on its own ("Portugal", "Lisboa") stands alone; a bare number needs its dimension's name.

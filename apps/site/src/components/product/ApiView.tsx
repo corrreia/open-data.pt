@@ -3,6 +3,7 @@ import { CommandBlock } from "../ops/CommandBlock";
 import { ArrowSquareOutIcon } from "@phosphor-icons/react";
 import { productPath } from "../../lib/api";
 import type { Product } from "../../lib/types";
+import { API_VIEW } from "../../text/product";
 
 interface Endpoint {
   title: string;
@@ -20,58 +21,58 @@ function endpointsFor(product: Product): Endpoint[] {
   const dataSpan = `from=${iso(new Date(newest.getTime() - 30 * 86_400_000))}&to=${iso(newest)}`;
   const changeSpan = `from=${iso(new Date(Date.now() - 7 * 86_400_000))}&to=${iso(new Date())}`;
   const knownAt = iso(new Date(Date.now() - 86_400_000));
-  const list: Endpoint[] = [{ title: "Product metadata", path: base, description: "Schema, version, freshness, cadence, licence and attribution." }];
+  const list: Endpoint[] = [{ title: API_VIEW.metadata, path: base, description: API_VIEW.metadataText }];
   if (product.role === "time-series") {
     list.push(
-      { title: "Current points", path: `${base}/series?limit=500`, description: "The newest points, newest first. Filter with seriesKey, from and to." },
+      { title: API_VIEW.currentPoints, path: `${base}/series?limit=500`, description: API_VIEW.currentPointsText },
       {
-        title: "History",
+        title: API_VIEW.history,
         path: `${base}/series/range?${dataSpan}&limit=500`,
-        description: "Every point of a past window from the durable history. Windows span up to 366 days; page with the returned cursor.",
+        description: API_VIEW.historyText,
       },
       {
-        title: "As known then",
+        title: API_VIEW.knownThen,
         path: `${base}/series/range?${dataSpan}&knownAt=${knownAt}&limit=500`,
-        description: "The same window as it had been published at knownAt: later corrections are left out.",
+        description: API_VIEW.knownThenText,
       },
-      { title: "Recent corrections", path: `${base}/series/changes?limit=200`, description: "Points revised after they were first published." },
-      { title: "Corrections in a window", path: `${base}/series/changes/range?${changeSpan}&limit=500`, description: "Every new or corrected point ingested in a past window." },
+      { title: API_VIEW.recentCorrections, path: `${base}/series/changes?limit=200`, description: API_VIEW.recentCorrectionsText },
+      { title: API_VIEW.windowCorrections, path: `${base}/series/changes/range?${changeSpan}&limit=500`, description: API_VIEW.windowCorrectionsText },
     );
   } else {
-    list.push({ title: "Current records", path: `${base}/records?limit=50`, description: "The current rows, paged with a cursor." });
+    list.push({ title: API_VIEW.currentRecords, path: `${base}/records?limit=50`, description: API_VIEW.currentRecordsText });
     const filterable = product.schema.fields.find((field) => ["category", "identifier", "string"].includes(field.type));
     if (filterable)
       list.push({
-        title: "Filtered records",
+        title: API_VIEW.filteredRecords,
         path: `${base}/records?where=${encodeURIComponent(filterable.id)}:VALUE&limit=50`,
         template: true,
-        description: `Rows whose ${filterable.name} equals VALUE. Repeat where= for up to five fields.`,
+        description: API_VIEW.filteredRecordsText(filterable.name),
       });
     if (product.schema.fields.some((field) => field.type === "geometry" || field.type === "latitude")) {
       list.push(
         {
-          title: "Records in an area",
+          title: API_VIEW.inArea,
           path: `${base}/records?bbox=MIN_LON,MIN_LAT,MAX_LON,MAX_LAT&limit=50`,
           template: true,
-          description: "Rows inside a bounding box, in degrees.",
+          description: API_VIEW.inAreaText,
         },
-        { title: "GeoJSON", path: `${base}.geojson`, description: "The current rows as a GeoJSON FeatureCollection." },
+        { title: "GeoJSON", path: `${base}.geojson`, description: API_VIEW.geojsonText },
       );
     }
     if (product.role === "event-log") {
       list.push(
-        { title: "Event history", path: `${base}/events?${dataSpan}&limit=200`, description: "Events of a past window from the durable history, up to 366 days." },
-        { title: "Events as known then", path: `${base}/events?${dataSpan}&knownAt=${knownAt}&limit=200`, description: "The same window as it had been published at knownAt." },
+        { title: API_VIEW.eventHistory, path: `${base}/events?${dataSpan}&limit=200`, description: API_VIEW.eventHistoryText },
+        { title: API_VIEW.eventsThen, path: `${base}/events?${dataSpan}&knownAt=${knownAt}&limit=200`, description: API_VIEW.eventsThenText },
       );
     }
     if (product.hasChanges) {
       list.push(
-        { title: "Recent changes", path: `${base}/changes?limit=200`, description: "Creates, updates, corrections and retractions from the recent window." },
-        { title: "Changes in a window", path: `${base}/changes/range?${changeSpan}&limit=500`, description: "Every revision ingested in a past window." },
+        { title: API_VIEW.recentChanges, path: `${base}/changes?limit=200`, description: API_VIEW.recentChangesText },
+        { title: API_VIEW.windowChanges, path: `${base}/changes/range?${changeSpan}&limit=500`, description: API_VIEW.windowChangesText },
       );
     }
   }
-  list.push({ title: "DCAT catalog", path: "/api/catalog.dcat.json", description: "This product’s dataset entry in the JSON-LD catalog." });
+  list.push({ title: API_VIEW.dcat, path: "/api/catalog.dcat.json", description: API_VIEW.dcatText });
   return list;
 }
 
@@ -82,24 +83,22 @@ export default function ApiView({ product }: { product: Product }) {
   const example = endpoints[1] ?? endpoints[0];
   return (
     <div className="grid gap-5">
-      <p className="text-sm text-kumo-subtle">
-        Open, read-only and keyless. Responses are JSON with CORS enabled; errors use application/problem+json. Requests are rate limited per client and a 429 says when to retry.
-      </p>
+      <p className="text-sm text-kumo-subtle">{API_VIEW.intro}</p>
       <div className="grid gap-3">
         {endpoints.map((endpoint) => (
           <LayerCard key={endpoint.title}>
             <LayerCard.Secondary className="flex items-center justify-between gap-3">
               <span className="font-medium text-kumo-default">{endpoint.title}</span>
               {endpoint.template ? (
-                <Badge variant="outline">template</Badge>
+                <Badge variant="outline">{API_VIEW.template}</Badge>
               ) : (
                 <Button size="sm" variant="ghost" icon={<ArrowSquareOutIcon />} onClick={() => window.open(endpoint.path, "_blank", "noopener")}>
-                  Open
+                  {API_VIEW.open}
                 </Button>
               )}
             </LayerCard.Secondary>
             <LayerCard.Primary className="grid gap-2">
-              <ClipboardText text={absolute(endpoint.path)} size="sm" className="min-w-0" />
+              <ClipboardText text={absolute(endpoint.path)} size="sm" className="min-w-0" labels={{ copyAction: API_VIEW.copyAction }} />
               <p className="text-xs text-kumo-subtle">{endpoint.description}</p>
             </LayerCard.Primary>
           </LayerCard>
@@ -107,12 +106,12 @@ export default function ApiView({ product }: { product: Product }) {
       </div>
       {example ? (
         <div className="grid gap-2">
-          <p className="text-sm text-kumo-subtle">From a terminal:</p>
-          <CommandBlock command={`curl -s '${absolute(example.path)}'`} label="Example request" />
+          <p className="text-sm text-kumo-subtle">{API_VIEW.fromTerminal}</p>
+          <CommandBlock command={`curl -s '${absolute(example.path)}'`} label={API_VIEW.exampleRequest} />
         </div>
       ) : null}
       <p className="text-sm">
-        <Link href="/docs#tag/products">Open the API reference</Link>
+        <Link href="/docs#tag/products">{API_VIEW.reference}</Link>
       </p>
     </div>
   );

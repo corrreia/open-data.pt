@@ -1,15 +1,16 @@
 import { productHref } from "../lib/api";
 import { ROLE, withoutPublisher, type Listing } from "../lib/catalog";
 import { fmt } from "../lib/format";
+import { LISTINGS } from "../text/listings";
 import { ROLE_COLOR, ROLE_ICON, RelativeTime } from "./common";
 
 const TONE_DOT = { ok: "bg-kumo-success", warn: "bg-kumo-warning", bad: "bg-kumo-danger" } as const;
-const TONE_WORD = { ok: "Current", warn: "Late", bad: "Failing" } as const;
+const TONE_WORD = LISTINGS.tone;
 
 function size(listing: Listing): string {
-  if (listing.empty) return "empty";
+  if (listing.empty) return LISTINGS.empty;
   const series = listing.role === "time-series";
-  return `${fmt.compact(listing.rows)}${series && listing.rows >= 5000 ? "+" : ""} ${series ? "pts" : "rows"}`;
+  return `${fmt.compact(listing.rows)}${series && listing.rows >= 5000 ? "+" : ""} ${series ? LISTINGS.points : LISTINGS.rows}`;
 }
 
 /**
@@ -46,7 +47,7 @@ export function ListingRows({ listings, underPublisher = false }: { listings: Li
               <span className="whitespace-nowrap text-xs text-kumo-subtle">{fmt.every(listing.cadence)}</span>
               <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-kumo-subtle" title={TONE_WORD[listing.tone]}>
                 <span className={`size-2 shrink-0 rounded-full ${TONE_DOT[listing.tone]}`} role="img" aria-label={TONE_WORD[listing.tone]} />
-                {listing.updatedAt ? <RelativeTime value={listing.updatedAt} className="font-mono" /> : "never"}
+                {listing.updatedAt ? <RelativeTime value={listing.updatedAt} className="font-mono" /> : LISTINGS.never}
               </span>
             </div>
           </li>
