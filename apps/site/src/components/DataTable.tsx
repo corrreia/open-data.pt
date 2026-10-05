@@ -1,6 +1,7 @@
 import { Button, InputGroup, LayerCard, Pagination, Table } from "@cloudflare/kumo";
 import { CaretDownIcon, CaretUpDownIcon, CaretUpIcon, DownloadSimpleIcon, MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
+import { searchable, searchWords } from "../lib/catalog";
 import { fmt } from "../lib/format";
 import type { JsonRecord, JsonValue } from "../lib/types";
 
@@ -76,13 +77,10 @@ export function DataTable<Row>(props: DataTableProps<Row>) {
   const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
-    const words = filter.toLocaleLowerCase().split(/\s+/).filter(Boolean);
+    const words = searchWords(filter);
     if (words.length === 0) return rows;
     return rows.filter((row) => {
-      const haystack = columns
-        .map((column) => (column.text ? column.text(row) : String(column.sort?.(row) ?? "")))
-        .join(" ")
-        .toLocaleLowerCase();
+      const haystack = searchable(columns.map((column) => (column.text ? column.text(row) : String(column.sort?.(row) ?? ""))).join(" "));
       return words.every((word) => haystack.includes(word));
     });
   }, [rows, columns, filter]);

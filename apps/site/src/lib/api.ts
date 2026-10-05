@@ -1,3 +1,5 @@
+import { localHref } from "./locale";
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -33,4 +35,4 @@ export async function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> 
 }
 
 export const productPath = (slug: string, suffix = "") => `/api/products/${encodeURIComponent(slug)}${suffix}`;
-export const productHref = (slug: string) => `/product/?slug=${encodeURIComponent(slug)}`;
+export const productHref = (slug: string) => localHref(`/product/?slug=${encodeURIComponent(slug)}`);

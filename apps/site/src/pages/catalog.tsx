@@ -6,7 +6,20 @@ import { PublisherMark } from "../components/PublisherMark";
 import { ErrorNote, PageHead, Placeholder } from "../components/common";
 import { mountPage } from "../components/mount";
 import { Shell } from "../components/Shell";
-import { ROLE, UPDATES, buildListings, buildPublishers, fetchFeeds, fetchProducts, publisherHref, topicLabel, type Listing, emptyLast } from "../lib/catalog";
+import {
+  ROLE,
+  UPDATES,
+  buildListings,
+  buildPublishers,
+  fetchFeeds,
+  fetchProducts,
+  listingHaystack,
+  publisherHref,
+  searchWords,
+  topicLabel,
+  type Listing,
+  emptyLast,
+} from "../lib/catalog";
 import { fmt, plural } from "../lib/format";
 import { useQuery } from "../lib/query";
 import type { Role } from "../lib/types";
@@ -81,22 +94,10 @@ function Catalog() {
     window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
   }, [q, sort, selected]);
 
-  const words = q.toLocaleLowerCase().split(/\s+/).filter(Boolean);
+  const words = searchWords(q);
   const matchesQuery = (listing: Listing) => {
     if (words.length === 0) return true;
-    // The feed is never shown, but its name is often what someone searches for: "fuel prices" finds the station prices.
-    const haystack = [
-      listing.title,
-      listing.description,
-      listing.id,
-      listing.feed.title,
-      listing.feed.description,
-      listing.publisher.name,
-      listing.format,
-      ...listing.topics.map(topicLabel),
-    ]
-      .join(" ")
-      .toLocaleLowerCase();
+    const haystack = listingHaystack(listing);
     return words.every((word) => haystack.includes(word));
   };
   const matchesFacets = (listing: Listing, except?: FacetId) =>

@@ -113,6 +113,36 @@ describe("link previews", () => {
     expect(html).not.toContain("<more>");
   });
 
+  it("serves each page in Portuguese under /pt/ from the same file, in its own language, each language naming the other", async () => {
+    const english = await page("/catalog/?topic=energy");
+    const portuguese = await page("/pt/catalog/?topic=energy&q=gasóleo");
+    expect(english.html).toContain('<html lang="en"');
+    expect(portuguese.html).toContain('<html lang="pt-PT"');
+    expect(portuguese.canonical).toBe(`${ORIGIN}/pt/catalog/?topic=energy`);
+    expect(portuguese.meta("og:title")).toBe("Energia: conjuntos de dados");
+    expect(portuguese.meta("og:locale")).toBe("pt_PT");
+    expect(portuguese.html).toContain("<noscript>O open-data.pt precisa de JavaScript");
+    for (const { html } of [english, portuguese]) {
+      expect(html).toContain(`<link rel="alternate" hreflang="en" href="${ORIGIN}/catalog/?topic=energy" />`);
+      expect(html).toContain(`<link rel="alternate" hreflang="pt-PT" href="${ORIGIN}/pt/catalog/?topic=energy" />`);
+      expect(html).toContain(`<link rel="alternate" hreflang="x-default" href="${ORIGIN}/catalog/?topic=energy" />`);
+    }
+    const home = await page("/pt/");
+    expect(home.title).toBe("open-data.pt");
+    expect(home.meta("og:title")).toBe("Dados públicos de Portugal, num só lugar");
+    expect(home.canonical).toBe(`${ORIGIN}/pt/`);
+    expect((await page("/pt/status/")).title).toBe("Estado · open-data.pt");
+    expect((await page("/pt/product/?slug=fuel-stations")).meta("og:description")).toBe(
+      "Prices at every station in mainland Portugal. Publicado por Direção-Geral de Energia e Geologia, em JSON gratuito e sem chave.",
+    );
+  });
+
+  it("sends /pt to /pt/", async () => {
+    const bare = await handleSite(new Request(`${ORIGIN}/pt?x=1`), host);
+    expect(bare.status).toBe(301);
+    expect(bare.headers.get("Location")).toBe(`${ORIGIN}/pt/?x=1`);
+  });
+
   it("names publishers and topics, and falls back to the page's own words for a name that does not exist", async () => {
     expect((await page("/publisher/?id=dgeg")).meta("og:title")).toBe("Direção-Geral de Energia e Geologia");
     expect((await page("/licence/?id=cc-by-4.0")).meta("og:title")).toBe("CC BY 4.0");

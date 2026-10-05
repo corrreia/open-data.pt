@@ -9,7 +9,7 @@ import { MCP_SERVER_NAME, MCP_SERVER_VERSION } from "@open-data-pt/api";
 import { sha256Hex } from "#/hash";
 import type { HeaderMap } from "#/api/errors";
 import { isPage, pageMarkdown, prefersMarkdown, productPage, publisherPage, readCatalog } from "#/pages/markdown";
-import { withPageMeta } from "#/pages/page-meta";
+import { englishPath, languageOf, portuguesePath, withPageMeta } from "#/pages/page-meta";
 
 /** The one Agent Skill: a static file of the site build, so the index hashes the bytes clients download. */
 export const SKILL_PATH = "/.well-known/agent-skills/open-data-pt/SKILL.md";
@@ -66,10 +66,15 @@ export async function handleSite(request: Request, host: SiteHost): Promise<Resp
     if (!read) return new Response(null, { status: 405, headers: { ...CORS, Allow: "GET, HEAD, OPTIONS" } });
     return serve(request, await build(url.origin, host));
   }
-  if (!read || !isPage(url.pathname)) return host.assets(request);
+  // A page in Portuguese is the same page under /pt/: the same file, the same Markdown for agents, and its own words in the head.
+  const language = languageOf(url.pathname);
+  if (language === "pt" && url.pathname === "/pt") return Response.redirect(new URL(`/pt/${url.search}`, url.origin).href, 301);
+  const english = new URL(url);
+  english.pathname = englishPath(url.pathname);
+  if (!read || !isPage(english.pathname)) return host.assets(request);
 
-  const links = pageLinks(`${url.pathname}${url.search}`);
-  const page = prefersMarkdown(request.headers.get("Accept")) ? await pageMarkdown(url, host) : undefined;
+  const links = pageLinks(`${english.pathname}${english.search}`);
+  const page = prefersMarkdown(request.headers.get("Accept")) ? await pageMarkdown(english, host) : undefined;
   if (page) {
     return new Response(request.method === "HEAD" ? null : page.markdown, {
       status: page.status,
@@ -83,7 +88,7 @@ export async function handleSite(request: Request, host: SiteHost): Promise<Resp
       },
     });
   }
-  const html = await host.assets(request);
+  const html = await host.assets(new Request(english, request));
   const rewrite = request.method === "GET" && html.ok && html.headers.get("Content-Type")?.startsWith("text/html") === true;
   const answer = rewrite ? new Response(await withPageMeta(await html.text(), url, host), html) : new Response(html.body, html);
   if (rewrite) {
@@ -130,10 +135,23 @@ async function sitemap(origin: string, host: SiteHost): Promise<Document> {
   }
   for (const [page, lastmod] of publishers) entries.push({ loc: `${origin}${page}`, lastmod });
   for (const { product } of listings) entries.push({ loc: `${origin}${productPage(product.slug)}`, lastmod: product.updatedAt });
+  // Each of the site's pages is listed in both languages, each entry naming the other, as Google reads alternates from a sitemap.
+  const urls = entries.flatMap(({ loc, lastmod }) => {
+    const modified = lastmod ? `<lastmod>${xml(lastmod)}</lastmod>` : "";
+    const url = new URL(loc);
+    if (!isPage(url.pathname)) return [`  <url><loc>${xml(loc)}</loc>${modified}</url>`];
+    const portuguese = `${origin}${portuguesePath(url.pathname)}${url.search}`;
+    const alternates = [
+      `<xhtml:link rel="alternate" hreflang="en" href="${xml(loc)}"/>`,
+      `<xhtml:link rel="alternate" hreflang="pt-PT" href="${xml(portuguese)}"/>`,
+      `<xhtml:link rel="alternate" hreflang="x-default" href="${xml(loc)}"/>`,
+    ].join("");
+    return [loc, portuguese].map((href) => `  <url><loc>${xml(href)}</loc>${modified}${alternates}</url>`);
+  });
   const body = [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-    ...entries.map(({ loc, lastmod }) => `  <url><loc>${xml(loc)}</loc>${lastmod ? `<lastmod>${xml(lastmod)}</lastmod>` : ""}</url>`),
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
+    ...urls,
     "</urlset>",
     "",
   ].join("\n");

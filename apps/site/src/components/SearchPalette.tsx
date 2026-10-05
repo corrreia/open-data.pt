@@ -2,7 +2,7 @@ import { CommandPalette } from "@cloudflare/kumo";
 import { BookOpenIcon, BuildingsIcon, ChartLineIcon, CompassIcon, DatabaseIcon, HandHeartIcon, HeartbeatIcon, MapPinIcon, TableIcon, ScalesIcon } from "@phosphor-icons/react";
 import { useMemo, useState, type ReactNode } from "react";
 import { productHref } from "../lib/api";
-import { buildListings, buildPublishers, fetchFeeds, fetchProducts, publisherHref, topicLabel } from "../lib/catalog";
+import { buildListings, buildPublishers, fetchFeeds, fetchProducts, listingHaystack, publisherHref, searchable, searchWords } from "../lib/catalog";
 import { useQuery } from "../lib/query";
 
 interface SearchItem {
@@ -56,35 +56,38 @@ export function SearchPalette({ open, onOpenChange }: { open: boolean; onOpenCha
   const index = useMemo(() => {
     if (!products.data || !feeds.data) return { listings: [], publishers: [] };
     const listings = buildListings(products.data, feeds.data);
-    const listingItems: SearchItem[] = listings.map(({ product, feed, title, description, publisher, topics }) => ({
-      id: product.slug,
-      title,
-      detail: publisher.name,
-      href: productHref(product.slug),
-      icon:
-        product.role === "time-series" ? (
-          <ChartLineIcon />
-        ) : product.schema.fields.some((field) => field.type === "geometry" || field.type === "latitude") ? (
-          <MapPinIcon />
-        ) : (
-          <TableIcon />
-        ),
-      haystack: `${title} ${product.slug} ${feed.title} ${feed.description} ${publisher.name} ${topics.map(topicLabel).join(" ")} ${description}`.toLocaleLowerCase(),
-    }));
+    const listingItems: SearchItem[] = listings.map((listing) => {
+      const { product, title, publisher } = listing;
+      return {
+        id: product.slug,
+        title,
+        detail: publisher.name,
+        href: productHref(product.slug),
+        icon:
+          product.role === "time-series" ? (
+            <ChartLineIcon />
+          ) : product.schema.fields.some((field) => field.type === "geometry" || field.type === "latitude") ? (
+            <MapPinIcon />
+          ) : (
+            <TableIcon />
+          ),
+        haystack: listingHaystack(listing),
+      };
+    });
     const publisherItems: SearchItem[] = buildPublishers(listings).map((publisher) => ({
       id: `publisher-${publisher.id}`,
       title: publisher.name,
       detail: `${publisher.listings.length} ${publisher.listings.length === 1 ? "table or series" : "tables and series"}`,
       href: publisherHref(publisher.id),
       icon: <BuildingsIcon />,
-      haystack: publisher.name.toLocaleLowerCase(),
+      haystack: searchable(publisher.name),
     }));
     return { listings: listingItems, publishers: publisherItems };
   }, [products.data, feeds.data]);
 
   const groups = useMemo<SearchGroup[]>(() => {
-    const words = search.toLocaleLowerCase().split(/\s+/).filter(Boolean);
-    const matches = (item: SearchItem) => words.every((word) => item.haystack.includes(word) || item.title.toLocaleLowerCase().includes(word));
+    const words = searchWords(search);
+    const matches = (item: SearchItem) => words.every((word) => item.haystack.includes(word) || searchable(item.title).includes(word));
     const pick = (items: SearchItem[]) => (words.length ? items.filter(matches) : items).slice(0, PER_GROUP);
     return [
       { id: "listings", label: "Tables and series", items: pick(index.listings) },

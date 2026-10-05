@@ -1,3 +1,5 @@
+import { FORMAT } from "../text/format";
+import { INTL_LOCALE } from "./locale";
 import type { JsonValue } from "./types";
 
 /** A finite number as written, never one coerced from a string, null or anything else. */
@@ -5,13 +7,13 @@ export const isNumber = (value: JsonValue | undefined): value is number => Numbe
 
 // Built once: constructing an Intl formatter costs far more than using one, and a page with
 // hundreds of ticking relative times formats each of them every second.
-const INTEGER = new Intl.NumberFormat();
-const COMPACT = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 2 });
-const DECIMAL = new Intl.NumberFormat(undefined, { maximumFractionDigits: 4 });
-const DATE = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
-const DATE_TIME = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
-const TIME = new Intl.DateTimeFormat(undefined, { timeStyle: "short" });
-const RELATIVE = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
+const INTEGER = new Intl.NumberFormat(INTL_LOCALE);
+const COMPACT = new Intl.NumberFormat(INTL_LOCALE, { notation: "compact", maximumFractionDigits: 2 });
+const DECIMAL = new Intl.NumberFormat(INTL_LOCALE, { maximumFractionDigits: 4 });
+const DATE = new Intl.DateTimeFormat(INTL_LOCALE, { dateStyle: "medium" });
+const DATE_TIME = new Intl.DateTimeFormat(INTL_LOCALE, { dateStyle: "medium", timeStyle: "short" });
+const TIME = new Intl.DateTimeFormat(INTL_LOCALE, { timeStyle: "short" });
+const RELATIVE = new Intl.RelativeTimeFormat(INTL_LOCALE, { numeric: "auto" });
 
 /**
  * A time as a reader sees it, or as the source wrote it. A source's own field can hold anything —
@@ -52,7 +54,7 @@ export const fmt = {
     if (value === undefined || value === null || value === "") return "—";
     const delta = (new Date(value).getTime() - now) / 1000;
     const abs = Math.abs(delta);
-    if (abs < 5) return "just now";
+    if (abs < 5) return FORMAT.justNow;
     if (abs < 60) return RELATIVE.format(Math.round(delta), "second");
     if (abs < 3600) return RELATIVE.format(Math.round(delta / 60), "minute");
     if (abs < 86_400) return RELATIVE.format(Math.round(delta / 3600), "hour");
@@ -60,37 +62,37 @@ export const fmt = {
     return fmt.date(value);
   },
   countdown(value: string | undefined, now = Date.now()) {
-    if (!value) return "not scheduled";
+    if (!value) return FORMAT.notScheduled;
     const seconds = Math.round((new Date(value).getTime() - now) / 1000);
-    if (seconds <= 0) return "due now";
-    if (seconds < 90) return `in ${seconds} s`;
-    if (seconds < 3600) return `in ${Math.round(seconds / 60)} min`;
-    if (seconds < 86_400) return `in ${Math.round(seconds / 3600)} h`;
-    return `in ${Math.round(seconds / 86_400)} d`;
+    if (seconds <= 0) return FORMAT.dueNow;
+    if (seconds < 90) return FORMAT.in(`${seconds} s`);
+    if (seconds < 3600) return FORMAT.in(`${Math.round(seconds / 60)} min`);
+    if (seconds < 86_400) return FORMAT.in(`${Math.round(seconds / 3600)} h`);
+    return FORMAT.in(`${Math.round(seconds / 86_400)} d`);
   },
   /** "every minute", "every 24 h", "daily", "every 30 days" */
   every(seconds: number | undefined) {
     if (seconds === undefined || !Number.isFinite(seconds)) return "—";
-    if (seconds < 60) return `every ${seconds} s`;
-    if (seconds === 60) return "every minute";
-    if (seconds < 3600) return `every ${Math.round(seconds / 60)} min`;
-    if (seconds === 3600) return "every hour";
-    if (seconds < 86_400) return `every ${Math.round(seconds / 3600)} h`;
-    if (seconds === 86_400) return "daily";
-    return `every ${Math.round(seconds / 86_400)} days`;
+    if (seconds < 60) return FORMAT.everyUnit(`${seconds} s`);
+    if (seconds === 60) return FORMAT.everyMinute;
+    if (seconds < 3600) return FORMAT.everyUnit(`${Math.round(seconds / 60)} min`);
+    if (seconds === 3600) return FORMAT.everyHour;
+    if (seconds < 86_400) return FORMAT.everyUnit(`${Math.round(seconds / 3600)} h`);
+    if (seconds === 86_400) return FORMAT.daily;
+    return FORMAT.everyDays(Math.round(seconds / 86_400));
   },
   span(seconds: number | undefined | null) {
-    if (seconds === null || seconds === undefined) return "kept indefinitely";
+    if (seconds === null || seconds === undefined) return FORMAT.keptIndefinitely;
     if (seconds < 60) return `${seconds} s`;
     if (seconds < 3600) return `${Math.round(seconds / 60)} min`;
     if (seconds < 86_400) return `${Math.round(seconds / 3600)} h`;
     const days = Math.round(seconds / 86_400);
-    return `${days} ${days === 1 ? "day" : "days"}`;
+    return FORMAT.days(days);
   },
   /** "under a minute", "23 min", "3 h 5 min", "2 d 4 h" */
   duration(ms: number) {
     const minutes = Math.round(ms / 60_000);
-    if (minutes < 1) return "under a minute";
+    if (minutes < 1) return FORMAT.underAMinute;
     if (minutes < 60) return `${minutes} min`;
     const hours = Math.floor(minutes / 60);
     if (hours < 24) return minutes % 60 ? `${hours} h ${minutes % 60} min` : `${hours} h`;
@@ -111,7 +113,7 @@ export const fmt = {
       return text.length > 60 ? `${text.slice(0, 57)}…` : text;
     }
     if (isNumber(value)) return DECIMAL.format(value);
-    if (value === true || value === false) return value ? "true" : "false";
+    if (value === true || value === false) return value ? FORMAT.yes : FORMAT.no;
     const text = String(value);
     return text.length > 120 ? `${text.slice(0, 117)}…` : text;
   },

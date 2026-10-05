@@ -3,7 +3,7 @@
 // public API the pages do.
 
 import { apiGet, productHref, productPath } from "./api";
-import { buildListings, fetchFeeds, fetchProducts, topicLabel } from "./catalog";
+import { buildListings, fetchFeeds, fetchProducts, listingHaystack, searchWords } from "./catalog";
 import type { Feed, JsonRecord, JsonValue, Product } from "./types";
 
 /** What the agent hands every call: aborted when it cancels the call. */
@@ -90,11 +90,12 @@ const TOOLS: WebMcpTool[] = [
     },
     annotations: { readOnlyHint: true, untrustedContentHint: true },
     async execute(input, call) {
-      const words = text(input.query).toLocaleLowerCase().split(/\s+/).filter(Boolean);
+      const words = searchWords(text(input.query));
       const [products, feeds] = await catalogLists(call?.signal);
       const results: JsonValue[] = [];
-      for (const { product, feed, title, description, publisher, licence, topics } of buildListings(products, feeds)) {
-        const haystack = `${title} ${product.slug} ${feed.title} ${feed.description} ${publisher.name} ${topics.map(topicLabel).join(" ")} ${description}`.toLocaleLowerCase();
+      for (const listing of buildListings(products, feeds)) {
+        const { product, title, description, publisher, licence, topics } = listing;
+        const haystack = listingHaystack(listing);
         if (!words.every((word) => haystack.includes(word))) continue;
         results.push({
           slug: product.slug,
