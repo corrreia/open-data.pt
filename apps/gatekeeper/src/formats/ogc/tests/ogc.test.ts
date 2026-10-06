@@ -987,6 +987,27 @@ describe("OGC API Features normalization", () => {
     expect(isJsonNumber(rows[0]?.latitude)).toBe(true);
   });
 
+  it("keeps properties called like the link, and like its escape, under distinct IDs", async () => {
+    const page = itemsPage({ count: 1, matched: 1 });
+    const features = Array.isArray(page.features) ? page.features : [];
+    const only = features[0];
+    if (isJsonObject(only) && isJsonObject(only.properties)) {
+      only.properties._source_url = "theirs";
+      only.properties._source_url__source = "also theirs";
+    }
+    const fetched = await collectOgcFeed(
+      config,
+      hosts,
+      serviceFetcher(() => page, 1),
+    );
+    const { transform, rows } = await normalize(fetched);
+    const ids = (transform.finish().products?.[0]?.schema?.fields ?? []).map((field) => field.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids).toEqual(expect.arrayContaining(["_source_url", "_source_url__source", "_source_url__source_2"]));
+    expect(rows[0]?._source_url).toMatch(/^https:\/\/ogcapi\.dgterritorio\.gov\.pt\/collections\/municipios\/items\//);
+    expect(Object.values(rows[0] ?? {})).toEqual(expect.arrayContaining(["theirs", "also theirs"]));
+  });
+
   it("rejects a malformed feature instead of publishing it", async () => {
     const document = `{"type":"FeatureCollection","ogc":${JSON.stringify({
       itemsUrl: `https://${DGT_HOST}/collections/municipios/items?f=json`,

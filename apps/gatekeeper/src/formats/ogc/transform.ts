@@ -143,6 +143,8 @@ class PropertyProfile {
 interface PreparedProperty {
   name: string;
   outputName: string;
+  /** Its schema ID, unique among every property's and the fields this table adds. */
+  id: string;
   /** The type declared up front, from the service's published schema. */
   declared: CanonicalField["type"];
   /** Whether the service published a type at all; discovered properties are inferred instead. */
@@ -319,7 +321,7 @@ function entityKey(feature: GeojsonFeature, properties: PreparedProperty[]): str
 function collectionSchema(properties: PreparedProperty[], geometry: GeometryMode, total: number | undefined): CanonicalSchema {
   const final = total !== undefined;
   const fields = properties.map((property): CanonicalField => ({
-    id: fieldId(property.name),
+    id: property.id,
     name: property.outputName,
     type: !final
       ? property.declared
@@ -405,12 +407,16 @@ function parseFeature(value: JsonValue | undefined): GeojsonFeature {
 
 function prepareProperties(description: OgcCollectionDescription): PreparedProperty[] {
   const taken = new Set<string>();
+  const ids = new Set<string>();
   return (description.schema ?? []).map((property) => {
     const outputName = uniqueOutputName(property.name, taken);
     taken.add(outputName);
+    const id = uniqueFieldId(property.name, ids);
+    ids.add(id);
     return {
       name: property.name,
       outputName,
+      id,
       declared: declaredType(property),
       published: property.type !== "unknown" || property.role === "id",
       profile: new PropertyProfile(),
@@ -422,7 +428,8 @@ function prepareProperties(description: OgcCollectionDescription): PreparedPrope
 function discoveredProperty(name: string, existing: PreparedProperty[]): PreparedProperty {
   const taken = new Set(existing.map((property) => property.outputName));
   const outputName = uniqueOutputName(name, taken);
-  return { name, outputName, declared: "string", published: false, profile: new PropertyProfile() };
+  const id = uniqueFieldId(name, new Set(existing.map((property) => property.id)));
+  return { name, outputName, id, declared: "string", published: false, profile: new PropertyProfile() };
 }
 
 function declaredType(property: OgcProperty): CanonicalField["type"] {
@@ -471,10 +478,15 @@ function plainText(value: string): string {
 /**
  * The schema ID of a source property. A collection may have its own `latitude`
  * or `longitude` property; it keeps its values under a distinct ID so it cannot
- * collide with the fields this table adds.
+ * collide with the fields this table adds, nor with another property that is
+ * already called by that distinct ID.
  */
-function fieldId(name: string): string {
-  return OWN_FIELDS.includes(name) ? `${name}__source` : name;
+function uniqueFieldId(name: string, taken: ReadonlySet<string>): string {
+  const wanted = OWN_FIELDS.includes(name) ? `${name}__source` : name;
+  if (!taken.has(wanted)) return wanted;
+  let suffix = 2;
+  while (taken.has(`${wanted}_${suffix}`)) suffix += 1;
+  return `${wanted}_${suffix}`;
 }
 
 function uniqueOutputName(name: string, taken: ReadonlySet<string>): string {
