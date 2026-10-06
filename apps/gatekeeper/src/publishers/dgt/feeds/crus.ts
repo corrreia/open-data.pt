@@ -16,12 +16,17 @@ import { CRUS_COLUMNS, DGT_HOST } from "#/publishers/dgt/ogc";
  * every page must arrive for the collection to be whole. The reader tries a
  * failed page again rather than the dataset being shaped around a flaky
  * gateway.
+ *
+ * The outlines are not collected. What this table adds to DGT's own service is
+ * the history of every parcel's class; the outlines DGT already serves whole,
+ * one link away, and a copy of them here was a second set of 278 products that
+ * repeated these columns and could not hold the largest parcels unsimplified.
  */
 export const FEED = defineFeed(OGC_DEPLOYMENT, {
   slug: "dgt-crus-feed",
   title: "Mainland Portugal land-use regime (CRUS)",
   description:
-    "Every parcel of mainland Portugal in the Carta do Regime de Uso do Solo — 234,768 of them, across all 278 municipalities — with the class and category of soil its municipal plan puts it in, the designation the plan uses, its area in hectares, the scale it was drawn at, where DGT took it from, whether the plan behind it is still in force, and that plan's deposit reference and publication date. Attributes only, without parcel outlines: Lisbon's 861 parcels alone carry nineteen megabytes of them.",
+    "Every parcel of mainland Portugal in the Carta do Regime de Uso do Solo — 234,768 of them, across all 278 municipalities — with the class and category of soil its municipal plan puts it in, the designation the plan uses, its area in hectares, the scale it was drawn at, where DGT took it from, whether the plan behind it is still in force, and that plan's deposit reference and publication date. Attributes only: the parcel outlines stay at DGT, about a gigabyte of them, and each row links to its parcel's page in DGT's service, outline included, in _source_url.",
   licence: "cc-by-4.0",
   attribution: "Direção-Geral do Território — Carta do Regime de Uso do Solo",
   topics: ["cities", "government"],

@@ -51,6 +51,13 @@ export const MAX_RECORD_BYTES = 1024 * 1024;
 const SIMPLIFY_METRES = [0.25, 0.5, 1];
 /** The field a simplified record carries: the tolerance its outline was simplified to. */
 const SIMPLIFIED_FIELD = "simplifiedToMetres";
+/**
+ * The field a record carries when its outline stays at the source: the
+ * feature's own page in the service, so the geometry this table does not hold
+ * is one link away. Underscored, because it is ours and not one of the source's
+ * properties.
+ */
+const SOURCE_URL_FIELD = "_source_url";
 
 /** The document's `ogc` member is the collection description and its published property schema. */
 const MAX_ENVELOPE_BYTES = 2 * 1024 * 1024;
@@ -65,8 +72,8 @@ const MAX_PROPERTIES = 512;
  * megabytes and there is room for a collection several times its size.
  */
 const MAX_IDENTITIES = 1_000_000;
-/** Fields every feature carries because they come from its geometry, not from a property. */
-const GEOMETRY_FIELDS = ["geometry", "latitude", "longitude", "west", "south", "east", "north"];
+/** Fields a feature carries that are ours, from its geometry or its address, not from a property. */
+const OWN_FIELDS = ["geometry", "latitude", "longitude", "west", "south", "east", "north", SOURCE_URL_FIELD];
 
 /** What a feed does with the collection's geometry. */
 type GeometryMode = "include" | "point" | "skip";
@@ -136,6 +143,8 @@ class PropertyProfile {
 interface PreparedProperty {
   name: string;
   outputName: string;
+  /** Its schema ID, unique among every property's and the fields this table adds. */
+  id: string;
   /** The type declared up front, from the service's published schema. */
   declared: CanonicalField["type"];
   /** Whether the service published a type at all; discovered properties are inferred instead. */
@@ -145,7 +154,7 @@ interface PreparedProperty {
 
 export class OgcTransformer {
   readonly id = "ogc-api-features";
-  readonly version = "1";
+  readonly version = "2";
 
   /**
    * Stream one collection document. Its `ogc` description precedes `features`,
@@ -166,6 +175,7 @@ export class OgcTransformer {
     const properties = prepareProperties(description);
     const byName = new Map(properties.map((property) => [property.name, property]));
     const geometry = description.geometry;
+    const featureBase = geometry === "include" ? undefined : featurePageBase(description.collectionUrl);
     let total = 0;
     let accepted = 0;
     let simplified = 0;
@@ -187,7 +197,7 @@ export class OgcTransformer {
               discovered.profile.observe(value);
             }
           }
-          const record = featureRecord(feature, properties, geometry);
+          const record = featureRecord(feature, properties, geometry, featureBase);
           if (record?.payload[SIMPLIFIED_FIELD] !== undefined) simplified += 1;
           if (record) {
             // Validate the final identity too: the source may omit Feature.id and
@@ -239,13 +249,14 @@ export class OgcTransformer {
  * was requested. A feature without a usable identity, or one too large to
  * store, is left out and counted as rejected.
  */
-function featureRecord(feature: GeojsonFeature, properties: PreparedProperty[], geometry: GeometryMode): CanonicalRecord | undefined {
+function featureRecord(feature: GeojsonFeature, properties: PreparedProperty[], geometry: GeometryMode, featureBase: string | undefined): CanonicalRecord | undefined {
   const key = entityKey(feature, properties);
   if (key === undefined) return undefined;
   const payload: JsonObject = {};
   for (const property of properties) {
     payload[property.outputName] = feature.properties[property.name] ?? null;
   }
+  if (featureBase !== undefined) payload[SOURCE_URL_FIELD] = featurePage(featureBase, feature.id);
   if (geometry !== "skip") {
     const point = representativePoint(feature.geometry);
     payload.latitude = point?.[1] ?? null;
@@ -310,7 +321,7 @@ function entityKey(feature: GeojsonFeature, properties: PreparedProperty[]): str
 function collectionSchema(properties: PreparedProperty[], geometry: GeometryMode, total: number | undefined): CanonicalSchema {
   const final = total !== undefined;
   const fields = properties.map((property): CanonicalField => ({
-    id: fieldId(property.name),
+    id: property.id,
     name: property.outputName,
     type: !final
       ? property.declared
@@ -321,6 +332,7 @@ function collectionSchema(properties: PreparedProperty[], geometry: GeometryMode
         : property.profile.inferredType(),
     nullable: !final || property.profile.present < total,
   }));
+  if (geometry !== "include") fields.push({ id: SOURCE_URL_FIELD, name: SOURCE_URL_FIELD, type: "url", nullable: true });
   if (geometry !== "skip") {
     if (geometry === "include") fields.push({ id: "geometry", name: "geometry", type: "geometry", nullable: true });
     fields.push({ id: "latitude", name: "latitude", type: "latitude", nullable: true }, { id: "longitude", name: "longitude", type: "longitude", nullable: true });
@@ -334,6 +346,25 @@ function collectionSchema(properties: PreparedProperty[], geometry: GeometryMode
     }
   }
   return { fields };
+}
+
+/** The collection's address without its query, which every feature page hangs off. */
+function featurePageBase(collectionUrl: string): string {
+  const url = new URL(collectionUrl);
+  url.search = "";
+  url.hash = "";
+  return url.toString().replace(/\/$/, "");
+}
+
+/**
+ * A feature's page in the service, `/collections/{collection}/items/{featureId}`
+ * as OGC API Features Part 1 gives every feature. Only the service's own
+ * feature id addresses it; a feature that has none has no page to link to.
+ */
+function featurePage(base: string, id: JsonValue | undefined): string | null {
+  if (isJsonString(id) && id.trim() !== "") return `${base}/items/${encodeURIComponent(id)}`;
+  if (isJsonNumber(id) && Number.isFinite(id)) return `${base}/items/${encodeURIComponent(String(id))}`;
+  return null;
 }
 
 function parseDescription(value: JsonObject): OgcCollectionDescription {
@@ -376,12 +407,16 @@ function parseFeature(value: JsonValue | undefined): GeojsonFeature {
 
 function prepareProperties(description: OgcCollectionDescription): PreparedProperty[] {
   const taken = new Set<string>();
+  const ids = new Set<string>();
   return (description.schema ?? []).map((property) => {
     const outputName = uniqueOutputName(property.name, taken);
     taken.add(outputName);
+    const id = uniqueFieldId(property.name, ids);
+    ids.add(id);
     return {
       name: property.name,
       outputName,
+      id,
       declared: declaredType(property),
       published: property.type !== "unknown" || property.role === "id",
       profile: new PropertyProfile(),
@@ -393,7 +428,8 @@ function prepareProperties(description: OgcCollectionDescription): PreparedPrope
 function discoveredProperty(name: string, existing: PreparedProperty[]): PreparedProperty {
   const taken = new Set(existing.map((property) => property.outputName));
   const outputName = uniqueOutputName(name, taken);
-  return { name, outputName, declared: "string", published: false, profile: new PropertyProfile() };
+  const id = uniqueFieldId(name, new Set(existing.map((property) => property.id)));
+  return { name, outputName, id, declared: "string", published: false, profile: new PropertyProfile() };
 }
 
 function declaredType(property: OgcProperty): CanonicalField["type"] {
@@ -426,6 +462,7 @@ function productDescription(description: OgcCollectionDescription): string {
     `OGC API Features collection “${description.title}”.`,
     plainText(description.description),
     description.geometry === "skip" ? "Feature attributes only: this feed asks the service for its records without geometry." : "",
+    description.geometry === "include" ? "" : `Each row links to its feature's page in the service, with the outline, in ${SOURCE_URL_FIELD}.`,
     description.properties ? `Only these properties were requested: ${description.properties.join(", ")}.` : "",
   ];
   return parts.filter(Boolean).join(" ");
@@ -441,14 +478,19 @@ function plainText(value: string): string {
 /**
  * The schema ID of a source property. A collection may have its own `latitude`
  * or `longitude` property; it keeps its values under a distinct ID so it cannot
- * collide with the fields derived from the geometry.
+ * collide with the fields this table adds, nor with another property that is
+ * already called by that distinct ID.
  */
-function fieldId(name: string): string {
-  return GEOMETRY_FIELDS.includes(name) ? `${name}__source` : name;
+function uniqueFieldId(name: string, taken: ReadonlySet<string>): string {
+  const wanted = OWN_FIELDS.includes(name) ? `${name}__source` : name;
+  if (!taken.has(wanted)) return wanted;
+  let suffix = 2;
+  while (taken.has(`${wanted}_${suffix}`)) suffix += 1;
+  return `${wanted}_${suffix}`;
 }
 
 function uniqueOutputName(name: string, taken: ReadonlySet<string>): string {
-  if (!taken.has(name) && !GEOMETRY_FIELDS.includes(name)) return name;
+  if (!taken.has(name) && !OWN_FIELDS.includes(name)) return name;
   let suffix = 2;
   while (taken.has(`${name} (${suffix})`)) suffix += 1;
   return `${name} (${suffix})`;
