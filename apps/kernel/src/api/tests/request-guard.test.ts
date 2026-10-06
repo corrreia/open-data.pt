@@ -24,6 +24,8 @@ describe("canonical routes", () => {
     expect(route("/api/products/stops/events?from=a&to=b")?.costly).toBe(true);
     expect(route("/api/products/stops/series/changes/range?from=a&to=b")?.costly).toBe(true);
     expect(route("/api/products/stops.geojson")?.costly).toBe(true);
+    expect(route("/api/products/stops.parquet")).toMatchObject({ costly: true, template: "/api/products/{slug}.parquet" });
+    expect(() => route("/api/products/stops.parquet?where=a%3Ab")).toThrow(/no query parameters/);
     expect(route("/api/products/stops/records/all")?.costly).toBe(true);
     expect(route("/api/products/stops/records?limit=500&cursor=abc")?.costly).toBe(false);
     // A filtered page reads on through the product until it fills.

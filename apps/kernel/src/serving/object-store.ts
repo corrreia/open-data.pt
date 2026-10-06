@@ -1,4 +1,6 @@
 import type { JsonObject } from "@open-data-pt/contract";
+import { digest } from "#/hash";
+import type { ProductIndexEntry } from "#/registry/feed-model";
 import type { SnapshotStore } from "#/serving/ports";
 
 /**
@@ -43,6 +45,44 @@ export const keys = {
   series: (feedId: string, slug: string, version: number) => `serving/${feedId}/${slug}/series/${version}.json`,
   seriesChanges: (feedId: string, slug: string, version: number) => `serving/${feedId}/${slug}/series-changes/${version}.json`,
 };
+
+/**
+ * Bumped whenever the Parquet file's columns or metadata change shape: a new
+ * layout is a new key, written afresh. Every layout up to this one stays
+ * known, so cleanup still finds files written under an older one.
+ */
+export const PARQUET_LAYOUT = 1;
+
+/** The parts of an index entry a Parquet key is derived from. */
+export type ParquetKeyed = Pick<ProductIndexEntry, "feedId" | "slug" | "version" | "kind" | "schema" | "chunks">;
+
+/**
+ * Where a record product version's Parquet download is kept, once someone has
+ * asked for it. The key is a digest of what the file is made of — the layout,
+ * the version, the schema and the content-addressed chunks — so it is known
+ * from the index entry alone, before the file exists: the runner retires it
+ * with the version's chunks, and a reset that reuses a version number never
+ * finds another version's file. Undefined for a series, which has no chunks.
+ */
+export function parquetKey(entry: ParquetKeyed, layout = PARQUET_LAYOUT): string | undefined {
+  if (entry.kind !== "record" || entry.chunks === null) return undefined;
+  const content = JSON.stringify([layout, entry.version, entry.schema, entry.chunks.map((chunk) => chunk.key)]);
+  return `${keys.prefix(entry.feedId, entry.slug)}/parquet/${digest(content)}.parquet`;
+}
+
+/**
+ * The key of a version's file under every layout up to `latest`: what cleanup
+ * deletes, so a file written before a layout bump is retired with its version
+ * instead of being left behind. Deleting a key never written is free.
+ */
+export function parquetKeys(entry: ParquetKeyed, latest = PARQUET_LAYOUT): string[] {
+  const found: string[] = [];
+  for (let layout = 1; layout <= latest; layout += 1) {
+    const key = parquetKey(entry, layout);
+    if (key) found.push(key);
+  }
+  return found;
+}
 
 /** How much rolling history each window keeps; older items live in the lake. */
 export const WINDOW = { changes: 500, points: 5_000, pointChanges: 500 };

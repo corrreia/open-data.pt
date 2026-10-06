@@ -290,13 +290,14 @@ async function product(url: URL, host: SiteHost): Promise<PageText> {
           ...rows.map((row) => `| ${columns.map((column) => cell(value(row[column]))).join(" | ")} |`),
         ]),
     "",
-    "## Read it as JSON",
+    "## Read it through the API",
     "",
     `- This product: ${origin}${path}`,
     series
       ? `- Points: ${origin}${path}/series?limit=1000 (seriesKey, from, to)`
       : `- Rows: ${origin}${path}/records?limit=500, following nextCursor, or every row at ${origin}${path}/records/all`,
     ...(geographic ? [`- GeoJSON: ${origin}${path}.geojson`] : []),
+    ...(series ? [] : [`- Parquet: ${origin}${path}.parquet (every current record in one file)`]),
     ...(item.exposeHistory ? [`- History: ${origin}${path}/${item.role === "event-log" ? "events" : series ? "series/range" : "changes/range"}?from=<ISO>&to=<ISO>`] : []),
   ]);
 }

@@ -16,7 +16,25 @@ The generated reference is at [open-data.pt/docs](https://open-data.pt/docs) and
 | `GET`  | `/api/products/:slug/changes`        | Recent bounded changes                         |
 | `GET`  | `/api/products/:slug/series/changes` | Recent series corrections                      |
 | `GET`  | `/api/products/:slug.geojson`        | Current geospatial records as streamed GeoJSON |
+| `GET`  | `/api/products/:slug.parquet`        | Every current record as one Parquet file       |
 | `GET`  | `/api/catalog.dcat.json`             | DCAT 3 JSON-LD catalog                         |
+
+### Parquet
+
+`/api/products/:slug.parquet` is a record product's current version as one Apache Parquet file, for
+DuckDB, pandas, R, Spark or QGIS: `SELECT * FROM 'https://open-data.pt/api/products/dgt-crus.parquet'`.
+It has an `id` column, one column per schema field, and the row's clocks (`_event_time`,
+`_valid_from`, `_valid_to`, `_source_published_at`, `_source_sequence`, `_observed_at`). Numbers are
+DOUBLE, dates DATE, date-times UTC TIMESTAMP, categories dictionary-encoded strings and JSON fields
+JSON text; a value that is not of its field's type is left null and counted in the `dropped_values`
+metadata entry. A `geometry` field is WKB with GeoParquet 1.1 metadata. The file's key-value metadata
+names the product, its version, its licence and attribution, its publisher and its source.
+
+The first request for a version writes the file into R2; later requests, and byte ranges, read it from
+there, and it is deleted with the version's chunks once a newer version replaces it. A time series has
+no file, and a product too large to write in one request (over a million rows) answers `413`. Why
+it works this way, and why history is not offered as Parquet yet, is in
+[ADR 0018](adr/0018-parquet-downloads.md).
 
 ## History
 

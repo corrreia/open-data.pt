@@ -128,6 +128,7 @@ function dataset(product: CatalogProduct, feed: CatalogFeed | undefined, canonic
   const downloads: JsonObject[] = [
     { "@type": "DataDownload", encodingFormat: "application/json", contentUrl: product.role === "time-series" ? `${api}/series?limit=1000` : `${api}/records/all` },
     ...(geographic ? [{ "@type": "DataDownload", encodingFormat: "application/geo+json", contentUrl: `${api}.geojson` }] : []),
+    ...(product.role === "time-series" ? [] : [{ "@type": "DataDownload", encodingFormat: "application/vnd.apache.parquet", contentUrl: `${api}.parquet` }]),
   ];
   const variables = product.schema.fields.slice(0, MAX_VARIABLES).map((field) => {
     const variable: JsonObject = { "@type": "PropertyValue", name: field.name };

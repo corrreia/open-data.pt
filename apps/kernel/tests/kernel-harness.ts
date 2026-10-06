@@ -20,12 +20,12 @@ import { drainOutbox, runCollection, type EngineOutcome, type LakeSend, type Run
 import type { Feed, ProductIndexEntry } from "#/registry/feed-model";
 import type { LakeTable } from "#/history/lake";
 import { ObjectStore } from "#/serving/object-store";
-import type { SnapshotStore, StoredObject } from "#/serving/ports";
+import type { ByteRange, FileInfo, FileMetadata, FileStore, FileUpload, SnapshotStore, StoredFile, StoredObject } from "#/serving/ports";
 import { RunnerCore, type RunnerDeps } from "#/runner/core";
 import { sqliteStorage } from "#/tests/sqlite-storage";
 
 /** R2 in memory, counting what the cost model counts: writes and reads. */
-export class MemorySnapshots implements SnapshotStore {
+export class MemorySnapshots implements SnapshotStore, FileStore {
   readonly objects = new Map<string, Uint8Array>();
   readonly putKeys: string[] = [];
   reads = 0;
@@ -49,6 +49,39 @@ export class MemorySnapshots implements SnapshotStore {
   }
   chunkPuts(): string[] {
     return this.putKeys.filter((key) => key.includes("/chunks/"));
+  }
+
+  readonly fileMetadata = new Map<string, FileMetadata>();
+  /** Every file upload started, closed or not. */
+  readonly uploads: string[] = [];
+  async headFile(objectKey: string): Promise<FileInfo | undefined> {
+    const bytes = this.objects.get(objectKey);
+    return bytes ? { size: bytes.byteLength, metadata: this.fileMetadata.get(objectKey) ?? {} } : undefined;
+  }
+  async getFile(objectKey: string, range?: ByteRange): Promise<StoredFile | undefined> {
+    this.reads += 1;
+    const bytes = this.objects.get(objectKey);
+    if (!bytes) return undefined;
+    const part = range ?? { offset: 0, length: bytes.byteLength };
+    return { body: new Response(bytes.slice(part.offset, part.offset + part.length)).body!, size: bytes.byteLength, metadata: this.fileMetadata.get(objectKey) ?? {}, range: part };
+  }
+  uploadFile(objectKey: string, _contentType: string, metadata: FileMetadata): FileUpload {
+    this.uploads.push(objectKey);
+    const pieces: Uint8Array[] = [];
+    return {
+      write: async (bytes) => {
+        pieces.push(bytes);
+      },
+      close: async () => {
+        const whole = new Uint8Array(await new Blob(pieces).arrayBuffer());
+        this.objects.set(objectKey, whole);
+        this.fileMetadata.set(objectKey, metadata);
+        return whole.byteLength;
+      },
+      abort: async () => {
+        pieces.length = 0;
+      },
+    };
   }
 }
 

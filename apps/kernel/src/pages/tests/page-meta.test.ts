@@ -148,6 +148,7 @@ describe("link previews", () => {
       distribution: [
         { "@type": "DataDownload", encodingFormat: "application/json", contentUrl: `${ORIGIN}/api/products/fuel-stations/records/all` },
         { "@type": "DataDownload", encodingFormat: "application/geo+json", contentUrl: `${ORIGIN}/api/products/fuel-stations.geojson` },
+        { "@type": "DataDownload", encodingFormat: "application/vnd.apache.parquet", contentUrl: `${ORIGIN}/api/products/fuel-stations.parquet` },
       ],
       variableMeasured: [
         { "@type": "PropertyValue", name: "Station" },

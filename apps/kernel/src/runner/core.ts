@@ -26,7 +26,7 @@ import {
 } from "#/registry/feed-model";
 import { digest } from "#/hash";
 import type { LakeTable } from "#/history/lake";
-import { keys, WINDOW, type ChangeItem, type ObjectStore } from "#/serving/object-store";
+import { keys, parquetKeys, WINDOW, type ChangeItem, type ObjectStore } from "#/serving/object-store";
 import { BLOB_BYTES, jsonArrays, MAX_RECORD_BYTES, SMALL_PRODUCT_BYTES, utf8Length } from "#/blob-budget";
 import { RecentChanges, recordRevision, retractionRevision, type PreparedRecord, type RecordContext } from "#/collection/records";
 import { dropAllTables, userTables, type SqlExec } from "#/sqlite-reset";
@@ -1518,9 +1518,11 @@ function sourceOf(feed: Feed): string {
   return `${feed.resourceKey}|${feed.configHash}`;
 }
 
+/** Every object a product version may have in R2. Its Parquet download, under any layout, is written only when first asked for; deleting one never written is free. */
 function objectKeysOf(entry: ProductIndexEntry): string[] {
   const found = (entry.chunks ?? []).map((chunk) => chunk.key);
   for (const key of [entry.changesKey, entry.seriesKey, entry.seriesChangesKey]) if (key) found.push(key);
+  found.push(...parquetKeys(entry));
   return found;
 }
 

@@ -33,6 +33,7 @@ const ROUTES: readonly RouteRule[] = [
   { pattern: /^\/api\/acquisitions$/, template: "/api/acquisitions", params: ["day", "feedId", "limit"] },
   { pattern: /^\/api\/feeds\/[^/]+$/, template: "/api/feeds/{feedId}", params: [] },
   { pattern: /^\/api\/products\/[^/]+\.geojson$/, template: "/api/products/{slug}.geojson", params: ["where", "bbox"], repeatable: ["where"], costly: true },
+  { pattern: /^\/api\/products\/[^/]+\.parquet$/, template: "/api/products/{slug}.parquet", params: [], costly: true },
   { pattern: /^\/api\/products\/[^/]+\/records\/all$/, template: "/api/products/{slug}/records/all", params: ["where", "bbox"], repeatable: ["where"], costly: true },
   {
     pattern: /^\/api\/products\/[^/]+\/records$/,

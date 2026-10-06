@@ -282,7 +282,10 @@ export class Serving {
       const publisher = vocabulary.publisherRef(key, origin);
       return { "@type": "foaf:Agent", "foaf:name": publisher.name, "foaf:homepage": publisher.url, "foaf:depiction": publisher.logo };
     };
-    const products = await this.listProducts();
+    const views = await this.catalog.listProducts();
+    // Record products are also one Parquet file each; a series is not.
+    const records = new Set(views.filter((view) => view.kind === "record").map((view) => view.slug));
+    const products = views.map(publicProduct);
     return {
       "@context": { dcat: "http://www.w3.org/ns/dcat#", dct: "http://purl.org/dc/terms/", prov: "http://www.w3.org/ns/prov#", foaf: "http://xmlns.com/foaf/0.1/" },
       "@id": `${origin}/api/catalog.dcat.json`,
@@ -303,6 +306,16 @@ export class Serving {
           "dct:provenance": feed ? `Generated from ${feed.title} through the ${feed.library} library` : undefined,
           "dcat:distribution": [
             { "@type": "dcat:Distribution", "dct:format": "application/json", "dcat:accessURL": `${origin}/api/products/${encodeURIComponent(product.slug)}/${endpoint}` },
+            ...(records.has(product.slug)
+              ? [
+                  {
+                    "@type": "dcat:Distribution",
+                    "dct:format": "application/vnd.apache.parquet",
+                    "dcat:mediaType": "https://www.iana.org/assignments/media-types/application/vnd.apache.parquet",
+                    "dcat:downloadURL": `${origin}/api/products/${encodeURIComponent(product.slug)}.parquet`,
+                  },
+                ]
+              : []),
           ],
         };
       }),

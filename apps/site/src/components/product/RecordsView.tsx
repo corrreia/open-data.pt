@@ -1,4 +1,4 @@
-import { Button, Empty, LayerCard, Loader, Meter } from "@cloudflare/kumo";
+import { Button, Empty, LayerCard, LinkButton, Loader, Meter } from "@cloudflare/kumo";
 import { DownloadSimpleIcon, TableIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorNote } from "../common";
@@ -222,6 +222,18 @@ export function RecordsView({ product, refreshKey }: { product: Product; refresh
         onRowClick={setSelected}
         exportRow={(record) => record}
         downloadName={product.slug}
+        toolbar={
+          // CSV and JSON hold the rows loaded here; the Parquet file is every current record, written by the API.
+          <LinkButton
+            href={productPath(product.slug, ".parquet")}
+            download={`${product.slug}.parquet`}
+            variant="ghost"
+            icon={<DownloadSimpleIcon />}
+            title="Every current record as one Parquet file"
+          >
+            Parquet
+          </LinkButton>
+        }
         footer={
           <span>
             {loaded.complete ? `All ${fmt.int(rows.length)} records` : `First ${fmt.int(rows.length)} of ${fmt.int(product.rowCount)} records`} · select a row for every field

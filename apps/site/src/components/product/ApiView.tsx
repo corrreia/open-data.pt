@@ -38,7 +38,14 @@ function endpointsFor(product: Product): Endpoint[] {
       { title: "Corrections in a window", path: `${base}/series/changes/range?${changeSpan}&limit=500`, description: "Every new or corrected point ingested in a past window." },
     );
   } else {
-    list.push({ title: "Current records", path: `${base}/records?limit=50`, description: "The current rows, paged with a cursor." });
+    list.push(
+      { title: "Current records", path: `${base}/records?limit=50`, description: "The current rows, paged with a cursor." },
+      {
+        title: "Parquet",
+        path: `${base}.parquet`,
+        description: "Every current record as one Parquet file, with its licence and attribution in the file's metadata. GeoParquet when it has a geometry.",
+      },
+    );
     const filterable = product.schema.fields.find((field) => ["category", "identifier", "string"].includes(field.type));
     if (filterable)
       list.push({
@@ -83,7 +90,8 @@ export default function ApiView({ product }: { product: Product }) {
   return (
     <div className="grid gap-5">
       <p className="text-sm text-kumo-subtle">
-        Open, read-only and keyless. Responses are JSON with CORS enabled; errors use application/problem+json. Requests are rate limited per client and a 429 says when to retry.
+        Open, read-only and keyless, with CORS enabled. {product.role === "time-series" ? "Responses are JSON" : "Responses are JSON, except the Parquet file"}; errors use
+        application/problem+json. Requests are rate limited per client and a 429 says when to retry.
       </p>
       <div className="grid gap-3">
         {endpoints.map((endpoint) => (

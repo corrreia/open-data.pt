@@ -4,6 +4,7 @@ import { buildChunks, compareKeys, writeChunk, type ChunkSink, type ServingRow }
 import type { ProductDetail } from "#/registry/registry";
 import { ObjectStore, keys, type SeriesWindow } from "#/serving/object-store";
 import { InvalidQueryError, RECORD_SCAN_BUDGET, Serving, type RecordQuery, type RowFilters } from "#/serving/serving";
+import { EMPTY_VOCABULARIES, Vocabulary } from "#/registry/vocabulary";
 import { MemorySnapshots } from "#/tests/kernel-harness";
 import { jsonAs } from "#/tests/support";
 
@@ -395,5 +396,25 @@ describe("time windows compare instants, however a time is written", () => {
   it("reads a record valid at an instant written without milliseconds", async () => {
     const { serving: service, product } = await serving([{ name: "n", type: "number" }], [{ id: "a", n: 1, validFrom: "2026-01-01T00:00:00Z" }]);
     expect((await service.records(product, { limit: 5, validAt: "2026-01-01T00:00:00.000Z" })).data).toHaveLength(1);
+  });
+});
+
+describe("the DCAT catalog lists each product's downloads", () => {
+  it("offers a record product as JSON and as one Parquet file, and a series as JSON only", async () => {
+    const built = await serving([{ name: "n", type: "number" }], [{ id: "a", n: 1 }]);
+    const series: ProductDetail = { ...built.product, slug: "readings", role: "time-series", kind: "series", chunks: null, seriesKey: "series/readings" };
+    const service = new Serving({ listProducts: async () => [built.product, series], getProduct: async () => undefined }, built.objects);
+    const catalog = await service.dcatCatalog("https://open-data.pt", [], new Vocabulary(EMPTY_VOCABULARIES));
+    const downloads = Object.fromEntries(catalog["dcat:dataset"].map((dataset) => [dataset["@id"].slice(dataset["@id"].lastIndexOf("/") + 1), dataset["dcat:distribution"]]));
+    expect(downloads.places).toEqual([
+      { "@type": "dcat:Distribution", "dct:format": "application/json", "dcat:accessURL": "https://open-data.pt/api/products/places/records" },
+      {
+        "@type": "dcat:Distribution",
+        "dct:format": "application/vnd.apache.parquet",
+        "dcat:mediaType": "https://www.iana.org/assignments/media-types/application/vnd.apache.parquet",
+        "dcat:downloadURL": "https://open-data.pt/api/products/places.parquet",
+      },
+    ]);
+    expect(downloads.readings).toEqual([{ "@type": "dcat:Distribution", "dct:format": "application/json", "dcat:accessURL": "https://open-data.pt/api/products/readings/series" }]);
   });
 });
