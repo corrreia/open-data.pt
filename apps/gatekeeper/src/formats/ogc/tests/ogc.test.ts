@@ -21,7 +21,7 @@ import {
   type SourceConfig,
   type SourceFetch,
 } from "#/index";
-import { OgcTransformer, collectOgcFeed, itemsUrl, resolveOgcFeed, validateOgcFeedConfig } from "#/formats/ogc/index";
+import { OGC_NORMALIZER, OgcTransformer, collectOgcFeed, itemsUrl, resolveOgcFeed, validateOgcFeedConfig } from "#/formats/ogc/index";
 import { boundingBox, simplifyGeometry } from "#/formats/ogc/geometry";
 
 const DGT_HOST = "ogcapi.dgterritorio.gov.pt";
@@ -896,8 +896,12 @@ describe("OGC API Features normalization", () => {
     }
     expect(records.map((record) => record.entityKey)).toEqual(["0101", "1106", "1824"]);
     expect(records[0]?.payload.municipio).toBe("Águeda");
-    // `geometry: skip` was asked for, so no geometry columns are invented.
+    // `geometry: skip` was asked for, so no geometry columns are invented,
+    // and each row links to the feature's page, where its outline is.
     expect(Object.keys(records[0]?.payload ?? {})).not.toContain("geometry");
+    expect(records[0]?.payload._source_url).toBe(`https://${DGT_HOST}/collections/municipios/items/0101`);
+    expect(transform.products[0]?.schema.fields.find((field) => field.id === "_source_url")?.type).toBe("url");
+    expect(transform.products[0]?.description).toMatch(/_source_url/);
     expect(transform.products[0]?.updateMode).toBe("authoritative-snapshot");
     expect(transform.products[0]?.slug).toBe("dgt-caop-municipios");
     expect(transform.finish().quality).toEqual({ acceptedRecords: 3, rejectedRecords: 0 });
@@ -912,6 +916,8 @@ describe("OGC API Features normalization", () => {
     expect(rows).toHaveLength(2);
     for (const payload of rows) {
       expect(payload.geometry).not.toBeNull();
+      // The outline is here, so there is nothing to link to.
+      expect(Object.keys(payload)).not.toContain("_source_url");
       expect(isJsonNumber(payload.latitude)).toBe(true);
       expect(isJsonNumber(payload.longitude)).toBe(true);
       // The Azores sit west of the Greenwich meridian and north of the equator.
@@ -1131,7 +1137,7 @@ describe("OGC API Features through the shared collector", () => {
       await request({
         configHash: resolved.configHash,
         checkpoint: {
-          normalizer: { id: "ogc-api-features", version: "1" },
+          normalizer: OGC_NORMALIZER,
           state: { singlePage: true, validators: { default: { etag: '"one"' } } },
         },
       }),
@@ -1202,21 +1208,16 @@ describe("OGC API Features through the shared collector", () => {
 });
 
 describe("OGC API Features examples", () => {
-  it("reads each collection once, unless the second read is its boundaries", () => {
-    const attributes = feedsOf("ogc")
-      .filter((example) => example.config.geometry === "skip")
-      .map((example) => `${example.config.host}/${example.config.collection}`);
-    expect(attributes.filter((one, index) => attributes.indexOf(one) !== index)).toEqual([]);
-    // Only the land-use charter is read more than once: the table entire without
-    // outlines, and the outlines one municipality each, every one of the 278 once.
-    const crus = feedsOf("ogc").filter((example) => example.config.collection === "crus");
-    expect(crus.filter((example) => example.config.geometry === "skip")).toHaveLength(1);
-    const municipalities = crus.filter((example) => example.config.filterField === "dtcc").map((example) => example.config.filterValue);
-    expect(municipalities).toHaveLength(278);
-    expect(new Set(municipalities).size).toBe(278);
-    expect(municipalities.every((code) => /^\d{4}$/u.test(code ?? ""))).toBe(true);
-    // Nothing else is cut by an attribute value.
-    expect(feedsOf("ogc").filter((example) => example.config.filterField !== undefined && example.config.collection !== "crus")).toEqual([]);
+  it("reads each collection once, whole", () => {
+    const collections = feedsOf("ogc").map((example) => `${example.config.host}/${example.config.collection}`);
+    expect(collections.filter((one, index) => collections.indexOf(one) !== index)).toEqual([]);
+    // The land-use charter's outlines stay at DGT: one table of its attributes, each row linking to its parcel there.
+    expect(
+      feedsOf("ogc")
+        .filter((example) => example.config.collection === "crus")
+        .map((example) => example.config.geometry),
+    ).toEqual(["skip"]);
+    expect(feedsOf("ogc").filter((example) => example.config.filterField !== undefined)).toEqual([]);
   });
 
   it("says in every CAOP title that the charter covers the mainland only", () => {
@@ -1253,8 +1254,7 @@ describe("OGC API Features examples", () => {
       const { cadenceSeconds } = example.policy;
       expect(cadenceSeconds, example.slug).toBeGreaterThanOrEqual(604_800);
       expect(example.staleAfterSeconds, example.slug).toBeGreaterThanOrEqual(cadenceSeconds);
-      // The municipal outlines keep no history: the national table records every parcel's changes.
-      expect(example.policy.historyMode, example.slug).toBe(example.slug.startsWith("dgt-crus-parcels-") ? "latest" : "changes");
+      expect(example.policy.historyMode, example.slug).toBe("changes");
     }
   });
 
