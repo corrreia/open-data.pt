@@ -152,7 +152,8 @@ export default class KernelWorker extends WorkerEntrypoint<Env> {
       return { response, cache };
     }
     const response = await handleApi(read, this.apiContext());
-    if (ttl === undefined || !response.ok) return { response: head ? withoutBody(response) : response, cache };
+    // Only a whole answer is cached: the edge cuts byte ranges out of it itself, and refuses to store a 206.
+    if (ttl === undefined || response.status !== 200) return { response: head ? withoutBody(response) : response, cache };
 
     const cacheable = new Response(response.body, response);
     // A product's current data names its cadence, so one that changes daily is not read again every 15 seconds.

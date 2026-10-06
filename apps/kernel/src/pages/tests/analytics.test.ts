@@ -162,6 +162,7 @@ describe("where and what", () => {
   it("keeps the product, feed, publisher or topic a request names", () => {
     expect(subjectOf("api", site("/api/products/carris-stops/series/summary/2026-09"))).toBe("carris-stops");
     expect(subjectOf("api", site("/api/products/carris-stops.geojson"))).toBe("carris-stops");
+    expect(subjectOf("api", site("/api/products/dgt-crus.parquet"))).toBe("dgt-crus");
     expect(subjectOf("api", site("/api/feeds/feed_abc"))).toBe("feed_abc");
     expect(subjectOf("api", site("/api/products"))).toBe("");
     expect(subjectOf("web", site("/product/?slug=ipma-warnings&tab=map"))).toBe("ipma-warnings");

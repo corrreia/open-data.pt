@@ -86,7 +86,9 @@ budget, and accepted history is never deleted to relieve pressure.
   FeedRunner).
 - **R2 `open-data-pt-data`:** content-addressed record chunks and bounded series and change windows.
   Only the selected version is served: whatever the previous version referenced and the new one does
-  not is deleted an hour later.
+  not is deleted an hour later. A record product's Parquet download is written there on the first
+  request for a version, under a key its chunks imply, and goes with them
+  ([ADR 0018](adr/0018-parquet-downloads.md)).
 - **Basin Catalog:** durable `open_data.records` and `open_data.points` revision history written
   through Basin Pipelines, partitioned by ingest day, compacted, with snapshots kept for a week.
 

@@ -104,7 +104,7 @@ export function routeOf(surface: Surface, url: URL): string {
 
 const isApiRead = (surface: Surface) => surface === "api" || surface === "mcp-read" || surface === "ask-read";
 
-const SUBJECT_IN_PATH = /^\/api\/(?:products|feeds)\/([^/]+?)(?:\.geojson|\/.*)?$/;
+const SUBJECT_IN_PATH = /^\/api\/(?:products|feeds)\/([^/]+?)(?:\.geojson|\.parquet|\/.*)?$/;
 
 /** The product, feed, publisher, licence or topic a request is about, when it names one. */
 export function subjectOf(surface: Surface, url: URL): string {
@@ -397,6 +397,7 @@ function formatOf(contentType: string | null): string {
   if (!type) return "";
   if (type === "application/problem+json") return "problem";
   if (type === "application/geo+json") return "geojson";
+  if (type === "application/vnd.apache.parquet") return "parquet";
   if (type.endsWith("json")) return "json";
   return type.slice(type.indexOf("/") + 1).replace(/^x-/, "");
 }

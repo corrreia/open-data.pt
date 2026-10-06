@@ -7,6 +7,7 @@ import { ANALYTICS_TTL_SECONDS } from "#/pages/analytics";
  */
 const CACHE_TTL_SECONDS: Array<[pattern: RegExp, seconds: number]> = [
   [/^\/api\/products\/[^/]+\.geojson$/, 15],
+  [/^\/api\/products\/[^/]+\.parquet$/, 15],
   [/^\/api\/products\/[^/]+\/records\/all$/, 15],
   [/^\/api\/products\/[^/]+\/(records|series|changes|series\/changes)$/, 15],
   [/^\/api\/products(\/[^/]+)?$/, 20],

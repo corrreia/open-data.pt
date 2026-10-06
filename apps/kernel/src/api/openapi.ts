@@ -29,7 +29,7 @@ export function openApiDocument(origin: string) {
       {
         name: "Products",
         description: [
-          "Read a product's current rows or points, and its past. `/records`, `/records/all` and the GeoJSON export filter with `where` and `bbox`; `/series` serves a time-series product's recent window.",
+          "Read a product's current rows or points, and its past. `/records`, `/records/all` and the GeoJSON export filter with `where` and `bbox`; `{slug}.parquet` is every current record as one Parquet file; `/series` serves a time-series product's recent window.",
           "",
           "History is queryable. `/events` and `/series/range` answer what was true over an event-time window, as known now or at any past `knownAt`; `/changes/range` and `/series/changes/range` list every revision the platform learned over a knowledge-time window, corrections included. A window is at most 366 days, pages follow deterministic cursors, and every answer states its freshness and its coverage, including when the lake begins. Arbitrary SQL is not exposed.",
           "",
@@ -246,6 +246,33 @@ export function openApiDocument(origin: string) {
           responses: {
             "200": { description: "GeoJSON FeatureCollection", content: { "application/geo+json": { schema: { type: "object" } } } },
             "404": responseRef("NotFound"),
+            ...reads(),
+          },
+        },
+      },
+      "/api/products/{slug}.parquet": {
+        get: {
+          operationId: "getProductParquet",
+          tags: ["Products"],
+          summary: "Download every current record of a product as one Parquet file",
+          description: [
+            "The product's current version as Apache Parquet: an `id` column, then one column per schema field, then the row's clocks (`_event_time`, `_valid_from`, `_valid_to`, `_source_published_at`, `_source_sequence`, `_observed_at`).",
+            "Numbers, latitudes and longitudes are DOUBLE, booleans BOOLEAN, dates DATE, date-times UTC TIMESTAMP (milliseconds), categories dictionary-encoded strings, JSON fields JSON text, and every other field a string. A value that is not of its field's type is left null and counted in the `dropped_values` metadata entry.",
+            "A `geometry` field is WKB described by GeoParquet 1.1 `geo` metadata (lon/lat, OGC:CRS84), so DuckDB, GDAL/QGIS and GeoPandas read it as geometry.",
+            "The file's key-value metadata carries `product`, `title`, `version`, `updated_at`, `licence`, `licence_id`, `licence_url`, `attribution`, `publisher`, `publisher_url`, `source` and `api`.",
+            "The first request for a version writes the file; later ones read it, and byte ranges are served (`Accept-Ranges: bytes`), so DuckDB can read it over HTTP. A `time-series` product has no file: read it with `/series` or its summaries. Counts against the stricter rate limit.",
+          ].join("\n\n"),
+          parameters: [pathParameter("slug", "Stable product slug")],
+          responses: {
+            "200": {
+              description: "The whole Parquet file",
+              headers: { ETag: { description: "Changes with the product version and its terms", schema: { type: "string" } } },
+              content: { "application/vnd.apache.parquet": { schema: { type: "string", format: "binary" } } },
+            },
+            "206": { description: "The byte range asked for with `Range`", content: { "application/vnd.apache.parquet": { schema: { type: "string", format: "binary" } } } },
+            "404": responseRef("NotFound"),
+            "413": responseRef("TooLarge"),
+            "416": { description: "The range starts past the end of the file" },
             ...reads(),
           },
         },
@@ -787,6 +814,7 @@ export function openApiDocument(origin: string) {
       responses: {
         BadRequest: problemResponse("An invalid or unknown query parameter"),
         NotFound: problemResponse("No such product or feed, or it is not public"),
+        TooLarge: problemResponse("The product is too large to write as one file in one request; read it as JSON from /records/all"),
         TooManyRequests: problemResponse("Too many uncached requests from this client, or every history query slot is busy", {
           "Retry-After": { description: "Seconds to wait", schema: { type: "integer" } },
         }),

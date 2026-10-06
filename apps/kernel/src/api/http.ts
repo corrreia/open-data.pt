@@ -8,8 +8,9 @@ import { Vocabulary } from "#/registry/vocabulary";
 import { NotFoundError, RequestError, type HeaderMap } from "#/api/errors";
 import type { Acquisition, Feed } from "#/registry/feed-model";
 import { ObjectStore } from "#/serving/object-store";
-import type { SnapshotStore } from "#/serving/ports";
+import { parquetDownload, type ParquetStore } from "#/api/parquet-download";
 import { MAX_HISTORY_PAGE, QueryError, runLakeQuery } from "#/history/query";
+import type { ParquetSource } from "#/serving/parquet";
 import { PUBLISHED_AHEAD_MS, readSummaryFile, readSummaryRange, type SummaryResolution } from "#/history/summaries";
 import { callRegistry, withHistorySlot } from "#/api/registry-calls";
 import { ALLOWED_METHODS, MAX_FILTERS, requestIdOf } from "#/api/request-guard";
@@ -31,7 +32,7 @@ const MAX_HISTORY_WINDOW_MS = 366 * 86_400_000;
 
 export interface ApiContext {
   env: Env;
-  snapshots: SnapshotStore;
+  snapshots: ParquetStore;
   lakeQueryFetch?: typeof fetch;
   analyticsFetch?: typeof fetch;
 }
@@ -161,11 +162,12 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
     }
     if (url.pathname === "/api/products") return json({ data: await serving().listProducts() });
     const geoJsonMatch = url.pathname.match(/^\/api\/products\/([^/]+)\.geojson$/);
+    const parquetMatch = url.pathname.match(/^\/api\/products\/([^/]+)\.parquet$/);
     const allRecordsMatch = url.pathname.match(/^\/api\/products\/([^/]+)\/records\/all$/);
     const historyMatch = url.pathname.match(/^\/api\/products\/([^/]+)\/(events|changes\/range|series\/range|series\/changes\/range)$/);
     const summaryMatch = url.pathname.match(/^\/api\/products\/([^/]+)\/series\/summary(?:\/(\d{4}(?:-\d{2})?))?$/);
     const productMatch = url.pathname.match(/^\/api\/products\/([^/]+)(?:\/(records|changes|series|series\/changes))?$/);
-    const slug = geoJsonMatch?.[1] ?? allRecordsMatch?.[1] ?? historyMatch?.[1] ?? summaryMatch?.[1] ?? productMatch?.[1];
+    const slug = geoJsonMatch?.[1] ?? parquetMatch?.[1] ?? allRecordsMatch?.[1] ?? historyMatch?.[1] ?? summaryMatch?.[1] ?? productMatch?.[1];
     if (slug) {
       // One Registry call answers every product read: the entry, its chunk list, and whether the public may see it.
       const service = serving();
@@ -179,6 +181,7 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
           product,
         );
       }
+      if (parquetMatch) return await parquetDownload(request, product, ctx.snapshots, async () => parquetSource(registry(), product, url.origin));
       if (allRecordsMatch) {
         return withCadence(
           new Response(await service.allRecords(product, rowFilters(url)), {
@@ -244,7 +247,10 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
     );
   } catch (error) {
     if (error instanceof NotFoundError) return problem(404, "Not found", error.message);
-    if (error instanceof RequestError) return problem(error.status, error.status === 429 ? "Too many requests" : "Invalid request", error.message, error.headers);
+    if (error instanceof RequestError) {
+      const title = error.status === 429 ? "Too many requests" : error.status === 413 ? "Too large for one file" : "Invalid request";
+      return problem(error.status, title, error.message, error.headers);
+    }
     if (error instanceof InvalidQueryError) return problem(400, "Invalid request", error.message);
     if (error instanceof QueryError && error.failure === "disabled") return problem(503, "History unavailable", "History queries are not enabled on this deployment.");
     const message = error instanceof Error ? error.message : String(error);
@@ -515,6 +521,15 @@ async function requireFeed(reg: RegistryStub, feedId: string): Promise<Feed> {
   const feed = await reg.getFeed(feedId);
   if (!feed) throw new NotFoundError("Feed was not found");
   return feed;
+}
+
+/** Where a Parquet file's data comes from, for its metadata: the product's API URL, its publisher and the source page the feed last read. */
+async function parquetSource(reg: RegistryStub, product: ProductDetail, origin: string): Promise<ParquetSource> {
+  const [feed, catalog] = await Promise.all([reg.getFeed(product.feedId), reg.catalog()]);
+  const source: ParquetSource = { apiUrl: `${origin}/api/products/${encodeURIComponent(product.slug)}` };
+  if (feed) source.publisher = new Vocabulary(catalog).publisherRef(feed.publisher, origin);
+  if (feed?.sourceUrl) source.sourceUrl = feed.sourceUrl;
+  return source;
 }
 
 /** The Registry's product index, as the public API reads it. */

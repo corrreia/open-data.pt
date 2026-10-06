@@ -11,6 +11,7 @@ wherever your question is.
 | [Libraries](libraries.md)       | Every library the Gatekeeper carries, what it reads, and which sources are held back      |
 | [Public API](api.md)            | Every endpoint, what it serves, and the rules that apply to all of them                   |
 | [Running it](development.md)    | Local development, the checks, and what a deployment does                                 |
+| [Decisions](adr/)               | Why some things are the way they are, with what was measured                              |
 
 ## Per source
 

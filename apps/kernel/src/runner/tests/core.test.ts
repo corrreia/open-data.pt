@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CollectionFailed, failureFrom } from "#/collection/engine";
 import { BACKFILL_RESUME_MS, BACKFILL_START_DELAY_MS, COOLDOWN_BASE_MS, FRESH_DATA_RETRY_MS, MAX_FAILURE_WAIT_SECONDS, nextRunAfter } from "#/runner/core";
+import { parquetKey } from "#/serving/object-store";
 import { kernelHarness, policy, record, type KernelHarness } from "#/tests/kernel-harness";
 
 const HOUR = 3_600_000;
@@ -446,6 +447,21 @@ describe("durable acceptance, publication and history delivery", () => {
     expect(served.map((key) => h.snapshots.objects.has(key))).toEqual([false, false, true]);
     expect(await h.served()).toHaveLength(1);
     expect(h.snapshots.putKeys.some((key) => key.includes("/manifests/"))).toBe(false);
+  });
+
+  it("deletes a version's Parquet download with its chunks, once a newer version replaces it", async () => {
+    const h = await kernelHarness();
+    h.source.records = [record("a", 1)];
+    await h.collect();
+    // Someone downloaded this version: the API wrote its file under the key the entry implies.
+    const downloaded = parquetKey(h.entry()!)!;
+    await h.snapshots.putStream(downloaded, new Uint8Array([1]));
+    h.source.records = [record("a", 2)];
+    await h.collect();
+    expect(parquetKey(h.entry()!)).not.toBe(downloaded);
+    h.clock.now += 2 * HOUR;
+    await h.core.collectGarbage();
+    expect(h.snapshots.objects.has(downloaded)).toBe(false);
   });
 
   it("keeps an object a newer version serves again, even after an older one discarded it", async () => {
