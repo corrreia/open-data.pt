@@ -18,9 +18,10 @@ import {
 } from "@open-data-pt/contract";
 
 import { BYTES_PER_CODE_UNIT, SMALL_PRODUCT_BYTES, STAGE_BYTES, utf8Length } from "#/blob-budget";
-import { buildChunks, chunkListProblem, compareKeys, parseChunkRows, servedIdentity, type ChunkSink, type ServingRow } from "#/serving/chunks";
+import { buildChunks, chunkListProblem, compareKeys, compareRows, extentOf, parseChunkRows, placedRow, servedIdentity, type ChunkSink } from "#/serving/chunks";
 import { CollectionDeadline } from "#/collection/deadline";
-import { keepsHistory, type ProductIndexEntry } from "#/registry/feed-model";
+import { keepsHistory, setExtent, spatialIndexMissing, type ProductIndexEntry } from "#/registry/feed-model";
+import { locatorFor, rowBox, spatialOrderKey, type Locator } from "#/serving/spatial";
 import { readFrames, type CompleteFrame, type FrameScope, type HeaderFrame } from "#/collection/frames";
 import { digest, stableStringify } from "#/hash";
 import type { LakeTable } from "#/history/lake";
@@ -424,7 +425,7 @@ function nextEntry(base: WorkerBase, rules: ProductRules, changed: boolean): Pro
   const previous = declared.previous;
   const schema = rules.final?.schema ?? header.schema;
   const watermark = rules.final?.watermark ?? header.watermark ?? previous?.watermark ?? null;
-  return {
+  const entry: ProductIndexEntry = {
     id: previous?.id ?? `prd_${crypto.randomUUID()}`,
     slug: declared.slug,
     feedId: plan.feed.id,
@@ -450,6 +451,8 @@ function nextEntry(base: WorkerBase, rules: ProductRules, changed: boolean): Pro
     updatedAt: changed ? plan.observedAt : (previous?.updatedAt ?? plan.observedAt),
     createdAt: previous?.createdAt ?? plan.observedAt,
   };
+  // The chunks it keeps keep their boxes; a product no longer located has no extent.
+  return setExtent(entry, header.kind === "record" && locatorFor(schema) ? previous?.extent : undefined);
 }
 
 function metadataChanged(previous: ProductIndexEntry | null, entry: ProductIndexEntry): boolean {
@@ -474,10 +477,11 @@ async function writeChangeWindow(base: WorkerBase, entry: ProductIndexEntry, fre
   entry.changesKey = key;
 }
 
-function chunkSink(base: WorkerBase, known: ReadonlySet<string>): ChunkSink {
+function chunkSink(base: WorkerBase, known: ReadonlySet<string>, located: boolean): ChunkSink {
   return {
     prefix: keys.prefix(base.plan.feed.id, base.declared.slug),
     known,
+    located,
     put: async (key, body) => {
       await base.ports.objects.writeText(key, body);
     },
@@ -552,14 +556,17 @@ class SmallRecordWorker implements ProductWorker {
       }
     }
     const probe = nextEntry(base, rules, true);
-    const changed = revisions > 0 || removed > 0 || !base.declared.previous?.chunks || metadataChanged(base.declared.previous, probe);
+    // A located product still served from chunks in entity order is rebuilt in place order now, while its rows are in hand.
+    const changed = revisions > 0 || removed > 0 || !base.declared.previous?.chunks || metadataChanged(base.declared.previous, probe) || spatialIndexMissing(probe);
     if (!changed) return { commit: { productKey: base.header.productKey, changed: false, entry: nextEntry(base, rules, false), mode: "small" }, revisions };
     const entry = nextEntry(base, rules, true);
-    const ordered: ServingRow[] = [...next.entries()].sort(([left], [right]) => compareKeys(left, right)).map(([key, json]) => ({ key, json }));
-    const chunks = await buildChunks(ordered, chunkSink(base, new Set((base.declared.previous?.chunks ?? []).map((chunk) => chunk.key))));
+    const locator = entry.kind === "record" ? locatorFor(entry.schema) : undefined;
+    const ordered = [...next.entries()].map(([key, json]) => placedRow(key, json, locator)).sort(compareRows);
+    const chunks = await buildChunks(ordered, chunkSink(base, new Set((base.declared.previous?.chunks ?? []).map((chunk) => chunk.key)), locator !== undefined));
     const problem = chunkListProblem(chunks, entry.slug);
     if (problem) throw new NormalizedInputError(problem);
     entry.chunks = chunks;
+    setExtent(entry, locator ? extentOf(chunks) : undefined);
     entry.rowCount = ordered.length;
     await writeChangeWindow(base, entry, changes.newestFirst());
     return { commit: { productKey: base.header.productKey, changed: true, entry, mode: "small" }, revisions };
@@ -583,16 +590,23 @@ class LargeRecordWorker implements ProductWorker {
   private readonly changes = new RecentChanges<ChangeItem>(WINDOW.changes);
   private revisions = 0;
   private staged = 0;
+  /** Where a located product's rows are, read from the schema its header declares. */
+  private readonly locator: Locator | undefined;
 
-  constructor(private readonly base: WorkerBase) {}
+  constructor(private readonly base: WorkerBase) {
+    this.locator = base.header.kind === "record" ? locatorFor(base.header.schema) : undefined;
+  }
 
   async pushRecord(record: CanonicalRecord): Promise<void> {
     const prepared = prepareRecord(record);
     const json = servingJson(prepared, this.base.context);
-    this.buffer.push({ prepared, json });
+    const staged: StagedRecord = { prepared, json };
+    // A located product's index is kept in place order; the payload is already parsed here, so placing a row is cheap.
+    if (this.locator) staged.order = spatialOrderKey(rowBox(this.locator, record.payload), prepared.key);
+    this.buffer.push(staged);
     // A staged row carries both the prepared record and the JSON it will be
     // served as, so it weighs about twice what it will be stored as.
-    this.bufferBytes += utf8Length(json) + utf8Length(prepared.hash) + prepared.key.length + STAGED_ROW_OVERHEAD;
+    this.bufferBytes += utf8Length(json) + utf8Length(prepared.hash) + prepared.key.length * 2 + STAGED_ROW_OVERHEAD;
     if (this.buffer.length >= STAGE_ROWS || this.bufferBytes >= STAGE_BYTES) await this.flush();
   }
 
@@ -632,13 +646,15 @@ class LargeRecordWorker implements ProductWorker {
       this.staged += sweep.removed;
     }
     const probe = nextEntry(base, rules, true);
-    const changed = this.revisions > 0 || this.staged > 0 || !base.declared.previous?.chunks || metadataChanged(base.declared.previous, probe);
+    // A located product still served in entity order is rebuilt in place order by the runner, from its index.
+    const unplaced = spatialIndexMissing(probe);
+    const changed = this.revisions > 0 || this.staged > 0 || !base.declared.previous?.chunks || metadataChanged(base.declared.previous, probe) || unplaced;
     if (!changed) return { commit: { productKey: base.header.productKey, changed: false, entry: nextEntry(base, rules, false), mode: "large" }, revisions: this.revisions };
     const entry = nextEntry(base, rules, true);
     await writeChangeWindow(base, entry, this.changes.newestFirst());
     // The runner rebuilds the changed chunks from its index after the commit and fills in the chunk list.
     return {
-      commit: { productKey: base.header.productKey, changed: true, entry, mode: "large", staged: this.staged > 0 || !base.declared.previous?.chunks },
+      commit: { productKey: base.header.productKey, changed: true, entry, mode: "large", staged: this.staged > 0 || !base.declared.previous?.chunks || unplaced },
       revisions: this.revisions,
     };
   }

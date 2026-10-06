@@ -59,7 +59,50 @@ export interface Product {
   attribution: string | null;
   hasChanges: boolean;
   hasSeries: boolean;
+  /** Where a product with a geometry or a latitude/longitude pair lies; null for one that has no place. */
+  extent: ProductExtent | null;
   updatedAt: string;
+}
+
+/** The box a located product's rows cover, and whether a point can be looked up in it from its chunk boxes. */
+export interface ProductExtent {
+  /** `[west, south, east, north]` in degrees; null when no row has a place, or until the product is indexed. */
+  bbox: [number, number, number, number] | null;
+  /** Its chunks are ordered and boxed by place. A product published before that is rebuilt by its runner, within hours. */
+  indexed: boolean;
+}
+
+/** A point asked about, in degrees, rounded to five decimals (about a metre). */
+export interface Point {
+  lat: number;
+  lon: number;
+}
+
+/** `/api/products?lat&lon`: the products whose extent reaches the point, from the product index alone. */
+export interface ProductsAtPoint {
+  point: Point;
+  /** Metres: a product counts when its extent comes within this distance of the point. */
+  radius: number;
+  data: Product[];
+  /** Located products not indexed yet, whose extent is unknown: any of them may cover the point. */
+  notIndexed: string[];
+}
+
+/** `/api/products/{slug}/at`: one product's records at a point. */
+export interface RecordsAtPoint {
+  point: Point;
+  radius: number;
+  /** Polygons containing the point (`_distance` 0), then points and lines within `radius`, nearest first. */
+  data: JsonObject[];
+  /** How many records matched; more than `data` holds when `capped`. */
+  matched: number;
+  capped: boolean;
+  /** Only the chunks whose box reaches the point were read; false while the product is read whole because it is not indexed yet. */
+  indexed: boolean;
+  /** Every chunk that could hold a match was read. False only when more chunks reach the point than one request reads. */
+  complete: boolean;
+  licence: Term | null;
+  attribution: string | null;
 }
 
 export type AcquisitionStatus = "failed" | "queued" | "running" | "succeeded" | "unchanged";

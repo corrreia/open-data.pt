@@ -3,7 +3,7 @@ import { NormalizedInputError, type CatalogFeed } from "@open-data-pt/contract";
 
 import { cadenceFloorOf, checkForVersion, syncStep, withCadenceFloor, type SyncPorts, type SyncProgress, type SyncState } from "#/registry/catalog-sync";
 import type { ManifestChunk } from "#/serving/chunks";
-import { definitionFingerprint, keepsHistory, type Acquisition, type Feed, type ProductIndexEntry, type ProductSummary } from "#/registry/feed-model";
+import { definitionFingerprint, isLocated, keepsHistory, type Acquisition, type Feed, type ProductIndexEntry, type ProductSummary } from "#/registry/feed-model";
 import { catalogVersionOf, gatekeeperOf } from "#/collection/gatekeeper";
 import { EMPTY_VOCABULARIES, Vocabulary, checkedCatalog, type Vocabularies, type VocabularyRef } from "#/registry/vocabulary";
 import { digest } from "#/hash";
@@ -21,6 +21,10 @@ const SYNC_STATE_KEY = "catalog-sync";
 /** The vocabularies the Gatekeeper's catalog last declared: its publishers, licences and topics. */
 const CATALOG_STATE_KEY = "catalog";
 const AUDIT_DUE_KEY = "lake-audit-due";
+/** The runners asked to rebuild a located product in place order, and when. */
+const SPATIAL_NUDGES_KEY = "spatial-nudges";
+const SPATIAL_NUDGES_PER_WAKE = 16;
+const SPATIAL_NUDGE_AGAIN_MS = 6 * 60 * 60_000;
 /** A history slot outlives its query's own deadline by a margin, and is then taken back from a request that cannot still hold it. */
 const HISTORY_SLOT_TTL_MS = (QUERY_DEADLINE_SECONDS + 15) * 1000;
 
@@ -121,6 +125,7 @@ export class Registry extends DurableObject<Env> {
       retryIn = 60_000;
       console.error(JSON.stringify({ event: "catalog_sync_failed", error: String(error) }));
     }
+    await this.nudgeSpatialIndex();
     // After the sync, so keeping feeds equal to the examples never waits on the lake.
     if (this.env.CATALOG_TOKEN) await this.summariseIfDue();
     await this.ctx.storage.setAlarm(Math.max(Date.now() + retryIn, this.nextWake()));
@@ -166,6 +171,36 @@ export class Registry extends DurableObject<Env> {
       this.store.setState(SUMMARY_DUE_STATE_KEY, now + 3_600_000);
       console.error(JSON.stringify({ event: "series_summary_failed", error: String(error) }));
     }
+  }
+
+  /**
+   * Located products published before spatial order have no extent, so a
+   * point cannot find them. Their runners rebuild them when they next wake,
+   * which for a monthly feed is a month away; this asks a few of those
+   * runners each wake (every 15 minutes) to do it now, and the same runner
+   * again only after a few hours. It ends once every located product has an extent.
+   */
+  private async nudgeSpatialIndex(): Promise<void> {
+    const now = Date.now();
+    const waiting = new Set(
+      this.store
+        .listProducts()
+        .filter((product) => product.status === "current" && isLocated(product) && product.extent === undefined)
+        .map((product) => product.feedId),
+    );
+    const asked = this.store.getState<Record<string, number>>(SPATIAL_NUDGES_KEY) ?? {};
+    const next: Record<string, number> = {};
+    for (const [feedId, at] of Object.entries(asked)) if (waiting.has(feedId) && now - at < SPATIAL_NUDGE_AGAIN_MS) next[feedId] = at;
+    const due = [...waiting].filter((feedId) => next[feedId] === undefined).slice(0, SPATIAL_NUDGES_PER_WAKE);
+    for (const feedId of due) {
+      next[feedId] = now;
+      try {
+        await this.env.FeedRunner.getByName(feedId).requestSpatialIndex();
+      } catch (error) {
+        console.warn(JSON.stringify({ event: "spatial_index_nudge_failed", feedId, error: String(error) }));
+      }
+    }
+    if (JSON.stringify(next) !== JSON.stringify(asked)) this.store.setState(SPATIAL_NUDGES_KEY, next);
   }
 
   private async auditIfDue(): Promise<void> {

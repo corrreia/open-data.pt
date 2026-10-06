@@ -12,9 +12,19 @@ describe("canonical routes", () => {
     expect([...(first?.url.searchParams.keys() ?? [])]).toEqual(["limit", "where", "where"]);
   });
 
+  it("keys a point by its coordinates to five decimals, so nearby clicks and longer spellings share an entry", () => {
+    const precise = route("/api/products/crus/at?lon=-9.1366049&lat=38.70770001&radius=25");
+    expect(precise?.url.search).toBe("?lat=38.7077&lon=-9.1366&radius=25");
+    expect(route("/api/products/crus/at?lat=38.707700&lon=-9.13660")?.url.href).toBe(route("/api/products/crus/at?lon=-9.1366&lat=38.7077")?.url.href);
+    expect(route("/api/products?lat=-0.000001&lon=0")?.url.search).toBe("?lat=0&lon=0");
+    // What is not a number is left for the API to refuse.
+    expect(route("/api/products/crus/at?lat=north&lon=-9.1")?.url.searchParams.get("lat")).toBe("north");
+  });
+
   it("refuses unknown and repeated parameters, and too many filters", () => {
     expect(() => route("/api/products/stops/events?from=a&to=b&feedId=other")).toThrow(GuardError);
-    expect(() => route("/api/products?_r=1")).toThrow(/no query parameters/);
+    expect(() => route("/api/feeds?_r=1")).toThrow(/no query parameters/);
+    expect(() => route("/api/products?_r=1")).toThrow(/accepts lat, lon, radius/);
     expect(() => route("/api/products/stops/records?limit=1&limit=2")).toThrow(/only once/);
     const filters = Array.from({ length: MAX_FILTERS + 1 }, (_, index) => `where=f${index}%3Ax`).join("&");
     expect(() => route(`/api/products/stops/records?${filters}`)).toThrow(/At most/);
@@ -29,6 +39,8 @@ describe("canonical routes", () => {
     // A filtered page reads on through the product until it fills.
     for (const filter of ["where=kind%3Abus", "bbox=-9.2,38.7,-9.1,38.8", "validAt=2026-09-01T00:00:00Z"])
       expect(route(`/api/products/stops/records?${filter}`)?.costly, filter).toBe(true);
+    // Discovery at a point reads the index alone.
+    expect(route("/api/products?lat=38.7&lon=-9.1")?.costly).toBe(false);
     expect(route("/api/config")).toBeUndefined();
     // The API serves data and collection status, not the platform's own machinery.
     for (const path of ["/api/usage", "/api/sync", "/api/policies", "/api/gatekeepers", "/api/feed-kinds", "/api/activity", "/api/feeds/f1/acquisitions", "/api/feeds/f1/backfill"])

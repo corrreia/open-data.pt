@@ -133,6 +133,17 @@ export class FeedRunner extends DurableObject<Env> {
     return changed;
   }
 
+  /**
+   * A located product of this feed is still served in entity order, with no
+   * chunk boxes: wake as soon as nothing else runs and rebuild it, rather than
+   * at the next collection, which for a monthly feed is a month away. Asked
+   * by the Registry's alarm and by a point lookup that found it unindexed.
+   */
+  async requestSpatialIndex(): Promise<void> {
+    if (this.core.retiring() || !this.core.feed()) return;
+    await this.rearm();
+  }
+
   /** The Registry dropped this feed: stop taking work, deliver what history is left, then delete everything. */
   async decommission(): Promise<void> {
     this.core.decommission();
@@ -189,6 +200,8 @@ export class FeedRunner extends DurableObject<Env> {
       }
       const due = this.core.takeDue();
       if (due) ended = !(await this.start(due)) || ended;
+      // With no collection to run, one located product written before spatial order is rebuilt in it; it publishes and reports itself.
+      else await this.core.indexSpatially();
       await this.core.collectGarbage();
     } catch (error) {
       ended = true;

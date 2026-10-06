@@ -1,4 +1,4 @@
-import type { Acquisition as ApiAcquisition, Coverage, Feed as ApiFeed } from "@open-data-pt/api";
+import type { Acquisition as ApiAcquisition, Coverage, Feed as ApiFeed, RecordsAtPoint } from "@open-data-pt/api";
 import { asObject, asString, isJsonString, parseJson, type JsonObject, type JsonValue } from "@open-data-pt/contract";
 
 import { ANALYTICS_WINDOWS, AnalyticsError, analyticsReport } from "#/pages/analytics";
@@ -13,6 +13,8 @@ import { MAX_HISTORY_PAGE, QueryError, runLakeQuery } from "#/history/query";
 import { PUBLISHED_AHEAD_MS, readSummaryFile, readSummaryRange, type SummaryResolution } from "#/history/summaries";
 import { callRegistry, withHistorySlot } from "#/api/registry-calls";
 import { ALLOWED_METHODS, MAX_FILTERS, requestIdOf } from "#/api/request-guard";
+import { NotIndexedError, POINT_LOOKUP, productsAt, recordsAt, type PointLookupQuery } from "#/serving/point-lookup";
+import type { PointQuery } from "#/serving/spatial";
 import {
   InvalidQueryError,
   Serving,
@@ -159,13 +161,18 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
         headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "public, max-age=300", "Content-Type": "application/ld+json" },
       });
     }
-    if (url.pathname === "/api/products") return json({ data: await serving().listProducts() });
+    if (url.pathname === "/api/products") {
+      const point = pointQuery(url, false);
+      const products = await serving().listProducts();
+      return json(point ? productsAt(products, point) : { data: products });
+    }
     const geoJsonMatch = url.pathname.match(/^\/api\/products\/([^/]+)\.geojson$/);
+    const atMatch = url.pathname.match(/^\/api\/products\/([^/]+)\/at$/);
     const allRecordsMatch = url.pathname.match(/^\/api\/products\/([^/]+)\/records\/all$/);
     const historyMatch = url.pathname.match(/^\/api\/products\/([^/]+)\/(events|changes\/range|series\/range|series\/changes\/range)$/);
     const summaryMatch = url.pathname.match(/^\/api\/products\/([^/]+)\/series\/summary(?:\/(\d{4}(?:-\d{2})?))?$/);
     const productMatch = url.pathname.match(/^\/api\/products\/([^/]+)(?:\/(records|changes|series|series\/changes))?$/);
-    const slug = geoJsonMatch?.[1] ?? allRecordsMatch?.[1] ?? historyMatch?.[1] ?? summaryMatch?.[1] ?? productMatch?.[1];
+    const slug = geoJsonMatch?.[1] ?? atMatch?.[1] ?? allRecordsMatch?.[1] ?? historyMatch?.[1] ?? summaryMatch?.[1] ?? productMatch?.[1];
     if (slug) {
       // One Registry call answers every product read: the entry, its chunk list, and whether the public may see it.
       const service = serving();
@@ -179,6 +186,7 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
           product,
         );
       }
+      if (atMatch) return withCadence(json(await productAt(ctx, url, product)), product);
       if (allRecordsMatch) {
         return withCadence(
           new Response(await service.allRecords(product, rowFilters(url)), {
@@ -246,6 +254,7 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
     if (error instanceof NotFoundError) return problem(404, "Not found", error.message);
     if (error instanceof RequestError) return problem(error.status, error.status === 429 ? "Too many requests" : "Invalid request", error.message, error.headers);
     if (error instanceof InvalidQueryError) return problem(400, "Invalid request", error.message);
+    if (error instanceof NotIndexedError) return problem(503, "Not indexed yet", error.message, { "Retry-After": String(NOT_INDEXED_RETRY_SECONDS) });
     if (error instanceof QueryError && error.failure === "disabled") return problem(503, "History unavailable", "History queries are not enabled on this deployment.");
     const message = error instanceof Error ? error.message : String(error);
     // Durable Object RPC keeps an error's message but not its class.
@@ -258,6 +267,53 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
     }
     return problem(500, "Request failed", `Something went wrong on our side. Request ${requestId}.`, { "X-Request-Id": requestId });
   }
+}
+
+/* ---------- What is at a point ---------- */
+
+/** A product too large to read whole, waiting for its runner to index it by place: a rebuild takes seconds once it starts. */
+const NOT_INDEXED_RETRY_SECONDS = 300;
+
+/** One product's records at a point, with the terms it is served under. */
+async function productAt(ctx: ApiContext, url: URL, product: ProductDetail): Promise<RecordsAtPoint> {
+  const point = pointQuery(url, true);
+  if (!point) throw new RequestError("lat and lon are required", 400);
+  const geometry = optionalQuery(url, "geometry");
+  if (geometry !== undefined && geometry !== "true" && geometry !== "false") throw new RequestError("geometry must be true or false", 400);
+  const query: PointLookupQuery = { ...point, limit: parseInteger(url, "limit", POINT_LOOKUP.defaultLimit, 1, POINT_LOOKUP.maxLimit), geometry: geometry === "true" };
+  try {
+    const found = await recordsAt(new ObjectStore(ctx.snapshots), product, query);
+    if (!found.indexed) await askForSpatialIndex(ctx, product);
+    return { point: { lat: point.latitude, lon: point.longitude }, radius: point.radius, ...found, licence: product.licence, attribution: product.attribution };
+  } catch (error) {
+    if (error instanceof NotIndexedError) await askForSpatialIndex(ctx, product);
+    throw error;
+  }
+}
+
+/** A lookup found a located product not yet indexed by place: its runner is asked to rebuild it now rather than at its next collection. */
+async function askForSpatialIndex(ctx: ApiContext, product: ProductDetail): Promise<void> {
+  try {
+    await ctx.env.FeedRunner.getByName(product.feedId).requestSpatialIndex();
+  } catch (error) {
+    console.warn(JSON.stringify({ event: "spatial_index_request_failed", product: product.slug, error: error instanceof Error ? error.message : String(error) }));
+  }
+}
+
+/** `lat`, `lon` and `radius`: a point in WGS 84 degrees and metres around it. Undefined when neither coordinate is given and none is required. */
+function pointQuery(url: URL, required: boolean): PointQuery | undefined {
+  const lat = optionalQuery(url, "lat");
+  const lon = optionalQuery(url, "lon");
+  if (lat === undefined && lon === undefined && !required) {
+    if (url.searchParams.has("radius")) throw new RequestError("radius needs lat and lon", 400);
+    return undefined;
+  }
+  if (lat === undefined || lon === undefined) throw new RequestError("lat and lon are both required: the point, in WGS 84 degrees", 400);
+  const latitude = Number(lat);
+  const longitude = Number(lon);
+  if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) throw new RequestError("lat must be a latitude in degrees, between -90 and 90", 400);
+  if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) throw new RequestError("lon must be a longitude in degrees, between -180 and 180", 400);
+  return { latitude, longitude, radius: parseInteger(url, "radius", POINT_LOOKUP.defaultRadius, 0, POINT_LOOKUP.maxRadius) };
 }
 
 /* ---------- Series summaries ---------- */

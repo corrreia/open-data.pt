@@ -15,6 +15,7 @@ import {
   type SourceFetch,
   type StreamingTransform,
 } from "@open-data-pt/gatekeeper";
+import type { CanonicalField } from "@open-data-pt/contract";
 import type { ChunkObject } from "#/serving/chunks";
 import { drainOutbox, runCollection, type EngineOutcome, type LakeSend, type RunnerPort } from "#/collection/engine";
 import type { Feed, ProductIndexEntry } from "#/registry/feed-model";
@@ -68,6 +69,8 @@ export interface FixtureSource {
   finalCompleteness?: Completeness;
   /** Products the batch declares after the fixture's own, each with its rows. */
   extra?: ProductBuild[];
+  /** The record product's schema fields, in place of its name and value (a located product names its geometry). */
+  fields?: CanonicalField[];
 }
 
 const KIND: FeedKindDescription = {
@@ -98,6 +101,8 @@ export function record(key: string, value: number | string, extra: JsonObject = 
 
 export interface KernelHarness {
   core: RunnerCore;
+  /** The runner's SQLite, for a test that has to put it in a state today's code no longer writes. */
+  database: DatabaseSync;
   port: RunnerPort;
   snapshots: MemorySnapshots;
   objects: ObjectStore;
@@ -219,6 +224,7 @@ export async function kernelHarness(options: HarnessOptions = {}): Promise<Kerne
   const run = (acquisitionId: string, lake?: LakeSend) => runCollection(acquisitionId, lake ? { runner: port, gatekeeper, objects, lake } : { runner: port, gatekeeper, objects });
   const harness: KernelHarness = {
     core,
+    database,
     port,
     snapshots,
     objects,
@@ -272,7 +278,7 @@ function fixtureTransform(source: FixtureSource): StreamingTransform {
           role: "reference" as const,
           kind: "record" as const,
           schema: {
-            fields: [
+            fields: source.fields ?? [
               { id: "name", name: "Name", type: "string" as const, nullable: false },
               { id: "value", name: "Value", type: "string" as const, nullable: true },
             ],

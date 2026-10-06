@@ -2,6 +2,7 @@ import type { Product as ApiProduct } from "@open-data-pt/api";
 import { asObject, asString, isJsonArray, isJsonNumber, isJsonObject, type CanonicalField, type CanonicalSchema, type JsonObject, type JsonValue } from "@open-data-pt/contract";
 
 import type { ChunkObject } from "#/serving/chunks";
+import { productExtent } from "#/serving/point-lookup";
 import type { ProductDetail, ProductView } from "#/registry/registry";
 import { NotFoundError } from "#/api/errors";
 import type { Feed } from "#/registry/feed-model";
@@ -459,6 +460,7 @@ export function publicProduct(entry: ProductView): ApiProduct {
     // A change window left from before the product stopped keeping history is not served: `/changes` answers 404.
     hasChanges: entry.exposeHistory && Boolean(entry.changesKey),
     hasSeries: Boolean(entry.seriesKey),
+    extent: productExtent(entry),
     updatedAt: entry.updatedAt,
   };
 }

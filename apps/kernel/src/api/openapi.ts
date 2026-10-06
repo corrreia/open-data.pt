@@ -29,7 +29,7 @@ export function openApiDocument(origin: string) {
       {
         name: "Products",
         description: [
-          "Read a product's current rows or points, and its past. `/records`, `/records/all` and the GeoJSON export filter with `where` and `bbox`; `/series` serves a time-series product's recent window.",
+          "Read a product's current rows or points, and its past. `/records`, `/records/all` and the GeoJSON export filter with `where` and `bbox`; `/series` serves a time-series product's recent window. For a place, `GET /api/products?lat&lon` lists the products that reach it and `/at` answers what one of them holds there.",
           "",
           "History is queryable. `/events` and `/series/range` answer what was true over an event-time window, as known now or at any past `knownAt`; `/changes/range` and `/series/changes/range` list every revision the platform learned over a knowledge-time window, corrections included. A window is at most 366 days, pages follow deterministic cursors, and every answer states its freshness and its coverage, including when the lake begins. Arbitrary SQL is not exposed.",
           "",
@@ -222,9 +222,73 @@ export function openApiDocument(origin: string) {
         get: {
           operationId: "listProducts",
           tags: ["Products"],
-          summary: "List cleaned products, current views, series, and summaries",
-          parameters: [],
-          responses: { "200": jsonResponse("Products", dataOf("Product")), ...reads() },
+          summary: "List cleaned products, current views, series, and summaries; with `lat` and `lon`, those that reach a point",
+          description:
+            "With `lat` and `lon`, the list holds only the products whose `extent` reaches the point (within `radius`), from the product index alone: no record is read. Ask each of them `/api/products/{slug}/at` for what it holds there. `notIndexed` names the located products whose extent is not known yet; any of them may cover the point too.",
+          parameters: [
+            latitudeParameter(false),
+            longitudeParameter(false),
+            radiusParameter("With `lat` and `lon`: metres; a product counts when its extent comes within this distance of the point. Pass the radius you will ask `/at` with."),
+          ],
+          responses: {
+            "200": jsonResponse("Products", {
+              type: "object",
+              required: ["data"],
+              properties: {
+                data: { type: "array", items: schemaRef("Product") },
+                point: { ...schemaRef("Point"), description: "With `lat` and `lon` only." },
+                radius: { type: "integer", description: "With `lat` and `lon` only: metres." },
+                notIndexed: {
+                  type: "array",
+                  items: { type: "string" },
+                  description: "With `lat` and `lon` only: slugs of located products whose extent is not known yet, so they are not in `data` but may cover the point.",
+                },
+              },
+            }),
+            ...reads(),
+          },
+        },
+      },
+      "/api/products/{slug}/at": {
+        get: {
+          operationId: "getProductRecordsAtPoint",
+          tags: ["Products"],
+          summary: "What one located product holds at a point: the polygons that contain it, and the points and lines near it",
+          description: [
+            "For a product with a geometry or a latitude/longitude pair (`extent` is not null). Polygons match when they contain the point (holes excluded), with `_distance` 0; points and lines match within `radius` metres, nearest first. Up to `limit` records come back, and `capped` says when more matched; geometries are left out unless `geometry=true`.",
+            "",
+            "Only the chunks whose box reaches the point are read, at most 16 a request; `complete` is false in the rare case more reach it. A product published before chunks were boxed is read whole while it is small enough (`indexed: false`), and otherwise answers 503 with `Retry-After` until the platform has indexed it. Find the products at a point first with `GET /api/products?lat&lon`.",
+            "",
+            "Counts against the stricter rate limit. The point is rounded to five decimals (about a metre), and the answer is cached like the product's records.",
+          ].join("\n"),
+          parameters: [
+            pathParameter("slug", "Stable product slug"),
+            latitudeParameter(true),
+            longitudeParameter(true),
+            radiusParameter(),
+            integerParameter("limit", 10, 1, 50),
+            { name: "geometry", in: "query", required: false, description: "Return each record's geometry too.", schema: { type: "boolean", default: false } },
+          ],
+          responses: {
+            "200": jsonResponse("The product's records at the point", {
+              type: "object",
+              required: ["point", "radius", "data", "matched", "capped", "indexed", "complete", "licence", "attribution"],
+              properties: {
+                point: schemaRef("Point"),
+                radius: { type: "integer", description: "Metres." },
+                data: { type: "array", items: schemaRef("RecordAtPoint") },
+                matched: { type: "integer", description: "Records that matched; more than `data` holds when `capped`." },
+                capped: { type: "boolean" },
+                indexed: { type: "boolean", description: "False while the product is read whole because its chunks are not boxed yet." },
+                complete: { type: "boolean", description: "Every chunk that could hold a match was read." },
+                licence: { oneOf: [{ type: "null" }, schemaRef("Term")], description: "The terms the product is served under." },
+                attribution: { type: ["string", "null"], description: "Credit the publisher with this, not open-data.pt." },
+              },
+            }),
+            "404": responseRef("NotFound"),
+            "503": responseRef("NotIndexed"),
+            ...reads(),
+          },
         },
       },
       "/api/products/{slug}": {
@@ -498,8 +562,46 @@ export function openApiDocument(origin: string) {
             attribution: { type: "string", description: "Credit the publisher with this, not open-data.pt." },
             hasChanges: { type: "boolean", description: "Whether `/changes` has recent changes." },
             hasSeries: { type: "boolean", description: "Whether `/series` has points." },
+            extent: {
+              oneOf: [{ type: "null" }, schemaRef("Extent")],
+              description: "Where a product with a geometry or a latitude/longitude pair lies, so `/at` can be asked of it; null for a product with no place.",
+            },
             updatedAt: time(),
           },
+        },
+        Extent: {
+          type: "object",
+          required: ["bbox", "indexed"],
+          properties: {
+            bbox: {
+              type: ["array", "null"],
+              items: { type: "number" },
+              minItems: 4,
+              maxItems: 4,
+              description: "`[west, south, east, north]` in degrees; null when no row has a place, or while the product is not indexed.",
+            },
+            indexed: {
+              type: "boolean",
+              description:
+                "Its chunks are ordered and boxed by place, so `/at` reads only the few that can hold the point. A product published before that is rebuilt by the platform, within hours.",
+            },
+          },
+        },
+        RecordAtPoint: {
+          allOf: [
+            schemaRef("Record"),
+            {
+              type: "object",
+              required: ["_distance"],
+              properties: { _distance: { type: "number", description: "Metres from the point: 0 for a polygon that contains it." } },
+            },
+          ],
+        },
+        Point: {
+          type: "object",
+          required: ["lat", "lon"],
+          description: "The point asked about, rounded to five decimals (about a metre).",
+          properties: { lat: { type: "number" }, lon: { type: "number" } },
         },
         Term: {
           type: "object",
@@ -797,6 +899,9 @@ export function openApiDocument(origin: string) {
         ),
         HistoryUnavailable: problemResponse("History queries are not enabled on this deployment"),
         AnalyticsUnavailable: problemResponse("Usage analytics are not enabled on this deployment (503), or Analytics Engine did not answer (502)"),
+        NotIndexed: problemResponse("The product is not indexed by place yet and is too large to read whole; the platform is indexing it", {
+          "Retry-After": { description: "Seconds to wait", schema: { type: "integer" } },
+        }),
       },
     },
   } as const;
@@ -898,6 +1003,36 @@ function bboxParameter() {
     required: false,
     description: "`minLon,minLat,maxLon,maxLat` in degrees, for products with latitude and longitude fields.",
     schema: { type: "string", examples: ["-9.25,38.69,-9.09,38.80"] },
+  };
+}
+
+function latitudeParameter(required: boolean) {
+  return {
+    name: "lat",
+    in: "query",
+    required,
+    description: `Latitude of the point, WGS 84 degrees${required ? "" : "; with `lon`"}.`,
+    schema: { type: "number", minimum: -90, maximum: 90, examples: [38.7077] },
+  };
+}
+
+function longitudeParameter(required: boolean) {
+  return {
+    name: "lon",
+    in: "query",
+    required,
+    description: `Longitude of the point, WGS 84 degrees${required ? "" : "; with `lat`"}.`,
+    schema: { type: "number", minimum: -180, maximum: 180, examples: [-9.1366] },
+  };
+}
+
+function radiusParameter(description = "Metres around the point within which points and lines count. Polygons count only when they contain the point.") {
+  return {
+    name: "radius",
+    in: "query",
+    required: false,
+    description,
+    schema: { type: "integer", default: 25, minimum: 0, maximum: 1000 },
   };
 }
 

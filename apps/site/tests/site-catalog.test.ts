@@ -42,6 +42,7 @@ function product(slug: string, title: string, role: Product["role"], rowCount: n
     attribution: null,
     hasChanges: false,
     hasSeries: false,
+    extent: null,
     updatedAt: "2026-09-24T10:00:00.000Z",
   };
 }

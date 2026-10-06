@@ -58,6 +58,14 @@ function endpointsFor(product: Product): Endpoint[] {
         { title: "GeoJSON", path: `${base}.geojson`, description: "The current rows as a GeoJSON FeatureCollection." },
       );
     }
+    if (product.extent) {
+      list.push({
+        title: "Records at a point",
+        path: `${base}/at?lat=LAT&lon=LON&radius=25`,
+        template: true,
+        description: "The polygons that contain a point, and the points and lines within radius metres of it.",
+      });
+    }
     if (product.role === "event-log") {
       list.push(
         { title: "Event history", path: `${base}/events?${dataSpan}&limit=200`, description: "Events of a past window from the durable history, up to 366 days." },

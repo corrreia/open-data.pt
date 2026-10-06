@@ -17,7 +17,13 @@ interface RouteRule {
   costly?: boolean;
   /** Parameters that make a request scan on through a product, and so count it against the stricter limit too. */
   costlyWith?: readonly string[];
+  /** Coordinates, rounded in the cache key to five decimals (about a metre), so a point clicked twice is one entry. */
+  coordinates?: readonly string[];
 }
+
+const POINT = ["lat", "lon"] as const;
+/** The point filter on a product's rows: where, and how far around it. */
+const AT_POINT = [...POINT, "radius"] as const;
 
 const HISTORY_WINDOW = ["from", "to", "cursor", "limit"] as const;
 
@@ -25,22 +31,32 @@ const HISTORY_WINDOW = ["from", "to", "cursor", "limit"] as const;
 const ROUTES: readonly RouteRule[] = [
   { pattern: /^\/api\/?$/, template: "/api", params: [] },
   { pattern: /^\/api\/health$/, template: "/api/health", params: [] },
-  { pattern: /^\/api\/products$/, template: "/api/products", params: [] },
+  // With a point, the products whose extent reaches it: the product index alone, no record read.
+  { pattern: /^\/api\/products$/, template: "/api/products", params: [...POINT, "radius"], coordinates: POINT },
   { pattern: /^\/api\/feeds$/, template: "/api/feeds", params: [] },
   { pattern: /^\/api\/catalog\.dcat\.json$/, template: "/api/catalog.dcat.json", params: [] },
   { pattern: /^\/api\/outages$/, template: "/api/outages", params: ["days"] },
   { pattern: /^\/api\/analytics$/, template: "/api/analytics", params: ["days"] },
   { pattern: /^\/api\/acquisitions$/, template: "/api/acquisitions", params: ["day", "feedId", "limit"] },
   { pattern: /^\/api\/feeds\/[^/]+$/, template: "/api/feeds/{feedId}", params: [] },
-  { pattern: /^\/api\/products\/[^/]+\.geojson$/, template: "/api/products/{slug}.geojson", params: ["where", "bbox"], repeatable: ["where"], costly: true },
+  {
+    pattern: /^\/api\/products\/[^/]+\.geojson$/,
+    template: "/api/products/{slug}.geojson",
+    params: ["where", "bbox", ...AT_POINT],
+    repeatable: ["where"],
+    coordinates: POINT,
+    costly: true,
+  },
   { pattern: /^\/api\/products\/[^/]+\/records\/all$/, template: "/api/products/{slug}/records/all", params: ["where", "bbox"], repeatable: ["where"], costly: true },
   {
     pattern: /^\/api\/products\/[^/]+\/records$/,
     template: "/api/products/{slug}/records",
-    params: ["limit", "cursor", "validAt", "where", "bbox"],
+    params: ["limit", "cursor", "validAt", "where", "bbox", ...AT_POINT],
     repeatable: ["where"],
+    coordinates: POINT,
     // A filtered page reads on until it fills, up to a few hundred chunks: much of a product, as /records/all reads all of it.
-    costlyWith: ["validAt", "where", "bbox"],
+    // A point reads only the chunks whose box reaches it, but up to POINT_LOOKUP.maxChunks of them, so it counts the same.
+    costlyWith: ["validAt", "where", "bbox", ...POINT],
   },
   { pattern: /^\/api\/products\/[^/]+\/changes$/, template: "/api/products/{slug}/changes", params: ["knownAt", "limit"] },
   { pattern: /^\/api\/products\/[^/]+\/series$/, template: "/api/products/{slug}/series", params: ["seriesKey", "from", "to", "limit"] },
@@ -110,11 +126,24 @@ export function canonicalRoute(url: URL): CanonicalRoute | undefined {
   }
   if ((seen.get("where")?.length ?? 0) > MAX_FILTERS) throw new GuardError(`At most ${MAX_FILTERS} where filters are allowed`, 400, "Invalid request");
   const canonical = new URL(url.pathname, url.origin);
+  const coordinates = new Set(rule.coordinates ?? []);
   for (const name of [...seen.keys()].sort()) {
-    for (const value of [...seen.get(name)!].sort()) canonical.searchParams.append(name, value);
+    for (const value of [...seen.get(name)!].sort()) canonical.searchParams.append(name, coordinates.has(name) ? roundedCoordinate(value) : value);
   }
   const scans = rule.costlyWith?.some((name) => seen.has(name)) === true;
   return { url: canonical, template: rule.template, costly: rule.costly === true || scans };
+}
+
+/**
+ * A coordinate at five decimals, about 1.1 m of latitude: finer than any
+ * source here places a parcel boundary, and coarse enough that the same
+ * point asked twice (or written with more digits) is one cache entry. What
+ * is not a number is left as it is, for the API to refuse.
+ */
+function roundedCoordinate(value: string): string {
+  const number = Number(value.trim());
+  if (value.trim() === "" || !Number.isFinite(number)) return value;
+  return String(Math.round(number * 1e5) / 1e5 || 0);
 }
 
 /** The request methods the read-only API answers; everything else is 405. */

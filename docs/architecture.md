@@ -62,8 +62,9 @@ sleeps for a week. The Workflow consumes the stream frame by frame with bounded 
    larger products are compared chunk by chunk against a SQLite entity index in the runner, which
    writes only changed rows.
 3. Changed products are served from content-addressed chunks, listed in order on the product's index
-   entry. Rows are ordered by entity key and chunks end where a key's hash says so, so one change
-   rewrites one chunk and unchanged chunks are never uploaded again.
+   entry. Rows are ordered by entity key (a located product's by place, each chunk carrying the box
+   of its rows; see [Point lookup](#point-lookup)) and chunks end where a key's hash says so, so one
+   change rewrites one chunk and unchanged chunks are never uploaded again.
 4. Meaningful revisions become history rows in a runner outbox, about one megabyte per SQLite row.
 5. One transaction applies staged entity changes, commits the outbox, and advances the checkpoint.
    The Registry then selects every current product of the feed at once; publication is retried until
@@ -92,6 +93,63 @@ budget, and accepted history is never deleted to relieve pressure.
 
 There is no raw source archive, no pending-batch store, no acquisitions history table, and no
 application usage ledger.
+
+## Point lookup
+
+"What does open-data.pt know about this place" is answered in two steps, neither of which reads
+the whole catalogue ([the API](api.md#what-is-at-a-place) has the parameters):
+`GET /api/products?lat&lon` filters the product index by each located product's `extent`, without
+reading a record, and `GET /api/products/{slug}/at` reads only the chunks of that one product whose
+box reaches the point, then tests each of their rows exactly: point in polygon with holes, distance to
+points and lines. The caller picks the products, so a land-use class is never read without the product
+that says what it means.
+
+The index is two things the collection already writes. Each chunk of a located product (one with a
+geometry or a latitude/longitude pair) lists the box of its rows on the chunk list, and the product's
+index entry carries the box of all of them (`extent`), which the Registry lists with every product.
+There is no other table, no queue and no per-request fan-out.
+
+A box per chunk only helps if a chunk's rows are near each other, and in entity-key order they are not.
+Measured on 2026-10-06 over every located product in production with more than one chunk (80 of 530,
+reconstructed from `/records/all` with the chunking rules, 200 query points per product drawn from its
+own rows, 25 m radius):
+
+| Order of rows                       | Chunks a point falls in, mean | Share of the product's chunks | MB read per lookup, mean |
+| ----------------------------------- | ----------------------------- | ----------------------------- | ------------------------ |
+| Entity key (as before)              | 4.9                           | 86%                           | 6.7                      |
+| Hilbert curve over the row's centre | 1.8                           | 47%                           | 2.6                      |
+
+The products that matter most show it best: the national road easements (62 chunks, 132 MB) are read
+34 chunks (72 MB) deep in key order and 2.3 chunks (4.8 MB) in Hilbert order; the administrative
+boundary segments 35 of 40 against 1.7; Porto's trees 27 of 36 against 2. The most chunks any sampled
+point fell in under Hilbert order was 8, in a municipality's land-use parcels, which are large
+polygons. Products of one chunk (450 of 530) are the same either way.
+
+So a located product's rows are chunked in place order: the order key is the Hilbert index of the
+centre of the row's box on a 2^16 grid over 32°W–6°W and 29°N–43°N (cells of about 40 by 24 m in the
+mainland), then the entity key; rows with no place sort last. Chunk boundaries are still drawn by the
+entity key's hash, so one changed row still rewrites one chunk (two when it moves). The large-product
+index keeps each row's order key in an `order_key` column with a partial index, filled only for
+located products, so the 412 products with no place are untouched and keep their chunk keys. For the
+located ones the content hashes change once: about 5 GB of chunks, nearly all of them the 278
+municipal land-use products (an estimate from 16 of them), is written again once and the old chunks
+are deleted an hour later. Records pages of a located product now come in place order.
+
+Products published before this have no chunk boxes. Nothing migrates them: a collection that reaches
+the product rebuilds it (it holds the rows anyway), and otherwise the runner rebuilds one such product
+per wake-up whenever nothing else runs, from its chunks or its index, and publishes it under a new
+version so that no records cursor can walk the old layout. Runners of monthly feeds would not wake for
+a month, so the Registry's alarm asks 16 of them every 15 minutes (each again after six hours) and a
+point lookup asks the runner of the product it found unindexed. Until a product is rebuilt the
+product list names it in `notIndexed` instead of leaving it out, and `/at` reads it whole when it has
+at most 16 chunks and answers 503 otherwise, so neither ever says "nothing here" about a product it
+did not search.
+
+A lookup reads at most 16 chunks: a chunk is at most 2 Mi characters, so that is 16 R2 reads (of the
+10,000 subrequests a Worker may make), a few MB of memory at a time since each chunk is split into rows
+and each row parsed and dropped, and a few hundred milliseconds of CPU at worst. It counts against the
+stricter rate limit, and is cached at the edge for a quarter of the product's cadence like its records,
+under a key whose coordinates are rounded to five decimals.
 
 ## History and backfill
 

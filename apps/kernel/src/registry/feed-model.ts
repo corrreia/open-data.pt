@@ -14,6 +14,7 @@ import type {
 } from "@open-data-pt/contract";
 
 import type { ManifestChunk } from "#/serving/chunks";
+import { locatorFor, type Box } from "#/serving/spatial";
 
 /** Runtime state a FeedRunner reports to the Registry after every run. */
 export interface BackfillSummary {
@@ -138,6 +139,13 @@ export interface ProductIndexEntry {
   rowCount: number;
   /** The ordered content-addressed chunks a record product is served from; null until materialized, and for series. */
   chunks: ManifestChunk[] | null;
+  /**
+   * A located record product whose chunks are ordered by place and boxed: the
+   * box all its rows cover, or null when none has a place. Absent for any
+   * other product, and for a located one whose chunks predate spatial order
+   * until its runner rebuilds them (`spatialIndexMissing`).
+   */
+  extent?: Box | null;
   /** Rolling window of record changes, when the product keeps them. */
   changesKey: string | null;
   /** Rolling window of series points and corrections, for time-series products. */
@@ -149,6 +157,27 @@ export interface ProductIndexEntry {
 
 /** A product without its chunk list: what product lists carry. */
 export type ProductSummary = Omit<ProductIndexEntry, "chunks">;
+
+/** A located record product (a geometry, or a latitude/longitude pair) answers what is at a point. */
+export function isLocated(entry: Pick<ProductIndexEntry, "kind" | "schema">): boolean {
+  return entry.kind === "record" && locatorFor(entry.schema) !== undefined;
+}
+
+/** Put a located product's extent on its entry, or take it off when it is not known; returns the entry. */
+export function setExtent<Entry extends Pick<ProductIndexEntry, "extent">>(entry: Entry, extent: Box | null | undefined): Entry {
+  if (extent === undefined) delete entry.extent;
+  else entry.extent = extent;
+  return entry;
+}
+
+/**
+ * A located product served from chunks that are not yet ordered by place and
+ * boxed: those written before spatial order existed. Its runner rebuilds them
+ * (`RunnerCore.indexSpatially`); until then a point lookup reads it whole.
+ */
+export function spatialIndexMissing(entry: Pick<ProductIndexEntry, "kind" | "schema" | "chunks" | "extent">): boolean {
+  return isLocated(entry) && entry.chunks !== null && entry.extent === undefined;
+}
 
 /**
  * Whether a product's revisions are history: written to the lake, kept in its

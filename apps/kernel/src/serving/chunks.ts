@@ -2,6 +2,7 @@ import { isJsonString, parseJson, type JsonValue } from "@open-data-pt/contract"
 
 import { MAX_CHUNK_LIST_BYTES, utf8Length } from "#/blob-budget";
 import { hash32, sha256Hex } from "#/hash";
+import { rowJsonBox, spatialOrderKey, unionBox, type Box, type Locator } from "#/serving/spatial";
 
 /**
  * Current record products are served from immutable, content-addressed chunks,
@@ -9,14 +10,27 @@ import { hash32, sha256Hex } from "#/hash";
  * and a chunk ends where a key's hash says so (content-defined boundaries), so
  * inserting or deleting one entity changes only the chunk around it. Identical
  * chunks keep their key and are never uploaded twice.
+ *
+ * A located product (one with a geometry or a latitude/longitude pair) orders
+ * its rows by place instead (`spatialOrderKey`), and each of its chunks lists
+ * the box its rows cover, so a point is answered from the few chunks whose box
+ * holds it. Ordered by entity key, a located product's chunks each span most
+ * of it: docs/architecture.md, "Point lookup", has the numbers.
  */
 export const CHUNK_LIMITS = { targetRows: 2048, maxRows: 8192, maxChars: 2 * 1024 * 1024 } as const;
 
 export interface ManifestChunk {
   key: string;
   rows: number;
+  /** The order keys of the chunk's first and last rows: the entity key, or a located product's spatial order key. */
   first: string;
   last: string;
+  /**
+   * A located product's chunk: the box its rows cover, or null when none of
+   * them has a place. Absent on the chunks of a product that is not located,
+   * and on those a located product was served from before boxes existed.
+   */
+  box?: Box | null;
 }
 
 /** Why a chunk list cannot be stored and published, or undefined when it fits. */
@@ -30,6 +44,38 @@ export function chunkListProblem(chunks: readonly ManifestChunk[], slug: string)
 export interface ServingRow {
   key: string;
   json: string;
+  /** A located product's spatial order key; the rows of any other product are ordered by `key`. */
+  order?: string;
+  /** Where a located product's row is; absent when it has no place. */
+  box?: Box;
+}
+
+/** The key a row is ordered and chunked by. */
+export function orderOf(row: ServingRow): string {
+  return row.order ?? row.key;
+}
+
+/** A served row ready to chunk: a located product's row carries its box and its spatial order key. */
+export function placedRow(key: string, json: string, locator: Locator | undefined): ServingRow {
+  if (!locator) return { key, json };
+  const box = rowJsonBox(locator, json);
+  const row: ServingRow = { key, json, order: spatialOrderKey(box, key) };
+  if (box) row.box = box;
+  return row;
+}
+
+/** Rows in chunk order. */
+export function compareRows(left: ServingRow, right: ServingRow): number {
+  return compareKeys(orderOf(left), orderOf(right));
+}
+
+/**
+ * The box every chunk of a located product covers together: null when no row
+ * has a place, and undefined while any chunk has no box yet.
+ */
+export function extentOf(chunks: readonly ManifestChunk[]): Box | null | undefined {
+  if (chunks.some((chunk) => chunk.box === undefined)) return undefined;
+  return unionBox(chunks.map((chunk) => chunk.box));
 }
 
 export interface ChunkObject {
@@ -44,6 +90,8 @@ export function isChunkBoundary(key: string): boolean {
 export interface ChunkSink {
   prefix: string;
   known: ReadonlySet<string>;
+  /** The product is located: every chunk lists the box of its rows. */
+  located?: boolean;
   put(key: string, body: string): Promise<void>;
 }
 
@@ -60,7 +108,9 @@ export async function writeChunk(sink: ChunkSink, rows: ServingRow[]): Promise<M
   body += "\n]}";
   const key = `${sink.prefix}/chunks/${await sha256Hex(body)}.json`;
   if (!sink.known.has(key)) await sink.put(key, body);
-  return { key, rows: rows.length, first: rows[0]!.key, last: rows.at(-1)!.key };
+  const chunk: ManifestChunk = { key, rows: rows.length, first: orderOf(rows[0]!), last: orderOf(rows.at(-1)!) };
+  if (sink.located) chunk.box = unionBox(rows.map((row) => row.box));
+  return chunk;
 }
 
 /** The rows of a chunk body, each with its exact JSON, by splitting lines instead of parsing the whole body. */
@@ -169,7 +219,7 @@ export function compareKeys(left: string, right: string): number {
   return left.length - right.length;
 }
 
-/** Index of the chunk whose key range holds `key`: the last chunk starting at or before it. */
+/** Index of the chunk whose order-key range holds `key`: the last chunk starting at or before it. */
 export function chunkIndexFor(chunks: readonly ManifestChunk[], key: string): number {
   let low = 0;
   let high = chunks.length - 1;
@@ -184,7 +234,7 @@ export function chunkIndexFor(chunks: readonly ManifestChunk[], key: string): nu
   return found;
 }
 
-/** Key-ordered rows strictly after `after` (or from the start when null), at most `limit`. */
+/** Rows in order strictly after the order key `after` (or from the start when null), at most `limit`. */
 export type OrderedRows = (after: string | null, limit: number) => ServingRow[] | Promise<ServingRow[]>;
 
 /**
@@ -248,11 +298,12 @@ async function rebuildFrom(
     position += 1;
     const closed = await writer.push(row);
     if (position >= page.length) {
-      cursor = row.key;
+      cursor = orderOf(row);
       page = await rows(cursor, pageSize);
       position = 0;
     }
-    if (closed && resync(row.key, page[position]?.key) !== undefined) return writer.chunks;
+    const next = page[position];
+    if (closed && resync(orderOf(row), next ? orderOf(next) : undefined) !== undefined) return writer.chunks;
   }
   await writer.close();
   return writer.chunks;

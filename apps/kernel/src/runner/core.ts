@@ -12,11 +12,27 @@ import {
   type TransformQuality,
 } from "@open-data-pt/contract";
 
-import { chunkIndexFor, chunkListProblem, parseChunkRows, regenerateChunks, servedIdentity, type ChunkSink, type ServingRow } from "#/serving/chunks";
+import {
+  buildChunks,
+  chunkIndexFor,
+  chunkListProblem,
+  compareRows,
+  extentOf,
+  parseChunkRows,
+  placedRow,
+  regenerateChunks,
+  servedIdentity,
+  type ChunkSink,
+  type ServingRow,
+} from "#/serving/chunks";
+import { locatorFor, rowJsonBox, type Locator } from "#/serving/spatial";
 import {
   definitionFingerprint,
   feedDefinition,
+  isLocated,
   keepsHistory,
+  setExtent,
+  spatialIndexMissing,
   type Acquisition,
   type AcquisitionStatus,
   type BackfillSummary,
@@ -75,6 +91,11 @@ export const FRESH_DATA_RETRY_MS = 24 * 60 * 60_000;
 const LOOKUP_BATCH = 2_000;
 /** Superseded serving objects are deleted this long after they stop being selectable: an edge-cached read may still name them. */
 const GARBAGE_GRACE_MS = 60 * 60_000;
+/** A spatial rebuild that failed is not tried again before this long: a chunk missing or a list too long will not mend sooner. */
+const SPATIAL_RETRY_MS = 6 * 60 * 60_000;
+const SPATIAL_RETRY_KEY = "spatial-retry-at";
+/** The publication a spatial rebuild makes; no acquisition stages anything under it. */
+const SPATIAL_PUBLICATION = "spatial-index";
 /** How long past its own timeout an executor may stay silent before the watchdog asks the Workflow about it. */
 const WATCHDOG_MARGIN_SECONDS = 300;
 
@@ -185,7 +206,16 @@ export interface StagedRecord {
   prepared: PreparedRecord;
   /** The JSON the row is served as. */
   json: string;
+  /** A located product's spatial order key, which its index and chunks are ordered by. */
+  order?: string;
 }
+
+/**
+ * One staged entity change: its key, hash and served JSON (both null for a
+ * removal), and for a located product its order key now and before, so the
+ * rebuild finds both the chunk it leaves and the chunk it joins.
+ */
+type StagedChange = [entityKey: string, hash: string | null, json: string | null, order: string | null, previousOrder: string | null];
 
 export interface StageResult {
   /** Entity ids of rows that already existed (for the retraction sweep). */
@@ -284,8 +314,15 @@ export class RunnerCore {
     this.exec(`CREATE TABLE IF NOT EXISTS products (
       product_key TEXT PRIMARY KEY, slug TEXT NOT NULL UNIQUE, mode TEXT NOT NULL, entry_json TEXT NOT NULL, regenerate INTEGER NOT NULL DEFAULT 0)`);
     this.exec(`CREATE TABLE IF NOT EXISTS entities (
-      id INTEGER PRIMARY KEY, product_key TEXT NOT NULL, entity_key TEXT NOT NULL, hash TEXT NOT NULL, row_json TEXT NOT NULL)`);
+      id INTEGER PRIMARY KEY, product_key TEXT NOT NULL, entity_key TEXT NOT NULL, hash TEXT NOT NULL, row_json TEXT NOT NULL, order_key TEXT)`);
     this.exec(`CREATE UNIQUE INDEX IF NOT EXISTS entities_key ON entities(product_key, entity_key)`);
+    // A located product's rows are chunked in place order. The column is added in place (a new schema version would
+    // reset every runner, and with it its undelivered history); rows of products that are not located leave it null,
+    // so the partial index holds only located rows and costs the others nothing.
+    if (!this.rows<{ name: string }>(`SELECT name FROM pragma_table_info('entities')`).some((column) => column.name === "order_key")) {
+      this.exec(`ALTER TABLE entities ADD COLUMN order_key TEXT`);
+    }
+    this.exec(`CREATE INDEX IF NOT EXISTS entities_order ON entities(product_key, order_key) WHERE order_key IS NOT NULL`);
     this.exec(`CREATE TABLE IF NOT EXISTS stage (seq INTEGER PRIMARY KEY, acquisition_id TEXT NOT NULL, product_key TEXT NOT NULL, body TEXT NOT NULL)`);
     this.exec(`CREATE INDEX IF NOT EXISTS stage_acquisition ON stage(acquisition_id, product_key)`);
     this.exec(`CREATE TABLE IF NOT EXISTS outbox (
@@ -406,6 +443,8 @@ export class RunnerCore {
     if (runtime.watchdogAt) times.push(Date.parse(runtime.watchdogAt));
     if (this.getState<PendingPublication>("publication")) times.push(now + 60_000);
     if (this.committedOutboxRows() > 0) times.push(now + 5 * 60_000);
+    // One located product at a time is rebuilt in place order, each on its own wake-up, until none is left.
+    if (this.unplacedProduct()) times.push(now);
     if (!runtime.runningAcquisitionId && runtime.cooldownUntil) {
       times.push(Date.parse(runtime.cooldownUntil));
     } else if (!runtime.runningAcquisitionId) {
@@ -600,16 +639,21 @@ export class RunnerCore {
     const product = this.productPlans().find((candidate) => candidate.productKey === productKey);
     if (!product || product.mode === "large") return;
     const rows: ServingRow[] = [];
-    for (const chunk of product.entry.chunks ?? []) rows.push(...parseChunkRows((await this.deps.objects.readText(chunk.key)) ?? ""));
+    const locator = isLocated(product.entry) ? locatorFor(product.entry.schema) : undefined;
+    for (const chunk of product.entry.chunks ?? []) {
+      for (const row of parseChunkRows((await this.deps.objects.readText(chunk.key)) ?? "")) rows.push(placedRow(row.key, row.json, locator));
+    }
     this.transaction(() => {
       for (const row of rows) {
         const hash = rowHash(row.json);
         this.exec(
-          `INSERT INTO entities (product_key, entity_key, hash, row_json) VALUES (?, ?, ?, ?) ON CONFLICT(product_key, entity_key) DO UPDATE SET hash = excluded.hash, row_json = excluded.row_json`,
+          `INSERT INTO entities (product_key, entity_key, hash, row_json, order_key) VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(product_key, entity_key) DO UPDATE SET hash = excluded.hash, row_json = excluded.row_json, order_key = excluded.order_key`,
           productKey,
           row.key,
           hash,
           row.json,
+          row.order ?? null,
         );
       }
       this.exec(`UPDATE products SET mode = 'large' WHERE product_key = ?`, productKey);
@@ -622,7 +666,7 @@ export class RunnerCore {
     const latest = new Map<string, StagedRecord>();
     for (const row of rows) latest.set(row.prepared.key, row);
     const existing = this.lookup(productKey, [...latest.keys()]);
-    const staged: Array<[string, string | null, string | null]> = [];
+    const staged: StagedChange[] = [];
     const changes = new RecentChanges<ChangeItem>(WINDOW.changes);
     const lake: JsonObject[] = [];
     const seen: number[] = [];
@@ -630,8 +674,9 @@ export class RunnerCore {
     for (const row of latest.values()) {
       const previous = existing.get(row.prepared.key);
       if (previous) seen.push(previous.id);
+      // A row whose place moved changes its order key even when nothing else changed: the hash covers its geometry.
       if (previous && previous.hash === row.prepared.hash) continue;
-      staged.push([row.prepared.key, row.prepared.hash, row.json]);
+      staged.push([row.prepared.key, row.prepared.hash, row.json, row.order ?? null, previous?.order ?? null]);
       const revision = recordRevision(row.prepared, Boolean(previous), context);
       changes.add(revision.change);
       revisions += 1;
@@ -652,15 +697,19 @@ export class RunnerCore {
     let revisions = 0;
     let after = 0;
     while (true) {
-      const page = this.rows<{ id: number; entity_key: string }>(`SELECT id, entity_key FROM entities WHERE product_key = ? AND id > ? ORDER BY id LIMIT 5000`, productKey, after);
+      const page = this.rows<{ id: number; entity_key: string; order_key: string | null }>(
+        `SELECT id, entity_key, order_key FROM entities WHERE product_key = ? AND id > ? ORDER BY id LIMIT 5000`,
+        productKey,
+        after,
+      );
       if (page.length === 0) break;
       after = page.at(-1)!.id;
-      const staged: Array<[string, null, null]> = [];
+      const staged: StagedChange[] = [];
       const lake: JsonObject[] = [];
       for (const row of page) {
         const byte = seen[row.id >> 3] ?? 0;
         if ((byte & (1 << (row.id & 7))) !== 0) continue;
-        staged.push([row.entity_key, null, null]);
+        staged.push([row.entity_key, null, null, null, row.order_key]);
         removed += 1;
         if (!retract) continue;
         const revision = retractionRevision(row.entity_key, context);
@@ -928,6 +977,78 @@ export class RunnerCore {
     return (entry.chunks?.length ?? 0) * BLOB_BYTES < SMALL_PRODUCT_BYTES / 2;
   }
 
+  /* ---------- Spatial order ---------- */
+
+  /**
+   * A located product still served in entity order, with no chunk boxes, that
+   * may be rebuilt now: none while a collection runs or a publication is
+   * pending (either may replace its entry), nor for a while after a rebuild failed.
+   */
+  unplacedProduct(): ProductPlan | undefined {
+    if (this.runtime().runningAcquisitionId || this.getState<PendingPublication>("publication")) return undefined;
+    const retryAt = this.getState<number>(SPATIAL_RETRY_KEY);
+    if (retryAt !== undefined && retryAt > this.deps.now()) return undefined;
+    return this.productPlans().find((product) => product.entry.status === "current" && spatialIndexMissing(product.entry));
+  }
+
+  /**
+   * Rebuild one located product's chunks in place order, with a box on each,
+   * and publish it: how a product written before spatial order gets indexed
+   * without waiting for its source to change. Its rows are the same; its
+   * version moves on, so a records cursor into the old chunk layout is
+   * refused instead of skipping or repeating rows. Returns whether it rebuilt one.
+   */
+  async indexSpatially(): Promise<boolean> {
+    const product = this.unplacedProduct();
+    if (!product) return false;
+    const feed = this.requireFeed();
+    // Holding the publication slot keeps a collection from beginning while the chunks are rebuilt.
+    this.setState("publication", { acquisitionId: SPATIAL_PUBLICATION, productKeys: [product.productKey] } satisfies PendingPublication);
+    const next: ProductPlan = { ...product, entry: { ...product.entry, version: product.entry.version + 1 } };
+    try {
+      if (product.mode === "large") await this.regenerate(feed, next, undefined);
+      else await this.placeSmallProduct(feed, next);
+      this.deleteState(SPATIAL_RETRY_KEY);
+    } catch (error) {
+      this.deleteState("publication");
+      this.setState(SPATIAL_RETRY_KEY, this.deps.now() + SPATIAL_RETRY_MS);
+      console.error(JSON.stringify({ event: "spatial_index_failed", feedId: feed.id, product: product.slug, error: String(error) }));
+      return false;
+    }
+    await this.publishPending();
+    console.log(JSON.stringify({ event: "spatial_index_built", feedId: feed.id, product: product.slug }));
+    return true;
+  }
+
+  /** A small product's served rows, read back from its chunks, placed, sorted by place and chunked again. */
+  private async placeSmallProduct(feed: Feed, product: ProductPlan): Promise<void> {
+    const locator = locatorFor(product.entry.schema);
+    if (!locator) return;
+    const previous = product.entry.chunks ?? [];
+    const rows: ServingRow[] = [];
+    for (const chunk of previous) {
+      const body = await this.deps.objects.readText(chunk.key);
+      if (body === undefined) throw new Error(`Chunk ${chunk.key} is missing`);
+      for (const row of parseChunkRows(body)) rows.push(placedRow(row.key, row.json, locator));
+    }
+    rows.sort(compareRows);
+    const chunks = await buildChunks(rows, {
+      prefix: keys.prefix(feed.id, product.slug),
+      known: new Set(previous.map((chunk) => chunk.key)),
+      located: true,
+      put: async (key, body) => {
+        await this.deps.objects.writeText(key, body);
+      },
+    });
+    const problem = chunkListProblem(chunks, product.slug);
+    if (problem) throw new Error(problem);
+    const entry = setExtent<ProductIndexEntry>({ ...product.entry, chunks, rowCount: rows.length }, extentOf(chunks));
+    this.transaction(() => {
+      this.supersede(product.entry, entry);
+      this.exec(`UPDATE products SET entry_json = ? WHERE product_key = ?`, JSON.stringify(entry), product.productKey);
+    });
+  }
+
   /* ---------- History outbox ---------- */
 
   /** Committed history blobs, oldest first. */
@@ -1108,16 +1229,16 @@ export class RunnerCore {
     return context;
   }
 
-  private lookup(productKey: string, entityKeys: string[]): Map<string, { id: number; hash: string }> {
-    const found = new Map<string, { id: number; hash: string }>();
+  private lookup(productKey: string, entityKeys: string[]): Map<string, { id: number; hash: string; order: string | null }> {
+    const found = new Map<string, { id: number; hash: string; order: string | null }>();
     for (let start = 0; start < entityKeys.length; start += LOOKUP_BATCH) {
       const slice = entityKeys.slice(start, start + LOOKUP_BATCH);
-      for (const row of this.rows<{ id: number; entity_key: string; hash: string }>(
-        `SELECT id, entity_key, hash FROM entities WHERE product_key = ? AND entity_key IN (SELECT value FROM json_each(?))`,
+      for (const row of this.rows<{ id: number; entity_key: string; hash: string; order_key: string | null }>(
+        `SELECT id, entity_key, hash, order_key FROM entities WHERE product_key = ? AND entity_key IN (SELECT value FROM json_each(?))`,
         productKey,
         JSON.stringify(slice),
       )) {
-        found.set(row.entity_key, { id: row.id, hash: row.hash });
+        found.set(row.entity_key, { id: row.id, hash: row.hash, order: row.order_key });
       }
     }
     return found;
@@ -1131,7 +1252,7 @@ export class RunnerCore {
   }
 
   /** Staged entity changes as blobs within the SQLite value budget; applyStage reads them back in order. */
-  private insertStage(acquisitionId: string, productKey: string, staged: Array<[string, string | null, string | null]>): void {
+  private insertStage(acquisitionId: string, productKey: string, staged: StagedChange[]): void {
     for (const blob of jsonArrays(staged.map((item) => JSON.stringify(item)))) {
       this.exec(`INSERT INTO stage (acquisition_id, product_key, body) VALUES (?, ?, ?)`, acquisitionId, productKey, blob.json);
     }
@@ -1145,10 +1266,10 @@ export class RunnerCore {
   private applyStage(acquisitionId: string, productKey: string): void {
     for (const { seq } of this.rows<{ seq: number }>(`SELECT seq FROM stage WHERE acquisition_id = ? AND product_key = ? ORDER BY seq`, acquisitionId, productKey)) {
       this.exec(
-        `INSERT INTO entities (product_key, entity_key, hash, row_json)
-         SELECT ?, json_extract(j.value, '$[0]'), json_extract(j.value, '$[1]'), json_extract(j.value, '$[2]')
+        `INSERT INTO entities (product_key, entity_key, hash, row_json, order_key)
+         SELECT ?, json_extract(j.value, '$[0]'), json_extract(j.value, '$[1]'), json_extract(j.value, '$[2]'), json_extract(j.value, '$[3]')
          FROM stage s, json_each(s.body) j WHERE s.seq = ? AND json_extract(j.value, '$[1]') IS NOT NULL
-         ON CONFLICT(product_key, entity_key) DO UPDATE SET hash = excluded.hash, row_json = excluded.row_json`,
+         ON CONFLICT(product_key, entity_key) DO UPDATE SET hash = excluded.hash, row_json = excluded.row_json, order_key = excluded.order_key`,
         productKey,
         seq,
       );
@@ -1161,9 +1282,13 @@ export class RunnerCore {
     }
   }
 
-  /** The entity keys one staged blob touches. */
-  private stagedKeys(seq: number): string[] {
-    return this.rows<{ key: string }>(`SELECT json_extract(j.value, '$[0]') AS key FROM stage s, json_each(s.body) j WHERE s.seq = ?`, seq).map((row) => row.key);
+  /** What one staged blob touches: each change's entity key, and its order key now and before. */
+  private stagedChanges(seq: number): Array<{ key: string; order: string | null; previous: string | null; upsert: boolean }> {
+    return this.rows<{ key: string; next_order: string | null; previous_order: string | null; upsert: number }>(
+      `SELECT json_extract(j.value, '$[0]') AS key, json_extract(j.value, '$[3]') AS next_order, json_extract(j.value, '$[4]') AS previous_order,
+        json_extract(j.value, '$[1]') IS NOT NULL AS upsert FROM stage s, json_each(s.body) j WHERE s.seq = ?`,
+      seq,
+    ).map((row) => ({ key: row.key, order: row.next_order, previous: row.previous_order, upsert: row.upsert === 1 }));
   }
 
   private saveProduct(product: ProductCommit, history: boolean): void {
@@ -1223,18 +1348,32 @@ export class RunnerCore {
     return (this.getState<string[]>("retired-products")?.length ?? 0) > 0;
   }
 
-  /** Rebuild the chunks a large product's committed changes touched; returns the entry to publish. */
-  private async regenerate(feed: Feed, product: ProductPlan, acquisitionId: string): Promise<ProductIndexEntry> {
-    const previous = product.entry.chunks ?? [];
+  /**
+   * Rebuild the chunks a large product's committed changes touched (all of
+   * them without an acquisition, or when the order they are in has to change);
+   * returns the entry to publish.
+   */
+  private async regenerate(feed: Feed, product: ProductPlan, acquisitionId: string | undefined): Promise<ProductIndexEntry> {
+    const locator = isLocated(product.entry) ? locatorFor(product.entry.schema) : undefined;
+    // An index row of a located product with no order key (one indexed before spatial order, or staged under a schema
+    // that did not say where rows are) is placed now; where it sat in the old chunks is unknown, so they are all rebuilt.
+    const placed = locator ? this.fillOrderKeys(product.productKey, locator) : 0;
+    const whole = acquisitionId === undefined || placed > 0 || spatialIndexMissing(product.entry);
+    const previous = whole ? [] : (product.entry.chunks ?? []);
     const dirty = previous.map(() => false);
-    if (previous.length > 0) {
+    if (previous.length > 0 && acquisitionId !== undefined) {
       for (const { seq } of this.rows<{ seq: number }>(`SELECT seq FROM stage WHERE acquisition_id = ? AND product_key = ?`, acquisitionId, product.productKey)) {
-        for (const key of this.stagedKeys(seq)) dirty[chunkIndexFor(previous, key)] = true;
+        for (const change of this.stagedChanges(seq)) {
+          // A located row moves from the chunk its old place put it in to the one its new place does.
+          const orders = locator ? [change.order, change.previous] : [change.key];
+          for (const order of orders) if (order !== null) dirty[chunkIndexFor(previous, order)] = true;
+        }
       }
     }
     const sink: ChunkSink = {
       prefix: keys.prefix(feed.id, product.slug),
-      known: new Set(previous.map((chunk) => chunk.key)),
+      known: new Set((product.entry.chunks ?? []).map((chunk) => chunk.key)),
+      located: locator !== undefined,
       put: async (key, body) => {
         await this.deps.objects.writeText(key, body);
       },
@@ -1242,36 +1381,75 @@ export class RunnerCore {
     const chunks = await regenerateChunks(
       previous,
       dirty,
-      (after, limit) => {
-        const rows =
-          after === null
-            ? this.rows<{ entity_key: string; row_json: string }>(
-                `SELECT entity_key, row_json FROM entities WHERE product_key = ? ORDER BY entity_key LIMIT ?`,
-                product.productKey,
-                limit,
-              )
-            : this.rows<{ entity_key: string; row_json: string }>(
-                `SELECT entity_key, row_json FROM entities WHERE product_key = ? AND entity_key > ? ORDER BY entity_key LIMIT ?`,
-                product.productKey,
-                after,
-                limit,
-              );
-        return rows.map((row) => ({ key: row.entity_key, json: row.row_json }));
-      },
+      (after, limit) => (locator ? this.placedRows(product.productKey, locator, after, limit) : this.keyedRows(product.productKey, after, limit)),
       sink,
     );
     const problem = chunkListProblem(chunks, product.slug);
     // The commit is durable, so a product too large to list must not wedge publication: it serves nothing, and every collection tries again.
     if (problem) console.error(JSON.stringify({ event: "chunk_list_too_large", feedId: feed.id, problem }));
-    const entry: ProductIndexEntry = problem
-      ? { ...product.entry, status: "failed", chunks: null, rowCount: 0 }
-      : { ...product.entry, chunks, rowCount: chunks.reduce((sum, chunk) => sum + chunk.rows, 0) };
+    const entry = setExtent<ProductIndexEntry>(
+      problem ? { ...product.entry, status: "failed", chunks: null, rowCount: 0 } : { ...product.entry, chunks, rowCount: chunks.reduce((sum, chunk) => sum + chunk.rows, 0) },
+      locator && !problem ? extentOf(chunks) : undefined,
+    );
     this.transaction(() => {
       if (problem) this.discardObjects(chunks.map((chunk) => chunk.key));
       this.supersede(product.entry, entry);
       this.exec(`UPDATE products SET entry_json = ?, regenerate = 0 WHERE product_key = ?`, JSON.stringify(entry), product.productKey);
     });
     return entry;
+  }
+
+  /** A product's index rows in entity-key order, after `after`. */
+  private keyedRows(productKey: string, after: string | null, limit: number): ServingRow[] {
+    const rows =
+      after === null
+        ? this.rows<{ entity_key: string; row_json: string }>(`SELECT entity_key, row_json FROM entities WHERE product_key = ? ORDER BY entity_key LIMIT ?`, productKey, limit)
+        : this.rows<{ entity_key: string; row_json: string }>(
+            `SELECT entity_key, row_json FROM entities WHERE product_key = ? AND entity_key > ? ORDER BY entity_key LIMIT ?`,
+            productKey,
+            after,
+            limit,
+          );
+    return rows.map((row) => ({ key: row.entity_key, json: row.row_json }));
+  }
+
+  /** A located product's index rows in place order, after the order key `after`, each with its box. */
+  private placedRows(productKey: string, locator: Locator, after: string | null, limit: number): ServingRow[] {
+    const rows =
+      after === null
+        ? this.rows<{ entity_key: string; row_json: string; order_key: string }>(
+            `SELECT entity_key, row_json, order_key FROM entities WHERE product_key = ? AND order_key IS NOT NULL ORDER BY order_key LIMIT ?`,
+            productKey,
+            limit,
+          )
+        : this.rows<{ entity_key: string; row_json: string; order_key: string }>(
+            `SELECT entity_key, row_json, order_key FROM entities WHERE product_key = ? AND order_key > ? ORDER BY order_key LIMIT ?`,
+            productKey,
+            after,
+            limit,
+          );
+    return rows.map((row) => {
+      const placed: ServingRow = { key: row.entity_key, json: row.row_json, order: row.order_key };
+      const box = rowJsonBox(locator, row.row_json);
+      if (box) placed.box = box;
+      return placed;
+    });
+  }
+
+  /** Give every index row of a located product that has none its order key; returns how many it placed. */
+  private fillOrderKeys(productKey: string, locator: Locator): number {
+    let placed = 0;
+    while (true) {
+      const page = this.rows<{ id: number; entity_key: string; row_json: string }>(
+        `SELECT id, entity_key, row_json FROM entities WHERE product_key = ? AND order_key IS NULL ORDER BY id LIMIT 1000`,
+        productKey,
+      );
+      if (page.length === 0) return placed;
+      this.transaction(() => {
+        for (const row of page) this.exec(`UPDATE entities SET order_key = ? WHERE id = ?`, placedRow(row.entity_key, row.row_json, locator).order ?? row.entity_key, row.id);
+      });
+      placed += page.length;
+    }
   }
 
   private demote(productKey: string): void {
