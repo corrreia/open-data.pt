@@ -297,7 +297,7 @@ async function product(url: URL, host: SiteHost): Promise<PageText> {
       ? `- Points: ${origin}${path}/series?limit=1000 (seriesKey, from, to)`
       : `- Rows: ${origin}${path}/records?limit=500, following nextCursor, or every row at ${origin}${path}/records/all`,
     ...(geographic ? [`- GeoJSON: ${origin}${path}.geojson`] : []),
-    ...(item.extent ? [`- At a point: ${origin}${path}/at?lat=<degrees>&lon=<degrees>&radius=25`] : []),
+    ...(item.extent ? [`- At a point: ${origin}${path}/records?lat=<degrees>&lon=<degrees>&radius=25`] : []),
     ...(item.exposeHistory ? [`- History: ${origin}${path}/${item.role === "event-log" ? "events" : series ? "series/range" : "changes/range"}?from=<ISO>&to=<ISO>`] : []),
   ]);
 }

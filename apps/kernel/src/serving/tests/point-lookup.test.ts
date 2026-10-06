@@ -1,14 +1,15 @@
 import type { Product } from "@open-data-pt/api";
 import type { FieldType, JsonObject } from "@open-data-pt/contract";
 import { describe, expect, it } from "vitest";
-import { NotFoundError } from "#/api/errors";
 import { setExtent } from "#/registry/feed-model";
 import type { ProductDetail } from "#/registry/registry";
 import { buildChunks, compareRows, extentOf, placedRow, writeChunk, type ManifestChunk } from "#/serving/chunks";
 import { ObjectStore, keys } from "#/serving/object-store";
-import { NotIndexedError, POINT_LOOKUP, productExtent, productsAt, recordsAt, type PointLookupQuery } from "#/serving/point-lookup";
-import { geometryBox, hitTest, locatorFor, queryBox, rowBox, spatialOrderKey, unionBox, type Box } from "#/serving/spatial";
+import { NotIndexedError, POINT_LOOKUP, productExtent, productsAt } from "#/serving/point-lookup";
+import { InvalidQueryError, Serving, type RecordQuery } from "#/serving/serving";
+import { boxesIntersect, geometryBox, hitTest, locatorFor, queryBox, rowBox, spatialOrderKey, unionBox, type Box } from "#/serving/spatial";
 import { MemorySnapshots } from "#/tests/kernel-harness";
+import { jsonAs } from "#/tests/support";
 
 /* ---------- Fixtures: places in Lisbon, Porto and Faro ---------- */
 
@@ -35,8 +36,6 @@ const ROAD = {
 /** 0.0003° of longitude at 38°N is about 26.3 m. */
 const METRES_PER_DEGREE = (6_371_008.8 * Math.PI) / 180;
 const metresEast = (degrees: number, latitude: number) => degrees * METRES_PER_DEGREE * Math.cos((latitude * Math.PI) / 180);
-
-const point = (latitude: number, longitude: number, radius = 25): PointLookupQuery => ({ latitude, longitude, radius, limit: 10, geometry: false });
 
 describe("boxes", () => {
   it("covers every position of a polygon, a multipolygon with holes, a line, a point and a collection", () => {
@@ -161,6 +160,22 @@ describe("exact hits", () => {
     ).toBeCloseTo(metresEast(0.0001, 38), 0);
   });
 
+  it("keeps everything the measurement accepts inside the box it reads, at any latitude", () => {
+    for (const latitude of [0, 38.7, 60, 89, 89.6, 89.9999, -89.9999]) {
+      const query = { latitude, longitude: -9, radius: 1000 };
+      const box = queryBox(query);
+      // Candidate points all round the query, from the edge of the radius out to fifty degrees east and west.
+      for (const east of [0, 1e-4, 1e-3, 0.01, 0.1, 1, 10, 50, -50]) {
+        for (const north of [0, 0.005, 0.00899, -0.00899]) {
+          const candidate = { type: "Point", coordinates: [-9 + east, Math.max(-90, Math.min(90, latitude + north))] };
+          if (hitTest(candidate, query)) expect(boxesIntersect(geometryBox(candidate)!, box), `${latitude} ${east} ${north}`).toBe(true);
+        }
+      }
+    }
+    // Next to a pole a degree of longitude is metres long; the measurement no longer counts fifty of them as near.
+    expect(hitTest({ type: "Point", coordinates: [41, 89.9999] }, { latitude: 89.9999, longitude: -9, radius: 25 })).toBeUndefined();
+  });
+
   it("widens the point by the radius for the box a chunk or a row must reach", () => {
     const box = queryBox({ latitude: 38, longitude: -9, radius: 1000 });
     expect(box.north - 38).toBeGreaterThan(1000 / METRES_PER_DEGREE);
@@ -229,7 +244,8 @@ async function product(groups: JsonObject[][], options: { fields?: Array<{ name:
     cadenceSeconds: 3600,
   };
   setExtent(detail, extent);
-  return { detail, objects, snapshots };
+  const service = new Serving({ listProducts: async () => [detail], getProduct: async (slug) => (slug === detail.slug ? detail : undefined) }, objects);
+  return { detail, service, snapshots };
 }
 
 const lisbon = [
@@ -240,84 +256,120 @@ const lisbon = [
 const porto = [{ id: "parcels", name: "Parcels", geometry: TWO_PARCELS }];
 const south = [{ id: "road", name: "Road", geometry: ROAD }];
 
+/** One page of a product's records at a point, as `/records?lat&lon` asks for it. */
+function at(
+  service: Serving,
+  detail: ProductDetail,
+  latitude: number,
+  longitude: number,
+  options: { radius?: number; limit?: number; cursor?: string; where?: Array<{ field: string; value: string }> } = {},
+) {
+  const query: RecordQuery = { limit: options.limit ?? 10, filters: { point: { latitude, longitude, radius: options.radius ?? 25 } } };
+  if (options.where && query.filters) query.filters.where = options.where;
+  if (options.cursor) query.cursor = options.cursor;
+  return service.records(detail, query);
+}
+
 describe("one product's records at a point", () => {
-  it("reads only the chunk whose box holds the point, and answers with the product's terms", async () => {
-    const { detail, objects, snapshots } = await product([lisbon, porto, south]);
+  it("reads only the chunk whose box holds the point, polygons that contain it first, then the nearest", async () => {
+    const { detail, service, snapshots } = await product([lisbon, porto, south]);
     expect(detail.chunks).toHaveLength(3);
     const reads = snapshots.reads;
-    const found = await recordsAt(objects, detail, point(38.72, -9.18));
+    const found = await at(service, detail, 38.72, -9.18);
     expect(snapshots.reads - reads).toBe(1);
     // The polygon that contains the point first, then the kiosk 5.6 m away; the far kiosk is past the radius.
     expect(found.data.map((row) => row.id)).toEqual(["block", "kiosk"]);
     expect(found.data[0]?._distance).toBe(0);
     expect(found.data[1]?._distance).toBeCloseTo(0.00005 * METRES_PER_DEGREE, 0);
-    expect(found).toMatchObject({ matched: 2, capped: false, indexed: true, complete: true });
-    // Geometries are left out unless asked for, and the row hash is never served.
-    expect(found.data[0]?.geometry).toBeUndefined();
+    expect(found.point).toEqual({ matched: 2, indexed: true, complete: true });
+    expect(found.nextCursor).toBeUndefined();
+    // A records page serves the whole record, geometry included, and never the row hash.
+    expect(found.data[0]?.geometry).toEqual(BLOCK_WITH_COURTYARD);
     expect(found.data[0]?._hash).toBeUndefined();
-    expect((await recordsAt(objects, detail, { ...point(38.72, -9.18), geometry: true })).data[0]?.geometry).toEqual(BLOCK_WITH_COURTYARD);
   });
 
-  it("reads nothing where no chunk reaches, and finds nothing in a courtyard", async () => {
-    const { detail, objects, snapshots } = await product([lisbon, porto, south]);
+  it("reads nothing where no chunk reaches, and finds nothing in a courtyard or a hole", async () => {
+    const { detail, service, snapshots } = await product([lisbon, porto, south]);
     const reads = snapshots.reads;
-    expect((await recordsAt(objects, detail, point(40.0, -7.0))).data).toEqual([]);
+    expect((await at(service, detail, 40.0, -7.0)).data).toEqual([]);
     expect(snapshots.reads).toBe(reads);
-    expect((await recordsAt(objects, detail, point(38.75, -9.15))).data).toEqual([]);
-    expect((await recordsAt(objects, detail, point(41.15, -8.45))).data).toEqual([]);
-    expect((await recordsAt(objects, detail, point(41.12, -8.48))).data.map((row) => row.id)).toEqual(["parcels"]);
+    expect((await at(service, detail, 38.75, -9.15)).data).toEqual([]);
+    expect((await at(service, detail, 41.15, -8.45)).data).toEqual([]);
+    expect((await at(service, detail, 41.12, -8.48)).data.map((row) => row.id)).toEqual(["parcels"]);
   });
 
   it("finds lines within the radius, and only within it", async () => {
-    const { detail, objects } = await product([lisbon, porto, south]);
-    expect((await recordsAt(objects, detail, point(38.005, -8.9997, 30))).data.map((row) => row.id)).toEqual(["road"]);
-    expect((await recordsAt(objects, detail, point(38.005, -8.9997, 20))).data).toEqual([]);
+    const { detail, service } = await product([lisbon, porto, south]);
+    expect((await at(service, detail, 38.005, -8.9997, { radius: 30 })).data.map((row) => row.id)).toEqual(["road"]);
+    expect((await at(service, detail, 38.005, -8.9997, { radius: 20 })).data).toEqual([]);
   });
 
-  it("caps the records it returns and says how many matched", async () => {
+  it("pages nearest first with a cursor, every match once, and says how many matched in all", async () => {
     const crowd = Array.from({ length: 30 }, (_, index) => ({
       id: `stop-${String(index).padStart(2, "0")}`,
-      name: "Stop",
+      name: index % 2 === 0 ? "Bus" : "Tram",
       geometry: { type: "Point", coordinates: [-9.1, 38.7 + index * 0.00001] },
     }));
-    const { detail, objects } = await product([crowd]);
-    const found = await recordsAt(objects, detail, { ...point(38.7, -9.1, 100), limit: 5 });
-    expect(found.data.map((row) => row.id)).toEqual(["stop-00", "stop-01", "stop-02", "stop-03", "stop-04"]);
-    expect(found).toMatchObject({ matched: 30, capped: true });
+    // Spread over three chunks, so the order is the distance's and not the chunks'.
+    const { detail, service } = await product([crowd.slice(20), crowd.slice(0, 10), crowd.slice(10, 20)]);
+    const first = await at(service, detail, 38.7, -9.1, { radius: 100, limit: 5 });
+    expect(first.data.map((row) => row.id)).toEqual(["stop-00", "stop-01", "stop-02", "stop-03", "stop-04"]);
+    expect(first.point?.matched).toBe(30);
+    const seen = first.data.map((row) => String(row.id));
+    let cursor = first.nextCursor;
+    while (cursor) {
+      const page = await at(service, detail, 38.7, -9.1, { radius: 100, limit: 5, cursor });
+      seen.push(...page.data.map((row) => String(row.id)));
+      cursor = page.nextCursor;
+    }
+    expect(seen).toEqual(crowd.map((stop) => stop.id));
+    // `where` applies to the same rows, and the count is of what passes both.
+    const buses = await at(service, detail, 38.7, -9.1, { radius: 100, limit: 50, where: [{ field: "name", value: "Bus" }] });
+    expect(buses.data.every((row) => row.name === "Bus")).toBe(true);
+    expect(buses.point?.matched).toBe(15);
+  });
+
+  it("refuses a cursor from another kind of page, or another version", async () => {
+    const { detail, service } = await product([lisbon]);
+    await expect(at(service, detail, 38.72, -9.18, { cursor: "v1:0:3" })).rejects.toBeInstanceOf(InvalidQueryError);
+    await expect(at(service, detail, 38.72, -9.18, { cursor: "v0:at:3" })).rejects.toThrow(/version/);
+    await expect(service.records(detail, { limit: 10, cursor: "v1:at:3" })).rejects.toBeInstanceOf(InvalidQueryError);
   });
 
   it("reads at most the bounded number of chunks, and says the answer is incomplete when more reach the point", async () => {
     const groups = Array.from({ length: POINT_LOOKUP.maxChunks + 2 }, (_, index) => [
       { id: `p${index}`, name: "Same place", geometry: { type: "Point", coordinates: [-9.1, 38.7] } },
     ]);
-    const { detail, objects, snapshots } = await product(groups);
+    const { detail, service, snapshots } = await product(groups);
     const reads = snapshots.reads;
-    const found = await recordsAt(objects, detail, point(38.7, -9.1));
+    const found = await at(service, detail, 38.7, -9.1);
     expect(snapshots.reads - reads).toBe(POINT_LOOKUP.maxChunks);
-    expect(found).toMatchObject({ matched: POINT_LOOKUP.maxChunks, complete: false });
+    expect(found.point).toMatchObject({ matched: POINT_LOOKUP.maxChunks, complete: false });
   });
 
   it("reads a product not indexed yet whole when it is small, and says so", async () => {
-    const { detail, objects, snapshots } = await product([lisbon, porto, south], { indexed: false });
+    const { detail, service, snapshots } = await product([lisbon, porto, south], { indexed: false });
     expect(detail.extent).toBeUndefined();
     const reads = snapshots.reads;
-    const found = await recordsAt(objects, detail, point(38.72, -9.18));
+    const found = await at(service, detail, 38.72, -9.18);
     expect(snapshots.reads - reads).toBe(3);
     expect(found.data.map((row) => row.id)).toEqual(["block", "kiosk"]);
-    expect(found).toMatchObject({ indexed: false, complete: true });
+    expect(found.point).toMatchObject({ indexed: false, complete: true });
   });
 
   it("refuses to guess about a product not indexed yet that is too large to read whole", async () => {
     const groups = Array.from({ length: POINT_LOOKUP.maxChunks + 1 }, (_, index) => [
       { id: `p${index}`, name: "Somewhere", geometry: { type: "Point", coordinates: [-9 + index, 38] } },
     ]);
-    const { detail, objects } = await product(groups, { indexed: false });
-    await expect(recordsAt(objects, detail, point(38, -9))).rejects.toBeInstanceOf(NotIndexedError);
+    const { detail, service } = await product(groups, { indexed: false });
+    await expect(at(service, detail, 38, -9)).rejects.toBeInstanceOf(NotIndexedError);
+    await expect(service.geoJson(detail, { point: { latitude: 38, longitude: -9, radius: 25 } })).rejects.toBeInstanceOf(NotIndexedError);
   });
 
-  it("has no point view of a product with no place", async () => {
-    const { detail, objects } = await product([[{ id: "a", name: "A" }]], { fields: [{ name: "name", type: "string" }] });
-    await expect(recordsAt(objects, detail, point(38, -9))).rejects.toBeInstanceOf(NotFoundError);
+  it("refuses a point on a product with no place, as bbox is refused there", async () => {
+    const { detail, service } = await product([[{ id: "a", name: "A" }]], { fields: [{ name: "name", type: "string" }] });
+    await expect(at(service, detail, 38, -9)).rejects.toBeInstanceOf(InvalidQueryError);
+    await expect(service.records(detail, { limit: 10, filters: { bbox: { west: -10, south: 37, east: -8, north: 39 } } })).rejects.toBeInstanceOf(InvalidQueryError);
     expect(productExtent(detail)).toBeNull();
   });
 
@@ -327,11 +379,22 @@ describe("one product's records at a point", () => {
       { name: "lat", type: "latitude" },
       { name: "lon", type: "longitude" },
     ];
-    const { detail, objects } = await product([[{ id: "stop", name: "Stop", lat: 38.7, lon: -9.1 }]], { fields });
+    const { detail, service } = await product([[{ id: "stop", name: "Stop", lat: 38.7, lon: -9.1 }]], { fields });
     expect(productExtent(detail)).toEqual({ bbox: [-9.1, 38.7, -9.1, 38.7], indexed: true });
-    const found = await recordsAt(objects, detail, point(38.7001, -9.1));
-    // Coordinates are plain fields, not geometry, so they stay in the record.
-    expect(found.data).toMatchObject([{ id: "stop", lat: 38.7, lon: -9.1 }]);
+    expect((await at(service, detail, 38.7001, -9.1)).data).toMatchObject([{ id: "stop", lat: 38.7, lon: -9.1 }]);
+  });
+
+  it("streams the same features as GeoJSON from the same chunks, each with its distance", async () => {
+    const { detail, service, snapshots } = await product([lisbon, porto, south]);
+    const reads = snapshots.reads;
+    const collection = jsonAs<{ indexed: boolean; complete: boolean; numberMatched?: number; numberReturned: number; features: Array<{ id: string; properties: JsonObject }> }>(
+      await new Response(await service.geoJson(detail, { point: { latitude: 38.72, longitude: -9.18, radius: 25 } })).text(),
+    );
+    expect(snapshots.reads - reads).toBe(1);
+    expect(collection.features.map((feature) => feature.id).sort()).toEqual(["block", "kiosk"]);
+    expect(collection.features.find((feature) => feature.id === "block")?.properties._distance).toBe(0);
+    expect(collection).toMatchObject({ indexed: true, complete: true, numberReturned: 2 });
+    expect(collection.numberMatched).toBeUndefined();
   });
 });
 

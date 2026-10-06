@@ -88,21 +88,19 @@ export interface ProductsAtPoint {
   notIndexed: string[];
 }
 
-/** `/api/products/{slug}/at`: one product's records at a point. */
-export interface RecordsAtPoint {
+/**
+ * `/api/products/{slug}/records?lat&lon`: a page of the records at a point. Polygons containing it come
+ * first (`_distance` 0), then points and lines within `radius`, nearest first; each record carries `_distance`.
+ */
+export interface RecordsAtPoint extends CursorPage<JsonObject> {
   point: Point;
   radius: number;
-  /** Polygons containing the point (`_distance` 0), then points and lines within `radius`, nearest first. */
-  data: JsonObject[];
-  /** How many records matched; more than `data` holds when `capped`. */
+  /** How many records matched in every page together. */
   matched: number;
-  capped: boolean;
   /** Only the chunks whose box reaches the point were read; false while the product is read whole because it is not indexed yet. */
   indexed: boolean;
   /** Every chunk that could hold a match was read. False only when more chunks reach the point than one request reads. */
   complete: boolean;
-  licence: Term | null;
-  attribution: string | null;
 }
 
 export type AcquisitionStatus = "failed" | "queued" | "running" | "succeeded" | "unchanged";

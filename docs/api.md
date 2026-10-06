@@ -20,27 +20,31 @@ The generated reference is at [open-data.pt/docs](https://open-data.pt/docs) and
 
 ## What is at a place
 
-Two steps, so that a lookup reads only what it was asked about:
+A point is a filter, on the product list and on a product's rows alike, so a lookup reads only what
+it was asked about:
 
-| Method | Path                                         | Purpose                                                                                      |
-| ------ | -------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `GET`  | `/api/products?lat=&lon=[&radius=]`          | The products whose extent reaches the point, from the product index alone; no record is read |
-| `GET`  | `/api/products/:slug/at?lat=&lon=[&radius=]` | One product's records at the point: polygons that contain it, points and lines within radius |
+| Method | Path                                              | Purpose                                                                                      |
+| ------ | ------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `GET`  | `/api/products?lat=&lon=[&radius=]`               | The products whose extent reaches the point, from the product index alone; no record is read |
+| `GET`  | `/api/products/:slug/records?lat=&lon=[&radius=]` | One product's records at the point: polygons that contain it, points and lines within radius |
+| `GET`  | `/api/products/:slug.geojson?lat=&lon=[&radius=]` | The same records as GeoJSON features                                                         |
 
 - A product with a geometry or a latitude/longitude pair carries an `extent`: its `bbox`
-  (`[west, south, east, north]`) and whether it is `indexed`. Every other product's `extent` is null,
-  and `/at` answers it `404`.
-- `/at` returns polygons that contain the point (holes excluded) with `_distance` 0, then points and
-  lines within `radius` metres (default 25, at most 1000), nearest first; at most `limit` (default
-  10, at most 50), with `matched` and `capped` saying what was left out. Geometries are left out
-  unless `geometry=true`. The answer carries the product's `licence` and `attribution`.
-- Only the chunks whose box reaches the point are read, at most 16 a request, so `/at` counts against
-  the stricter rate limit like the GeoJSON export. `complete` is false if more chunks reach it.
+  (`[west, south, east, north]`) and whether it is `indexed`. On a product whose `extent` is null a
+  point is a `400` on `/records`, as `bbox` is there, and the GeoJSON export answers `404`.
+- `/records` at a point returns polygons that contain it (holes excluded) with `_distance` 0, then
+  points and lines within `radius` metres (default 25, at most 1000), nearest first. It pages like any
+  records page (`limit`, `nextCursor`), says `matched` across every page, and combines with `where`
+  and `validAt`. `bbox` and a point together are a `400`. The GeoJSON export streams the same features
+  with a `_distance` property, in chunk order.
+- Only the chunks whose box reaches the point are read, at most 16 a request and the same ones on every
+  page, so a point counts against the stricter rate limit like any filtered page. `complete` is false
+  if more chunks reach it.
 - A product published before chunks carried boxes is not `indexed`: the platform rebuilds it within
   hours. Until then `/api/products?lat&lon` names it under `notIndexed` rather than leaving it out,
-  and `/at` reads it whole when it is small (`indexed: false`) or answers `503` with `Retry-After`.
-- `lat` and `lon` are rounded to five decimals (about a metre) in the cache key and the answer. `/at`
-  is cached like the product's records; the product list with a point like the product list.
+  and a point reads it whole when it is small (`indexed: false`) or answers `503` with `Retry-After`.
+- `lat` and `lon` are rounded to five decimals (about a metre) in the cache key and the answer. The
+  records at a point are cached like any records page; the product list with a point like the list.
 
 ## History
 

@@ -13,12 +13,15 @@ describe("canonical routes", () => {
   });
 
   it("keys a point by its coordinates to five decimals, so nearby clicks and longer spellings share an entry", () => {
-    const precise = route("/api/products/crus/at?lon=-9.1366049&lat=38.70770001&radius=25");
+    const precise = route("/api/products/crus/records?lon=-9.1366049&lat=38.70770001&radius=25");
     expect(precise?.url.search).toBe("?lat=38.7077&lon=-9.1366&radius=25");
-    expect(route("/api/products/crus/at?lat=38.707700&lon=-9.13660")?.url.href).toBe(route("/api/products/crus/at?lon=-9.1366&lat=38.7077")?.url.href);
+    expect(route("/api/products/crus/records?lat=38.707700&lon=-9.13660")?.url.href).toBe(route("/api/products/crus/records?lon=-9.1366&lat=38.7077")?.url.href);
     expect(route("/api/products?lat=-0.000001&lon=0")?.url.search).toBe("?lat=0&lon=0");
     // What is not a number is left for the API to refuse.
-    expect(route("/api/products/crus/at?lat=north&lon=-9.1")?.url.searchParams.get("lat")).toBe("north");
+    expect(route("/api/products/crus/records?lat=north&lon=-9.1")?.url.searchParams.get("lat")).toBe("north");
+    // The GeoJSON export takes the same point; /records/all does not.
+    expect(route("/api/products/crus.geojson?lat=38.707704&lon=-9.1")?.url.search).toBe("?lat=38.7077&lon=-9.1");
+    expect(() => route("/api/products/crus/records/all?lat=38.7&lon=-9.1")).toThrow(GuardError);
   });
 
   it("refuses unknown and repeated parameters, and too many filters", () => {
@@ -37,7 +40,7 @@ describe("canonical routes", () => {
     expect(route("/api/products/stops/records/all")?.costly).toBe(true);
     expect(route("/api/products/stops/records?limit=500&cursor=abc")?.costly).toBe(false);
     // A filtered page reads on through the product until it fills.
-    for (const filter of ["where=kind%3Abus", "bbox=-9.2,38.7,-9.1,38.8", "validAt=2026-09-01T00:00:00Z"])
+    for (const filter of ["where=kind%3Abus", "bbox=-9.2,38.7,-9.1,38.8", "validAt=2026-09-01T00:00:00Z", "lat=38.7&lon=-9.1"])
       expect(route(`/api/products/stops/records?${filter}`)?.costly, filter).toBe(true);
     // Discovery at a point reads the index alone.
     expect(route("/api/products?lat=38.7&lon=-9.1")?.costly).toBe(false);

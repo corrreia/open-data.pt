@@ -1,8 +1,9 @@
 import type { Product as ApiProduct } from "@open-data-pt/api";
 import { asObject, asString, isJsonArray, isJsonNumber, isJsonObject, type CanonicalField, type CanonicalSchema, type JsonObject, type JsonValue } from "@open-data-pt/contract";
 
-import type { ChunkObject } from "#/serving/chunks";
-import { productExtent } from "#/serving/point-lookup";
+import type { ChunkObject, ManifestChunk } from "#/serving/chunks";
+import { pointPlan, productExtent, servedDistance } from "#/serving/point-lookup";
+import type { Hit, PointQuery } from "#/serving/spatial";
 import type { ProductDetail, ProductView } from "#/registry/registry";
 import { NotFoundError } from "#/api/errors";
 import type { Feed } from "#/registry/feed-model";
@@ -27,6 +28,8 @@ export interface BoundingBox {
 export interface RowFilters {
   where?: FieldFilter[];
   bbox?: BoundingBox;
+  /** Only the rows that cover a point: polygons containing it, points and lines within the radius. Never with `bbox`. */
+  point?: PointQuery;
 }
 
 /** What the records endpoint asks a product for. */
@@ -49,6 +52,8 @@ export class InvalidQueryError extends Error {
 export interface RecordPage {
   data: JsonObject[];
   nextCursor?: string;
+  /** With a point filter: how many records matched across every page, and how the chunks were chosen. */
+  point?: { matched: number; indexed: boolean; complete: boolean };
 }
 
 /** What the changes endpoint asks a product for. */
@@ -125,6 +130,8 @@ export class Serving {
    * RECORD_SCAN_BUDGET first comes back short, or empty, with a cursor to continue from.
    */
   async records(product: ProductDetail, input: RecordQuery): Promise<RecordPage> {
+    const point = input.filters?.point;
+    if (point) return this.recordsAtPoint(product, input, point);
     const matches = rowMatcher(product.schema, input.filters);
     const chunks = product.chunks ?? [];
     const cursor = parseRecordCursor(input.cursor);
@@ -170,6 +177,46 @@ export class Serving {
     }
     const page: RecordPage = { data };
     if (chunk < chunks.length) page.nextCursor = `v${product.version}:${chunk}:${offset}`;
+    return page;
+  }
+
+  /**
+   * One page of the records at a point, nearest first: the polygons that contain it, then points
+   * and lines by distance, then by id. Being sorted, a page is not a stretch of chunks, so every
+   * page reads the same few chunks (those whose box reaches the point, at most
+   * POINT_LOOKUP.maxChunks), keeps the best `offset + limit` matches, and its cursor is an offset
+   * into that order. The other filters (`where`, `validAt`) apply to the same rows.
+   */
+  private async recordsAtPoint(product: ProductDetail, input: RecordQuery, query: PointQuery): Promise<RecordPage> {
+    const plan = pointPlan(product, query);
+    if (!plan) throw new InvalidQueryError("lat and lon need a product with a geometry, or latitude and longitude fields");
+    const matches = rowMatcher(product.schema, { where: input.filters?.where ?? [] });
+    const offset = parsePointCursor(input.cursor, product.version);
+    const keep = offset + input.limit;
+    const nearest = (left: PointRow, right: PointRow) => left.hit.distance - right.hit.distance || compareIds(left.record, right.record);
+    let best: PointRow[] = [];
+    let matched = 0;
+    for (const chunk of plan.chunks) {
+      for (const row of await this.chunkRows(chunk.key)) {
+        if (input.validAt && !validAt(row, input.validAt)) continue;
+        if (matches && !matches(row)) continue;
+        const hit = plan.hit(row);
+        if (!hit) continue;
+        matched += 1;
+        best.push({ record: row, hit });
+        // Only the best `keep` can be on this page or before it: memory stays bounded by the page, not the matches.
+        if (best.length > 2 * keep + 64) best = best.sort(nearest).slice(0, keep);
+      }
+    }
+    const data = best
+      .sort(nearest)
+      .slice(offset, keep)
+      .map(({ record, hit }) => {
+        const { _hash: _h, ...served } = record;
+        return { ...served, _distance: servedDistance(hit) };
+      });
+    const page: RecordPage = { data, point: { matched, indexed: plan.indexed, complete: plan.complete } };
+    if (matched > keep) page.nextCursor = `v${product.version}:at:${keep}`;
     return page;
   }
 
@@ -225,24 +272,35 @@ export class Serving {
     const longitudeField = product.schema.fields.find((field) => field.type === "longitude")?.name;
     if (!geometryField && !(latitudeField && longitudeField)) throw new NotFoundError("Product has no geometry or coordinate fields");
     const matches = rowMatcher(product.schema, filters);
+    // A point reads only the chunks whose box reaches it, and says so before the first feature, as it knows it then.
+    const plan = filters?.point ? pointPlan(product, filters.point) : undefined;
+    const placed = plan ? `"indexed":${plan.indexed},"complete":${plan.complete},` : "";
     // Filtered, the number of matching features is only known at the end.
-    const matched = matches ? "" : `"numberMatched":${servedRows(product)},`;
-    const head = `{"type":"FeatureCollection",${matched}"timeStamp":${JSON.stringify(new Date().toISOString())},"features":[`;
+    const matched = matches || plan ? "" : `"numberMatched":${servedRows(product)},`;
+    const head = `{"type":"FeatureCollection",${matched}${placed}"timeStamp":${JSON.stringify(new Date().toISOString())},"features":[`;
     return this.streamRows(
       product,
       head,
       (returned) => `],"numberReturned":${returned}}`,
       (row) => {
         if (matches && !matches(row)) return undefined;
-        const feature = toFeature(row, geometryField, latitudeField, longitudeField);
+        const hit = plan?.hit(row);
+        if (plan && !hit) return undefined;
+        const feature = toFeature(row, geometryField, latitudeField, longitudeField, hit ? { _distance: servedDistance(hit) } : {});
         return feature ? JSON.stringify(feature) : undefined;
       },
+      plan?.chunks,
     );
   }
 
-  /** One JSON document around a product's rows: the head, then each chunk's serialized rows as it is read, then the tail. */
-  private streamRows(product: ProductDetail, head: string, tail: (returned: number) => string, serialize: (row: JsonObject) => string | undefined): ReadableStream<Uint8Array> {
-    const chunks = product.chunks ?? [];
+  /** One JSON document around a product's rows (or those of the chunks given): the head, then each chunk's serialized rows as it is read, then the tail. */
+  private streamRows(
+    product: ProductDetail,
+    head: string,
+    tail: (returned: number) => string,
+    serialize: (row: JsonObject) => string | undefined,
+    chunks: readonly ManifestChunk[] = product.chunks ?? [],
+  ): ReadableStream<Uint8Array> {
     const encoder = new TextEncoder();
     let index = -1;
     let returned = 0;
@@ -336,6 +394,30 @@ function servedRows(product: ProductDetail): number {
   return (product.chunks ?? []).reduce((total, chunk) => total + chunk.rows, 0);
 }
 
+/** A row at a point and how it stands to it. */
+interface PointRow {
+  record: JsonObject;
+  hit: Hit;
+}
+
+/** Ties at the same distance go by id, so the order, and every page of it, is the same each time. */
+function compareIds(left: JsonObject, right: JsonObject): number {
+  const a = String(left.id);
+  const b = String(right.id);
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
+/** Where a page of records at a point starts: an offset into the nearest-first order, bound to the version it was taken from. */
+function parsePointCursor(cursor: string | undefined, version: number): number {
+  if (!cursor) return 0;
+  const match = /^v(\d+):at:(\d+)$/.exec(cursor);
+  if (!match) throw new InvalidQueryError("cursor is invalid: it was not taken from records at this point");
+  if (Number(match[1]) !== version) {
+    throw new InvalidQueryError(`cursor belongs to version ${match[1]}, and the product is now at version ${version}; start again without a cursor`);
+  }
+  return Number(match[2]);
+}
+
 function parseRecordCursor(cursor: string | undefined): { version: number; chunk: number; offset: number } | undefined {
   if (!cursor) return undefined;
   const match = /^v(\d+):(\d+):(\d+)$/.exec(cursor);
@@ -397,8 +479,14 @@ function validAt(record: JsonObject, at: string): boolean {
   return (validFrom === undefined || instant(validFrom) <= moment) && (validTo === undefined || instant(validTo) >= moment);
 }
 
-function toFeature(row: JsonObject, geometryField: string | undefined, latitudeField: string | undefined, longitudeField: string | undefined): JsonObject | undefined {
-  const { _hash: _h, ...properties } = row;
+function toFeature(
+  row: JsonObject,
+  geometryField: string | undefined,
+  latitudeField: string | undefined,
+  longitudeField: string | undefined,
+  extra: JsonObject = {},
+): JsonObject | undefined {
+  const { _hash: _h, ...properties } = { ...row, ...extra };
   let geometry = geometryField ? asGeometry(row[geometryField]) : undefined;
   if (geometryField) delete properties[geometryField];
   if (!geometry && latitudeField && longitudeField) {

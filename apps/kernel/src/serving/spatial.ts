@@ -199,6 +199,18 @@ export function spatialOrderKey(box: Box | undefined, entityKey: string): string
 /** Metres in a degree of latitude, on a sphere of the Earth's mean radius. */
 const METRES_PER_DEGREE = (6_371_008.8 * Math.PI) / 180;
 
+/**
+ * How much shorter a degree of longitude is than one of latitude at a
+ * latitude, never under a hundredth (about 89.4° from the equator). The box a
+ * query reads and the distances it measures both use this one scale, so the
+ * box always holds whatever the measurement accepts; near a pole, where the
+ * floor applies, distances east and west come out longer than they are, and
+ * the answer errs towards leaving a row out.
+ */
+function eastScale(latitude: number): number {
+  return Math.max(0.01, Math.cos((latitude * Math.PI) / 180));
+}
+
 /** A point asked about, and how far around it to look for points and lines, in metres. */
 export interface PointQuery {
   longitude: number;
@@ -213,7 +225,7 @@ export interface PointQuery {
  */
 export function queryBox(query: PointQuery): Box {
   const latitudeDegrees = (query.radius / METRES_PER_DEGREE) * 1.01;
-  const longitudeDegrees = latitudeDegrees / Math.max(0.01, Math.cos((query.latitude * Math.PI) / 180));
+  const longitudeDegrees = latitudeDegrees / eastScale(query.latitude);
   return {
     west: query.longitude - longitudeDegrees,
     south: query.latitude - latitudeDegrees,
@@ -252,7 +264,7 @@ class Plane {
   private readonly east: number;
 
   constructor(readonly query: PointQuery) {
-    this.east = METRES_PER_DEGREE * Math.cos((query.latitude * Math.PI) / 180);
+    this.east = METRES_PER_DEGREE * eastScale(query.latitude);
   }
 
   x(longitude: number): number {

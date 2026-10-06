@@ -61,7 +61,7 @@ function endpointsFor(product: Product): Endpoint[] {
     if (product.extent) {
       list.push({
         title: "Records at a point",
-        path: `${base}/at?lat=LAT&lon=LON&radius=25`,
+        path: `${base}/records?lat=LAT&lon=LON&radius=25`,
         template: true,
         description: "The polygons that contain a point, and the points and lines within radius metres of it.",
       });

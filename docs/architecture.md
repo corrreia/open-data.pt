@@ -99,8 +99,8 @@ application usage ledger.
 "What does open-data.pt know about this place" is answered in two steps, neither of which reads
 the whole catalogue ([the API](api.md#what-is-at-a-place) has the parameters):
 `GET /api/products?lat&lon` filters the product index by each located product's `extent`, without
-reading a record, and `GET /api/products/{slug}/at` reads only the chunks of that one product whose
-box reaches the point, then tests each of their rows exactly: point in polygon with holes, distance to
+reading a record, and the same `lat` and `lon` on one product's `/records` (or GeoJSON) read only
+the chunks of that product whose box reaches the point, then tests each of their rows exactly: point in polygon with holes, distance to
 points and lines. The caller picks the products, so a land-use class is never read without the product
 that says what it means.
 
@@ -141,15 +141,19 @@ per wake-up whenever nothing else runs, from its chunks or its index, and publis
 version so that no records cursor can walk the old layout. Runners of monthly feeds would not wake for
 a month, so the Registry's alarm asks 16 of them every 15 minutes (each again after six hours) and a
 point lookup asks the runner of the product it found unindexed. Until a product is rebuilt the
-product list names it in `notIndexed` instead of leaving it out, and `/at` reads it whole when it has
+product list names it in `notIndexed` instead of leaving it out, and a point filter reads it whole when it has
 at most 16 chunks and answers 503 otherwise, so neither ever says "nothing here" about a product it
 did not search.
 
 A lookup reads at most 16 chunks: a chunk is at most 2 Mi characters, so that is 16 R2 reads (of the
 10,000 subrequests a Worker may make), a few MB of memory at a time since each chunk is split into rows
-and each row parsed and dropped, and a few hundred milliseconds of CPU at worst. It counts against the
-stricter rate limit, and is cached at the edge for a quarter of the product's cadence like its records,
-under a key whose coordinates are rounded to five decimals.
+and each row parsed and dropped, and a few hundred milliseconds of CPU at worst. Its records come
+nearest first, which is not chunk order, so a records page at a point does not walk the product the
+way other filtered pages do (reading on, within the records scan budget, until the page fills): every
+page reads the same few chunks, keeps the best `offset + limit` matches, and its cursor is an offset
+into that order. `where` and `validAt` apply to the same rows. It counts against the stricter rate
+limit like any filtered page, and is cached at the edge for a quarter of the product's cadence like
+its records, under a key whose coordinates are rounded to five decimals.
 
 ## History and backfill
 

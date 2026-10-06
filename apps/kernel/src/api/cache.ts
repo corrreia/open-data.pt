@@ -8,8 +8,7 @@ import { ANALYTICS_TTL_SECONDS } from "#/pages/analytics";
 const CACHE_TTL_SECONDS: Array<[pattern: RegExp, seconds: number]> = [
   [/^\/api\/products\/[^/]+\.geojson$/, 15],
   [/^\/api\/products\/[^/]+\/records\/all$/, 15],
-  // A point lookup is current data like a records page: a quarter of the product's cadence, at most five minutes.
-  [/^\/api\/products\/[^/]+\/(records|series|changes|series\/changes|at)$/, 15],
+  [/^\/api\/products\/[^/]+\/(records|series|changes|series\/changes)$/, 15],
   [/^\/api\/products(\/[^/]+)?$/, 20],
   [/^\/api\/(feeds|acquisitions)$/, 10],
   [/^\/api\/feeds\/[^/]+$/, 10],

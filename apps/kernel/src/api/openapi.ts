@@ -29,7 +29,7 @@ export function openApiDocument(origin: string) {
       {
         name: "Products",
         description: [
-          "Read a product's current rows or points, and its past. `/records`, `/records/all` and the GeoJSON export filter with `where` and `bbox`; `/series` serves a time-series product's recent window. For a place, `GET /api/products?lat&lon` lists the products that reach it and `/at` answers what one of them holds there.",
+          "Read a product's current rows or points, and its past. `/records`, `/records/all` and the GeoJSON export filter with `where` and `bbox`; `/series` serves a time-series product's recent window. For a place, `GET /api/products?lat&lon` lists the products that reach it, and `/records` or the GeoJSON export with the same `lat` and `lon` answers what one of them holds there.",
           "",
           "History is queryable. `/events` and `/series/range` answer what was true over an event-time window, as known now or at any past `knownAt`; `/changes/range` and `/series/changes/range` list every revision the platform learned over a knowledge-time window, corrections included. A window is at most 366 days, pages follow deterministic cursors, and every answer states its freshness and its coverage, including when the lake begins. Arbitrary SQL is not exposed.",
           "",
@@ -224,11 +224,13 @@ export function openApiDocument(origin: string) {
           tags: ["Products"],
           summary: "List cleaned products, current views, series, and summaries; with `lat` and `lon`, those that reach a point",
           description:
-            "With `lat` and `lon`, the list holds only the products whose `extent` reaches the point (within `radius`), from the product index alone: no record is read. Ask each of them `/api/products/{slug}/at` for what it holds there. `notIndexed` names the located products whose extent is not known yet; any of them may cover the point too.",
+            "With `lat` and `lon`, the list holds only the products whose `extent` reaches the point (within `radius`), from the product index alone: no record is read. Ask each of them `/api/products/{slug}/records?lat&lon` for what it holds there. `notIndexed` names the located products whose extent is not known yet; any of them may cover the point too.",
           parameters: [
-            latitudeParameter(false),
-            longitudeParameter(false),
-            radiusParameter("With `lat` and `lon`: metres; a product counts when its extent comes within this distance of the point. Pass the radius you will ask `/at` with."),
+            latitudeParameter(),
+            longitudeParameter(),
+            radiusParameter(
+              "With `lat` and `lon`: metres; a product counts when its extent comes within this distance of the point. Pass the radius you will ask `/records` with.",
+            ),
           ],
           responses: {
             "200": jsonResponse("Products", {
@@ -249,48 +251,6 @@ export function openApiDocument(origin: string) {
           },
         },
       },
-      "/api/products/{slug}/at": {
-        get: {
-          operationId: "getProductRecordsAtPoint",
-          tags: ["Products"],
-          summary: "What one located product holds at a point: the polygons that contain it, and the points and lines near it",
-          description: [
-            "For a product with a geometry or a latitude/longitude pair (`extent` is not null). Polygons match when they contain the point (holes excluded), with `_distance` 0; points and lines match within `radius` metres, nearest first. Up to `limit` records come back, and `capped` says when more matched; geometries are left out unless `geometry=true`.",
-            "",
-            "Only the chunks whose box reaches the point are read, at most 16 a request; `complete` is false in the rare case more reach it. A product published before chunks were boxed is read whole while it is small enough (`indexed: false`), and otherwise answers 503 with `Retry-After` until the platform has indexed it. Find the products at a point first with `GET /api/products?lat&lon`.",
-            "",
-            "Counts against the stricter rate limit. The point is rounded to five decimals (about a metre), and the answer is cached like the product's records.",
-          ].join("\n"),
-          parameters: [
-            pathParameter("slug", "Stable product slug"),
-            latitudeParameter(true),
-            longitudeParameter(true),
-            radiusParameter(),
-            integerParameter("limit", 10, 1, 50),
-            { name: "geometry", in: "query", required: false, description: "Return each record's geometry too.", schema: { type: "boolean", default: false } },
-          ],
-          responses: {
-            "200": jsonResponse("The product's records at the point", {
-              type: "object",
-              required: ["point", "radius", "data", "matched", "capped", "indexed", "complete", "licence", "attribution"],
-              properties: {
-                point: schemaRef("Point"),
-                radius: { type: "integer", description: "Metres." },
-                data: { type: "array", items: schemaRef("RecordAtPoint") },
-                matched: { type: "integer", description: "Records that matched; more than `data` holds when `capped`." },
-                capped: { type: "boolean" },
-                indexed: { type: "boolean", description: "False while the product is read whole because its chunks are not boxed yet." },
-                complete: { type: "boolean", description: "Every chunk that could hold a match was read." },
-                licence: { oneOf: [{ type: "null" }, schemaRef("Term")], description: "The terms the product is served under." },
-                attribution: { type: ["string", "null"], description: "Credit the publisher with this, not open-data.pt." },
-              },
-            }),
-            "404": responseRef("NotFound"),
-            "503": responseRef("NotIndexed"),
-            ...reads(),
-          },
-        },
-      },
       "/api/products/{slug}": {
         get: {
           operationId: "getProduct",
@@ -305,11 +265,13 @@ export function openApiDocument(origin: string) {
           operationId: "getProductGeoJson",
           tags: ["Products"],
           summary: "Get a product's geometry or coordinate records as a streamed GeoJSON FeatureCollection",
-          description: "Filtered exports omit `numberMatched`; `numberReturned` is always at the end. Counts against the stricter rate limit.",
-          parameters: [pathParameter("slug", "Stable product slug"), whereParameter(), bboxParameter()],
+          description:
+            "Filtered exports omit `numberMatched`; `numberReturned` is always at the end. With `lat` and `lon`, only the features at the point, each with a `_distance` property, read from the chunks whose box reaches it (at most 16), and the collection states `indexed` and `complete` as `/records` does. Counts against the stricter rate limit.",
+          parameters: [pathParameter("slug", "Stable product slug"), whereParameter(), bboxParameter(), ...pointParameters()],
           responses: {
             "200": { description: "GeoJSON FeatureCollection", content: { "application/geo+json": { schema: { type: "object" } } } },
             "404": responseRef("NotFound"),
+            "503": responseRef("NotIndexed"),
             ...reads(),
           },
         },
@@ -339,7 +301,7 @@ export function openApiDocument(origin: string) {
           tags: ["Products"],
           summary: "Read the current reference, state, summary, or event records",
           description:
-            "A filtered page (`where`, `bbox` or `validAt`) reads on through the product until it holds `limit` rows or the product ends, up to a bounded amount of work per request. A page that reaches that bound before it fills comes back with fewer rows than `limit`, or with none, and still carries `nextCursor`: an empty `data` with a `nextCursor` is not the end and does not mean nothing matches. Follow `nextCursor` until it is absent. Filtered pages count against the stricter rate limit.",
+            "A filtered page (`where`, `bbox` or `validAt`) reads on through the product until it holds `limit` rows or the product ends, up to a bounded amount of work per request. A page that reaches that bound before it fills comes back with fewer rows than `limit`, or with none, and still carries `nextCursor`: an empty `data` with a `nextCursor` is not the end and does not mean nothing matches. Follow `nextCursor` until it is absent. Filtered pages count against the stricter rate limit.\n\nWith `lat` and `lon`, a page holds the records at the point: polygons that contain it (holes excluded) first, with `_distance` 0, then points and lines within `radius` metres, nearest first, each with `_distance`. It reads only the chunks whose box reaches the point, at most 16 a request, the same on every page, and also says `matched` (across every page), `indexed` and `complete`. `where` and `validAt` apply too; `bbox` with a point is a 400, and so is a point on a product with no place (`extent` null). A product published before chunks were boxed is read whole while it is small (`indexed: false`), and otherwise answers 503 with `Retry-After`. Find the products at a point with `GET /api/products?lat&lon`.",
           parameters: [
             pathParameter("slug", "Stable product slug"),
             integerParameter("limit", 50, 1, 500),
@@ -350,17 +312,28 @@ export function openApiDocument(origin: string) {
             timeParameter("validAt", "Only records valid at this RFC 3339 time."),
             whereParameter(),
             bboxParameter(),
+            ...pointParameters(),
           ],
           responses: {
             "200": jsonResponse("Current records", {
               type: "object",
               required: ["data"],
               properties: {
-                data: { type: "array", items: schemaRef("Record") },
+                data: {
+                  type: "array",
+                  items: schemaRef("Record"),
+                  description: "With `lat` and `lon`, each record also carries `_distance`: metres from the point, 0 inside a polygon.",
+                },
                 nextCursor: { type: "string", description: "Absent on the last page; pass it back as `cursor`." },
+                point: { ...schemaRef("Point"), description: "With `lat` and `lon` only." },
+                radius: { type: "integer", description: "With `lat` and `lon` only: metres." },
+                matched: { type: "integer", description: "With `lat` and `lon` only: records at the point across every page." },
+                indexed: { type: "boolean", description: "With `lat` and `lon` only: false while the product is read whole because its chunks are not boxed yet." },
+                complete: { type: "boolean", description: "With `lat` and `lon` only: every chunk that could hold a match was read." },
               },
             }),
             "404": responseRef("NotFound"),
+            "503": responseRef("NotIndexed"),
             ...reads(),
           },
         },
@@ -564,7 +537,7 @@ export function openApiDocument(origin: string) {
             hasSeries: { type: "boolean", description: "Whether `/series` has points." },
             extent: {
               oneOf: [{ type: "null" }, schemaRef("Extent")],
-              description: "Where a product with a geometry or a latitude/longitude pair lies, so `/at` can be asked of it; null for a product with no place.",
+              description: "Where a product with a geometry or a latitude/longitude pair lies, so `/records` can be asked about a point in it; null for a product with no place.",
             },
             updatedAt: time(),
           },
@@ -583,19 +556,9 @@ export function openApiDocument(origin: string) {
             indexed: {
               type: "boolean",
               description:
-                "Its chunks are ordered and boxed by place, so `/at` reads only the few that can hold the point. A product published before that is rebuilt by the platform, within hours.",
+                "Its chunks are ordered and boxed by place, so a point filter reads only the few that can hold the point. A product published before that is rebuilt by the platform, within hours.",
             },
           },
-        },
-        RecordAtPoint: {
-          allOf: [
-            schemaRef("Record"),
-            {
-              type: "object",
-              required: ["_distance"],
-              properties: { _distance: { type: "number", description: "Metres from the point: 0 for a polygon that contains it." } },
-            },
-          ],
         },
         Point: {
           type: "object",
@@ -1006,24 +969,29 @@ function bboxParameter() {
   };
 }
 
-function latitudeParameter(required: boolean) {
+function latitudeParameter() {
   return {
     name: "lat",
     in: "query",
-    required,
-    description: `Latitude of the point, WGS 84 degrees${required ? "" : "; with `lon`"}.`,
+    required: false,
+    description: "Latitude of a point, WGS 84 degrees; with `lon`. Rounded to five decimals (about a metre).",
     schema: { type: "number", minimum: -90, maximum: 90, examples: [38.7077] },
   };
 }
 
-function longitudeParameter(required: boolean) {
+function longitudeParameter() {
   return {
     name: "lon",
     in: "query",
-    required,
-    description: `Longitude of the point, WGS 84 degrees${required ? "" : "; with `lat`"}.`,
+    required: false,
+    description: "Longitude of a point, WGS 84 degrees; with `lat`. Rounded to five decimals (about a metre).",
     schema: { type: "number", minimum: -180, maximum: 180, examples: [-9.1366] },
   };
+}
+
+/** The point filter on a product's rows. */
+function pointParameters() {
+  return [latitudeParameter(), longitudeParameter(), radiusParameter()];
 }
 
 function radiusParameter(description = "Metres around the point within which points and lines count. Polygons count only when they contain the point.") {

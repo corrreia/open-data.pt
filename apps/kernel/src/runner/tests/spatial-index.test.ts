@@ -1,6 +1,6 @@
 import { asArrayOrEmpty, asObject, parseJson, type CanonicalField, type CanonicalRecord } from "@open-data-pt/contract";
 import { describe, expect, it } from "vitest";
-import type { ChunkObject } from "#/serving/chunks";
+import { chunkListProblem, isChunkBoundary, type ChunkObject } from "#/serving/chunks";
 import { geometryBox, type Box } from "#/serving/spatial";
 import { kernelHarness, type KernelHarness } from "#/tests/kernel-harness";
 
@@ -189,5 +189,68 @@ describe("a large located product", () => {
     expect(await checkChunkBoxes(h)).toHaveLength(COUNT);
     expect(mixedChunks(h)).toBeLessThanOrEqual(1);
     expect(h.core.unplacedProduct()).toBeUndefined();
+  }, 120_000);
+
+  it("keeps serving the version it had when a rebuild fails, and keeps its chunks", async () => {
+    const h = await placedHarness();
+    h.source.records = twoCities(COUNT, padding);
+    await h.collect();
+    forgetSpatialIndex(h);
+    const before = h.core.productPlans()[0]!.entry;
+    const publications = h.published.length;
+    // The index holds rows its chunks do not yet serve, so the rebuild has new chunks to write; and R2 refuses them.
+    h.database.exec("UPDATE entities SET row_json = replace(row_json, 'Parcel', 'Lot')");
+    h.snapshots.failPuts = true;
+    expect(await h.core.indexSpatially()).toBe(false);
+    h.snapshots.failPuts = false;
+    // Nothing was published, the entry is the one before, and none of its chunks is waiting to be deleted.
+    expect(h.published.length).toBe(publications);
+    expect(h.core.productPlans()[0]).toMatchObject({ entry: before, regenerate: false });
+    const garbage = new Set(
+      h.database
+        .prepare("SELECT object_key FROM garbage")
+        .all()
+        .map((row) => String(row.object_key)),
+    );
+    expect((before.chunks ?? []).filter((chunk) => garbage.has(chunk.key))).toEqual([]);
+    for (const chunk of before.chunks ?? []) expect(await h.objects.readText(chunk.key), chunk.key).toBeDefined();
+    // The publication slot is free again, so collections go on, and the rebuild is tried again later.
+    expect(h.core.getState("publication")).toBeUndefined();
+    expect(h.core.unplacedProduct()).toBeUndefined();
+    h.clock.now += 7 * HOUR;
+    expect(h.core.unplacedProduct()?.mode).toBe("large");
+  }, 120_000);
+
+  it("never publishes a rebuild whose chunk list is too long to store, and keeps serving the version before", async () => {
+    // Keys whose hash closes a chunk, so every row is a chunk of its own; five thousand of them list in just under the
+    // stored-value limit in key order, and over it once each chunk carries a box and a longer order key.
+    const keys: string[] = [];
+    for (let index = 0; keys.length < 5_000; index += 1) {
+      const key = `parcel-${String(index).padStart(13, "0")}`;
+      if (isChunkBoundary(key)) keys.push(key);
+    }
+    const h = await kernelHarness();
+    // Published before boxes: the same rows under a schema that did not yet say where they are.
+    h.source.records = keys.map((key, index) => parcel(key, -9.2 + (index % 100) * 0.002, 38.7 + Math.floor(index / 100) * 0.002, "x".repeat(3 * 1024)));
+    await h.collect();
+    const legacy = h.core.productPlans()[0]!;
+    expect(legacy.mode).toBe("large");
+    expect(chunkListProblem(legacy.entry.chunks ?? [], "things")).toBeUndefined();
+    h.database.prepare("UPDATE products SET entry_json = ?").run(JSON.stringify({ ...legacy.entry, schema: { fields: PLACED } }));
+    const before = h.core.productPlans()[0]!.entry;
+    const publications = h.published.length;
+
+    expect(await h.core.indexSpatially()).toBe(false);
+    // Nothing failed was published, the entry is the one before, and none of its chunks is waiting to be deleted.
+    expect(h.published.length).toBe(publications);
+    expect(h.core.productPlans()[0]).toMatchObject({ entry: before, regenerate: false });
+    const garbage = new Set(
+      h.database
+        .prepare("SELECT object_key FROM garbage")
+        .all()
+        .map((row) => String(row.object_key)),
+    );
+    expect((before.chunks ?? []).filter((chunk) => garbage.has(chunk.key))).toEqual([]);
+    expect(h.core.getState("publication")).toBeUndefined();
   }, 120_000);
 });

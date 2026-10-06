@@ -23,6 +23,7 @@ import {
   regenerateChunks,
   servedIdentity,
   type ChunkSink,
+  type ManifestChunk,
   type ServingRow,
 } from "#/serving/chunks";
 import { locatorFor, rowJsonBox, type Locator } from "#/serving/spatial";
@@ -1041,7 +1042,10 @@ export class RunnerCore {
       },
     });
     const problem = chunkListProblem(chunks, product.slug);
-    if (problem) throw new Error(problem);
+    if (problem) {
+      this.abandonChunks(chunks, product.entry);
+      throw new Error(problem);
+    }
     const entry = setExtent<ProductIndexEntry>({ ...product.entry, chunks, rowCount: rows.length }, extentOf(chunks));
     this.transaction(() => {
       this.supersede(product.entry, entry);
@@ -1385,6 +1389,11 @@ export class RunnerCore {
       sink,
     );
     const problem = chunkListProblem(chunks, product.slug);
+    // A rebuild with nothing committed behind it (a spatial rebuild) fails instead: the version it would replace serves on.
+    if (problem && acquisitionId === undefined) {
+      this.abandonChunks(chunks, product.entry);
+      throw new Error(problem);
+    }
     // The commit is durable, so a product too large to list must not wedge publication: it serves nothing, and every collection tries again.
     if (problem) console.error(JSON.stringify({ event: "chunk_list_too_large", feedId: feed.id, problem }));
     const entry = setExtent<ProductIndexEntry>(
@@ -1397,6 +1406,12 @@ export class RunnerCore {
       this.exec(`UPDATE products SET entry_json = ?, regenerate = 0 WHERE product_key = ?`, JSON.stringify(entry), product.productKey);
     });
     return entry;
+  }
+
+  /** Chunks a rebuild wrote and will not publish: deleted after the grace period, except those the entry still serves. */
+  private abandonChunks(chunks: readonly ManifestChunk[], serving: ProductIndexEntry): void {
+    const kept = new Set((serving.chunks ?? []).map((chunk) => chunk.key));
+    this.transaction(() => this.discardObjects(chunks.map((chunk) => chunk.key).filter((key) => !kept.has(key))));
   }
 
   /** A product's index rows in entity-key order, after `after`. */

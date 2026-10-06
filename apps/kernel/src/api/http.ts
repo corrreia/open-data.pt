@@ -13,7 +13,8 @@ import { MAX_HISTORY_PAGE, QueryError, runLakeQuery } from "#/history/query";
 import { PUBLISHED_AHEAD_MS, readSummaryFile, readSummaryRange, type SummaryResolution } from "#/history/summaries";
 import { callRegistry, withHistorySlot } from "#/api/registry-calls";
 import { ALLOWED_METHODS, MAX_FILTERS, requestIdOf } from "#/api/request-guard";
-import { NotIndexedError, POINT_LOOKUP, productsAt, recordsAt, type PointLookupQuery } from "#/serving/point-lookup";
+import { NotIndexedError, POINT_LOOKUP, productsAt } from "#/serving/point-lookup";
+import { spatialIndexMissing } from "#/registry/feed-model";
 import type { PointQuery } from "#/serving/spatial";
 import {
   InvalidQueryError,
@@ -162,31 +163,30 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
       });
     }
     if (url.pathname === "/api/products") {
-      const point = pointQuery(url, false);
+      const point = pointQuery(url);
       const products = await serving().listProducts();
       return json(point ? productsAt(products, point) : { data: products });
     }
     const geoJsonMatch = url.pathname.match(/^\/api\/products\/([^/]+)\.geojson$/);
-    const atMatch = url.pathname.match(/^\/api\/products\/([^/]+)\/at$/);
     const allRecordsMatch = url.pathname.match(/^\/api\/products\/([^/]+)\/records\/all$/);
     const historyMatch = url.pathname.match(/^\/api\/products\/([^/]+)\/(events|changes\/range|series\/range|series\/changes\/range)$/);
     const summaryMatch = url.pathname.match(/^\/api\/products\/([^/]+)\/series\/summary(?:\/(\d{4}(?:-\d{2})?))?$/);
     const productMatch = url.pathname.match(/^\/api\/products\/([^/]+)(?:\/(records|changes|series|series\/changes))?$/);
-    const slug = geoJsonMatch?.[1] ?? atMatch?.[1] ?? allRecordsMatch?.[1] ?? historyMatch?.[1] ?? summaryMatch?.[1] ?? productMatch?.[1];
+    const slug = geoJsonMatch?.[1] ?? allRecordsMatch?.[1] ?? historyMatch?.[1] ?? summaryMatch?.[1] ?? productMatch?.[1];
     if (slug) {
       // One Registry call answers every product read: the entry, its chunk list, and whether the public may see it.
       const service = serving();
       const product = await service.product(decodeURIComponent(slug));
       if (!product) throw new NotFoundError("Product was not found");
       if (geoJsonMatch) {
+        const filters = rowFilters(url, true);
         return withCadence(
-          new Response(await service.geoJson(product, rowFilters(url)), {
+          new Response(await placed(ctx, product, filters, () => service.geoJson(product, filters)), {
             headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/geo+json" },
           }),
           product,
         );
       }
-      if (atMatch) return withCadence(json(await productAt(ctx, url, product)), product);
       if (allRecordsMatch) {
         return withCadence(
           new Response(await service.allRecords(product, rowFilters(url)), {
@@ -205,12 +205,17 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
       if (view === "records") {
         const cursor = optionalQuery(url, "cursor");
         const validAt = optionalTime(url, "validAt");
-        const filters = rowFilters(url);
+        const filters = rowFilters(url, true);
         const query: RecordQuery = { limit: parseInteger(url, "limit", 50, 1, 500) };
         if (cursor) query.cursor = decodeCursor(cursor);
         if (validAt) query.validAt = validAt;
         if (filters) query.filters = filters;
-        const page = await service.records(product, query);
+        const page = await placed(ctx, product, filters, () => service.records(product, query));
+        if (page.point && filters?.point) {
+          const body: RecordsAtPoint = { data: page.data, point: { lat: filters.point.latitude, lon: filters.point.longitude }, radius: filters.point.radius, ...page.point };
+          if (page.nextCursor) body.nextCursor = encodeCursor(page.nextCursor);
+          return withCadence(json(body), product);
+        }
         const body: JsonObject = { data: page.data };
         if (page.nextCursor) body.nextCursor = encodeCursor(page.nextCursor);
         return withCadence(json(body), product);
@@ -274,20 +279,17 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
 /** A product too large to read whole, waiting for its runner to index it by place: a rebuild takes seconds once it starts. */
 const NOT_INDEXED_RETRY_SECONDS = 300;
 
-/** One product's records at a point, with the terms it is served under. */
-async function productAt(ctx: ApiContext, url: URL, product: ProductDetail): Promise<RecordsAtPoint> {
-  const point = pointQuery(url, true);
-  if (!point) throw new RequestError("lat and lon are required", 400);
-  const geometry = optionalQuery(url, "geometry");
-  if (geometry !== undefined && geometry !== "true" && geometry !== "false") throw new RequestError("geometry must be true or false", 400);
-  const query: PointLookupQuery = { ...point, limit: parseInteger(url, "limit", POINT_LOOKUP.defaultLimit, 1, POINT_LOOKUP.maxLimit), geometry: geometry === "true" };
+/**
+ * A read with a point filter on a located product not yet indexed by place
+ * asks its runner to rebuild it now, rather than at its next collection,
+ * whether the product was small enough to read whole or refused.
+ */
+async function placed<Answer>(ctx: ApiContext, product: ProductDetail, filters: RowFilters | undefined, read: () => Promise<Answer>): Promise<Answer> {
+  if (!filters?.point || !spatialIndexMissing(product)) return read();
   try {
-    const found = await recordsAt(new ObjectStore(ctx.snapshots), product, query);
-    if (!found.indexed) await askForSpatialIndex(ctx, product);
-    return { point: { lat: point.latitude, lon: point.longitude }, radius: point.radius, ...found, licence: product.licence, attribution: product.attribution };
-  } catch (error) {
-    if (error instanceof NotIndexedError) await askForSpatialIndex(ctx, product);
-    throw error;
+    return await read();
+  } finally {
+    await askForSpatialIndex(ctx, product);
   }
 }
 
@@ -300,11 +302,11 @@ async function askForSpatialIndex(ctx: ApiContext, product: ProductDetail): Prom
   }
 }
 
-/** `lat`, `lon` and `radius`: a point in WGS 84 degrees and metres around it. Undefined when neither coordinate is given and none is required. */
-function pointQuery(url: URL, required: boolean): PointQuery | undefined {
+/** `lat`, `lon` and `radius`: a point in WGS 84 degrees and metres around it. Undefined when neither coordinate is given. */
+function pointQuery(url: URL): PointQuery | undefined {
   const lat = optionalQuery(url, "lat");
   const lon = optionalQuery(url, "lon");
-  if (lat === undefined && lon === undefined && !required) {
+  if (lat === undefined && lon === undefined) {
     if (url.searchParams.has("radius")) throw new RequestError("radius needs lat and lon", 400);
     return undefined;
   }
@@ -612,15 +614,23 @@ function publicFeed(feed: Feed, vocabulary: Vocabulary, origin: string): ApiFeed
 
 /* ---------- Record filters ---------- */
 
-/** `where=field:value` (repeatable) and `bbox=west,south,east,north`, if given. */
-function rowFilters(url: URL): RowFilters | undefined {
+/**
+ * `where=field:value` (repeatable), `bbox=west,south,east,north`, and on the routes that take one a
+ * point (`lat`, `lon`, `radius`), if given. A box and a point together are refused: `bbox` tests a
+ * row's latitude and longitude fields and the point its geometry, and which of the two would win is
+ * not something a reader should have to guess.
+ */
+function rowFilters(url: URL, atPoint = false): RowFilters | undefined {
   const where = url.searchParams.getAll("where").map(parseWhere);
   const bbox = optionalQuery(url, "bbox");
-  if (where.length === 0 && !bbox) return undefined;
+  const point = atPoint ? pointQuery(url) : undefined;
+  if (where.length === 0 && !bbox && !point) return undefined;
+  if (bbox && point) throw new RequestError("bbox and lat/lon cannot be combined: ask for the rows in a box, or for those at a point", 400);
   if (where.length > MAX_FILTERS) throw new RequestError(`At most ${MAX_FILTERS} where filters are allowed`, 400);
   const filters: RowFilters = {};
   if (where.length > 0) filters.where = where;
   if (bbox) filters.bbox = parseBbox(bbox);
+  if (point) filters.point = point;
   return filters;
 }
 
