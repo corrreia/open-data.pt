@@ -77,11 +77,17 @@ export interface ParquetWriteResult {
 
 /** A product's Parquet file, ready to send, and whether this request had to write it. */
 export interface ParquetDownload {
-  file: StoredFile;
+  /** The file, or the range of it asked for; absent when the range starts past its end. */
+  file?: StoredFile;
+  /** The whole file's size in bytes. */
+  size: number;
   etag: string;
   /** Present when this request encoded the file; a later request finds it in R2. */
   written?: ParquetWriteResult;
 }
+
+/** The byte range a request asks for once the file's size is known: none for the whole file, or one that starts past its end. */
+export type RangeAsk = (size: number) => ByteRange | "unsatisfiable" | undefined;
 
 /** The product cannot be written as one file within a request's CPU budget. */
 export class ParquetTooLargeError extends Error {
@@ -183,10 +189,11 @@ function fieldColumn(field: CanonicalField): ParquetColumn {
 /* ---------- Cells ---------- */
 
 /** Text is always writable: a number or a flag as written, anything else as its JSON. */
-function textCell(value: JsonValue): Cell {
+/** Text: a string, or a number or flag as written. An object or array is not text, and is left out. */
+function textCell(value: JsonValue): Cell | undefined {
   if (isJsonString(value)) return value;
   if (isJsonNumber(value) || isJsonBoolean(value)) return String(value);
-  return JSON.stringify(value);
+  return undefined;
 }
 
 function numberCell(value: JsonValue): Cell | undefined {
@@ -210,8 +217,12 @@ function dateCell(value: JsonValue): Cell | undefined {
   if (!isJsonString(value)) return undefined;
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
   if (!match) return undefined;
-  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
-  return date.getUTCDate() === Number(match[3]) ? date : undefined;
+  const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];
+  // setUTCFullYear, not Date.UTC, which reads years 0–99 as 1900–1999; a month or day the calendar
+  // does not have rolls over, and is caught by reading every part back.
+  const date = new Date(0);
+  date.setUTCFullYear(year, month - 1, day);
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day ? date : undefined;
 }
 
 /** An instant from ISO 8601 text. Numbers are left out: seconds and milliseconds cannot be told apart. */
@@ -259,6 +270,8 @@ class GeometryExtent {
   south = Infinity;
   east = -Infinity;
   north = -Infinity;
+  low = Infinity;
+  high = -Infinity;
 
   add(geometry: JsonObject): void {
     const type = asString(geometry.type) ?? "";
@@ -288,6 +301,11 @@ class GeometryExtent {
       this.east = Math.max(this.east, x);
       this.south = Math.min(this.south, y);
       this.north = Math.max(this.north, y);
+      const z = coordinates[2];
+      if (isJsonNumber(z)) {
+        this.low = Math.min(this.low, z);
+        this.high = Math.max(this.high, z);
+      }
       return coordinates.length;
     }
     let most = 0;
@@ -298,7 +316,9 @@ class GeometryExtent {
   metadata(): JsonObject {
     // Lon/lat in WGS 84 (GeoJSON's own), which is GeoParquet's default CRS, so `crs` is left out.
     const column: JsonObject = { encoding: "WKB", geometry_types: [...this.types].sort() };
-    if (Number.isFinite(this.west)) column.bbox = [this.west, this.south, this.east, this.north];
+    // GeoParquet 1.1: a column with Z has a box of six values, [xmin, ymin, zmin, xmax, ymax, zmax].
+    if (Number.isFinite(this.west) && Number.isFinite(this.low)) column.bbox = [this.west, this.south, this.low, this.east, this.north, this.high];
+    else if (Number.isFinite(this.west)) column.bbox = [this.west, this.south, this.east, this.north];
     return column;
   }
 }
@@ -416,12 +436,14 @@ export function parquetMetadata(product: ProductDetail, source: ParquetSource): 
 }
 
 /**
- * The digest of the terms a file states. Its key follows the data alone, so
- * a file written before a licence or attribution changed is found by its
- * metadata, and written again.
+ * The digest of what a file's footer says about the product beyond its data:
+ * its name and description, and every part of the licence and attribution it
+ * states. Its key follows the data alone, so a file written before any of
+ * these changed is found by this digest in its R2 metadata, and written again.
  */
 export function termsDigest(product: ProductDetail): string {
-  return digest(JSON.stringify([product.licence?.id ?? null, product.licence?.url ?? null, product.attribution]));
+  const licence = product.licence;
+  return digest(JSON.stringify([product.title, product.description, licence?.id ?? null, licence?.name ?? null, licence?.url ?? null, product.attribution]));
 }
 
 /** The rows of one chunk, by its key. */
@@ -439,7 +461,7 @@ export class ParquetExports {
     private readonly readChunk: ChunkReader,
   ) {}
 
-  async download(product: ProductDetail, describe: () => Promise<ParquetSource>, range?: (size: number) => ByteRange | undefined): Promise<ParquetDownload> {
+  async download(product: ProductDetail, describe: () => Promise<ParquetSource>, range?: RangeAsk): Promise<ParquetDownload> {
     const key = parquetKey(product);
     if (key === undefined || product.status !== "current") {
       throw new NotFoundError(
@@ -456,10 +478,14 @@ export class ParquetExports {
       written = await this.write(product, key, terms, await describe());
       info = { size: written.bytes, metadata: { terms } };
     }
-    const file = await this.files.getFile(key, range?.(info.size));
-    if (!file) throw new NotFoundError("The Parquet file of this product is being replaced; retry shortly");
-    const download: ParquetDownload = { file, etag: `"${key.slice(key.lastIndexOf("/") + 1, -".parquet".length)}-${terms}"` };
+    const download: ParquetDownload = { size: info.size, etag: `"${key.slice(key.lastIndexOf("/") + 1, -".parquet".length)}-${terms}"` };
     if (written) download.written = written;
+    const asked = range?.(info.size);
+    // A range past the end is answered from the size alone: nothing is read.
+    if (asked === "unsatisfiable") return download;
+    const file = await this.files.getFile(key, asked);
+    if (!file) throw new NotFoundError("The Parquet file of this product is being replaced; retry shortly");
+    download.file = file;
     return download;
   }
 

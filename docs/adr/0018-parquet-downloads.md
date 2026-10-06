@@ -85,11 +85,14 @@ schema, and the content-addressed chunk keys
 index entry alone, `objectKeysOf` includes it: when a newer version supersedes an entry, the old
 file goes into the `garbage` table with the old chunks and is deleted an hour later, exactly like
 them. Deleting a file that was never written is a free no-op. A runner reset that reuses a version
-number cannot find another version's file, because the chunk keys differ.
+number cannot find another version's file, because the chunk keys differ. When the file's layout
+changes, `PARQUET_LAYOUT` is bumped and cleanup derives the key under every layout up to it, so a
+file written under an older layout is still retired with its version rather than orphaned.
 
-Licence and attribution are not part of the key, since the runner does not know them; a digest of
-them is stored as the object's custom metadata, and a file whose terms no longer match is written
-again under the same key.
+What the footer says about the product beyond its data — title, description, the licence's id, name
+and URL, and the attribution — is not part of the key, since the runner does not know all of it; a
+digest of it is stored as the object's custom metadata, and a file whose digest no longer matches is
+written again under the same key.
 
 Two simultaneous first requests may both write the file; the writes are identical and the second
 overwrites the first. No lock is worth the extra Durable Object request.

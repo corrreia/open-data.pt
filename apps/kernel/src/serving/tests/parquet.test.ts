@@ -3,7 +3,7 @@ import { parquetMetadata as readMetadata, parquetReadObjects } from "hyparquet";
 import { describe, expect, it } from "vitest";
 import type { ProductDetail } from "#/registry/registry";
 import { buildChunks, compareKeys, type ManifestChunk } from "#/serving/chunks";
-import { keys, ObjectStore, parquetKey } from "#/serving/object-store";
+import { keys, ObjectStore, parquetKey, parquetKeys } from "#/serving/object-store";
 import { ParquetExports, ParquetTooLargeError, PARQUET_LIMITS, ROW_GROUP_LIMITS, type ParquetSource } from "#/serving/parquet";
 import type { ChunkObject } from "#/serving/chunks";
 import { MemorySnapshots } from "#/tests/kernel-harness";
@@ -70,7 +70,7 @@ async function bytesOf(stream: ReadableStream<Uint8Array>): Promise<ArrayBuffer>
 
 async function download(fixture: Awaited<ReturnType<typeof published>>) {
   const result = await fixture.exports.download(fixture.product, async () => SOURCE);
-  const file = await bytesOf(result.file.body);
+  const file = await bytesOf(result.file!.body);
   return { result, file, metadata: readMetadata(file), rows: await parquetReadObjects({ file }) };
 }
 
@@ -133,7 +133,8 @@ const PLACES: JsonObject[] = [
       ],
     },
   },
-  { id: "c", name: "Chiado", kind: "square", count: "n/a", open: "maybe", outline: { type: "Pointy", coordinates: [0, 0] } },
+  // An object in a text field, and an array in a category, are not text.
+  { id: "c", name: "Chiado", kind: ["square"], count: "n/a", open: "maybe", site: { href: "https://example.pt/c" }, outline: { type: "Pointy", coordinates: [0, 0] } },
 ];
 
 describe("a record product as one Parquet file", () => {
@@ -192,9 +193,23 @@ describe("a record product as one Parquet file", () => {
     expect(a).toMatchObject({ _valid_from: null, _valid_to: null, _source_sequence: "7" });
     // A number written as text is still a number; a flag written as text is still a flag.
     expect(b).toMatchObject({ id: "b", count: 7.5, open: false, day: null, at: null, extra: "plain", site: null, code: "B-2" });
-    expect(c).toMatchObject({ id: "c", count: null, open: null, lat: null, outline: null });
+    expect(c).toMatchObject({ id: "c", name: "Chiado", kind: null, site: null, count: null, open: null, lat: null, outline: null });
     const dropped = metadata.key_value_metadata?.find((entry) => entry.key === "dropped_values")?.value;
-    expect(JSON.parse(dropped!)).toEqual({ count: 1, open: 1, day: 1, at: 1, outline: 1 });
+    expect(JSON.parse(dropped!)).toEqual({ kind: 1, site: 1, count: 1, open: 1, day: 1, at: 1, outline: 1 });
+  });
+
+  it("drops a date the calendar does not have instead of moving it, and keeps the years before 100", async () => {
+    const days = ["2026-13-01", "2026-00-01", "2026-02-29", "2024-02-29", "0050-06-15", "2026-09-10T23:30:00Z"];
+    const { rows, metadata } = await download(
+      await published(
+        [{ name: "day", type: "date" }],
+        days.map((day, index) => ({ id: `d${index}`, day })),
+      ),
+    );
+    const year50 = new Date(0);
+    year50.setUTCFullYear(50, 5, 15);
+    expect(rows.map((row) => row.day)).toEqual([null, null, null, new Date("2024-02-29T00:00:00Z"), year50, new Date("2026-09-10T00:00:00Z")]);
+    expect(JSON.parse(metadata.key_value_metadata!.find((entry) => entry.key === "dropped_values")!.value!)).toEqual({ day: 3 });
   });
 
   it("writes geometry as WKB that a GeoParquet reader turns back into GeoJSON, with its types and extent", async () => {
@@ -205,7 +220,7 @@ describe("a record product as one Parquet file", () => {
     expect(geo).toEqual({
       version: "1.1.0",
       primary_column: "outline",
-      columns: { outline: { encoding: "WKB", geometry_types: ["Point", "Polygon Z"], bbox: [-9.21, 38.69, -9.13, 38.71] } },
+      columns: { outline: { encoding: "WKB", geometry_types: ["Point", "Polygon Z"], bbox: [-9.21, 38.69, 5, -9.13, 38.71, 5] } },
     });
   });
 
@@ -243,7 +258,7 @@ describe("a Parquet file is written once per product version", () => {
     const fixture = await published(EVERY_TYPE, PLACES);
     const first = await fixture.exports.download(fixture.product, async () => SOURCE);
     expect(first.written?.rows).toBe(3);
-    const bytes = await bytesOf(first.file.body);
+    const bytes = await bytesOf(first.file!.body);
     const readsAfterWrite = fixture.snapshots.reads;
     let described = 0;
     const second = await fixture.exports.download(fixture.product, async () => {
@@ -255,7 +270,7 @@ describe("a Parquet file is written once per product version", () => {
     expect(fixture.snapshots.uploads).toEqual([parquetKey(fixture.product)]);
     // One read: the file itself. No chunk was read again.
     expect(fixture.snapshots.reads - readsAfterWrite).toBe(1);
-    expect(await bytesOf(second.file.body)).toEqual(bytes);
+    expect(await bytesOf(second.file!.body)).toEqual(bytes);
     expect(second.etag).toBe(first.etag);
   });
 
@@ -269,21 +284,54 @@ describe("a Parquet file is written once per product version", () => {
     const rewritten = await fixture.exports.download(relicensed, async () => SOURCE);
     expect(rewritten.written).toBeDefined();
     expect(rewritten.etag).not.toBe(first.etag);
-    const file = await bytesOf(rewritten.file.body);
+    const file = await bytesOf(rewritten.file!.body);
     expect(readMetadata(file).key_value_metadata?.find((entry) => entry.key === "attribution")?.value).toBe("DGT");
     expect(fixture.snapshots.uploads).toEqual([parquetKey(fixture.product), parquetKey(newer), parquetKey(fixture.product)]);
   });
 
+  it("writes again when only the licence's name changes, since the footer states it", async () => {
+    const fixture = await published([{ name: "name", type: "string" }], PLACES);
+    await fixture.exports.download(fixture.product, async () => SOURCE);
+    const renamed = { ...fixture.product, licence: { ...fixture.product.licence!, name: "Creative Commons Attribution 4.0" } };
+    const rewritten = await fixture.exports.download(renamed, async () => SOURCE);
+    expect(rewritten.written).toBeDefined();
+    const file = await bytesOf(rewritten.file!.body);
+    expect(readMetadata(file).key_value_metadata?.find((entry) => entry.key === "licence")?.value).toBe("Creative Commons Attribution 4.0");
+  });
+
+  it("keeps the key of a version's file under every layout, so cleanup finds one written before a layout bump", () => {
+    const entry = { feedId: "feed_1", slug: "places", version: 3, kind: "record" as const, schema: { fields: [] }, chunks: [] };
+    const keysByLayout = [1, 2, 3].map((layout) => parquetKey(entry, layout));
+    expect(new Set(keysByLayout).size).toBe(3);
+    expect(parquetKeys(entry, 3)).toEqual(keysByLayout);
+    expect(parquetKeys(entry)).toEqual([parquetKey(entry)]);
+    expect(parquetKeys({ ...entry, kind: "series", chunks: null }, 3)).toEqual([]);
+  });
+
   it("serves a byte range of the stored file", async () => {
     const fixture = await published([{ name: "name", type: "string" }], PLACES);
-    const whole = await bytesOf((await fixture.exports.download(fixture.product, async () => SOURCE)).file.body);
+    const whole = await bytesOf((await fixture.exports.download(fixture.product, async () => SOURCE)).file!.body);
     const tail = await fixture.exports.download(
       fixture.product,
       async () => SOURCE,
       (size) => ({ offset: size - 8, length: 8 }),
     );
-    expect(tail.file.range).toEqual({ offset: whole.byteLength - 8, length: 8 });
-    expect(new Uint8Array(await bytesOf(tail.file.body))).toEqual(new Uint8Array(whole.slice(-8)));
+    expect(tail.file!.range).toEqual({ offset: whole.byteLength - 8, length: 8 });
+    expect(new Uint8Array(await bytesOf(tail.file!.body))).toEqual(new Uint8Array(whole.slice(-8)));
+  });
+
+  it("answers a range past the end from the file's size alone, reading nothing", async () => {
+    const fixture = await published([{ name: "name", type: "string" }], PLACES);
+    const whole = await bytesOf((await fixture.exports.download(fixture.product, async () => SOURCE)).file!.body);
+    const reads = fixture.snapshots.reads;
+    const past = await fixture.exports.download(
+      fixture.product,
+      async () => SOURCE,
+      () => "unsatisfiable",
+    );
+    expect(past).toMatchObject({ size: whole.byteLength });
+    expect(past.file).toBeUndefined();
+    expect(fixture.snapshots.reads).toBe(reads);
   });
 
   it("has nothing for a time series", async () => {

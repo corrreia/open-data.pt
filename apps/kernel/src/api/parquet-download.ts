@@ -24,18 +24,10 @@ export async function parquetDownload(request: Request, product: ProductDetail, 
     return chunk.rows;
   });
   const header = request.headers.get("Range");
-  let unsatisfiable: number | undefined;
   try {
-    const download = await exports.download(product, describe, (size) => {
-      const range = byteRange(header, size);
-      if (range === "unsatisfiable") unsatisfiable = size;
-      return range === "unsatisfiable" ? undefined : range;
-    });
+    const download = await exports.download(product, describe, (size) => byteRange(header, size));
     const { file } = download;
-    if (unsatisfiable !== undefined) {
-      await file.body.cancel();
-      return new Response(null, { status: 416, headers: { "Access-Control-Allow-Origin": "*", "Content-Range": `bytes */${unsatisfiable}` } });
-    }
+    if (!file) return new Response(null, { status: 416, headers: { "Access-Control-Allow-Origin": "*", "Content-Range": `bytes */${download.size}` } });
     const partial = file.range.length !== file.size;
     const headers = new Headers({
       "Access-Control-Allow-Origin": "*",

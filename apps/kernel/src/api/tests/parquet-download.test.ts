@@ -87,6 +87,7 @@ describe("GET /api/products/{slug}.parquet", () => {
     expect(tail.status).toBe(206);
     expect(tail.headers.get("Content-Range")).toBe(`bytes ${whole.byteLength - 4}-${whole.byteLength - 1}/${whole.byteLength}`);
     expect(new TextDecoder().decode(await tail.arrayBuffer())).toBe("PAR1");
+    const reads = snapshots.reads;
     const past = await parquetDownload(
       new Request("https://open-data.pt/api/products/places.parquet", { headers: { Range: `bytes=${whole.byteLength}-` } }),
       detail,
@@ -95,6 +96,8 @@ describe("GET /api/products/{slug}.parquet", () => {
     );
     expect(past.status).toBe(416);
     expect(past.headers.get("Content-Range")).toBe(`bytes */${whole.byteLength}`);
+    // A 416 is answered from the stored size: the file itself is not read.
+    expect(snapshots.reads).toBe(reads);
     expect(snapshots.uploads).toHaveLength(1);
   });
 });

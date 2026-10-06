@@ -90,7 +90,8 @@ export default function ApiView({ product }: { product: Product }) {
   return (
     <div className="grid gap-5">
       <p className="text-sm text-kumo-subtle">
-        Open, read-only and keyless. Responses are JSON with CORS enabled; errors use application/problem+json. Requests are rate limited per client and a 429 says when to retry.
+        Open, read-only and keyless, with CORS enabled. {product.role === "time-series" ? "Responses are JSON" : "Responses are JSON, except the Parquet file"}; errors use
+        application/problem+json. Requests are rate limited per client and a 429 says when to retry.
       </p>
       <div className="grid gap-3">
         {endpoints.map((endpoint) => (
