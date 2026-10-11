@@ -11,7 +11,7 @@ export const FEED = defineFeed(PEERINGDB_DEPLOYMENT, {
   topics: ["telecom"],
   config: { feed: "exchanges", country: "PT" },
   staleAfterSeconds: 1_209_600,
-  // PeeringDB's directory: republishing it needs PeeringDB's permission.
+  // PeeringDB's directory: republished with their permission, see docs/publishers/peeringdb.md.
   policy: {
     cadenceSeconds: 604_800,
     timeoutSeconds: 60,
