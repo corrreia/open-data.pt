@@ -61,9 +61,8 @@ what we are waiting for. None of their feeds is installed, so nothing of theirs 
 The library that reads them still ships: a hold is about whose data we serve, not about what code
 exists. Lifting a hold is deleting one word.
 
-| Publisher   | Read by     | Held because                                                                    |
-| ----------- | ----------- | ------------------------------------------------------------------------------- |
-| `peeringdb` | `peeringdb` | The acceptable-use policy requires permission for reproduction and bulk sharing |
+None is held at the moment. PeeringDB was the last, until it answered on 6 October 2026 that our use
+falls within its acceptable-use policy; see [its page](publishers/peeringdb.md).
 
 A publisher whose terms forbid what this service does is not held but left out, and has no folder. Lime is one:
 the Public GBFS Terms its own feed names in `license_url` forbid redistributing the data, building a dataset from

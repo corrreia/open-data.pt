@@ -117,7 +117,8 @@ export const LICENCES = {
   "peeringdb-aup": {
     name: "PeeringDB Acceptable Use Policy",
     url: "https://www.peeringdb.com/aup",
-    summary: "PeeringDB requires permission for reproduction and bulk sharing outside its approved uses, which is why the source is held.",
+    summary:
+      "PeeringDB requires permission for reproduction and bulk sharing outside its approved uses; PeeringDB confirmed in October 2026 that this republication falls within its AUP.",
   },
   "anacom-terms": {
     name: "ANACOM terms and conditions",
