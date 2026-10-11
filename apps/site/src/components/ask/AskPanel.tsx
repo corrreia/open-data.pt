@@ -682,30 +682,38 @@ export default function AskPanel({ open, failure, onClose, onRunning, onModalCha
   else content = <Chat session={session} accounts={accounts ?? []} open={open} onSignedOut={() => setSession({ ...session, signedIn: false })} onRunning={onRunning} />;
 
   return (
-    <div
-      ref={panel}
-      role="dialog"
-      aria-modal={open && phone}
-      aria-labelledby="ask-title"
-      tabIndex={-1}
-      // Docked, the panel stays in the page, so an answer carries on, but nothing in it can be reached.
-      // It turns visible at once when it opens, so focus can move into it, and hidden only once it has faded out.
-      inert={!open}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") onClose();
-      }}
-      className={`fixed inset-x-0 top-[var(--ask-top,0px)] z-40 flex outline-none h-[var(--ask-height,100dvh)] flex-col overflow-hidden bg-kumo-base sm:inset-x-auto sm:top-auto sm:bottom-4 sm:right-4 sm:h-[min(46rem,calc(100dvh-2rem))] sm:w-[28rem] sm:rounded-2xl sm:border sm:border-kumo-line sm:shadow-md ${open ? "visible opacity-100 motion-safe:[transition:opacity_200ms,transform_200ms,visibility_0s]" : "invisible translate-y-3 opacity-0 motion-safe:[transition:opacity_200ms,transform_200ms,visibility_0s_200ms]"}`}
-    >
-      <header className="flex items-center gap-2 border-b border-kumo-line px-4 py-3">
-        <div className="grid min-w-0 flex-1">
-          <h2 id="ask-title" className="font-display text-lg leading-tight text-kumo-strong">
-            Ask the data
-          </h2>
-          <span className="text-xs text-kumo-subtle">On your own Cloudflare account</span>
-        </div>
-        <Button variant="ghost" size={ICON_SIZE} icon={<XIcon />} onClick={onClose} aria-label="Close" title="Close" />
-      </header>
-      {content}
-    </div>
+    <>
+      {/* On a phone the panel ends where the visible part of the screen does, but iOS draws the keyboard's
+          bar of form controls as a translucent strip below that: this keeps the page from showing through it. */}
+      <div
+        aria-hidden="true"
+        className={`fixed inset-x-0 top-0 -bottom-[100vh] z-40 bg-kumo-base sm:hidden ${open ? "visible opacity-100 motion-safe:[transition:opacity_200ms,visibility_0s]" : "invisible opacity-0 motion-safe:[transition:opacity_200ms,visibility_0s_200ms]"}`}
+      />
+      <div
+        ref={panel}
+        role="dialog"
+        aria-modal={open && phone}
+        aria-labelledby="ask-title"
+        tabIndex={-1}
+        // Docked, the panel stays in the page, so an answer carries on, but nothing in it can be reached.
+        // It turns visible at once when it opens, so focus can move into it, and hidden only once it has faded out.
+        inert={!open}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") onClose();
+        }}
+        className={`fixed inset-x-0 top-[var(--ask-top,0px)] z-40 flex outline-none h-[var(--ask-height,100dvh)] flex-col overflow-hidden bg-kumo-base sm:inset-x-auto sm:top-auto sm:bottom-4 sm:right-4 sm:h-[min(46rem,calc(100dvh-2rem))] sm:w-[28rem] sm:rounded-2xl sm:border sm:border-kumo-line sm:shadow-md ${open ? "visible opacity-100 motion-safe:[transition:opacity_200ms,transform_200ms,visibility_0s]" : "invisible translate-y-3 opacity-0 motion-safe:[transition:opacity_200ms,transform_200ms,visibility_0s_200ms]"}`}
+      >
+        <header className="flex items-center gap-2 border-b border-kumo-line px-4 py-3">
+          <div className="grid min-w-0 flex-1">
+            <h2 id="ask-title" className="font-display text-lg leading-tight text-kumo-strong">
+              Ask the data
+            </h2>
+            <span className="text-xs text-kumo-subtle">On your own Cloudflare account</span>
+          </div>
+          <Button variant="ghost" size={ICON_SIZE} icon={<XIcon />} onClick={onClose} aria-label="Close" title="Close" />
+        </header>
+        {content}
+      </div>
+    </>
   );
 }
