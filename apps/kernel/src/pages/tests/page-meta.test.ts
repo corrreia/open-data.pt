@@ -57,15 +57,15 @@ const API = new Map<string, JsonValue>([
   ["/api/products", { data: [PRODUCT, AVERAGE] }],
 ]);
 
-/** The API as fixtures, and every page as its real HTML file from the site's source. */
+/** The API as fixtures, and the site's real HTML shell, which every page is served from. */
 const host: SiteHost = {
   api: async (path) => {
     const body = API.get(path);
     return body === undefined ? Response.json({ type: "about:blank", title: "Not found", status: 404, detail: "Not found" }, { status: 404 }) : Response.json(body);
   },
   assets: async (request) => {
-    const path = new URL(request.url).pathname;
-    return new Response(readFileSync(`apps/site/${path.slice(1)}index.html`), { headers: { "Content-Type": "text/html", ETag: '"the-file"' } });
+    if (new URL(request.url).pathname !== "/") return new Response("Not found", { status: 404 });
+    return new Response(readFileSync("apps/site/index.html"), { headers: { "Content-Type": "text/html", ETag: '"the-file"' } });
   },
 };
 
@@ -101,6 +101,14 @@ describe("link previews", () => {
     }
     expect((await page("/")).meta("og:title")).toBe("Public data from Portugal, in one place");
     expect((await page("/catalog/")).meta("og:title")).toBe("Catalog");
+  });
+
+  it("serves every page from the one shell, with that page's own title and description", async () => {
+    const catalog = await page("/catalog/");
+    expect(catalog.title).toBe("Catalog · open-data.pt");
+    expect(catalog.meta("description")).toBe("Every dataset open-data.pt collects, filterable by topic, publisher, kind of data, update frequency and format.");
+    expect(catalog.html.match(/<title>/g)).toHaveLength(1);
+    expect(catalog.html.match(/<meta name="description"/g)).toHaveLength(1);
   });
 
   it("names the product a page shows, escaped, with only its slug in the canonical URL", async () => {

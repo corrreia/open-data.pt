@@ -1,7 +1,6 @@
 import { LayerCard } from "@cloudflare/kumo";
 import type { ReactNode } from "react";
 import { PageHead, SectionHead } from "../components/common";
-import { Shell } from "../components/Shell";
 import { CONTACT_EMAIL, REPOSITORY, newIssue } from "../lib/project";
 
 const LINK = "font-medium text-kumo-link hover:underline";
@@ -19,7 +18,7 @@ function Rule({ title, children }: { title: string; children: ReactNode }) {
 
 function Aup() {
   return (
-    <Shell section="aup">
+    <>
       <PageHead eyebrow="Acceptable use" title="What you may do with this data, and what we ask of you">
         open-data.pt republishes data other people made. It is free to read, needs no key and no account, and it comes with no warranty. These are the terms that come with it.
       </PageHead>
@@ -106,7 +105,7 @@ function Aup() {
           </Rule>
         </div>
       </section>
-    </Shell>
+    </>
   );
 }
 

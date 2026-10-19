@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { ListingRows } from "../components/ListingRows";
 import { PublisherMark } from "../components/PublisherMark";
 import { ErrorNote, PageHead, Placeholder } from "../components/common";
-import { Shell } from "../components/Shell";
 import { ROLE, UPDATES, buildListings, buildPublishers, fetchFeeds, fetchProducts, publisherHref, topicLabel, type Listing, emptyLast } from "../lib/catalog";
 import { fmt, plural } from "../lib/format";
 import { replaceAddress } from "../lib/navigation";
@@ -171,7 +170,7 @@ function Catalog() {
   );
 
   return (
-    <Shell section="catalog">
+    <>
       <PageHead eyebrow="Catalog" title="Every dataset, and who publishes it">
         Filter by topic, publisher, kind of data, how often it changes, or how the publisher shares it. Every table and series keeps its publisher’s licence and links back to their
         source.
@@ -293,7 +292,7 @@ function Catalog() {
           )}
         </section>
       </div>
-    </Shell>
+    </>
   );
 }
 

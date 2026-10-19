@@ -91,6 +91,14 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+/*
+ * The site's layers — the sticky header, the agent's panel and its button — stack inside #root, and
+ * Kumo portals every select, menu, popover and dialog to the end of <body>, after it. Isolated, the
+ * whole of #root sits below those portals, so a dropdown opened in the agent's panel paints above it.
+ */
+#root {
+  isolation: isolate;
+}
 
 /*
  * One focus indicator for everything a keyboard reaches. Kumo's own is a ring in the button's

@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
+import { SITE_PAGES, sitePageAt } from "@open-data-pt/api";
 import type { JsonObject, JsonValue } from "@open-data-pt/contract";
 import { describe, expect, it } from "vitest";
 import { SKILL_PATH, handleSite, type SiteHost } from "#/pages/discovery";
-import { prefersMarkdown } from "#/pages/markdown";
+import { isPage, prefersMarkdown } from "#/pages/markdown";
 import { jsonBody } from "#/tests/support";
 
 const ORIGIN = "https://open-data.pt";
@@ -115,14 +116,13 @@ interface AiCatalog {
 }
 
 describe("agent discovery", () => {
-  it("runs the Worker before static assets on every page, so metadata and Markdown negotiation are applied", () => {
+  it("runs the Worker before static assets on every page, so the shell, metadata and Markdown negotiation are applied", () => {
     const config = readFileSync("apps/kernel/wrangler.jsonc", "utf8");
-    // Every page the site builds is a folder of its own with an index.html; `dist` is the build of them all.
-    const pages = readdirSync("apps/site", { withFileTypes: true })
-      .filter((entry) => entry.isDirectory() && entry.name !== "dist" && existsSync(`apps/site/${entry.name}/index.html`))
-      .map((entry) => entry.name);
-    expect(pages).toContain("catalog");
-    expect(pages.filter((page) => !config.includes(`"/${page}/*"`))).toEqual([]);
+    const routed = SITE_PAGES.map((page) => page.path).filter((path) => path !== "/");
+    expect(routed).toContain("/catalog/");
+    expect(routed.filter((path) => !config.includes(`"${path}*"`))).toEqual([]);
+    // Each page has a Markdown version, and each Markdown version is a page.
+    expect(SITE_PAGES.every((page) => isPage(page.path))).toBe(true);
   });
 
   it("lists every page, publisher and product in a sitemap that robots.txt names", async () => {
@@ -267,9 +267,7 @@ describe("agent discovery", () => {
     expect(answer.text).toContain("in the last 3 days");
     expect(answer.text).toContain(`${ORIGIN}/api/outages?days=3`);
     expect(answer.text).not.toContain("days=90");
-    const html = readFileSync("apps/site/status/index.html", "utf8");
-    expect(html).toContain("over the last 3 days.");
-    expect(html).not.toContain("90 days");
+    expect(sitePageAt("/status/")?.description).toContain("over the last 3 days.");
   });
 
   it("lists each table and series on its own, never grouped by the feed it comes from", async () => {

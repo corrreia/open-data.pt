@@ -3,7 +3,7 @@
  * text/markdown. The pages draw themselves in the browser from the API; these
  * say the same from the same reads, as text an agent can use directly.
  */
-import type { Feed as CatalogFeed, Outage, Product as CatalogProduct, Term } from "@open-data-pt/api";
+import { pagePath, type Feed as CatalogFeed, type Outage, type Product as CatalogProduct, type Term } from "@open-data-pt/api";
 import type { JsonObject, JsonValue } from "@open-data-pt/contract";
 import type { SiteHost } from "#/pages/discovery";
 
@@ -61,9 +61,6 @@ const RENDERERS = new Map<string, Renderer>([
   ["/contribute/", contribute],
   ["/aup/", aup],
 ]);
-
-/** "/catalog/index.html" is the same page as "/catalog/". */
-export const pagePath = (pathname: string) => pathname.replace(/index\.html$/, "");
 
 /** Whether the path is one of the site's pages, each of which also answers as Markdown. */
 export function isPage(pathname: string): boolean {

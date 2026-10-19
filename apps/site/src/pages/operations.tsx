@@ -7,7 +7,6 @@ import { Activity, type FeedLookup } from "../components/ops/Activity";
 import { HealthBadge, HealthWord, feedHealth, healthLabel, type Health } from "../components/ops/health";
 import { RunBadge, acquisitionsKey, fetchAcquisitions, runStatus, triggerLabel } from "../components/ops/runs";
 import { useHashLanding } from "../components/ops/useHashLanding";
-import { Shell } from "../components/Shell";
 import { RowDialog } from "../components/product/RecordDialog";
 import { productHref } from "../lib/api";
 import { fetchFeeds, fetchProducts, formatOf } from "../lib/catalog";
@@ -417,7 +416,7 @@ function Operations() {
   useHashLanding(Boolean(feeds.data && products.data));
 
   return (
-    <Shell section="operations">
+    <>
       <div className="grid gap-6">
         <PageHead eyebrow="Operations" title="Every feed, every attempt.">
           Nobody starts or stops anything: feeds install themselves, collect on their own cadence, and retry by themselves when something breaks. This page shows what each feed
@@ -451,7 +450,7 @@ function Operations() {
       <Activity lookup={lookup} />
       <FeedsSection feeds={feedList} productsByFeed={lookup.productsByFeed} loading={feeds.loading} />
       <AcquisitionsSection feeds={feedList} feedsById={lookup.feedsById} />
-    </Shell>
+    </>
   );
 }
 

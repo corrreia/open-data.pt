@@ -1,50 +1,79 @@
 /**
- * Moving between the site's pages without loading a new one. Every page is still its own HTML file,
- * which is what a crawler, a link preview or a fresh tab reads; once a page is open, following a link
- * to another of the site's pages swaps the page in place, so what lives beside the pages — the agent's
- * panel and an answer it is still writing, the cached API reads — carries on.
+ * Moving between the site's pages without loading a new one. The kernel serves every page as the same
+ * HTML shell, with that page's title, description and link-preview tags written in, which is what a
+ * crawler, a link preview or a fresh tab reads; the shell then draws the page its address names.
+ * Once a page is open, following a link to another of the site's pages swaps the page in place, so
+ * what lives beside the pages — the header, the agent's panel and an answer it is still writing, the
+ * cached API reads — carries on.
  *
  * A link is followed in place only when a plain click would have loaded another of the site's pages
  * in this tab. A click with a modifier key, a link to a new tab, a download, a link to a section of
  * the same page, and every address outside the site's pages (/docs, /api/…, another site) are the
  * browser's, as they always were.
  */
-import { PAGE_VIEW_HEADER } from "@open-data-pt/api";
+import { PAGE_VIEW_HEADER, SITE_PAGES as PAGES, pagePath } from "@open-data-pt/api";
 import { useSyncExternalStore, type ComponentType } from "react";
+import type { Section } from "../components/Shell";
 
 export interface PageModule {
   default: ComponentType;
 }
 
 interface SitePage {
-  /** The document title the page's file carries; a page that names what it shows sets its own once it knows. */
+  /** The document title the kernel writes for the page; a page that names what it shows sets its own once it knows. */
   title: string;
+  /** Where the header marks the visitor as being. */
+  section: Section;
   load: () => Promise<PageModule>;
 }
 
-/** The site's pages by path, each loaded the first time someone goes to it. */
-export const SITE_PAGES = new Map<string, SitePage>([
-  ["/", { title: "open-data.pt", load: () => import("../pages/home") }],
-  ["/catalog/", { title: "Catalog · open-data.pt", load: () => import("../pages/catalog") }],
-  ["/publisher/", { title: "Publishers · open-data.pt", load: () => import("../pages/publisher") }],
-  ["/licence/", { title: "Licences · open-data.pt", load: () => import("../pages/licence") }],
-  ["/product/", { title: "Dataset · open-data.pt", load: () => import("../pages/product") }],
-  ["/start/", { title: "Start here · open-data.pt", load: () => import("../pages/start") }],
-  ["/status/", { title: "Status · open-data.pt", load: () => import("../pages/status") }],
-  ["/analytics/", { title: "Analytics · open-data.pt", load: () => import("../pages/analytics") }],
-  ["/operations/", { title: "Operations · open-data.pt", load: () => import("../pages/operations") }],
-  ["/contribute/", { title: "Contribute · open-data.pt", load: () => import("../pages/contribute") }],
-  ["/aup/", { title: "Acceptable use · open-data.pt", load: () => import("../pages/aup") }],
+const LOADERS = new Map<string, { section: Section; load: () => Promise<PageModule> }>([
+  ["/", { section: "home", load: () => import("../pages/home") }],
+  ["/catalog/", { section: "catalog", load: () => import("../pages/catalog") }],
+  ["/publisher/", { section: "publishers", load: () => import("../pages/publisher") }],
+  ["/licence/", { section: "licences", load: () => import("../pages/licence") }],
+  ["/product/", { section: "product", load: () => import("../pages/product") }],
+  ["/start/", { section: "start", load: () => import("../pages/start") }],
+  ["/status/", { section: "status", load: () => import("../pages/status") }],
+  ["/analytics/", { section: "analytics", load: () => import("../pages/analytics") }],
+  ["/operations/", { section: "operations", load: () => import("../pages/operations") }],
+  ["/contribute/", { section: "contribute", load: () => import("../pages/contribute") }],
+  ["/aup/", { section: "aup", load: () => import("../pages/aup") }],
 ]);
 
-/** "/catalog/index.html" is the same page as "/catalog/". */
-export const pagePath = (pathname: string) => pathname.replace(/index\.html$/, "");
+/** The site's pages by path, each loaded the first time someone goes to it. */
+export const SITE_PAGES = new Map<string, SitePage>(
+  PAGES.flatMap(({ path, title }) => {
+    const loader = LOADERS.get(path);
+    return loader ? [[path, { title, ...loader }]] : [];
+  }),
+);
 
-/** The site page an address opens, or undefined for an address that is not one of them. */
+/**
+ * The site page an address opens, or undefined for an address that is not one of them. "/catalog" is
+ * "/catalog/", as the kernel would redirect it: a link written without the slash still opens in place.
+ */
 export function sitePageOf(url: URL, origin: string): string | undefined {
   if (url.origin !== origin) return undefined;
   const path = pagePath(url.pathname);
-  return SITE_PAGES.has(path) ? path : undefined;
+  if (SITE_PAGES.has(path)) return path;
+  return SITE_PAGES.has(`${path}/`) ? `${path}/` : undefined;
+}
+
+/**
+ * A link someone else wrote — the agent's model — as an address on this site when it is one. Models
+ * write "product/?slug=x" as often as "/product/?slug=x", and the first would resolve against
+ * whatever page is open; a link to https://open-data.pt/… is this site's, wherever this copy runs.
+ */
+export function siteHref(href: string): string {
+  const absolute = /^https:\/\/open-data\.pt(\/.*)?$/.exec(href);
+  if (absolute) return absolute[1] ?? "/";
+  return /^([a-z][a-z0-9+.-]*:|\/|#|\?)/i.test(href) ? href : `/${href}`;
+}
+
+/** Loads every page the tab has not opened yet, so the next link opens at once, and still opens after a deploy has replaced the site's files. */
+export function preloadPages() {
+  for (const page of SITE_PAGES.values()) void page.load().catch(() => undefined);
 }
 
 /* ---------- Where the tab is ---------- */
@@ -135,10 +164,12 @@ const newEntry = (): EntryState => ({ id: crypto.randomUUID(), scroll: 0 });
  */
 export function navigate(href: string, replace = false) {
   const url = new URL(href, window.location.href);
-  if (!sitePageOf(url, window.location.origin)) {
+  const page = sitePageOf(url, window.location.origin);
+  if (!page) {
     window.location.assign(url.href);
     return;
   }
+  url.pathname = page;
   keepScroll();
   if (isMalformed(url.hash)) url.hash = "";
   if (replace) window.history.replaceState(newEntry(), "", url.href);
@@ -188,6 +219,17 @@ export function startNavigation() {
     if (!link || !followsInPlace(event, link)) return;
     event.preventDefault();
     navigate(link.href);
+  });
+  // A search form that sends its words to one of the site's pages, as the home page's does, opens it in place too.
+  document.addEventListener("submit", (event) => {
+    const form = event.target;
+    if (event.defaultPrevented || !(form instanceof HTMLFormElement) || form.method !== "get" || (form.target && form.target !== "_self")) return;
+    const url = new URL(form.action);
+    if (!sitePageOf(url, window.location.origin)) return;
+    event.preventDefault();
+    url.search = "";
+    for (const [name, value] of new FormData(form, event.submitter)) if (!(value instanceof File)) url.searchParams.append(name, value);
+    navigate(url.href);
   });
   window.addEventListener("popstate", () => {
     dropMalformedFragment();

@@ -2,7 +2,6 @@ import { Badge, Banner, Button, LayerCard, Loader, Meter } from "@cloudflare/kum
 import { ArrowSquareOutIcon, CaretRightIcon, CheckCircleIcon, WarningCircleIcon, WarningIcon } from "@phosphor-icons/react";
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { ErrorNote, PageHead, SectionHead } from "../components/common";
-import { Shell } from "../components/Shell";
 import { apiGet, productHref } from "../lib/api";
 import { fetchFeeds, fetchProducts, publisherHref } from "../lib/catalog";
 import { fmt, plural } from "../lib/format";
@@ -318,7 +317,7 @@ function StatusPage() {
     });
 
   return (
-    <Shell section="status">
+    <>
       <section className="grid gap-5">
         <PageHead eyebrow="Status" title="Is everything being collected?" />
         {/* One state at a time: the error, or the wait, or the answer. */}
@@ -501,7 +500,7 @@ function StatusPage() {
           {tip.content}
         </div>
       ) : null}
-    </Shell>
+    </>
   );
 }
 

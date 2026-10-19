@@ -1,0 +1,5 @@
+# Vite names every file under /assets/ by a hash of its contents, so a file there never changes:
+# browsers keep it for a year without asking again. Pages and other files keep Cloudflare's
+# default (revalidate on every use), and pages are the kernel's to answer, so this does not touch them.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

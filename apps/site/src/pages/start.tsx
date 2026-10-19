@@ -4,7 +4,6 @@ import { useMemo, type ReactNode } from "react";
 import { PageHead, RoleBadge, SectionHead, bodyRows, cardRows } from "../components/common";
 import { CommandBlock, useCopy } from "../components/ops/CommandBlock";
 import { useHashLanding } from "../components/ops/useHashLanding";
-import { Shell } from "../components/Shell";
 import { productHref } from "../lib/api";
 import { ROLE, fetchProducts } from "../lib/catalog";
 import { fmt, plural } from "../lib/format";
@@ -268,7 +267,7 @@ function Start() {
   const seriesSlug = series ?? "{slug}";
 
   return (
-    <Shell section="start">
+    <>
       <div className="grid gap-8">
         <PageHead
           eyebrow="Start here"
@@ -482,7 +481,7 @@ function Start() {
           </TableOfContents>
         </aside>
       </div>
-    </Shell>
+    </>
   );
 }
 

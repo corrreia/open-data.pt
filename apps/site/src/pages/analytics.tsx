@@ -16,7 +16,6 @@ import {
 } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ErrorNote, PageHead, SectionHead, StatTile, useDarkMode } from "../components/common";
-import { Shell } from "../components/Shell";
 import { ApiError, apiGet, productHref } from "../lib/api";
 import { fetchProducts, licenceHref, publisherHref } from "../lib/catalog";
 import { brandIcon } from "../lib/client-icons";
@@ -176,7 +175,7 @@ function AnalyticsPage() {
   const disabled = report.error instanceof ApiError && report.error.status === 503;
 
   return (
-    <Shell section="analytics">
+    <>
       <PageHead eyebrow="Analytics" title="How open-data.pt is used">
         Requests to the website, the API, the MCP server and the site&rsquo;s own agent, Ask the data, counted as they are answered. No cookies, no IP addresses and no visitor
         identifiers are kept: only what was asked for, by what kind of client, from which country. The numbers are refreshed every half hour and go back{" "}
@@ -208,7 +207,7 @@ function AnalyticsPage() {
           <Report report={report.data} view={view} titles={titles} />
         </div>
       )}
-    </Shell>
+    </>
   );
 }
 
