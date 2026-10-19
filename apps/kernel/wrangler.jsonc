@@ -107,11 +107,16 @@
     // on their own Workers AI. It is an ID, not a secret: PKCE stands in for one. Empty turns the agent off.
     // Its redirect URIs are https://open-data.pt/ask/callback and, for `pnpm dev`, http://localhost:8787/ask/callback.
     "ASK_OAUTH_CLIENT_ID": "21c009b4df55f4416b91413c9d00d926",
+    // open-data.pt's GitHub OAuth App, which signs people in to ask on their own GitHub Copilot. Its secret
+    // is ASK_GITHUB_CLIENT_SECRET. An OAuth App has one callback URL, https://open-data.pt/ask/github/callback;
+    // `pnpm dev` needs an app of its own for http://localhost:8787/ask/github/callback. Empty turns Copilot off.
+    "ASK_GITHUB_CLIENT_ID": "",
   },
-  // Secrets (wrangler secret put): CATALOG_TOKEN, for Basin SQL, and ANALYTICS_TOKEN
-  // (Account Analytics: Read), for the Analytics Engine SQL API. The API is
+  // Secrets (wrangler secret put): CATALOG_TOKEN, for Basin SQL; ANALYTICS_TOKEN
+  // (Account Analytics: Read), for the Analytics Engine SQL API; and ASK_GITHUB_CLIENT_SECRET,
+  // the GitHub OAuth App's secret, which GitHub asks for to turn a sign-in into a token. The API is
   // read-only; nothing takes an operator credential.
-  "secrets": { "required": ["CATALOG_TOKEN", "ANALYTICS_TOKEN"] },
+  "secrets": { "required": ["CATALOG_TOKEN", "ANALYTICS_TOKEN", "ASK_GITHUB_CLIENT_SECRET"] },
   // A first baseline of a large product applies its whole index in one runner
   // transaction; Workflow steps also run under this CPU limit.
   "limits": { "cpu_ms": 120000 },

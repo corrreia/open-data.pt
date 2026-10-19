@@ -20,6 +20,7 @@ function cloudflare(answer: (url: string, body: string) => Response, clientId = 
   const sent: Sent[] = [];
   const host: AskHost = {
     clientId,
+    github: { clientId: "", clientSecret: "" },
     now: () => NOW,
     fetch: async (input, init) => {
       const request = new Request(input, init);
@@ -29,6 +30,12 @@ function cloudflare(answer: (url: string, body: string) => Response, clientId = 
     },
   };
   return { host, sent };
+}
+
+/** What /ask/session answers. */
+interface Session {
+  enabled: boolean;
+  providers: Record<"cloudflare" | "github", { enabled: boolean; signedIn: boolean }>;
 }
 
 /** The cookies a response sets, by name, without their attributes. */
@@ -105,7 +112,10 @@ describe("signing in with Cloudflare", () => {
 
     // Every page asks whether the agent is on and signed in; that answer never reaches Cloudflare.
     const session = await handleAsk(new Request(`${ORIGIN}/ask/session`, { headers: { Cookie: cookieHeader(signedIn) } }), host);
-    expect(await jsonBody<{ enabled: boolean; signedIn: boolean }>(session)).toMatchObject({ enabled: true, signedIn: true });
+    expect(await jsonBody<Session>(session)).toMatchObject({
+      enabled: true,
+      providers: { cloudflare: { enabled: true, signedIn: true }, github: { enabled: false, signedIn: false } },
+    });
     expect(sent).toHaveLength(1);
 
     const accounts = await handleAsk(new Request(`${ORIGIN}/ask/accounts`, { headers: { Cookie: cookieHeader(signedIn) } }), host);
@@ -131,7 +141,10 @@ describe("signing in with Cloudflare", () => {
 
   it("says so, and starts nothing, on a deployment without an OAuth client", async () => {
     const { host } = cloudflare(() => new Response(null, { status: 500 }), "");
-    expect(await jsonBody<{ enabled: boolean }>(await handleAsk(new Request(`${ORIGIN}/ask/session`), host))).toMatchObject({ enabled: false, signedIn: false });
+    expect(await jsonBody<Session>(await handleAsk(new Request(`${ORIGIN}/ask/session`), host))).toMatchObject({
+      enabled: false,
+      providers: { cloudflare: { enabled: false, signedIn: false } },
+    });
     expect((await handleAsk(new Request(`${ORIGIN}/ask/signin`), host)).status).toBe(503);
   });
 });

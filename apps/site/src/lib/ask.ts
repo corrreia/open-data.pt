@@ -1,8 +1,9 @@
 // The site's agent. It runs in the visitor's browser and uses the same MCP server as /mcp, with the
 // same `search` and `execute` tools and guide. Here that server runs in the page: the model's code runs
 // in Cloudflare Code Mode's sandboxed iframe instead of on a Dynamic Worker, and reads /api with this
-// page's fetch. Only the model runs elsewhere, on the visitor's own Cloudflare account: each step goes
-// to /ask/chat, which passes it to their Workers AI and streams the answer back.
+// page's fetch. Only the model runs elsewhere, on the visitor's own account: each step goes to the
+// kernel, which passes it to their Workers AI (/ask/chat) or their GitHub Copilot (/ask/github/chat)
+// and streams the answer back.
 //
 // One thing is added for this chat alone: the model's code also gets `ui`, which draws charts, maps
 // and tables under the answer.
@@ -18,18 +19,39 @@ import type { JsonValue } from "./types";
 /* ---------- The kernel's routes ---------- */
 
 const MODEL = z.object({ id: z.string(), name: z.string(), free: z.boolean(), note: z.string() });
-const SESSION = z.object({ enabled: z.boolean(), signedIn: z.boolean(), models: z.array(MODEL) });
+const PROVIDER = z.object({ enabled: z.boolean(), signedIn: z.boolean() });
+const SESSION = z.object({ enabled: z.boolean(), providers: z.object({ cloudflare: PROVIDER.extend({ models: z.array(MODEL) }), github: PROVIDER }) });
 const ACCOUNTS = z.object({ signedIn: z.boolean(), accounts: z.array(z.object({ id: z.string(), name: z.string() })) });
+const COPILOT = z.object({
+  signedIn: z.boolean(),
+  plan: z.string().nullish(),
+  models: z.array(z.object({ id: z.string(), name: z.string(), note: z.string() })),
+  /** Why the account offers no model, when it offers none. */
+  problem: z.string().optional(),
+});
 const PROBLEM = z.object({ type: z.string().optional(), detail: z.string() });
 
 /** The kernel's problem type for a model the visitor's plan does not include. */
 const PAID_MODEL_PROBLEM = "https://open-data.pt/ask/problems/paid-model";
 
 export type AskSession = z.infer<typeof SESSION>;
-export type AskModel = z.infer<typeof MODEL>;
 export type AskAccounts = z.infer<typeof ACCOUNTS>;
+export type CopilotModels = z.infer<typeof COPILOT>;
 
-/** Whether the agent is on here and this browser is signed in; the kernel answers from the cookie alone. */
+/** Who runs the model: the visitor's Cloudflare Workers AI, or their GitHub Copilot. */
+export type Provider = "cloudflare" | "github";
+
+/** A model the agent offers, with whose account it runs on. */
+export interface AskModel {
+  provider: Provider;
+  id: string;
+  name: string;
+  note: string;
+  /** Whether it runs on Cloudflare's free plan; every Copilot model counts as paid. */
+  free: boolean;
+}
+
+/** Whether the agent is on here and which ways of asking this browser is signed in to; the kernel answers from the cookies alone. */
 export async function readSession(): Promise<AskSession> {
   const response = await fetch("/ask/session", { headers: { accept: "application/json" } });
   if (!response.ok) throw await askError(response);
@@ -43,14 +65,24 @@ export async function readAccounts(): Promise<AskAccounts> {
   return ACCOUNTS.parse(await response.json());
 }
 
+/** The models the visitor's Copilot plan offers this agent, or why it offers none. */
+export async function readCopilot(): Promise<CopilotModels> {
+  const response = await fetch("/ask/github/models", { headers: { accept: "application/json" } });
+  if (!response.ok) throw await askError(response);
+  return COPILOT.parse(await response.json());
+}
+
+/** Where each provider's routes are. */
+const ROUTES = { cloudflare: "/ask", github: "/ask/github" } as const satisfies Record<Provider, string>;
+
 /** Revokes the sign-in and clears its cookie; throws when the kernel did not, so the panel never claims a sign-out that did not happen. */
-export async function signOut(): Promise<void> {
-  const response = await fetch("/ask/signout", { method: "POST" });
+export async function signOut(provider: Provider): Promise<void> {
+  const response = await fetch(`${ROUTES[provider]}/signout`, { method: "POST" });
   if (!response.ok) throw await askError(response);
 }
 
 /** Where sign-in starts, coming back to this page with the agent open. */
-export const signInHref = () => `/ask/signin?return=${encodeURIComponent(`${window.location.pathname}${window.location.search}`)}`;
+export const signInHref = (provider: Provider) => `${ROUTES[provider]}/signin?return=${encodeURIComponent(`${window.location.pathname}${window.location.search}`)}`;
 
 export class AskError extends Error {
   constructor(
@@ -268,24 +300,39 @@ export type ChatMessage =
   | { role: "assistant"; content: string; tool_calls?: ToolCallRequest[] }
   | { role: "tool"; tool_call_id: string; content: string };
 
-/** One tool call as the agent shows it while the model works. */
+/** One tool call as the agent shows it while the model works, and what it ran and got back, for anyone who opens it. */
 export interface Step {
   id: string;
   label: string;
   state: "running" | "done" | "failed";
+  /** The code the model ran, or the search it made. */
+  code: string;
+  /** What came back, cut to MAX_SHOWN_OUTPUT. */
+  output: string;
 }
+
+/** A step's output past this is cut where it is shown and kept: the model read it whole. */
+const MAX_SHOWN_OUTPUT = 4000;
+/** The model's thinking past this keeps only its end, which is what led to the answer. */
+const MAX_REASONING = 6000;
 
 /** The answer being written: what it read, what it drew, its text so far, and what it cost. */
 export interface AssistantTurn {
   steps: Step[];
   visuals: Visual[];
   text: string;
+  /** What the model wrote while thinking, for models that stream it. */
+  reasoning: string;
   /** Whether the model is thinking before it writes or calls anything. */
   thinking: boolean;
   done: boolean;
   error?: string;
   /** Workers AI's unit of cost, as its stream reports it; the free allowance is 10,000 a day. */
   neurons: number;
+  /** Tokens read and written, as Copilot's stream reports them. */
+  tokens: number;
+  /** The datasets the model's code read, by slug, in the order it first read them. */
+  datasets: string[];
   /** Something the visitor should know about how it was answered, such as a change of model. */
   notice?: string;
 }
@@ -319,6 +366,7 @@ const CHUNK = z.object({
           .object({
             content: z.string().nullish(),
             reasoning_content: z.string().nullish(),
+            reasoning_text: z.string().nullish(),
             tool_calls: z
               .array(z.object({ index: z.number(), id: z.string().nullish(), function: z.object({ name: z.string().nullish(), arguments: z.string().nullish() }).nullish() }))
               .nullish(),
@@ -328,23 +376,26 @@ const CHUNK = z.object({
       }),
     )
     .nullish(),
-  usage: z.object({ neurons: z.number().nullish() }).nullish(),
+  usage: z.object({ neurons: z.number().nullish(), total_tokens: z.number().nullish() }).nullish(),
 });
 
 /** One model reply, put together from its stream. */
 export interface Reply {
   content: string;
+  /** Its thinking, for models that stream it apart from the answer. */
+  reasoning: string;
   toolCalls: ToolCallRequest[];
   finishReason: string | undefined;
   neurons: number;
+  tokens: number;
 }
 
 /**
- * Reads a Chat Completions event stream: text arrives in pieces, and each tool call's name and
- * arguments arrive in pieces under its index. `onText` hears the text so far as it grows.
+ * Reads a Chat Completions event stream: text and thinking arrive in pieces, and each tool call's name
+ * and arguments arrive in pieces under its index. `onText` hears the reply so far as it grows.
  */
-export async function readReply(body: ReadableStream<Uint8Array>, onText: (text: string, thinking: boolean) => void): Promise<Reply> {
-  const reply: Reply = { content: "", toolCalls: [], finishReason: undefined, neurons: 0 };
+export async function readReply(body: ReadableStream<Uint8Array>, onText: (reply: Reply) => void): Promise<Reply> {
+  const reply: Reply = { content: "", reasoning: "", toolCalls: [], finishReason: undefined, neurons: 0, tokens: 0 };
   const calls = new Map<number, ToolCallRequest>();
   const decoder = new TextDecoder();
   const reader = body.getReader();
@@ -356,10 +407,13 @@ export async function readReply(body: ReadableStream<Uint8Array>, onText: (text:
     const chunk = CHUNK.safeParse(parseJsonValue(data));
     if (!chunk.success) return;
     reply.neurons += chunk.data.usage?.neurons ?? 0;
+    reply.tokens += chunk.data.usage?.total_tokens ?? 0;
     for (const choice of chunk.data.choices ?? []) {
       if (choice.finish_reason) reply.finishReason = choice.finish_reason;
       const delta = choice.delta;
       if (delta?.content) reply.content += delta.content;
+      const thought = delta?.reasoning_content ?? delta?.reasoning_text;
+      if (thought) reply.reasoning += thought;
       for (const piece of delta?.tool_calls ?? []) {
         const call = calls.get(piece.index) ?? { id: "", type: "function", function: { name: "", arguments: "" } };
         if (piece.id) call.id = piece.id;
@@ -367,7 +421,7 @@ export async function readReply(body: ReadableStream<Uint8Array>, onText: (text:
         call.function.arguments += piece.function?.arguments ?? "";
         calls.set(piece.index, call);
       }
-      if (delta?.content || delta?.reasoning_content) onText(reply.content, !reply.content);
+      if (delta?.content || thought) onText(reply);
     }
   };
   for (;;) {
@@ -384,9 +438,10 @@ export async function readReply(body: ReadableStream<Uint8Array>, onText: (text:
 }
 
 export interface Conversation {
+  /** The Cloudflare account a Workers AI model runs on; Copilot needs none. */
   accountId: string;
   model: AskModel;
-  /** Where to turn when the visitor's plan does not include `model`: the first model that works on Workers Free. */
+  /** Where to turn when the visitor's Cloudflare plan does not include `model`: the first model that works on Workers Free. */
   freeModel: AskModel | undefined;
   /** Told when the agent moves to `freeModel`, so the next question starts there. */
   onModelChange: (model: AskModel) => void;
@@ -402,15 +457,18 @@ export interface Conversation {
  */
 export async function answer({ accountId, model: asked, freeModel, onModelChange, messages, signal, onUpdate }: Conversation): Promise<void> {
   let model = asked;
-  const turn: AssistantTurn = { steps: [], visuals: [], text: "", thinking: true, done: false, neurons: 0 };
-  const show = () => onUpdate({ ...turn, steps: turn.steps.map((step) => ({ ...step })), visuals: [...turn.visuals] });
+  const turn: AssistantTurn = { steps: [], visuals: [], text: "", reasoning: "", thinking: true, done: false, neurons: 0, tokens: 0, datasets: [] };
+  const show = () => onUpdate({ ...turn, steps: turn.steps.map((step) => ({ ...step })), visuals: [...turn.visuals], datasets: [...turn.datasets] });
   show();
   const server = await connectLocalServer();
+  // Thinking from earlier steps of this answer, which the next step's thinking follows.
+  let thought = "";
   for (let step = 0; step < MAX_STEPS; step += 1) {
-    const response = await fetch("/ask/chat", {
+    const body = model.provider === "cloudflare" ? { accountId, model: model.id, messages, tools: server.tools } : { model: model.id, messages, tools: server.tools };
+    const response = await fetch(`${ROUTES[model.provider]}/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json", accept: "text/event-stream" },
-      body: JSON.stringify({ accountId, model: model.id, messages, tools: server.tools }),
+      body: JSON.stringify(body),
       signal,
     });
     if (!response.ok || !response.body) {
@@ -425,13 +483,16 @@ export async function answer({ accountId, model: asked, freeModel, onModelChange
       }
       throw error;
     }
-    const reply = await readReply(response.body, (text, thinking) => {
-      turn.text = text;
-      turn.thinking = thinking;
+    const reply = await readReply(response.body, (sofar) => {
+      turn.text = sofar.content;
+      turn.thinking = !sofar.content;
+      turn.reasoning = keepEnd(joined(thought, sofar.reasoning), MAX_REASONING);
       show();
     });
     turn.neurons += reply.neurons;
+    turn.tokens += reply.tokens;
     turn.text = reply.content;
+    thought = joined(thought, reply.reasoning);
     const assistant: ChatMessage = { role: "assistant", content: reply.content };
     if (reply.toolCalls.length) assistant.tool_calls = reply.toolCalls;
     messages.push(assistant);
@@ -444,12 +505,16 @@ export async function answer({ accountId, model: asked, freeModel, onModelChange
       return;
     }
     // Text the model wrote before calling a tool is its own working; the answer comes after.
+    if (reply.content) thought = joined(thought, reply.content);
+    turn.reasoning = keepEnd(thought, MAX_REASONING);
     turn.text = "";
     turn.thinking = true;
     for (const call of reply.toolCalls) {
       signal.throwIfAborted();
-      const shown: Step = { id: call.id, label: describeCall(call), state: "running" };
+      const input = toolInput(call.function.arguments);
+      const shown: Step = { id: call.id, label: describeCall(call), state: "running", code: input?.code ?? call.function.arguments, output: "" };
       turn.steps.push(shown);
+      for (const slug of datasetsRead(shown.code)) if (!turn.datasets.includes(slug)) turn.datasets.push(slug);
       show();
       drawTo = (visual) => {
         turn.visuals.push(visual);
@@ -458,6 +523,7 @@ export async function answer({ accountId, model: asked, freeModel, onModelChange
       try {
         const result = await callTool(server, call);
         shown.state = result.ok ? "done" : "failed";
+        shown.output = result.content.length > MAX_SHOWN_OUTPUT ? `${result.content.slice(0, MAX_SHOWN_OUTPUT)}…` : result.content;
         messages.push({ role: "tool", tool_call_id: call.id, content: result.content });
       } finally {
         drawTo = undefined;
@@ -470,6 +536,14 @@ export async function answer({ accountId, model: asked, freeModel, onModelChange
   turn.error = `The model called tools ${MAX_STEPS} times without answering, so it was stopped. Ask something narrower.`;
   show();
 }
+
+/** The datasets a program reads, by the slug in each /api/products/{slug} path it names. */
+export function datasetsRead(code: string): string[] {
+  return [...new Set([...code.matchAll(/\/api\/products\/([a-z0-9][a-z0-9-]*)/g)].flatMap((match) => (match[1] ? [match[1]] : [])))];
+}
+
+const joined = (before: string, after: string) => (before && after ? `${before}\n\n${after}` : before || after);
+const keepEnd = (text: string, max: number) => (text.length > max ? `…${text.slice(-max)}` : text);
 
 /** A tool call as a line a person can read: the API paths its code reads, or that it searched the API's description. */
 export function describeCall(call: ToolCallRequest): string {

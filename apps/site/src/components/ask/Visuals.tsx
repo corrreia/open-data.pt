@@ -1,23 +1,29 @@
-import { Chart, TimeseriesChart } from "@cloudflare/kumo";
+import { Button, Chart, Dialog, TimeseriesChart } from "@cloudflare/kumo";
+import { ArrowsOutSimpleIcon, DownloadSimpleIcon, XIcon } from "@phosphor-icons/react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import type { ChartSpec, MapSpec, TableSpec, Visual } from "../../lib/ask";
+import { csvOf, download, fileNameOf } from "../../lib/download";
 import { echarts } from "../../lib/echarts";
 import { fmt, isNumber, isRecord } from "../../lib/format";
 import { SERIES_COLORS } from "../../lib/palette";
 import { useDarkMode } from "../common";
 
 // What the agent's code drew with ui.chart, ui.map and ui.table, under its answer. The model wrote
-// these specs, so every label is shown as text and nothing in them is read as markup.
+// these specs, so every label is shown as text and nothing in them is read as markup. Each drawing
+// opens full size, and downloads as the CSV of the values behind it.
+
+/** In the conversation, or opened full size. */
+type Size = "inline" | "large";
 
 /* ---------- Charts ---------- */
 
 /** A time on a line chart: an ISO time, or milliseconds since 1970. */
 const instant = (x: string | number) => (isNumber(x) ? x : Date.parse(x));
 
-function ChartVisual({ spec }: { spec: ChartSpec }) {
+function ChartVisual({ spec, size }: { spec: ChartSpec; size: Size }) {
   const dark = useDarkMode();
   const palette = dark ? SERIES_COLORS.dark : SERIES_COLORS.light;
   const unit = spec.unit ? ` ${spec.unit}` : "";
@@ -26,7 +32,7 @@ function ChartVisual({ spec }: { spec: ChartSpec }) {
       <TimeseriesChart
         echarts={echarts}
         isDarkMode={dark}
-        height={240}
+        height={size === "large" ? 480 : 240}
         gradient={spec.series.length === 1}
         yAxisName={spec.unit}
         tooltipValueFormat={(value: number) => `${fmt.cell(value, "number")}${unit}`}
@@ -45,7 +51,7 @@ function ChartVisual({ spec }: { spec: ChartSpec }) {
     <Chart
       echarts={echarts}
       isDarkMode={dark}
-      height={Math.min(560, Math.max(160, categories.length * spec.series.length * 20 + 60))}
+      height={Math.min(size === "large" ? 1200 : 560, Math.max(160, categories.length * spec.series.length * (size === "large" ? 26 : 20) + 60))}
       options={{
         grid: { left: 8, right: 48, top: spec.series.length > 1 ? 28 : 8, bottom: 8, containLabel: true },
         tooltip: { trigger: "axis", axisPointer: { type: "shadow" }, valueFormatter: (value) => `${fmt.cell(Number(value), "number")}${unit}` },
@@ -104,7 +110,7 @@ function drawableFeature(value: NonNullable<MapSpec["geojson"]>["features"][numb
   return parsed.success ? [{ type: "Feature", geometry: parsed.data.geometry, properties: parsed.data.properties ?? null }] : [];
 }
 
-function MapVisual({ spec }: { spec: MapSpec }) {
+function MapVisual({ spec, size }: { spec: MapSpec; size: Size }) {
   const element = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -159,7 +165,7 @@ function MapVisual({ spec }: { spec: MapSpec }) {
   return (
     <div className="grid gap-1.5">
       {/* Leaflet's own zoom buttons and attribution links stay reachable; the figure's caption names the map. */}
-      <div ref={element} className="h-64 w-full overflow-hidden rounded-lg border border-kumo-line" />
+      <div ref={element} className={`${size === "large" ? "h-[min(70vh,48rem)]" : "h-64"} w-full overflow-hidden rounded-lg border border-kumo-line`} />
       {values.length ? (
         <div className="flex items-center gap-2 text-xs text-kumo-subtle">
           <span>
@@ -179,9 +185,9 @@ function MapVisual({ spec }: { spec: MapSpec }) {
 
 /* ---------- Tables ---------- */
 
-function TableVisual({ spec }: { spec: TableSpec }) {
+function TableVisual({ spec, size = "inline" }: { spec: TableSpec; size?: Size }) {
   return (
-    <div className="max-h-72 overflow-auto rounded-lg border border-kumo-line">
+    <div className={`${size === "large" ? "max-h-[70vh]" : "max-h-72"} overflow-auto rounded-lg border border-kumo-line`}>
       <table className="w-full border-collapse text-xs tabular-nums">
         <thead className="sticky top-0 bg-kumo-recessed">
           <tr>
@@ -273,26 +279,72 @@ function AsTable({ spec }: { spec: TableSpec | undefined }) {
   );
 }
 
+/** The values behind a drawing, as rows: what its CSV holds. */
+function valuesOf(visual: Visual): TableSpec | undefined {
+  if (visual.kind === "chart") return chartTable(visual.spec);
+  if (visual.kind === "map") return mapTable(visual.spec);
+  return visual.spec;
+}
+
+/** One drawing at a size: a chart or a map with its values as a table under it, or a table. */
+function Drawing({ visual, size }: { visual: Visual; size: Size }) {
+  if (visual.kind === "chart")
+    return (
+      <>
+        <ChartVisual spec={visual.spec} size={size} />
+        <AsTable spec={chartTable(visual.spec)} />
+      </>
+    );
+  if (visual.kind === "map")
+    return (
+      <>
+        <MapVisual spec={visual.spec} size={size} />
+        <AsTable spec={mapTable(visual.spec)} />
+      </>
+    );
+  return <TableVisual spec={visual.spec} size={size} />;
+}
+
+function Figure({ visual }: { visual: Visual }) {
+  const [large, setLarge] = useState(false);
+  const values = valuesOf(visual);
+  const save = () => {
+    if (values) download(`${fileNameOf(visual.spec.title)}.csv`, csvOf(values.columns, values.rows), "text/csv");
+  };
+  return (
+    <figure className="grid gap-1.5">
+      <div className="flex items-start gap-1">
+        <figcaption className="min-w-0 flex-1 pt-1 text-xs font-medium text-kumo-strong">{visual.spec.title}</figcaption>
+        {values?.rows.length ? (
+          <Button variant="ghost" size="xs" icon={<DownloadSimpleIcon />} onClick={save} aria-label={`Download ${visual.spec.title} as CSV`} title="Download as CSV" />
+        ) : null}
+        <Button variant="ghost" size="xs" icon={<ArrowsOutSimpleIcon />} onClick={() => setLarge(true)} aria-label={`Open ${visual.spec.title} full size`} title="Open full size" />
+      </div>
+      {/* Opened full size, the drawing in the conversation stays as it is, so the dialog draws its own. */}
+      <Drawing visual={visual} size="inline" />
+      <Dialog.Root open={large} onOpenChange={setLarge}>
+        <Dialog size="xl" className="grid max-h-[90vh] w-[min(72rem,calc(100vw-2rem))]! max-w-none! gap-3 overflow-y-auto p-5">
+          <div className="flex items-start gap-3">
+            <Dialog.Title className="min-w-0 flex-1 font-display text-xl text-kumo-strong">{visual.spec.title}</Dialog.Title>
+            {values?.rows.length ? (
+              <Button variant="secondary" size="sm" icon={<DownloadSimpleIcon />} onClick={save}>
+                CSV
+              </Button>
+            ) : null}
+            <Dialog.Close aria-label="Close" render={(props) => <Button {...props} variant="ghost" size="sm" icon={<XIcon />} aria-label="Close" />} />
+          </div>
+          {large ? <Drawing visual={visual} size="large" /> : null}
+        </Dialog>
+      </Dialog.Root>
+    </figure>
+  );
+}
+
 export default function Visuals({ visuals }: { visuals: Visual[] }) {
   return (
     <div className="grid gap-4">
       {visuals.map((visual, index) => (
-        <figure key={index} className="grid gap-1.5">
-          <figcaption className="text-xs font-medium text-kumo-strong">{visual.spec.title}</figcaption>
-          {visual.kind === "chart" ? (
-            <>
-              <ChartVisual spec={visual.spec} />
-              <AsTable spec={chartTable(visual.spec)} />
-            </>
-          ) : visual.kind === "map" ? (
-            <>
-              <MapVisual spec={visual.spec} />
-              <AsTable spec={mapTable(visual.spec)} />
-            </>
-          ) : (
-            <TableVisual spec={visual.spec} />
-          )}
-        </figure>
+        <Figure key={index} visual={visual} />
       ))}
     </div>
   );

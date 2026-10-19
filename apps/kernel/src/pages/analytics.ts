@@ -15,6 +15,7 @@ import { isbot } from "isbot";
 import { parse as parseReferrer } from "ts-referer-parser";
 
 import { isPage } from "#/pages/markdown";
+import { isAskChat } from "#/ask/ask";
 import { NAMING_PARAMETER } from "#/pages/page-meta";
 import { routeTemplate } from "#/api/request-guard";
 
@@ -86,7 +87,7 @@ export function surfaceOf(url: URL): Surface | undefined {
   const path = url.pathname;
   if (path === "/api" || path.startsWith("/api/")) return "api";
   if (path === "/mcp") return "mcp";
-  if (path === "/ask/chat") return "ask";
+  if (isAskChat(path)) return "ask";
   if (path === "/docs" || path === "/docs/" || path === "/openapi.json") return "docs";
   if (DISCOVERY.test(path)) return "discovery";
   if (isPage(path)) return "web";

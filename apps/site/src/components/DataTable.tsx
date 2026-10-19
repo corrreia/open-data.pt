@@ -1,8 +1,9 @@
 import { Button, InputGroup, LayerCard, Pagination, Table } from "@cloudflare/kumo";
 import { CaretDownIcon, CaretUpDownIcon, CaretUpIcon, DownloadSimpleIcon, MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
+import { csvValue, download } from "../lib/download";
 import { fmt } from "../lib/format";
-import type { JsonRecord, JsonValue } from "../lib/types";
+import type { JsonRecord } from "../lib/types";
 
 export type SortValue = string | number | null | undefined;
 
@@ -51,21 +52,6 @@ function compare(a: SortValue, b: SortValue) {
   if (b === null || b === undefined || b === "") return -1;
   if (Number.isFinite(a) && Number.isFinite(b)) return Number(a) - Number(b);
   return String(a).localeCompare(String(b), undefined, { numeric: true });
-}
-
-function csvValue(value: JsonValue | undefined) {
-  if (value === null || value === undefined) return "";
-  const text = Array.isArray(value) || (value !== null && Object.prototype.toString.call(value) === "[object Object]") ? JSON.stringify(value) : String(value);
-  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
-}
-
-function download(name: string, body: string, type: string) {
-  const url = URL.createObjectURL(new Blob([body], { type }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = name;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 /** A Kumo table that filters, sorts, pages and downloads what it holds. */

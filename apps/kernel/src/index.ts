@@ -87,6 +87,7 @@ export default class KernelWorker extends WorkerEntrypoint<Env> {
       try {
         served.response = await handleAsk(request, {
           clientId: this.env.ASK_OAUTH_CLIENT_ID,
+          github: { clientId: this.env.ASK_GITHUB_CLIENT_ID, clientSecret: this.env.ASK_GITHUB_CLIENT_SECRET },
           fetch: (input, init) => fetch(input, init),
           now: Date.now,
           onChat: (model, messages) => {

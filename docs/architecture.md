@@ -138,11 +138,28 @@ authorization code flow with PKCE against a public client, and grant `ai.read`, 
 accounts) and `offline_access`; sign-in returns them to the page they started from with the agent open. The
 browser runs the conversation and sends each model step to `POST /ask/chat`, which passes it to the
 visitor's Workers AI (`/ai/v1/chat/completions`, streamed) with their token
-(`apps/kernel/src/ask/ask.ts`). It passes through only because Cloudflare's API answers no browser
+(`apps/kernel/src/ask/cloudflare.ts`). It passes through only because Cloudflare's API answers no browser
 preflight. The tokens live in an httpOnly cookie, which Workers Logs records as `REDACTED`; the
 kernel stores nothing and pays for no inference and no code run. `GET /ask/session` answers from the
 cookie alone, since every page asks it; the conversation is kept in the tab's `sessionStorage`, so
 it follows the visitor from page to page.
+
+The visitor can instead run the model on their own **GitHub Copilot**
+(`apps/kernel/src/ask/github.ts`). They sign in with open-data.pt's GitHub OAuth App (web flow with
+PKCE, scope `read:user`; Copilot access comes from their plan, not a scope), and `POST /ask/github/chat`
+passes each step to Copilot's `/chat/completions` with their `gho_` token, which Copilot bills to
+their plan. `GET /ask/github/models` reads their entitlement (`/copilot_internal/user`, which also
+names the address their plan is served from) and lists the chat models that call tools over chat
+completions. GitHub documents this only for its Copilot SDK, which drives the Copilot CLI on a
+server; the HTTP API underneath is not documented for other clients and may change or refuse us. The
+calls say who they are: our own OAuth App, our own User-Agent, none of the editor or integration
+headers first-party clients send, and never another client's ID. GitHub Models, the documented
+per-user inference API, was retired on 2026-07-30.
+
+The GitHub OAuth App is the owner's to create: callback URL `https://open-data.pt/ask/github/callback`
+(an OAuth App has one, so `pnpm dev` needs a second app for `http://localhost:8787/ask/github/callback`).
+Its client ID goes in `ASK_GITHUB_CLIENT_ID` and its secret in the `ASK_GITHUB_CLIENT_SECRET` Worker
+secret, which GitHub asks for to turn a sign-in into a token. While either is empty, Copilot is not offered.
 
 Cloudflare's own chat agent class, `AIChatAgent`, was the alternative. It would keep each
 conversation in a Durable Object on our account over a WebSocket, and its code runs would be

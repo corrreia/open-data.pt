@@ -114,7 +114,10 @@ export function openApiDocument(origin: string) {
                 }),
                 ask: countsOf({
                   turn: { type: "string", enum: ["question", "step"], description: "`question` begins one; `step` is a model call after tool results." },
-                  model: { type: "string", description: "The Workers AI model asked, on the visitor's own account." },
+                  model: {
+                    type: "string",
+                    description: "The model asked: a Workers AI model on the visitor's own Cloudflare account, or `copilot/<model>` on their own GitHub Copilot.",
+                  },
                   status: { type: "string", description: "The answer's status class, such as 2xx, 4xx or 429." },
                 }),
               },
