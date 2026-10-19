@@ -10,6 +10,7 @@
  * never serves. Nothing here is a Gatekeeper concern — that is the contract.
  */
 export { MCP_GUIDE, MCP_SERVER_NAME, MCP_SERVER_VERSION } from "./mcp";
+export { SITE_PAGES, pagePath, sitePageAt, type SitePage } from "./pages";
 
 /**
  * Marks the site's request for a page it has just shown in place, without loading it: the kernel

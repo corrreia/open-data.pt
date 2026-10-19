@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { ListingRows } from "../components/ListingRows";
 import { ErrorNote, Kv, PageHead, Placeholder, StatTile, TagRow, bodyRows, cardRows } from "../components/common";
 import { PublisherMark, PublisherWatermark } from "../components/PublisherMark";
-import { Shell } from "../components/Shell";
 import { buildListings, buildPublishers, fetchFeeds, fetchProducts, licenceHref, publisherHref, topicsOf, type Publisher, emptyLast } from "../lib/catalog";
 import { fmt, plural } from "../lib/format";
 import { navigate } from "../lib/navigation";
@@ -182,7 +181,7 @@ function Publishers() {
   if (publisher) document.title = `${publisher.name} · open-data.pt`;
 
   return (
-    <Shell section="publishers">
+    <>
       <ErrorNote
         error={products.error ?? feeds.error}
         what="the publishers"
@@ -209,7 +208,7 @@ function Publishers() {
       ) : (
         <PublisherIndex publishers={publishers} />
       )}
-    </Shell>
+    </>
   );
 }
 

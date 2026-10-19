@@ -6,7 +6,6 @@ import { ChangesView, CorrectionsView, EventHistoryView } from "../components/pr
 import { SchemaView } from "../components/product/SchemaView";
 import { RecordsView } from "../components/product/RecordsView";
 import { ChunkBoundary } from "../components/ChunkBoundary";
-import { Shell } from "../components/Shell";
 import { ApiError, apiGet, productPath } from "../lib/api";
 import { PublisherMark } from "../components/PublisherMark";
 import { ROLE, freshness, licenceHref, openableUrl, publisherHref, throughOf } from "../lib/catalog";
@@ -140,7 +139,7 @@ function ProductPage() {
   if (missing) {
     document.title = "Dataset not found · open-data.pt";
     return (
-      <Shell section="product">
+      <>
         <PageHead eyebrow="Dataset" title={slug ? "No dataset at this address" : "No dataset chosen"}>
           {slug ? (
             <>Nothing on open-data.pt has the name “{slug}”. The link may be mistyped or out of date: find the dataset in the catalog.</>
@@ -153,23 +152,23 @@ function ProductPage() {
             Open the catalog
           </Button>
         </div>
-      </Shell>
+      </>
     );
   }
   if (product.error) {
     document.title = "Dataset unavailable · open-data.pt";
     return (
-      <Shell section="product">
+      <>
         <PageHead eyebrow="Dataset" title="This dataset could not be loaded" />
         <ErrorNote error={product.error} what="the dataset" onRetry={() => void product.refetch()} />
-      </Shell>
+      </>
     );
   }
   if (!data) {
     return (
-      <Shell section="product">
+      <>
         <Pending />
-      </Shell>
+      </>
     );
   }
 
@@ -181,7 +180,7 @@ function ProductPage() {
   const source = openableUrl(feed.data?.sourceUrl);
 
   return (
-    <Shell section="product">
+    <>
       <header className="grid gap-4 pt-2">
         <Breadcrumbs size="sm">
           <Breadcrumbs.Link href="/catalog/">Catalog</Breadcrumbs.Link>
@@ -433,7 +432,7 @@ function ProductPage() {
           </Step>
         </ol>
       </section>
-    </Shell>
+    </>
   );
 }
 

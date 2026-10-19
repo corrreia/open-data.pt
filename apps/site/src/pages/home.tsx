@@ -19,7 +19,6 @@ import { useMemo, type ReactNode } from "react";
 import { ListingRows } from "../components/ListingRows";
 import { Eyebrow, RelativeTime, SectionHead, StatTile } from "../components/common";
 import { PublisherMark } from "../components/PublisherMark";
-import { Shell } from "../components/Shell";
 import { apiGet, productHref } from "../lib/api";
 import { buildListings, buildPublishers, fetchFeeds, fetchProducts, publisherHref, topicLabel, type Listing, emptyLast } from "../lib/catalog";
 import { fmt, plural } from "../lib/format";
@@ -74,7 +73,7 @@ function Home() {
   }, [listings]);
 
   return (
-    <Shell section="home">
+    <>
       <section aria-labelledby="hero-title" className="grid items-center gap-10 pt-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:pt-14">
         <div className="grid gap-6">
           <Eyebrow>Portuguese public data</Eyebrow>
@@ -226,7 +225,7 @@ function Home() {
           </Badge>
         ) : null}
       </section>
-    </Shell>
+    </>
   );
 }
 

@@ -10,11 +10,11 @@
  */
 import { asArray, asNumber, asObject, asString, isJsonObject, parseJson, type JsonObject, type JsonValue } from "@open-data-pt/contract";
 
-import { ASK_READ_HEADER, PAGE_VIEW_HEADER } from "@open-data-pt/api";
+import { ASK_READ_HEADER, PAGE_VIEW_HEADER, pagePath } from "@open-data-pt/api";
 import { isbot } from "isbot";
 import { parse as parseReferrer } from "ts-referer-parser";
 
-import { isPage, pagePath } from "#/pages/markdown";
+import { isPage } from "#/pages/markdown";
 import { NAMING_PARAMETER } from "#/pages/page-meta";
 import { routeTemplate } from "#/api/request-guard";
 

@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { ListingRows } from "../components/ListingRows";
 import { PublisherMark } from "../components/PublisherMark";
 import { ErrorNote, PageHead, Placeholder, StatTile, bodyRows, cardRows } from "../components/common";
-import { Shell } from "../components/Shell";
 import { buildLicences, buildListings, fetchFeeds, fetchProducts, licenceHref, publisherHref, topicsOf, type Licence, emptyLast } from "../lib/catalog";
 import { fmt, plural } from "../lib/format";
 import { navigate } from "../lib/navigation";
@@ -149,7 +148,7 @@ function Licences() {
   if (licence) document.title = `${licence.name} · open-data.pt`;
 
   return (
-    <Shell section="licences">
+    <>
       <ErrorNote
         error={products.error ?? feeds.error}
         what="the licences"
@@ -176,7 +175,7 @@ function Licences() {
       ) : (
         <LicenceIndex licences={licences} />
       )}
-    </Shell>
+    </>
   );
 }
 

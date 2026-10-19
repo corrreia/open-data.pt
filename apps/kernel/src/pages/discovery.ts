@@ -83,7 +83,8 @@ export async function handleSite(request: Request, host: SiteHost): Promise<Resp
       },
     });
   }
-  const html = await host.assets(request);
+  // Every page is the same shell, which the site fills as it runs; what differs is the metadata written into it.
+  const html = await host.assets(new Request(new URL("/", url), { method: request.method, headers: request.headers }));
   const rewrite = request.method === "GET" && html.ok && html.headers.get("Content-Type")?.startsWith("text/html") === true;
   const answer = rewrite ? new Response(await withPageMeta(await html.text(), url, host), html) : new Response(html.body, html);
   if (rewrite) {

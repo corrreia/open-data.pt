@@ -2,7 +2,6 @@ import { LayerCard, LinkButton } from "@cloudflare/kumo";
 import { BugIcon, LightbulbIcon, PlusCircleIcon, StackIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import { PageHead, SectionHead, bodyRows, cardRows } from "../components/common";
-import { Shell } from "../components/Shell";
 import { CONTRIBUTING, REPOSITORY, newIssue } from "../lib/project";
 
 const LINK = "font-medium text-kumo-link hover:underline";
@@ -59,7 +58,7 @@ const WAYS: Way[] = [
 
 function Contribute() {
   return (
-    <Shell section="contribute">
+    <>
       <PageHead eyebrow="Contribute" title="Help collect Portugal’s public data">
         open-data.pt is open source. Anyone can suggest a source or report one that broke, and a new dataset from a source we already read is often a single entry of code.
       </PageHead>
@@ -122,7 +121,7 @@ function Contribute() {
           . The data is not: it belongs to its publishers, under their licences, and open-data.pt republishes it.
         </p>
       </section>
-    </Shell>
+    </>
   );
 }
 

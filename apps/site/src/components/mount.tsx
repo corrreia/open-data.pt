@@ -1,7 +1,7 @@
 import { TooltipProvider } from "@cloudflare/kumo";
-import { StrictMode, type ComponentType } from "react";
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { reloadForUpdate, startNavigation } from "../lib/navigation";
+import { reloadForUpdate, startNavigation, type PageModule } from "../lib/navigation";
 import { registerSiteTools } from "../lib/webmcp";
 import { Site } from "./Site";
 import "../styles.css";
@@ -25,16 +25,20 @@ window.addEventListener("vite:preloadError", (event) => {
   if (reloadForUpdate()) event.preventDefault();
 });
 
-/** Starts the site in the entry's root element, on the page whose file the tab loaded. */
-export function startSite(page: ComponentType) {
+/** Starts the site in the shell's root element, on the page its address names, once that page has loaded. */
+export function startSite(load: () => Promise<PageModule>) {
   startNavigation();
   const root = document.getElementById("root");
   if (!root) throw new Error("The page has no #root element");
-  createRoot(root).render(
-    <StrictMode>
-      <TooltipProvider delay={250}>
-        <Site initial={page} />
-      </TooltipProvider>
-    </StrictMode>,
+  load().then(
+    (page) =>
+      createRoot(root).render(
+        <StrictMode>
+          <TooltipProvider delay={250}>
+            <Site initial={page.default} />
+          </TooltipProvider>
+        </StrictMode>,
+      ),
+    () => reloadForUpdate(),
   );
 }

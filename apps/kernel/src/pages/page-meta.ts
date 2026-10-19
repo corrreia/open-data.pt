@@ -8,8 +8,8 @@
  */
 import { UNSTATED_LICENCE, type JsonObject, type JsonValue } from "@open-data-pt/contract";
 import type { SiteHost } from "#/pages/discovery";
-import type { Feed as CatalogFeed, Product as CatalogProduct, Term } from "@open-data-pt/api";
-import { every, pagePath, read, readIfFound, topicLabel } from "#/pages/markdown";
+import { pagePath, sitePageAt, type Feed as CatalogFeed, type Product as CatalogProduct, type Term } from "@open-data-pt/api";
+import { every, read, readIfFound, topicLabel } from "#/pages/markdown";
 
 const SITE_NAME = "open-data.pt";
 /** What the home page's preview says, rather than the bare site name. */
@@ -55,11 +55,13 @@ interface Named {
   dataset?: JsonObject;
 }
 
-/** The page's HTML with its title, description, canonical link, Open Graph and X card tags, and structured data set for this URL. */
+/**
+ * The site's one HTML shell, made this URL's page: its title, description, canonical link, Open Graph
+ * and X card tags, and structured data.
+ */
 export async function withPageMeta(html: string, url: URL, host: SiteHost): Promise<string> {
-  const title = decode(/<title>([^<]*)<\/title>/.exec(html)?.[1] ?? SITE_NAME);
-  const description = decode(/<meta name="description" content="([^"]*)"/.exec(html)?.[1] ?? "");
-  const meta = await pageMeta(url, title, description, host);
+  const page = sitePageAt(url.pathname);
+  const meta = await pageMeta(url, page?.title ?? SITE_NAME, page?.description ?? "", host);
   // Replacer functions, so a "$" in a product's title is text, not a replacement pattern.
   return html
     .replace(/<title>[^<]*<\/title>/, () => `<title>${escape(meta.title)}</title>`)
@@ -201,4 +203,3 @@ function headTags(meta: PageMeta, origin: string): string {
 
 const clip = (text: string, max: number) => (text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text);
 const escape = (text: string) => text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
-const decode = (text: string) => text.replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&quot;", '"').replaceAll("&#39;", "'").replaceAll("&amp;", "&");

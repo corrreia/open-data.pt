@@ -37,11 +37,6 @@ function countryFlags(): Plugin {
   };
 }
 
-/** One HTML entry per page; the kernel serves `dist` as its static assets, so every URL stays what it was. */
-const ALL_PAGES = ["index", "catalog", "publisher", "licence", "product", "status", "analytics", "start", "operations", "contribute", "aup"];
-/** SITE_PAGES=index,catalog builds a subset while pages are being worked on. */
-const PAGES = process.env.SITE_PAGES ? ALL_PAGES.filter((page) => process.env.SITE_PAGES?.split(",").includes(page)) : ALL_PAGES;
-
 export default defineConfig({
   plugins: [react(), tailwindcss(), brandIcons(), publisherMarks(), countryFlags()],
   build: {
@@ -50,8 +45,5 @@ export default defineConfig({
     chunkSizeWarningLimit: 800,
     emptyOutDir: true,
     target: "es2022",
-    rollupOptions: {
-      input: Object.fromEntries(PAGES.map((page) => [page, resolve(import.meta.dirname, page === "index" ? "index.html" : `${page}/index.html`)])),
-    },
   },
 });

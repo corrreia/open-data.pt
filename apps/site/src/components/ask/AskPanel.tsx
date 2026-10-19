@@ -17,7 +17,7 @@ import {
   type AssistantTurn,
   type ChatMessage,
 } from "../../lib/ask";
-import { useSiteLocation } from "../../lib/navigation";
+import { siteHref, useSiteLocation } from "../../lib/navigation";
 import { fmt } from "../../lib/format";
 
 // The agent's panel. Charts and maps load only when an answer has one.
@@ -132,7 +132,8 @@ const lisbonToday = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/L
 
 /** Answers render as Markdown; links to this site stay in the tab, and the conversation follows; others open a new one. */
 const MARKDOWN: Components = {
-  a: ({ href, children }) => {
+  a: ({ href: written, children }) => {
+    const href = written === undefined ? undefined : siteHref(written);
     const external = href !== undefined && /^https?:/.test(href) && !href.startsWith(window.location.origin);
     return (
       <a href={href} className={LINK} target={external ? "_blank" : undefined} rel={external ? "noopener noreferrer" : undefined}>
