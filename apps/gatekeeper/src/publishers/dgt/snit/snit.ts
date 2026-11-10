@@ -7,7 +7,7 @@ import {
   isJsonString,
   parseJsonBytes,
   readBoundedResponse,
-  retryAfterSeconds,
+  upstreamResponseError,
   type FeedKindDescription,
   type JsonObject,
   type JsonValue,
@@ -213,7 +213,7 @@ async function send(url: URL, init: RequestInit, fetcher: typeof fetch, resource
   }
   if (response.status >= 300 && response.status < 400) throw new GatekeeperError("SNIT redirects are not allowed", "source-denied");
   if (response.url !== "" && new URL(response.url).origin !== url.origin) throw new GatekeeperError("SNIT answered from another origin", "source-denied");
-  if (!response.ok) throw new GatekeeperError(`SNIT ${resource} returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+  if (!response.ok) throw upstreamResponseError(response, `SNIT ${resource} returned HTTP ${response.status}`);
   return response;
 }
 

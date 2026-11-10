@@ -8,7 +8,7 @@ import {
   isJsonString,
   parseJsonBytes,
   readBoundedResponse,
-  retryAfterSeconds,
+  upstreamResponseError,
   sourceValidator,
   type FeedKindDescription,
   type JsonObject,
@@ -157,7 +157,7 @@ async function answer(origin: string, query: string, fetcher: typeof fetch): Pro
     throw new GatekeeperError(`QualAr request failed: ${error instanceof Error ? error.message : "network failure"}`, "upstream-error");
   }
   if (response.status >= 300 && response.status < 400) throw new GatekeeperError("QualAr redirected", "source-denied");
-  if (!response.ok) throw new GatekeeperError(`QualAr returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+  if (!response.ok) throw upstreamResponseError(response, `QualAr returned HTTP ${response.status}`);
   let value: JsonValue;
   try {
     value = parseJsonBytes(await readBoundedResponse(response, DAY_MAX_BYTES, "QualAr answer"));

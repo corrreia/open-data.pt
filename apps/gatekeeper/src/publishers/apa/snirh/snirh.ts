@@ -3,7 +3,7 @@ import {
   contentEtag,
   fixedOrigin,
   readBoundedResponse,
-  retryAfterSeconds,
+  upstreamResponseError,
   type FeedKindDescription,
   type HistoryCursor,
   type SourceConfig,
@@ -607,7 +607,7 @@ async function request(url: URL, session: Session, what: string, init: RequestIn
         page: page.slice(0, 200),
       }),
     );
-    throw new GatekeeperError(`${what} returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+    throw upstreamResponseError(response, `${what} returned HTTP ${response.status}`);
   }
   return response;
 }

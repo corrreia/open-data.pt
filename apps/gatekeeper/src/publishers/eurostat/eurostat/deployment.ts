@@ -6,6 +6,7 @@ import { EUROSTAT_FEEDS } from "./eurostat";
 export const EUROSTAT_DEPLOYMENT: LibraryDeployment<{ readonly EUROSTAT_API_ORIGIN: string }, EurostatContext> = {
   source: "eurostat",
   name: "Eurostat",
+  publicFormat: "own-api",
   vars: { EUROSTAT_API_ORIGIN: "https://ec.europa.eu" },
   library: (env) => ({
     kinds: Object.values(EUROSTAT_FEEDS),

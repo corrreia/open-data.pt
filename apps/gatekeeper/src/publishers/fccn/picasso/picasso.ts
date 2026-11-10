@@ -1,4 +1,4 @@
-import { GatekeeperError, fixedOrigin, readBoundedResponse, retryAfterSeconds, type FeedKindDescription, type SourceConfig, type SourceFetch } from "#/index";
+import { GatekeeperError, upstreamResponseError, fixedOrigin, readBoundedResponse, type FeedKindDescription, type SourceConfig, type SourceFetch } from "#/index";
 
 /**
  * Picasso, FCCN's network statistics service, which draws the GigaPIX traffic charts on gigapix.pt. Each chart is an
@@ -79,7 +79,7 @@ export async function collectPicassoFeed(config: SourceConfig, apiOrigin: string
   }
   if (!response.ok) {
     await response.body?.cancel().catch(() => undefined);
-    throw new GatekeeperError(`Picasso returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+    throw upstreamResponseError(response, `Picasso returned HTTP ${response.status}`);
   }
   const body = await readBoundedResponse(response, PICASSO_MAX_BYTES, "Picasso chart");
   return { kind: "body", body, provenance: { sourceUrl: GIGAPIX_STATISTICS_PAGE }, completeness: "complete", state: {} };

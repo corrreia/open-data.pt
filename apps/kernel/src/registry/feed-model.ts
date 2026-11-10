@@ -58,6 +58,8 @@ export interface Feed extends FeedStatus {
   description: string;
   /** The library that reads the feed. */
   library: string;
+  /** The shared standard's id, or `own-api` for a publisher-specific library. */
+  format: string;
   /** What the feed reads, as the Gatekeeper resolved it: its checkpoint and the history of what it read hang on it. */
   resourceKey: string;
   /** Digest of the feed's whole canonical configuration; the Gatekeeper collects only the configuration it names. */

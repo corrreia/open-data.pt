@@ -5,6 +5,7 @@ import { GTFS_FEEDS } from "./gtfs";
 export const GTFS_DEPLOYMENT: LibraryDeployment<object, GtfsContext> = {
   source: "gtfs",
   name: "GTFS transit feeds",
+  publicFormat: "gtfs",
   // One GTFS archive is tens of megabytes of CSV, parsed in a single invocation.
   cpuMs: 120_000,
   vars: {},

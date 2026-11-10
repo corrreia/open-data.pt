@@ -1,6 +1,7 @@
 import {
   GatekeeperError,
   responseValidator,
+  upstreamResponseError,
   type FeedKindDescription,
   type SourceBody,
   type SourceFetch,
@@ -76,9 +77,8 @@ export async function collectCarrisFeed(config: SourceConfig, checkpoint: Source
     if (validator) unchanged.validator = validator;
     return unchanged;
   }
-  if (!response.ok || !response.body) {
-    throw new GatekeeperError(`Carris Metropolitana returned HTTP ${response.status}`, "upstream-error");
-  }
+  if (!response.ok) throw upstreamResponseError(response, `Carris Metropolitana returned HTTP ${response.status}`);
+  if (!response.body) throw new GatekeeperError("Carris Metropolitana returned no body", "upstream-error");
   const contentLength = response.headers.get("content-length");
   if (contentLength && Number(contentLength) > 12 * 1024 * 1024) {
     throw new GatekeeperError("Carris Metropolitana response exceeded 12 MiB", "response-too-large");

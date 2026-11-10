@@ -5,6 +5,7 @@ import {
   isJsonString,
   parseJsonBytes,
   responseValidator,
+  upstreamResponseError,
   type FeedKindDescription,
   type JsonValue,
   type SourceBody,
@@ -197,7 +198,8 @@ export async function collectIpmaFeed(config: SourceConfig, checkpoint: SourceVa
   }
   const maximumBytes = IPMA_FEED_LIMITS[feed];
   if (isIpmaDatasetFeed(feed)) {
-    if (!primaryResponse.ok || !primaryResponse.body) throw new GatekeeperError(`IPMA returned HTTP ${primaryResponse.status}`, "upstream-error");
+    if (!primaryResponse.ok) throw upstreamResponseError(primaryResponse, `IPMA returned HTTP ${primaryResponse.status}`);
+    if (!primaryResponse.body) throw new GatekeeperError("IPMA returned no dataset body", "upstream-error");
     const declared = primaryResponse.headers.get("content-length");
     if (declared && Number(declared) > maximumBytes) throw new GatekeeperError("IPMA dataset exceeds its byte limit", "response-too-large");
     const fetched: SourceBody = {
@@ -253,9 +255,8 @@ function isFeedName(value: string | undefined): value is IpmaFeedName {
 }
 
 async function readJsonResource(response: Response, url: URL, maximumBytes: number): Promise<CollectedResource> {
-  if (!response.ok || !response.body) {
-    throw new GatekeeperError(`IPMA returned HTTP ${response.status} for ${url.pathname}`, "upstream-error");
-  }
+  if (!response.ok) throw upstreamResponseError(response, `IPMA returned HTTP ${response.status} for ${url.pathname}`);
+  if (!response.body) throw new GatekeeperError(`IPMA returned no body for ${url.pathname}`, "upstream-error");
   const declared = response.headers.get("content-length");
   if (declared && Number(declared) > maximumBytes) {
     throw new GatekeeperError(`IPMA response for ${url.pathname} exceeded ${maximumBytes} bytes`, "response-too-large");

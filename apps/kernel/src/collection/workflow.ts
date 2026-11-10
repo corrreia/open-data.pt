@@ -23,7 +23,7 @@ export interface CollectionParams {
 export class CollectionWorkflow extends WorkflowEntrypoint<Env, CollectionParams> {
   override async run(event: Readonly<WorkflowEvent<CollectionParams>>, step: WorkflowStep): Promise<void> {
     const { feedId, acquisitionId, timeoutSeconds } = event.payload;
-    const runner = runnerPort(this.env.FeedRunner.getByName(feedId));
+    const runner = runnerPort(this.env.FeedRunner.getByName(feedId), `workflow:${acquisitionId}`);
     const streams = lakeStreams(this.env);
     const lake = PipelinesLake.available(streams) ? new PipelinesLake(streams) : undefined;
     let outcome: EngineOutcome;
@@ -57,7 +57,7 @@ export class CollectionWorkflow extends WorkflowEntrypoint<Env, CollectionParams
   }
 }
 
-function runnerPort(stub: DurableObjectStub<FeedRunner>): RunnerPort {
+function runnerPort(stub: DurableObjectStub<FeedRunner>, owner: string): RunnerPort {
   return {
     begin: (id) => stub.begin(id),
     declare: (id, input) => stub.declare(id, input),
@@ -69,7 +69,8 @@ function runnerPort(stub: DurableObjectStub<FeedRunner>): RunnerPort {
     unchanged: (id, checkpoint) => stub.unchanged(id, checkpoint),
     historyExhausted: (id) => stub.historyExhausted(id),
     fail: (id, failure) => stub.fail(id, failure),
-    pendingOutbox: (limit) => stub.pendingOutbox(limit),
-    ackOutbox: (seqs, next) => stub.ackOutbox(seqs, next),
+    claimOutbox: (limit) => stub.claimOutbox(owner, limit),
+    acknowledgeOutbox: (token, next) => stub.acknowledgeOutbox(owner, token, next),
+    releaseOutbox: (token) => stub.releaseOutbox(owner, token),
   };
 }

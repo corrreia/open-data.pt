@@ -1,5 +1,7 @@
 import { asObject, asArray, asNumber, asString, isJsonObject, parseJson, type JsonObject } from "@open-data-pt/contract";
 
+import { readBoundedBytes } from "#/io/bytes";
+
 /**
  * Internal Basin SQL client used only by typed, bounded HTTP handlers and the
  * Registry's daily lake audit. The SQL token and SQL text are never exposed as
@@ -13,6 +15,8 @@ const MAX_LIMIT = MAX_HISTORY_PAGE + 1;
 const MAX_SQL_LENGTH = 4000;
 /** How long a query may run before it is given up. */
 export const QUERY_DEADLINE_SECONDS = 30;
+/** The largest Basin SQL envelope materialized in one Worker isolate. */
+export const BASIN_RESPONSE_MAX_BYTES = 8 * 1024 * 1024;
 
 export interface LakeQueryResult {
   rows: Array<JsonObject>;
@@ -59,8 +63,14 @@ export async function runLakeQuery(
         signal: aborter.signal,
       });
       status = response.status;
-      text = await response.text();
+      const tooLarge = () => new QueryError(`Basin SQL answered HTTP ${status} with more than ${BASIN_RESPONSE_MAX_BYTES} bytes`, status < 400 ? "unreadable" : "store");
+      const bytes = response.body ? await readBoundedBytes(response.body, response.headers.get("Content-Length"), BASIN_RESPONSE_MAX_BYTES, tooLarge) : new Uint8Array();
+      text = new TextDecoder().decode(bytes);
     } catch (error) {
+      if (error instanceof QueryError) {
+        report(`body-${error.failure}`);
+        throw error;
+      }
       report(aborter.signal.aborted ? "timeout" : "unreachable");
       if (aborter.signal.aborted) throw new QueryError(`Basin SQL did not answer within ${QUERY_DEADLINE_SECONDS} seconds`, "timeout");
       throw new QueryError(`Basin SQL could not be reached: ${error instanceof Error ? error.message : String(error)}`, "store");

@@ -47,7 +47,7 @@ import {
   type CommitResult,
   type DeclaredProduct,
   type DeclareInput,
-  type OutboxBlob,
+  type OutboxClaim,
   type ProductCommit,
   type StagedRecord,
   type StageResult,
@@ -70,9 +70,12 @@ export interface RunnerPort {
   unchanged(acquisitionId: string, checkpoint: SourceCheckpoint): Promise<void>;
   historyExhausted(acquisitionId: string): Promise<void>;
   fail(acquisitionId: string, failure: CollectionFailure): Promise<void>;
-  pendingOutbox(limit: number): Promise<OutboxBlob[]>;
-  /** Acknowledge delivered blobs and take up to `next` more committed ones, in one call. */
-  ackOutbox(seqs: number[], next: number): Promise<OutboxBlob[]>;
+  /** Exclusively claim the oldest committed page for this drainer. */
+  claimOutbox(limit: number): Promise<OutboxClaim | undefined>;
+  /** Acknowledge this drainer's token and atomically take its next page. */
+  acknowledgeOutbox(token: string, next: number): Promise<OutboxClaim | undefined>;
+  /** Give back this drainer's current token after a send failure. */
+  releaseOutbox(token: string): Promise<void>;
 }
 
 export interface CollectingGatekeeper {
@@ -292,8 +295,8 @@ async function consumeBatch(plan: CollectionPlan, stream: ReadableStream<Uint8Ar
     if (complete.nextCursor) input.history.nextCursor = complete.nextCursor;
   }
   const committed = await ports.runner.commit(acquisitionId, input);
-  const pending = committed.historyRows > 0 || committed.outbox.length > 0;
-  const undelivered = pending && !(await deliverNow(ports, committed.outbox));
+  const pending = committed.historyRows > 0;
+  const undelivered = pending && !(await deliverNow(ports));
   return { status: committed.status, rows, revisions, historyRows: committed.historyRows, undelivered };
 }
 
@@ -305,14 +308,14 @@ export const DELIVERY_STEP_BLOBS = 400;
 const INLINE_DELIVERY_BLOBS = 16;
 
 /**
- * Send the history a collection just committed, starting from the blobs the
- * commit handed back. The batch is already durable, so a failure here is
- * never a reason to collect again: it leaves the rest to the delivery step.
+ * Send history after the collection commits it by exclusively claiming the
+ * oldest pages. The batch is already durable, so a failure here is never a
+ * reason to collect again: it leaves the rest to the delivery step.
  */
-async function deliverNow(ports: EnginePorts, first: OutboxBlob[]): Promise<boolean> {
+async function deliverNow(ports: EnginePorts): Promise<boolean> {
   if (!ports.lake) return false;
   try {
-    return (await drainOutbox(ports.runner, ports.lake, INLINE_DELIVERY_BLOBS, first)).done;
+    return (await drainOutbox(ports.runner, ports.lake, INLINE_DELIVERY_BLOBS)).done;
   } catch (error) {
     console.warn(JSON.stringify({ event: "inline_history_delivery_failed", error: String(error) }));
     return false;
@@ -326,26 +329,31 @@ export interface Drained {
 }
 
 /**
- * Deliver committed history rows to Pipelines, acknowledging each page once
- * sent. The acknowledgement returns the next page, so a page costs one runner
- * call; `first`, when given, is a page the caller already holds.
+ * Deliver committed history rows to Pipelines under one exclusive expiring
+ * claim at a time. A failed or unrepresentable page is released without
+ * acknowledging any blob; ambiguous earlier sends are safely retried.
  */
-export async function drainOutbox(runner: Pick<RunnerPort, "pendingOutbox" | "ackOutbox">, send: LakeSend, maxBlobs: number, first?: OutboxBlob[]): Promise<Drained> {
+export async function drainOutbox(runner: Pick<RunnerPort, "claimOutbox" | "acknowledgeOutbox" | "releaseOutbox">, send: LakeSend, maxBlobs: number): Promise<Drained> {
   let delivered = 0;
-  let blobs = first ?? (await runner.pendingOutbox(Math.min(OUTBOX_PAGE_BLOBS, maxBlobs)));
-  while (blobs.length > 0 && delivered < maxBlobs) {
-    for (const blob of blobs) {
-      // SAFETY: outbox blobs hold JSON arrays of lake rows validated before they were stored.
-      await send(blob.table, JSON.parse(blob.rowsJson) as JsonObject[]);
+  let claim = await runner.claimOutbox(Math.min(OUTBOX_PAGE_BLOBS, maxBlobs));
+  while (claim && delivered < maxBlobs) {
+    try {
+      for (const blob of claim.blobs) {
+        // SAFETY: outbox blobs hold JSON arrays of lake rows validated before they were stored. Legacy rows are checked again by the lake sender.
+        await send(blob.table, JSON.parse(blob.rowsJson) as JsonObject[]);
+      }
+    } catch (error) {
+      await runner.releaseOutbox(claim.token);
+      throw error;
     }
-    delivered += blobs.length;
-    // Past the budget, one blob is enough to learn whether anything is left.
-    blobs = await runner.ackOutbox(
-      blobs.map((blob) => blob.seq),
-      delivered < maxBlobs ? OUTBOX_PAGE_BLOBS : 1,
-    );
+    delivered += claim.blobs.length;
+    claim = await runner.acknowledgeOutbox(claim.token, delivered < maxBlobs ? Math.min(OUTBOX_PAGE_BLOBS, maxBlobs - delivered) : 1);
+    if (delivered >= maxBlobs && claim) {
+      await runner.releaseOutbox(claim.token);
+      return { delivered, done: false };
+    }
   }
-  return { delivered, done: blobs.length === 0 };
+  return { delivered, done: claim === undefined };
 }
 
 /* ---------- Products ---------- */

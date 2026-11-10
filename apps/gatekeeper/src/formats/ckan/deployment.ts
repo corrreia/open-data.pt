@@ -5,6 +5,7 @@ import { CKAN_FEEDS } from "./ckan";
 export const CKAN_DEPLOYMENT: LibraryDeployment<object, CkanContext> = {
   source: "ckan",
   name: "CKAN portals",
+  publicFormat: "ckan",
   vars: {},
   library: (_env, publishers) => {
     const hosts = allowedHosts(publishers.hosts.join(","));

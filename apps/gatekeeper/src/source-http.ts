@@ -14,6 +14,11 @@ export function retryAfterSeconds(headers: Headers): number | undefined {
   return Number.isNaN(at) ? undefined : Math.max(0, Math.ceil((at - Date.now()) / 1000));
 }
 
+/** A non-success upstream response as the one retryable error every source adapter returns. */
+export function upstreamResponseError(response: Response, message: string): GatekeeperError {
+  return new GatekeeperError(message, "upstream-error", retryAfterSeconds(response.headers));
+}
+
 /**
  * An upstream body read whole under a byte budget. A `content-length` past the
  * budget is refused before a byte is read; a body that grows past it while

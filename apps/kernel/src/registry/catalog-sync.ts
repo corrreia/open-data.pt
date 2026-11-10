@@ -57,8 +57,10 @@ export interface SyncState {
   hashes: Record<string, string>;
   lastCheckedAt?: string;
   lastError?: string;
-  /** The Gatekeeper's catalog version the last check read with its catalog; absent from one that does not say. */
+  /** The Gatekeeper catalog version whose operations all became public. */
   catalogVersion?: string;
+  /** The snapshot being applied. It becomes catalogVersion only after every operation succeeds. */
+  pendingCatalogVersion?: string;
   /** When a newer catalog version last brought a check forward. */
   versionCheckAt?: number;
 }
@@ -72,14 +74,18 @@ export interface SyncProgress {
   pending: number;
 }
 
+export interface SyncCatalogSnapshot {
+  feeds: CatalogFeed[];
+  version: string;
+}
+
 export interface SyncPorts {
-  /** The feeds the Gatekeeper's catalog lists; `undefined` when it did not answer, or answered with nothing. */
-  readCatalog(): Promise<CatalogFeed[] | undefined>;
-  /** The Gatekeeper's catalog version; `undefined` from one too old to say. */
-  catalogVersion(): Promise<string | undefined>;
+  /** The feeds and version resolved together; `undefined` when the Gatekeeper did not answer. */
+  readCatalogSnapshot(): Promise<SyncCatalogSnapshot | undefined>;
   feeds(): SyncFeed[];
   apply(feed: CatalogFeed): Promise<void>;
   retire(feedId: string): Promise<void>;
+  activateCatalog(): void;
   load(): SyncState | undefined;
   save(state: SyncState): void;
   now(): number;
@@ -97,20 +103,18 @@ export async function syncStep(ports: SyncPorts, options: { check?: boolean } = 
   const state = ports.load() ?? { nextCheckAt: 0, queue: [], hashes: {} };
   const progress: SyncProgress = { checked: false, applied: 0, retired: 0, failed: 0, pending: 0 };
   if (state.queue.length === 0 && (options.check === true || now >= state.nextCheckAt)) {
-    const [catalog, version] = await Promise.all([ports.readCatalog(), ports.catalogVersion()]);
+    const snapshot = await ports.readCatalogSnapshot();
     state.nextCheckAt = now + SYNC_CHECK_MS;
-    if (catalog === undefined) {
+    if (snapshot === undefined) {
       state.lastError = "The Gatekeeper did not answer; its feeds are kept as they are";
       ports.save(state);
       return progress;
     }
-    if (version === undefined) delete state.catalogVersion;
-    else state.catalogVersion = version;
-    state.queue = planSync(catalog, ports.feeds(), state.hashes);
+    state.pendingCatalogVersion = snapshot.version;
+    state.queue = planSync(snapshot.feeds, ports.feeds(), state.hashes);
     state.lastCheckedAt = new Date(now).toISOString();
-    // A check that finds nothing left to do ends the last failure's story; a failed operation is queued again by the
-    // check, so its error is set again if it fails again.
-    if (state.queue.length === 0) delete state.lastError;
+    // This snapshot gets a fresh result. Any operation that fails below records its error until the next check retries it.
+    delete state.lastError;
     progress.checked = true;
     ports.save(state);
   }
@@ -133,6 +137,12 @@ export async function syncStep(ports: SyncPorts, options: { check?: boolean } = 
     }
   }
   progress.pending = state.queue.length;
+  if (state.queue.length === 0 && progress.failed === 0 && state.lastError === undefined && state.pendingCatalogVersion !== undefined) {
+    ports.activateCatalog();
+    state.catalogVersion = state.pendingCatalogVersion;
+    delete state.pendingCatalogVersion;
+    delete state.lastError;
+  }
   ports.save(state);
   return progress;
 }

@@ -5,7 +5,7 @@ import {
   isJsonObject,
   parseJsonBytes,
   readBoundedResponse,
-  retryAfterSeconds,
+  upstreamResponseError,
   type FeedKindDescription,
   type JsonValue,
   type SourceConfig,
@@ -147,7 +147,7 @@ async function request(fetcher: typeof fetch, url: URL): Promise<Response> {
   } catch (error) {
     throw new GatekeeperError(`NGSI request failed: ${error instanceof Error ? error.message : "network failure"}`, "upstream-error");
   }
-  if (!response.ok) throw new GatekeeperError(`NGSI answered ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+  if (!response.ok) throw upstreamResponseError(response, `NGSI answered ${response.status}`);
   return response;
 }
 

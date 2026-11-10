@@ -27,6 +27,9 @@ export interface FrameScope {
 
 export type FrameLimits = Pick<CollectionLimits, "outputBytes" | "recordBytes" | "records">;
 
+/** Producer chunks are decoded incrementally so one large enqueue never becomes one large string. */
+const MAX_DECODE_SLICE_BYTES = 64 * 1024;
+
 /**
  * Validate an untrusted normalized byte stream one frame at a time. Nothing is
  * accumulated: the consumer's pace is the only thing that pulls bytes from the
@@ -38,6 +41,7 @@ export async function* readFrames(stream: ReadableStream<Uint8Array>, limits: Fr
   const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: false });
   const encoder = new TextEncoder();
   const frameBytes = frameBytesFor(limits);
+  const decodeSliceBytes = Math.min(MAX_DECODE_SLICE_BYTES, frameBytes + 1);
   let carry = "";
   let totalBytes = 0;
   let rows = 0;
@@ -103,22 +107,24 @@ export async function* readFrames(stream: ReadableStream<Uint8Array>, limits: Fr
       if (part.done) break;
       totalBytes += part.value.byteLength;
       if (totalBytes > limits.outputBytes) throw new NormalizedInputError(`Normalized output exceeds ${limits.outputBytes} bytes`);
-      try {
-        carry += decoder.decode(part.value, { stream: true });
-      } catch {
-        throw new NormalizedInputError("Invalid normalized UTF-8");
-      }
-      let start = 0;
-      while (true) {
-        const newline = carry.indexOf("\n", start);
-        if (newline < 0) break;
-        const line = carry.slice(start, newline);
-        start = newline + 1;
-        yield frameOf(line);
-      }
-      carry = start > 0 ? carry.slice(start) : carry;
-      if (carry.length * 3 > frameBytes && encoder.encode(carry).byteLength > frameBytes) {
-        throw new NormalizedInputError(`Normalized frame exceeds ${frameBytes} bytes`);
+      for (let offset = 0; offset < part.value.byteLength; offset += decodeSliceBytes) {
+        try {
+          carry += decoder.decode(part.value.subarray(offset, offset + decodeSliceBytes), { stream: true });
+        } catch {
+          throw new NormalizedInputError("Invalid normalized UTF-8");
+        }
+        let start = 0;
+        while (true) {
+          const newline = carry.indexOf("\n", start);
+          if (newline < 0) break;
+          const line = carry.slice(start, newline);
+          start = newline + 1;
+          yield frameOf(line);
+        }
+        carry = start > 0 ? carry.slice(start) : carry;
+        if (carry.length * 3 > frameBytes && encoder.encode(carry).byteLength > frameBytes) {
+          throw new NormalizedInputError(`Normalized frame exceeds ${frameBytes} bytes`);
+        }
       }
     }
     try {

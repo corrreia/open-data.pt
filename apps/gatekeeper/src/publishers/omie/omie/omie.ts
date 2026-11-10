@@ -4,7 +4,7 @@ import {
   fixedOrigin,
   readBoundedResponse,
   responseValidator,
-  retryAfterSeconds,
+  upstreamResponseError,
   type FeedKindDescription,
   type HistoryCursor,
   type SourceFetch,
@@ -96,7 +96,7 @@ export async function collectOmieFeed(
     if (response.status === 304) return notModified(response, checkpoint);
     if (response.status === 404) continue;
     if (!response.ok || !response.body) {
-      throw new GatekeeperError(`OMIE returned HTTP ${response.status} for ${filename}`, "upstream-error", retryAfterSeconds(response.headers));
+      throw upstreamResponseError(response, `OMIE returned HTTP ${response.status} for ${filename}`);
     }
 
     const remaining = OMIE_MAX_BYTES - sourceBytes;
@@ -186,7 +186,7 @@ export async function collectOmieHistory(config: SourceConfig, cursor: HistoryCu
       continue;
     }
     if (!response.ok || !response.body) {
-      throw new GatekeeperError(`OMIE returned HTTP ${response.status} for ${filename}`, "upstream-error", retryAfterSeconds(response.headers));
+      throw upstreamResponseError(response, `OMIE returned HTTP ${response.status} for ${filename}`);
     }
 
     const remaining = OMIE_MAX_BYTES - sourceBytes;

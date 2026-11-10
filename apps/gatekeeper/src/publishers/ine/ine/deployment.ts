@@ -6,6 +6,7 @@ import { INE_FEEDS } from "./ine";
 export const INE_DEPLOYMENT: LibraryDeployment<{ readonly INE_API_ORIGIN: string }, IneContext> = {
   source: "ine",
   name: "INE, Statistics Portugal",
+  publicFormat: "own-api",
   vars: { INE_API_ORIGIN: "https://www.ine.pt" },
   library: (env) => ({
     kinds: Object.values(INE_FEEDS),

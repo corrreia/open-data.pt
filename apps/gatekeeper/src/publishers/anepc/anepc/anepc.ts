@@ -5,7 +5,7 @@ import {
   isJsonObject,
   parseJsonBytes,
   readBoundedResponse,
-  retryAfterSeconds,
+  upstreamResponseError,
   type FeedKindDescription,
   type JsonObject,
   type JsonValue,
@@ -52,7 +52,7 @@ export async function collectAnepcFeed(config: SourceConfig, checkpoint: SourceV
   validateAnepcFeedConfig(config);
   const url = anepcUrl(origin);
   const response = await request(fetcher, url);
-  if (!response.ok) throw new GatekeeperError(`ANEPC returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+  if (!response.ok) throw upstreamResponseError(response, `ANEPC returned HTTP ${response.status}`);
   const bytes = await readBoundedResponse(response, ANEPC_MAX_BYTES, "ANEPC active occurrences");
   const root = document(bytes);
   const properties = isJsonObject(root.properties) ? root.properties : undefined;

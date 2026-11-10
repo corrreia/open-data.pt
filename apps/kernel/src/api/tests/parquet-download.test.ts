@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { StorageUnavailableError } from "#/api/errors";
 import { byteRange, parquetDownload } from "#/api/parquet-download";
 import { CADENCE_HEADER } from "#/api/cache";
 import type { ProductDetail } from "#/registry/registry";
@@ -65,6 +66,29 @@ async function product(snapshots: MemorySnapshots): Promise<ProductDetail> {
 const describeSource = async () => ({ apiUrl: "https://open-data.pt/api/products/places" });
 
 describe("GET /api/products/{slug}.parquet", () => {
+  it("raises storage unavailable when a selected source chunk is missing", async () => {
+    const snapshots = new MemorySnapshots();
+    const detail = await product(snapshots);
+    await snapshots.delete((detail.chunks ?? []).map((chunk) => chunk.key));
+    await expect(parquetDownload(new Request("https://open-data.pt/api/products/places.parquet"), detail, snapshots, describeSource)).rejects.toBeInstanceOf(
+      StorageUnavailableError,
+    );
+  });
+
+  it("raises storage unavailable when the selected Parquet object disappears before its body read", async () => {
+    class DisappearingFileStore extends MemorySnapshots {
+      override async getFile(objectKey: string, range?: Parameters<MemorySnapshots["getFile"]>[1]) {
+        this.objects.delete(objectKey);
+        return super.getFile(objectKey, range);
+      }
+    }
+    const snapshots = new DisappearingFileStore();
+    const detail = await product(snapshots);
+    await expect(parquetDownload(new Request("https://open-data.pt/api/products/places.parquet"), detail, snapshots, describeSource)).rejects.toBeInstanceOf(
+      StorageUnavailableError,
+    );
+  });
+
   it("answers the whole file as a download the edge can cache and cut ranges from", async () => {
     const snapshots = new MemorySnapshots();
     const response = await parquetDownload(new Request("https://open-data.pt/api/products/places.parquet"), await product(snapshots), snapshots, describeSource);

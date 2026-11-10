@@ -1,4 +1,4 @@
-import { GatekeeperError, retryAfterSeconds, type FeedKindDescription, type SourceConfig, type SourceFetch } from "#/index";
+import { GatekeeperError, upstreamResponseError, type FeedKindDescription, type SourceConfig, type SourceFetch } from "#/index";
 
 export const FIRMS_API_ORIGIN = "https://firms.modaps.eosdis.nasa.gov";
 export const FIRMS_MAX_BYTES = 4 * 1024 * 1024;
@@ -55,7 +55,7 @@ export async function collectFirmsFeed(config: SourceConfig, origin: string, map
   }
   if ((response.status >= 300 && response.status < 400) || (response.url && new URL(response.url).origin !== url.origin))
     throw new GatekeeperError("FIRMS redirects are not allowed", "source-denied");
-  if (!response.ok || !response.body) throw new GatekeeperError(`FIRMS returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+  if (!response.ok || !response.body) throw upstreamResponseError(response, `FIRMS returned HTTP ${response.status}`);
   const declared = Number(response.headers.get("content-length"));
   if (Number.isFinite(declared) && declared > FIRMS_MAX_BYTES) {
     await response.body.cancel("FIRMS response exceeded its byte bound");

@@ -3,7 +3,7 @@ import { asObject, asString, isJsonArray, isJsonNumber, isJsonObject, type Canon
 
 import type { ChunkObject } from "#/serving/chunks";
 import type { ProductDetail, ProductView } from "#/registry/registry";
-import { NotFoundError } from "#/api/errors";
+import { NotFoundError, StorageUnavailableError } from "#/api/errors";
 import type { Feed } from "#/registry/feed-model";
 import type { ChangesWindow, ObjectStore, SeriesChangesWindow, SeriesWindow } from "#/serving/object-store";
 import type { Vocabulary } from "#/registry/vocabulary";
@@ -175,7 +175,8 @@ export class Serving {
   async changes(product: ProductDetail, input: ChangeQuery) {
     if (!product.changesKey) return [];
     const window = await this.objects.read<ChangesWindow>(product.changesKey);
-    let changes = window?.changes ?? [];
+    if (!window) throw new StorageUnavailableError("The selected changes object is unavailable; retry shortly");
+    let changes = window.changes;
     const knownAt = input.knownAt;
     if (knownAt) changes = changes.filter((change) => instant(change.observedAt) <= instant(knownAt));
     return changes.slice(0, input.limit);
@@ -184,13 +185,15 @@ export class Serving {
   async series(product: ProductDetail, input: SeriesQuery) {
     if (!product.seriesKey) return [];
     const window = await this.objects.read<SeriesWindow>(product.seriesKey);
-    return filterPoints(window?.points ?? [], input).slice(0, input.limit);
+    if (!window) throw new StorageUnavailableError("The selected series object is unavailable; retry shortly");
+    return filterPoints(window.points, input).slice(0, input.limit);
   }
 
   async seriesChanges(product: ProductDetail, input: SeriesQuery) {
     if (!product.seriesChangesKey) return [];
     const window = await this.objects.read<SeriesChangesWindow>(product.seriesChangesKey);
-    return filterPoints(window?.changes ?? [], input).slice(0, input.limit);
+    if (!window) throw new StorageUnavailableError("The selected series changes object is unavailable; retry shortly");
+    return filterPoints(window.changes, input).slice(0, input.limit);
   }
 
   /**
@@ -199,6 +202,7 @@ export class Serving {
    * known at the end, so `numberMatched` is left out.
    */
   async allRecords(product: ProductDetail, filters?: RowFilters): Promise<ReadableStream<Uint8Array>> {
+    await this.ensureChunks(product);
     const matches = rowMatcher(product.schema, filters);
     const matched = matches ? "" : `"numberMatched":${servedRows(product)},`;
     return this.streamRows(
@@ -223,6 +227,7 @@ export class Serving {
     const latitudeField = product.schema.fields.find((field) => field.type === "latitude")?.name;
     const longitudeField = product.schema.fields.find((field) => field.type === "longitude")?.name;
     if (!geometryField && !(latitudeField && longitudeField)) throw new NotFoundError("Product has no geometry or coordinate fields");
+    await this.ensureChunks(product);
     const matches = rowMatcher(product.schema, filters);
     // Filtered, the number of matching features is only known at the end.
     const matched = matches ? "" : `"numberMatched":${servedRows(product)},`;
@@ -322,13 +327,24 @@ export class Serving {
     };
   }
 
+  /**
+   * A streamed response cannot change its status after its first bytes. Check
+   * each selected object without materializing it, so absence is a 503 rather
+   * than a truncated 200 and preflight memory stays bounded.
+   */
+  private async ensureChunks(product: ProductDetail): Promise<void> {
+    for (const chunk of product.chunks ?? []) {
+      if (!(await this.objects.exists(chunk.key))) throw new StorageUnavailableError("A selected chunk of this product is unavailable; retry shortly");
+    }
+  }
+
   private async chunkRows(key: string): Promise<JsonObject[]> {
     return chunkRowsOf(await this.chunkText(key));
   }
 
   private async chunkText(key: string): Promise<string> {
     const text = await this.objects.readText(key);
-    if (text === undefined) throw new NotFoundError("A chunk of this product is missing; retry shortly");
+    if (text === undefined) throw new StorageUnavailableError("A selected chunk of this product is unavailable; retry shortly");
     return text;
   }
 }

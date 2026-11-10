@@ -6,7 +6,7 @@ import {
   isJsonString,
   parseJsonBytes,
   readBoundedResponse,
-  retryAfterSeconds,
+  upstreamResponseError,
   streamJsonArray,
   type FeedKindDescription,
   type JsonObject,
@@ -816,7 +816,7 @@ function assertWgs84Collection(value: JsonObject, config: ValidatedConfig): void
 
 function assertUpstream(response: Response, resource: string): void {
   if (!response.ok) {
-    throw new GatekeeperError(`OGC API Features ${resource} returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+    throw upstreamResponseError(response, `OGC API Features ${resource} returned HTTP ${response.status}`);
   }
 }
 

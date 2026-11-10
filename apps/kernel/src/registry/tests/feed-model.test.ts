@@ -7,6 +7,7 @@ const DEFINITION: Feed = {
   title: "Things",
   description: "Fixture",
   library: "fixture",
+  format: "own-api",
   resourceKey: "fixture:fixture:things:1",
   configHash: "0".repeat(64),
   eventTimed: false,

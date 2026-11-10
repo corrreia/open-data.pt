@@ -247,6 +247,12 @@ export interface CatalogDescription {
   feeds: CatalogFeed[];
 }
 
+/** One catalog body and the digest computed from those exact bytes by one Gatekeeper release. */
+export interface CatalogSnapshot {
+  catalog: CatalogDescription;
+  version: string;
+}
+
 /** The licence key for data whose publisher states no reuse terms: not a licence, so no markup names one. */
 export const UNSTATED_LICENCE = "source-terms";
 
@@ -261,6 +267,8 @@ export interface CatalogFeed {
   publisher: string;
   /** The library that reads it: how, never what or whose. */
   library: string;
+  /** The shared standard's id, or `own-api` for a publisher-specific library. */
+  format: string;
   title: string;
   description: string;
   /** The terms the publisher states for it: a licence's `id`, or `source-terms` when they state none. */
@@ -359,6 +367,8 @@ export type NormalizedFrame =
 /** The Gatekeeper's private RPC: its catalog, a digest of it, and normalized collection. */
 export interface FeedGatekeeper extends WorkerEntrypoint {
   catalog(): Promise<CatalogDescription>;
+  /** The catalog and its digest from one resolved Gatekeeper snapshot. */
+  catalogSnapshot(): Promise<CatalogSnapshot>;
   /**
    * A digest of the catalog: it changes exactly when a release changes the publishers, the vocabularies or the
    * feeds, so the kernel syncs the moment a new Gatekeeper answers instead of on its schedule.

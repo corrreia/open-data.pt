@@ -24,6 +24,8 @@ import { publisherClient, type PublisherSources } from "./publisher-client";
  * worked out, and what its feeds need from the Worker when they run.
  */
 export interface GatekeeperLibrary<C = never> {
+  /** The standard named by the public catalog, or `own-api` for a publisher-specific library. */
+  publicFormat: string;
   /** Every feed kind this library declares, under its own unprefixed names. */
   kinds: readonly FeedKindDescription[];
   /**
@@ -128,6 +130,8 @@ export interface LibraryDeployment<E, C = never> {
   source: string;
   /** How the library describes itself, in words ("CKAN portals"). */
   name: string;
+  /** The standard named by the public catalog, or `own-api` for a publisher-specific library. */
+  publicFormat: string;
   /** Vars it reads, with their values. */
   vars: Readonly<Record<string, string>>;
   /** Secret names, set with `wrangler secret put` on the Worker. */
@@ -139,7 +143,7 @@ export interface LibraryDeployment<E, C = never> {
    * Builds the library from the Worker's environment and what the publishers it reads bring to it. Resolving a feed
    * reads nothing but its configuration: whatever the source must confirm, its collection finds out.
    */
-  library: (env: E, publishers: PublisherInputs) => GatekeeperLibrary<C>;
+  library: (env: E, publishers: PublisherInputs) => Omit<GatekeeperLibrary<C>, "publicFormat">;
 }
 
 /**
@@ -188,7 +192,7 @@ export function buildLibrary<E extends object>(
   const bound = { ...deployment.vars, ...env };
   // SAFETY: a deployment reads its own declared vars, secrets and buckets from the environment, and this one is
   // built from those declarations; `never` only lets deployments with different environments share a list.
-  return deployment.library(bound as never, publishers);
+  return { ...deployment.library(bound as never, publishers), publicFormat: deployment.publicFormat };
 }
 
 /** The routing key every feed's configuration carries; it names the library, not the publisher. */

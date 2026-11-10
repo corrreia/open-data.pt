@@ -12,6 +12,7 @@ import { OOKLA_BUCKET_ORIGIN, OOKLA_FEEDS } from "./parquet";
 export const PARQUET_DEPLOYMENT: LibraryDeployment<{ readonly OOKLA_BUCKET_ORIGIN: string }, ParquetContext> = {
   source: "parquet",
   name: "Ookla's Parquet tiles on S3",
+  publicFormat: "own-api",
   vars: { OOKLA_BUCKET_ORIGIN },
   cpuMs: 60_000,
   library: (env) => ({

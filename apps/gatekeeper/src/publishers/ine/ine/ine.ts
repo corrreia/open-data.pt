@@ -6,7 +6,7 @@ import {
   isJsonString,
   parseJsonBytes,
   readBoundedResponse,
-  retryAfterSeconds,
+  upstreamResponseError,
   type FeedKindDescription,
   type HistoryCursor,
   type JsonObject,
@@ -434,7 +434,7 @@ async function upstreamFetch(fetcher: typeof fetch, url: URL, headers: Headers):
 
 function requireSuccessfulResponse(response: Response, resource: string): void {
   if (!response.ok || !response.body) {
-    throw new GatekeeperError(`INE ${resource} endpoint returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+    throw upstreamResponseError(response, `INE ${resource} endpoint returned HTTP ${response.status}`);
   }
 }
 

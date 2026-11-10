@@ -2,7 +2,7 @@ import {
   GatekeeperError,
   allowedHosts,
   responseValidator,
-  retryAfterSeconds,
+  upstreamResponseError,
   type FeedKindDescription,
   type SourceBody,
   type SourceConfig,
@@ -57,7 +57,7 @@ export async function collectGtfsFeed(config: SourceConfig, checkpoint: SourceVa
   }
   if (!response.ok) {
     await response.body?.cancel("GTFS source failed").catch(() => undefined);
-    throw new GatekeeperError(`Source returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+    throw upstreamResponseError(response, `Source returned HTTP ${response.status}`);
   }
   if (!response.body) {
     throw new GatekeeperError("GTFS source returned no archive body", "invalid-response");

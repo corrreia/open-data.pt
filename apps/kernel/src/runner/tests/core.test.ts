@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { CollectionFailed, failureFrom } from "#/collection/engine";
-import { BACKFILL_RESUME_MS, BACKFILL_START_DELAY_MS, COOLDOWN_BASE_MS, FRESH_DATA_RETRY_MS, MAX_FAILURE_WAIT_SECONDS, nextRunAfter } from "#/runner/core";
+import { CollectionFailed, drainOutbox, failureFrom } from "#/collection/engine";
+import { BACKFILL_RESUME_MS, BACKFILL_START_DELAY_MS, COOLDOWN_BASE_MS, FRESH_DATA_RETRY_MS, MAX_FAILURE_WAIT_SECONDS, OUTBOX_CLAIM_TTL_MS, nextRunAfter } from "#/runner/core";
 import { parquetKey } from "#/serving/object-store";
 import { kernelHarness, policy, record, type KernelHarness } from "#/tests/kernel-harness";
 
@@ -44,7 +44,27 @@ describe("runner schedule and failure handling", () => {
     const acquisition = h.core.collectNow("manual");
     h.core.markStarted(acquisition.id, "instance");
     h.core.begin(acquisition.id);
-    h.core.appendOutbox(acquisition.id, "records", "[]", 1);
+    h.core.appendOutbox(
+      acquisition.id,
+      "records",
+      JSON.stringify([
+        {
+          batch_id: acquisition.id,
+          revision_id: "rev_1",
+          feed_id: "feed_1",
+          product_slug: "things",
+          schema: {},
+          entity_key: "a",
+          operation: "upsert",
+          product_version: 1,
+          observed_at: new Date(h.clock.now).toISOString(),
+          ingested_at: new Date(h.clock.now).toISOString(),
+          acquisition_id: acquisition.id,
+          payload: {},
+        },
+      ]),
+      1,
+    );
     h.core.fail(acquisition.id, failureFrom(new CollectionFailed("upstream-error", true)));
     expect(h.core.pendingOutbox(10)).toHaveLength(0);
     expect(h.core.committedOutboxRows()).toBe(0);
@@ -362,6 +382,12 @@ describe("automatic history walk", () => {
     expect(h.core.backfillSummary()).toBeUndefined();
   });
 
+  it("persists the number of peer backfills used for pacing", async () => {
+    const h = await kernelHarness();
+    h.core.setBackfillPeers(7);
+    expect(h.core.runtime().backfillPeers).toBe(7);
+  });
+
   it("waits between slices as long as the source states one may be read, over its own pacing", async () => {
     const h = await kernelHarness({ policy: policy({ cadenceSeconds: 7 * 24 * 3600 }), history: { minSliceSeconds: 300 } });
     h.source.records = [record("a", 1)];
@@ -433,6 +459,83 @@ describe("durable acceptance, publication and history delivery", () => {
     expect(again).toMatchObject({ status: "unchanged", historyRows: 0 });
   });
 
+  it("keeps Registry-selected chunks and Parquet blocked while publication fails past the grace period", async () => {
+    const h = await kernelHarness();
+    h.source.records = [record("a", 1)];
+    await h.collect();
+    const selected = h.entry()!;
+    const chunk = selected.chunks![0]!.key;
+    const parquet = parquetKey(selected)!;
+    await h.snapshots.putStream(parquet, new Uint8Array([1]));
+
+    h.source.records = [record("a", 2)];
+    h.failPublish.next = true;
+    await h.collect();
+    h.clock.now += 2 * HOUR;
+
+    expect(await h.core.collectGarbage()).toBe(0);
+    expect(h.snapshots.objects.has(chunk)).toBe(true);
+    expect(h.snapshots.objects.has(parquet)).toBe(true);
+    expect(h.entry()?.version).toBe(1);
+  });
+
+  it("returns the same publication receipt after a lost reply and keeps its original garbage deadline", async () => {
+    const h = await kernelHarness();
+    h.source.records = [record("a", 1)];
+    await h.collect();
+    const old = h.entry()!;
+    const chunk = old.chunks![0]!.key;
+    const parquet = parquetKey(old)!;
+    await h.snapshots.putStream(parquet, new Uint8Array([1]));
+
+    h.source.records = [record("a", 2)];
+    h.failPublish.afterAccept = true;
+    await h.collect();
+    expect(h.publicationReceipts).toHaveLength(2);
+    const accepted = h.publications.at(-1)!;
+    expect(accepted).toMatchObject({ feedId: "feed_1", acquisitionId: expect.any(String), entries: [{ feedId: "feed_1", version: 2 }] });
+    expect(accepted.supersededObjectKeys).toEqual(expect.arrayContaining([chunk, parquet]));
+    const lost = h.publicationReceipts.at(-1)!;
+    await h.core.publishPending();
+    expect(h.publicationReceipts.at(-1)).toEqual(lost);
+    expect(h.publications.filter((publication) => publication.id === lost.acceptedPublicationId)).toHaveLength(1);
+
+    h.clock.now = Date.parse(lost.selectedAt) + HOUR - 1;
+    expect(await h.core.collectGarbage()).toBe(0);
+    h.clock.now += 1;
+    expect(await h.core.collectGarbage()).toBeGreaterThan(0);
+    expect(h.snapshots.objects.has(chunk)).toBe(false);
+    expect(h.snapshots.objects.has(parquet)).toBe(false);
+  });
+
+  it("lets a later Registry receipt acknowledge an earlier pending publication without publishing it again", async () => {
+    const h = await kernelHarness();
+    h.source.records = [record("a", 1)];
+    await h.collect();
+    const old = h.entry()!.chunks![0]!.key;
+    h.source.records = [record("a", 2)];
+    h.failPublish.next = true;
+    await h.collect();
+    const pending = (await h.core.registrySnapshot()).publication;
+    const publications = h.publications.length;
+    const selectedAt = new Date(h.clock.now).toISOString();
+
+    expect(
+      h.core.acknowledgePublication({
+        known: true,
+        backfillPeers: 1,
+        acceptedPublicationId: "publication_later",
+        acceptedThrough: pending.number + 1,
+        selectedAt,
+      }),
+    ).toBe(true);
+    await h.core.publishPending();
+    expect(h.publications).toHaveLength(publications);
+    h.clock.now = Date.parse(selectedAt) + HOUR;
+    expect(await h.core.collectGarbage()).toBeGreaterThan(0);
+    expect(h.snapshots.objects.has(old)).toBe(false);
+  });
+
   it("deletes the chunks and windows a new version no longer serves, after a grace period", async () => {
     const h = await kernelHarness();
     const served: string[] = [];
@@ -475,6 +578,106 @@ describe("durable acceptance, publication and history delivery", () => {
     await h.core.collectGarbage();
     expect(h.snapshots.objects.has(current)).toBe(true);
     expect(await h.served()).toHaveLength(1);
+  });
+});
+
+describe("exclusive history outbox claims", () => {
+  it("gives concurrent Workflow and alarm drainers disjoint oldest pages", async () => {
+    const h = await kernelHarness({ history: null, policy: policy({ maxRecordBytes: 600_000 }) });
+    h.source.records = Array.from({ length: 10 }, (_, index) => record(`k${index}`, index, { padding: "x".repeat(450_000) }));
+    const acquisition = h.core.collectNow("manual");
+    h.core.markStarted(acquisition.id, "claim-pages");
+    await h.run(acquisition.id);
+
+    const [workflow, alarm] = await Promise.all([Promise.resolve(h.core.claimOutbox("workflow:acq", 4)), Promise.resolve(h.core.claimOutbox("alarm:feed_1", 4))]);
+    expect(workflow?.blobs).toHaveLength(4);
+    expect(alarm?.blobs.length).toBeGreaterThan(0);
+    const workflowSeqs = new Set(workflow?.blobs.map((blob) => blob.seq));
+    expect(alarm?.blobs.every((blob) => !workflowSeqs.has(blob.seq))).toBe(true);
+  });
+
+  it("keeps a claim through normal calls, expires it, and rejects a stale acknowledgement after reclaim", async () => {
+    const h = await kernelHarness({ history: null });
+    h.source.records = [record("a", 1)];
+    const acquisition = h.core.collectNow("manual");
+    h.core.markStarted(acquisition.id, "claim-ttl");
+    await h.run(acquisition.id);
+
+    const first = h.core.claimOutbox("workflow:one", 4)!;
+    expect(h.core.status().historyBacklog).toBeGreaterThan(0);
+    expect(h.core.pendingOutbox(4).map((blob) => blob.seq)).toEqual(first.blobs.map((blob) => blob.seq));
+    expect(h.core.claimOutbox("alarm:feed_1", 4)).toBeUndefined();
+    h.clock.now += OUTBOX_CLAIM_TTL_MS + 1;
+    const reclaimed = h.core.claimOutbox("alarm:feed_1", 4)!;
+    expect(reclaimed.blobs.map((blob) => blob.seq)).toEqual(first.blobs.map((blob) => blob.seq));
+
+    h.core.acknowledgeOutbox(first.owner, first.token, 0);
+    expect(h.core.committedOutboxRows()).toBe(1);
+    h.core.acknowledgeOutbox(reclaimed.owner, reclaimed.token, 0);
+    expect(h.core.committedOutboxRows()).toBe(0);
+  });
+
+  it("retries an ambiguous send with the same revision identities before acknowledging it", async () => {
+    const h = await kernelHarness({ history: null });
+    h.source.records = [record("a", 1), record("b", 2)];
+    const acquisition = h.core.collectNow("manual");
+    h.core.markStarted(acquisition.id, "ambiguous-send");
+    await h.run(acquisition.id);
+    const attempts: string[][] = [];
+    const portFor = (owner: string) => ({
+      claimOutbox: async (limit: number) => h.core.claimOutbox(owner, limit),
+      acknowledgeOutbox: async (token: string, next: number) => h.core.acknowledgeOutbox(owner, token, next),
+      releaseOutbox: async (token: string) => h.core.releaseOutbox(owner, token),
+    });
+
+    await expect(
+      drainOutbox(
+        portFor("workflow:first"),
+        async (_table, rows) => {
+          attempts.push(rows.map((row) => String(row.revision_id)));
+          throw new Error("reply lost after acceptance");
+        },
+        4,
+      ),
+    ).rejects.toThrow("reply lost after acceptance");
+    expect(h.core.committedOutboxRows()).toBe(2);
+    await drainOutbox(
+      portFor("alarm:feed_1"),
+      async (_table, rows) => {
+        attempts.push(rows.map((row) => String(row.revision_id)));
+      },
+      4,
+    );
+    expect(attempts).toHaveLength(2);
+    expect(attempts[1]).toEqual(attempts[0]);
+    expect(h.core.committedOutboxRows()).toBe(0);
+  });
+
+  it("releases a failed send and leaves every blob durable for another owner", async () => {
+    const h = await kernelHarness({ history: null });
+    h.source.records = [record("a", 1), record("b", 2)];
+    const acquisition = h.core.collectNow("manual");
+    h.core.markStarted(acquisition.id, "claim-failure");
+    await h.run(acquisition.id);
+    const rows = h.core.committedOutboxRows();
+    const owner = "workflow:failed";
+    const outbox = {
+      claimOutbox: async (limit: number) => h.core.claimOutbox(owner, limit),
+      acknowledgeOutbox: async (token: string, next: number) => h.core.acknowledgeOutbox(owner, token, next),
+      releaseOutbox: async (token: string) => h.core.releaseOutbox(owner, token),
+    };
+
+    await expect(
+      drainOutbox(
+        outbox,
+        async () => {
+          throw new Error("Pipeline submission timed out");
+        },
+        4,
+      ),
+    ).rejects.toThrow("Pipeline submission timed out");
+    expect(h.core.committedOutboxRows()).toBe(rows);
+    expect(h.core.claimOutbox("alarm:feed_1", 4)?.blobs).toHaveLength(1);
   });
 });
 

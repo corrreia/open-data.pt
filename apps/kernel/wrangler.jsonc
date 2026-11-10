@@ -81,6 +81,10 @@
       ],
     },
   ],
+  // The default gateway is deliberately uncached. Only this named entrypoint
+  // generates cacheable API reads, using Workers Caching rather than Cache API calls.
+  "cache": { "enabled": false },
+  "exports": { "CachedApi": { "type": "worker", "cache": { "enabled": true } } },
   // The Gatekeeper Worker: every library, reached over private RPC.
   "services": [{ "binding": "GATEKEEPER", "service": "open-data-pt-gatekeeper" }],
   // Per-client limits on uncached API reads, keyed by cf-connecting-ip; cache hits

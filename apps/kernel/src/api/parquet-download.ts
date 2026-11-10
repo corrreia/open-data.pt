@@ -1,5 +1,5 @@
 import { CADENCE_HEADER } from "#/api/cache";
-import { NotFoundError, RequestError } from "#/api/errors";
+import { RequestError, StorageUnavailableError } from "#/api/errors";
 import type { ProductDetail } from "#/registry/registry";
 import type { ChunkObject } from "#/serving/chunks";
 import { ObjectStore } from "#/serving/object-store";
@@ -20,7 +20,7 @@ export async function parquetDownload(request: Request, product: ProductDetail, 
   const objects = new ObjectStore(store);
   const exports = new ParquetExports(store, async (key) => {
     const chunk = await objects.read<ChunkObject>(key);
-    if (!chunk) throw new NotFoundError("A chunk of this product is missing; retry shortly");
+    if (!chunk) throw new StorageUnavailableError("A selected chunk of this product is unavailable; retry shortly");
     return chunk.rows;
   });
   const header = request.headers.get("Range");
@@ -44,6 +44,10 @@ export async function parquetDownload(request: Request, product: ProductDetail, 
     return new Response(file.body, { status: partial ? 206 : 200, headers });
   } catch (error) {
     if (error instanceof ParquetTooLargeError) throw new RequestError(error.message, 413);
+    // ParquetExports detects a file that disappeared between its metadata and body reads.
+    if (error instanceof Error && error.message === "The Parquet file of this product is being replaced; retry shortly") {
+      throw new StorageUnavailableError("The selected Parquet object is unavailable; retry shortly");
+    }
     throw error;
   }
 }

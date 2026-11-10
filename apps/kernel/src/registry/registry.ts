@@ -1,18 +1,19 @@
 import { DurableObject } from "cloudflare:workers";
 import { NormalizedInputError, type CatalogFeed } from "@open-data-pt/contract";
 
-import { cadenceFloorOf, checkForVersion, syncStep, withCadenceFloor, type SyncPorts, type SyncProgress, type SyncState } from "#/registry/catalog-sync";
+import { cadenceFloorOf, checkForVersion, syncStep, withCadenceFloor, type SyncCatalogSnapshot, type SyncPorts, type SyncProgress, type SyncState } from "#/registry/catalog-sync";
 import type { ManifestChunk } from "#/serving/chunks";
-import { definitionFingerprint, keepsHistory, type Acquisition, type Feed, type ProductIndexEntry, type ProductSummary } from "#/registry/feed-model";
-import { catalogVersionOf, gatekeeperOf } from "#/collection/gatekeeper";
+import { definitionFingerprint, keepsHistory, type Acquisition, type Feed, type ProductSummary } from "#/registry/feed-model";
+import { gatekeeperOf } from "#/collection/gatekeeper";
 import { EMPTY_VOCABULARIES, Vocabulary, checkedCatalog, type Vocabularies, type VocabularyRef } from "#/registry/vocabulary";
 import { digest } from "#/hash";
 import { ObjectStore } from "#/serving/object-store";
 import { QUERY_DEADLINE_SECONDS, runLakeQuery } from "#/history/query";
 import { SUMMARY_DAYS_PER_WAKE, SUMMARY_DUE_STATE_KEY, summariseSettledDays } from "#/history/summaries";
 import { R2SnapshotStore } from "#/serving/r2-snapshot-store";
-import { RegistryStore, type ActivityWindow } from "#/registry/store";
+import { RegistryStore, rehydrateRegistryProducts, type ActivityWindow } from "#/registry/store";
 import { ingestRunnerReport, OUTAGE_KEEP_MS, OUTAGES_SINCE_KEY, type OutageWindow, type RunnerReport, type RunnerReportReceipt, isSustained } from "#/registry/reporting";
+import type { RunnerPublication, RunnerPublicationReceipt } from "#/durability/runner-snapshot";
 
 /** The one Registry's name: every runner and request reaches the same object. */
 export const REGISTRY_ROOM = "main";
@@ -20,9 +21,11 @@ export const REGISTRY_ROOM = "main";
 const SYNC_STATE_KEY = "catalog-sync";
 /** The vocabularies the Gatekeeper's catalog last declared: its publishers, licences and topics. */
 const CATALOG_STATE_KEY = "catalog";
+const PENDING_CATALOG_STATE_KEY = "pending-catalog";
 const AUDIT_DUE_KEY = "lake-audit-due";
 /** A history slot outlives its query's own deadline by a margin, and is then taken back from a request that cannot still hold it. */
 const HISTORY_SLOT_TTL_MS = (QUERY_DEADLINE_SECONDS + 15) * 1000;
+const HISTORY_QUERY_CAPACITY = 4;
 
 /**
  * A product as the public API lists it: the selected entry without its chunk
@@ -68,17 +71,17 @@ export function registryOf(env: Env): DurableObjectStub<Registry> {
  */
 export class Registry extends DurableObject<Env> {
   private readonly store: RegistryStore;
-  /** The history queries holding a slot, by the id their request drew, and when each took it. */
-  private readonly activeHistoryQueries = new Map<string, number>();
   private reportsSincePrune = 0;
   /** The sync step in flight: its RPC round trips let other events in, and two steps must never interleave. */
   private syncing: Promise<SyncProgress> | undefined;
-  /** The stored catalog, expanded once and kept until the Gatekeeper declares another. */
+  /** The active catalog, expanded once and kept until a complete snapshot activates. */
   private vocabularyCache: Vocabulary | undefined;
+  /** The catalog snapshot currently being applied. */
+  private pendingVocabularyCache: Vocabulary | undefined;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
-    this.store = new RegistryStore(ctx.storage.sql);
+    this.store = new RegistryStore(ctx.storage.sql, (body) => ctx.storage.transactionSync(body));
     this.store.migrate();
     // Only the alarm starts work: a fresh or reset Registry installs every example on its first one.
     void ctx.blockConcurrencyWhile(async () => {
@@ -98,17 +101,11 @@ export class Registry extends DurableObject<Env> {
    */
   tryStartHistoryQuery(queryId: string): boolean {
     const now = Date.now();
-    for (const [id, taken] of this.activeHistoryQueries) {
-      if (now - taken > HISTORY_SLOT_TTL_MS) this.activeHistoryQueries.delete(id);
-    }
-    if (this.activeHistoryQueries.has(queryId)) return true;
-    if (this.activeHistoryQueries.size >= 4) return false;
-    this.activeHistoryQueries.set(queryId, now);
-    return true;
+    return this.store.tryStartHistoryQuery(queryId, new Date(now).toISOString(), new Date(now + HISTORY_SLOT_TTL_MS).toISOString(), HISTORY_QUERY_CAPACITY);
   }
 
   finishHistoryQuery(queryId: string): void {
-    this.activeHistoryQueries.delete(queryId);
+    this.store.finishHistoryQuery(queryId);
   }
 
   override async alarm(): Promise<void> {
@@ -116,10 +113,11 @@ export class Registry extends DurableObject<Env> {
     let retryIn = 0;
     try {
       await this.syncCatalog();
+      if (this.store.rehydrationRequired() && this.syncReadyForRehydration()) await this.rehydrateProducts();
     } catch (error) {
-      // Never a tight loop: a step that throws (not one whose operations fail) waits a minute.
+      // Never a tight loop: a step or runner round trip that throws waits a minute.
       retryIn = 60_000;
-      console.error(JSON.stringify({ event: "catalog_sync_failed", error: String(error) }));
+      console.error(JSON.stringify({ event: "registry_maintenance_failed", error: String(error) }));
     }
     // After the sync, so keeping feeds equal to the examples never waits on the lake.
     if (this.env.CATALOG_TOKEN) await this.summariseIfDue();
@@ -130,7 +128,7 @@ export class Registry extends DurableObject<Env> {
   private nextWake(): number {
     const now = Date.now();
     const sync = this.store.getState<SyncState>(SYNC_STATE_KEY);
-    let wake = sync === undefined || sync.queue.length > 0 ? now : sync.nextCheckAt;
+    let wake = sync === undefined || sync.queue.length > 0 || (this.store.rehydrationRequired() && this.syncReadyForRehydration()) ? now : sync.nextCheckAt;
     if (this.env.CATALOG_TOKEN) {
       wake = Math.min(wake, this.store.getState<number>(AUDIT_DUE_KEY) ?? nextAuditTime(now));
       wake = Math.min(wake, this.store.getState<number>(SUMMARY_DUE_STATE_KEY) ?? nextAuditTime(now));
@@ -200,13 +198,25 @@ export class Registry extends DurableObject<Env> {
     return sync?.lastCheckedAt !== undefined && sync.queue.length === 0;
   }
 
+  /** Rehydration waits for a complete successful catalog pass, not a partial install that will be retried. */
+  private syncReadyForRehydration(): boolean {
+    const sync = this.store.getState<SyncState>(SYNC_STATE_KEY);
+    return sync?.lastCheckedAt !== undefined && sync.queue.length === 0 && sync.lastError === undefined;
+  }
+
+  private async rehydrateProducts(): Promise<void> {
+    const step = await rehydrateRegistryProducts(this.store, (feedId) => this.env.FeedRunner.getByName(feedId).registrySnapshot(), new Date().toISOString());
+    if (step.complete)
+      console.log(JSON.stringify({ event: "registry_rehydrated", feeds: this.store.listFeeds().length, products: this.store.listProducts().length, changed: step.changed }));
+  }
+
   private syncPorts(): SyncPorts {
     return {
-      readCatalog: () => this.readCatalog(),
-      catalogVersion: () => catalogVersionOf(this.env),
+      readCatalogSnapshot: () => this.readCatalogSnapshot(),
       feeds: () => this.store.listFeeds().map((feed) => ({ id: feed.id, slug: feed.slug })),
       apply: (feed) => this.installFeed(feed),
       retire: (feedId) => this.retireFeed(feedId),
+      activateCatalog: () => this.activatePendingCatalog(),
       load: () => this.store.getState<SyncState>(SYNC_STATE_KEY),
       save: (state) => this.store.setState(SYNC_STATE_KEY, state),
       now: () => Date.now(),
@@ -220,13 +230,16 @@ export class Registry extends DurableObject<Env> {
    * in another shape (one of another release, for a minute during a deploy), or
    * lists nothing, is broken rather than emptied.
    */
-  private async readCatalog(): Promise<CatalogFeed[] | undefined> {
+  private async readCatalogSnapshot(): Promise<SyncCatalogSnapshot | undefined> {
     try {
-      const { feeds, ...vocabularies } = checkedCatalog(await gatekeeperOf(this.env).catalog());
+      const snapshot = await gatekeeperOf(this.env).catalogSnapshot();
+      const { feeds, ...vocabularies } = checkedCatalog(snapshot.catalog);
       if (feeds.length === 0) throw new Error("The Gatekeeper listed no feeds");
       if (vocabularies.publishers.length === 0) throw new Error("The Gatekeeper declared no publishers");
-      this.storeVocabularies(vocabularies);
-      return feeds;
+      if (!snapshot.version.trim()) throw new Error("The Gatekeeper returned an empty catalog version");
+      this.store.setState(PENDING_CATALOG_STATE_KEY, vocabularies);
+      this.pendingVocabularyCache = new Vocabulary(vocabularies);
+      return { feeds, version: snapshot.version };
     } catch (error) {
       console.warn(JSON.stringify({ event: "gatekeeper_unavailable", error: String(error) }));
       return undefined;
@@ -241,6 +254,21 @@ export class Registry extends DurableObject<Env> {
   private vocabulary(): Vocabulary {
     this.vocabularyCache ??= new Vocabulary(this.catalog());
     return this.vocabularyCache;
+  }
+
+  private pendingVocabulary(): Vocabulary {
+    const pending = this.store.getState<Vocabularies>(PENDING_CATALOG_STATE_KEY);
+    if (!pending) return this.vocabulary();
+    this.pendingVocabularyCache ??= new Vocabulary(pending);
+    return this.pendingVocabularyCache;
+  }
+
+  private activatePendingCatalog(): void {
+    const pending = this.store.getState<Vocabularies>(PENDING_CATALOG_STATE_KEY);
+    if (!pending) return;
+    this.storeVocabularies(pending);
+    this.store.deleteState(PENDING_CATALOG_STATE_KEY);
+    this.pendingVocabularyCache = undefined;
   }
 
   /** Written only when they changed: a Gatekeeper that says the same thing every check costs one read. */
@@ -259,7 +287,7 @@ export class Registry extends DurableObject<Env> {
   private async installFeed(listed: CatalogFeed): Promise<void> {
     // A local session polls politely: `pnpm dev` sets a floor under every cadence, and a deployment sets none.
     const input = withCadenceFloor(listed, cadenceFloorOf(this.env.DEV_MIN_CADENCE_SECONDS));
-    const unknown = this.vocabulary().unknownKey(input);
+    const unknown = this.pendingVocabulary().unknownKey(input);
     if (unknown !== undefined) throw new NormalizedInputError(`${input.slug} names ${unknown}`);
     const existing = this.store.getFeedBySlug(input.slug);
     const now = new Date().toISOString();
@@ -277,9 +305,9 @@ export class Registry extends DurableObject<Env> {
     };
     const unchanged = existing !== undefined && definitionFingerprint(existing) === definitionFingerprint(candidate);
     const feed: Feed = unchanged ? { ...candidate, updatedAt: existing.updatedAt } : candidate;
-    if (!unchanged) this.store.upsertFeed(feed);
-    // A runner re-sent what it already has reports nothing, unless this Registry holds no status for it (a fresh or reset Registry).
+    // Configure the runner first. A failed RPC leaves the complete public definition and its products on the prior generation.
     await this.env.FeedRunner.getByName(feed.id).configure(feed, existing?.consecutiveFailures === undefined);
+    if (!unchanged) this.store.upsertFeed(feed);
   }
 
   /** The runner first stops taking work (so a failure here leaves the feed listed and the next check retries), then the feed is forgotten. */
@@ -326,15 +354,18 @@ export class Registry extends DurableObject<Env> {
    * can retire; while the sync is still installing feeds it throws instead,
    * and the runner retries the publication.
    */
-  publishProducts(feedId: string, entries: ProductIndexEntry[], report?: RunnerReport): RunnerReportReceipt {
-    if (!this.store.getFeed(feedId)) {
+  publishProducts(publication: RunnerPublication, report?: RunnerReport): RunnerPublicationReceipt {
+    if (report && report.feedId !== publication.feedId) throw new NormalizedInputError("Publication report names another feed");
+    if (this.store.rehydrationRequired()) throw new Error("The Registry is rehydrating its complete product index; publication will be retried");
+    if (!this.store.getFeed(publication.feedId)) {
       if (!this.syncSettled()) throw new Error("The Registry is still installing feeds; publication will be retried");
       return { known: false, backfillPeers: 0 };
     }
     const at = new Date().toISOString();
-    const receipt = this.ctx.storage.transactionSync((): RunnerReportReceipt => {
-      this.store.replaceFeedProducts(feedId, entries);
-      return report ? ingestRunnerReport(this.store, report, at) : { known: true, backfillPeers: 1 };
+    const receipt = this.ctx.storage.transactionSync((): RunnerPublicationReceipt => {
+      const reportReceipt = report ? ingestRunnerReport(this.store, report, at) : { known: true as const, backfillPeers: 1 };
+      if (!reportReceipt.known) return { known: false, backfillPeers: 0 };
+      return this.store.acceptPublication(publication, at, reportReceipt.backfillPeers);
     });
     if (report) {
       this.reportIngested();

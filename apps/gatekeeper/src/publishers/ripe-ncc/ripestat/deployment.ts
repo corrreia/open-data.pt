@@ -6,6 +6,7 @@ import { RIPESTAT_FEEDS } from "./ripestat";
 export const RIPESTAT_DEPLOYMENT: LibraryDeployment<{ readonly RIPESTAT_API_ORIGIN: string }, RipestatContext> = {
   source: "ripestat",
   name: "RIPEstat",
+  publicFormat: "own-api",
   vars: { RIPESTAT_API_ORIGIN: "https://stat.ripe.net" },
   library: (env) => ({
     kinds: Object.values(RIPESTAT_FEEDS),

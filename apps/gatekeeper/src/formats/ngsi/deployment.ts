@@ -6,6 +6,7 @@ import { NGSI_FEEDS, ngsiHosts } from "./ngsi";
 export const NGSI_DEPLOYMENT: LibraryDeployment<object, NgsiContext> = {
   source: "ngsi",
   name: "FIWARE NGSI v2 brokers",
+  publicFormat: "ngsi",
   vars: {},
   library: (_env, publishers) => {
     const hosts = publishers.hosts.join(",");

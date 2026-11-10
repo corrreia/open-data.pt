@@ -1,36 +1,93 @@
 import { NormalizedInputError, UNSTATED_LICENCE, asArrayOrEmpty, asObject, asString, asStringList, isProductSlug, parseJson } from "@open-data-pt/contract";
 import type { JsonObject } from "@open-data-pt/contract";
 import type { ManifestChunk } from "#/serving/chunks";
-import { feedDefinition, type Acquisition, type Feed, type FeedStatus, type ProductIndexEntry, type ProductSummary } from "#/registry/feed-model";
-import { dropAllTables, userTables, type SqlExec } from "#/sqlite-reset";
+import { digest } from "#/hash";
+import { definitionFingerprint, feedDefinition, type Acquisition, type Feed, type FeedStatus, type ProductIndexEntry, type ProductSummary } from "#/registry/feed-model";
+import { migrateDurableSchema, type SynchronousTransaction } from "#/durability/migrations";
+import { SYNC_BATCH } from "#/registry/catalog-sync";
+import { runnerPublicationId, type RunnerPublication, type RunnerPublicationReceipt, type RunnerSnapshot } from "#/durability/runner-snapshot";
+import type { SqlExec } from "#/sqlite-reset";
 
 /**
  * SQLite inside the Registry Durable Object: feed definitions, a
  * mirror of each runner's status and recent acquisitions, slug ownership, and
  * the atomically selected product index the public API reads.
  */
-export const REGISTRY_SCHEMA_VERSION = 201;
+export const REGISTRY_SCHEMA_BASELINE = 201;
+export const REGISTRY_SCHEMA_VERSION = 205;
 const ACTIVITY_KEEP = 5_000;
+const REHYDRATION_REQUIRED_KEY = "runner-rehydration-required";
+const REHYDRATION_DIGEST_KEY = "runner-rehydration-digest";
 
 export class RegistryStore {
-  constructor(private readonly sql: SqlExec) {}
+  constructor(
+    private readonly sql: SqlExec,
+    private readonly transaction: SynchronousTransaction = (body) => body(),
+  ) {}
 
-  /** A different schema version resets the Registry; the one terminology cleanup below preserves the current schema's data in place. */
+  /** Migrate only from the production baseline, preserving every accepted row. */
   migrate(): void {
-    const tables = userTables(this.sql);
-    const current = tables.includes("meta") ? this.rows<{ value: string }>(`SELECT value FROM meta WHERE key = 'schema_version'`)[0]?.value : undefined;
-    if (tables.length > 0 && current !== String(REGISTRY_SCHEMA_VERSION)) {
-      console.warn(JSON.stringify({ event: "registry_schema_reset", from: current ?? null, to: REGISTRY_SCHEMA_VERSION }));
-      dropAllTables(this.sql);
-    }
+    migrateDurableSchema({
+      owner: "Registry",
+      sql: this.sql,
+      transaction: this.transaction,
+      baselineVersion: REGISTRY_SCHEMA_BASELINE,
+      targetVersion: REGISTRY_SCHEMA_VERSION,
+      migrations: [
+        {
+          id: 202,
+          name: "checked-migrations",
+          checksum: "d7185b0935ba68a66e658bf4a915",
+          apply: () => this.migrateFrom201(),
+        },
+        {
+          id: 203,
+          name: "durable-product-rehydration",
+          checksum: "25b97db923283f1279fa05ad554a",
+          apply: () => this.createRehydrationSchema(),
+        },
+        {
+          id: 204,
+          name: "publication-receipts",
+          checksum: "5b87502570d226fc6a4432ddef03",
+          apply: () => this.createPublicationSchema(),
+        },
+        {
+          id: 205,
+          name: "history-query-leases",
+          checksum: "47b095aa9d73c895a601687ea55",
+          apply: () => this.createHistoryQueryLeaseSchema(),
+        },
+      ],
+      createBaseline: () => this.createSchema(),
+      ready: (fresh) => {
+        if (fresh) this.setState(REHYDRATION_REQUIRED_KEY, true);
+      },
+    });
+  }
+
+  private migrateFrom201(): void {
+    this.createSchema202();
+    // Old definitions called their library `gatekeeperKind`. Rewrite them before the first feed read.
+    this.exec(`UPDATE feeds SET definition_json = json_remove(json_set(definition_json, '$.library', json_extract(definition_json, '$.gatekeeperKind')), '$.gatekeeperKind')
+      WHERE json_type(definition_json, '$.library') IS NULL AND json_type(definition_json, '$.gatekeeperKind') = 'text'`);
+    this.foldDatasetsIntoFeeds();
+    const backfillColumns = this.rows<{ name: string }>(`SELECT name FROM pragma_table_info('backfills')`).map((row) => row.name);
+    if (backfillColumns.includes("gatekeeper_kind")) this.exec(`ALTER TABLE backfills RENAME COLUMN gatekeeper_kind TO library`);
+  }
+
+  private createSchema(): void {
+    this.createSchema202();
+    this.createRehydrationSchema();
+    this.createPublicationSchema();
+    this.createHistoryQueryLeaseSchema();
+  }
+
+  private createSchema202(): void {
     this.exec(`CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)`);
     this.exec(`CREATE TABLE IF NOT EXISTS registry_state (key TEXT PRIMARY KEY, value_json TEXT NOT NULL)`);
     this.exec(`CREATE TABLE IF NOT EXISTS feeds (
       id TEXT PRIMARY KEY, slug TEXT NOT NULL UNIQUE, definition_json TEXT NOT NULL, enabled INTEGER NOT NULL, title TEXT NOT NULL)`);
-    // One-time terminology cleanup: old definitions called their library `gatekeeperKind`. Rewrite the JSON in place before any feed is read.
-    this.exec(`UPDATE feeds SET definition_json = json_remove(json_set(definition_json, '$.library', json_extract(definition_json, '$.gatekeeperKind')), '$.gatekeeperKind')
-      WHERE json_type(definition_json, '$.library') IS NULL AND json_type(definition_json, '$.gatekeeperKind') = 'text'`);
-    this.foldDatasetsIntoFeeds();
     this.exec(`CREATE TABLE IF NOT EXISTS feed_status (feed_id TEXT PRIMARY KEY, status_json TEXT NOT NULL, updated_at TEXT NOT NULL)`);
     this.exec(`CREATE TABLE IF NOT EXISTS claims (slug TEXT PRIMARY KEY, feed_id TEXT NOT NULL)`);
     // The chunk list is its own column, last, so product lists never read it.
@@ -39,17 +96,30 @@ export class RegistryStore {
     this.exec(`CREATE TABLE IF NOT EXISTS activity (id TEXT PRIMARY KEY, feed_id TEXT NOT NULL, at TEXT NOT NULL, item_json TEXT NOT NULL)`);
     this.exec(`CREATE INDEX IF NOT EXISTS activity_at ON activity (at DESC)`);
     this.exec(`CREATE TABLE IF NOT EXISTS backfills (feed_id TEXT PRIMARY KEY, library TEXT NOT NULL, status TEXT NOT NULL, updated_at TEXT NOT NULL)`);
-    const backfillColumns = this.rows<{ name: string }>(`SELECT name FROM pragma_table_info('backfills')`).map((row) => row.name);
-    if (backfillColumns.includes("gatekeeper_kind")) this.exec(`ALTER TABLE backfills RENAME COLUMN gatekeeper_kind TO library`);
-    // One row per stretch of time a feed's live collection kept failing, or (feed_id '') the platform stopped collecting.
-    // A table added here needs no version change: CREATE IF NOT EXISTS adds it to a live Registry on its next start.
     this.exec(`CREATE TABLE IF NOT EXISTS outages (
       id INTEGER PRIMARY KEY, feed_id TEXT NOT NULL, started_at TEXT NOT NULL, ended_at TEXT, cause TEXT NOT NULL, failures INTEGER NOT NULL, last_error TEXT)`);
     this.exec(`CREATE INDEX IF NOT EXISTS outages_started ON outages (started_at)`);
     this.exec(`CREATE UNIQUE INDEX IF NOT EXISTS outages_open ON outages (feed_id) WHERE ended_at IS NULL`);
-    // Every construction runs this; writing the version only when it is new keeps a warm-up free of row writes.
-    if (current !== String(REGISTRY_SCHEMA_VERSION))
-      this.exec(`INSERT INTO meta (key, value) VALUES ('schema_version', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`, String(REGISTRY_SCHEMA_VERSION));
+  }
+
+  private createRehydrationSchema(): void {
+    this.exec(`CREATE TABLE IF NOT EXISTS rehydration_progress (
+      feed_id TEXT PRIMARY KEY, position INTEGER NOT NULL UNIQUE, definition_fingerprint TEXT NOT NULL, snapshot_json TEXT)`);
+    this.exec(`CREATE TABLE IF NOT EXISTS rehydration_claims (slug TEXT PRIMARY KEY, feed_id TEXT NOT NULL)`);
+    this.exec(`CREATE TABLE IF NOT EXISTS rehydration_products (
+      slug TEXT PRIMARY KEY, feed_id TEXT NOT NULL, product_key TEXT NOT NULL, title TEXT NOT NULL, entry_json TEXT NOT NULL, chunks_json TEXT, UNIQUE(feed_id, product_key))`);
+  }
+
+  private createPublicationSchema(): void {
+    this.exec(`CREATE TABLE IF NOT EXISTS accepted_publications (
+      publication_id TEXT PRIMARY KEY, feed_id TEXT NOT NULL, publication_number INTEGER NOT NULL, selected_at TEXT NOT NULL,
+      UNIQUE(feed_id, publication_number))`);
+    this.exec(`CREATE INDEX IF NOT EXISTS accepted_publications_feed ON accepted_publications (feed_id, publication_number DESC)`);
+  }
+
+  private createHistoryQueryLeaseSchema(): void {
+    this.exec(`CREATE TABLE IF NOT EXISTS history_query_leases (query_id TEXT PRIMARY KEY, expires_at TEXT NOT NULL)`);
+    this.exec(`CREATE INDEX IF NOT EXISTS history_query_leases_expiry ON history_query_leases (expires_at)`);
   }
 
   getState<T>(key: string): T | undefined {
@@ -60,6 +130,14 @@ export class RegistryStore {
 
   setState<T>(key: string, value: T): void {
     this.exec(`INSERT INTO registry_state (key, value_json) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json`, key, JSON.stringify(value));
+  }
+
+  deleteState(key: string): void {
+    this.exec(`DELETE FROM registry_state WHERE key = ?`, key);
+  }
+
+  rehydrationRequired(): boolean {
+    return this.getState<boolean>(REHYDRATION_REQUIRED_KEY) === true;
   }
 
   /**
@@ -133,6 +211,7 @@ export class RegistryStore {
     this.exec(`DELETE FROM activity WHERE feed_id = ?`, feedId);
     this.exec(`DELETE FROM backfills WHERE feed_id = ?`, feedId);
     this.exec(`DELETE FROM outages WHERE feed_id = ?`, feedId);
+    this.exec(`DELETE FROM accepted_publications WHERE feed_id = ?`, feedId);
     this.exec(`DELETE FROM feeds WHERE id = ?`, feedId);
   }
 
@@ -148,6 +227,124 @@ export class RegistryStore {
 
   /* ---------- Products ---------- */
 
+  /**
+   * Return the next bounded set of runners whose snapshots are still needed.
+   * A changed installed feed set or definition restarts the durable shadow so
+   * snapshots from different catalog generations can never be selected together.
+   */
+  nextRehydrationBatch(limit = SYNC_BATCH): string[] {
+    if (!this.rehydrationRequired()) return [];
+    const installed = this.rehydrationFeeds();
+    const progress = this.rows<RehydrationProgressRow>(`SELECT feed_id, position, definition_fingerprint, snapshot_json FROM rehydration_progress ORDER BY position`);
+    const matches =
+      progress.length === installed.length &&
+      progress.every((row, position) => row.feed_id === installed[position]?.feedId && row.definition_fingerprint === installed[position]?.fingerprint);
+    if (!matches) {
+      this.transaction(() => {
+        this.clearRehydration();
+        for (const [position, feed] of installed.entries())
+          this.exec(`INSERT INTO rehydration_progress (feed_id, position, definition_fingerprint, snapshot_json) VALUES (?, ?, ?, NULL)`, feed.feedId, position, feed.fingerprint);
+      });
+    }
+    return this.rows<{ feed_id: string }>(`SELECT feed_id FROM rehydration_progress WHERE snapshot_json IS NULL ORDER BY position LIMIT ?`, limit).map((row) => row.feed_id);
+  }
+
+  /** Replace one feed's durable shadow rows and mark its snapshot complete. */
+  stageRunnerSnapshot(feedId: string, snapshot: RunnerSnapshot): void {
+    if (snapshot.feed.id !== feedId) throw new Error(`Runner ${feedId} returned snapshot for ${snapshot.feed.id}`);
+    if (snapshot.publication.feedId !== feedId || snapshot.publication.id !== runnerPublicationId(feedId, snapshot.publication.number, snapshot.publication.acquisitionId))
+      throw new Error(`Runner ${feedId} returned an invalid publication identity`);
+    if (snapshot.products.some((entry) => entry.feedId !== feedId) || JSON.stringify(snapshot.publication.entries) !== JSON.stringify(snapshot.products))
+      throw new Error(`Runner ${feedId} returned another feed's product`);
+
+    this.transaction(() => {
+      const progress = this.rows<RehydrationProgressRow>(`SELECT feed_id, position, definition_fingerprint, snapshot_json FROM rehydration_progress WHERE feed_id = ?`, feedId)[0];
+      if (!this.rehydrationRequired() || !progress) throw new Error(`Runner ${feedId} is not part of the current rehydration`);
+      if (progress.definition_fingerprint !== definitionFingerprint(snapshot.feed)) throw new Error(`Runner ${feedId} returned a stale feed definition`);
+
+      this.exec(`DELETE FROM rehydration_products WHERE feed_id = ?`, feedId);
+      this.exec(`DELETE FROM rehydration_claims WHERE feed_id = ?`, feedId);
+      const slugs = snapshot.products.map((entry) => entry.slug);
+      if (slugs.length > 64 || new Set(slugs).size !== slugs.length || !slugs.every(isProductSlug)) throw new NormalizedInputError("Invalid or duplicate product slugs");
+      const owners = this.rows<{ slug: string; feed_id: string }>(
+        `SELECT slug, feed_id FROM rehydration_claims WHERE slug IN (SELECT value FROM json_each(?))`,
+        JSON.stringify(slugs),
+      );
+      const conflict = owners.find((owner) => owner.feed_id !== feedId);
+      if (conflict) throw new NormalizedInputError(`Product ${conflict.slug} belongs to feed ${conflict.feed_id}, not ${feedId}`);
+      this.exec(`INSERT INTO rehydration_claims (slug, feed_id) SELECT value, ? FROM json_each(?)`, feedId, JSON.stringify(slugs));
+      for (const entry of snapshot.products) {
+        const { chunks, ...summary } = entry;
+        this.exec(
+          `INSERT INTO rehydration_products (slug, feed_id, product_key, title, entry_json, chunks_json) VALUES (?, ?, ?, ?, ?, ?)`,
+          entry.slug,
+          feedId,
+          entry.productKey,
+          entry.title,
+          JSON.stringify(summary),
+          chunks ? JSON.stringify(chunks) : null,
+        );
+      }
+      const { products: _products, ...progressSnapshot } = snapshot;
+      this.exec(`UPDATE rehydration_progress SET snapshot_json = ? WHERE feed_id = ?`, JSON.stringify(progressSnapshot), feedId);
+    });
+  }
+
+  /**
+   * Select the complete durable shadow in one transaction. Incomplete work is
+   * left untouched; after completion, a repeated call is entirely read-only.
+   */
+  finishRehydration(at: string): boolean | undefined {
+    if (!this.rehydrationRequired()) return false;
+    const installed = this.rehydrationFeeds();
+    const progress = this.rows<RehydrationProgressRow>(`SELECT feed_id, position, definition_fingerprint, snapshot_json FROM rehydration_progress ORDER BY position`);
+    if (
+      progress.length !== installed.length ||
+      progress.some((row, position) => row.feed_id !== installed[position]?.feedId || row.definition_fingerprint !== installed[position]?.fingerprint || row.snapshot_json === null)
+    )
+      return undefined;
+
+    return this.transaction(() => {
+      const snapshots = progress.map((row) => {
+        // SAFETY: stageRunnerSnapshot writes validated runner snapshot metadata under the row for that feed.
+        return JSON.parse(row.snapshot_json ?? "") as RehydrationSnapshot;
+      });
+      const snapshotDigest = digest(JSON.stringify(snapshots));
+      const changed = this.getState<string>(REHYDRATION_DIGEST_KEY) !== snapshotDigest;
+      this.exec(`DELETE FROM products`);
+      this.exec(`DELETE FROM claims`);
+      this.exec(`INSERT INTO claims (slug, feed_id) SELECT slug, feed_id FROM rehydration_claims`);
+      this.exec(
+        `INSERT INTO products (slug, feed_id, product_key, title, entry_json, chunks_json)
+         SELECT slug, feed_id, product_key, title, entry_json, chunks_json FROM rehydration_products`,
+      );
+      for (const snapshot of snapshots) {
+        this.recordSelectedPublication(snapshot.publication, at);
+        this.setFeedStatus(snapshot.feed.id, snapshot.status, at);
+        for (const acquisition of snapshot.recentAcquisitions)
+          this.upsertActivity(acquisition.id, snapshot.feed.id, acquisition.completedAt ?? acquisition.requestedAt, { ...acquisition, feedId: snapshot.feed.id });
+        const backfill = snapshot.status.backfill;
+        if (backfill) this.setBackfill(snapshot.feed.id, snapshot.feed.library, backfill.status, backfill.updatedAt);
+      }
+      this.setState(REHYDRATION_DIGEST_KEY, snapshotDigest);
+      this.deleteState(REHYDRATION_REQUIRED_KEY);
+      this.clearRehydration();
+      return changed;
+    });
+  }
+
+  private rehydrationFeeds(): RehydrationFeed[] {
+    return this.listFeeds()
+      .map((feed) => ({ feedId: feed.id, fingerprint: definitionFingerprint(feed) }))
+      .sort((left, right) => left.feedId.localeCompare(right.feedId));
+  }
+
+  private clearRehydration(): void {
+    this.exec(`DELETE FROM rehydration_products`);
+    this.exec(`DELETE FROM rehydration_claims`);
+    this.exec(`DELETE FROM rehydration_progress`);
+  }
+
   /** One all-or-none ownership claim before any serving object is written. */
   claimProducts(feedId: string, slugs: string[]): void {
     if (!this.getFeed(feedId)) throw new NormalizedInputError(`Unknown product owner feed ${feedId}`);
@@ -159,6 +356,67 @@ export class RegistryStore {
     const unclaimed = slugs.filter((slug) => !owners.some((owner) => owner.slug === slug));
     if (unclaimed.length === 0) return;
     this.exec(`INSERT INTO claims (slug, feed_id) SELECT value, ? FROM json_each(?) WHERE 1 ON CONFLICT(slug) DO NOTHING`, feedId, JSON.stringify(unclaimed));
+  }
+
+  /**
+   * Select a numbered complete publication once. Repeats and older retries return
+   * the newest durable receipt without selecting their entries again.
+   * Caller wraps this in the report transaction.
+   */
+  acceptPublication(publication: RunnerPublication, selectedAt: string, backfillPeers: number): RunnerPublicationReceipt {
+    if (publication.id !== runnerPublicationId(publication.feedId, publication.number, publication.acquisitionId)) throw new NormalizedInputError("Invalid publication identity");
+    if (!Number.isSafeInteger(publication.number) || publication.number < 0) throw new NormalizedInputError("Invalid publication number");
+    if (publication.entries.some((entry) => entry.feedId !== publication.feedId)) throw new NormalizedInputError("Publication contains mixed feed owners");
+    const sameNumber = this.rows<AcceptedPublicationRow>(
+      `SELECT publication_id, feed_id, publication_number, selected_at FROM accepted_publications WHERE feed_id = ? AND publication_number = ?`,
+      publication.feedId,
+      publication.number,
+    )[0];
+    if (sameNumber && sameNumber.publication_id !== publication.id) throw new NormalizedInputError("Publication number has another identity");
+    const latest = this.latestPublication(publication.feedId);
+    if (!latest || publication.number > latest.publication_number) {
+      this.replaceFeedProducts(publication.feedId, publication.entries);
+      this.recordSelectedPublication(publication, selectedAt);
+    }
+    const accepted = this.latestPublication(publication.feedId);
+    if (!accepted) throw new Error(`Publication ${publication.id} was not recorded`);
+    return {
+      known: true,
+      backfillPeers,
+      acceptedPublicationId: accepted.publication_id,
+      acceptedThrough: accepted.publication_number,
+      selectedAt: accepted.selected_at,
+    };
+  }
+
+  private recordSelectedPublication(publication: RunnerPublication, selectedAt: string): void {
+    const sameNumber = this.rows<AcceptedPublicationRow>(
+      `SELECT publication_id, feed_id, publication_number, selected_at FROM accepted_publications WHERE feed_id = ? AND publication_number = ?`,
+      publication.feedId,
+      publication.number,
+    )[0];
+    if (sameNumber) {
+      if (sameNumber.publication_id !== publication.id) throw new NormalizedInputError("Publication number has another identity");
+      return;
+    }
+    const latest = this.latestPublication(publication.feedId);
+    if (latest && latest.publication_number > publication.number) return;
+    this.exec(
+      `INSERT INTO accepted_publications (publication_id, feed_id, publication_number, selected_at) VALUES (?, ?, ?, ?)`,
+      publication.id,
+      publication.feedId,
+      publication.number,
+      selectedAt,
+    );
+    // Only the newest receipt is needed: any older retry is covered by this monotonic number.
+    this.exec(`DELETE FROM accepted_publications WHERE feed_id = ? AND publication_number < ?`, publication.feedId, publication.number);
+  }
+
+  private latestPublication(feedId: string): AcceptedPublicationRow | undefined {
+    return this.rows<AcceptedPublicationRow>(
+      `SELECT publication_id, feed_id, publication_number, selected_at FROM accepted_publications WHERE feed_id = ? ORDER BY publication_number DESC LIMIT 1`,
+      feedId,
+    )[0];
   }
 
   /** Replace a feed's complete product set. Caller wraps this in one transaction. */
@@ -196,6 +454,24 @@ export class RegistryStore {
   listProducts(): ProductSummary[] {
     // SAFETY: entry_json is written only from ProductIndexEntry values, without their chunks, by replaceFeedProducts.
     return this.rows<{ entry_json: string }>(`SELECT entry_json FROM products ORDER BY title`).map((row) => JSON.parse(row.entry_json) as ProductSummary);
+  }
+
+  /* ---------- History query leases ---------- */
+
+  /** Allocate one durable query lease, pruning requests that cannot still be running. */
+  tryStartHistoryQuery(queryId: string, now: string, expiresAt: string, capacity: number): boolean {
+    return this.transaction(() => {
+      this.exec(`DELETE FROM history_query_leases WHERE expires_at <= ?`, now);
+      if (this.rows<{ found: number }>(`SELECT 1 AS found FROM history_query_leases WHERE query_id = ?`, queryId).length > 0) return true;
+      const active = Number(this.rows<{ count: number }>(`SELECT COUNT(*) AS count FROM history_query_leases`)[0]?.count ?? 0);
+      if (active >= capacity) return false;
+      this.exec(`INSERT INTO history_query_leases (query_id, expires_at) VALUES (?, ?)`, queryId, expiresAt);
+      return true;
+    });
+  }
+
+  finishHistoryQuery(queryId: string): void {
+    this.exec(`DELETE FROM history_query_leases WHERE query_id = ?`, queryId);
   }
 
   /* ---------- Activity mirror ---------- */
@@ -361,6 +637,27 @@ function mapOutage(row: OutageRow): Outage {
   return outage;
 }
 
+interface AcceptedPublicationRow extends Record<string, SqlStorageValue> {
+  publication_id: string;
+  feed_id: string;
+  publication_number: number;
+  selected_at: string;
+}
+
+interface RehydrationFeed {
+  feedId: string;
+  fingerprint: string;
+}
+
+interface RehydrationProgressRow extends Record<string, SqlStorageValue> {
+  feed_id: string;
+  position: number;
+  definition_fingerprint: string;
+  snapshot_json: string | null;
+}
+
+type RehydrationSnapshot = Omit<RunnerSnapshot, "products">;
+
 interface FeedRow extends Record<string, SqlStorageValue> {
   definition_json: string;
   status_json: string | null;
@@ -372,6 +669,25 @@ function mapFeed(row: FeedRow): Feed {
   // SAFETY: status_json is written only from the FeedStatus a runner reported.
   const status = row.status_json ? (JSON.parse(row.status_json) as FeedStatus) : {};
   return { ...definition, ...status };
+}
+
+/** One bounded alarm step of the durable product-index rehydration. */
+export async function rehydrateRegistryProducts(
+  store: RegistryStore,
+  snapshotFor: (feedId: string) => Promise<RunnerSnapshot>,
+  at: string,
+  batchSize = SYNC_BATCH,
+): Promise<RehydrationStep> {
+  const feedIds = store.nextRehydrationBatch(Math.min(SYNC_BATCH, Math.max(0, Math.floor(batchSize))));
+  for (const feedId of feedIds) store.stageRunnerSnapshot(feedId, await snapshotFor(feedId));
+  const changed = store.finishRehydration(at);
+  return { requested: feedIds.length, complete: changed !== undefined, changed: changed ?? false };
+}
+
+export interface RehydrationStep {
+  requested: number;
+  complete: boolean;
+  changed: boolean;
 }
 
 export type { JsonObject };

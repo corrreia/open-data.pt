@@ -6,7 +6,7 @@ import {
   isJsonString,
   lisbonOffsetMinutes,
   readBoundedJson,
-  retryAfterSeconds,
+  upstreamResponseError,
   type FeedKindDescription,
   type JsonObject,
   type JsonValue,
@@ -241,7 +241,7 @@ function unexpectedAnswer(path: string): GatekeeperError {
 }
 
 function upstreamError(message: string, response: Response): GatekeeperError {
-  return new GatekeeperError(message, "upstream-error", retryAfterSeconds(response.headers));
+  return upstreamResponseError(response, message);
 }
 
 function isMetroFeedName(value: string | undefined): value is MetroFeedName {

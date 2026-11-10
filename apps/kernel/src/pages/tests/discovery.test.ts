@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { SITE_PAGES, sitePageAt } from "@open-data-pt/api";
+import { OPENAPI_MEDIA_TYPE, SITE_PAGES, sitePageAt } from "@open-data-pt/api";
 import type { JsonObject, JsonValue } from "@open-data-pt/contract";
 import { describe, expect, it } from "vitest";
 import { SKILL_PATH, handleSite, type SiteHost } from "#/pages/discovery";
@@ -145,7 +145,7 @@ describe("agent discovery", () => {
     expect(response.headers.get("Content-Type")).toBe('application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"');
     const { linkset } = await jsonBody<{ linkset: Array<{ anchor: string; "service-desc": Links[]; "service-doc": Links[]; status: Links[] }> }>(response);
     expect(linkset.map((entry) => entry.anchor)).toEqual([`${ORIGIN}/api`, `${ORIGIN}/mcp`]);
-    expect(linkset[0]?.["service-desc"][0]?.href).toBe(`${ORIGIN}/openapi.json`);
+    expect(linkset[0]?.["service-desc"][0]).toEqual({ href: `${ORIGIN}/openapi.json`, type: OPENAPI_MEDIA_TYPE });
     expect(linkset[0]?.["service-doc"].map((link) => link.href)).toEqual([`${ORIGIN}/docs`, `${ORIGIN}/llms.txt`]);
     expect(linkset[0]?.status[0]?.href).toBe(`${ORIGIN}/api/health`);
 

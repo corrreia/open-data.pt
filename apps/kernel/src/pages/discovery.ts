@@ -5,7 +5,7 @@
  * for text/markdown. All of it is public and read-only, built on each read
  * from the same API any client reads and from the site's own files.
  */
-import { MCP_SERVER_NAME, MCP_SERVER_VERSION } from "@open-data-pt/api";
+import { MCP_SERVER_NAME, MCP_SERVER_VERSION, OPENAPI_MEDIA_TYPE } from "@open-data-pt/api";
 import { sha256Hex } from "#/hash";
 import type { HeaderMap } from "#/api/errors";
 import { isPage, pageMarkdown, prefersMarkdown, productPage, publisherPage, readCatalog } from "#/pages/markdown";
@@ -101,7 +101,7 @@ function pageLinks(target: string): string {
   return [
     `<${target}>; rel="alternate"; type="text/markdown"`,
     '</.well-known/api-catalog>; rel="api-catalog"',
-    '</openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json"',
+    `</openapi.json>; rel="service-desc"; type="${OPENAPI_MEDIA_TYPE}"`,
     '</docs>; rel="service-doc"; type="text/html"',
     '</llms.txt>; rel="describedby"; type="text/plain"',
     '</.well-known/ai-catalog.json>; rel="ai-catalog"; type="application/json"',
@@ -147,7 +147,7 @@ async function apiCatalog(origin: string): Promise<Document> {
   const linkset = [
     {
       anchor: `${origin}/api`,
-      "service-desc": [{ href: `${origin}/openapi.json`, type: "application/vnd.oai.openapi+json" }],
+      "service-desc": [{ href: `${origin}/openapi.json`, type: OPENAPI_MEDIA_TYPE }],
       "service-doc": [
         { href: `${origin}/docs`, type: "text/html" },
         { href: `${origin}/llms.txt`, type: "text/plain" },
@@ -215,7 +215,7 @@ async function aiCatalog(origin: string): Promise<Document> {
         identifier: identifier("api", "open-data-pt"),
         displayName: "open-data.pt API",
         description: "OpenAPI 3.1 description of a free, keyless, read-only JSON API over Portuguese public data.",
-        type: "application/vnd.oai.openapi+json",
+        type: OPENAPI_MEDIA_TYPE,
         url: `${origin}/openapi.json`,
         tags: TAGS,
         representativeQueries: ["Portuguese public data as JSON", "Electricity production by source in Portugal", "Earthquakes recorded by IPMA this month"],

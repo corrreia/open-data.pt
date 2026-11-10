@@ -4,7 +4,7 @@ import {
   isJsonObject,
   parseJsonBytes,
   readBoundedResponse,
-  retryAfterSeconds,
+  upstreamResponseError,
   type FeedKindDescription,
   type SourceConfig,
   type SourceFetch,
@@ -70,7 +70,7 @@ export async function collectUsgsFeed(config: SourceConfig, checkpoint: SourceVa
   }
   if ((response.status >= 300 && response.status < 400) || (response.url && new URL(response.url).origin !== url.origin))
     throw new GatekeeperError("USGS redirects are not allowed", "source-denied");
-  if (!response.ok) throw new GatekeeperError(`USGS returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+  if (!response.ok) throw upstreamResponseError(response, `USGS returned HTTP ${response.status}`);
   const bytes = await readBoundedResponse(response, USGS_MAX_BYTES, "USGS earthquake response");
   let value;
   try {

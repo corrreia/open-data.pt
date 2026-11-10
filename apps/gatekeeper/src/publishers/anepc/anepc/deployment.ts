@@ -5,6 +5,7 @@ import { ANEPC_API_ORIGIN, ANEPC_FEEDS } from "./anepc";
 export const ANEPC_DEPLOYMENT: LibraryDeployment<{ readonly ANEPC_API_ORIGIN: string }, AnepcContext> = {
   source: "anepc",
   name: "ANEPC active civil-protection occurrences",
+  publicFormat: "own-api",
   vars: { ANEPC_API_ORIGIN },
   library: (env) => ({
     kinds: Object.values(ANEPC_FEEDS),

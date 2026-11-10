@@ -6,6 +6,7 @@ import { DGEG_FEEDS } from "./dgeg";
 export const DGEG_DEPLOYMENT: LibraryDeployment<{ readonly DGEG_API_ORIGIN: string }, DgegContext> = {
   source: "dgeg",
   name: "DGEG fuel prices",
+  publicFormat: "own-api",
   vars: { DGEG_API_ORIGIN: "https://precoscombustiveis.dgeg.gov.pt" },
   library: (env) => ({
     kinds: Object.values(DGEG_FEEDS),

@@ -8,8 +8,8 @@ import {
   isJsonString,
   lisbonDay,
   readBoundedJson,
-  retryAfterSeconds,
   streamNdjson,
+  upstreamResponseError,
   type FeedKindDescription,
   type JsonValue,
   type NormalizedRow,
@@ -123,15 +123,15 @@ export async function collectRenPeriodic(options: RenPeriodicOptions, checkpoint
   for (const period of selected) {
     const url = endpoint(origin, service, period);
     const response = await options.fetcher(url, init);
-    if ((!response.ok && response.status !== 404) || !response.body)
-      throw new GatekeeperError(`REN periodic API returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+    if (!response.ok && response.status !== 404) throw upstreamResponseError(response, `REN periodic API returned HTTP ${response.status}`);
+    if (!response.body) throw upstreamResponseError(response, `REN periodic API returned no body for HTTP ${response.status}`);
     const data = await readBoundedJson(response, 32 * 1024, "REN periodic response");
     // REN uses 404 plus this exact JSON message for a day not yet published.
     if (isJsonObject(data) && data.message === DAILY_NO_DATA) {
       missing = true;
       continue;
     }
-    if (!response.ok) throw new GatekeeperError(`REN periodic API returned HTTP ${response.status}`, "upstream-error");
+    if (!response.ok) throw upstreamResponseError(response, `REN periodic API returned HTTP ${response.status}`);
     if (!sourceUrl) sourceUrl = url.toString();
     lines.push(JSON.stringify({ period, response: data }));
   }

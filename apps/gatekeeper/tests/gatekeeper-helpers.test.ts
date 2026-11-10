@@ -14,6 +14,7 @@ import {
   readBoundedResponse,
   retryAfterSeconds,
   runTransformer,
+  upstreamResponseError,
   sha256Hex,
   type TransformContext,
 } from "@open-data-pt/gatekeeper";
@@ -31,6 +32,15 @@ describe("Retry-After", () => {
     expect(retryAfterSeconds(headers("soon"))).toBeUndefined();
     expect(retryAfterSeconds(headers("99999999999999999999"))).toBeUndefined();
     expect(retryAfterSeconds(headers())).toBeUndefined();
+  });
+
+  it("is preserved by the shared upstream response error for seconds and HTTP dates", () => {
+    expect(upstreamResponseError(new Response(null, { status: 429, headers: { "Retry-After": "45" } }), "busy")).toMatchObject({
+      code: "upstream-error",
+      retryAfterSeconds: 45,
+    });
+    const error = upstreamResponseError(new Response(null, { status: 503, headers: { "Retry-After": new Date(Date.now() + 60_000).toUTCString() } }), "later");
+    expect(error.retryAfterSeconds).toBeGreaterThanOrEqual(58);
   });
 });
 

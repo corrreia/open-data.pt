@@ -4,7 +4,7 @@ import {
   assertHistoryProgress,
   assertResolvedFeed,
   historyCursorKey,
-  type CollectionResult,
+  isPermanentCollectionError,
   type JsonObject,
   type JsonValue,
   type NormalizedFrame,
@@ -100,9 +100,18 @@ describe("collection result envelope validation", () => {
     { kind: "unchanged", checkpoint: checkpoint(), extra: true },
     { kind: "exhausted", checkpoint: checkpoint() },
   ])("rejects malformed or extended RPC result %j", (result) => {
-    const untrusted: unknown = result;
-    // SAFETY: the result arrives over RPC typed as a CollectionResult; the validator is what finds it is not one.
-    expect(() => assertCollectionResult(untrusted as CollectionResult, { kind: "live" })).toThrow();
+    expect(() => assertCollectionResult(result, { kind: "live" })).toThrow();
+  });
+
+  it.each([null, 7, "failure", [], { kind: "invented" }] as const)("permanently rejects a non-result RPC value %j", (result) => {
+    let message = "";
+    try {
+      assertCollectionResult(result, { kind: "live" });
+    } catch (error) {
+      message = (error instanceof Error ? error.message : String(error)).replace(/^NormalizedInputError: /, "");
+    }
+    expect(message).toContain("open-data/normalized-input");
+    expect(isPermanentCollectionError(new Error(message))).toBe(true);
   });
 });
 
@@ -141,6 +150,27 @@ describe("normalized consumer validation", () => {
     ];
     await expect(readNormalizedStream(framed([h]), limits, scope)).rejects.toThrow();
   });
+  it.each([
+    ["record", "time-series"],
+    ["series", "reference"],
+  ] as const)("rejects contradictory product kind %s and role %s", async (kind, role) => {
+    const h = header();
+    h.products = [
+      {
+        productKey: "events",
+        slug: "events",
+        title: "Events",
+        description: "",
+        role,
+        schema: { fields: [] },
+        kind,
+        updateMode: "authoritative-snapshot",
+        completeness: "complete",
+      },
+    ];
+    await expect(readNormalizedStream(framed([h]), limits, scope)).rejects.toThrow("invalid frame");
+  });
+
   it.each(["record", "series"])("rejects inline product rows under kind:%s rather than bypassing row budgets", async (kind) => {
     for (const field of ["records", "points"]) {
       const h = header();

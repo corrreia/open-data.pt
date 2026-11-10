@@ -11,7 +11,7 @@ import {
   isoDate,
   parseJsonBytes,
   readBoundedResponse,
-  retryAfterSeconds,
+  upstreamResponseError,
   type FeedKindDescription,
   type HistoryCursor,
   type JsonObject,
@@ -137,7 +137,7 @@ export async function collectEurostatDataset(config: SourceConfig, checkpoint: S
     throw new GatekeeperError(eurostatErrorMessage(bytes) ?? "Eurostat rejected the dataset configuration", "invalid-config");
   }
   if (!response.ok || !response.body) {
-    throw new GatekeeperError(`Eurostat returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+    throw upstreamResponseError(response, `Eurostat returned HTTP ${response.status}`);
   }
 
   const bytes = await readBoundedBody(response, EUROSTAT_MAX_BYTES, tooLarge);
@@ -207,7 +207,7 @@ export async function collectEurostatDatasetHistory(config: SourceConfig, cursor
     throw new GatekeeperError(eurostatErrorMessage(bytes) ?? "Eurostat rejected the history query", "invalid-config");
   }
   if (!response.ok || !response.body) {
-    throw new GatekeeperError(`Eurostat history request returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+    throw upstreamResponseError(response, `Eurostat history request returned HTTP ${response.status}`);
   }
 
   const bytes = await readBoundedBody(response, EUROSTAT_HISTORY_MAX_BYTES, historyTooLarge);

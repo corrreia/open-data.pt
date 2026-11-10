@@ -27,6 +27,16 @@ export type Vocabularies = Omit<CatalogDescription, "feeds">;
 /** What the Registry holds before the Gatekeeper has first answered: every key is served as itself. */
 export const EMPTY_VOCABULARIES: Vocabularies = { publishers: [], licences: [], topics: [] };
 
+/** Hard platform limits a Gatekeeper catalog may request for one feed. */
+export const POLICY_CEILINGS = {
+  cadenceSeconds: 31 * 86_400,
+  timeoutSeconds: 1_800,
+  maxBytes: 768 * 1024 * 1024,
+  maxOutputBytes: 192 * 1024 * 1024,
+  maxRecordBytes: 1024 * 1024,
+  maxRecords: 1_000_000,
+} as const;
+
 /** What a feed says about itself that the catalog expands: whose it is, under what terms, and what it is about. */
 export interface FeedTermKeys {
   publisher: string;
@@ -153,6 +163,7 @@ function checkedFeed(value: JsonValue): CatalogFeed {
     slug,
     publisher: required(value, "publisher", subject),
     library: required(value, "library", subject),
+    format: required(value, "format", subject),
     title: required(value, "title", subject),
     description: value.description,
     licence: required(value, "licence", subject),
@@ -174,14 +185,14 @@ function checkedPolicy(value: JsonValue | undefined, subject: string): Collectio
   const historyMode = value.historyMode;
   if (historyMode !== "changes" && historyMode !== "latest") throw new NormalizedInputError(`Gatekeeper catalog: ${subject} has an invalid history mode`);
   const policy: CollectionPolicyDefinition = {
-    cadenceSeconds: whole(value.cadenceSeconds, "cadenceSeconds", subject),
-    timeoutSeconds: whole(value.timeoutSeconds, "timeoutSeconds", subject),
-    maxBytes: whole(value.maxBytes, "maxBytes", subject),
+    cadenceSeconds: boundedWhole(value.cadenceSeconds, "cadenceSeconds", subject, POLICY_CEILINGS.cadenceSeconds),
+    timeoutSeconds: boundedWhole(value.timeoutSeconds, "timeoutSeconds", subject, POLICY_CEILINGS.timeoutSeconds),
+    maxBytes: boundedWhole(value.maxBytes, "maxBytes", subject, POLICY_CEILINGS.maxBytes),
     historyMode,
   };
-  if (value.maxOutputBytes !== undefined) policy.maxOutputBytes = whole(value.maxOutputBytes, "maxOutputBytes", subject);
-  if (value.maxRecordBytes !== undefined) policy.maxRecordBytes = whole(value.maxRecordBytes, "maxRecordBytes", subject);
-  if (value.maxRecords !== undefined) policy.maxRecords = whole(value.maxRecords, "maxRecords", subject);
+  if (value.maxOutputBytes !== undefined) policy.maxOutputBytes = boundedWhole(value.maxOutputBytes, "maxOutputBytes", subject, POLICY_CEILINGS.maxOutputBytes);
+  if (value.maxRecordBytes !== undefined) policy.maxRecordBytes = boundedWhole(value.maxRecordBytes, "maxRecordBytes", subject, POLICY_CEILINGS.maxRecordBytes);
+  if (value.maxRecords !== undefined) policy.maxRecords = boundedWhole(value.maxRecords, "maxRecords", subject, POLICY_CEILINGS.maxRecords);
   if (value.withoutHistory !== undefined) {
     const without = value.withoutHistory;
     if (!isJsonArray(without) || !without.every(isJsonString)) throw new NormalizedInputError(`Gatekeeper catalog: ${subject} has an invalid withoutHistory`);
@@ -210,6 +221,13 @@ function checkedHistory(value: JsonValue, subject: string): HistoryCapability {
 function whole(value: JsonValue | undefined, field: string, subject: string): number {
   if (!isJsonNumber(value) || !Number.isSafeInteger(value) || value <= 0) throw new NormalizedInputError(`Gatekeeper catalog: ${subject} has an invalid ${field}`);
   return value;
+}
+
+/** A policy number within the Kernel's own platform ceiling. */
+function boundedWhole(value: JsonValue | undefined, field: string, subject: string, ceiling: number): number {
+  const parsed = whole(value, field, subject);
+  if (parsed > ceiling) throw new NormalizedInputError(`Gatekeeper catalog: ${subject} has ${field} above the Kernel ceiling of ${ceiling}`);
+  return parsed;
 }
 
 /** One list of the catalog, each entry an object with a unique non-empty `id`. */

@@ -3,7 +3,7 @@ import {
   fixedOrigin,
   isJsonString,
   readBoundedResponse,
-  retryAfterSeconds,
+  upstreamResponseError,
   type Described,
   type FeedKindDescription,
   type HistoryCursor,
@@ -155,7 +155,7 @@ export async function listQuarters(origin: string, layer: OoklaLayer, fetcher: t
     url.searchParams.set("prefix", `parquet/performance/type=${layer}/`);
     if (continuation) url.searchParams.set("continuation-token", continuation);
     const response = await request(fetcher, url, new Headers({ Accept: "application/xml" }));
-    if (!response.ok) throw new GatekeeperError(`Ookla's bucket listing returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+    if (!response.ok) throw upstreamResponseError(response, `Ookla's bucket listing returned HTTP ${response.status}`);
     const listed = parseListing(new TextDecoder().decode(await readBoundedResponse(response, LISTING_MAX_BYTES, "Ookla's bucket listing")), layer);
     files.push(...listed.files);
     continuation = listed.continuation;
@@ -194,7 +194,7 @@ export function rangeReader(origin: string, file: QuarterFile, fetcher: typeof f
     }
     if (response.status !== 206 || !response.body) {
       await response.body?.cancel();
-      throw new GatekeeperError(`Ookla's bucket answered a range of ${file.key} with HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+      throw upstreamResponseError(response, `Ookla's bucket answered a range of ${file.key} with HTTP ${response.status}`);
     }
     if (response.headers.get("content-range") !== `bytes ${start}-${end}/${file.size}`) {
       await response.body.cancel();

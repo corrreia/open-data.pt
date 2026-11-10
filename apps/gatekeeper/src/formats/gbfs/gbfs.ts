@@ -8,6 +8,7 @@ import {
   isJsonObject,
   isJsonString,
   parseJsonBytes,
+  upstreamResponseError,
   type FeedKindDescription,
   type JsonObject,
   type JsonValue,
@@ -289,9 +290,8 @@ async function upstreamFetch(fetcher: Fetcher, url: URL, headers: Headers): Prom
 }
 
 function assertSuccessful(response: Response, resource: string): void {
-  if (!response.ok || !response.body) {
-    throw new GatekeeperError(`${resource} returned HTTP ${response.status}`, "upstream-error");
-  }
+  if (!response.ok) throw upstreamResponseError(response, `${resource} returned HTTP ${response.status}`);
+  if (!response.body) throw new GatekeeperError(`${resource} returned no body`, "upstream-error");
 }
 
 async function readJsonResource(response: Response, url: URL, maximumBytes: number, allowOmission: boolean): Promise<ParsedResource | undefined> {

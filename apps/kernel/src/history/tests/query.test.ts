@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { QueryError, runLakeQuery, validate } from "#/history/query";
+import { BASIN_RESPONSE_MAX_BYTES, QueryError, runLakeQuery, validate } from "#/history/query";
 
 /** The kernel's own vars, as its generated `Env` types them from wrangler.jsonc; the token is a test one. */
 const env: Pick<Env, "CATALOG_TOKEN" | "LAKE_BUCKET" | "CLOUDFLARE_ACCOUNT_ID"> = {
@@ -25,6 +25,24 @@ describe("internal Basin SQL client", () => {
     await expect(runLakeQuery(env, "SELECT 1 LIMIT 1", "test", async () => Response.json({ success: false, errors: [{ message: "failure" }] }, { status: 500 }))).rejects.toThrow(
       QueryError,
     );
+  });
+
+  it.each([
+    [200, "unreadable"],
+    [500, "store"],
+  ] as const)("cancels a Basin HTTP %i body above its ceiling as %s", async (status, failure) => {
+    let cancelled = false;
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new Uint8Array(BASIN_RESPONSE_MAX_BYTES));
+        controller.enqueue(new Uint8Array(1));
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
+    await expect(runLakeQuery(env, "SELECT 1 LIMIT 1", "test", async () => new Response(body, { status }))).rejects.toMatchObject({ failure });
+    expect(cancelled).toBe(true);
   });
 
   it("says why a query failed: its own guard, the store, an unreachable store, or an unreadable answer", async () => {

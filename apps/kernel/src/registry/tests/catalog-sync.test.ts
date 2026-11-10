@@ -21,6 +21,7 @@ function feed(slug: string, title = slug): CatalogFeed {
     slug,
     publisher: "ine",
     library,
+    format: "own-api",
     title,
     description: "Fixture",
     licence: "cc-by-4.0",
@@ -41,20 +42,18 @@ interface InstalledFeed extends SyncFeed {
 /** A Registry in memory: what the sync installs, updates and retires, and its stored sync state. */
 class FakeRegistry implements SyncPorts {
   catalog: CatalogFeed[] | undefined = [];
-  version: string | undefined = "v1";
+  version = "v1";
   readonly installed = new Map<string, InstalledFeed>();
   readonly applied: string[] = [];
   readonly retired: string[] = [];
   readonly failing = new Set<string>();
+  activations = 0;
   state: SyncState | undefined;
   clock = 1_000_000;
   private nextId = 1;
 
-  async readCatalog(): Promise<CatalogFeed[] | undefined> {
-    return structuredClone(this.catalog);
-  }
-  async catalogVersion(): Promise<string | undefined> {
-    return this.version;
+  async readCatalogSnapshot() {
+    return this.catalog === undefined ? undefined : { feeds: structuredClone(this.catalog), version: this.version };
   }
   feeds(): SyncFeed[] {
     return [...this.installed.values()];
@@ -70,6 +69,10 @@ class FakeRegistry implements SyncPorts {
   async retire(feedId: string): Promise<void> {
     this.retired.push(feedId);
     for (const [slug, feed] of this.installed) if (feed.id === feedId) this.installed.delete(slug);
+  }
+
+  activateCatalog(): void {
+    this.activations += 1;
   }
 
   load(): SyncState | undefined {
@@ -113,6 +116,7 @@ describe("catalog sync", () => {
     expect(steps.map((step) => step.pending)).toEqual([5, 1, 0]);
     expect(steps.map((step) => step.checked)).toEqual([true, false, false]);
     expect([...fake.installed.keys()].sort()).toEqual(["a1", "a2", "a3", "a4", "a5", "a6", "b1", "b2", "b3"]);
+    expect(fake.activations).toBe(1);
   });
 
   it("checks only every fifteen minutes unless asked", async () => {
@@ -124,13 +128,15 @@ describe("catalog sync", () => {
     expect((await syncStep(fake)).checked).toBe(true);
   });
 
-  it("keeps the catalog version each check read, and forgets it when a Gatekeeper cannot say", async () => {
+  it("stores the version returned with the exact catalog snapshot", async () => {
     const fake = registry();
     await fake.drain();
     expect(fake.state?.catalogVersion).toBe("v1");
-    fake.version = undefined;
+    fake.version = "v2";
+    fake.catalog!.push(feed("b4"));
     await fake.nextCheck();
-    expect(fake.state).not.toHaveProperty("catalogVersion");
+    expect(fake.state?.catalogVersion).toBe("v2");
+    expect(fake.installed.has("b4")).toBe(true);
   });
 
   it("brings the next check forward when a runner hears a catalog the last check did not read", async () => {
@@ -234,11 +240,14 @@ describe("catalog sync", () => {
     expect(steps.reduce((total, step) => total + step.failed, 0)).toBe(1);
     expect(fake.installed.size).toBe(8);
     expect(fake.state!.lastError).toMatch(/^a2: .*install failed/);
+    expect(fake.activations).toBe(0);
+    expect(fake.state?.catalogVersion).toBeUndefined();
+    expect(fake.state?.pendingCatalogVersion).toBe("v1");
     fake.failing.clear();
     await fake.nextCheck();
     expect(fake.applied).toEqual(["a2"]);
-    expect(fake.state!.lastError).toBeDefined();
-    await fake.nextCheck();
+    expect(fake.activations).toBe(1);
+    expect(fake.state?.catalogVersion).toBe("v1");
     expect(fake.state!.lastError).toBeUndefined();
   });
 });

@@ -24,6 +24,14 @@ export class ObjectStore {
     return object ? new Response(object.body).text() : undefined;
   }
 
+  /** Whether an object exists, without materializing its body. */
+  async exists(key: string): Promise<boolean> {
+    const object = await this.snapshots.get(key);
+    if (!object) return false;
+    await object.body.cancel().catch(() => undefined);
+    return true;
+  }
+
   async write<T>(key: string, value: T): Promise<number> {
     return this.writeText(key, JSON.stringify(value));
   }

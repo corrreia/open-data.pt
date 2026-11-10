@@ -11,7 +11,7 @@ import {
   parseJsonBytes,
   readBoundedResponse,
   responseValidator,
-  retryAfterSeconds,
+  upstreamResponseError,
   type FeedKindDescription,
   type HistoryCursor,
   type JsonObject,
@@ -391,11 +391,11 @@ function exhaustedHistory(): SourceExhausted {
 }
 
 function upstreamError(service: RenServiceName, response: Response): GatekeeperError {
-  return new GatekeeperError(`REN Data Hub returned HTTP ${response.status} for ${service}`, "upstream-error", retryAfterSeconds(response.headers));
+  return upstreamResponseError(response, `REN Data Hub returned HTTP ${response.status} for ${service}`);
 }
 
 function historyUpstreamError(service: RenServiceName, response: Response): GatekeeperError {
-  return new GatekeeperError(`REN Data Hub returned HTTP ${response.status} for ${service} history`, "upstream-error", retryAfterSeconds(response.headers));
+  return upstreamResponseError(response, `REN Data Hub returned HTTP ${response.status} for ${service} history`);
 }
 
 function historyBefore(value: string): Date {

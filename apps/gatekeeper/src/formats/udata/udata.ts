@@ -8,7 +8,7 @@ import {
   readBoundedBytes,
   requireString,
   responseValidator,
-  retryAfterSeconds,
+  upstreamResponseError,
   sourceValidator,
   type JsonObject,
   type JsonValue,
@@ -207,5 +207,5 @@ function catalogueResource(candidate: JsonValue): UdataResource | undefined {
 
 /** A refused upstream response, carrying its status and any `Retry-After` the provider asked for. */
 function upstreamError(label: string, response: Response): GatekeeperError {
-  return new GatekeeperError(`${label} returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+  return upstreamResponseError(response, `${label} returned HTTP ${response.status}`);
 }

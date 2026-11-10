@@ -5,6 +5,7 @@ import { SNIT_API_ORIGIN, SNIT_FEEDS } from "./snit";
 export const SNIT_DEPLOYMENT: LibraryDeployment<{ readonly SNIT_API_ORIGIN: string }, SnitContext> = {
   source: "snit",
   name: "SNIT territorial management instruments",
+  publicFormat: "own-api",
   vars: { SNIT_API_ORIGIN },
   // The master plans come back as about 6 MB of JSON that is parsed, re-encoded
   // and digested before a row is emitted; that is past the default CPU budget,

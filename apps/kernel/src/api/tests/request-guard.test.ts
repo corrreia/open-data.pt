@@ -1,3 +1,4 @@
+import { API_ROUTES } from "@open-data-pt/api";
 import { describe, expect, it } from "vitest";
 import { openApiDocument } from "#/api/openapi";
 import { GuardError, MAX_FILTERS, canonicalRoute, isAllowedMethod, requestIdOf, withinRateLimit } from "#/api/request-guard";
@@ -38,12 +39,18 @@ describe("canonical routes", () => {
     expect(route("/api/acquisitions?day=2026-09-01&feedId=f1&limit=5")?.costly).toBe(false);
   });
 
-  it("accepts every query parameter the OpenAPI document publishes", () => {
-    for (const [path, item] of Object.entries(openApiDocument("https://open-data.pt").paths)) {
-      const url = new URL(`https://open-data.pt${path.replace("{slug}", "stops").replace("{feedId}", "feed_1").replace("{period}", "2026-09")}`);
-      for (const parameter of item.get.parameters) if (parameter.in === "query") url.searchParams.set(parameter.name, "1");
-      expect(() => canonicalRoute(url), path).not.toThrow();
-      expect(canonicalRoute(url), path).toBeDefined();
+  it("publishes exactly the query parameters the route contract accepts", () => {
+    const document = openApiDocument("https://open-data.pt");
+    for (const definition of API_ROUTES) {
+      const found = Object.entries(document.paths).find(([path]) => path === definition.path);
+      if (!found) throw new Error(`OpenAPI has no path for ${definition.path}`);
+      const published: string[] = [];
+      for (const parameter of found[1].get.parameters) if (parameter.in === "query") published.push(parameter.name);
+      expect(published, definition.path).toEqual(definition.query.map((parameter) => parameter.name));
+      const url = new URL(`https://open-data.pt${definition.path.replace("{slug}", "stops").replace("{feedId}", "feed_1").replace("{period}", "2026-09")}`);
+      for (const name of published) url.searchParams.set(name, "1");
+      expect(() => canonicalRoute(url), definition.path).not.toThrow();
+      expect(canonicalRoute(url), definition.path).toBeDefined();
     }
   });
 

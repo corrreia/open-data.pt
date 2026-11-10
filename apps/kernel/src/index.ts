@@ -1,4 +1,5 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
+import { OPENAPI_MEDIA_TYPE } from "@open-data-pt/api";
 import { UsageRecorder, askCallOf, countedSurface, type AskCall, type CacheOutcome, type McpCall } from "#/pages/analytics";
 import { CADENCE_HEADER, cacheTtl, productTtl } from "#/api/cache";
 import { handleSite, type SiteHost } from "#/pages/discovery";
@@ -48,8 +49,12 @@ export default class KernelWorker extends WorkerEntrypoint<Env> {
 
   private async serve(request: Request, url: URL, usage: UsageRecorder): Promise<Served> {
     if (url.pathname === "/openapi.json") {
-      const response = Response.json(openApiDocument(url.origin), {
-        headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "public, max-age=300" },
+      const response = new Response(JSON.stringify(openApiDocument(url.origin)), {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Cache-Control": "public, max-age=300",
+          "Content-Type": OPENAPI_MEDIA_TYPE,
+        },
       });
       return { response, cache: "none" };
     }
@@ -120,9 +125,8 @@ export default class KernelWorker extends WorkerEntrypoint<Env> {
   }
 
   /**
-   * The read-only API behind the edge cache. The cache key is the route's
-   * canonical URL, so unknown parameters are refused rather than cached apart,
-   * and only requests that miss the cache count against the rate limits.
+   * The uncached gateway: method and query guards stay here, then cacheable GETs
+   * cross the named CachedApi entrypoint whose platform cache collapses misses.
    */
   private async api(request: Request, url: URL): Promise<Served> {
     if (!isAllowedMethod(request.method)) {
@@ -141,28 +145,19 @@ export default class KernelWorker extends WorkerEntrypoint<Env> {
     const read = new Request(target, { method: "GET", headers: request.headers });
     const ttl = route ? cacheTtl(target) : undefined;
     if (ttl !== undefined) {
-      const hit = await caches.default.match(read);
-      if (hit) return { response: head ? withoutBody(hit) : hit, cache: "hit" };
+      const response = await this.ctx.exports.CachedApi.fetch(read);
+      const status = response.headers.get("CF-Cache-Status")?.toLowerCase();
+      const cache: CacheOutcome = status === "hit" ? "hit" : "miss";
+      return { response: head ? withoutBody(response) : response, cache };
     }
-    const cache = ttl === undefined ? "none" : "miss";
     if (!(await withinRateLimit(this.rateLimiters(), request, route?.costly === true))) {
       const response = problem(429, "Too many requests", `This client sent too many uncached requests; retry after ${RATE_LIMIT_RETRY_SECONDS} seconds.`, {
         "Retry-After": String(RATE_LIMIT_RETRY_SECONDS),
       });
-      return { response, cache };
+      return { response, cache: "none" };
     }
     const response = await handleApi(read, this.apiContext());
-    // Only a whole answer is cached: the edge cuts byte ranges out of it itself, and refuses to store a 206.
-    if (ttl === undefined || response.status !== 200) return { response: head ? withoutBody(response) : response, cache };
-
-    const cacheable = new Response(response.body, response);
-    // A product's current data names its cadence, so one that changes daily is not read again every 15 seconds.
-    const cadence = cacheable.headers.get(CADENCE_HEADER);
-    cacheable.headers.delete(CADENCE_HEADER);
-    const lifetime = productTtl(ttl, cadence === null ? undefined : Number(cadence));
-    cacheable.headers.set("Cache-Control", `public, max-age=${lifetime}, stale-while-revalidate=${lifetime}`);
-    this.ctx.waitUntil(caches.default.put(read, cacheable.clone()));
-    return { response: head ? withoutBody(cacheable) : cacheable, cache };
+    return { response: head ? withoutBody(response) : response, cache: "none" };
   }
 
   protected apiContext(): ApiContext {
@@ -214,6 +209,42 @@ export default class KernelWorker extends WorkerEntrypoint<Env> {
       clientKey: key,
       onCall,
     };
+  }
+}
+
+/**
+ * The only cache-enabled entrypoint. Cloudflare applies its documented Worker
+ * cache before invoking this handler, so only misses generate an API response
+ * and consume a rate-limit token. Wrangler accepts and routes this locally but
+ * does not simulate hits; production hit and miss-collapse behaviour remains
+ * an explicit verification gap in docs/api.md.
+ */
+export class CachedApi extends WorkerEntrypoint<Env> {
+  override async fetch(request: Request): Promise<Response> {
+    const url = new URL(request.url);
+    const route = canonicalRoute(url);
+    if (!(await withinRateLimit(this.rateLimiters(), request, route?.costly === true))) {
+      return problem(429, "Too many requests", `This client sent too many uncached requests; retry after ${RATE_LIMIT_RETRY_SECONDS} seconds.`, {
+        "Retry-After": String(RATE_LIMIT_RETRY_SECONDS),
+      });
+    }
+    const response = await handleApi(request, this.apiContext());
+    const ttl = cacheTtl(url);
+    if (ttl === undefined || response.status !== 200) return response;
+    const cacheable = new Response(response.body, response);
+    const cadence = cacheable.headers.get(CADENCE_HEADER);
+    cacheable.headers.delete(CADENCE_HEADER);
+    const lifetime = productTtl(ttl, cadence === null ? undefined : Number(cadence));
+    cacheable.headers.set("Cache-Control", `public, max-age=${lifetime}`);
+    return cacheable;
+  }
+
+  protected apiContext(): ApiContext {
+    return { env: this.env, snapshots: new R2SnapshotStore(this.env.DATA_OBJECTS) };
+  }
+
+  protected rateLimiters(): RateLimiters {
+    return { api: this.env.API_RATE_LIMIT, costly: this.env.HISTORY_RATE_LIMIT };
   }
 }
 

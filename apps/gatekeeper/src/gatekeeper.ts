@@ -1,5 +1,5 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
-import type { CatalogDescription } from "@open-data-pt/contract";
+import type { CatalogDescription, CatalogSnapshot } from "@open-data-pt/contract";
 
 import { FEEDS, catalogOf, enabledFeed, feedEnabled, publisherInputs, runtimeOf } from "./catalog";
 import { buildLibrary, collectNormalized, otherRelease, feedCollector, type CollectionRequest, type CollectionResult, type GatekeeperLibraries, type Library } from "./index";
@@ -52,6 +52,11 @@ export function gatekeeper<E extends object>(libraries: readonly Library[]) {
      */
     async catalog(): Promise<CatalogDescription> {
       return (await this.resolvedCatalog()).catalog;
+    }
+
+    /** The catalog and digest resolved together by this Gatekeeper instance. */
+    async catalogSnapshot(): Promise<CatalogSnapshot> {
+      return await this.resolvedCatalog();
     }
 
     /** The digest of what `catalog` answers for the libraries this Worker carries. */

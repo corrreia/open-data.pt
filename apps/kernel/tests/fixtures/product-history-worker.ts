@@ -1,7 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 import { asObject, parseJson, requireString } from "@open-data-pt/contract";
 import type { ApiContext } from "../../src/api/http";
-import KernelWorker from "../../src/index";
+import KernelWorker, { CachedApi as KernelCachedApi } from "../../src/index";
 export { Registry, FeedRunner, CollectionWorkflow } from "../../src/index";
 
 interface HistoryTestEnv extends Env {
@@ -30,15 +30,30 @@ export default class ProductHistoryTestWorker extends KernelWorker {
     return super.fetch(request);
   }
   protected override apiContext(): ApiContext {
-    return {
-      ...super.apiContext(),
-      lakeQueryFetch: async (input, init) => {
-        if (String(input) !== `https://api.sql.cloudflarestorage.com/api/v1/accounts/${LAKE.CLOUDFLARE_ACCOUNT_ID}/r2-sql/query/${LAKE.LAKE_BUCKET}`)
-          throw new Error("Unexpected provider URL");
-        return this.historyFixture.getByName("history").fetch(new Request("https://fixture/query", init));
-      },
-    };
+    return { ...super.apiContext(), lakeQueryFetch: historyFetch(this.historyFixture) };
   }
+}
+
+/** The cached entrypoint with the same test-only lake transport as the gateway. */
+export class CachedApi extends KernelCachedApi {
+  private readonly historyFixture: DurableObjectNamespace<HistoryFixture>;
+
+  constructor(ctx: ExecutionContext, env: HistoryTestEnv) {
+    super(ctx, { ...env, ...LAKE });
+    this.historyFixture = env.HISTORY_FIXTURE;
+  }
+
+  protected override apiContext(): ApiContext {
+    return { ...super.apiContext(), lakeQueryFetch: historyFetch(this.historyFixture) };
+  }
+}
+
+function historyFetch(historyFixture: DurableObjectNamespace<HistoryFixture>): typeof fetch {
+  return async (input, init) => {
+    if (String(input) !== `https://api.sql.cloudflarestorage.com/api/v1/accounts/${LAKE.CLOUDFLARE_ACCOUNT_ID}/r2-sql/query/${LAKE.LAKE_BUCKET}`)
+      throw new Error("Unexpected provider URL");
+    return historyFixture.getByName("history").fetch(new Request("https://fixture/query", init));
+  };
 }
 
 /** Real SQLite executes the emitted window queries, including the ingest-day partition bound. */

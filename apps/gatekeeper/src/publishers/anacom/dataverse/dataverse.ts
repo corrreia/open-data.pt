@@ -7,7 +7,7 @@ import {
   isJsonString,
   readBoundedJson,
   readBoundedResponse,
-  retryAfterSeconds,
+  upstreamResponseError,
   toByteStream,
   type FeedKindDescription,
   type SourceConfig,
@@ -140,5 +140,5 @@ async function csvEntry(archive: Uint8Array, indicator: string): Promise<Uint8Ar
 
 function requireOk(response: Response, what: string): void {
   if (response.ok) return;
-  throw new GatekeeperError(`STAT.ANACOM answered HTTP ${response.status} for ${what}`, "upstream-error", retryAfterSeconds(response.headers));
+  throw upstreamResponseError(response, `STAT.ANACOM answered HTTP ${response.status} for ${what}`);
 }

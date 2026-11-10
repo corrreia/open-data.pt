@@ -56,6 +56,7 @@ export {
   readBoundedResponse,
   retryAfterSeconds,
   sha256Hex,
+  upstreamResponseError,
 } from "./source-http";
 export { readBoundedBytes, toByteStream } from "./stream";
 export { streamCsvRecords, streamCsvRows, type CsvStreamOptions } from "./stream-csv";
