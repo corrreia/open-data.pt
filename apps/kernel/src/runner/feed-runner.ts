@@ -278,7 +278,7 @@ export class FeedRunner extends DurableObject<Env> {
     const receipt = await registryOf(this.env).publishProducts(publication, await this.reportFor(feed));
     if (receipt.known) {
       this.reportsSent += 1;
-      this.core.backfillPeers = Math.max(1, receipt.backfillPeers);
+      this.core.setBackfillPeers(receipt.backfillPeers);
     }
     return receipt;
   }
@@ -295,7 +295,7 @@ export class FeedRunner extends DurableObject<Env> {
       return;
     }
     this.reportsSent += 1;
-    this.core.backfillPeers = Math.max(1, receipt.backfillPeers);
+    this.core.setBackfillPeers(receipt.backfillPeers);
     if (receipt.retire && !this.core.retiring()) {
       console.warn(JSON.stringify({ event: "runner_unknown_to_registry", feedId: feed.id }));
       this.core.decommission();

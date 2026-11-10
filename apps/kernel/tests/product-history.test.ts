@@ -107,8 +107,9 @@ afterAll(async () => {
 }, 30_000);
 
 interface HistoryPage {
-  data: Array<{ value?: number; revisionId?: string; payload?: { value: number } }>;
+  data: Array<{ value?: number; revisionId?: string; ingestedAt?: string; payload?: { value: number } }>;
   nextCursor: string | null;
+  snapshotAt: string;
   knownAt?: string | null;
   coverage: { lakeStartsAt: string | null };
 }
@@ -142,7 +143,9 @@ describe("typed product history owner isolation", () => {
     const second = await jsonBody<HistoryPage>(secondResponse);
     expect(second.data.map((row) => row.payload?.value ?? row.value)).toEqual([1]);
     expect(second.nextCursor).toBeNull();
+    expect(second.snapshotAt).toBe(first.snapshotAt);
     for (const query of (await historyQueries()).slice(-2)) {
+      expect(query).toContain(`__ingest_ts <= TIMESTAMP '${first.snapshotAt}'`);
       expect(query).toContain("WHERE feed_id = 'feed-owner''s' AND product_slug = '");
       expect(query).toContain(`product_slug = '${slug}'`);
       // Event and observation feeds let the lake skip ingest-day partitions: ten days before the window for what a
@@ -212,6 +215,7 @@ describe("series as known at any moment", () => {
       ["rev-b", 10],
       ["rev-a", 1],
     ]);
+    expect(page.data.every((row) => row.ingestedAt?.endsWith("Z") === true)).toBe(true);
     expect(page.coverage.lakeStartsAt).toBe("2026-09-09T00:00:00.000Z");
   });
 

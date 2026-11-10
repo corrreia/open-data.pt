@@ -14,7 +14,7 @@ import type { SqlExec } from "#/sqlite-reset";
  * the atomically selected product index the public API reads.
  */
 export const REGISTRY_SCHEMA_BASELINE = 201;
-export const REGISTRY_SCHEMA_VERSION = 204;
+export const REGISTRY_SCHEMA_VERSION = 205;
 const ACTIVITY_KEEP = 5_000;
 const REHYDRATION_REQUIRED_KEY = "runner-rehydration-required";
 const REHYDRATION_DIGEST_KEY = "runner-rehydration-digest";
@@ -52,6 +52,12 @@ export class RegistryStore {
           checksum: "5b87502570d226fc6a4432ddef03",
           apply: () => this.createPublicationSchema(),
         },
+        {
+          id: 205,
+          name: "history-query-leases",
+          checksum: "47b095aa9d73c895a601687ea55",
+          apply: () => this.createHistoryQueryLeaseSchema(),
+        },
       ],
       createBaseline: () => this.createSchema(),
       ready: (fresh) => {
@@ -74,6 +80,7 @@ export class RegistryStore {
     this.createSchema202();
     this.createRehydrationSchema();
     this.createPublicationSchema();
+    this.createHistoryQueryLeaseSchema();
   }
 
   private createSchema202(): void {
@@ -108,6 +115,11 @@ export class RegistryStore {
       publication_id TEXT PRIMARY KEY, feed_id TEXT NOT NULL, publication_number INTEGER NOT NULL, selected_at TEXT NOT NULL,
       UNIQUE(feed_id, publication_number))`);
     this.exec(`CREATE INDEX IF NOT EXISTS accepted_publications_feed ON accepted_publications (feed_id, publication_number DESC)`);
+  }
+
+  private createHistoryQueryLeaseSchema(): void {
+    this.exec(`CREATE TABLE IF NOT EXISTS history_query_leases (query_id TEXT PRIMARY KEY, expires_at TEXT NOT NULL)`);
+    this.exec(`CREATE INDEX IF NOT EXISTS history_query_leases_expiry ON history_query_leases (expires_at)`);
   }
 
   getState<T>(key: string): T | undefined {
@@ -442,6 +454,24 @@ export class RegistryStore {
   listProducts(): ProductSummary[] {
     // SAFETY: entry_json is written only from ProductIndexEntry values, without their chunks, by replaceFeedProducts.
     return this.rows<{ entry_json: string }>(`SELECT entry_json FROM products ORDER BY title`).map((row) => JSON.parse(row.entry_json) as ProductSummary);
+  }
+
+  /* ---------- History query leases ---------- */
+
+  /** Allocate one durable query lease, pruning requests that cannot still be running. */
+  tryStartHistoryQuery(queryId: string, now: string, expiresAt: string, capacity: number): boolean {
+    return this.transaction(() => {
+      this.exec(`DELETE FROM history_query_leases WHERE expires_at <= ?`, now);
+      if (this.rows<{ found: number }>(`SELECT 1 AS found FROM history_query_leases WHERE query_id = ?`, queryId).length > 0) return true;
+      const active = Number(this.rows<{ count: number }>(`SELECT COUNT(*) AS count FROM history_query_leases`)[0]?.count ?? 0);
+      if (active >= capacity) return false;
+      this.exec(`INSERT INTO history_query_leases (query_id, expires_at) VALUES (?, ?)`, queryId, expiresAt);
+      return true;
+    });
+  }
+
+  finishHistoryQuery(queryId: string): void {
+    this.exec(`DELETE FROM history_query_leases WHERE query_id = ?`, queryId);
   }
 
   /* ---------- Activity mirror ---------- */

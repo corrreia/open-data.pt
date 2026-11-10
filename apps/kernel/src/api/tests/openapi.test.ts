@@ -49,7 +49,7 @@ describe("public API contract", () => {
     expect(document.components.schemas.Feed.properties?.format).not.toHaveProperty("enum");
     expect(document.components.schemas.Product.required).toEqual(expect.arrayContaining(["version", "status", "currentAcquisitionId", "watermark", "completeness"]));
     expect(document.components.schemas.Product.properties?.currentAcquisitionId).toMatchObject({ type: ["string", "null"] });
-    expect(document.components.schemas.HistoryPage.required).toEqual(expect.arrayContaining(["data", "nextCursor", "freshness", "coverage", "source"]));
+    expect(document.components.schemas.HistoryPage.required).toEqual(expect.arrayContaining(["data", "nextCursor", "snapshotAt", "freshness", "coverage", "source"]));
   });
 
   it("documents a read-only API with its time queries and filters", () => {

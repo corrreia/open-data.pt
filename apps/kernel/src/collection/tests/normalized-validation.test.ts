@@ -150,6 +150,27 @@ describe("normalized consumer validation", () => {
     ];
     await expect(readNormalizedStream(framed([h]), limits, scope)).rejects.toThrow();
   });
+  it.each([
+    ["record", "time-series"],
+    ["series", "reference"],
+  ] as const)("rejects contradictory product kind %s and role %s", async (kind, role) => {
+    const h = header();
+    h.products = [
+      {
+        productKey: "events",
+        slug: "events",
+        title: "Events",
+        description: "",
+        role,
+        schema: { fields: [] },
+        kind,
+        updateMode: "authoritative-snapshot",
+        completeness: "complete",
+      },
+    ];
+    await expect(readNormalizedStream(framed([h]), limits, scope)).rejects.toThrow("invalid frame");
+  });
+
   it.each(["record", "series"])("rejects inline product rows under kind:%s rather than bypassing row budgets", async (kind) => {
     for (const field of ["records", "points"]) {
       const h = header();

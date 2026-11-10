@@ -73,6 +73,24 @@ async function registry() {
   return { database, store };
 }
 
+describe("durable history query leases", () => {
+  it("keeps capacity across object reconstruction and reclaims expired leases", async () => {
+    const { database, store } = await registry();
+    const now = "2026-09-11T00:00:00.000Z";
+    const expires = "2026-09-11T00:01:00.000Z";
+    for (const id of ["q1", "q2", "q3", "q4"]) expect(store.tryStartHistoryQuery(id, now, expires, 4)).toBe(true);
+    expect(store.tryStartHistoryQuery("q5", now, expires, 4)).toBe(false);
+
+    const reconstructed = new RegistryStore(sqliteStorage(database));
+    reconstructed.migrate();
+    expect(reconstructed.tryStartHistoryQuery("q5", now, expires, 4)).toBe(false);
+    expect(reconstructed.tryStartHistoryQuery("q1", now, expires, 4)).toBe(true);
+    reconstructed.finishHistoryQuery("q1");
+    expect(reconstructed.tryStartHistoryQuery("q5", now, expires, 4)).toBe(true);
+    expect(reconstructed.tryStartHistoryQuery("q6", "2026-09-11T00:02:00.000Z", "2026-09-11T00:03:00.000Z", 4)).toBe(true);
+  });
+});
+
 describe("the Registry's product index", () => {
   it("returns a record product's chunk list for a single read and never in a list", async () => {
     const { store } = await registry();

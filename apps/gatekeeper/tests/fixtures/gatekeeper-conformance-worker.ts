@@ -32,12 +32,11 @@ export interface ConformanceAnswer {
 export default {
   async fetch(request: Request, env: FixtureEnv): Promise<Response> {
     if (new URL(request.url).pathname === "/previous-release") return Response.json(await env.GK.collect(previousRelease()));
-    const first = await env.GK.catalogVersion();
-    const catalog = await env.GK.catalog();
-    const second = await env.GK.catalogVersion();
+    const first = await env.GK.catalogSnapshot();
+    const second = await env.GK.catalogSnapshot();
     const answer: ConformanceAnswer = {
-      versions: [first, second],
-      feeds: catalog.feeds.map(({ slug, library, resourceKey, configHash, eventTimed }) => ({ slug, library, resourceKey, configHash, eventTimed })),
+      versions: [first.version, second.version],
+      feeds: first.catalog.feeds.map(({ slug, library, resourceKey, configHash, eventTimed }) => ({ slug, library, resourceKey, configHash, eventTimed })),
     };
     return Response.json(answer);
   },

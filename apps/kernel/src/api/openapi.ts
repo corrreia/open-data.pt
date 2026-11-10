@@ -392,7 +392,7 @@ export function openApiDocument(origin: string) {
         get: {
           operationId: "listProductChangeRange",
           tags: ["Products"],
-          summary: "Read every revision ingested in a knowledge-time window, newest first",
+          summary: "Read every revision learned in a knowledge-time window, newest first",
           description: "Record products return record revisions. Time-series products return point revisions, as `/series/changes/range` does, and accept `seriesKey`.",
           parameters: [
             ...historyWindow("knowledge-time"),
@@ -427,7 +427,7 @@ export function openApiDocument(origin: string) {
         get: {
           operationId: "listProductSeriesChangeRange",
           tags: ["Products"],
-          summary: "Read every point revision ingested in a knowledge-time window: new points and corrections, newest first",
+          summary: "Read every point revision learned in a knowledge-time window: new points and corrections, newest first",
           parameters: [
             ...historyWindow("knowledge-time"),
             queryParameter("seriesKey", "Optional series key."),

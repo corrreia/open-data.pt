@@ -1,10 +1,10 @@
 import { DurableObject } from "cloudflare:workers";
 import { NormalizedInputError, type CatalogFeed } from "@open-data-pt/contract";
 
-import { cadenceFloorOf, checkForVersion, syncStep, withCadenceFloor, type SyncPorts, type SyncProgress, type SyncState } from "#/registry/catalog-sync";
+import { cadenceFloorOf, checkForVersion, syncStep, withCadenceFloor, type SyncCatalogSnapshot, type SyncPorts, type SyncProgress, type SyncState } from "#/registry/catalog-sync";
 import type { ManifestChunk } from "#/serving/chunks";
 import { definitionFingerprint, keepsHistory, type Acquisition, type Feed, type ProductSummary } from "#/registry/feed-model";
-import { catalogVersionOf, gatekeeperOf } from "#/collection/gatekeeper";
+import { gatekeeperOf } from "#/collection/gatekeeper";
 import { EMPTY_VOCABULARIES, Vocabulary, checkedCatalog, type Vocabularies, type VocabularyRef } from "#/registry/vocabulary";
 import { digest } from "#/hash";
 import { ObjectStore } from "#/serving/object-store";
@@ -21,9 +21,11 @@ export const REGISTRY_ROOM = "main";
 const SYNC_STATE_KEY = "catalog-sync";
 /** The vocabularies the Gatekeeper's catalog last declared: its publishers, licences and topics. */
 const CATALOG_STATE_KEY = "catalog";
+const PENDING_CATALOG_STATE_KEY = "pending-catalog";
 const AUDIT_DUE_KEY = "lake-audit-due";
 /** A history slot outlives its query's own deadline by a margin, and is then taken back from a request that cannot still hold it. */
 const HISTORY_SLOT_TTL_MS = (QUERY_DEADLINE_SECONDS + 15) * 1000;
+const HISTORY_QUERY_CAPACITY = 4;
 
 /**
  * A product as the public API lists it: the selected entry without its chunk
@@ -69,13 +71,13 @@ export function registryOf(env: Env): DurableObjectStub<Registry> {
  */
 export class Registry extends DurableObject<Env> {
   private readonly store: RegistryStore;
-  /** The history queries holding a slot, by the id their request drew, and when each took it. */
-  private readonly activeHistoryQueries = new Map<string, number>();
   private reportsSincePrune = 0;
   /** The sync step in flight: its RPC round trips let other events in, and two steps must never interleave. */
   private syncing: Promise<SyncProgress> | undefined;
-  /** The stored catalog, expanded once and kept until the Gatekeeper declares another. */
+  /** The active catalog, expanded once and kept until a complete snapshot activates. */
   private vocabularyCache: Vocabulary | undefined;
+  /** The catalog snapshot currently being applied. */
+  private pendingVocabularyCache: Vocabulary | undefined;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -99,17 +101,11 @@ export class Registry extends DurableObject<Env> {
    */
   tryStartHistoryQuery(queryId: string): boolean {
     const now = Date.now();
-    for (const [id, taken] of this.activeHistoryQueries) {
-      if (now - taken > HISTORY_SLOT_TTL_MS) this.activeHistoryQueries.delete(id);
-    }
-    if (this.activeHistoryQueries.has(queryId)) return true;
-    if (this.activeHistoryQueries.size >= 4) return false;
-    this.activeHistoryQueries.set(queryId, now);
-    return true;
+    return this.store.tryStartHistoryQuery(queryId, new Date(now).toISOString(), new Date(now + HISTORY_SLOT_TTL_MS).toISOString(), HISTORY_QUERY_CAPACITY);
   }
 
   finishHistoryQuery(queryId: string): void {
-    this.activeHistoryQueries.delete(queryId);
+    this.store.finishHistoryQuery(queryId);
   }
 
   override async alarm(): Promise<void> {
@@ -216,11 +212,11 @@ export class Registry extends DurableObject<Env> {
 
   private syncPorts(): SyncPorts {
     return {
-      readCatalog: () => this.readCatalog(),
-      catalogVersion: () => catalogVersionOf(this.env),
+      readCatalogSnapshot: () => this.readCatalogSnapshot(),
       feeds: () => this.store.listFeeds().map((feed) => ({ id: feed.id, slug: feed.slug })),
       apply: (feed) => this.installFeed(feed),
       retire: (feedId) => this.retireFeed(feedId),
+      activateCatalog: () => this.activatePendingCatalog(),
       load: () => this.store.getState<SyncState>(SYNC_STATE_KEY),
       save: (state) => this.store.setState(SYNC_STATE_KEY, state),
       now: () => Date.now(),
@@ -234,13 +230,16 @@ export class Registry extends DurableObject<Env> {
    * in another shape (one of another release, for a minute during a deploy), or
    * lists nothing, is broken rather than emptied.
    */
-  private async readCatalog(): Promise<CatalogFeed[] | undefined> {
+  private async readCatalogSnapshot(): Promise<SyncCatalogSnapshot | undefined> {
     try {
-      const { feeds, ...vocabularies } = checkedCatalog(await gatekeeperOf(this.env).catalog());
+      const snapshot = await gatekeeperOf(this.env).catalogSnapshot();
+      const { feeds, ...vocabularies } = checkedCatalog(snapshot.catalog);
       if (feeds.length === 0) throw new Error("The Gatekeeper listed no feeds");
       if (vocabularies.publishers.length === 0) throw new Error("The Gatekeeper declared no publishers");
-      this.storeVocabularies(vocabularies);
-      return feeds;
+      if (!snapshot.version.trim()) throw new Error("The Gatekeeper returned an empty catalog version");
+      this.store.setState(PENDING_CATALOG_STATE_KEY, vocabularies);
+      this.pendingVocabularyCache = new Vocabulary(vocabularies);
+      return { feeds, version: snapshot.version };
     } catch (error) {
       console.warn(JSON.stringify({ event: "gatekeeper_unavailable", error: String(error) }));
       return undefined;
@@ -255,6 +254,21 @@ export class Registry extends DurableObject<Env> {
   private vocabulary(): Vocabulary {
     this.vocabularyCache ??= new Vocabulary(this.catalog());
     return this.vocabularyCache;
+  }
+
+  private pendingVocabulary(): Vocabulary {
+    const pending = this.store.getState<Vocabularies>(PENDING_CATALOG_STATE_KEY);
+    if (!pending) return this.vocabulary();
+    this.pendingVocabularyCache ??= new Vocabulary(pending);
+    return this.pendingVocabularyCache;
+  }
+
+  private activatePendingCatalog(): void {
+    const pending = this.store.getState<Vocabularies>(PENDING_CATALOG_STATE_KEY);
+    if (!pending) return;
+    this.storeVocabularies(pending);
+    this.store.deleteState(PENDING_CATALOG_STATE_KEY);
+    this.pendingVocabularyCache = undefined;
   }
 
   /** Written only when they changed: a Gatekeeper that says the same thing every check costs one read. */
@@ -273,7 +287,7 @@ export class Registry extends DurableObject<Env> {
   private async installFeed(listed: CatalogFeed): Promise<void> {
     // A local session polls politely: `pnpm dev` sets a floor under every cadence, and a deployment sets none.
     const input = withCadenceFloor(listed, cadenceFloorOf(this.env.DEV_MIN_CADENCE_SECONDS));
-    const unknown = this.vocabulary().unknownKey(input);
+    const unknown = this.pendingVocabulary().unknownKey(input);
     if (unknown !== undefined) throw new NormalizedInputError(`${input.slug} names ${unknown}`);
     const existing = this.store.getFeedBySlug(input.slug);
     const now = new Date().toISOString();
@@ -291,9 +305,9 @@ export class Registry extends DurableObject<Env> {
     };
     const unchanged = existing !== undefined && definitionFingerprint(existing) === definitionFingerprint(candidate);
     const feed: Feed = unchanged ? { ...candidate, updatedAt: existing.updatedAt } : candidate;
-    if (!unchanged) this.store.upsertFeed(feed);
-    // A runner re-sent what it already has reports nothing, unless this Registry holds no status for it (a fresh or reset Registry).
+    // Configure the runner first. A failed RPC leaves the complete public definition and its products on the prior generation.
     await this.env.FeedRunner.getByName(feed.id).configure(feed, existing?.consecutiveFailures === undefined);
+    if (!unchanged) this.store.upsertFeed(feed);
   }
 
   /** The runner first stops taking work (so a failure here leaves the feed listed and the next check retries), then the feed is forgotten. */

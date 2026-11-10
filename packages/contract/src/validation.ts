@@ -233,7 +233,7 @@ function product(value: JsonValue): boolean {
     ["current-state", "event-log", "reference", "summary", "time-series"].includes(asString(value.role) ?? "") &&
     schema(value.schema) &&
     ["record", "series"].includes(asString(value.kind) ?? "") &&
-    (value.kind !== "series" || value.role === "time-series") &&
+    (value.kind === "series") === (value.role === "time-series") &&
     ["authoritative-snapshot", "delta", "source-window"].includes(asString(value.updateMode) ?? "") &&
     ["complete", "partial", "unknown"].includes(asString(value.completeness) ?? "") &&
     optionalTime(value.watermark)

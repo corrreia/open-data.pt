@@ -43,12 +43,12 @@ it works this way, and why history is not offered as Parquet yet, is in
 Durable history, from the lake. Every one of these requires a bounded UTC interval of at most 366
 days, and answers with an opaque `nextCursor`, freshness and explicit coverage.
 
-| Method | Path                                       | Purpose                                                                            |
-| ------ | ------------------------------------------ | ---------------------------------------------------------------------------------- |
-| `GET`  | `/api/products/:slug/events`               | Applicable event revisions in a bounded interval (`from`, `to`, `knownAt`)         |
-| `GET`  | `/api/products/:slug/changes/range`        | Durable changes in a bounded knowledge-time interval                               |
-| `GET`  | `/api/products/:slug/series/range`         | Durable deduplicated series points; `knownAt` answers what was known then          |
-| `GET`  | `/api/products/:slug/series/changes/range` | Series point revisions (new points and corrections) ingested in a bounded interval |
+| Method | Path                                       | Purpose                                                                    |
+| ------ | ------------------------------------------ | -------------------------------------------------------------------------- |
+| `GET`  | `/api/products/:slug/events`               | Applicable event revisions in a bounded interval (`from`, `to`, `knownAt`) |
+| `GET`  | `/api/products/:slug/changes/range`        | Durable changes in a bounded knowledge-time interval                       |
+| `GET`  | `/api/products/:slug/series/range`         | Durable deduplicated series points; `knownAt` answers what was known then  |
+| `GET`  | `/api/products/:slug/series/changes/range` | Series point revisions learned in a bounded knowledge-time interval        |
 
 ## Where the data comes from, and how it is going
 

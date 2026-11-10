@@ -162,9 +162,14 @@ export class FixtureGatekeeper extends WorkerEntrypoint<Env> implements FeedGate
     };
   }
 
+  async catalogSnapshot() {
+    const catalog = await this.catalog();
+    return { catalog, version: `fixture:${JSON.stringify(catalog)}` };
+  }
+
   /** Changes with the feed the test writes, as a real Gatekeeper's does with a release. */
   async catalogVersion(): Promise<string> {
-    return `fixture:${JSON.stringify(await this.catalog())}`;
+    return (await this.catalogSnapshot()).version;
   }
 
   /** The feed as the test last wrote it: its title, and a revision standing for a change to what it collects. */

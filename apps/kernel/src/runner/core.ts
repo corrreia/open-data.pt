@@ -107,6 +107,8 @@ export interface RunnerState {
   lastSuccessSource?: string;
   /** Where the latest live collection read its data, for the site's source link. */
   sourceUrl?: string;
+  /** Persisted pressure from other feeds of this library walking history. */
+  backfillPeers?: number;
   consecutiveFailures: number;
   /** Executor deaths without a report (memory or CPU kills), across consecutive acquisitions. */
   consecutiveInterruptions: number;
@@ -384,6 +386,10 @@ export class RunnerCore {
     this.setState("runtime", state);
   }
 
+  setBackfillPeers(peers: number): void {
+    this.setRuntime({ ...this.runtime(), backfillPeers: Math.max(1, Math.floor(peers)) });
+  }
+
   requireFeed(): Feed {
     const feed = this.feed();
     if (!feed) throw new Error("This runner has no feed configured");
@@ -524,9 +530,6 @@ export class RunnerCore {
   private watchdogDeadline(): string {
     return new Date(this.deps.now() + (this.requireFeed().policy.timeoutSeconds + WATCHDOG_MARGIN_SECONDS) * 1000).toISOString();
   }
-
-  /** How many feeds of the same library are walking history; paces this runner's slices. */
-  backfillPeers = 1;
 
   /** Every serving object this runner still references, for cleanup when its feed is gone. */
   servingKeys(): string[] {
@@ -1497,7 +1500,7 @@ export class RunnerCore {
       updatedAt: new Date(now).toISOString(),
       // Pace per library: several feeds read the same way share one polite rate; a source that states how often one of
       // its slices may be read is never read faster than that.
-      nextAt: new Date(now + Math.max(20_000, 6_000 * this.backfillPeers, (this.feed()?.history?.minSliceSeconds ?? 0) * 1000)).toISOString(),
+      nextAt: new Date(now + Math.max(20_000, 6_000 * (this.runtime().backfillPeers ?? 1), (this.feed()?.history?.minSliceSeconds ?? 0) * 1000)).toISOString(),
     };
     delete next.lastError;
     this.setState("backfill", next);

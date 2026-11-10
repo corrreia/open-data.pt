@@ -184,6 +184,7 @@ export const HistoryPageSchema = <T extends z.ZodType>(item: T) =>
   z.object({
     data: z.array(item),
     nextCursor: z.string().nullable(),
+    snapshotAt: timeSchema,
     knownAt: nullableTimeSchema.optional(),
     freshness: FreshnessSchema,
     coverage: CoverageSchema,
@@ -267,6 +268,7 @@ export type Coverage = z.infer<typeof CoverageSchema>;
 export type HistoryPage<T> = {
   data: T[];
   nextCursor: string | null;
+  snapshotAt: string;
   knownAt?: string | null;
   freshness: Freshness;
   coverage: Coverage;

@@ -75,6 +75,7 @@ describe("public runtime schemas", () => {
         },
       ],
       nextCursor: null,
+      snapshotAt: time,
       freshness: { updatedAt: time, stale: false },
       coverage: { requested: { from: time, to: "2026-09-11T12:00:00.000Z" }, lakeStartsAt: time, coveredFrom: time, complete: true, reason: null },
       source: "lake",

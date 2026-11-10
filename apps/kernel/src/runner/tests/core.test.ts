@@ -382,6 +382,12 @@ describe("automatic history walk", () => {
     expect(h.core.backfillSummary()).toBeUndefined();
   });
 
+  it("persists the number of peer backfills used for pacing", async () => {
+    const h = await kernelHarness();
+    h.core.setBackfillPeers(7);
+    expect(h.core.runtime().backfillPeers).toBe(7);
+  });
+
   it("waits between slices as long as the source states one may be read, over its own pacing", async () => {
     const h = await kernelHarness({ policy: policy({ cadenceSeconds: 7 * 24 * 3600 }), history: { minSliceSeconds: 300 } });
     h.source.records = [record("a", 1)];
