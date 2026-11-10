@@ -148,10 +148,10 @@ interface UntrustedCollectionResult {
 /** Validate the non-stream RPC envelope before the kernel acts on an untrusted Gatekeeper result. */
 // oxlint-disable-next-line anti-slop/no-unknown-parameters -- This is the RPC boundary parser required to accept any remote value before narrowing it.
 export function assertCollectionResult(result: unknown, mode: CollectionRequest["mode"]): asserts result is CollectionResult {
-  if (!(result instanceof Object) || Array.isArray(result)) throw new NormalizedInputError("Gatekeeper returned an invalid collection result");
+  if (result === null || Array.isArray(result) || Object(result) !== result) throw new NormalizedInputError("Gatekeeper returned an invalid collection result");
   // SAFETY: this object crossed RPC untrusted; every property read below is checked before the asserted CollectionResult is accepted.
   const candidate = result as UntrustedCollectionResult;
-  const exact = (keys: string[]) => Object.keys(result).every((key) => keys.includes(key));
+  const exact = (keys: string[]) => Object.keys(candidate).every((key) => keys.includes(key));
   switch (candidate.kind) {
     case "batch":
       if (!exact(["kind", "stream"]) || !(candidate.stream instanceof ReadableStream)) throw new NormalizedInputError("Gatekeeper returned an invalid batch result");
