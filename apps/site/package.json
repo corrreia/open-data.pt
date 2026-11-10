@@ -10,7 +10,7 @@
   "dependencies": {
     "@cloudflare/codemode": "0.5.2",
     "@cloudflare/kumo": "2.13.2",
-    "@modelcontextprotocol/sdk": "1.30.0",
+    "@modelcontextprotocol/sdk": "1.31.0",
     "@open-data-pt/api": "workspace:*",
     "@open-data-pt/lisbon": "workspace:*",
     "@phosphor-icons/react": "^2.1.10",
