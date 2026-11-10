@@ -5,7 +5,7 @@ import { digest } from "#/hash";
 import { definitionFingerprint, feedDefinition, type Acquisition, type Feed, type FeedStatus, type ProductIndexEntry, type ProductSummary } from "#/registry/feed-model";
 import { migrateDurableSchema, type SynchronousTransaction } from "#/durability/migrations";
 import { SYNC_BATCH } from "#/registry/catalog-sync";
-import { runnerPublicationId, type RunnerSnapshot } from "#/durability/runner-snapshot";
+import { runnerPublicationId, type RunnerPublication, type RunnerPublicationReceipt, type RunnerSnapshot } from "#/durability/runner-snapshot";
 import type { SqlExec } from "#/sqlite-reset";
 
 /**
@@ -14,7 +14,7 @@ import type { SqlExec } from "#/sqlite-reset";
  * the atomically selected product index the public API reads.
  */
 export const REGISTRY_SCHEMA_BASELINE = 201;
-export const REGISTRY_SCHEMA_VERSION = 203;
+export const REGISTRY_SCHEMA_VERSION = 204;
 const ACTIVITY_KEEP = 5_000;
 const REHYDRATION_REQUIRED_KEY = "runner-rehydration-required";
 const REHYDRATION_DIGEST_KEY = "runner-rehydration-digest";
@@ -46,6 +46,12 @@ export class RegistryStore {
           checksum: "25b97db923283f1279fa05ad554a",
           apply: () => this.createRehydrationSchema(),
         },
+        {
+          id: 204,
+          name: "publication-receipts",
+          checksum: "5b87502570d226fc6a4432ddef03",
+          apply: () => this.createPublicationSchema(),
+        },
       ],
       createBaseline: () => this.createSchema(),
       ready: (fresh) => {
@@ -67,6 +73,7 @@ export class RegistryStore {
   private createSchema(): void {
     this.createSchema202();
     this.createRehydrationSchema();
+    this.createPublicationSchema();
   }
 
   private createSchema202(): void {
@@ -94,6 +101,13 @@ export class RegistryStore {
     this.exec(`CREATE TABLE IF NOT EXISTS rehydration_claims (slug TEXT PRIMARY KEY, feed_id TEXT NOT NULL)`);
     this.exec(`CREATE TABLE IF NOT EXISTS rehydration_products (
       slug TEXT PRIMARY KEY, feed_id TEXT NOT NULL, product_key TEXT NOT NULL, title TEXT NOT NULL, entry_json TEXT NOT NULL, chunks_json TEXT, UNIQUE(feed_id, product_key))`);
+  }
+
+  private createPublicationSchema(): void {
+    this.exec(`CREATE TABLE IF NOT EXISTS accepted_publications (
+      publication_id TEXT PRIMARY KEY, feed_id TEXT NOT NULL, publication_number INTEGER NOT NULL, selected_at TEXT NOT NULL,
+      UNIQUE(feed_id, publication_number))`);
+    this.exec(`CREATE INDEX IF NOT EXISTS accepted_publications_feed ON accepted_publications (feed_id, publication_number DESC)`);
   }
 
   getState<T>(key: string): T | undefined {
@@ -185,6 +199,7 @@ export class RegistryStore {
     this.exec(`DELETE FROM activity WHERE feed_id = ?`, feedId);
     this.exec(`DELETE FROM backfills WHERE feed_id = ?`, feedId);
     this.exec(`DELETE FROM outages WHERE feed_id = ?`, feedId);
+    this.exec(`DELETE FROM accepted_publications WHERE feed_id = ?`, feedId);
     this.exec(`DELETE FROM feeds WHERE id = ?`, feedId);
   }
 
@@ -225,8 +240,10 @@ export class RegistryStore {
   /** Replace one feed's durable shadow rows and mark its snapshot complete. */
   stageRunnerSnapshot(feedId: string, snapshot: RunnerSnapshot): void {
     if (snapshot.feed.id !== feedId) throw new Error(`Runner ${feedId} returned snapshot for ${snapshot.feed.id}`);
-    if (snapshot.publication.id !== runnerPublicationId(feedId, snapshot.products)) throw new Error(`Runner ${feedId} returned an invalid publication identity`);
-    if (snapshot.products.some((entry) => entry.feedId !== feedId)) throw new Error(`Runner ${feedId} returned another feed's product`);
+    if (snapshot.publication.feedId !== feedId || snapshot.publication.id !== runnerPublicationId(feedId, snapshot.publication.number, snapshot.publication.acquisitionId))
+      throw new Error(`Runner ${feedId} returned an invalid publication identity`);
+    if (snapshot.products.some((entry) => entry.feedId !== feedId) || JSON.stringify(snapshot.publication.entries) !== JSON.stringify(snapshot.products))
+      throw new Error(`Runner ${feedId} returned another feed's product`);
 
     this.transaction(() => {
       const progress = this.rows<RehydrationProgressRow>(`SELECT feed_id, position, definition_fingerprint, snapshot_json FROM rehydration_progress WHERE feed_id = ?`, feedId)[0];
@@ -290,6 +307,7 @@ export class RegistryStore {
          SELECT slug, feed_id, product_key, title, entry_json, chunks_json FROM rehydration_products`,
       );
       for (const snapshot of snapshots) {
+        this.recordSelectedPublication(snapshot.publication, at);
         this.setFeedStatus(snapshot.feed.id, snapshot.status, at);
         for (const acquisition of snapshot.recentAcquisitions)
           this.upsertActivity(acquisition.id, snapshot.feed.id, acquisition.completedAt ?? acquisition.requestedAt, { ...acquisition, feedId: snapshot.feed.id });
@@ -326,6 +344,67 @@ export class RegistryStore {
     const unclaimed = slugs.filter((slug) => !owners.some((owner) => owner.slug === slug));
     if (unclaimed.length === 0) return;
     this.exec(`INSERT INTO claims (slug, feed_id) SELECT value, ? FROM json_each(?) WHERE 1 ON CONFLICT(slug) DO NOTHING`, feedId, JSON.stringify(unclaimed));
+  }
+
+  /**
+   * Select a numbered complete publication once. Repeats and older retries return
+   * the newest durable receipt without selecting their entries again.
+   * Caller wraps this in the report transaction.
+   */
+  acceptPublication(publication: RunnerPublication, selectedAt: string, backfillPeers: number): RunnerPublicationReceipt {
+    if (publication.id !== runnerPublicationId(publication.feedId, publication.number, publication.acquisitionId)) throw new NormalizedInputError("Invalid publication identity");
+    if (!Number.isSafeInteger(publication.number) || publication.number < 0) throw new NormalizedInputError("Invalid publication number");
+    if (publication.entries.some((entry) => entry.feedId !== publication.feedId)) throw new NormalizedInputError("Publication contains mixed feed owners");
+    const sameNumber = this.rows<AcceptedPublicationRow>(
+      `SELECT publication_id, feed_id, publication_number, selected_at FROM accepted_publications WHERE feed_id = ? AND publication_number = ?`,
+      publication.feedId,
+      publication.number,
+    )[0];
+    if (sameNumber && sameNumber.publication_id !== publication.id) throw new NormalizedInputError("Publication number has another identity");
+    const latest = this.latestPublication(publication.feedId);
+    if (!latest || publication.number > latest.publication_number) {
+      this.replaceFeedProducts(publication.feedId, publication.entries);
+      this.recordSelectedPublication(publication, selectedAt);
+    }
+    const accepted = this.latestPublication(publication.feedId);
+    if (!accepted) throw new Error(`Publication ${publication.id} was not recorded`);
+    return {
+      known: true,
+      backfillPeers,
+      acceptedPublicationId: accepted.publication_id,
+      acceptedThrough: accepted.publication_number,
+      selectedAt: accepted.selected_at,
+    };
+  }
+
+  private recordSelectedPublication(publication: RunnerPublication, selectedAt: string): void {
+    const sameNumber = this.rows<AcceptedPublicationRow>(
+      `SELECT publication_id, feed_id, publication_number, selected_at FROM accepted_publications WHERE feed_id = ? AND publication_number = ?`,
+      publication.feedId,
+      publication.number,
+    )[0];
+    if (sameNumber) {
+      if (sameNumber.publication_id !== publication.id) throw new NormalizedInputError("Publication number has another identity");
+      return;
+    }
+    const latest = this.latestPublication(publication.feedId);
+    if (latest && latest.publication_number > publication.number) return;
+    this.exec(
+      `INSERT INTO accepted_publications (publication_id, feed_id, publication_number, selected_at) VALUES (?, ?, ?, ?)`,
+      publication.id,
+      publication.feedId,
+      publication.number,
+      selectedAt,
+    );
+    // Only the newest receipt is needed: any older retry is covered by this monotonic number.
+    this.exec(`DELETE FROM accepted_publications WHERE feed_id = ? AND publication_number < ?`, publication.feedId, publication.number);
+  }
+
+  private latestPublication(feedId: string): AcceptedPublicationRow | undefined {
+    return this.rows<AcceptedPublicationRow>(
+      `SELECT publication_id, feed_id, publication_number, selected_at FROM accepted_publications WHERE feed_id = ? ORDER BY publication_number DESC LIMIT 1`,
+      feedId,
+    )[0];
   }
 
   /** Replace a feed's complete product set. Caller wraps this in one transaction. */
@@ -526,6 +605,13 @@ function mapOutage(row: OutageRow): Outage {
   if (row.ended_at) outage.endedAt = row.ended_at;
   if (row.last_error) outage.lastError = row.last_error;
   return outage;
+}
+
+interface AcceptedPublicationRow extends Record<string, SqlStorageValue> {
+  publication_id: string;
+  feed_id: string;
+  publication_number: number;
+  selected_at: string;
 }
 
 interface RehydrationFeed {

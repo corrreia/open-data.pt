@@ -53,7 +53,7 @@ describe("Pipelines delivery", () => {
     for (const batch of points.batches) expect(new TextEncoder().encode(JSON.stringify(batch)).byteLength).toBeLessThan(5_000_000);
   });
 
-  it("fits a record row over the 1 MB message limit by leaving out its largest values, and leaves out a point that cannot fit", async () => {
+  it("refuses oversized rows without trimming or dropping them", async () => {
     const records = new MemoryStream();
     const points = new MemoryStream();
     const lake = new PipelinesLake({ LAKE_RECORDS: records, LAKE_POINTS: points });
@@ -64,24 +64,15 @@ describe("Pipelines delivery", () => {
       operation: "upsert",
       product_version: 2,
       ingested_at: "2026-09-09T01:00:00.000Z",
-      event_time: null,
-      valid_from: null,
-      valid_to: null,
-      source_published_at: null,
       payload: { name: "Plano Diretor", municipality: "Lisboa", geometry: outline },
     };
-    const bytes = new TextEncoder().encode(JSON.stringify(record.payload)).byteLength;
-    expect(bytes).toBeGreaterThan(LAKE_ROW_BYTES);
-    await lake.send("records", [record, { ...record, entity_key: "plan-2", payload: { name: "Small" } }]);
-    const sent = records.batches.flat();
-    expect(sent.map((row) => row.entity_key)).toEqual(["plan-1", "plan-2"]);
-    expect(sent[0]?.payload).toEqual({ name: "Plano Diretor", municipality: "Lisboa", _omitted: { fields: ["geometry"], bytes } });
-    expect(sent[1]?.payload).toEqual({ name: "Small" });
-    // A payload with an `_omitted` of its own cannot be trimmed without losing it, so its row is left out whole.
-    await lake.send("records", [{ ...record, entity_key: "plan-3", payload: { _omitted: "the source's own", geometry: outline } }]);
-    expect(records.batches.flat().map((row) => row.entity_key)).toEqual(["plan-1", "plan-2"]);
-    await lake.send("points", [point(0, "x".repeat(1_000_000)), point(1)]);
-    expect(points.batches.flat().map((row) => row.revision_id)).toEqual(["revision-1"]);
+    expect(new TextEncoder().encode(JSON.stringify(record)).byteLength).toBeGreaterThan(LAKE_ROW_BYTES);
+    await expect(lake.send("records", [record, { ...record, entity_key: "plan-2", payload: { name: "Small" } }])).rejects.toThrow(/Pipeline rows/);
+    expect(records.batches).toEqual([]);
+    await expect(lake.send("records", [{ ...record, entity_key: "plan-3", payload: { _omitted: "the source's own", geometry: outline } }])).rejects.toThrow(/Pipeline rows/);
+    expect(records.batches).toEqual([]);
+    await expect(lake.send("points", [point(0, "x".repeat(1_000_000)), point(1)])).rejects.toThrow(/Pipeline rows/);
+    expect(points.batches).toEqual([]);
   });
 
   it("validates rows against the table before they are accepted", () => {

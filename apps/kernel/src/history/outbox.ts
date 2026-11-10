@@ -1,7 +1,7 @@
 import type { JsonObject } from "@open-data-pt/contract";
 
 import { BLOB_BYTES, utf8Length } from "#/blob-budget";
-import { validateLakeRow, type LakeTable } from "#/history/lake";
+import { assertLakeRowFits, validateLakeRow, type LakeTable } from "#/history/lake";
 
 export type OutboxFlush = (table: LakeTable, rowsJson: string, rows: number) => Promise<void>;
 
@@ -34,10 +34,11 @@ export class OutboxBuffer {
 
   async add(table: LakeTable, row: JsonObject): Promise<void> {
     validateLakeRow(row, table);
+    assertLakeRowFits(row, table);
     const json = JSON.stringify(row);
     const size = utf8Length(json) + 1;
     const pending = this.pending.get(table)!;
-    // Close the blob before this row would overflow it; only a row larger than the budget travels alone.
+    // Close the blob before this row would overflow it. Each row already fits the Pipeline budget.
     if (pending.rows.length > 0 && pending.bytes + size > this.maxBytes) await this.flush(table);
     pending.rows.push(json);
     pending.bytes += size;

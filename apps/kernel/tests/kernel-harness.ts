@@ -22,6 +22,7 @@ import type { LakeTable } from "#/history/lake";
 import { ObjectStore } from "#/serving/object-store";
 import type { ByteRange, FileInfo, FileMetadata, FileStore, FileUpload, SnapshotStore, StoredFile, StoredObject } from "#/serving/ports";
 import { RunnerCore, type RunnerDeps } from "#/runner/core";
+import type { RunnerPublication, RunnerPublicationReceipt } from "#/durability/runner-snapshot";
 import { sqliteStorage } from "#/tests/sqlite-storage";
 
 /** R2 in memory, counting what the cost model counts: writes and reads. */
@@ -136,8 +137,10 @@ export interface KernelHarness {
   objects: ObjectStore;
   source: FixtureSource;
   published: ProductIndexEntry[][];
+  publications: RunnerPublication[];
+  publicationReceipts: Array<Extract<RunnerPublicationReceipt, { known: true }>>;
   lake: Array<{ table: LakeTable; rows: JsonObject[] }>;
-  failPublish: { next: boolean };
+  failPublish: { next: boolean; afterAccept: boolean };
   clock: { now: number };
   collect(): Promise<EngineOutcome & { acquisitionId: string }>;
   /** Run one acquisition; with `lake`, the collection delivers its history itself, as the Workflow does. */
@@ -177,16 +180,36 @@ export async function kernelHarness(options: HarnessOptions = {}): Promise<Kerne
   const snapshots = new MemorySnapshots(options.keepChunkBodies ?? true);
   const objects = new ObjectStore(snapshots);
   const published: ProductIndexEntry[][] = [];
-  const failPublish = { next: false };
+  const publications: RunnerPublication[] = [];
+  const publicationReceipts: Array<Extract<RunnerPublicationReceipt, { known: true }>> = [];
+  const acceptedPublications = new Map<string, Extract<RunnerPublicationReceipt, { known: true }>>();
+  const failPublish = { next: false, afterAccept: false };
   const deps: RunnerDeps = {
     objects,
-    publish: async (entries) => {
+    publish: async (publication) => {
       if (failPublish.next) {
         failPublish.next = false;
         throw new Error("Registry unavailable");
       }
-      published.push(entries);
-      return true;
+      let receipt = acceptedPublications.get(publication.id);
+      if (!receipt) {
+        receipt = {
+          known: true,
+          backfillPeers: 1,
+          acceptedPublicationId: publication.id,
+          acceptedThrough: publication.number,
+          selectedAt: new Date(clock.now).toISOString(),
+        };
+        acceptedPublications.set(publication.id, receipt);
+        publications.push(publication);
+        published.push(publication.entries);
+      }
+      publicationReceipts.push(receipt);
+      if (failPublish.afterAccept) {
+        failPublish.afterAccept = false;
+        throw new Error("Registry reply lost");
+      }
+      return receipt;
     },
     claim: async () => undefined,
     lakeAvailable: true,
@@ -222,6 +245,7 @@ export async function kernelHarness(options: HarnessOptions = {}): Promise<Kerne
   core.configure(feed);
   const source: FixtureSource = { records: [], points: [], completeness: "complete", rejected: 0, updateMode: "authoritative-snapshot", kind: "record" };
   const lake: Array<{ table: LakeTable; rows: JsonObject[] }> = [];
+  const outboxOwner = "workflow:harness";
   const port: RunnerPort = {
     begin: async (id) => core.begin(id),
     declare: (id, input) => core.declare(id, input),
@@ -233,11 +257,9 @@ export async function kernelHarness(options: HarnessOptions = {}): Promise<Kerne
     unchanged: async (id, checkpoint) => core.unchanged(id, checkpoint),
     historyExhausted: async (id) => core.historyExhausted(id),
     fail: async (id, failure) => core.fail(id, failure),
-    pendingOutbox: async (limit) => core.pendingOutbox(limit),
-    ackOutbox: async (seqs, next) => {
-      core.ackOutbox(seqs);
-      return core.pendingOutbox(next);
-    },
+    claimOutbox: async (limit) => core.claimOutbox(outboxOwner, limit),
+    acknowledgeOutbox: async (token, next) => core.acknowledgeOutbox(outboxOwner, token, next),
+    releaseOutbox: async (token) => core.releaseOutbox(outboxOwner, token),
   };
   const gatekeeper = {
     collect: (request: Parameters<typeof collectNormalized>[0]) =>
@@ -258,6 +280,8 @@ export async function kernelHarness(options: HarnessOptions = {}): Promise<Kerne
     objects,
     source,
     published,
+    publications,
+    publicationReceipts,
     lake,
     failPublish,
     clock,

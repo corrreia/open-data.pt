@@ -1,12 +1,14 @@
 import {
   NormalizedInputError,
   historyCursorKey,
+  isJsonObject,
   isPermanentCollectionError,
   type CollectionFailureCode,
   type CollectionLimits,
   type Completeness,
   type HistoryCursor,
   type JsonObject,
+  type JsonValue,
   type ProductDeclaration,
   type SourceCheckpoint,
   type TransformQuality,
@@ -25,12 +27,12 @@ import {
   type ProductIndexEntry,
 } from "#/registry/feed-model";
 import { digest } from "#/hash";
-import type { LakeTable } from "#/history/lake";
+import { assertLakeRowFits, validateLakeRow, type LakeTable } from "#/history/lake";
 import { keys, parquetKeys, WINDOW, type ChangeItem, type ObjectStore } from "#/serving/object-store";
 import { BLOB_BYTES, jsonArrays, MAX_RECORD_BYTES, SMALL_PRODUCT_BYTES, utf8Length } from "#/blob-budget";
 import { RecentChanges, recordRevision, retractionRevision, type PreparedRecord, type RecordContext } from "#/collection/records";
 import { migrateDurableSchema, type SynchronousTransaction } from "#/durability/migrations";
-import { runnerPublicationId, type RunnerSnapshot } from "#/durability/runner-snapshot";
+import { runnerPublicationId, type RunnerPublication, type RunnerPublicationReceipt, type RunnerSnapshot } from "#/durability/runner-snapshot";
 import type { SqlExec } from "#/sqlite-reset";
 
 /**
@@ -42,7 +44,7 @@ import type { SqlExec } from "#/sqlite-reset";
  */
 
 export const RUNNER_SCHEMA_BASELINE = 202;
-export const RUNNER_SCHEMA_VERSION = 203;
+export const RUNNER_SCHEMA_VERSION = 204;
 /** Products up to this many rows are compared in memory by the executor; larger ones use the SQLite entity index. */
 export const SMALL_PRODUCT_ROWS = 20_000;
 const MAX_RETRY_BACKOFF_SECONDS = 15 * 60;
@@ -78,6 +80,10 @@ export const FRESH_DATA_RETRY_MS = 24 * 60 * 60_000;
 const LOOKUP_BATCH = 2_000;
 /** Superseded serving objects are deleted this long after they stop being selectable: an edge-cached read may still name them. */
 const GARBAGE_GRACE_MS = 60 * 60_000;
+/** A delivery claim outlives one bounded Pipeline page, including its timeout. */
+export const OUTBOX_CLAIM_TTL_MS = 15 * 60_000;
+/** A claimed page stays comfortably below the Durable Object RPC payload limit. */
+const OUTBOX_CLAIM_MAX_BLOBS = 4;
 /** How long past its own timeout an executor may stay silent before the watchdog asks the Workflow about it. */
 const WATCHDOG_MARGIN_SECONDS = 300;
 
@@ -159,12 +165,7 @@ export interface CommitResult {
   status: "succeeded" | "unchanged";
   /** History rows the collection committed to the outbox; none means there is nothing to deliver. */
   historyRows: number;
-  /** The first committed blobs waiting for delivery, so the executor sends them without asking again. */
-  outbox: OutboxBlob[];
 }
-
-/** Blobs a commit hands back: four of at most 900 KB stay far below the RPC payload limit. */
-const COMMIT_OUTBOX_BLOBS = 4;
 
 export interface DeclareInput {
   normalizer: { id: string; version: string };
@@ -246,11 +247,19 @@ export interface OutboxBlob {
   rowsJson: string;
 }
 
+/** One exclusively owned, expiring page of committed history blobs. */
+export interface OutboxClaim {
+  token: string;
+  owner: string;
+  expiresAt: string;
+  blobs: OutboxBlob[];
+}
+
 /** What the core needs from outside its database. */
 export interface RunnerDeps {
   objects: ObjectStore;
-  /** Atomically select these entries as the feed's complete product set. False when the Registry no longer knows the feed. */
-  publish(entries: ProductIndexEntry[]): Promise<boolean>;
+  /** Atomically select this complete numbered publication and return the Registry's durable receipt. */
+  publish(publication: RunnerPublication): Promise<RunnerPublicationReceipt>;
   claim(feedId: string, slugs: string[]): Promise<void>;
   lakeAvailable: boolean;
   now(): number;
@@ -282,19 +291,51 @@ export class RunnerCore {
           checksum: "66a906a3238d7750f1e009d344d6",
           apply: () => this.migrateFrom202(),
         },
+        {
+          id: 204,
+          name: "publication-and-outbox-claims",
+          checksum: "30ae462f314dc8a8fd4da6ded5e5",
+          apply: () => this.migrateFrom203(),
+        },
       ],
-      createBaseline: () => this.createSchema(),
+      createBaseline: () => this.createSchema203(),
     });
   }
 
   private migrateFrom202(): void {
-    this.createSchema();
+    this.createSchema203();
     // An existing runner's feed called its library `gatekeeperKind`. Rewrite it before the first alarm reads it.
     this.exec(`UPDATE state SET value_json = json_remove(json_set(value_json, '$.library', json_extract(value_json, '$.gatekeeperKind')), '$.gatekeeperKind')
       WHERE key = 'feed' AND json_type(value_json, '$.library') IS NULL AND json_type(value_json, '$.gatekeeperKind') = 'text'`);
   }
 
-  private createSchema(): void {
+  private migrateFrom203(): void {
+    const feedId = this.feed()?.id ?? "unconfigured";
+    const legacy = this.getState<LegacyPendingPublication>("publication");
+    const number = legacy ? 1 : 0;
+    const acquisitionId = legacy?.acquisitionId ?? null;
+    const publicationId = runnerPublicationId(feedId, number, acquisitionId);
+    if (legacy) {
+      this.setState("publication-sequence", number);
+      this.setState("publication", { id: publicationId, number, feedId, acquisitionId: legacy.acquisitionId } satisfies PendingPublication);
+    } else {
+      this.setState("publication-sequence", 0);
+    }
+    const outboxColumns = new Set(this.rows<{ name: string }>(`SELECT name FROM pragma_table_info('outbox')`).map((row) => row.name));
+    if (!outboxColumns.has("claim_token")) this.exec(`ALTER TABLE outbox ADD COLUMN claim_token TEXT`);
+    if (!outboxColumns.has("claim_owner")) this.exec(`ALTER TABLE outbox ADD COLUMN claim_owner TEXT`);
+    if (!outboxColumns.has("claim_expires_at")) this.exec(`ALTER TABLE outbox ADD COLUMN claim_expires_at TEXT`);
+    const garbageColumns = new Set(this.rows<{ name: string }>(`SELECT name FROM pragma_table_info('garbage')`).map((row) => row.name));
+    if (!garbageColumns.has("publication_id")) {
+      this.exec(`ALTER TABLE garbage RENAME TO garbage_203`);
+      this.exec(`CREATE TABLE garbage (object_key TEXT PRIMARY KEY, publication_id TEXT NOT NULL, delete_after TEXT)`);
+      if (legacy) this.exec(`INSERT INTO garbage (object_key, publication_id, delete_after) SELECT object_key, ?, NULL FROM garbage_203`, publicationId);
+      else this.exec(`INSERT INTO garbage (object_key, publication_id, delete_after) SELECT object_key, ?, delete_after FROM garbage_203`, publicationId);
+      this.exec(`DROP TABLE garbage_203`);
+    }
+  }
+
+  private createSchema203(): void {
     this.exec(`CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)`);
     this.exec(`CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value_json TEXT NOT NULL)`);
     this.exec(`CREATE TABLE IF NOT EXISTS acquisitions (
@@ -414,7 +455,7 @@ export class RunnerCore {
     if (this.retiring()) return now + 1000;
     const runtime = this.runtime();
     const times: number[] = [];
-    const garbageDue = this.rows<{ at: string | null }>(`SELECT MIN(delete_after) AS at FROM garbage`)[0]?.at;
+    const garbageDue = this.rows<{ at: string | null }>(`SELECT MIN(delete_after) AS at FROM garbage WHERE delete_after IS NOT NULL`)[0]?.at;
     if (garbageDue) times.push(Date.parse(garbageDue));
     if (runtime.watchdogAt) times.push(Date.parse(runtime.watchdogAt));
     if (this.getState<PendingPublication>("publication")) times.push(now + 60_000);
@@ -692,6 +733,7 @@ export class RunnerCore {
   /** A blob of history rows the executor prepared (small products and series). */
   appendOutbox(acquisitionId: string, table: LakeTable, rowsJson: string, rows: number): void {
     if (rows <= 0) return;
+    this.validateOutboxBlob(table, rowsJson, rows);
     this.exec(`INSERT INTO outbox (acquisition_id, lake_table, rows_json, rows, bytes) VALUES (?, ?, ?, ?, ?)`, acquisitionId, table, rowsJson, rows, utf8Length(rowsJson));
   }
 
@@ -703,8 +745,7 @@ export class RunnerCore {
   async commit(acquisitionId: string, input: CommitInput): Promise<CommitResult> {
     const acquisition = this.getAcquisition(acquisitionId);
     if (!acquisition) throw new Error(`Unknown acquisition ${acquisitionId}`);
-    if (acquisition.status === "succeeded" || acquisition.status === "unchanged")
-      return { status: acquisition.status, historyRows: acquisition.historyRows ?? 0, outbox: this.pendingOutbox(COMMIT_OUTBOX_BLOBS) };
+    if (acquisition.status === "succeeded" || acquisition.status === "unchanged") return { status: acquisition.status, historyRows: acquisition.historyRows ?? 0 };
     const policy = this.requireFeed().policy;
     const now = this.deps.now();
     const at = new Date(now).toISOString();
@@ -712,13 +753,24 @@ export class RunnerCore {
     const changed = input.products.some((product) => product.changed) || input.revisions > 0;
     const status = changed ? "succeeded" : "unchanged";
     const history = acquisition.trigger === "history";
+    const publishKeys = input.products.filter((product) => product.changed).map((product) => product.productKey);
+    const needsPublication = !history && (publishKeys.length > 0 || this.hasMissingProducts(input.products.map((product) => product.productKey)));
+    const publication = needsPublication ? this.nextPublication(acquisitionId) : undefined;
     let historyRows = 0;
     this.transaction(() => {
+      if (publication) {
+        this.setState("publication-sequence", publication.number);
+        this.setState("publication", publication);
+      }
       for (const product of input.products) {
         if (product.mode === "large" && product.staged) this.applyStage(acquisitionId, product.productKey);
-        this.saveProduct(product, history);
+        this.saveProduct(product, history, publication?.id);
       }
-      if (!history) this.retireMissing(input.products.map((product) => product.productKey));
+      if (!history)
+        this.retireMissing(
+          input.products.map((product) => product.productKey),
+          publication?.id,
+        );
       historyRows = Number(this.rows<{ total: number | null }>(`SELECT SUM(rows) AS total FROM outbox WHERE acquisition_id = ?`, acquisitionId)[0]?.total ?? 0);
       this.exec(`UPDATE outbox SET committed = 1, committed_at = ? WHERE acquisition_id = ?`, at, acquisitionId);
       this.exec(
@@ -759,10 +811,7 @@ export class RunnerCore {
       }
       this.setRuntime(next);
       if (!history) this.maybeStartBackfill();
-      const publish = input.products.filter((product) => product.changed).map((product) => product.productKey);
-      if (!history && (publish.length > 0 || this.retiredSinceLastPublication()))
-        this.setState("publication", { acquisitionId, productKeys: publish } satisfies PendingPublication);
-      else this.exec(`DELETE FROM stage WHERE acquisition_id = ?`, acquisitionId);
+      if (!publication) this.exec(`DELETE FROM stage WHERE acquisition_id = ?`, acquisitionId);
       this.deleteState(collectionKey(acquisitionId));
     });
     try {
@@ -770,7 +819,7 @@ export class RunnerCore {
     } catch (error) {
       console.warn(JSON.stringify({ event: "publication_deferred", acquisitionId, error: String(error) }));
     }
-    return { status, historyRows, outbox: this.pendingOutbox(COMMIT_OUTBOX_BLOBS) };
+    return { status, historyRows };
   }
 
   /** The source said nothing changed, or no product changed: advance the checkpoint only. */
@@ -906,20 +955,35 @@ export class RunnerCore {
    * Safe to repeat.
    */
   async publishPending(): Promise<void> {
-    const publication = this.getState<PendingPublication>("publication");
-    if (!publication) return;
-    const products = await this.preparePublication(publication);
-    const known = await this.deps.publish(products.map((product) => product.entry));
-    if (!known) throw new Error("Feed is no longer registered");
-    this.transaction(() => {
-      this.exec(`DELETE FROM stage WHERE acquisition_id = ?`, publication.acquisitionId);
-      this.deleteState("publication");
-      this.deleteState("retired-products");
-    });
+    const pending = this.getState<PendingPublication>("publication");
+    if (!pending) return;
+    const { publication, products } = await this.preparePublication(pending);
+    const receipt = await this.deps.publish(publication);
+    if (!receipt.known) throw new Error("Feed is no longer registered");
+    if (!this.acknowledgePublication(receipt)) throw new Error(`Registry receipt ${receipt.acceptedPublicationId} does not cover publication ${publication.id}`);
     // A failed product keeps its index, so the next collection rebuilds from it instead of staging every row again.
     for (const product of products) {
       if (product.mode === "large" && product.entry.status !== "failed" && this.fitsInMemory(product.entry)) this.demote(product.productKey);
     }
+  }
+
+  /** Activate blocked garbage only after a durable Registry receipt covers its publication. */
+  acknowledgePublication(receipt: Extract<RunnerPublicationReceipt, { known: true }>): boolean {
+    const publication = this.getState<PendingPublication>("publication");
+    if (!publication) return true;
+    if (receipt.acceptedThrough < publication.number) return false;
+    const deleteAfter = new Date(Date.parse(receipt.selectedAt) + GARBAGE_GRACE_MS).toISOString();
+    this.transaction(() => {
+      this.exec(`UPDATE garbage SET delete_after = ? WHERE publication_id = ? AND delete_after IS NULL`, deleteAfter, publication.id);
+      this.exec(`DELETE FROM stage WHERE acquisition_id = ?`, publication.acquisitionId);
+      this.setState("last-publication", {
+        id: publication.id,
+        number: publication.number,
+        acquisitionId: publication.acquisitionId,
+      } satisfies PublishedPublication);
+      this.deleteState("publication");
+    });
+    return true;
   }
 
   /**
@@ -939,19 +1003,63 @@ export class RunnerCore {
 
   /* ---------- History outbox ---------- */
 
-  /** Committed history blobs, oldest first. */
+  /** Committed history blobs, oldest first. Inspection only; delivery uses exclusive claims. */
   pendingOutbox(limit: number): OutboxBlob[] {
-    const rows = this.rows<{ seq: number; lake_table: string; rows_json: string }>(`SELECT seq, lake_table, rows_json FROM outbox WHERE committed = 1 ORDER BY seq LIMIT ?`, limit);
+    return this.mapOutboxRows(
+      this.rows<{ seq: number; lake_table: string; rows_json: string }>(`SELECT seq, lake_table, rows_json FROM outbox WHERE committed = 1 ORDER BY seq LIMIT ?`, limit),
+    );
+  }
+
+  /** Atomically take the oldest unclaimed bounded page, recovering expired claims first. */
+  claimOutbox(owner: string, limit: number): OutboxClaim | undefined {
+    return this.transaction(() => this.claimOutboxWithin(owner, limit));
+  }
+
+  /** Delete only rows held by this token, then claim the next page for the same owner. */
+  acknowledgeOutbox(owner: string, token: string, next: number): OutboxClaim | undefined {
+    return this.transaction(() => {
+      this.exec(`DELETE FROM outbox WHERE committed = 1 AND claim_owner = ? AND claim_token = ?`, owner, token);
+      return this.claimOutboxWithin(owner, next);
+    });
+  }
+
+  /** A failed sender gives back only its own claim; another owner's rows are untouched. */
+  releaseOutbox(owner: string, token: string): void {
+    this.exec(`UPDATE outbox SET claim_token = NULL, claim_owner = NULL, claim_expires_at = NULL WHERE committed = 1 AND claim_owner = ? AND claim_token = ?`, owner, token);
+  }
+
+  private claimOutboxWithin(owner: string, requested: number): OutboxClaim | undefined {
+    const now = new Date(this.deps.now()).toISOString();
+    this.exec(`UPDATE outbox SET claim_token = NULL, claim_owner = NULL, claim_expires_at = NULL WHERE committed = 1 AND claim_expires_at <= ?`, now);
+    const limit = Math.min(OUTBOX_CLAIM_MAX_BLOBS, Math.max(0, Math.floor(requested)));
+    if (limit === 0) return undefined;
+    const seqs = this.rows<{ seq: number }>(`SELECT seq FROM outbox WHERE committed = 1 AND claim_token IS NULL ORDER BY seq LIMIT ?`, limit).map((row) => row.seq);
+    if (seqs.length === 0) return undefined;
+    const token = crypto.randomUUID();
+    const expiresAt = new Date(this.deps.now() + OUTBOX_CLAIM_TTL_MS).toISOString();
+    this.exec(
+      `UPDATE outbox SET claim_token = ?, claim_owner = ?, claim_expires_at = ? WHERE seq IN (SELECT value FROM json_each(?)) AND claim_token IS NULL`,
+      token,
+      owner,
+      expiresAt,
+      JSON.stringify(seqs),
+    );
+    const blobs = this.mapOutboxRows(
+      this.rows<{ seq: number; lake_table: string; rows_json: string }>(
+        `SELECT seq, lake_table, rows_json FROM outbox WHERE claim_owner = ? AND claim_token = ? ORDER BY seq`,
+        owner,
+        token,
+      ),
+    );
+    return blobs.length === 0 ? undefined : { token, owner, expiresAt, blobs };
+  }
+
+  private mapOutboxRows(rows: Array<{ seq: number; lake_table: string; rows_json: string }>): OutboxBlob[] {
     return rows.map((row) => {
       // SAFETY: lake_table is written only from the LakeTable union by appendOutbox/appendLakeRows.
       const table = row.lake_table as LakeTable;
       return { seq: row.seq, table, rowsJson: row.rows_json };
     });
-  }
-
-  ackOutbox(seqs: number[]): void {
-    if (seqs.length === 0) return;
-    this.exec(`DELETE FROM outbox WHERE seq IN (SELECT value FROM json_each(?))`, JSON.stringify(seqs));
   }
 
   /** Whether history committed before `before` is still waiting: the executor that committed it did not deliver it. */
@@ -1003,20 +1111,22 @@ export class RunnerCore {
   async registrySnapshot(): Promise<RunnerSnapshot> {
     const feed = this.requireFeed();
     const pending = this.getState<PendingPublication>("publication");
-    const plans = pending ? await this.preparePublication(pending) : this.productPlans();
-    const products = plans.map((product) => product.entry);
+    const prepared = pending ? await this.preparePublication(pending) : undefined;
+    const products = prepared ? prepared.products.map((product) => product.entry) : this.productPlans().map((product) => product.entry);
     const recentAcquisitions = this.listAcquisitions(10);
     const latestPublished = recentAcquisitions.find((acquisition) => acquisition.status === "succeeded" || acquisition.status === "unchanged");
-    return {
-      feed,
-      products,
-      status: this.status(),
-      recentAcquisitions,
-      publication: {
-        id: runnerPublicationId(feed.id, products),
-        acquisitionId: pending?.acquisitionId ?? latestPublished?.id ?? null,
-      },
+    const last = this.getState<PublishedPublication>("last-publication");
+    const number = prepared?.publication.number ?? last?.number ?? this.getState<number>("publication-sequence") ?? 0;
+    const acquisitionId = prepared?.publication.acquisitionId ?? last?.acquisitionId ?? latestPublished?.id ?? null;
+    const publication: RunnerPublication = prepared?.publication ?? {
+      id: last?.id ?? runnerPublicationId(feed.id, number, acquisitionId),
+      number,
+      feedId: feed.id,
+      acquisitionId,
+      entries: products,
+      supersededObjectKeys: [],
     };
+    return { feed, products, status: this.status(), recentAcquisitions, publication };
   }
 
   status(): FeedStatus {
@@ -1070,7 +1180,9 @@ export class RunnerCore {
   /** Delete the serving objects whose grace period has passed; `nextAlarm` wakes the runner for them. */
   async collectGarbage(): Promise<number> {
     const now = new Date(this.deps.now()).toISOString();
-    const due = this.rows<{ object_key: string }>(`SELECT object_key FROM garbage WHERE delete_after <= ? ORDER BY delete_after LIMIT 1000`, now).map((row) => row.object_key);
+    const due = this.rows<{ object_key: string }>(`SELECT object_key FROM garbage WHERE delete_after IS NOT NULL AND delete_after <= ? ORDER BY delete_after LIMIT 1000`, now).map(
+      (row) => row.object_key,
+    );
     if (due.length === 0) return 0;
     await this.deps.objects.delete(due);
     this.exec(`DELETE FROM garbage WHERE object_key IN (SELECT value FROM json_each(?))`, JSON.stringify(due));
@@ -1097,14 +1209,27 @@ export class RunnerCore {
 
   /* ---------- Internals ---------- */
 
-  /** Finish any chunk regeneration needed before either publication path can expose the complete selection. */
-  private async preparePublication(publication: PendingPublication): Promise<ProductPlan[]> {
+  /** Finish chunk regeneration and assemble the exact publication retried to the Registry. */
+  private async preparePublication(pending: PendingPublication): Promise<{ publication: RunnerPublication; products: ProductPlan[] }> {
     const feed = this.requireFeed();
     const products = this.productPlans();
     for (const product of products) {
-      if (product.regenerate) product.entry = await this.regenerate(feed, product, publication.acquisitionId);
+      if (product.regenerate) product.entry = await this.regenerate(feed, product, pending.acquisitionId, pending.id);
     }
-    return products;
+    const supersededObjectKeys = this.rows<{ object_key: string }>(`SELECT object_key FROM garbage WHERE publication_id = ? ORDER BY object_key`, pending.id).map(
+      (row) => row.object_key,
+    );
+    return {
+      publication: {
+        id: pending.id,
+        number: pending.number,
+        feedId: pending.feedId,
+        acquisitionId: pending.acquisitionId,
+        entries: products.map((product) => product.entry),
+        supersededObjectKeys,
+      },
+      products,
+    };
   }
 
   private createAcquisition(trigger: string): Acquisition {
@@ -1164,8 +1289,23 @@ export class RunnerCore {
 
   /** History rows as outbox blobs within the SQLite value budget. */
   private appendLakeRows(acquisitionId: string, table: LakeTable, rows: JsonObject[]): void {
+    for (const row of rows) {
+      validateLakeRow(row, table);
+      assertLakeRowFits(row, table);
+    }
     for (const blob of jsonArrays(rows.map((row) => JSON.stringify(row)))) {
       this.exec(`INSERT INTO outbox (acquisition_id, lake_table, rows_json, rows, bytes) VALUES (?, ?, ?, ?, ?)`, acquisitionId, table, blob.json, blob.count, blob.bytes);
+    }
+  }
+
+  private validateOutboxBlob(table: LakeTable, rowsJson: string, expectedRows: number): void {
+    // SAFETY: JSON.parse returns JSON-compatible data for this JSON outbox boundary.
+    const parsed = JSON.parse(rowsJson) as JsonValue;
+    if (!Array.isArray(parsed) || parsed.length !== expectedRows) throw new NormalizedInputError("History outbox blob row count does not match its JSON array");
+    for (const value of parsed) {
+      if (!isJsonObject(value)) throw new NormalizedInputError("History outbox blobs require object rows");
+      validateLakeRow(value, table);
+      assertLakeRowFits(value, table);
     }
   }
 
@@ -1205,7 +1345,7 @@ export class RunnerCore {
     return this.rows<{ key: string }>(`SELECT json_extract(j.value, '$[0]') AS key FROM stage s, json_each(s.body) j WHERE s.seq = ?`, seq).map((row) => row.key);
   }
 
-  private saveProduct(product: ProductCommit, history: boolean): void {
+  private saveProduct(product: ProductCommit, history: boolean, publicationId: string | undefined): void {
     // History slices never change current serving: their slugs were claimed at declaration.
     if (history) return;
     const current = this.rows<{ entry_json: string }>(`SELECT entry_json FROM products WHERE product_key = ?`, product.productKey)[0];
@@ -1221,7 +1361,7 @@ export class RunnerCore {
       product.mode === "large" && product.staged ? 1 : 0,
     );
     // SAFETY: entry_json is written only from ProductIndexEntry values.
-    this.supersede(current ? (JSON.parse(current.entry_json) as ProductIndexEntry) : null, product.entry);
+    this.supersede(current ? (JSON.parse(current.entry_json) as ProductIndexEntry) : null, product.entry, publicationId);
   }
 
   /**
@@ -1229,21 +1369,25 @@ export class RunnerCore {
    * and the next one does not is garbage. What the next one references is not,
    * even if an earlier version discarded it: content-addressed chunks come back.
    */
-  private supersede(previous: ProductIndexEntry | null, next: ProductIndexEntry): void {
+  private supersede(previous: ProductIndexEntry | null, next: ProductIndexEntry, publicationId: string | undefined): void {
     const kept = objectKeysOf(next);
     this.exec(`DELETE FROM garbage WHERE object_key IN (SELECT value FROM json_each(?))`, JSON.stringify(kept));
     if (!previous) return;
     const keep = new Set(kept);
-    this.discardObjects(objectKeysOf(previous).filter((key) => !keep.has(key)));
+    this.discardObjects(
+      objectKeysOf(previous).filter((key) => !keep.has(key)),
+      publicationId,
+    );
   }
 
-  /** Serving objects no product version selects any more: deleted once their grace period has passed. */
-  private discardObjects(objectKeys: Iterable<string>): void {
-    const deleteAfter = new Date(this.deps.now() + GARBAGE_GRACE_MS).toISOString();
-    for (const key of objectKeys) this.exec(`INSERT INTO garbage (object_key, delete_after) VALUES (?, ?) ON CONFLICT(object_key) DO NOTHING`, key, deleteAfter);
+  /** Serving objects blocked until the Registry acknowledges the publication that superseded them. */
+  private discardObjects(objectKeys: Iterable<string>, publicationId: string | undefined): void {
+    if (!publicationId) throw new Error("Superseded objects require a publication identity");
+    for (const key of objectKeys)
+      this.exec(`INSERT INTO garbage (object_key, publication_id, delete_after) VALUES (?, ?, NULL) ON CONFLICT(object_key) DO NOTHING`, key, publicationId);
   }
 
-  private retireMissing(productKeys: string[]): void {
+  private retireMissing(productKeys: string[], publicationId: string | undefined): void {
     const keep = new Set(productKeys);
     const missing = this.rows<{ product_key: string }>(`SELECT product_key FROM products`)
       .map((row) => row.product_key)
@@ -1251,19 +1395,25 @@ export class RunnerCore {
     if (missing.length === 0) return;
     for (const key of missing) {
       // A retired product's serving objects are no longer selectable once the Registry publishes without it.
-      this.discardObjects(this.productObjectKeys(key));
+      this.discardObjects(this.productObjectKeys(key), publicationId);
       this.exec(`DELETE FROM entities WHERE product_key = ?`, key);
       this.exec(`DELETE FROM products WHERE product_key = ?`, key);
     }
-    this.setState("retired-products", missing);
   }
 
-  private retiredSinceLastPublication(): boolean {
-    return (this.getState<string[]>("retired-products")?.length ?? 0) > 0;
+  private hasMissingProducts(productKeys: string[]): boolean {
+    const keep = new Set(productKeys);
+    return this.rows<{ product_key: string }>(`SELECT product_key FROM products`).some((row) => !keep.has(row.product_key));
+  }
+
+  private nextPublication(acquisitionId: string): PendingPublication {
+    const feedId = this.requireFeed().id;
+    const number = (this.getState<number>("publication-sequence") ?? 0) + 1;
+    return { id: runnerPublicationId(feedId, number, acquisitionId), number, feedId, acquisitionId };
   }
 
   /** Rebuild the chunks a large product's committed changes touched; returns the entry to publish. */
-  private async regenerate(feed: Feed, product: ProductPlan, acquisitionId: string): Promise<ProductIndexEntry> {
+  private async regenerate(feed: Feed, product: ProductPlan, acquisitionId: string, publicationId: string): Promise<ProductIndexEntry> {
     const previous = product.entry.chunks ?? [];
     const dirty = previous.map(() => false);
     if (previous.length > 0) {
@@ -1306,8 +1456,12 @@ export class RunnerCore {
       ? { ...product.entry, status: "failed", chunks: null, rowCount: 0 }
       : { ...product.entry, chunks, rowCount: chunks.reduce((sum, chunk) => sum + chunk.rows, 0) };
     this.transaction(() => {
-      if (problem) this.discardObjects(chunks.map((chunk) => chunk.key));
-      this.supersede(product.entry, entry);
+      if (problem)
+        this.discardObjects(
+          chunks.map((chunk) => chunk.key),
+          publicationId,
+        );
+      this.supersede(product.entry, entry, publicationId);
       this.exec(`UPDATE products SET entry_json = ?, regenerate = 0 WHERE product_key = ?`, JSON.stringify(entry), product.productKey);
     });
     return entry;
@@ -1460,9 +1614,22 @@ interface CollectionMemo {
   declared?: Array<{ productKey: string; slug: string; version: number; baseline: boolean }>;
 }
 
-interface PendingPublication {
+interface LegacyPendingPublication {
   acquisitionId: string;
   productKeys: string[];
+}
+
+interface PendingPublication {
+  id: string;
+  number: number;
+  feedId: string;
+  acquisitionId: string;
+}
+
+interface PublishedPublication {
+  id: string;
+  number: number;
+  acquisitionId: string;
 }
 
 interface AcquisitionRow extends Record<string, SqlStorageValue> {

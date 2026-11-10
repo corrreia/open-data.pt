@@ -1,8 +1,9 @@
 import type { Completeness } from "@open-data-pt/contract";
 import { describe, expect, it } from "vitest";
-import { PromotionRequired, collectionStep, openableUrl, type CollectingGatekeeper } from "#/collection/engine";
+import { PromotionRequired, collectionStep, failureFrom, openableUrl, type CollectingGatekeeper } from "#/collection/engine";
 import { MAX_RECORD_BYTES, STAGE_BYTES } from "#/blob-budget";
 import { BACKFILL_START_DELAY_MS, SMALL_PRODUCT_ROWS } from "#/runner/core";
+import { LAKE_ROW_BYTES } from "#/history/lake";
 import { kernelHarness, policy, record, type KernelHarness } from "#/tests/kernel-harness";
 
 function rows(count: number, value: (index: number) => number | string = (index) => index): ReturnType<typeof record>[] {
@@ -420,10 +421,62 @@ describe("collection engine: history per product and fewer round trips", () => {
 // The harness's SQLite refuses values over 2 MB, as Durable Objects do; these
 // products failed in production with "string or blob too big: SQLITE_TOOBIG".
 describe("collection engine: SQLite value limit", () => {
-  it("stores large accented rows of a small product without a history blob over 2 MB", async () => {
+  it("fails a source-owned _omitted record before current serving, checkpoint, or outbox commit", async () => {
+    const h = await kernelHarness({ history: null, policy: policy({ maxRecordBytes: 1024 * 1024, maxOutputBytes: 16 * 1024 * 1024 }) });
+    h.source.records = [record("a", 1)];
+    await h.collect();
+    const entry = h.entry();
+    const checkpoint = h.core.runtime().checkpoint;
+    const historyRows = h.lakeRows().length;
+    h.source.records = [record("a", 2, { _omitted: "source-owned", geometry: "ã".repeat(460_000) })];
+    const acquisition = h.core.collectNow("manual");
+    h.core.markStarted(acquisition.id, "oversized-record");
+    const error = await h.run(acquisition.id).catch((failure: Error) => failure);
+    if (!(error instanceof Error)) throw new Error("Expected oversized record failure");
+    expect(error.message).toMatch(/Pipeline rows/);
+    h.core.fail(acquisition.id, failureFrom(error));
+
+    expect(h.entry()).toEqual(entry);
+    expect(h.core.runtime().checkpoint).toEqual(checkpoint);
+    expect(h.core.committedOutboxRows()).toBe(0);
+    expect(h.lakeRows()).toHaveLength(historyRows);
+    expect((await h.served())[0]?.value).toBe(1);
+  });
+
+  it("fails an oversized point before current serving, checkpoint, or outbox commit", async () => {
+    const h = await kernelHarness({ history: null, policy: policy({ maxRecordBytes: 1024 * 1024, maxOutputBytes: 16 * 1024 * 1024 }) });
+    h.source.kind = "series";
+    h.source.points = [{ seriesKey: "temp", eventTime: "2026-09-10T01:00:00.000Z", value: 10, unit: "C", dimensions: {} }];
+    await h.collect();
+    const entry = h.entry("readings");
+    const checkpoint = h.core.runtime().checkpoint;
+    const historyRows = h.lakeRows().length;
+    h.source.points = [
+      {
+        seriesKey: "temp",
+        eventTime: "2026-09-10T02:00:00.000Z",
+        value: 11,
+        unit: "C",
+        dimensions: { note: "x".repeat(LAKE_ROW_BYTES) },
+      },
+    ];
+    const acquisition = h.core.collectNow("manual");
+    h.core.markStarted(acquisition.id, "oversized-point");
+    const error = await h.run(acquisition.id).catch((failure: Error) => failure);
+    if (!(error instanceof Error)) throw new Error("Expected oversized point failure");
+    expect(error.message).toMatch(/Pipeline rows/);
+    h.core.fail(acquisition.id, failureFrom(error));
+
+    expect(h.entry("readings")).toEqual(entry);
+    expect(h.core.runtime().checkpoint).toEqual(checkpoint);
+    expect(h.core.committedOutboxRows()).toBe(0);
+    expect(h.lakeRows()).toHaveLength(historyRows);
+  });
+
+  it("stores large accented rows that fit the Pipeline row budget without a history blob over 2 MB", async () => {
     const h = await kernelHarness({ keepLake: true, policy: policy({ maxRecordBytes: 1024 * 1024, maxOutputBytes: 16 * 1024 * 1024 }) });
-    // About 998,000 bytes per row but 499,000 characters: two such rows passed a 900,000-character budget together.
-    h.source.records = Array.from({ length: 3 }, (_, index) => record(`k${index}`, "ã".repeat(499_000)));
+    // About 898,000 bytes per row but 449,000 characters: two must still be split by UTF-8 bytes.
+    h.source.records = Array.from({ length: 3 }, (_, index) => record(`k${index}`, "ã".repeat(449_000)));
     expect((await h.collect()).status).toBe("succeeded");
     expect(h.entry()).toMatchObject({ rowCount: 3 });
     expect(h.lakeRows("records")).toHaveLength(3);

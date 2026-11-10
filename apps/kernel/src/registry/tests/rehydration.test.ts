@@ -35,7 +35,14 @@ function snapshotFor(feed: Feed, products: ProductIndexEntry[], source: RunnerSn
     products,
     status: source.status,
     recentAcquisitions: source.recentAcquisitions.map((acquisition) => ({ ...acquisition, feedId: feed.id })),
-    publication: { id: runnerPublicationId(feed.id, products), acquisitionId: source.publication.acquisitionId },
+    publication: {
+      id: runnerPublicationId(feed.id, source.publication.number, source.publication.acquisitionId),
+      number: source.publication.number,
+      feedId: feed.id,
+      acquisitionId: source.publication.acquisitionId,
+      entries: products,
+      supersededObjectKeys: [],
+    },
   };
 }
 

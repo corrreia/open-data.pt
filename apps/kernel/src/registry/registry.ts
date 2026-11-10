@@ -3,7 +3,7 @@ import { NormalizedInputError, type CatalogFeed } from "@open-data-pt/contract";
 
 import { cadenceFloorOf, checkForVersion, syncStep, withCadenceFloor, type SyncPorts, type SyncProgress, type SyncState } from "#/registry/catalog-sync";
 import type { ManifestChunk } from "#/serving/chunks";
-import { definitionFingerprint, keepsHistory, type Acquisition, type Feed, type ProductIndexEntry, type ProductSummary } from "#/registry/feed-model";
+import { definitionFingerprint, keepsHistory, type Acquisition, type Feed, type ProductSummary } from "#/registry/feed-model";
 import { catalogVersionOf, gatekeeperOf } from "#/collection/gatekeeper";
 import { EMPTY_VOCABULARIES, Vocabulary, checkedCatalog, type Vocabularies, type VocabularyRef } from "#/registry/vocabulary";
 import { digest } from "#/hash";
@@ -13,6 +13,7 @@ import { SUMMARY_DAYS_PER_WAKE, SUMMARY_DUE_STATE_KEY, summariseSettledDays } fr
 import { R2SnapshotStore } from "#/serving/r2-snapshot-store";
 import { RegistryStore, rehydrateRegistryProducts, type ActivityWindow } from "#/registry/store";
 import { ingestRunnerReport, OUTAGE_KEEP_MS, OUTAGES_SINCE_KEY, type OutageWindow, type RunnerReport, type RunnerReportReceipt, isSustained } from "#/registry/reporting";
+import type { RunnerPublication, RunnerPublicationReceipt } from "#/durability/runner-snapshot";
 
 /** The one Registry's name: every runner and request reaches the same object. */
 export const REGISTRY_ROOM = "main";
@@ -339,16 +340,18 @@ export class Registry extends DurableObject<Env> {
    * can retire; while the sync is still installing feeds it throws instead,
    * and the runner retries the publication.
    */
-  publishProducts(feedId: string, entries: ProductIndexEntry[], report?: RunnerReport): RunnerReportReceipt {
+  publishProducts(publication: RunnerPublication, report?: RunnerReport): RunnerPublicationReceipt {
+    if (report && report.feedId !== publication.feedId) throw new NormalizedInputError("Publication report names another feed");
     if (this.store.rehydrationRequired()) throw new Error("The Registry is rehydrating its complete product index; publication will be retried");
-    if (!this.store.getFeed(feedId)) {
+    if (!this.store.getFeed(publication.feedId)) {
       if (!this.syncSettled()) throw new Error("The Registry is still installing feeds; publication will be retried");
       return { known: false, backfillPeers: 0 };
     }
     const at = new Date().toISOString();
-    const receipt = this.ctx.storage.transactionSync((): RunnerReportReceipt => {
-      this.store.replaceFeedProducts(feedId, entries);
-      return report ? ingestRunnerReport(this.store, report, at) : { known: true, backfillPeers: 1 };
+    const receipt = this.ctx.storage.transactionSync((): RunnerPublicationReceipt => {
+      const reportReceipt = report ? ingestRunnerReport(this.store, report, at) : { known: true as const, backfillPeers: 1 };
+      if (!reportReceipt.known) return { known: false, backfillPeers: 0 };
+      return this.store.acceptPublication(publication, at, reportReceipt.backfillPeers);
     });
     if (report) {
       this.reportIngested();

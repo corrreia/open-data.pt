@@ -2,7 +2,7 @@ import { DurableObject } from "cloudflare:workers";
 import type { SourceCheckpoint } from "@open-data-pt/contract";
 
 import { drainOutbox } from "#/collection/engine";
-import type { Acquisition, Feed, ProductIndexEntry } from "#/registry/feed-model";
+import type { Acquisition, Feed } from "#/registry/feed-model";
 import { catalogVersionOf } from "#/collection/gatekeeper";
 import { PipelinesLake, lakeStreams, type LakeTable } from "#/history/lake";
 import { ObjectStore } from "#/serving/object-store";
@@ -15,14 +15,14 @@ import {
   type CommitResult,
   type DeclaredProduct,
   type DeclareInput,
-  type OutboxBlob,
+  type OutboxClaim,
   type StagedRecord,
   type StageResult,
   type SweepResult,
 } from "#/runner/core";
 import { registryOf } from "#/registry/registry";
 import type { RunnerReport, RunnerReportReceipt } from "#/registry/reporting";
-import type { RunnerSnapshot } from "#/durability/runner-snapshot";
+import type { RunnerPublication, RunnerPublicationReceipt, RunnerSnapshot } from "#/durability/runner-snapshot";
 
 /** History its Workflow has not delivered after this long is drained by the runner's alarm. */
 const LEFTOVER_HISTORY_AFTER_MS = 10 * 60_000;
@@ -107,17 +107,19 @@ export class FeedRunner extends DurableObject<Env> {
     await this.settle();
   }
 
-  pendingOutbox(limit: number): OutboxBlob[] {
-    return this.core.pendingOutbox(limit);
+  claimOutbox(owner: string, limit: number): OutboxClaim | undefined {
+    return this.core.claimOutbox(owner, limit);
   }
 
-  /** Acknowledge delivered blobs and hand back up to `next` more, so delivering a page costs one call. */
-  async ackOutbox(seqs: number[], next = 0): Promise<OutboxBlob[]> {
-    this.core.ackOutbox(seqs);
-    if (this.core.committedOutboxRows() > 0) return this.core.pendingOutbox(next);
-    // All delivered: the wake-up armed at commit to catch undelivered history has nothing left to do.
-    await this.rearm();
-    return [];
+  /** Acknowledge only this owner's token and atomically take its next page. */
+  async acknowledgeOutbox(owner: string, token: string, next = 0): Promise<OutboxClaim | undefined> {
+    const claim = this.core.acknowledgeOutbox(owner, token, next);
+    if (this.core.committedOutboxRows() === 0) await this.rearm();
+    return claim;
+  }
+
+  releaseOutbox(owner: string, token: string): void {
+    this.core.releaseOutbox(owner, token);
   }
 
   /* ---------- Registry calls ---------- */
@@ -239,12 +241,11 @@ export class FeedRunner extends DurableObject<Env> {
   /** Send history no executor delivered; returns how many blobs went. */
   private async drainLeftoverHistory(): Promise<number> {
     const lake = new PipelinesLake(lakeStreams(this.env));
+    const owner = `alarm:${this.core.requireFeed().id}`;
     const outbox = {
-      pendingOutbox: async (limit: number) => this.core.pendingOutbox(limit),
-      ackOutbox: async (seqs: number[], next: number) => {
-        this.core.ackOutbox(seqs);
-        return this.core.pendingOutbox(next);
-      },
+      claimOutbox: async (limit: number) => this.core.claimOutbox(owner, limit),
+      acknowledgeOutbox: async (token: string, next: number) => this.core.acknowledgeOutbox(owner, token, next),
+      releaseOutbox: async (token: string) => this.core.releaseOutbox(owner, token),
     };
     return (await drainOutbox(outbox, (table, rows) => lake.send(table, rows), LEFTOVER_ALARM_BLOBS)).delivered;
   }
@@ -272,13 +273,14 @@ export class FeedRunner extends DurableObject<Env> {
   }
 
   /** Select the feed's products and report this runner's state in one Registry call. */
-  private async publishWithReport(entries: ProductIndexEntry[]): Promise<boolean> {
+  private async publishWithReport(publication: RunnerPublication): Promise<RunnerPublicationReceipt> {
     const feed = this.core.requireFeed();
-    const receipt = await registryOf(this.env).publishProducts(feed.id, entries, await this.reportFor(feed));
-    if (!receipt.known) return false;
-    this.reportsSent += 1;
-    this.core.backfillPeers = Math.max(1, receipt.backfillPeers);
-    return true;
+    const receipt = await registryOf(this.env).publishProducts(publication, await this.reportFor(feed));
+    if (receipt.known) {
+      this.reportsSent += 1;
+      this.core.backfillPeers = Math.max(1, receipt.backfillPeers);
+    }
+    return receipt;
   }
 
   private async report(): Promise<void> {
