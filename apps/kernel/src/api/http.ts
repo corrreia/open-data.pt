@@ -1,15 +1,24 @@
-import type { Acquisition as ApiAcquisition, Coverage, Feed as ApiFeed } from "@open-data-pt/api";
+import { MAX_HISTORY_WINDOW_DAYS, integerQueryAt, type Acquisition as ApiAcquisition, type Coverage, type Feed as ApiFeed } from "@open-data-pt/api";
 import { asObject, asString, isJsonString, parseJson, type JsonObject, type JsonValue } from "@open-data-pt/contract";
 
-import { ANALYTICS_WINDOWS, AnalyticsError, analyticsReport } from "#/pages/analytics";
+import { AnalyticsError, analyticsReport } from "#/pages/analytics";
 import { CADENCE_HEADER } from "#/api/cache";
 import { REGISTRY_ROOM, type ProductDetail, type Registry } from "#/registry/registry";
 import { Vocabulary } from "#/registry/vocabulary";
-import { NotFoundError, RequestError, type HeaderMap } from "#/api/errors";
+import {
+  EXPOSED_PROBLEM_HEADERS,
+  NotFoundError,
+  RequestError,
+  StorageUnavailableError,
+  decodePathSegment,
+  storageUnavailableResponse,
+  validatePathEncoding,
+  type HeaderMap,
+} from "#/api/errors";
 import type { Acquisition, Feed } from "#/registry/feed-model";
 import { ObjectStore } from "#/serving/object-store";
 import { parquetDownload, type ParquetStore } from "#/api/parquet-download";
-import { MAX_HISTORY_PAGE, QueryError, runLakeQuery } from "#/history/query";
+import { QueryError, runLakeQuery } from "#/history/query";
 import type { ParquetSource } from "#/serving/parquet";
 import { PUBLISHED_AHEAD_MS, readSummaryFile, readSummaryRange, type SummaryResolution } from "#/history/summaries";
 import { callRegistry, withHistorySlot } from "#/api/registry-calls";
@@ -28,7 +37,7 @@ import {
 } from "#/serving/serving";
 
 /** History windows are at most this long; longer spans take one request per window. */
-const MAX_HISTORY_WINDOW_MS = 366 * 86_400_000;
+const MAX_HISTORY_WINDOW_MS = MAX_HISTORY_WINDOW_DAYS * 86_400_000;
 
 export interface ApiContext {
   env: Env;
@@ -50,6 +59,7 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
   const serving = () => new Serving(publicCatalog(registry()), new ObjectStore(ctx.snapshots));
 
   try {
+    validatePathEncoding(url.pathname);
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
@@ -84,13 +94,13 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
           series: `${product}/series/range?from={iso}&to={iso}[&knownAt={iso}][&seriesKey={key}]`,
           seriesChanges: `${product}/series/changes/range?from={iso}&to={iso}[&seriesKey={key}]`,
           changes: `${product}/changes/range?from={iso}&to={iso}`,
-          maximumWindowDays: 366,
+          maximumWindowDays: MAX_HISTORY_WINDOW_DAYS,
         },
       });
     }
     if (url.pathname === "/api/outages") {
       // When each feed's live collection kept failing, and when the platform collected nothing, over the last days.
-      const days = parseInteger(url, "days", 90, 1, 90);
+      const days = parseInteger(url, "days");
       const to = new Date().toISOString();
       const from = new Date(Date.parse(to) - days * 86_400_000).toISOString();
       const window = await registry().outages(from, to);
@@ -99,8 +109,7 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
 
     if (url.pathname === "/api/analytics") {
       // How the site, the API and the MCP server are used: counts only, from Analytics Engine; the edge keeps each window for half an hour.
-      const days = parseInteger(url, "days", 7, 1, 90);
-      if (!ANALYTICS_WINDOWS.some((window) => window === days)) throw new RequestError(`days must be one of ${ANALYTICS_WINDOWS.join(", ")}`, 400);
+      const days = parseInteger(url, "days");
       try {
         return json(await analyticsReport(ctx.env, days, Date.now(), ctx.analyticsFetch));
       } catch (error) {
@@ -122,7 +131,7 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
     const feedMatch = url.pathname.match(/^\/api\/feeds\/([^/]+)$/);
     if (feedMatch?.[1]) {
       const reg = registry();
-      const [feed, catalog] = await Promise.all([requireFeed(reg, decodeURIComponent(feedMatch[1])), reg.catalog()]);
+      const [feed, catalog] = await Promise.all([requireFeed(reg, decodePathSegment(feedMatch[1])), reg.catalog()]);
       return json({ data: publicFeed(feed, new Vocabulary(catalog), url.origin) });
     }
 
@@ -134,7 +143,7 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
       const reg = registry();
       if (day !== undefined) {
         if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !isCalendarTime(day)) throw new RequestError("day must be a calendar date (YYYY-MM-DD)", 400);
-        const limit = parseInteger(url, "limit", 500, 1, 1000);
+        const limit = parseInteger(url, "limit");
         const start = `${day}T00:00:00.000Z`;
         const end = new Date(Date.parse(start) + 86_400_000).toISOString();
         const [activity, feeds] = await Promise.all([reg.activityBetween(start, end, limit, feedId), reg.listFeeds()]);
@@ -146,7 +155,7 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
           data: activity.items.filter((acquisition) => open.has(acquisition.feedId)).map(publicAcquisition),
         });
       }
-      const limit = parseInteger(url, "limit", 50, 1, 200);
+      const limit = parseInteger(url, "limit");
       const [acquisitions, feeds] = await Promise.all([reg.listAcquisitions(limit, feedId), reg.listFeeds()]);
       const open = new Set(feeds.map((feed) => feed.id));
       return json({ data: acquisitions.filter((acquisition) => open.has(acquisition.feedId)).map(publicAcquisition) });
@@ -171,7 +180,7 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
     if (slug) {
       // One Registry call answers every product read: the entry, its chunk list, and whether the public may see it.
       const service = serving();
-      const product = await service.product(decodeURIComponent(slug));
+      const product = await service.product(decodePathSegment(slug));
       if (!product) throw new NotFoundError("Product was not found");
       if (geoJsonMatch) {
         return withCadence(
@@ -201,7 +210,7 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
         const cursor = optionalQuery(url, "cursor");
         const validAt = optionalTime(url, "validAt");
         const filters = rowFilters(url);
-        const query: RecordQuery = { limit: parseInteger(url, "limit", 50, 1, 500) };
+        const query: RecordQuery = { limit: parseInteger(url, "limit") };
         if (cursor) query.cursor = decodeCursor(cursor);
         if (validAt) query.validAt = validAt;
         if (filters) query.filters = filters;
@@ -213,7 +222,7 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
       if (view === "changes") {
         requireHistory(product);
         const knownAt = optionalTime(url, "knownAt");
-        const query: ChangeQuery = { limit: parseInteger(url, "limit", 100, 1, 500) };
+        const query: ChangeQuery = { limit: parseInteger(url, "limit") };
         if (knownAt) query.knownAt = knownAt;
         return withCadence(json({ data: await service.changes(product, query) }), product);
       }
@@ -221,7 +230,7 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
       const seriesKey = optionalQuery(url, "seriesKey");
       const from = optionalTime(url, "from");
       const to = optionalTime(url, "to");
-      const input: SeriesQuery = { limit: parseInteger(url, "limit", 100, 1, 1000) };
+      const input: SeriesQuery = { limit: parseInteger(url, "limit") };
       if (seriesKey) input.seriesKey = seriesKey;
       if (from) input.from = from;
       if (to) input.to = to;
@@ -247,6 +256,7 @@ export async function handleApi(request: Request, ctx: ApiContext): Promise<Resp
     );
   } catch (error) {
     if (error instanceof NotFoundError) return problem(404, "Not found", error.message);
+    if (error instanceof StorageUnavailableError) return storageUnavailableResponse(error);
     if (error instanceof RequestError) {
       const title = error.status === 429 ? "Too many requests" : error.status === 413 ? "Too large for one file" : "Invalid request";
       return problem(error.status, title, error.message, error.headers);
@@ -288,7 +298,7 @@ async function seriesSummary(ctx: ApiContext, url: URL, product: ProductDetail, 
 
 /* ---------- History ---------- */
 
-/** The four typed history endpoints, all bounded to a 366-day window. */
+/** The four typed history endpoints, all bounded to the route contract's maximum window. */
 async function history(ctx: ApiContext, registry: () => RegistryStub, url: URL, product: ProductDetail, endpoint: string): Promise<Response> {
   if (endpoint === "events") return eventRange(ctx, registry, url, product, await historicalFeed(registry, product, "event-log"));
   if (endpoint === "series/range") return seriesRange(ctx, registry, url, product, await historicalFeed(registry, product, "time-series"));
@@ -303,7 +313,7 @@ async function history(ctx: ApiContext, registry: () => RegistryStub, url: URL, 
 async function eventRange(ctx: ApiContext, registry: () => RegistryStub, url: URL, product: HistoricalProduct, feed: Feed): Promise<Response> {
   const { from, to } = historyWindow(url);
   const knownAt = optionalTime(url, "knownAt");
-  const limit = parseInteger(url, "limit", 200, 1, 500);
+  const limit = parseInteger(url, "limit");
   const cursor = historyCursor(url);
   const cursorClause = cursor
     ? ` AND (event_time < TIMESTAMP '${cursor.time}' OR (event_time = TIMESTAMP '${cursor.time}' AND entity_key > '${sqlString(cursor.key)}') OR (event_time = TIMESTAMP '${cursor.time}' AND entity_key = '${sqlString(cursor.key)}' AND revision_id < '${sqlString(cursor.revision)}'))`
@@ -334,7 +344,7 @@ async function eventRange(ctx: ApiContext, registry: () => RegistryStub, url: UR
 /** Every record revision ingested in [from, to), newest knowledge first. */
 async function recordChangeRange(ctx: ApiContext, registry: () => RegistryStub, url: URL, product: HistoricalProduct, feed: Feed): Promise<Response> {
   const { from, to } = historyWindow(url);
-  const limit = parseInteger(url, "limit", 200, 1, 500);
+  const limit = parseInteger(url, "limit");
   const cursor = historyCursor(url);
   const cursorClause = cursor
     ? ` AND (observed_at < TIMESTAMP '${cursor.time}' OR (observed_at = TIMESTAMP '${cursor.time}' AND entity_key > '${sqlString(cursor.key)}') OR (observed_at = TIMESTAMP '${cursor.time}' AND entity_key = '${sqlString(cursor.key)}' AND revision_id < '${sqlString(cursor.revision)}'))`
@@ -374,7 +384,7 @@ async function seriesRange(ctx: ApiContext, registry: () => RegistryStub, url: U
   const { from, to } = historyWindow(url);
   const knownAt = optionalTime(url, "knownAt");
   const seriesKey = optionalQuery(url, "seriesKey");
-  const limit = parseInteger(url, "limit", 500, 1, MAX_HISTORY_PAGE);
+  const limit = parseInteger(url, "limit");
   const cursor = historyCursor(url);
   const seriesClause = seriesKey ? ` AND series_key = '${sqlString(seriesKey)}'` : "";
   const knownClause = knownAt ? ` AND observed_at <= TIMESTAMP '${knownAt}'` : "";
@@ -406,7 +416,7 @@ async function seriesRange(ctx: ApiContext, registry: () => RegistryStub, url: U
 async function seriesChangeRange(ctx: ApiContext, registry: () => RegistryStub, url: URL, product: HistoricalProduct, feed: Feed): Promise<Response> {
   const { from, to } = historyWindow(url);
   const seriesKey = optionalQuery(url, "seriesKey");
-  const limit = parseInteger(url, "limit", 500, 1, MAX_HISTORY_PAGE);
+  const limit = parseInteger(url, "limit");
   const cursor = historyCursor(url);
   const seriesClause = seriesKey ? ` AND series_key = '${sqlString(seriesKey)}'` : "";
   const cursorClause = cursor
@@ -449,13 +459,13 @@ interface HistoryWindow {
   to: string;
 }
 
-/** A validated history window: both ends given, ordered, at most 366 days apart. */
+/** A validated history window: both ends given, ordered and within the route contract's maximum. */
 function historyWindow(url: URL): HistoryWindow {
   const from = requiredDate(url, "from");
   const to = requiredDate(url, "to");
   if (from >= to) throw new RequestError("from must be before to", 400);
   if (Date.parse(to) - Date.parse(from) > MAX_HISTORY_WINDOW_MS)
-    throw new RequestError("A history window cannot exceed 366 days; page through longer spans one window at a time", 400);
+    throw new RequestError(`A history window cannot exceed ${MAX_HISTORY_WINDOW_DAYS} days; page through longer spans one window at a time`, 400);
   return { from, to };
 }
 
@@ -537,9 +547,6 @@ function publicCatalog(reg: RegistryStub): ProductCatalog {
   return { listProducts: async () => reg.listProducts(), getProduct: async (slug) => reg.getProduct(slug) };
 }
 
-/** Standards a publisher can share data through; anything else is the publisher's own API. */
-const STANDARD_FORMATS = new Set(["arcgis", "ckan", "gbfs", "gtfs", "opendatasoft", "udata"]);
-
 /**
  * A feed as the API shows it: where the data comes from, how often it is read, and how its
  * collection is going. The runner's scope and checkpoint, the policy, the library, the lake
@@ -554,7 +561,7 @@ function publicFeed(feed: Feed, vocabulary: Vocabulary, origin: string): ApiFeed
     history: _history,
     checkpoint: _checkpoint,
     policy,
-    library,
+    library: _library,
     publisher,
     licence,
     topics,
@@ -566,7 +573,7 @@ function publicFeed(feed: Feed, vocabulary: Vocabulary, origin: string): ApiFeed
     ...publicValue
   } = feed;
   const terms = vocabulary.feedTerms(attribution === undefined ? { publisher, licence, topics } : { publisher, licence, topics, attribution }, origin);
-  return { ...publicValue, ...terms, format: STANDARD_FORMATS.has(library) ? library : "own-api", cadenceSeconds: policy.cadenceSeconds };
+  return { ...publicValue, ...terms, cadenceSeconds: policy.cadenceSeconds };
 }
 
 /* ---------- Record filters ---------- */
@@ -701,12 +708,15 @@ function optionalQuery(url: URL, name: string): string | undefined {
   return value ? value : undefined;
 }
 
-function parseInteger(url: URL, name: string, defaultValue: number, minimum: number, maximum: number): number {
+function parseInteger(url: URL, name: string): number {
+  const bounds = integerQueryAt(url.pathname, name);
+  if (!bounds) throw new Error(`Route metadata has no integer query parameter ${name} for ${url.pathname}`);
   const raw = url.searchParams.get(name);
-  if (raw === null) return defaultValue;
+  if (raw === null) return bounds.default;
   if (!/^\d+$/.test(raw)) throw new RequestError(`${name} must be an integer`, 400);
   const value = Number(raw);
-  if (value < minimum || value > maximum) throw new RequestError(`${name} must be between ${minimum} and ${maximum}`, 400);
+  if (value < bounds.minimum || value > bounds.maximum) throw new RequestError(`${name} must be between ${bounds.minimum} and ${bounds.maximum}`, 400);
+  if (bounds.values && !bounds.values.includes(value)) throw new RequestError(`${name} must be one of ${bounds.values.join(", ")}`, 400);
   return value;
 }
 
@@ -720,7 +730,16 @@ function json<T>(value: T, status = 200): Response {
 export function problem(status: number, title: string, detail: string, headers: HeaderMap = {}): Response {
   return Response.json(
     { type: "about:blank", title, status, detail },
-    { status, headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store", "Content-Type": "application/problem+json", ...headers } },
+    {
+      status,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Expose-Headers": EXPOSED_PROBLEM_HEADERS,
+        "Cache-Control": "no-store",
+        "Content-Type": "application/problem+json",
+        ...headers,
+      },
+    },
   );
 }
 

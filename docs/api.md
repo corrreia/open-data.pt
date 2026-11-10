@@ -6,18 +6,20 @@ The generated reference is at [open-data.pt/docs](https://open-data.pt/docs) and
 
 ## Catalog and data
 
-| Method | Path                                 | Purpose                                        |
-| ------ | ------------------------------------ | ---------------------------------------------- |
-| `GET`  | `/api/products`                      | Public product catalog                         |
-| `GET`  | `/api/products/:slug`                | One product's metadata                         |
-| `GET`  | `/api/products/:slug/records`        | Current records with cursor pagination         |
-| `GET`  | `/api/products/:slug/records/all`    | Every current record in one streamed response  |
-| `GET`  | `/api/products/:slug/series`         | Current bounded series window                  |
-| `GET`  | `/api/products/:slug/changes`        | Recent bounded changes                         |
-| `GET`  | `/api/products/:slug/series/changes` | Recent series corrections                      |
-| `GET`  | `/api/products/:slug.geojson`        | Current geospatial records as streamed GeoJSON |
-| `GET`  | `/api/products/:slug.parquet`        | Every current record as one Parquet file       |
-| `GET`  | `/api/catalog.dcat.json`             | DCAT 3 JSON-LD catalog                         |
+| Method | Path                                         | Purpose                                               |
+| ------ | -------------------------------------------- | ----------------------------------------------------- |
+| `GET`  | `/api/products`                              | Public product catalog                                |
+| `GET`  | `/api/products/:slug`                        | One product's metadata                                |
+| `GET`  | `/api/products/:slug/records`                | Current records with cursor pagination                |
+| `GET`  | `/api/products/:slug/records/all`            | Every current record in one streamed response         |
+| `GET`  | `/api/products/:slug/series`                 | Current bounded series window                         |
+| `GET`  | `/api/products/:slug/series/summary`         | Series summaries by hour, Lisbon day or month         |
+| `GET`  | `/api/products/:slug/series/summary/:period` | One stored summary month (`YYYY-MM`) or year (`YYYY`) |
+| `GET`  | `/api/products/:slug/changes`                | Recent bounded changes                                |
+| `GET`  | `/api/products/:slug/series/changes`         | Recent series corrections                             |
+| `GET`  | `/api/products/:slug.geojson`                | Current geospatial records as streamed GeoJSON        |
+| `GET`  | `/api/products/:slug.parquet`                | Every current record as one Parquet file              |
+| `GET`  | `/api/catalog.dcat.json`                     | DCAT 3 JSON-LD catalog                                |
 
 ### Parquet
 
@@ -55,6 +57,7 @@ days, and answers with an opaque `nextCursor`, freshness and explicit coverage.
 | `GET`  | `/api/feeds`, `/api/feeds/:id`   | Publisher, source, format, cadence and freshness of each dataset                       |
 | `GET`  | `/api/acquisitions?feedId=&day=` | Collection runs, newest first, or every run of one UTC day                             |
 | `GET`  | `/api/outages?days=`             | When each feed's live collection kept failing, and when the platform collected nothing |
+| `GET`  | `/api/analytics?days=`           | Aggregate site, API and MCP usage; no visitor identifiers                              |
 | `GET`  | `/api/health`                    | One JSON status for uptime checks                                                      |
 
 ## Rules that apply to all of it
@@ -68,8 +71,18 @@ days, and answers with an opaque `nextCursor`, freshness and explicit coverage.
   against the stricter rate limit, like `/records/all` and the GeoJSON export.
 - An unknown query parameter answers `400`. Requests are rate limited per client (`429` with
   `Retry-After`).
+- A `/records` cursor belongs to the exact product version that issued it. If that product updates
+  before the next page, the API answers `400` and says to restart without a cursor; restarting is
+  the only way to avoid silently mixing two current versions.
+- History cursors are opaque and have endpoint, product, window, filter and snapshot affinity. Pass
+  one back only with the same request parameters. If a cursor is rejected, restart from the first
+  page; do not edit or reuse it for another window.
 - A product's current data is cached at the edge for a quarter of its feed's cadence, between 15
   seconds and five minutes. History windows that ended more than an hour ago are cached for a day.
+  Cacheable generation runs through the named `CachedApi` Worker entrypoint configured with Workers
+  Caching in Wrangler 4.146.0. Local Wrangler accepts and routes the entrypoint but does not simulate
+  cache hits, so production cache-hit and concurrent-miss collapsing remain an explicit verification
+  gap.
 - Every product states its `cadenceSeconds`, `licence` and `attribution`. The code is MIT; the data is
   not — it belongs to the institution that published it.
 

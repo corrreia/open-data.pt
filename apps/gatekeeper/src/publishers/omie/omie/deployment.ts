@@ -6,6 +6,7 @@ import { OMIE_FEEDS } from "./omie";
 export const OMIE_DEPLOYMENT: LibraryDeployment<{ readonly OMIE_API_ORIGIN: string }, OmieContext> = {
   source: "omie",
   name: "OMIE electricity market",
+  publicFormat: "own-api",
   vars: { OMIE_API_ORIGIN: "https://www.omie.es" },
   library: (env) => ({
     kinds: Object.values(OMIE_FEEDS),

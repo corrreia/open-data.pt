@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { cacheTtl, productTtl } from "#/api/cache";
 
@@ -5,6 +6,16 @@ const NOW = Date.parse("2026-09-10T12:00:00.000Z");
 const at = (path: string) => cacheTtl(new URL(`https://open-data.pt${path}`), NOW);
 
 describe("edge cache lifetimes", () => {
+  it("uses the named cached entrypoint and no manual Cache API", () => {
+    const config = readFileSync("apps/kernel/wrangler.jsonc", "utf8");
+    const worker = readFileSync("apps/kernel/src/index.ts", "utf8");
+    expect(config).toContain('"cache": { "enabled": false }');
+    expect(config).toContain('"CachedApi": { "type": "worker", "cache": { "enabled": true } }');
+    expect(worker).toContain("export class CachedApi");
+    expect(worker).not.toContain("caches.default");
+    expect(worker).not.toContain("stale-while-revalidate");
+  });
+
   it("caches history windows that ended over an hour ago for a day", () => {
     expect(at("/api/products/seismic/events?from=2026-07-01T00:00:00Z&to=2026-07-10T00:00:00Z")).toBe(86_400);
     expect(at("/api/products/load/series/range?from=2026-09-01T00:00:00Z&to=2026-09-10T10:00:00Z")).toBe(86_400);

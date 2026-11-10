@@ -6,6 +6,7 @@ import { PEERINGDB_FEEDS } from "./peeringdb";
 export const PEERINGDB_DEPLOYMENT: LibraryDeployment<{ readonly PEERINGDB_API_ORIGIN: string }, PeeringdbContext> = {
   source: "peeringdb",
   name: "PeeringDB",
+  publicFormat: "own-api",
   vars: { PEERINGDB_API_ORIGIN: "https://www.peeringdb.com" },
   library: (env) => ({
     kinds: Object.values(PEERINGDB_FEEDS),

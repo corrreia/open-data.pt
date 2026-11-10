@@ -20,6 +20,7 @@ const LIBRARIES: GatekeeperLibraries = new Map([
   [
     "fixture",
     {
+      publicFormat: "own-api",
       kinds: [],
       resolve: async (config) => ({
         config: { ...config, region: (config.region ?? "North").trim().toLowerCase() },

@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@open-data-pt/contract": "workspace:*"
+    "@open-data-pt/contract": "workspace:*",
+    "zod": "^4.6.5"
   },
   "exports": {
     ".": "./src/index.ts"

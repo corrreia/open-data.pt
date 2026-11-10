@@ -44,6 +44,7 @@ async function registry() {
     title: "Things",
     description: "",
     library: "fixture",
+    format: "own-api",
     resourceKey: resolved.resourceKey,
     configHash: resolved.configHash,
     eventTimed: false,

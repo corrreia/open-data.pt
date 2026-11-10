@@ -10,6 +10,7 @@ interface FirmsEnv {
 export const FIRMS_DEPLOYMENT: LibraryDeployment<FirmsEnv, FirmsContext> = {
   source: "firms",
   name: "NASA FIRMS thermal anomalies",
+  publicFormat: "own-api",
   vars: { NASA_FIRMS_API_ORIGIN: FIRMS_API_ORIGIN },
   secrets: ["NASA_FIRMS_MAP_KEY"],
   library: (env) => ({

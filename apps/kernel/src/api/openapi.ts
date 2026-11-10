@@ -1,5 +1,8 @@
+import { API_ROUTES, AcquisitionSchema, CoverageSchema, FeedSchema, HistoryPageSchema, ProblemSchema, ProductSchema } from "@open-data-pt/api";
+import { z } from "zod";
+
 export function openApiDocument(origin: string) {
-  return {
+  const document = {
     openapi: "3.1.0",
     info: {
       title: "open-data.pt API",
@@ -31,7 +34,7 @@ export function openApiDocument(origin: string) {
         description: [
           "Read a product's current rows or points, and its past. `/records`, `/records/all` and the GeoJSON export filter with `where` and `bbox`; `{slug}.parquet` is every current record as one Parquet file; `/series` serves a time-series product's recent window.",
           "",
-          "History is queryable. `/events` and `/series/range` answer what was true over an event-time window, as known now or at any past `knownAt`; `/changes/range` and `/series/changes/range` list every revision the platform learned over a knowledge-time window, corrections included. A window is at most 366 days, pages follow deterministic cursors, and every answer states its freshness and its coverage, including when the lake begins. Arbitrary SQL is not exposed.",
+          "History is queryable. `/events` and `/series/range` answer what was true over an event-time window, as known now or at any past `knownAt`; `/changes/range` and `/series/changes/range` list every revision the platform learned over a knowledge-time window, corrections included. A window is at most 366 days. A cursor is valid only for the endpoint, product, window, filters and snapshot that issued it; if it is rejected, restart from the first page. Every answer states its freshness and its coverage, including when the lake begins. Arbitrary SQL is not exposed.",
           "",
           "A window that ended more than an hour ago is cached for a day; everything else for 10 to 300 seconds, a quarter of the feed's cadence.",
         ].join("\n"),
@@ -302,7 +305,7 @@ export function openApiDocument(origin: string) {
           tags: ["Products"],
           summary: "Read the current reference, state, summary, or event records",
           description:
-            "A filtered page (`where`, `bbox` or `validAt`) reads on through the product until it holds `limit` rows or the product ends, up to a bounded amount of work per request. A page that reaches that bound before it fills comes back with fewer rows than `limit`, or with none, and still carries `nextCursor`: an empty `data` with a `nextCursor` is not the end and does not mean nothing matches. Follow `nextCursor` until it is absent. Filtered pages count against the stricter rate limit.",
+            "A cursor belongs to the exact product version that issued it. If the product updates before the next page, the API answers 400 and the walk must restart without a cursor; this prevents pages from silently mixing versions. A filtered page (`where`, `bbox` or `validAt`) reads on through the product until it holds `limit` rows or the product ends, up to a bounded amount of work per request. A page that reaches that bound before it fills comes back with fewer rows than `limit`, or with none, and still carries `nextCursor`: an empty `data` with a `nextCursor` is not the end and does not mean nothing matches. Follow `nextCursor` until it is absent. Filtered pages count against the stricter rate limit.",
           parameters: [
             pathParameter("slug", "Stable product slug"),
             integerParameter("limit", 50, 1, 500),
@@ -824,10 +827,77 @@ export function openApiDocument(origin: string) {
           { "X-Request-Id": { description: "Quote it when reporting the failure", schema: { type: "string" } } },
         ),
         HistoryUnavailable: problemResponse("History queries are not enabled on this deployment"),
+        StorageUnavailable: problemResponse("Selected internal storage is temporarily unavailable; retry after Retry-After", {
+          "Retry-After": { description: "Seconds to wait", schema: { type: "integer" } },
+        }),
         AnalyticsUnavailable: problemResponse("Usage analytics are not enabled on this deployment (503), or Analytics Engine did not answer (502)"),
       },
     },
-  } as const;
+  };
+  // SAFETY: the literal above is the OpenAPI structure MutableOpenApi describes; the helper only replaces route metadata,
+  // query bounds and schemas on paths that the literal already declares.
+  applyRouteContract(document as MutableOpenApi);
+  return document;
+}
+
+interface MutableOpenApiParameter {
+  name: string;
+  in: string;
+  required: boolean;
+  schema: SchemaObject;
+}
+
+interface MutableOpenApiOperation {
+  operationId: string;
+  tags: string[];
+  summary: string;
+  parameters: MutableOpenApiParameter[];
+  responses: Record<string, { content?: Record<string, { schema: SchemaObject }> }>;
+}
+
+interface MutableOpenApi {
+  paths: Record<string, { get: MutableOpenApiOperation }>;
+  components: { schemas: Record<string, SchemaObject> };
+}
+
+/** Route guards, response validation and the generated document share one route table. */
+function applyRouteContract(document: MutableOpenApi): void {
+  for (const route of API_ROUTES) {
+    const item = document.paths[route.path];
+    if (!item) throw new Error(`OpenAPI has no path for ${route.path}`);
+    item.get.operationId = route.openapi.operationId;
+    item.get.tags = [...route.openapi.tags];
+    item.get.summary = route.openapi.summary;
+    const pathParameters = item.get.parameters.filter((parameter) => parameter.in !== "query");
+    const queryParameters = route.query.map((definition) => {
+      const parameter = item.get.parameters.find((candidate) => candidate.in === "query" && candidate.name === definition.name);
+      if (!parameter) throw new Error(`OpenAPI ${route.path} has no ${definition.name} query parameter`);
+      let integerSchema: SchemaObject | undefined;
+      if (definition.integer) {
+        integerSchema = {
+          type: "integer",
+          default: definition.integer.default,
+          minimum: definition.integer.minimum,
+          maximum: definition.integer.maximum,
+        };
+        if (definition.integer.values) integerSchema.enum = [...definition.integer.values];
+      }
+      return { ...parameter, required: definition.required === true, schema: integerSchema ?? parameter.schema };
+    });
+    item.get.parameters = [...pathParameters, ...queryParameters];
+  }
+  // SAFETY: Zod 4 emits JSON Schema, which is the OpenAPI 3.1 Schema Object dialect used here.
+  document.components.schemas.Product = z.toJSONSchema(ProductSchema) as SchemaObject;
+  // SAFETY: same boundary as above.
+  document.components.schemas.Feed = z.toJSONSchema(FeedSchema) as SchemaObject;
+  // SAFETY: same boundary as above.
+  document.components.schemas.Acquisition = z.toJSONSchema(AcquisitionSchema) as SchemaObject;
+  // SAFETY: same boundary as above.
+  document.components.schemas.Coverage = z.toJSONSchema(CoverageSchema) as SchemaObject;
+  // SAFETY: same boundary as above. Endpoint-specific routes further constrain each row.
+  document.components.schemas.HistoryPage = z.toJSONSchema(HistoryPageSchema(z.looseObject({}))) as SchemaObject;
+  // SAFETY: same boundary as above.
+  document.components.schemas.Problem = z.toJSONSchema(ProblemSchema) as SchemaObject;
 }
 
 export function scalarReferenceHtml(nonce: string): string {
@@ -874,7 +944,7 @@ function responseRef(name: string) {
 
 /** Answers every read can give besides its own. */
 function reads() {
-  return { "400": responseRef("BadRequest"), "429": responseRef("TooManyRequests"), "500": responseRef("ServerError") };
+  return { "400": responseRef("BadRequest"), "429": responseRef("TooManyRequests"), "500": responseRef("ServerError"), "503": responseRef("StorageUnavailable") };
 }
 
 /** Answers every history window can give besides its own. */

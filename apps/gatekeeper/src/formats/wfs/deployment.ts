@@ -6,6 +6,7 @@ import { WFS_FEEDS, wfsHosts } from "./wfs";
 export const WFS_DEPLOYMENT: LibraryDeployment<object, WfsContext> = {
   source: "wfs",
   name: "OGC Web Feature Services",
+  publicFormat: "wfs",
   vars: {},
   cpuMs: 120_000,
   library: (_env, publishers) => {

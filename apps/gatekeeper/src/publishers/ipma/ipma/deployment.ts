@@ -7,6 +7,7 @@ import { IPMA_WEB_ORIGIN } from "./lightning";
 export const IPMA_DEPLOYMENT: LibraryDeployment<{ readonly IPMA_API_ORIGIN: string; readonly IPMA_WEB_ORIGIN: string }, IpmaContext> = {
   source: "ipma",
   name: "IPMA weather and sea",
+  publicFormat: "own-api",
   vars: { IPMA_API_ORIGIN: "https://api.ipma.pt", IPMA_WEB_ORIGIN },
   library: (env) => ({
     kinds: Object.values(IPMA_FEEDS),

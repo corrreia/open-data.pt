@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { resolveLibraryFeed, type GatekeeperLibraries } from "@open-data-pt/gatekeeper";
 import { FEEDS, RUNNABLE, catalogOf } from "@open-data-pt/gatekeeper/catalog";
-import { CARRIED_NAMES, INSTALLED, carriedLibraries } from "./catalog";
+import { CARRIED, CARRIED_NAMES, INSTALLED, carriedLibraries } from "./catalog";
 import { jsonAs, readFixture } from "./support";
 
 const PINNED = new URL("./fixtures/feed-identity.json", import.meta.url);
@@ -15,6 +15,11 @@ const PINNED = new URL("./fixtures/feed-identity.json", import.meta.url);
  * Update the fixture (`vitest -u`) only for a change that is meant to do that.
  */
 describe("every feed's resolved identity", () => {
+  it("declares public format metadata in every deployment", () => {
+    const shared = new Set(["arcgis", "ckan", "gbfs", "gtfs", "myinfo", "ngsi", "ogc", "opendatasoft", "udata", "wfs"]);
+    for (const { deployment } of CARRIED) expect(deployment.publicFormat).toBe(shared.has(deployment.source) ? deployment.source : "own-api");
+  });
+
   it("is what it was", async () => {
     const identities: Record<string, { resourceKey: string; kind: string }> = {};
     for (const feed of FEEDS) {
@@ -42,6 +47,8 @@ describe("every feed's resolved identity", () => {
     expect(feeds).toHaveLength(INSTALLED.length);
     for (const feed of feeds) {
       expect({ slug: feed.slug, resourceKey: feed.resourceKey }).toEqual({ slug: feed.slug, resourceKey: pinned[feed.slug]?.resourceKey });
+      const deployment = CARRIED.find((candidate) => candidate.deployment.source === feed.library)?.deployment;
+      expect(feed.format).toBe(deployment?.publicFormat);
       expect(Object.keys(feed)).not.toContain("config");
       expect(Object.keys(feed)).not.toContain("kind");
     }

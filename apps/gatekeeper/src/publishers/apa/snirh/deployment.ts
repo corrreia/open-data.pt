@@ -5,6 +5,7 @@ import { SNIRH_FEEDS, SNIRH_ORIGIN } from "./snirh";
 export const SNIRH_DEPLOYMENT: LibraryDeployment<{ readonly SNIRH_API_ORIGIN: string }, SnirhContext> = {
   source: "snirh",
   name: "SNIRH water resources",
+  publicFormat: "own-api",
   vars: { SNIRH_API_ORIGIN: SNIRH_ORIGIN },
   library: (env) => ({
     kinds: Object.values(SNIRH_FEEDS),

@@ -261,6 +261,8 @@ export interface CatalogFeed {
   publisher: string;
   /** The library that reads it: how, never what or whose. */
   library: string;
+  /** The shared standard's id, or `own-api` for a publisher-specific library. */
+  format: string;
   title: string;
   description: string;
   /** The terms the publisher states for it: a licence's `id`, or `source-terms` when they state none. */

@@ -6,6 +6,7 @@ import { OPENDATASOFT_FEEDS } from "./opendatasoft";
 export const OPENDATASOFT_DEPLOYMENT: LibraryDeployment<object, OpendatasoftContext> = {
   source: "opendatasoft",
   name: "Opendatasoft portals",
+  publicFormat: "opendatasoft",
   vars: {},
   library: (_env, publishers) => {
     const hosts = allowedHosts(publishers.hosts.join(","));

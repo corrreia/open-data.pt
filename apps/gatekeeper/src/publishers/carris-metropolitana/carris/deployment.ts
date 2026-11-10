@@ -6,6 +6,7 @@ import { CARRIS_FEEDS } from "./carris";
 export const CARRIS_DEPLOYMENT: LibraryDeployment<{ readonly CARRIS_API_ORIGIN: string }, CarrisContext> = {
   source: "carris",
   name: "Carris Metropolitana",
+  publicFormat: "own-api",
   vars: { CARRIS_API_ORIGIN: "https://api.carrismetropolitana.pt" },
   library: (env) => ({
     kinds: Object.values(CARRIS_FEEDS),

@@ -163,6 +163,7 @@ function checkedFeed(value: JsonValue): CatalogFeed {
     slug,
     publisher: required(value, "publisher", subject),
     library: required(value, "library", subject),
+    format: required(value, "format", subject),
     title: required(value, "title", subject),
     description: value.description,
     licence: required(value, "licence", subject),

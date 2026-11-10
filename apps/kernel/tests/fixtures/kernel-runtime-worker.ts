@@ -20,7 +20,7 @@ import {
 import { REGISTRY_ROOM } from "../../src/registry/registry";
 import { handleApi } from "../../src/api/http";
 import KernelWorker from "../../src/index";
-export { Registry, FeedRunner, CollectionWorkflow } from "../../src/index";
+export { Registry, FeedRunner, CollectionWorkflow, CachedApi } from "../../src/index";
 
 const ROWS_KEY = "fixture/rows.json";
 const EXAMPLE_KEY = "fixture/example.json";
@@ -153,6 +153,7 @@ export class FixtureGatekeeper extends WorkerEntrypoint<Env> implements FeedGate
           topics: [...topics],
           publisher: "fixture-publisher",
           library: "fixture",
+          format: "own-api",
           resourceKey: resolution.resourceKey,
           configHash: resolution.configHash,
           eventTimed: false,

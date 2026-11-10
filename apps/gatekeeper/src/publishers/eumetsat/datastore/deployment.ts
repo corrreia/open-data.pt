@@ -13,6 +13,7 @@ interface DataStoreEnv {
 export const DATASTORE_DEPLOYMENT: LibraryDeployment<DataStoreEnv, DataStoreContext> = {
   source: "datastore",
   name: "EUMETSAT Data Store",
+  publicFormat: "own-api",
   vars: { EUMETSAT_API_ORIGIN: DATASTORE_API_ORIGIN },
   secrets: ["EUMETSAT_CONSUMER_KEY", "EUMETSAT_CONSUMER_SECRET"],
   library: (env) => ({

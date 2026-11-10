@@ -6,6 +6,7 @@ import { ARCGIS_FEEDS } from "./arcgis";
 export const ARCGIS_DEPLOYMENT: LibraryDeployment<object, ArcgisContext> = {
   source: "arcgis",
   name: "ArcGIS feature services",
+  publicFormat: "arcgis",
   vars: {},
   library: (_env, publishers) => {
     const hosts = allowedHosts(publishers.hosts.join(","));

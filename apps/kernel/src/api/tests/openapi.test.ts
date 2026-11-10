@@ -39,6 +39,19 @@ describe("public API contract", () => {
     expect(Object.keys(document.paths).some((path) => path.includes("/v1/") || path.includes("/v2/"))).toBe(false);
   });
 
+  it("matches runtime nullability, required fields and request limits", () => {
+    const document = openApiDocument("https://open-data.pt");
+    const acquisitionLimit = document.paths["/api/acquisitions"].get.parameters.find((parameter) => parameter.name === "limit");
+    const recordChangeLimit = document.paths["/api/products/{slug}/changes/range"].get.parameters.find((parameter) => parameter.name === "limit");
+    expect(acquisitionLimit?.schema).toMatchObject({ default: 50, minimum: 1, maximum: 1000 });
+    expect(recordChangeLimit?.schema).toMatchObject({ default: 200, minimum: 1, maximum: 500 });
+    expect(document.components.schemas.Feed.properties?.format).toMatchObject({ type: "string", minLength: 1 });
+    expect(document.components.schemas.Feed.properties?.format).not.toHaveProperty("enum");
+    expect(document.components.schemas.Product.required).toEqual(expect.arrayContaining(["version", "status", "currentAcquisitionId", "watermark", "completeness"]));
+    expect(document.components.schemas.Product.properties?.currentAcquisitionId).toMatchObject({ type: ["string", "null"] });
+    expect(document.components.schemas.HistoryPage.required).toEqual(expect.arrayContaining(["data", "nextCursor", "freshness", "coverage", "source"]));
+  });
+
   it("documents a read-only API with its time queries and filters", () => {
     const document = openApiDocument("https://open-data.pt");
     const paths = Object.keys(document.paths);
@@ -67,6 +80,11 @@ describe("public API contract", () => {
     expect(source).not.toContain("_r=");
     expect(source).not.toContain("busted(");
     expect(source).not.toContain("transform-runs");
+  });
+
+  it("serves the OpenAPI media type discovery advertises", () => {
+    const source = readFileSync("apps/kernel/src/index.ts", "utf8");
+    expect(source).toContain('"Content-Type": OPENAPI_MEDIA_TYPE');
   });
 
   it("mounts Scalar against the published OpenAPI document", () => {

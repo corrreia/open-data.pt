@@ -6,6 +6,7 @@ import { DATAVERSE_API_ORIGIN, DATAVERSE_FEEDS } from "./dataverse";
 export const DATAVERSE_DEPLOYMENT: LibraryDeployment<{ readonly DATAVERSE_API_ORIGIN: string }, DataverseContext> = {
   source: "dataverse",
   name: "STAT.ANACOM indicator files",
+  publicFormat: "own-api",
   vars: { DATAVERSE_API_ORIGIN },
   library: (env) => ({
     kinds: Object.values(DATAVERSE_FEEDS),

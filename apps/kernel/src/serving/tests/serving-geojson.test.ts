@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { buildChunks, compareKeys, writeChunk, type ChunkSink, type ServingRow } from "#/serving/chunks";
 import type { ProductDetail } from "#/registry/registry";
 import { ObjectStore, keys, type SeriesWindow } from "#/serving/object-store";
+import { StorageUnavailableError } from "#/api/errors";
 import { InvalidQueryError, RECORD_SCAN_BUDGET, Serving, type RecordQuery, type RowFilters } from "#/serving/serving";
 import { EMPTY_VOCABULARIES, Vocabulary } from "#/registry/vocabulary";
 import { MemorySnapshots } from "#/tests/kernel-harness";
@@ -295,6 +296,23 @@ describe("record filters are checked against the schema and applied while readin
 });
 
 describe("every current record in one streamed response", () => {
+  it("raises storage unavailable before serving a selected missing chunk", async () => {
+    const built = await serving(
+      [
+        { name: "lat", type: "latitude" },
+        { name: "lon", type: "longitude" },
+      ],
+      [{ id: "a", lat: 38.7, lon: -9.1 }],
+    );
+    await built.objects.delete(built.chunks.map((chunk) => chunk.key));
+    await expect(built.serving.records(built.product, { limit: 1 })).rejects.toBeInstanceOf(StorageUnavailableError);
+    await expect(built.serving.allRecords(built.product)).rejects.toBeInstanceOf(StorageUnavailableError);
+    await expect(built.serving.geoJson(built.product)).rejects.toBeInstanceOf(StorageUnavailableError);
+    await expect(built.serving.changes({ ...built.product, changesKey: "missing-changes" }, { limit: 1 })).rejects.toBeInstanceOf(StorageUnavailableError);
+    await expect(built.serving.series({ ...built.product, seriesKey: "missing-series" }, { limit: 1 })).rejects.toBeInstanceOf(StorageUnavailableError);
+    await expect(built.serving.seriesChanges({ ...built.product, seriesChangesKey: "missing-series-changes" }, { limit: 1 })).rejects.toBeInstanceOf(StorageUnavailableError);
+  });
+
   it("joins every chunk into one document, each record once and without the storage hash", async () => {
     const records = Array.from({ length: 9_000 }, (_, index) => ({ id: `r${String(index).padStart(5, "0")}`, n: index }));
     const { serving: service, product, chunks } = await serving([{ name: "n", type: "number" }], records);

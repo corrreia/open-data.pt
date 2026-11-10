@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createTestHarness } from "wrangler";
+import { AcquisitionSchema, FeedSchema, ProductSchema } from "@open-data-pt/api";
 import type { Acquisition, Feed } from "#/registry/feed-model";
 import { openApiDocument } from "#/api/openapi";
 import type { JsonObject } from "@open-data-pt/contract";
@@ -154,6 +155,7 @@ describe("a kernel nobody operates", () => {
     const listed = await jsonBody<{ data: Array<{ slug: string; format: string; cadenceSeconds: number | null }> }>(await server.fetch("/api/feeds"));
     const fixtureFeed = listed.data.find((feed) => feed.slug === "fixture-things");
     expect(fixtureFeed).toMatchObject({ cadenceSeconds: 3600 });
+    expect(FeedSchema.safeParse(fixtureFeed).success).toBe(true);
     for (const internal of ["policyId", "library", "config", "semantics", "lastError", "cooldownUntil"]) expect(fixtureFeed).not.toHaveProperty(internal);
     const today = new Date().toISOString().slice(0, 10);
     const day = await jsonBody<{ day: string; data: Array<{ feedId: string }> }>(await server.fetch(`/api/acquisitions?day=${today}&feedId=${feedId}`));
@@ -163,6 +165,8 @@ describe("a kernel nobody operates", () => {
     // The OpenAPI document names every field a product, feed and run carries, so the reference and the MCP search tool stay true.
     const schemas = openApiDocument("https://open-data.pt").components.schemas;
     const product = await jsonBody<{ slug: string }>(await server.fetch("/api/products/fixture-things"));
+    expect(ProductSchema.safeParse(product).success).toBe(true);
+    expect(AcquisitionSchema.safeParse(day.data[0]).success).toBe(true);
     expect(Object.keys(product).filter((key) => !(key in schemas.Product.properties))).toEqual([]);
     expect(Object.keys(fixtureFeed ?? {}).filter((key) => !(key in schemas.Feed.properties))).toEqual([]);
     expect(Object.keys(day.data[0] ?? {}).filter((key) => !(key in schemas.Acquisition.properties))).toEqual([]);
@@ -229,6 +233,7 @@ describe("usage analytics", () => {
     // Every request below writes a data point to the bound dataset; none of them may fail for it.
     expect((await server.fetch("/api/health", { headers: { "User-Agent": "curl/8.14.1" } })).status).toBe(200);
     expect((await server.fetch("/api/nothing-here")).status).toBe(404);
+    expect((await server.fetch("/api/feeds/%E0%A4%A")).status).toBe(400);
     expect(
       (await server.fetch("/mcp", { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json, text/event-stream" }, body: "{}" })).status,
     ).toBeLessThan(500);

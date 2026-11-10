@@ -39,7 +39,11 @@ const FORMAT_LABEL = new Map([
   ["ckan", "CKAN"],
   ["gtfs", "GTFS"],
   ["gbfs", "GBFS"],
+  ["myinfo", "MYINFO"],
+  ["ngsi", "FIWARE NGSI"],
+  ["ogc", "OGC API Features"],
   ["udata", "dados.gov.pt"],
+  ["wfs", "OGC Web Feature Service"],
 ]);
 const UNITS: Array<[number, string]> = [
   [86_400, "day"],

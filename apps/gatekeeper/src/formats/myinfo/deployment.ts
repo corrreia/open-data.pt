@@ -11,6 +11,7 @@ import { MYINFO_FEEDS, MYINFO_ORIGIN } from "./myinfo";
 export const MYINFO_DEPLOYMENT: LibraryDeployment<{ readonly MYINFO_ORIGIN: string }, MyInfoContext> = {
   source: "myinfo",
   name: "Card4B MYINFO operator portals",
+  publicFormat: "myinfo",
   vars: { MYINFO_ORIGIN },
   library: (env, publishers) => {
     const operators = myInfoOperators(publishers.configs);

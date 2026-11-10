@@ -6,6 +6,7 @@ import { REN_FEEDS } from "./ren";
 export const REN_DEPLOYMENT: LibraryDeployment<{ readonly REN_API_ORIGIN: string; readonly REN_DATA_API_ORIGIN: string }, RenContext> = {
   source: "ren",
   name: "REN electricity grid",
+  publicFormat: "own-api",
   vars: { REN_API_ORIGIN: "https://datahub.ren.pt", REN_DATA_API_ORIGIN: "https://servicebus.ren.pt" },
   library: (env) => ({
     kinds: Object.values(REN_FEEDS),

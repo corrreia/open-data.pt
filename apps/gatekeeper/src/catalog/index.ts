@@ -68,12 +68,16 @@ export async function catalogOf(feeds: readonly DeclaredFeed[], libraries: Gatek
 }
 
 async function catalogFeed(feed: DeclaredFeed, libraries: GatekeeperLibraries): Promise<CatalogFeed> {
+  const source = feed.config[SOURCE_KEY] ?? "";
+  const library = libraries.get(source);
+  if (!library) throw new Error(`The Gatekeeper does not carry the ${source} library`);
   const resolved = await resolveLibraryFeed(feed.config, libraries);
   const { config: _config, topics, ...data } = feed;
   const entry: CatalogFeed = {
     ...data,
     topics: [...topics],
-    library: feed.config[SOURCE_KEY] ?? "",
+    library: source,
+    format: library.publicFormat,
     resourceKey: resolved.resourceKey,
     configHash: resolved.configHash,
     eventTimed: resolved.semantics.domainSubject === "event" || resolved.semantics.domainSubject === "observation",

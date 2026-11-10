@@ -4,6 +4,7 @@ import { UDATA_FEEDS, resolveUdataFeed, type UdataContext } from "./collector";
 export const UDATA_DEPLOYMENT: LibraryDeployment<object, UdataContext> = {
   source: "udata",
   name: "uData portals",
+  publicFormat: "udata",
   vars: {},
   library: (_env, publishers) => {
     const hosts = allowedHosts(publishers.hosts.join(","));

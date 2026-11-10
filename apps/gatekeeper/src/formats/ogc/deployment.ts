@@ -10,6 +10,7 @@ import { OGC_FEEDS } from "./ogc";
 export const OGC_DEPLOYMENT: LibraryDeployment<object, OgcContext> = {
   source: "ogc",
   name: "OGC API Features services",
+  publicFormat: "ogc",
   vars: {},
   library: (_env, publishers) => {
     const hosts = allowedHosts(publishers.hosts.join(","));

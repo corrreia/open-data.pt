@@ -13,6 +13,7 @@ interface MetrolisboaEnv {
 export const METROLISBOA_DEPLOYMENT: LibraryDeployment<MetrolisboaEnv, MetrolisboaContext> = {
   source: "metrolisboa",
   name: "Metro Lisboa",
+  publicFormat: "own-api",
   // Where the EstadoServicoML gateway answers: our own proxy hostname. Metro's port 8243 sends an
   // incomplete certificate chain that a Worker refuses (error 526). lisboa-metro.open-data.pt is a
   // proxied CNAME to api.metrolisboa.pt whose origin rule sends it to port 8243 with SSL "full".

@@ -204,6 +204,7 @@ export async function kernelHarness(options: HarnessOptions = {}): Promise<Kerne
     title: "Things",
     description: "Fixture",
     library: "fixture",
+    format: "own-api",
     resourceKey: resolved.resourceKey,
     configHash: resolved.configHash,
     eventTimed: false,

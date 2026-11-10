@@ -21,6 +21,7 @@ function feed(slug: string, title = slug): CatalogFeed {
     slug,
     publisher: "ine",
     library,
+    format: "own-api",
     title,
     description: "Fixture",
     licence: "cc-by-4.0",

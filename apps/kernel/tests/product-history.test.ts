@@ -50,6 +50,7 @@ beforeAll(async () => {
       title: feedId,
       description: "",
       library: "fixture",
+      format: "own-api",
       resourceKey: resolved.resourceKey,
       configHash: resolved.configHash,
       eventTimed: true,

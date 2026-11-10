@@ -6,6 +6,7 @@ import { IODA_FEEDS, IODA_HOST, iodaHosts } from "./ioda";
 export const IODA_DEPLOYMENT: LibraryDeployment<{ readonly IODA_ALLOWED_HOSTS: string }, IodaContext> = {
   source: "ioda",
   name: "IODA internet outage detection",
+  publicFormat: "own-api",
   vars: { IODA_ALLOWED_HOSTS: IODA_HOST },
   library: (env) => ({
     kinds: Object.values(IODA_FEEDS),
