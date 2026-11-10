@@ -9,7 +9,7 @@ import {
   isJsonString,
   parseJson,
   readBoundedResponse,
-  retryAfterSeconds,
+  upstreamResponseError,
   type FeedKindDescription,
   type JsonObject,
   type JsonValue,
@@ -211,7 +211,7 @@ async function readPortalPage(url: string, postback: Postback | undefined, fetch
   }
   const response = await fetcher(url, init);
   if (!response.ok) {
-    throw new GatekeeperError(`MYINFO returned HTTP ${response.status} for ${url}`, "upstream-error", retryAfterSeconds(response.headers));
+    throw upstreamResponseError(response, `MYINFO returned HTTP ${response.status} for ${url}`);
   }
   const bytes = await readBoundedResponse(response, postback === undefined ? PAGE_MAX_BYTES : RESULT_MAX_BYTES, `MYINFO page ${url}`);
   return { bytes, session: sessionCookie(response.headers.get("set-cookie")) };

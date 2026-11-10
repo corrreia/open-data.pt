@@ -57,6 +57,20 @@ describe("normalized frame reader", () => {
     await expect(drain(framed([header(), event(1)]), { ...limits, outputBytes: 100, recordBytes: 80 })).rejects.toThrow(/exceeds/);
   });
 
+  it("rejects one large producer chunk without decoding the whole no-newline chunk into carry", async () => {
+    let cancelled = false;
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode("x".repeat(2 * 1024 * 1024)));
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
+    await expect(drain(stream, { outputBytes: 4 * 1024 * 1024, recordBytes: 1024, records: 10 })).rejects.toThrow(/frame exceeds/);
+    expect(cancelled).toBe(true);
+  });
+
   it("requires explicit continuation or exhaustion from a history slice", async () => {
     const history: FrameScope = { ...scope, mode: { kind: "history", cursor: { before: "2026-09-10T00:00:00.000Z" } } };
     await expect(drain(framed([header()]), limits, history)).rejects.toThrow(/continuation or exhaustion/);

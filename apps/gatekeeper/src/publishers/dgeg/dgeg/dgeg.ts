@@ -8,6 +8,7 @@ import {
   parseJsonBytes,
   readBoundedResponse,
   responseValidator,
+  upstreamResponseError,
   type FeedKindDescription,
   type JsonValue,
   type SourceBody,
@@ -289,9 +290,8 @@ async function fetchReferenceArray(origin: URL, method: string, fetcher: Fetcher
 }
 
 function requireSuccessfulResponse(response: Response): void {
-  if (!response.ok || !response.body) {
-    throw new GatekeeperError(`DGEG returned HTTP ${response.status}`, "upstream-error");
-  }
+  if (!response.ok) throw upstreamResponseError(response, `DGEG returned HTTP ${response.status}`);
+  if (!response.body) throw new GatekeeperError("DGEG returned no body", "upstream-error");
 }
 
 function parseEnvelopeArray(bytes: Uint8Array): JsonValue[] {

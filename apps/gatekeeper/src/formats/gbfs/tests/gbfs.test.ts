@@ -254,8 +254,11 @@ describe("GBFS Gatekeeper", () => {
     await expect(collectGbfsFeed({ url: DISCOVERY_URL }, undefined, ALLOWED_HOSTS, fetcher)).rejects.toThrow("host example.com is not allowed");
   });
 
-  it("turns provider failures into an upstream error", async () => {
-    const fetcher = vi.fn(async () => new Response("unavailable", { status: 503 }));
-    await expect(collectGbfsFeed({ url: DISCOVERY_URL }, undefined, ALLOWED_HOSTS, fetcher)).rejects.toMatchObject({ code: "upstream-error" });
+  it("turns provider failures into an upstream error with Retry-After seconds", async () => {
+    const fetcher = vi.fn(async () => new Response("unavailable", { status: 503, headers: { "Retry-After": "45" } }));
+    await expect(collectGbfsFeed({ url: DISCOVERY_URL }, undefined, ALLOWED_HOSTS, fetcher)).rejects.toMatchObject({
+      code: "upstream-error",
+      retryAfterSeconds: 45,
+    });
   });
 });

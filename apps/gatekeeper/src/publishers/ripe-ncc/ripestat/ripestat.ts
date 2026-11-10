@@ -7,7 +7,7 @@ import {
   parseJsonBytes,
   readBoundedResponse,
   responseValidator,
-  retryAfterSeconds,
+  upstreamResponseError,
   sourceValidator,
   type CollectionRequest,
   type FeedKindDescription,
@@ -147,7 +147,7 @@ export async function collectRipestatFeed(
     if (!previous) throw new GatekeeperError("RIPEstat returned an unsolicited 304", "invalid-response");
     return { kind: "not-modified", validator: responseValidator(response.headers) ?? previous };
   }
-  if (!response.ok || !response.body) throw new GatekeeperError(`RIPEstat returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+  if (!response.ok || !response.body) throw upstreamResponseError(response, `RIPEstat returned HTTP ${response.status}`);
   if (Number(response.headers.get("content-length")) > RIPESTAT_MAX_BYTES) {
     await response.body.cancel("RIPEstat source exceeded its byte bound");
     throw new GatekeeperError("RIPEstat source exceeded its byte bound", "response-too-large");

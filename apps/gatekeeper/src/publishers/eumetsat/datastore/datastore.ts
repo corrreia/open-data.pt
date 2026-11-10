@@ -6,7 +6,7 @@ import {
   isJsonString,
   readBoundedJson,
   readBoundedResponse,
-  retryAfterSeconds,
+  upstreamResponseError,
   type FeedKindDescription,
   type JsonObject,
   type SourceBody,
@@ -174,5 +174,5 @@ async function accessToken(origin: string, credentials: DataStoreCredentials, fe
 
 async function upstreamError(message: string, response: Response): Promise<GatekeeperError> {
   await response.body?.cancel().catch(() => undefined);
-  return new GatekeeperError(message, "upstream-error", retryAfterSeconds(response.headers));
+  return upstreamResponseError(response, message);
 }

@@ -5,7 +5,7 @@ import {
   isJsonObject,
   isJsonString,
   readBoundedResponse,
-  retryAfterSeconds,
+  upstreamResponseError,
   type CollectionRequest,
   type FeedKindDescription,
   type JsonObject,
@@ -152,7 +152,7 @@ export async function collectIodaFeed(
   if (!hosts.has(IODA_HOST)) throw new GatekeeperError("The IODA host is not allowed by this deployment", "source-denied");
   const url = iodaUrl(validated, IODA_HOST, now);
   const response = await request(fetcher, url);
-  if (!response.ok || !response.body) throw new GatekeeperError(`IODA returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+  if (!response.ok || !response.body) throw upstreamResponseError(response, `IODA returned HTTP ${response.status}`);
   if (Number(response.headers.get("content-length")) > IODA_MAX_BYTES) {
     await response.body.cancel("IODA source exceeded its byte bound");
     throw new GatekeeperError("IODA source exceeded its byte bound", "response-too-large");

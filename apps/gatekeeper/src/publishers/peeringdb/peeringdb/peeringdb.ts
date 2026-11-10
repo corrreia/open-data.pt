@@ -5,7 +5,7 @@ import {
   isJsonObject,
   parseJsonBytes,
   readBoundedResponse,
-  retryAfterSeconds,
+  upstreamResponseError,
   type FeedKindDescription,
   type JsonObject,
   type JsonValue,
@@ -62,7 +62,7 @@ export async function collectPeeringdbFeed(config: SourceConfig, apiOrigin: stri
       }
       if ((response.status >= 300 && response.status < 400) || (response.url && new URL(response.url).origin !== origin))
         throw new GatekeeperError("PeeringDB redirects and unsolicited 304s are not allowed", "source-denied");
-      if (!response.ok) throw new GatekeeperError(`PeeringDB returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+      if (!response.ok) throw upstreamResponseError(response, `PeeringDB returned HTTP ${response.status}`);
       const bytes = await readBoundedResponse(response, Math.min(256 * 1024, PEERINGDB_MAX_BYTES - consumedBytes), "PeeringDB page");
       consumedBytes += bytes.byteLength;
       let document: JsonValue;

@@ -13,13 +13,16 @@ import type { ExecuteResult, Executor } from "@cloudflare/codemode";
 import { openApiMcpServer, type RequestOptions } from "@cloudflare/codemode/mcp";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { MCP_GUIDE, MCP_SERVER_NAME, MCP_SERVER_VERSION } from "@open-data-pt/api";
-import { asObject, asString, parseJson, type JsonValue } from "@open-data-pt/contract";
+import { asObject, asString, parseJson, parseJsonBytes, type JsonValue } from "@open-data-pt/contract";
 
-import { mcpCallOf, type McpCall } from "#/pages/analytics";
 import { openApiDocument } from "#/api/openapi";
+import { readBoundedBytes } from "#/io/bytes";
+import { mcpCallOf, type McpCall } from "#/pages/analytics";
 
 /** The largest API answer handed to sandbox code; bigger reads page with a cursor or narrow with filters. */
 export const MAX_READ_BYTES = 8 * 1024 * 1024;
+/** The largest JSON-RPC request accepted by the public MCP endpoint. */
+export const MAX_MCP_REQUEST_BYTES = 1024 * 1024;
 
 /** Seconds a client waits after using up its code runs for the minute: the rate-limit period. */
 const RUN_RETRY_SECONDS = 60;
@@ -71,9 +74,18 @@ export async function handleMcp(request: Request, host: McpHost): Promise<Respon
     );
   }
 
-  const call = await readMcpCall(request);
-  if (call) host.onCall?.(call);
-  const initializing = call?.method === "initialize";
+  let incoming: IncomingMcpRequest;
+  try {
+    incoming = await readMcpRequest(request);
+  } catch (error) {
+    if (!(error instanceof McpRequestTooLarge)) throw error;
+    return Response.json(
+      { jsonrpc: "2.0", error: { code: -32000, message: `MCP request body exceeds ${MAX_MCP_REQUEST_BYTES / 1024 / 1024} MiB.` }, id: null },
+      { status: 413, headers: CORS },
+    );
+  }
+  if (incoming.call) host.onCall?.(incoming.call);
+  const initializing = incoming.call?.method === "initialize";
   const server = openApiMcpServer({
     name: MCP_SERVER_NAME,
     version: MCP_SERVER_VERSION,
@@ -86,7 +98,7 @@ export async function handleMcp(request: Request, host: McpHost): Promise<Respon
   const transport = new WebStandardStreamableHTTPServerTransport({ enableJsonResponse: true });
   await server.connect(transport);
   try {
-    const response = await transport.handleRequest(request);
+    const response = await transport.handleRequest(incoming.request);
     const answered = new Response(response.body, response);
     for (const [name, value] of Object.entries(CORS)) answered.headers.set(name, value);
     // Clients send the number back on every request, which tells a hosted assistant's conversations apart. Nothing is stored under it.
@@ -214,12 +226,23 @@ function parseIpv6(text: string): bigint | undefined {
   return value;
 }
 
-/** What a POST asks for: its first message's method and tool; `initialize` when any message in a batch opens a session. */
-async function readMcpCall(request: Request): Promise<McpCall | undefined> {
+interface IncomingMcpRequest {
+  request: Request;
+  call?: McpCall;
+}
+
+class McpRequestTooLarge extends Error {}
+
+/** Read the POST once, inspect its call metadata, and rebuild the request the MCP transport consumes. */
+async function readMcpRequest(request: Request): Promise<IncomingMcpRequest> {
+  const tooLarge = () => new McpRequestTooLarge();
+  const bytes = request.body ? await readBoundedBytes(request.body, request.headers.get("Content-Length"), MAX_MCP_REQUEST_BYTES, tooLarge) : new Uint8Array();
+  const rebuilt = new Request(request.url, { method: request.method, headers: request.headers, body: bytes, signal: request.signal });
   try {
-    return mcpCallOf(parseJson(await request.clone().text()));
+    const call = mcpCallOf(parseJsonBytes(bytes));
+    return call === undefined ? { request: rebuilt } : { request: rebuilt, call };
   } catch {
-    return undefined;
+    return { request: rebuilt };
   }
 }
 

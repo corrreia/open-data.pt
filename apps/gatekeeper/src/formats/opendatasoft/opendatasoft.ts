@@ -6,7 +6,7 @@ import {
   isJsonString,
   parseJsonBytes,
   readBoundedResponse,
-  retryAfterSeconds,
+  upstreamResponseError,
   streamJsonArray,
   type FeedKindDescription,
   type HistoryCursor,
@@ -724,7 +724,7 @@ function upstreamBody(response: Response, resource: string): ReadableStream<Uint
 }
 
 function upstreamError(response: Response, resource: string): GatekeeperError {
-  return new GatekeeperError(`Opendatasoft ${resource} returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+  return upstreamResponseError(response, `Opendatasoft ${resource} returned HTTP ${response.status}`);
 }
 
 function parseResource(bytes: Uint8Array, resource: string): JsonValue {

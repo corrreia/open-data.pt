@@ -1,7 +1,7 @@
 import type { Executor } from "@cloudflare/codemode";
 import type { JsonObject } from "@open-data-pt/contract";
-import { describe, expect, it } from "vitest";
-import { MAX_READ_BYTES, fromHostedAssistant, handleMcp, limitRuns, mcpClientKey, type McpHost } from "#/api/mcp";
+import { describe, expect, it, vi } from "vitest";
+import { MAX_MCP_REQUEST_BYTES, MAX_READ_BYTES, fromHostedAssistant, handleMcp, limitRuns, mcpClientKey, type McpHost } from "#/api/mcp";
 import { jsonBody } from "#/tests/support";
 
 /** Runs sandbox code in the test process: the Dynamic Worker's contract without its isolation. */
@@ -59,6 +59,42 @@ const products = () =>
   });
 
 describe("MCP server", () => {
+  it("returns a JSON-RPC 413 before executing a request body above 1 MiB", async () => {
+    let executions = 0;
+    const executor: Executor = {
+      async execute() {
+        executions += 1;
+        return { result: "ran" };
+      },
+    };
+    const { host } = fakeHost(products, executor);
+    const request = mcpRequest({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "tools/call",
+      params: { name: "execute", arguments: { code: `async () => "${"x".repeat(MAX_MCP_REQUEST_BYTES)}"` } },
+    });
+    const response = await handleMcp(request, host);
+    expect(response.status).toBe(413);
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe("*");
+    expect(await jsonBody(response)).toEqual({
+      jsonrpc: "2.0",
+      error: { code: -32000, message: "MCP request body exceeds 1 MiB." },
+      id: null,
+    });
+    expect(executions).toBe(0);
+  });
+
+  it("consumes the MCP request body once and hands a reconstruction to the transport", async () => {
+    const { host } = fakeHost(products);
+    const request = mcpRequest({ jsonrpc: "2.0", id: 2, method: "tools/list" });
+    const cloned = vi.spyOn(request, "clone");
+    const response = await handleMcp(request, host);
+    expect(response.status).toBe(200);
+    expect(request.bodyUsed).toBe(true);
+    expect(cloned).not.toHaveBeenCalled();
+  });
+
   it("introduces itself with a session number and offers Code Mode's two tools", async () => {
     const { host } = fakeHost(products);
     const initialize = await handleMcp(

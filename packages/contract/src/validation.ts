@@ -136,15 +136,28 @@ export function assertSourceCheckpoint(value: SourceCheckpoint): void {
   if (!validCheckpoint(value)) throw new NormalizedInputError("Source checkpoint exceeds its bounded contract");
 }
 
+interface UntrustedCollectionResult {
+  kind?: string;
+  stream?: object;
+  checkpoint?: SourceCheckpoint;
+  code?: (typeof FAILURE_CODES)[number];
+  retryable?: boolean;
+  retryAfterSeconds?: number;
+}
+
 /** Validate the non-stream RPC envelope before the kernel acts on an untrusted Gatekeeper result. */
-export function assertCollectionResult(result: CollectionResult, mode: CollectionRequest["mode"]): void {
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- This is the RPC boundary parser required to accept any remote value before narrowing it.
+export function assertCollectionResult(result: unknown, mode: CollectionRequest["mode"]): asserts result is CollectionResult {
+  if (!(result instanceof Object) || Array.isArray(result)) throw new NormalizedInputError("Gatekeeper returned an invalid collection result");
+  // SAFETY: this object crossed RPC untrusted; every property read below is checked before the asserted CollectionResult is accepted.
+  const candidate = result as UntrustedCollectionResult;
   const exact = (keys: string[]) => Object.keys(result).every((key) => keys.includes(key));
-  switch (result.kind) {
+  switch (candidate.kind) {
     case "batch":
-      if (!exact(["kind", "stream"]) || !(result.stream instanceof ReadableStream)) throw new NormalizedInputError("Gatekeeper returned an invalid batch result");
+      if (!exact(["kind", "stream"]) || !(candidate.stream instanceof ReadableStream)) throw new NormalizedInputError("Gatekeeper returned an invalid batch result");
       return;
     case "unchanged":
-      if (mode.kind !== "live" || !exact(["kind", "checkpoint"]) || !validCheckpoint(result.checkpoint))
+      if (mode.kind !== "live" || !exact(["kind", "checkpoint"]) || !validCheckpoint(candidate.checkpoint))
         throw new NormalizedInputError("Gatekeeper returned an invalid unchanged result");
       return;
     case "exhausted":
@@ -153,12 +166,15 @@ export function assertCollectionResult(result: CollectionResult, mode: Collectio
     case "failure":
       if (
         !exact(["kind", "code", "retryable", "retryAfterSeconds"]) ||
-        !FAILURE_CODES.includes(result.code) ||
-        !isJsonBoolean(result.retryable) ||
-        (result.retryAfterSeconds !== undefined && (!Number.isSafeInteger(result.retryAfterSeconds) || result.retryAfterSeconds < 0))
+        candidate.code === undefined ||
+        !FAILURE_CODES.includes(candidate.code) ||
+        !isJsonBoolean(candidate.retryable) ||
+        (candidate.retryAfterSeconds !== undefined && (!Number.isSafeInteger(candidate.retryAfterSeconds) || candidate.retryAfterSeconds < 0))
       )
         throw new NormalizedInputError("Gatekeeper returned an invalid failure result");
       return;
+    default:
+      throw new NormalizedInputError("Gatekeeper returned an invalid collection result");
   }
 }
 

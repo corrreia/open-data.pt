@@ -9,7 +9,7 @@ import {
   parseJsonBytes,
   readBoundedResponse,
   responseValidator,
-  retryAfterSeconds,
+  upstreamResponseError,
   streamJsonArray,
   type Completeness,
   type FeedKindDescription,
@@ -575,5 +575,5 @@ function isNotFoundEnvelope(envelope: JsonObject): boolean {
 }
 
 function upstreamError(action: string, response: Response): GatekeeperError {
-  return new GatekeeperError(`CKAN ${action} returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+  return upstreamResponseError(response, `CKAN ${action} returned HTTP ${response.status}`);
 }

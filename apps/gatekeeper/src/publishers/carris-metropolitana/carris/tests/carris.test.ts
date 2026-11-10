@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { GatekeeperError } from "#/index";
 import { collectCarrisFeed, validateCarrisFeedConfig } from "#/publishers/carris-metropolitana/carris/carris";
 
 describe("Carris Gatekeeper", () => {
@@ -46,12 +47,17 @@ describe("Carris Gatekeeper", () => {
     expect(fetched).toEqual({ kind: "not-modified", validator: { etag: '"v1"' } });
   });
 
-  it("fails as an upstream error when the API does not answer 2xx", async () => {
-    const fetcher = vi.fn(async () => new Response("busy", { status: 503 }));
+  it("preserves an HTTP-date Retry-After when the API does not answer 2xx", async () => {
+    const retryAt = new Date(Date.now() + 60_000).toUTCString();
+    const fetcher = vi.fn(async () => new Response("busy", { status: 503, headers: { "Retry-After": retryAt } }));
 
-    await expect(collectCarrisFeed({ feed: "alerts" }, undefined, "https://api.carrismetropolitana.pt", fetcher)).rejects.toMatchObject({
-      name: "GatekeeperError",
-      code: "upstream-error",
-    });
+    let failure: GatekeeperError | undefined;
+    try {
+      await collectCarrisFeed({ feed: "alerts" }, undefined, "https://api.carrismetropolitana.pt", fetcher);
+    } catch (error) {
+      if (error instanceof GatekeeperError) failure = error;
+    }
+    expect(failure).toMatchObject({ name: "GatekeeperError", code: "upstream-error" });
+    expect(failure?.retryAfterSeconds).toBeGreaterThanOrEqual(58);
   });
 });

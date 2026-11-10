@@ -3,7 +3,7 @@ import {
   invalidResponse,
   readBoundedResponse,
   responseValidator,
-  retryAfterSeconds,
+  upstreamResponseError,
   sourceValidator,
   type FeedKindDescription,
   type JsonObject,
@@ -291,5 +291,5 @@ function mergedValidator(headers: Headers, previous: SourceValidator | undefined
   return Object.keys(validator).length ? validator : undefined;
 }
 function upstreamError(response: Response): GatekeeperError {
-  return new GatekeeperError(`Parliament source returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+  return upstreamResponseError(response, `Parliament source returned HTTP ${response.status}`);
 }

@@ -8,7 +8,7 @@ import {
   isJsonString,
   parseJson,
   readBoundedResponse,
-  retryAfterSeconds,
+  upstreamResponseError,
   type FeedKindDescription,
   type JsonObject,
   type JsonValue,
@@ -256,7 +256,7 @@ async function page(url: URL, fetcher: typeof fetch, maxBytes: number, budget: {
     throw new GatekeeperError(`InfoÁgua request failed: ${error instanceof Error ? error.message : "network failure"}`, "upstream-error");
   }
   if (response.status >= 300 && response.status < 400) throw new GatekeeperError("InfoÁgua redirects are not allowed", "source-denied");
-  if (!response.ok) throw new GatekeeperError(`InfoÁgua returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+  if (!response.ok) throw upstreamResponseError(response, `InfoÁgua returned HTTP ${response.status}`);
   if (budget.remaining <= 0) throw new GatekeeperError("InfoÁgua pages exceed this collection's byte budget", "response-too-large");
   const bytes = await readBoundedResponse(response, Math.min(maxBytes, budget.remaining), "InfoÁgua page");
   budget.remaining -= bytes.byteLength;

@@ -9,7 +9,7 @@ import {
   isJsonString,
   readBoundedResponse,
   responseValidator,
-  retryAfterSeconds,
+  upstreamResponseError,
   streamJsonArray,
   type CanonicalRecord,
   type CanonicalSchema,
@@ -58,7 +58,7 @@ export async function collectIpmaLightning(checkpoint: SourceValidator | undefin
   }
   if (!response.ok) {
     await response.body?.cancel().catch(() => undefined);
-    throw new GatekeeperError(`IPMA returned HTTP ${response.status} for its lightning page`, "upstream-error", retryAfterSeconds(response.headers));
+    throw upstreamResponseError(response, `IPMA returned HTTP ${response.status} for its lightning page`);
   }
   const page = new TextDecoder().decode(await readBoundedResponse(response, IPMA_LIGHTNING_MAX_BYTES, "IPMA lightning page"));
   // The map's script declares the discharges as one object literal, which is JSON, followed by the layer that draws it.

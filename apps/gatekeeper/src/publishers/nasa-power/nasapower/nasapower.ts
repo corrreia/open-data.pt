@@ -4,7 +4,7 @@ import {
   isJsonObject,
   parseJsonBytes,
   readBoundedResponse,
-  retryAfterSeconds,
+  upstreamResponseError,
   type FeedKindDescription,
   type SourceConfig,
   type SourceFetch,
@@ -75,7 +75,7 @@ export async function collectNasaPowerFeed(config: SourceConfig, checkpoint: Sou
   }
   if ((response.status >= 300 && response.status < 400) || (response.url && new URL(response.url).origin !== url.origin))
     throw new GatekeeperError("NASA POWER redirects are not allowed", "source-denied");
-  if (!response.ok) throw new GatekeeperError(`NASA POWER returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+  if (!response.ok) throw upstreamResponseError(response, `NASA POWER returned HTTP ${response.status}`);
   const bytes = await readBoundedResponse(response, NASA_POWER_MAX_BYTES, "NASA POWER response");
   let value;
   try {

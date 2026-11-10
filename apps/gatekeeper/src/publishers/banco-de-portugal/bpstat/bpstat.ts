@@ -9,6 +9,7 @@ import {
   isoDate,
   parseJsonBytes,
   readBoundedResponse,
+  upstreamResponseError,
   type FeedKindDescription,
   type JsonObject,
   type JsonValue,
@@ -205,9 +206,8 @@ async function upstreamFetch(fetcher: typeof fetch, url: URL, headers: Headers):
 }
 
 function requireSuccessfulResponse(response: Response): void {
-  if (!response.ok || !response.body) {
-    throw new GatekeeperError(`BPstat returned HTTP ${response.status}`, "upstream-error");
-  }
+  if (!response.ok) throw upstreamResponseError(response, `BPstat returned HTTP ${response.status}`);
+  if (!response.body) throw new GatekeeperError("BPstat returned no body", "upstream-error");
 }
 
 /**

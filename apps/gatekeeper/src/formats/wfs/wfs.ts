@@ -5,7 +5,7 @@ import {
   isJsonObject,
   parseJsonBytes,
   readBoundedResponse,
-  retryAfterSeconds,
+  upstreamResponseError,
   type Completeness,
   type FeedKindDescription,
   type JsonValue,
@@ -452,7 +452,7 @@ async function request(fetcher: typeof fetch, url: URL, maximumBytes: number, la
   }
   if ((response.status >= 300 && response.status < 400) || (response.url && new URL(response.url).origin !== url.origin))
     throw new GatekeeperError("WFS redirects are not allowed", "source-denied");
-  if (!response.ok) throw new GatekeeperError(`${label} returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+  if (!response.ok) throw upstreamResponseError(response, `${label} returned HTTP ${response.status}`);
   return readBoundedResponse(response, maximumBytes, label);
 }
 

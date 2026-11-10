@@ -15,7 +15,7 @@ export const FEED = defineFeed(OPENDATASOFT_DEPLOYMENT, {
     timeoutSeconds: 180,
     maxBytes: 8 * 1024 * 1024,
     maxOutputBytes: 32 * 1024 * 1024,
-    maxRecordBytes: 2 * 1024 * 1024,
+    maxRecordBytes: 1024 * 1024,
     maxRecords: 20_000,
     historyMode: "changes",
   },

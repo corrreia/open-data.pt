@@ -7,7 +7,7 @@ import {
   parseJsonBytes,
   readBoundedResponse,
   responseValidator,
-  retryAfterSeconds,
+  upstreamResponseError,
   streamJsonArray,
   type FeedKindDescription,
   type JsonObject,
@@ -632,7 +632,7 @@ function notModified(validator: SourceValidator | undefined): SourceNotModified 
 
 function assertUpstreamResponse(response: Response, operation: string): void {
   if (!response.ok) {
-    throw new GatekeeperError(`ArcGIS ${operation} returned HTTP ${response.status}`, "upstream-error", retryAfterSeconds(response.headers));
+    throw upstreamResponseError(response, `ArcGIS ${operation} returned HTTP ${response.status}`);
   }
 }
 
