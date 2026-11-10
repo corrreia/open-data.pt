@@ -2,8 +2,9 @@ import { NormalizedInputError, UNSTATED_LICENCE, asArrayOrEmpty, asObject, asStr
 import type { JsonObject } from "@open-data-pt/contract";
 import type { ManifestChunk } from "#/serving/chunks";
 import { digest } from "#/hash";
-import { feedDefinition, type Acquisition, type Feed, type FeedStatus, type ProductIndexEntry, type ProductSummary } from "#/registry/feed-model";
+import { definitionFingerprint, feedDefinition, type Acquisition, type Feed, type FeedStatus, type ProductIndexEntry, type ProductSummary } from "#/registry/feed-model";
 import { migrateDurableSchema, type SynchronousTransaction } from "#/durability/migrations";
+import { SYNC_BATCH } from "#/registry/catalog-sync";
 import { runnerPublicationId, type RunnerSnapshot } from "#/durability/runner-snapshot";
 import type { SqlExec } from "#/sqlite-reset";
 
@@ -13,7 +14,7 @@ import type { SqlExec } from "#/sqlite-reset";
  * the atomically selected product index the public API reads.
  */
 export const REGISTRY_SCHEMA_BASELINE = 201;
-export const REGISTRY_SCHEMA_VERSION = 202;
+export const REGISTRY_SCHEMA_VERSION = 203;
 const ACTIVITY_KEEP = 5_000;
 const REHYDRATION_REQUIRED_KEY = "runner-rehydration-required";
 const REHYDRATION_DIGEST_KEY = "runner-rehydration-digest";
@@ -39,6 +40,12 @@ export class RegistryStore {
           checksum: "d7185b0935ba68a66e658bf4a915",
           apply: () => this.migrateFrom201(),
         },
+        {
+          id: 203,
+          name: "durable-product-rehydration",
+          checksum: "25b97db923283f1279fa05ad554a",
+          apply: () => this.createRehydrationSchema(),
+        },
       ],
       createBaseline: () => this.createSchema(),
       ready: (fresh) => {
@@ -48,7 +55,7 @@ export class RegistryStore {
   }
 
   private migrateFrom201(): void {
-    this.createSchema();
+    this.createSchema202();
     // Old definitions called their library `gatekeeperKind`. Rewrite them before the first feed read.
     this.exec(`UPDATE feeds SET definition_json = json_remove(json_set(definition_json, '$.library', json_extract(definition_json, '$.gatekeeperKind')), '$.gatekeeperKind')
       WHERE json_type(definition_json, '$.library') IS NULL AND json_type(definition_json, '$.gatekeeperKind') = 'text'`);
@@ -58,6 +65,11 @@ export class RegistryStore {
   }
 
   private createSchema(): void {
+    this.createSchema202();
+    this.createRehydrationSchema();
+  }
+
+  private createSchema202(): void {
     this.exec(`CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)`);
     this.exec(`CREATE TABLE IF NOT EXISTS registry_state (key TEXT PRIMARY KEY, value_json TEXT NOT NULL)`);
     this.exec(`CREATE TABLE IF NOT EXISTS feeds (
@@ -74,6 +86,14 @@ export class RegistryStore {
       id INTEGER PRIMARY KEY, feed_id TEXT NOT NULL, started_at TEXT NOT NULL, ended_at TEXT, cause TEXT NOT NULL, failures INTEGER NOT NULL, last_error TEXT)`);
     this.exec(`CREATE INDEX IF NOT EXISTS outages_started ON outages (started_at)`);
     this.exec(`CREATE UNIQUE INDEX IF NOT EXISTS outages_open ON outages (feed_id) WHERE ended_at IS NULL`);
+  }
+
+  private createRehydrationSchema(): void {
+    this.exec(`CREATE TABLE IF NOT EXISTS rehydration_progress (
+      feed_id TEXT PRIMARY KEY, position INTEGER NOT NULL UNIQUE, definition_fingerprint TEXT NOT NULL, snapshot_json TEXT)`);
+    this.exec(`CREATE TABLE IF NOT EXISTS rehydration_claims (slug TEXT PRIMARY KEY, feed_id TEXT NOT NULL)`);
+    this.exec(`CREATE TABLE IF NOT EXISTS rehydration_products (
+      slug TEXT PRIMARY KEY, feed_id TEXT NOT NULL, product_key TEXT NOT NULL, title TEXT NOT NULL, entry_json TEXT NOT NULL, chunks_json TEXT, UNIQUE(feed_id, product_key))`);
   }
 
   getState<T>(key: string): T | undefined {
@@ -181,40 +201,118 @@ export class RegistryStore {
   /* ---------- Products ---------- */
 
   /**
-   * Replace the complete product index from snapshots gathered before this
-   * transaction began. The in-memory snapshot is the shadow: no product row is
-   * changed until every installed runner has answered. An identical repeat is
-   * a read-only operation.
+   * Return the next bounded set of runners whose snapshots are still needed.
+   * A changed installed feed set or definition restarts the durable shadow so
+   * snapshots from different catalog generations can never be selected together.
    */
-  replaceFromRunnerSnapshots(snapshots: RunnerSnapshot[], at: string): boolean {
-    const installed = this.listFeeds()
-      .map((feed) => feed.id)
-      .sort();
-    const ordered = [...snapshots].sort((left, right) => left.feed.id.localeCompare(right.feed.id));
-    const answered = ordered.map((snapshot) => snapshot.feed.id);
-    if (new Set(answered).size !== answered.length || JSON.stringify(answered) !== JSON.stringify(installed))
-      throw new Error("Runner snapshots do not cover every installed feed exactly once");
-    for (const snapshot of ordered) {
-      if (snapshot.publication.id !== runnerPublicationId(snapshot.feed.id, snapshot.products))
-        throw new Error(`Runner ${snapshot.feed.id} returned an invalid publication identity`);
-      if (snapshot.products.some((entry) => entry.feedId !== snapshot.feed.id)) throw new Error(`Runner ${snapshot.feed.id} returned another feed's product`);
+  nextRehydrationBatch(limit = SYNC_BATCH): string[] {
+    if (!this.rehydrationRequired()) return [];
+    const installed = this.rehydrationFeeds();
+    const progress = this.rows<RehydrationProgressRow>(`SELECT feed_id, position, definition_fingerprint, snapshot_json FROM rehydration_progress ORDER BY position`);
+    const matches =
+      progress.length === installed.length &&
+      progress.every((row, position) => row.feed_id === installed[position]?.feedId && row.definition_fingerprint === installed[position]?.fingerprint);
+    if (!matches) {
+      this.transaction(() => {
+        this.clearRehydration();
+        for (const [position, feed] of installed.entries())
+          this.exec(`INSERT INTO rehydration_progress (feed_id, position, definition_fingerprint, snapshot_json) VALUES (?, ?, ?, NULL)`, feed.feedId, position, feed.fingerprint);
+      });
     }
-    const snapshotDigest = digest(JSON.stringify(ordered));
-    if (this.getState<string>(REHYDRATION_DIGEST_KEY) === snapshotDigest) return false;
+    return this.rows<{ feed_id: string }>(`SELECT feed_id FROM rehydration_progress WHERE snapshot_json IS NULL ORDER BY position LIMIT ?`, limit).map((row) => row.feed_id);
+  }
 
-    this.exec(`DELETE FROM products`);
-    this.exec(`DELETE FROM claims`);
-    for (const snapshot of ordered) {
-      this.replaceFeedProducts(snapshot.feed.id, snapshot.products);
-      this.setFeedStatus(snapshot.feed.id, snapshot.status, at);
-      for (const acquisition of snapshot.recentAcquisitions)
-        this.upsertActivity(acquisition.id, snapshot.feed.id, acquisition.completedAt ?? acquisition.requestedAt, { ...acquisition, feedId: snapshot.feed.id });
-      const backfill = snapshot.status.backfill;
-      if (backfill) this.setBackfill(snapshot.feed.id, snapshot.feed.library, backfill.status, backfill.updatedAt);
-    }
-    this.setState(REHYDRATION_DIGEST_KEY, snapshotDigest);
-    this.deleteState(REHYDRATION_REQUIRED_KEY);
-    return true;
+  /** Replace one feed's durable shadow rows and mark its snapshot complete. */
+  stageRunnerSnapshot(feedId: string, snapshot: RunnerSnapshot): void {
+    if (snapshot.feed.id !== feedId) throw new Error(`Runner ${feedId} returned snapshot for ${snapshot.feed.id}`);
+    if (snapshot.publication.id !== runnerPublicationId(feedId, snapshot.products)) throw new Error(`Runner ${feedId} returned an invalid publication identity`);
+    if (snapshot.products.some((entry) => entry.feedId !== feedId)) throw new Error(`Runner ${feedId} returned another feed's product`);
+
+    this.transaction(() => {
+      const progress = this.rows<RehydrationProgressRow>(`SELECT feed_id, position, definition_fingerprint, snapshot_json FROM rehydration_progress WHERE feed_id = ?`, feedId)[0];
+      if (!this.rehydrationRequired() || !progress) throw new Error(`Runner ${feedId} is not part of the current rehydration`);
+      if (progress.definition_fingerprint !== definitionFingerprint(snapshot.feed)) throw new Error(`Runner ${feedId} returned a stale feed definition`);
+
+      this.exec(`DELETE FROM rehydration_products WHERE feed_id = ?`, feedId);
+      this.exec(`DELETE FROM rehydration_claims WHERE feed_id = ?`, feedId);
+      const slugs = snapshot.products.map((entry) => entry.slug);
+      if (slugs.length > 64 || new Set(slugs).size !== slugs.length || !slugs.every(isProductSlug)) throw new NormalizedInputError("Invalid or duplicate product slugs");
+      const owners = this.rows<{ slug: string; feed_id: string }>(
+        `SELECT slug, feed_id FROM rehydration_claims WHERE slug IN (SELECT value FROM json_each(?))`,
+        JSON.stringify(slugs),
+      );
+      const conflict = owners.find((owner) => owner.feed_id !== feedId);
+      if (conflict) throw new NormalizedInputError(`Product ${conflict.slug} belongs to feed ${conflict.feed_id}, not ${feedId}`);
+      this.exec(`INSERT INTO rehydration_claims (slug, feed_id) SELECT value, ? FROM json_each(?)`, feedId, JSON.stringify(slugs));
+      for (const entry of snapshot.products) {
+        const { chunks, ...summary } = entry;
+        this.exec(
+          `INSERT INTO rehydration_products (slug, feed_id, product_key, title, entry_json, chunks_json) VALUES (?, ?, ?, ?, ?, ?)`,
+          entry.slug,
+          feedId,
+          entry.productKey,
+          entry.title,
+          JSON.stringify(summary),
+          chunks ? JSON.stringify(chunks) : null,
+        );
+      }
+      const { products: _products, ...progressSnapshot } = snapshot;
+      this.exec(`UPDATE rehydration_progress SET snapshot_json = ? WHERE feed_id = ?`, JSON.stringify(progressSnapshot), feedId);
+    });
+  }
+
+  /**
+   * Select the complete durable shadow in one transaction. Incomplete work is
+   * left untouched; after completion, a repeated call is entirely read-only.
+   */
+  finishRehydration(at: string): boolean | undefined {
+    if (!this.rehydrationRequired()) return false;
+    const installed = this.rehydrationFeeds();
+    const progress = this.rows<RehydrationProgressRow>(`SELECT feed_id, position, definition_fingerprint, snapshot_json FROM rehydration_progress ORDER BY position`);
+    if (
+      progress.length !== installed.length ||
+      progress.some((row, position) => row.feed_id !== installed[position]?.feedId || row.definition_fingerprint !== installed[position]?.fingerprint || row.snapshot_json === null)
+    )
+      return undefined;
+
+    return this.transaction(() => {
+      const snapshots = progress.map((row) => {
+        // SAFETY: stageRunnerSnapshot writes validated runner snapshot metadata under the row for that feed.
+        return JSON.parse(row.snapshot_json ?? "") as RehydrationSnapshot;
+      });
+      const snapshotDigest = digest(JSON.stringify(snapshots));
+      const changed = this.getState<string>(REHYDRATION_DIGEST_KEY) !== snapshotDigest;
+      this.exec(`DELETE FROM products`);
+      this.exec(`DELETE FROM claims`);
+      this.exec(`INSERT INTO claims (slug, feed_id) SELECT slug, feed_id FROM rehydration_claims`);
+      this.exec(
+        `INSERT INTO products (slug, feed_id, product_key, title, entry_json, chunks_json)
+         SELECT slug, feed_id, product_key, title, entry_json, chunks_json FROM rehydration_products`,
+      );
+      for (const snapshot of snapshots) {
+        this.setFeedStatus(snapshot.feed.id, snapshot.status, at);
+        for (const acquisition of snapshot.recentAcquisitions)
+          this.upsertActivity(acquisition.id, snapshot.feed.id, acquisition.completedAt ?? acquisition.requestedAt, { ...acquisition, feedId: snapshot.feed.id });
+        const backfill = snapshot.status.backfill;
+        if (backfill) this.setBackfill(snapshot.feed.id, snapshot.feed.library, backfill.status, backfill.updatedAt);
+      }
+      this.setState(REHYDRATION_DIGEST_KEY, snapshotDigest);
+      this.deleteState(REHYDRATION_REQUIRED_KEY);
+      this.clearRehydration();
+      return changed;
+    });
+  }
+
+  private rehydrationFeeds(): RehydrationFeed[] {
+    return this.listFeeds()
+      .map((feed) => ({ feedId: feed.id, fingerprint: definitionFingerprint(feed) }))
+      .sort((left, right) => left.feedId.localeCompare(right.feedId));
+  }
+
+  private clearRehydration(): void {
+    this.exec(`DELETE FROM rehydration_products`);
+    this.exec(`DELETE FROM rehydration_claims`);
+    this.exec(`DELETE FROM rehydration_progress`);
   }
 
   /** One all-or-none ownership claim before any serving object is written. */
@@ -430,6 +528,20 @@ function mapOutage(row: OutageRow): Outage {
   return outage;
 }
 
+interface RehydrationFeed {
+  feedId: string;
+  fingerprint: string;
+}
+
+interface RehydrationProgressRow extends Record<string, SqlStorageValue> {
+  feed_id: string;
+  position: number;
+  definition_fingerprint: string;
+  snapshot_json: string | null;
+}
+
+type RehydrationSnapshot = Omit<RunnerSnapshot, "products">;
+
 interface FeedRow extends Record<string, SqlStorageValue> {
   definition_json: string;
   status_json: string | null;
@@ -443,16 +555,23 @@ function mapFeed(row: FeedRow): Feed {
   return { ...definition, ...status };
 }
 
-/** Gather every runner answer before one transaction swaps the complete index. */
+/** One bounded alarm step of the durable product-index rehydration. */
 export async function rehydrateRegistryProducts(
   store: RegistryStore,
-  transaction: SynchronousTransaction,
-  feedIds: string[],
   snapshotFor: (feedId: string) => Promise<RunnerSnapshot>,
   at: string,
-): Promise<boolean> {
-  const snapshots = await Promise.all(feedIds.map((feedId) => snapshotFor(feedId)));
-  return transaction(() => store.replaceFromRunnerSnapshots(snapshots, at));
+  batchSize = SYNC_BATCH,
+): Promise<RehydrationStep> {
+  const feedIds = store.nextRehydrationBatch(Math.min(SYNC_BATCH, Math.max(0, Math.floor(batchSize))));
+  for (const feedId of feedIds) store.stageRunnerSnapshot(feedId, await snapshotFor(feedId));
+  const changed = store.finishRehydration(at);
+  return { requested: feedIds.length, complete: changed !== undefined, changed: changed ?? false };
+}
+
+export interface RehydrationStep {
+  requested: number;
+  complete: boolean;
+  changed: boolean;
 }
 
 export type { JsonObject };

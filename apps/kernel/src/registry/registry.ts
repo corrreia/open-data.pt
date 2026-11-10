@@ -208,15 +208,9 @@ export class Registry extends DurableObject<Env> {
   }
 
   private async rehydrateProducts(): Promise<void> {
-    const feeds = this.store.listFeeds();
-    const changed = await rehydrateRegistryProducts(
-      this.store,
-      (body) => this.ctx.storage.transactionSync(body),
-      feeds.map((feed) => feed.id),
-      (feedId) => this.env.FeedRunner.getByName(feedId).registrySnapshot(),
-      new Date().toISOString(),
-    );
-    console.log(JSON.stringify({ event: "registry_rehydrated", feeds: feeds.length, products: this.store.listProducts().length, changed }));
+    const step = await rehydrateRegistryProducts(this.store, (feedId) => this.env.FeedRunner.getByName(feedId).registrySnapshot(), new Date().toISOString());
+    if (step.complete)
+      console.log(JSON.stringify({ event: "registry_rehydrated", feeds: this.store.listFeeds().length, products: this.store.listProducts().length, changed: step.changed }));
   }
 
   private syncPorts(): SyncPorts {

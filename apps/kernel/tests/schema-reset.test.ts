@@ -131,6 +131,28 @@ describe("checked durable migrations", () => {
     expect(store.getState("catalog-sync")).toEqual({ nextCheckAt: 123, queue: [], hashes: { [definition.slug]: "hash" }, lastCheckedAt: acquisition.completedAt });
   });
 
+  it("adds durable Registry rehydration tables to schema 202 without touching active products", async () => {
+    const database = new DatabaseSync(":memory:");
+    const store = new RegistryStore(sqliteStorage(database), transaction(database));
+    store.migrate();
+    const definition = await feed();
+    store.upsertFeed(definition);
+    store.replaceFeedProducts(definition.id, [entry()]);
+    database.exec(`
+      DROP TABLE rehydration_products;
+      DROP TABLE rehydration_claims;
+      DROP TABLE rehydration_progress;
+      DELETE FROM schema_migrations WHERE id = 203;
+      UPDATE meta SET value = '202' WHERE key = 'schema_version';
+    `);
+
+    new RegistryStore(sqliteStorage(database), transaction(database)).migrate();
+
+    expect(store.getProductBySlug("things")).toEqual(entry());
+    expect(userTables(sqliteStorage(database))).toEqual(expect.arrayContaining(["rehydration_claims", "rehydration_products", "rehydration_progress"]));
+    expect(database.prepare("SELECT id, name FROM schema_migrations WHERE id = 203").get()).toEqual({ id: 203, name: "durable-product-rehydration" });
+  });
+
   it("migrates a Runner from production schema 202 without losing feed, products, committed outbox, garbage, checkpoint, or acquisitions", async () => {
     const database = new DatabaseSync(":memory:");
     const core = runner(database);
