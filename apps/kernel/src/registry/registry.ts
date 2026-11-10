@@ -11,7 +11,7 @@ import { ObjectStore } from "#/serving/object-store";
 import { QUERY_DEADLINE_SECONDS, runLakeQuery } from "#/history/query";
 import { SUMMARY_DAYS_PER_WAKE, SUMMARY_DUE_STATE_KEY, summariseSettledDays } from "#/history/summaries";
 import { R2SnapshotStore } from "#/serving/r2-snapshot-store";
-import { RegistryStore, type ActivityWindow } from "#/registry/store";
+import { RegistryStore, rehydrateRegistryProducts, type ActivityWindow } from "#/registry/store";
 import { ingestRunnerReport, OUTAGE_KEEP_MS, OUTAGES_SINCE_KEY, type OutageWindow, type RunnerReport, type RunnerReportReceipt, isSustained } from "#/registry/reporting";
 
 /** The one Registry's name: every runner and request reaches the same object. */
@@ -78,7 +78,7 @@ export class Registry extends DurableObject<Env> {
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
-    this.store = new RegistryStore(ctx.storage.sql);
+    this.store = new RegistryStore(ctx.storage.sql, (body) => ctx.storage.transactionSync(body));
     this.store.migrate();
     // Only the alarm starts work: a fresh or reset Registry installs every example on its first one.
     void ctx.blockConcurrencyWhile(async () => {
@@ -116,10 +116,11 @@ export class Registry extends DurableObject<Env> {
     let retryIn = 0;
     try {
       await this.syncCatalog();
+      if (this.store.rehydrationRequired() && this.syncReadyForRehydration()) await this.rehydrateProducts();
     } catch (error) {
-      // Never a tight loop: a step that throws (not one whose operations fail) waits a minute.
+      // Never a tight loop: a step or runner round trip that throws waits a minute.
       retryIn = 60_000;
-      console.error(JSON.stringify({ event: "catalog_sync_failed", error: String(error) }));
+      console.error(JSON.stringify({ event: "registry_maintenance_failed", error: String(error) }));
     }
     // After the sync, so keeping feeds equal to the examples never waits on the lake.
     if (this.env.CATALOG_TOKEN) await this.summariseIfDue();
@@ -130,7 +131,7 @@ export class Registry extends DurableObject<Env> {
   private nextWake(): number {
     const now = Date.now();
     const sync = this.store.getState<SyncState>(SYNC_STATE_KEY);
-    let wake = sync === undefined || sync.queue.length > 0 ? now : sync.nextCheckAt;
+    let wake = sync === undefined || sync.queue.length > 0 || (this.store.rehydrationRequired() && this.syncReadyForRehydration()) ? now : sync.nextCheckAt;
     if (this.env.CATALOG_TOKEN) {
       wake = Math.min(wake, this.store.getState<number>(AUDIT_DUE_KEY) ?? nextAuditTime(now));
       wake = Math.min(wake, this.store.getState<number>(SUMMARY_DUE_STATE_KEY) ?? nextAuditTime(now));
@@ -198,6 +199,24 @@ export class Registry extends DurableObject<Env> {
   private syncSettled(): boolean {
     const sync = this.store.getState<SyncState>(SYNC_STATE_KEY);
     return sync?.lastCheckedAt !== undefined && sync.queue.length === 0;
+  }
+
+  /** Rehydration waits for a complete successful catalog pass, not a partial install that will be retried. */
+  private syncReadyForRehydration(): boolean {
+    const sync = this.store.getState<SyncState>(SYNC_STATE_KEY);
+    return sync?.lastCheckedAt !== undefined && sync.queue.length === 0 && sync.lastError === undefined;
+  }
+
+  private async rehydrateProducts(): Promise<void> {
+    const feeds = this.store.listFeeds();
+    const changed = await rehydrateRegistryProducts(
+      this.store,
+      (body) => this.ctx.storage.transactionSync(body),
+      feeds.map((feed) => feed.id),
+      (feedId) => this.env.FeedRunner.getByName(feedId).registrySnapshot(),
+      new Date().toISOString(),
+    );
+    console.log(JSON.stringify({ event: "registry_rehydrated", feeds: feeds.length, products: this.store.listProducts().length, changed }));
   }
 
   private syncPorts(): SyncPorts {
@@ -327,6 +346,7 @@ export class Registry extends DurableObject<Env> {
    * and the runner retries the publication.
    */
   publishProducts(feedId: string, entries: ProductIndexEntry[], report?: RunnerReport): RunnerReportReceipt {
+    if (this.store.rehydrationRequired()) throw new Error("The Registry is rehydrating its complete product index; publication will be retried");
     if (!this.store.getFeed(feedId)) {
       if (!this.syncSettled()) throw new Error("The Registry is still installing feeds; publication will be retried");
       return { known: false, backfillPeers: 0 };

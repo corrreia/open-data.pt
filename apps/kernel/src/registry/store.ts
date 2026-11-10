@@ -1,36 +1,67 @@
 import { NormalizedInputError, UNSTATED_LICENCE, asArrayOrEmpty, asObject, asString, asStringList, isProductSlug, parseJson } from "@open-data-pt/contract";
 import type { JsonObject } from "@open-data-pt/contract";
 import type { ManifestChunk } from "#/serving/chunks";
+import { digest } from "#/hash";
 import { feedDefinition, type Acquisition, type Feed, type FeedStatus, type ProductIndexEntry, type ProductSummary } from "#/registry/feed-model";
-import { dropAllTables, userTables, type SqlExec } from "#/sqlite-reset";
+import { migrateDurableSchema, type SynchronousTransaction } from "#/durability/migrations";
+import { runnerPublicationId, type RunnerSnapshot } from "#/durability/runner-snapshot";
+import type { SqlExec } from "#/sqlite-reset";
 
 /**
  * SQLite inside the Registry Durable Object: feed definitions, a
  * mirror of each runner's status and recent acquisitions, slug ownership, and
  * the atomically selected product index the public API reads.
  */
-export const REGISTRY_SCHEMA_VERSION = 201;
+export const REGISTRY_SCHEMA_BASELINE = 201;
+export const REGISTRY_SCHEMA_VERSION = 202;
 const ACTIVITY_KEEP = 5_000;
+const REHYDRATION_REQUIRED_KEY = "runner-rehydration-required";
+const REHYDRATION_DIGEST_KEY = "runner-rehydration-digest";
 
 export class RegistryStore {
-  constructor(private readonly sql: SqlExec) {}
+  constructor(
+    private readonly sql: SqlExec,
+    private readonly transaction: SynchronousTransaction = (body) => body(),
+  ) {}
 
-  /** A different schema version resets the Registry; the one terminology cleanup below preserves the current schema's data in place. */
+  /** Migrate only from the production baseline, preserving every accepted row. */
   migrate(): void {
-    const tables = userTables(this.sql);
-    const current = tables.includes("meta") ? this.rows<{ value: string }>(`SELECT value FROM meta WHERE key = 'schema_version'`)[0]?.value : undefined;
-    if (tables.length > 0 && current !== String(REGISTRY_SCHEMA_VERSION)) {
-      console.warn(JSON.stringify({ event: "registry_schema_reset", from: current ?? null, to: REGISTRY_SCHEMA_VERSION }));
-      dropAllTables(this.sql);
-    }
+    migrateDurableSchema({
+      owner: "Registry",
+      sql: this.sql,
+      transaction: this.transaction,
+      baselineVersion: REGISTRY_SCHEMA_BASELINE,
+      targetVersion: REGISTRY_SCHEMA_VERSION,
+      migrations: [
+        {
+          id: 202,
+          name: "checked-migrations",
+          checksum: "d7185b0935ba68a66e658bf4a915",
+          apply: () => this.migrateFrom201(),
+        },
+      ],
+      createBaseline: () => this.createSchema(),
+      ready: (fresh) => {
+        if (fresh) this.setState(REHYDRATION_REQUIRED_KEY, true);
+      },
+    });
+  }
+
+  private migrateFrom201(): void {
+    this.createSchema();
+    // Old definitions called their library `gatekeeperKind`. Rewrite them before the first feed read.
+    this.exec(`UPDATE feeds SET definition_json = json_remove(json_set(definition_json, '$.library', json_extract(definition_json, '$.gatekeeperKind')), '$.gatekeeperKind')
+      WHERE json_type(definition_json, '$.library') IS NULL AND json_type(definition_json, '$.gatekeeperKind') = 'text'`);
+    this.foldDatasetsIntoFeeds();
+    const backfillColumns = this.rows<{ name: string }>(`SELECT name FROM pragma_table_info('backfills')`).map((row) => row.name);
+    if (backfillColumns.includes("gatekeeper_kind")) this.exec(`ALTER TABLE backfills RENAME COLUMN gatekeeper_kind TO library`);
+  }
+
+  private createSchema(): void {
     this.exec(`CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)`);
     this.exec(`CREATE TABLE IF NOT EXISTS registry_state (key TEXT PRIMARY KEY, value_json TEXT NOT NULL)`);
     this.exec(`CREATE TABLE IF NOT EXISTS feeds (
       id TEXT PRIMARY KEY, slug TEXT NOT NULL UNIQUE, definition_json TEXT NOT NULL, enabled INTEGER NOT NULL, title TEXT NOT NULL)`);
-    // One-time terminology cleanup: old definitions called their library `gatekeeperKind`. Rewrite the JSON in place before any feed is read.
-    this.exec(`UPDATE feeds SET definition_json = json_remove(json_set(definition_json, '$.library', json_extract(definition_json, '$.gatekeeperKind')), '$.gatekeeperKind')
-      WHERE json_type(definition_json, '$.library') IS NULL AND json_type(definition_json, '$.gatekeeperKind') = 'text'`);
-    this.foldDatasetsIntoFeeds();
     this.exec(`CREATE TABLE IF NOT EXISTS feed_status (feed_id TEXT PRIMARY KEY, status_json TEXT NOT NULL, updated_at TEXT NOT NULL)`);
     this.exec(`CREATE TABLE IF NOT EXISTS claims (slug TEXT PRIMARY KEY, feed_id TEXT NOT NULL)`);
     // The chunk list is its own column, last, so product lists never read it.
@@ -39,17 +70,10 @@ export class RegistryStore {
     this.exec(`CREATE TABLE IF NOT EXISTS activity (id TEXT PRIMARY KEY, feed_id TEXT NOT NULL, at TEXT NOT NULL, item_json TEXT NOT NULL)`);
     this.exec(`CREATE INDEX IF NOT EXISTS activity_at ON activity (at DESC)`);
     this.exec(`CREATE TABLE IF NOT EXISTS backfills (feed_id TEXT PRIMARY KEY, library TEXT NOT NULL, status TEXT NOT NULL, updated_at TEXT NOT NULL)`);
-    const backfillColumns = this.rows<{ name: string }>(`SELECT name FROM pragma_table_info('backfills')`).map((row) => row.name);
-    if (backfillColumns.includes("gatekeeper_kind")) this.exec(`ALTER TABLE backfills RENAME COLUMN gatekeeper_kind TO library`);
-    // One row per stretch of time a feed's live collection kept failing, or (feed_id '') the platform stopped collecting.
-    // A table added here needs no version change: CREATE IF NOT EXISTS adds it to a live Registry on its next start.
     this.exec(`CREATE TABLE IF NOT EXISTS outages (
       id INTEGER PRIMARY KEY, feed_id TEXT NOT NULL, started_at TEXT NOT NULL, ended_at TEXT, cause TEXT NOT NULL, failures INTEGER NOT NULL, last_error TEXT)`);
     this.exec(`CREATE INDEX IF NOT EXISTS outages_started ON outages (started_at)`);
     this.exec(`CREATE UNIQUE INDEX IF NOT EXISTS outages_open ON outages (feed_id) WHERE ended_at IS NULL`);
-    // Every construction runs this; writing the version only when it is new keeps a warm-up free of row writes.
-    if (current !== String(REGISTRY_SCHEMA_VERSION))
-      this.exec(`INSERT INTO meta (key, value) VALUES ('schema_version', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`, String(REGISTRY_SCHEMA_VERSION));
   }
 
   getState<T>(key: string): T | undefined {
@@ -60,6 +84,14 @@ export class RegistryStore {
 
   setState<T>(key: string, value: T): void {
     this.exec(`INSERT INTO registry_state (key, value_json) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json`, key, JSON.stringify(value));
+  }
+
+  deleteState(key: string): void {
+    this.exec(`DELETE FROM registry_state WHERE key = ?`, key);
+  }
+
+  rehydrationRequired(): boolean {
+    return this.getState<boolean>(REHYDRATION_REQUIRED_KEY) === true;
   }
 
   /**
@@ -147,6 +179,43 @@ export class RegistryStore {
   }
 
   /* ---------- Products ---------- */
+
+  /**
+   * Replace the complete product index from snapshots gathered before this
+   * transaction began. The in-memory snapshot is the shadow: no product row is
+   * changed until every installed runner has answered. An identical repeat is
+   * a read-only operation.
+   */
+  replaceFromRunnerSnapshots(snapshots: RunnerSnapshot[], at: string): boolean {
+    const installed = this.listFeeds()
+      .map((feed) => feed.id)
+      .sort();
+    const ordered = [...snapshots].sort((left, right) => left.feed.id.localeCompare(right.feed.id));
+    const answered = ordered.map((snapshot) => snapshot.feed.id);
+    if (new Set(answered).size !== answered.length || JSON.stringify(answered) !== JSON.stringify(installed))
+      throw new Error("Runner snapshots do not cover every installed feed exactly once");
+    for (const snapshot of ordered) {
+      if (snapshot.publication.id !== runnerPublicationId(snapshot.feed.id, snapshot.products))
+        throw new Error(`Runner ${snapshot.feed.id} returned an invalid publication identity`);
+      if (snapshot.products.some((entry) => entry.feedId !== snapshot.feed.id)) throw new Error(`Runner ${snapshot.feed.id} returned another feed's product`);
+    }
+    const snapshotDigest = digest(JSON.stringify(ordered));
+    if (this.getState<string>(REHYDRATION_DIGEST_KEY) === snapshotDigest) return false;
+
+    this.exec(`DELETE FROM products`);
+    this.exec(`DELETE FROM claims`);
+    for (const snapshot of ordered) {
+      this.replaceFeedProducts(snapshot.feed.id, snapshot.products);
+      this.setFeedStatus(snapshot.feed.id, snapshot.status, at);
+      for (const acquisition of snapshot.recentAcquisitions)
+        this.upsertActivity(acquisition.id, snapshot.feed.id, acquisition.completedAt ?? acquisition.requestedAt, { ...acquisition, feedId: snapshot.feed.id });
+      const backfill = snapshot.status.backfill;
+      if (backfill) this.setBackfill(snapshot.feed.id, snapshot.feed.library, backfill.status, backfill.updatedAt);
+    }
+    this.setState(REHYDRATION_DIGEST_KEY, snapshotDigest);
+    this.deleteState(REHYDRATION_REQUIRED_KEY);
+    return true;
+  }
 
   /** One all-or-none ownership claim before any serving object is written. */
   claimProducts(feedId: string, slugs: string[]): void {
@@ -372,6 +441,18 @@ function mapFeed(row: FeedRow): Feed {
   // SAFETY: status_json is written only from the FeedStatus a runner reported.
   const status = row.status_json ? (JSON.parse(row.status_json) as FeedStatus) : {};
   return { ...definition, ...status };
+}
+
+/** Gather every runner answer before one transaction swaps the complete index. */
+export async function rehydrateRegistryProducts(
+  store: RegistryStore,
+  transaction: SynchronousTransaction,
+  feedIds: string[],
+  snapshotFor: (feedId: string) => Promise<RunnerSnapshot>,
+  at: string,
+): Promise<boolean> {
+  const snapshots = await Promise.all(feedIds.map((feedId) => snapshotFor(feedId)));
+  return transaction(() => store.replaceFromRunnerSnapshots(snapshots, at));
 }
 
 export type { JsonObject };

@@ -29,7 +29,9 @@ import type { LakeTable } from "#/history/lake";
 import { keys, parquetKeys, WINDOW, type ChangeItem, type ObjectStore } from "#/serving/object-store";
 import { BLOB_BYTES, jsonArrays, MAX_RECORD_BYTES, SMALL_PRODUCT_BYTES, utf8Length } from "#/blob-budget";
 import { RecentChanges, recordRevision, retractionRevision, type PreparedRecord, type RecordContext } from "#/collection/records";
-import { dropAllTables, userTables, type SqlExec } from "#/sqlite-reset";
+import { migrateDurableSchema, type SynchronousTransaction } from "#/durability/migrations";
+import { runnerPublicationId, type RunnerSnapshot } from "#/durability/runner-snapshot";
+import type { SqlExec } from "#/sqlite-reset";
 
 /**
  * Everything one FeedRunner Durable Object owns, as plain logic over its
@@ -39,7 +41,8 @@ import { dropAllTables, userTables, type SqlExec } from "#/sqlite-reset";
  * (a Workflow) and reaches this core through small RPC calls.
  */
 
-export const RUNNER_SCHEMA_VERSION = 202;
+export const RUNNER_SCHEMA_BASELINE = 202;
+export const RUNNER_SCHEMA_VERSION = 203;
 /** Products up to this many rows are compared in memory by the executor; larger ones use the SQLite entity index. */
 export const SMALL_PRODUCT_ROWS = 20_000;
 const MAX_RETRY_BACKOFF_SECONDS = 15 * 60;
@@ -255,27 +258,45 @@ export interface RunnerDeps {
   random?(): number;
 }
 
-type Transaction = <T>(body: () => T) => T;
-
 export class RunnerCore {
   constructor(
     private readonly sql: SqlExec,
-    private readonly transaction: Transaction,
+    private readonly transaction: SynchronousTransaction,
     private readonly deps: RunnerDeps,
   ) {}
 
   /* ---------- Schema ---------- */
 
-  /** A different schema version resets this runner; the one terminology cleanup below preserves its current feed in place. */
+  /** Migrate only from the production baseline, preserving every accepted row. */
   migrate(): void {
-    const current = this.tableExists("meta") ? this.rows<{ value: string }>(`SELECT value FROM meta WHERE key = 'schema_version'`)[0]?.value : undefined;
-    if (current !== undefined && current !== String(RUNNER_SCHEMA_VERSION)) this.reset();
-    if (current === undefined && userTables(this.sql).length > 0) this.reset();
-    this.exec(`CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)`);
-    this.exec(`CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value_json TEXT NOT NULL)`);
-    // One-time terminology cleanup: an existing runner's feed called its library `gatekeeperKind`. Rewrite it before the first alarm reads it.
+    migrateDurableSchema({
+      owner: "Runner",
+      sql: this.sql,
+      transaction: this.transaction,
+      baselineVersion: RUNNER_SCHEMA_BASELINE,
+      targetVersion: RUNNER_SCHEMA_VERSION,
+      migrations: [
+        {
+          id: 203,
+          name: "checked-migrations",
+          checksum: "66a906a3238d7750f1e009d344d6",
+          apply: () => this.migrateFrom202(),
+        },
+      ],
+      createBaseline: () => this.createSchema(),
+    });
+  }
+
+  private migrateFrom202(): void {
+    this.createSchema();
+    // An existing runner's feed called its library `gatekeeperKind`. Rewrite it before the first alarm reads it.
     this.exec(`UPDATE state SET value_json = json_remove(json_set(value_json, '$.library', json_extract(value_json, '$.gatekeeperKind')), '$.gatekeeperKind')
       WHERE key = 'feed' AND json_type(value_json, '$.library') IS NULL AND json_type(value_json, '$.gatekeeperKind') = 'text'`);
+  }
+
+  private createSchema(): void {
+    this.exec(`CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)`);
+    this.exec(`CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value_json TEXT NOT NULL)`);
     this.exec(`CREATE TABLE IF NOT EXISTS acquisitions (
       id TEXT PRIMARY KEY, trigger TEXT NOT NULL, status TEXT NOT NULL, requested_at TEXT NOT NULL, started_at TEXT, completed_at TEXT,
       observed_at TEXT, event_time TEXT, source_published_at TEXT, completeness TEXT, normalizer_json TEXT, quality_json TEXT,
@@ -293,14 +314,6 @@ export class RunnerCore {
       rows INTEGER NOT NULL, bytes INTEGER NOT NULL, committed INTEGER NOT NULL DEFAULT 0, committed_at TEXT)`);
     this.exec(`CREATE INDEX IF NOT EXISTS outbox_acquisition ON outbox(acquisition_id)`);
     this.exec(`CREATE TABLE IF NOT EXISTS garbage (object_key TEXT PRIMARY KEY, delete_after TEXT NOT NULL)`);
-    // Every construction runs this; writing the version only when it is new keeps a warm-up free of row writes.
-    if (current !== String(RUNNER_SCHEMA_VERSION))
-      this.exec(`INSERT INTO meta (key, value) VALUES ('schema_version', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`, String(RUNNER_SCHEMA_VERSION));
-  }
-
-  private reset(): void {
-    console.warn(JSON.stringify({ event: "runner_schema_reset", version: RUNNER_SCHEMA_VERSION }));
-    dropAllTables(this.sql);
   }
 
   /* ---------- State ---------- */
@@ -895,11 +908,7 @@ export class RunnerCore {
   async publishPending(): Promise<void> {
     const publication = this.getState<PendingPublication>("publication");
     if (!publication) return;
-    const feed = this.requireFeed();
-    const products = this.productPlans();
-    for (const product of products) {
-      if (product.regenerate) product.entry = await this.regenerate(feed, product, publication.acquisitionId);
-    }
+    const products = await this.preparePublication(publication);
     const known = await this.deps.publish(products.map((product) => product.entry));
     if (!known) throw new Error("Feed is no longer registered");
     this.transaction(() => {
@@ -990,6 +999,26 @@ export class RunnerCore {
 
   /* ---------- Reads ---------- */
 
+  /** Complete state a fresh Registry can select again without waiting for the source to change. */
+  async registrySnapshot(): Promise<RunnerSnapshot> {
+    const feed = this.requireFeed();
+    const pending = this.getState<PendingPublication>("publication");
+    const plans = pending ? await this.preparePublication(pending) : this.productPlans();
+    const products = plans.map((product) => product.entry);
+    const recentAcquisitions = this.listAcquisitions(10);
+    const latestPublished = recentAcquisitions.find((acquisition) => acquisition.status === "succeeded" || acquisition.status === "unchanged");
+    return {
+      feed,
+      products,
+      status: this.status(),
+      recentAcquisitions,
+      publication: {
+        id: runnerPublicationId(feed.id, products),
+        acquisitionId: pending?.acquisitionId ?? latestPublished?.id ?? null,
+      },
+    };
+  }
+
   status(): FeedStatus {
     const runtime = this.runtime();
     const last = this.listAcquisitions(1)[0];
@@ -1067,6 +1096,16 @@ export class RunnerCore {
   }
 
   /* ---------- Internals ---------- */
+
+  /** Finish any chunk regeneration needed before either publication path can expose the complete selection. */
+  private async preparePublication(publication: PendingPublication): Promise<ProductPlan[]> {
+    const feed = this.requireFeed();
+    const products = this.productPlans();
+    for (const product of products) {
+      if (product.regenerate) product.entry = await this.regenerate(feed, product, publication.acquisitionId);
+    }
+    return products;
+  }
 
   private createAcquisition(trigger: string): Acquisition {
     const id = `acq_${crypto.randomUUID()}`;
@@ -1358,10 +1397,6 @@ export class RunnerCore {
   private discard(acquisitionId: string): void {
     this.exec(`DELETE FROM stage WHERE acquisition_id = ?`, acquisitionId);
     this.exec(`DELETE FROM outbox WHERE acquisition_id = ? AND committed = 0`, acquisitionId);
-  }
-
-  private tableExists(name: string): boolean {
-    return this.rows<{ name: string }>(`SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?`, name).length > 0;
   }
 
   private exec(query: string, ...bindings: SqlStorageValue[]): void {

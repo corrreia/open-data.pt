@@ -22,6 +22,7 @@ import {
 } from "#/runner/core";
 import { registryOf } from "#/registry/registry";
 import type { RunnerReport, RunnerReportReceipt } from "#/registry/reporting";
+import type { RunnerSnapshot } from "#/durability/runner-snapshot";
 
 /** History its Workflow has not delivered after this long is drained by the runner's alarm. */
 const LEFTOVER_HISTORY_AFTER_MS = 10 * 60_000;
@@ -144,6 +145,10 @@ export class FeedRunner extends DurableObject<Env> {
   feed(): Feed | undefined {
     const definition = this.core.feed();
     return definition ? { ...definition, ...this.core.status() } : undefined;
+  }
+
+  registrySnapshot(): Promise<RunnerSnapshot> {
+    return this.core.registrySnapshot();
   }
 
   listAcquisitions(limit = 50): Acquisition[] {
