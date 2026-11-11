@@ -2,12 +2,12 @@ import Delaunator from "delaunator";
 import * as THREE from "three";
 import { MapControls } from "three/addons/controls/MapControls.js";
 import type { Terrain } from "./terrain/format.ts";
-import { Land, ORIGIN, type Point, project, unproject } from "./terrain/geometry.ts";
+import { Heights, Land, ORIGIN, type Point, project, unproject } from "./terrain/geometry.ts";
 import { sunPosition } from "./sun.ts";
 
 /** The scene's unit is the kilometre: x east, z south, y up. Heights are drawn this many times taller than they are. */
-const EXAGGERATION = 9;
-const metresToScene = (metres: number): number => (metres / 1000) * EXAGGERATION;
+export const EXAGGERATION = 9;
+export const metresToScene = (metres: number): number => (metres / 1000) * EXAGGERATION;
 /** How far under the sea the shore's cliff reaches. */
 const PLINTH = 5;
 
@@ -173,7 +173,20 @@ export interface Reading {
   metres: number;
 }
 
+/** What a layer draws with: the scene, the ground under any point, and a turn on every frame. */
 export interface MapScene {
+  scene: THREE.Scene;
+  camera: THREE.PerspectiveCamera;
+  /** Whether a point of the plane is on the mainland. */
+  onLand(point: Point): boolean;
+  /** How high the drawn ground stands at a point of the plane, in the scene's units. */
+  ground(point: Point): number;
+  /** Where a point of the plane at a height of the scene falls on the screen, in CSS pixels; nothing when it is behind the camera. */
+  toScreen(point: Point, height: number): [x: number, y: number] | undefined;
+  /** Called before every frame is drawn, with the time in milliseconds. */
+  onFrame(listener: (now: number) => void): void;
+  /** Colours the land by a value at each of its points, or back to its heights when given nothing. */
+  paint(colourAt: ((point: Point, into: THREE.Color) => void) | undefined): void;
   /** What the pointer is over, or nothing when it is over the sea. */
   onReading: (reading: Reading | undefined) => void;
   /** Lights the map as the sun stands at this instant, and says how high it stands. */
@@ -232,7 +245,32 @@ export function createMap(canvas: HTMLCanvasElement, terrain: Terrain): MapScene
   window.addEventListener("resize", resize);
   resize();
 
+  const ground = new Heights(3);
+  for (let index = 0; index < terrain.points.length; index += 3) ground.add([terrain.points[index] ?? 0, terrain.points[index + 1] ?? 0], terrain.points[index + 2] ?? 0);
+  const onLand = new Land(rings);
+  const listeners: ((now: number) => void)[] = [];
+  const corner = new THREE.Vector3();
+  const colours = land.geometry.getAttribute("color");
+  const colour = new THREE.Color();
+
   const map: MapScene = {
+    scene,
+    camera,
+    onLand: (point) => onLand.has(point),
+    ground: (point) => metresToScene(ground.at(point, 3, 0.3)),
+    toScreen(point, height) {
+      corner.set(point[0], height, -point[1]).project(camera);
+      return corner.z > 1 ? undefined : [((corner.x + 1) / 2) * window.innerWidth, ((1 - corner.y) / 2) * window.innerHeight];
+    },
+    onFrame: (listener) => void listeners.push(listener),
+    paint(colourAt) {
+      for (let index = 0; index < terrain.points.length / 3; index++) {
+        if (colourAt === undefined) tint(terrain.points[index * 3 + 2] ?? 0, colour);
+        else colourAt([terrain.points[index * 3] ?? 0, terrain.points[index * 3 + 1] ?? 0], colour);
+        colours.setXYZ(index, colour.r, colour.g, colour.b);
+      }
+      colours.needsUpdate = true;
+    },
     onReading: () => {},
     light(at) {
       const { elevation, azimuth } = sunPosition(at, ORIGIN[0], ORIGIN[1]);
@@ -277,6 +315,7 @@ export function createMap(canvas: HTMLCanvasElement, terrain: Terrain): MapScene
       if (progress === 1) settling = false;
     }
     controls.update();
+    for (const listener of listeners) listener(now);
     if (pointerMoved) read();
     renderer.render(scene, camera);
   });

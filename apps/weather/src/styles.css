@@ -121,7 +121,111 @@ footer {
   margin-bottom: 4px;
 }
 
+#layers {
+  position: fixed;
+  right: 24px;
+  bottom: 20px;
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  min-width: 190px;
+  font-size: 13px;
+  background: rgb(10 16 28 / 0.72);
+  border: 1px solid rgb(255 255 255 / 0.1);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+#layers label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+#layers label[hidden] {
+  display: none;
+}
+
+#layers input {
+  accent-color: var(--sun);
+  width: 15px;
+  height: 15px;
+  margin: 0;
+}
+
+#scale {
+  height: 8px;
+  border-radius: 4px;
+  margin: 0 0 14px 23px;
+  position: relative;
+  font:
+    10px/1 ui-monospace,
+    "SF Mono",
+    Menlo,
+    monospace;
+  color: var(--quiet);
+}
+
+#scale::before,
+#scale::after {
+  position: absolute;
+  top: 11px;
+}
+
+#scale::before {
+  content: attr(data-low);
+  left: 0;
+}
+
+#scale::after {
+  content: attr(data-high);
+  right: 0;
+}
+
+#live {
+  margin-top: 4px;
+  font:
+    11px/1.4 ui-monospace,
+    "SF Mono",
+    Menlo,
+    monospace;
+  color: var(--quiet);
+}
+
+#tip {
+  position: fixed;
+  z-index: 2;
+  pointer-events: none;
+  transform: translate(14px, -50%);
+  padding: 8px 10px;
+  max-width: 260px;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-line;
+  background: rgb(10 16 28 / 0.9);
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 8px;
+}
+
+#tip::first-line {
+  font-weight: 650;
+}
+
 @media (max-width: 600px) {
+  #layers {
+    right: 12px;
+    bottom: auto;
+    top: 64px;
+    min-width: 0;
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  #hint {
+    display: none;
+  }
+
   header {
     top: 14px;
     left: 16px;

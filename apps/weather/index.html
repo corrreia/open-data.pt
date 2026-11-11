@@ -17,6 +17,15 @@
     </header>
     <p id="status" role="status">A desenhar Portugal…</p>
     <output id="readout" aria-live="off"></output>
+    <form id="layers" aria-label="Camadas">
+      <label><input type="checkbox" name="temperature" checked /><span>Temperatura</span></label>
+      <div id="scale" aria-hidden="true"></div>
+      <label><input type="checkbox" name="wind" checked /><span>Vento</span></label>
+      <label><input type="checkbox" name="reservoirs" checked /><span>Albufeiras</span></label>
+      <label hidden><input type="checkbox" name="water" checked /><span>Rios e lagoas</span></label>
+      <p id="live"></p>
+    </form>
+    <div id="tip" hidden></div>
     <footer>
       <p id="hint">Arrastar move · roda aproxima · botão direito ou dois dedos rodam</p>
       <p id="credits"></p>
