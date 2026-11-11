@@ -3,40 +3,20 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f3f5f4" />
+    <meta name="color-scheme" content="light dark" />
     <meta
       name="description"
       content="O tempo em Portugal com os dados do IPMA: previsão, avisos, observações, mar, índices, sismos e trovoada. Dados abertos servidos por open-data.pt."
     />
-    <title>Tempo em Portugal · weather.open-data.pt</title>
+    <title>Tempo em Portugal</title>
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='12' cy='12' r='6' fill='%23f2b233'/%3E%3Cpath d='M10 26a5 5 0 0 1-.6-9.96 7 7 0 0 1 13.5 1.5A4.3 4.3 0 0 1 22.5 26z' fill='%23fff' stroke='%2314212a' stroke-width='2'/%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
-    <header>
-      <a class="name" href="#/">Tempo em Portugal</a>
-      <nav aria-label="Secções"></nav>
-      <p id="clock"></p>
-    </header>
-    <main>
-      <section id="chart" aria-label="Mapa">
-        <canvas aria-label="Mapa de Portugal continental em relevo. Arraste para mover e use a roda para aproximar."></canvas>
-        <div id="marks"></div>
-        <button id="home" type="button" title="Ver o país inteiro, com o norte para cima">País inteiro</button>
-        <p id="key"></p>
-      </section>
-      <article id="panel" aria-live="polite"></article>
-    </main>
-    <footer>
-      <p>
-        Dados do Instituto Português do Mar e da Atmosfera, lidos em <a href="https://open-data.pt/">open-data.pt</a>. Este site não é do IPMA: para decisões que dependam do tempo,
-        consulte <a href="https://www.ipma.pt/">ipma.pt</a>.
-      </p>
-      <p><a href="/credits/">Fontes e créditos</a></p>
-    </footer>
-    <script type="module" src="/src/main.ts"></script>
+    <div id="root"></div>
+    <noscript>Este site precisa de JavaScript para ler os dados do IPMA em open-data.pt. Os mesmos dados estão em <a href="https://www.ipma.pt/">ipma.pt</a>.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

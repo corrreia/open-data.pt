@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { colourOn, css, type Scale, uvName } from "../src/scales.ts";
-import { regionOf } from "../src/sections/section.ts";
+import { regionOf } from "../src/regions.ts";
 
 const SCALE: Scale = [
   [0, 0x000000],

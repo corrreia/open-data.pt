@@ -134,14 +134,16 @@ export interface MapScene {
   onLand(point: Point): boolean;
   /** Where a place falls on the screen, in CSS pixels from the canvas's corner; nothing when it is out of sight. */
   toScreen(longitude: number, latitude: number): [x: number, y: number] | undefined;
-  /** Called after the camera has moved, and once at the start. */
-  onMove(listener: () => void): void;
+  /** Called after every frame drawn, which is whenever the camera has moved. Returns how to stop being called. */
+  onMove(listener: () => void): () => void;
   /** Colours the land by a value at each of its points, or back to its heights when given nothing. */
   paint(colourAt: ((point: Point, into: THREE.Color) => void) | undefined): void;
   /** Draws rivers and lagoons. */
   addWater(water: Water): void;
   /** Lights the map as the sun stands at this instant. */
   light(at: Date): void;
+  /** Draws the map for a dark page or a light one: the sea and the light change, the land's colours do not. */
+  setDark(dark: boolean): void;
   /** Radians the view has turned clockwise from north. */
   bearing(): number;
   /** Turns the view back to north, looking straight down on the whole country. */
@@ -188,7 +190,7 @@ export function createMap(canvas: HTMLCanvasElement, terrain: Terrain): MapScene
     return { x: centre.x, z: centre.z, distance: Math.max(tall, wide), bearing: 0, tilt: 0 };
   };
 
-  const moved: (() => void)[] = [];
+  const moved = new Set<() => void>();
   let dirty = true;
   const resize = (): void => {
     const { clientWidth: width, clientHeight: height } = canvas;
@@ -240,7 +242,10 @@ export function createMap(canvas: HTMLCanvasElement, terrain: Terrain): MapScene
       if (corner.z > 1 || Math.abs(corner.x) > 1.05 || Math.abs(corner.y) > 1.05) return undefined;
       return [((corner.x + 1) / 2) * canvas.clientWidth, ((1 - corner.y) / 2) * canvas.clientHeight];
     },
-    onMove: (listener) => void moved.push(listener),
+    onMove(listener) {
+      moved.add(listener);
+      return () => void moved.delete(listener);
+    },
     paint(colourAt) {
       for (let index = 0; index < terrain.points.length / 3; index++) {
         if (colourAt === undefined) tint(terrain.points[index * 3 + 2] ?? 0, colour);
@@ -289,11 +294,18 @@ export function createMap(canvas: HTMLCanvasElement, terrain: Terrain): MapScene
         .add(centre);
       dirty = true;
     },
+    setDark(dark) {
+      scene.background = new THREE.Color(dark ? 0x16242d : SEA);
+      sky.intensity = dark ? 1.05 : 1.5;
+      sun.intensity = dark ? 1.15 : 1.6;
+      dirty = true;
+    },
     bearing: () => controls.goal.bearing,
     home() {
       // The shorter way round.
       controls.goal.bearing -= Math.round(controls.goal.bearing / (2 * Math.PI)) * 2 * Math.PI;
-      controls.flyTo(whole(), 0.006);
+      // Someone who asked for less motion is taken there at once.
+      controls.flyTo(whole(), window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 1 : 0.006);
       framed = true;
     },
   };

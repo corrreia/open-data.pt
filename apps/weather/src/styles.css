@@ -1,347 +1,102 @@
+/* weather.open-data.pt on Kumo: Cloudflare's components, with a cool neutral scale and one blue. */
+@source "../node_modules/@cloudflare/kumo/dist/**/*.{js,jsx}";
+@import "@cloudflare/kumo/styles";
+@import "tailwindcss";
+
 /*
- * A weather service's pages: light, plain and dense, so the numbers are what is seen. The map is
- * the left half and stays put; the right half is the section's own table. One blue, used for what
- * can be pressed and for where you are; every other colour on the page means something measured.
+ * Kumo's semantic tokens, each written once for light and dark with light-dark(). The neutrals
+ * lean a little towards the blue of the accent; the status colours keep their meaning in both.
  */
+@theme {
+  --font-sans: "Archivo Variable", "Helvetica Neue", Arial, system-ui, sans-serif;
+
+  --text-color-kumo-default: light-dark(oklch(0.25 0.02 245), oklch(0.93 0.008 245));
+  --text-color-kumo-strong: light-dark(oklch(0.18 0.02 245), oklch(0.985 0.004 245));
+  --text-color-kumo-subtle: light-dark(oklch(0.46 0.02 245), oklch(0.75 0.012 245));
+  --text-color-kumo-placeholder: light-dark(oklch(0.55 0.015 245), oklch(0.66 0.012 245));
+  --text-color-kumo-inactive: light-dark(oklch(0.7 0.012 245), oklch(0.5 0.012 245));
+  --text-color-kumo-brand: light-dark(oklch(0.45 0.13 245), oklch(0.78 0.11 240));
+  --text-color-kumo-link: light-dark(oklch(0.45 0.13 245), oklch(0.78 0.11 240));
+  --text-color-kumo-success: light-dark(#1b7a4f, #4fc98a);
+  --text-color-kumo-warning: light-dark(#a85400, #f0a25a);
+  --text-color-kumo-danger: light-dark(#b3261e, #f08a80);
+  --text-color-kumo-info: light-dark(#2f66c4, #7fa6f0);
+
+  --color-kumo-canvas: light-dark(oklch(0.965 0.005 245), oklch(0.19 0.012 245));
+  --color-kumo-base: light-dark(oklch(0.995 0.002 245), oklch(0.235 0.013 245));
+  --color-kumo-elevated: light-dark(oklch(0.978 0.004 245), oklch(0.215 0.012 245));
+  --color-kumo-recessed: light-dark(oklch(0.948 0.007 245), oklch(0.205 0.012 245));
+  --color-kumo-control: light-dark(oklch(0.997 0.002 245), oklch(0.25 0.013 245));
+  --color-kumo-overlay: light-dark(oklch(0.995 0.002 245), oklch(0.26 0.013 245));
+  --color-kumo-interact: light-dark(oklch(0.87 0.012 245), oklch(0.37 0.014 245));
+  --color-kumo-tint: light-dark(oklch(0.94 0.025 245), oklch(0.3 0.04 245));
+  --color-kumo-fill: light-dark(oklch(0.925 0.009 245), oklch(0.31 0.014 245));
+  --color-kumo-fill-hover: light-dark(oklch(0.885 0.011 245), oklch(0.36 0.015 245));
+  --color-kumo-line: light-dark(oklch(0.87 0.011 245), oklch(0.36 0.014 245));
+  --color-kumo-hairline: light-dark(oklch(0.905 0.009 245), oklch(0.31 0.013 245));
+  --color-kumo-focus: light-dark(oklch(0.45 0.13 245), oklch(0.78 0.11 240));
+  --color-kumo-brand: light-dark(oklch(0.45 0.13 245), oklch(0.6 0.13 245));
+  --color-kumo-brand-hover: light-dark(oklch(0.38 0.12 245), oklch(0.66 0.13 245));
+  --color-kumo-contrast: light-dark(oklch(0.25 0.03 245), oklch(0.94 0.02 245));
+  --color-kumo-success: light-dark(#1b7a4f, #4fc98a);
+  --color-kumo-success-tint: light-dark(oklch(0.94 0.05 158), oklch(0.3 0.05 158));
+  --color-kumo-warning: light-dark(#a85400, #f0a25a);
+  --color-kumo-warning-tint: light-dark(oklch(0.95 0.06 75), oklch(0.32 0.06 70));
+  --color-kumo-danger: light-dark(#b3261e, #f08a80);
+  --color-kumo-danger-tint: light-dark(oklch(0.95 0.05 25), oklch(0.32 0.06 25));
+  --color-kumo-info: light-dark(#2f66c4, #7fa6f0);
+  --color-kumo-info-tint: light-dark(oklch(0.94 0.04 262), oklch(0.3 0.05 262));
+
+  /* Kumo sets 13px text at 1.18; anything that wraps needs room between its lines. */
+  --text-sm--line-height: calc(20 / 13);
+}
+
 :root {
-  color-scheme: light;
-  --page: #f3f5f4;
-  --sheet: #ffffff;
-  --ink: #14212a;
-  --quiet: #5b6b76;
-  --rule: #dde3e6;
-  --blue: #0b5a8c;
-  --label: "Archivo Variable", "Helvetica Neue", Arial, sans-serif;
-  font-family: var(--label);
-  font-size: 15px;
-  line-height: 1.45;
+  color-scheme: light dark;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-}
-
-html,
-body {
-  height: 100%;
+html {
+  background: var(--color-kumo-canvas);
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  background: var(--page);
-  color: var(--ink);
+  min-height: 100dvh;
+  font-family: var(--font-sans);
+  background: var(--color-kumo-canvas);
+  color: var(--text-color-kumo-default);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  color: var(--blue);
-  text-underline-offset: 3px;
-  text-decoration-thickness: 1px;
+/* Kumo portals its menus to the end of <body>: isolated, the whole page sits below them. */
+#root {
+  isolation: isolate;
 }
 
-button,
-select {
-  font: inherit;
-  color: inherit;
-}
-
+/*
+ * One focus indicator for everything a keyboard reaches: outside Tailwind's layers, so it wins
+ * over an outline-none, and an outline survives forced-colours mode.
+ */
 :focus-visible {
-  outline: 2px solid var(--blue);
+  outline: 2px solid var(--color-kumo-focus);
   outline-offset: 2px;
 }
 
-body > header {
-  display: flex;
-  align-items: stretch;
-  gap: 28px;
-  padding: 0 20px;
-  background: var(--sheet);
-  border-bottom: 1px solid var(--rule);
+h1,
+h2,
+h3 {
+  text-wrap: balance;
 }
 
-.name {
-  align-self: center;
-  padding: 14px 0;
-  font-size: 17px;
-  font-weight: 750;
-  font-stretch: 112%;
-  letter-spacing: -0.01em;
-  color: var(--ink);
-  text-decoration: none;
-  white-space: nowrap;
+p {
+  text-wrap: pretty;
 }
 
-nav {
-  display: flex;
-  gap: 2px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-nav a {
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  color: var(--quiet);
-  font-weight: 550;
-  font-stretch: 96%;
-  text-decoration: none;
-  white-space: nowrap;
-  border-bottom: 3px solid transparent;
-  border-top: 3px solid transparent;
-}
-
-nav a:hover {
-  color: var(--ink);
-}
-
-nav a[aria-current] {
-  color: var(--blue);
-  border-bottom-color: var(--blue);
-}
-
-#clock {
-  margin-left: auto;
-  align-self: center;
-  font-size: 13px;
-  color: var(--quiet);
-  white-space: nowrap;
-}
-
-#clock::first-letter {
-  text-transform: uppercase;
-}
-
-main {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(380px, 520px);
-  min-height: 0;
-}
-
-#chart {
-  position: relative;
-  min-height: 0;
-  overflow: hidden;
-}
-
-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-  touch-action: none;
-  cursor: grab;
-}
-
-canvas:active {
-  cursor: grabbing;
-}
-
-#marks {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.mark {
-  position: absolute;
-  top: 0;
-  left: 0;
-  will-change: transform;
-  white-space: nowrap;
-}
-
-.mark[hidden] {
-  display: none;
-}
-
-button.mark,
-.mark[title] {
-  pointer-events: auto;
-}
-
-#home {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  padding: 5px 10px;
-  font-size: 13px;
-  font-weight: 550;
-  background: var(--sheet);
-  border: 1px solid var(--rule);
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-#key {
-  position: absolute;
-  left: 12px;
-  bottom: 12px;
-  max-width: min(420px, calc(100% - 24px));
-  padding: 8px 11px;
-  font-size: 12.5px;
-  line-height: 1.4;
-  color: var(--quiet);
-  background: rgb(255 255 255 / 0.92);
-  border: 1px solid var(--rule);
-  border-radius: 4px;
-}
-
-#key:has(span:empty) {
-  display: none;
-}
-
-.scale {
-  display: grid;
-  gap: 6px;
-}
-
-.strip {
-  display: block;
-  height: 9px;
-  border-radius: 2px;
-}
-
-.ticks {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-  color: var(--ink);
-}
-
-.ticks b {
-  font-weight: 400;
-}
-
-/* The marks: a forecast for a city, a count of warnings, a station's reading, and so on. */
-.forecast {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  padding: 1px 7px 1px 3px;
-  background: var(--sheet);
-  border: 1px solid rgb(20 33 42 / 0.25);
-  border-radius: 14px;
-  font-size: 13px;
-}
-
-.forecast .weather {
-  width: 24px;
-  height: 24px;
-}
-
-.forecast b {
-  font-weight: 700;
-}
-
-.forecast span {
-  color: var(--quiet);
-  font-size: 11.5px;
-}
-
-.warning,
-.index {
-  display: grid;
-  place-items: center;
-  min-width: 26px;
-  height: 26px;
-  padding: 0 6px;
-  border-radius: 13px;
-  background: var(--level);
-  border: 1.5px solid rgb(20 33 42 / 0.55);
-  font: 700 12.5px var(--label);
-  color: var(--ink);
-}
-
-.station {
-  padding: 0 4px;
-  background: rgb(255 255 255 / 0.86);
-  border: 1px solid rgb(20 33 42 / 0.3);
-  border-radius: 3px;
-  font-size: 11px;
-  line-height: 1.45;
-  font-variant-numeric: tabular-nums;
-  cursor: pointer;
-}
-
-.station:hover {
-  background: var(--sheet);
-  border-color: var(--blue);
-  z-index: 1;
-}
-
-.station .arrow {
-  width: 9px;
-  height: 9px;
-  margin-right: 2px;
-}
-
-.sea {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 1px 7px 1px 5px;
-  background: #e4f0f6;
-  border: 1px solid rgb(11 90 140 / 0.45);
-  border-radius: 12px;
-  font-size: 12px;
-}
-
-.sea b {
-  font-weight: 650;
-}
-
-.fire {
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: var(--level);
-  border: 1px solid rgb(20 33 42 / 0.5);
-}
-
-.quake {
-  width: var(--size);
-  height: var(--size);
-  border-radius: 50%;
-  border: 2px solid #a3271e;
-  background: rgb(216 52 42 / 0.22);
-}
-
-.strike {
-  width: 9px;
-  height: 9px;
-  background: #6a3fb5;
-  border: 1px solid #fff;
-  transform-origin: center;
-  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
-}
-
-.pin {
-  padding: 2px 8px;
-  background: var(--ink);
-  color: #fff;
-  border-radius: 3px;
-  font-size: 12.5px;
-  font-weight: 600;
-}
-
-.arrow {
-  width: 12px;
-  height: 12px;
-  flex: none;
-  fill: currentColor;
-  vertical-align: -1px;
-}
-
+/* The weather glyphs: ink for clouds, and a colour only where it says something (sun, rain, lightning). */
 .weather {
-  width: 30px;
-  height: 30px;
   fill: none;
-  stroke: var(--ink);
+  stroke: var(--text-color-kumo-default);
   stroke-width: 1.6;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -349,364 +104,42 @@ button.mark,
 
 .weather .sun {
   fill: #f6c445;
-  stroke: #c98a12;
+  stroke: #b97c08;
 }
 
 .weather .rays {
-  stroke: #c98a12;
+  stroke: #b97c08;
 }
 
 .weather .cloud {
-  fill: #fff;
+  fill: var(--color-kumo-base);
 }
 
 .weather .rain {
-  stroke: #1f6fb5;
+  stroke: light-dark(#1f6fb5, #7db8ee);
   stroke-width: 2;
 }
 
 .weather .bolt {
   fill: #f6c445;
-  stroke: #9a6a0a;
+  stroke: #8a5d06;
   stroke-width: 1;
 }
 
 .weather .snow,
 .weather .mist {
-  stroke: #5b7f99;
+  stroke: var(--text-color-kumo-subtle);
 }
 
-#panel {
-  min-height: 0;
-  overflow-y: auto;
-  padding: 22px 24px 40px;
-  background: var(--sheet);
-  border-left: 1px solid var(--rule);
+/* Where a row of tabs runs past the edge, it fades there, so there is seen to be more. */
+.scroll-fade {
+  /* The fade is the cue; a scrollbar under a row of tabs is only clutter. */
+  scrollbar-width: none;
+  mask-image: linear-gradient(90deg, #000 calc(100% - 2.5rem), transparent);
 }
 
-h2 {
-  font-size: 26px;
-  font-weight: 750;
-  font-stretch: 108%;
-  letter-spacing: -0.015em;
-  line-height: 1.15;
-}
-
-h3 {
-  margin: 26px 0 6px;
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.lede {
-  margin: 8px 0 16px;
-  color: var(--quiet);
-  max-width: 52ch;
-}
-
-.empty {
-  margin-top: 16px;
-  color: var(--quiet);
-}
-
-.choice {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin: 14px 0 10px;
-}
-
-.choice button {
-  padding: 5px 11px;
-  background: none;
-  border: 1px solid var(--rule);
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 550;
-  font-stretch: 96%;
-  cursor: pointer;
-}
-
-.choice button::first-letter {
-  text-transform: uppercase;
-}
-
-.choice button:hover {
-  border-color: var(--quiet);
-}
-
-.choice button[aria-pressed="true"] {
-  background: var(--blue);
-  border-color: var(--blue);
-  color: #fff;
-}
-
-select {
-  width: 100%;
-  margin-bottom: 4px;
-  padding: 7px 8px;
-  background: var(--sheet);
-  border: 1px solid var(--rule);
-  border-radius: 4px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-stretch: 94%;
-}
-
-th,
-td {
-  padding: 7px 8px 7px 0;
-  text-align: left;
-  vertical-align: middle;
-  border-bottom: 1px solid var(--rule);
-  font-weight: 400;
-}
-
-thead th {
-  padding-block: 5px;
-  font-size: 11.5px;
-  font-weight: 600;
-  font-stretch: 104%;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--quiet);
-}
-
-tbody th {
-  font-weight: 600;
-}
-
-th small {
-  display: block;
-  font-weight: 400;
-  font-size: 12.5px;
-  color: var(--quiet);
-}
-
-td.icon {
-  width: 38px;
-  padding-block: 3px;
-}
-
-.figure {
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-  white-space: nowrap;
-}
-
-thead .figure {
-  font: 600 11.5px var(--label);
-  font-stretch: 104%;
-}
-
-.figure b {
-  font-weight: 700;
-}
-
-.quiet,
-td.period {
-  color: var(--quiet);
-}
-
-td.period {
-  font-size: 12.5px;
-  text-align: right;
-  white-space: nowrap;
-}
-
-td.wind {
-  white-space: nowrap;
-}
-
-td.wind .arrow {
-  margin-right: 5px;
-}
-
-.level,
-.state {
-  display: inline-block;
-  padding: 1px 8px;
-  border-radius: 3px;
-  font-size: 12.5px;
-  font-weight: 650;
-  white-space: nowrap;
-}
-
-.level {
-  background: var(--level);
-  color: var(--ink);
-}
-
-.level::first-letter {
-  text-transform: uppercase;
-}
-
-.state.open {
-  background: #dcefd9;
-  color: #1f5c22;
-}
-
-.state.partial {
-  background: #fbeab8;
-  color: #6b4a00;
-}
-
-.state.closed {
-  background: #f6d5d1;
-  color: #8a1c14;
-}
-
-.swatch {
-  display: block;
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
-  border: 1px solid rgb(20 33 42 / 0.25);
-}
-
-.link {
-  padding: 0;
-  background: none;
-  border: 0;
-  font-weight: 600;
-  text-align: left;
-  cursor: pointer;
-}
-
-.link:hover {
-  color: var(--blue);
-  text-decoration: underline;
-}
-
-.places {
-  color: var(--quiet);
-  font-size: 13.5px;
-}
-
-.detail:not(:empty) {
-  margin: 4px 0 18px;
-  padding: 2px 14px 12px;
-  background: var(--page);
-  border-left: 3px solid var(--blue);
-}
-
-.detail h3 {
-  margin-top: 12px;
-}
-
-.chart {
-  display: block;
-  width: 100%;
-  max-width: 460px;
-  height: auto;
-}
-
-.chart .line {
-  fill: none;
-  stroke: var(--blue);
-  stroke-width: 1.6;
-  stroke-linejoin: round;
-}
-
-.chart .bar {
-  fill: #4f93cf;
-}
-
-.chart .rule {
-  stroke: var(--rule);
-}
-
-.chart .figure {
-  font-size: 9px;
-  font-variant-numeric: tabular-nums;
-  fill: var(--quiet);
-}
-
-body > footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 9px 20px;
-  font-size: 12.5px;
-  color: var(--quiet);
-  background: var(--sheet);
-  border-top: 1px solid var(--rule);
-}
-
-@media (max-width: 860px) {
-  html,
-  body {
-    height: auto;
-  }
-
-  body {
-    display: block;
-  }
-
-  body > header {
-    flex-wrap: wrap;
-    gap: 0 16px;
-    padding: 0 14px;
-  }
-
-  .name {
-    padding: 11px 0 4px;
-  }
-
-  #clock {
-    font-size: 12px;
-  }
-
-  nav {
-    order: 3;
-    width: 100%;
-    margin-inline: -8px;
-  }
-
-  nav a {
-    padding: 9px 8px;
-  }
-
-  main {
-    display: block;
-  }
-
-  /* The map keeps its height and its key goes under it, where it covers nothing. */
-  #chart {
-    overflow: visible;
-  }
-
-  canvas {
-    position: relative;
-    height: 58vh;
-    min-height: 340px;
-  }
-
-  #marks {
-    bottom: auto;
-    height: max(58vh, 340px);
-  }
-
-  #key {
-    position: static;
-    max-width: none;
-    border-width: 1px 0 0;
-    border-radius: 0;
-    background: var(--page);
-  }
-
-  #panel {
-    border-left: 0;
-    border-top: 1px solid var(--rule);
-    padding: 18px 14px 32px;
-    overflow: visible;
-  }
-
-  body > footer {
-    display: block;
-    padding: 12px 14px;
+@media (min-width: 64rem) {
+  .scroll-fade {
+    mask-image: none;
   }
 }

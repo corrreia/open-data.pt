@@ -80,19 +80,25 @@ export const RADIATION: Scale = [
 
 /** The UV index as the World Health Organization colours it: low, moderate, high, very high, extreme. */
 export function uvColour(index: number): number {
-  return index < 3 ? 0x4c9a3c : index < 6 ? 0xf2c200 : index < 8 ? 0xf07f13 : index < 11 ? 0xd8342a : 0x8a3fa0;
+  return index < 3 ? 0x5aa84a : index < 6 ? 0xf2c200 : index < 8 ? 0xf07f13 : index < 11 ? 0xc8281f : 0x7b3794;
 }
+
+/** The ink that reads on the UV colour of an index. */
+export const uvInk = (index: number): string => (index < 8 ? INK.dark : INK.light);
 
 export function uvName(index: number): string {
   return index < 3 ? "baixo" : index < 6 ? "moderado" : index < 8 ? "elevado" : index < 11 ? "muito elevado" : "extremo";
 }
 
 /** IPMA's five classes of rural fire danger, 1 to 5, in the colours its own map uses. */
-export const FIRE_COLOURS = [0x9a9a9a, 0x4c9a3c, 0xf2e23a, 0xf07f13, 0xd8342a, 0x7a1414];
+export const FIRE_COLOURS = [0x9a9a9a, 0x5aa84a, 0xf2e23a, 0xf07f13, 0xc8281f, 0x7a1414];
 
-/** IPMA's warning levels above green, mildest first. */
+/** The ink that reads on a filled colour: dark on the light ones, white on the dark. */
+export const INK = { dark: "#14212a", light: "#ffffff" };
+
+/** IPMA's warning levels above green, mildest first, each with the ink that reads on it. */
 export const WARNING_LEVELS = new Map([
-  ["yellow", { colour: 0xf2c200, name: "Amarelo" }],
-  ["orange", { colour: 0xf07f13, name: "Laranja" }],
-  ["red", { colour: 0xd8342a, name: "Vermelho" }],
+  ["yellow", { colour: 0xf2c200, name: "Amarelo", ink: INK.dark }],
+  ["orange", { colour: 0xf07f13, name: "Laranja", ink: INK.dark }],
+  ["red", { colour: 0xc8281f, name: "Vermelho", ink: INK.light }],
 ]);
