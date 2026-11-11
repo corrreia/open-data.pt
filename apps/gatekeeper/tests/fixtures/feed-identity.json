@@ -100,7 +100,7 @@
     "kind": "anepc:active-occurrences"
   },
   "apa-air-quality-stations-feed": {
-    "resourceKey": "arcgis:arcgis:layer:e6ec31b69a95520eb46a988cc7f738bdcbb63b859e9ce43d34986e7ce52116f5",
+    "resourceKey": "arcgis:arcgis:layer:838566eb4ca38286924e7d2b8565a769dd2801bf5069c86a22a590fcdea371ef",
     "kind": "arcgis:layer"
   },
   "apa-bathing-beaches-feed": {
@@ -108,7 +108,7 @@
     "kind": "arcgis:layer"
   },
   "apa-bathing-waters-feed": {
-    "resourceKey": "arcgis:arcgis:layer:bd8bd352dcd712c2cde1f4e88a8c03c57adc09919c3e6a6dce10e60294dccde4",
+    "resourceKey": "arcgis:arcgis:layer:ffc41b6e6fe8c579b7be53bd43516767b493cef0c46a6df2e62f90a41a1a9abb",
     "kind": "arcgis:layer"
   },
   "apa-beach-occupancy-feed": {
@@ -124,7 +124,7 @@
     "kind": "arcgis:layer"
   },
   "apa-emissions-trading-installations-feed": {
-    "resourceKey": "arcgis:arcgis:layer:f257dc8e2fda27ab065c1e15ca56b04c5527e83a39f8c639c5c752fcb81ca286",
+    "resourceKey": "arcgis:arcgis:layer:83b25ab7d1e73b2744a1da90ab863b9acff11ca094d0fe5befa981416bf62912",
     "kind": "arcgis:layer"
   },
   "apa-flood-marks-feed": {
@@ -132,7 +132,7 @@
     "kind": "arcgis:layer"
   },
   "apa-hydrometric-stations-feed": {
-    "resourceKey": "arcgis:arcgis:layer:c38cc0585dfd2efb5f40d46eb9dee6d514eec63c737b92019fe159b4a7adedbd",
+    "resourceKey": "arcgis:arcgis:layer:ae0f991a62d4a4ad8323f09509224423e4e60e3e0b1c0faa5940fa8b4b34405f",
     "kind": "arcgis:layer"
   },
   "apa-impact-assessment-projects-feed": {
@@ -164,7 +164,7 @@
     "kind": "arcgis:layer"
   },
   "apa-radnet-stations-feed": {
-    "resourceKey": "arcgis:arcgis:layer:706e1f3fd2b12d92a5c6c478f58fc1031620d28d569f1ffb9b34784577f85c21",
+    "resourceKey": "arcgis:arcgis:layer:8c237c0e2d456cc96351f2b3544018f7e8fca563d51bffc3a2482753072be7fc",
     "kind": "arcgis:layer"
   },
   "apa-seveso-establishments-feed": {
@@ -172,11 +172,11 @@
     "kind": "arcgis:layer"
   },
   "apa-waste-infrastructure-feed": {
-    "resourceKey": "arcgis:arcgis:layer:98195f610b40552a6ca3958ed99ed1ce8f6d1a644a39342483fbc1a474e23d38",
+    "resourceKey": "arcgis:arcgis:layer:8955c3341b04fc893a2b65e5c9f9d33852ad1da85422ca3eb96f51217a731796",
     "kind": "arcgis:layer"
   },
   "apa-waste-operators-feed": {
-    "resourceKey": "arcgis:arcgis:layer:9b1a3fcf0629bfeba5dedf99a3f481324d3a817b96c58af77c43b245ac58a3df",
+    "resourceKey": "arcgis:arcgis:layer:7d805ca38dfaaca677723268cbd58e513db87fb5fb47b45c6a5a8b2f1835dd77",
     "kind": "arcgis:layer"
   },
   "barraqueiro-oeste-lisboa-torres-vedras-feed": {
@@ -568,7 +568,7 @@
     "kind": "ogc:collection"
   },
   "dgt-crus-feed": {
-    "resourceKey": "ogc:ogc:collection:50a4df8f1f881a1bb3758556715079c1c2b4c3e7440205d7fc28efed73c4d690",
+    "resourceKey": "ogc:ogc:collection:24884f4fe4df919764773d32032e4f07635b3be07c1f99fdaff1250f355419ea",
     "kind": "ogc:collection"
   },
   "dgt-fototeca-index-feed": {
@@ -1187,10 +1187,6 @@
     "resourceKey": "arcgis:arcgis:layer:ffbfdea1a30d080b2029f4082f7238e52a8e7303288fcb27c1b75e3b201f01bd",
     "kind": "arcgis:layer"
   },
-  "mafra-equipamentos-cultura-feed": {
-    "resourceKey": "arcgis:arcgis:layer:e6a105d769dcfcb37023522c7ac71552dadcf66d7d86206a5cf6d30e4f09bb46",
-    "kind": "arcgis:layer"
-  },
   "mafra-equipamentos-escolares-feed": {
     "resourceKey": "arcgis:arcgis:layer:915c0350b75cd858ab1553e2a7e6b8fbf0a240ffca71ba9bdcfaaf4c3f00e476",
     "kind": "arcgis:layer"
@@ -1248,7 +1244,7 @@
     "kind": "myinfo:network"
   },
   "metro-do-porto-gtfs-feed": {
-    "resourceKey": "gtfs:gtfs:static:a113af14d4555704c0eb69632e915939baa919a28f831377317b8bda80daeb9d",
+    "resourceKey": "gtfs:gtfs:static:292aeb21ee240e7f607abfcf4b113dc4b89851f2090b9fb9fdfaede963cbafaf",
     "kind": "gtfs:static"
   },
   "metro-lisboa-gtfs-feed": {
@@ -1312,7 +1308,7 @@
     "kind": "wfs:reference"
   },
   "oeiras-condicionalismos-via-publica-feed": {
-    "resourceKey": "wfs:wfs:reference:e8c33db0355a43e7ab63ee7f594ca8e49107b2f281ce8fe9a926ebc16d0ad7d8",
+    "resourceKey": "wfs:wfs:reference:39c9d02c4bfed300ccaa586a9b774147a9b9ebbd92c8a66cf4a4d2418bd0ebfa",
     "kind": "wfs:reference"
   },
   "oeiras-docas-bicicletas-feed": {

@@ -90,13 +90,12 @@ export const DGT_HOST = "ogcapi.dgterritorio.gov.pt";
  */
 
 /*
- * Every column the CRUS layer holds is asked for, `autor` and `objectid` included.
- * Walking the whole layer they are constant and redundant — `autor` is DGT on
- * all 234,768 parcels and `objectid` equals `fid` on every one — but they are
- * what the charter records about who drew a parcel and what the source calls
- * it, and a reader matching this against DGT's own systems needs them. `Autor`
+ * Every column the CRUS layer holds is asked for, including `autor` and its `fid`.
+ * Walking the whole layer, `autor` is DGT on every parcel, but it is what the
+ * charter records about who drew one and a reader matching this against DGT's
+ * own systems needs it. `Autor`
  * is also half of the pair that says whose data this is: DGT drew it, `fonte`
  * says which municipality's plan it came from.
  */
 export const CRUS_COLUMNS =
-  "objectid,dtcc,municipio,designacao_no_plano,classe_2021,categoria_2021,escala_origem,fonte,area_ha,autor,data_pub_origem,registo_ou_deposito,situacao_pdm,codigo";
+  "fid,dtcc,municipio,designacao_no_plano,classe_2021,categoria_2021,escala_origem,fonte,area_ha,autor,data_pub_origem,registo_ou_deposito,situacao_pdm,codigo";

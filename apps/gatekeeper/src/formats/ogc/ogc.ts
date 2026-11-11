@@ -28,7 +28,9 @@ const DEFAULT_PAGE_SIZE = 500;
 /** Requests per collection, unless the configuration names another number: politeness, and a bound on the walk. */
 const DEFAULT_MAX_PAGES = 100;
 const PAGE_SIZE_LIMIT = 5_000;
-const PAGE_COUNT_LIMIT = 500;
+const CONFIG_PAGE_COUNT_LIMIT = 500;
+/** A service may cap responses far below the requested page size; CRUS currently needs about 2,350 pages of 100. */
+const WALK_PAGE_LIMIT = 5_000;
 /** Redirects followed, each one re-validated against the allowlist before it is fetched. */
 const MAX_REDIRECTS = 3;
 /**
@@ -198,7 +200,7 @@ function parseConfig(config: SourceConfig, hosts: ReadonlySet<string>): Validate
     collection,
     geometry: normalizeGeometry(config.geometry ?? "include"),
     pageSize: boundedInteger(config.pageSize, DEFAULT_PAGE_SIZE, PAGE_SIZE_LIMIT, "pageSize"),
-    maxPages: boundedInteger(config.maxPages, DEFAULT_MAX_PAGES, PAGE_COUNT_LIMIT, "maxPages"),
+    maxPages: boundedInteger(config.maxPages, DEFAULT_MAX_PAGES, CONFIG_PAGE_COUNT_LIMIT, "maxPages"),
   };
   const properties = normalizeProperties(config.properties);
   if (properties) validated.properties = properties;
@@ -369,7 +371,7 @@ function unsafeParsed(config: SourceConfig): ValidatedConfig {
     collection: (config.collection ?? "").trim(),
     geometry: normalizeGeometry(config.geometry ?? "include"),
     pageSize: boundedInteger(config.pageSize, DEFAULT_PAGE_SIZE, PAGE_SIZE_LIMIT, "pageSize"),
-    maxPages: boundedInteger(config.maxPages, DEFAULT_MAX_PAGES, PAGE_COUNT_LIMIT, "maxPages"),
+    maxPages: boundedInteger(config.maxPages, DEFAULT_MAX_PAGES, CONFIG_PAGE_COUNT_LIMIT, "maxPages"),
   };
   if (!COLLECTION_PATTERN.test(validated.collection)) {
     throw new GatekeeperError("collection must match ^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$", "invalid-config");
@@ -563,8 +565,10 @@ async function* features(
    * the walk. Each is held as a digest, so a national collection costs a few
    * megabytes rather than the tens its keys would.
    */
-  const seen = new SeenIdentities(PAGE_SIZE_LIMIT * PAGE_COUNT_LIMIT);
-  for (let pageNumber = 0; pageNumber < config.maxPages; pageNumber += 1) {
+  const seen = new SeenIdentities(cap);
+  // Some services cap each response below the requested page size. The feature cap remains `pageSize × maxPages`;
+  // the separate page bound prevents an upstream `next` loop without assuming the service honours our limit.
+  for (let pageNumber = 0; pageNumber < WALK_PAGE_LIMIT; pageNumber += 1) {
     let page = openPage(response);
     let count = 0;
     /*
@@ -633,12 +637,14 @@ async function* features(
      * from a collection that grew since it was counted: if features come back,
      * the per-feature check above refuses them rather than truncating quietly.
      */
-    if (pageNumber + 1 === config.maxPages) {
+    if (yielded >= cap) {
       if (expected !== undefined && expected <= cap) {
-        invalid("OGC API Features offered more pages than the count it reported allows");
+        // Read one courtesy page when the count divides exactly by the service's real page size. A non-empty page is
+        // rejected by the per-feature cap or count checks above, rather than silently truncating a growing collection.
+      } else {
+        // A declared partial cap must not fetch an extra page that will never be consumed.
+        return;
       }
-      // A declared partial cap must not fetch an extra page that will never be consumed.
-      return;
     }
     offset = next;
     url = buildItemsUrl(config, offset);
@@ -646,6 +652,7 @@ async function* features(
     assertUpstream(response, "items");
     assertWgs84(response.headers, config);
   }
+  invalid(`OGC API Features offered more than ${WALK_PAGE_LIMIT} pages`);
 }
 
 /** A feature's own identity, for the duplicate check; a service that omits `id` gets no check. */

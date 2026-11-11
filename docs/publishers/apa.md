@@ -7,12 +7,12 @@ stations, groundwater, flood alerts, drought), and its reference layers.
 
 APA is read through four libraries, and they are split so that no value is published twice:
 
-| Library    | Where                                                     | What                                                                                                                                                                                                                                              |
-| ---------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `arcgis`   | `sniambgeoogc.apambiente.pt` (SNIAmb)                     | Reference layers: station locations, beaches and their current water quality, flood marks, landfills, combustion plants, impact assessments, EMAS sites, waste infrastructure and operators; live beach occupancy; radioactivity readings (SIRAD) |
-| `snirh`    | `snirh.apambiente.pt` (SNIRH, the water resources system) | Every measurement, with its history: the station database and three monthly bulletins                                                                                                                                                             |
-| `infoagua` | `infoagua.apambiente.pt` (InfoÁgua, the public water app) | What only InfoÁgua publishes: each watched station's flood alert, each basin's drought index, each reservoir's capacity and uses, and the hourly flow into and out of each reservoir it watches                                                   |
-| `qualar`   | `qualar.apambiente.pt` (QualAr, the air quality system)   | The latest hour of each pollutant at every station of the national air quality network                                                                                                                                                            |
+| Library    | Where                                                                       | What                                                                                                                                                                                                             |
+| ---------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `arcgis`   | `inspire.apambiente.pt` (INSPIRE) and `sniambgeoogc.apambiente.pt` (SNIAmb) | INSPIRE carries air-quality, hydrometric and RADNET stations, bathing waters, CELE installations and waste facilities. SNIAmb still carries the reference layers for which APA publishes no working replacement. |
+| `snirh`    | `snirh.apambiente.pt` (SNIRH, the water resources system)                   | Every measurement, with its history: the station database and three monthly bulletins                                                                                                                            |
+| `infoagua` | `infoagua.apambiente.pt` (InfoÁgua, the public water app)                   | What only InfoÁgua publishes: each watched station's flood alert, each basin's drought index, each reservoir's capacity and uses, and the hourly flow into and out of each reservoir it watches                  |
+| `qualar`   | `qualar.apambiente.pt` (QualAr, the air quality system)                     | The latest hour of each pollutant at every station of the national air quality network                                                                                                                           |
 
 InfoÁgua shows the last day or two of SNIRH's readings at the stations it watches for floods,
 sooner than SNIRH does. Two SNIRH feeds take their **live** readings from it, because SNIRH itself now
@@ -43,6 +43,7 @@ our first collection.
 
 No credentials. SNIRH has no API: the `snirh` library reads what its own pages read.
 
+- **INSPIRE needs a browser identity from Cloudflare.** Its ArcGIS services answer ordinary browsers and local requests, but return 520 to a Worker carrying the crawler identity. APA's publisher host entry therefore uses the same common Chrome User-Agent as SNIRH.
 - **Station lists need a session.** The station database keeps its filter in a PHP session. The
   library posts the form (network, parameter, and an empty `f_estado`: every station, since one SNIRH
   lists as inactive can still report) to

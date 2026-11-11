@@ -44,6 +44,11 @@ export const PUBLISHER: PublisherDefinition = {
     // A live collection of river levels or rain reads about ninety station pages of this small app: one a second.
     { host: "infoagua.apambiente.pt", minIntervalSeconds: 1 },
     "sniambgeoogc.apambiente.pt",
+    {
+      host: "inspire.apambiente.pt",
+      // APA's INSPIRE ArcGIS services return 520 to Cloudflare's crawler identity but answer a normal browser identity.
+      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    },
     // QualAr shares its server with SNIRH, which blocked our name after a busy history walk: at most one request every
     // five seconds, under our own name.
     { host: "qualar.apambiente.pt", minIntervalSeconds: 5 },

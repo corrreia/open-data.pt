@@ -16,7 +16,7 @@ export const FEED = defineFeed(WFS_DEPLOYMENT, {
     host: "oeirasinterativa.oeiras.pt",
     path: "/gis/services/dados_abertos/wfs",
     typeName: "dados_abertos:w_condicionalismos_via_publica",
-    idField: "@id",
+    idField: "id",
     srsName: "EPSG:4326",
     dateFields: "ultima_atualizacao",
     dateOnlyFields: "data_prevista_inicio,data_prevista_conclusao",

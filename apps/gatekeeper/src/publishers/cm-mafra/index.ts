@@ -3,7 +3,6 @@ import { FEED as mafraCentrosSaude } from "./feeds/mafra-centros-saude";
 import { FEED as mafraCiclovias } from "./feeds/mafra-ciclovias";
 import { FEED as mafraCircuitosPedestresBtt } from "./feeds/mafra-circuitos-pedestres-btt";
 import { FEED as mafraEcopontosContentores } from "./feeds/mafra-ecopontos-contentores";
-import { FEED as mafraEquipamentosCultura } from "./feeds/mafra-equipamentos-cultura";
 import { FEED as mafraEquipamentosEscolares } from "./feeds/mafra-equipamentos-escolares";
 import { FEED as mafraEquipamentosSociais } from "./feeds/mafra-equipamentos-sociais";
 import { FEED as mafraEspacosJogoRecreio } from "./feeds/mafra-espacos-jogo-recreio";
@@ -28,7 +27,6 @@ export const PUBLISHER: PublisherDefinition = {
     mafraCiclovias,
     mafraCircuitosPedestresBtt,
     mafraEcopontosContentores,
-    mafraEquipamentosCultura,
     mafraEquipamentosEscolares,
     mafraEquipamentosSociais,
     mafraEspacosJogoRecreio,
