@@ -163,6 +163,10 @@
     "resourceKey": "arcgis:arcgis:layer:9bd008921a09d481d7a4be47af8aca3641f43bc03fd873d3c05495986f7cf227",
     "kind": "arcgis:layer"
   },
+  "apa-public-lagoons-feed": {
+    "resourceKey": "arcgis:arcgis:layer:a58bb3a412cbb1710ece601a41a3c0fdbf95dcf32e21eb3bff64af49c24b046f",
+    "kind": "arcgis:layer"
+  },
   "apa-radioactivity-aerosols-feed": {
     "resourceKey": "arcgis:arcgis:layer:7b4432a18d69f0c9bcfaf19c88d90c68fa6bbd22d6ec2b87d8b755b434fe5835",
     "kind": "arcgis:layer"
@@ -177,6 +181,10 @@
   },
   "apa-radnet-stations-feed": {
     "resourceKey": "arcgis:arcgis:layer:8c237c0e2d456cc96351f2b3544018f7e8fca563d51bffc3a2482753072be7fc",
+    "kind": "arcgis:layer"
+  },
+  "apa-river-water-bodies-feed": {
+    "resourceKey": "arcgis:arcgis:layer:d27508ea8fb29a65b2c54f2f7ae9a13016127df2793abc8545a47cae600196fc",
     "kind": "arcgis:layer"
   },
   "apa-seveso-establishments-feed": {
