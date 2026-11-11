@@ -566,6 +566,7 @@ async function* features(
    * megabytes rather than the tens its keys would.
    */
   const seen = new SeenIdentities(cap);
+  const declaredComplete = expected !== undefined && expected <= cap;
   // Some services cap each response below the requested page size. The feature cap remains `pageSize × maxPages`;
   // the separate page bound prevents an upstream `next` loop without assuming the service honours our limit.
   for (let pageNumber = 0; pageNumber < WALK_PAGE_LIMIT; pageNumber += 1) {
@@ -580,6 +581,8 @@ async function* features(
     for (;;) {
       try {
         for await (const feature of page.features) {
+          // A walk declared partial or unknown up front ends at the cap, which a service's short pages can put mid-page.
+          if (yielded >= cap && !declaredComplete) return;
           count += 1;
           yielded += 1;
           // Never truncate to a stale count: a collection that grew between the
@@ -638,7 +641,7 @@ async function* features(
      * the per-feature check above refuses them rather than truncating quietly.
      */
     if (yielded >= cap) {
-      if (expected !== undefined && expected <= cap) {
+      if (declaredComplete) {
         // Read one courtesy page when the count divides exactly by the service's real page size. A non-empty page is
         // rejected by the per-feature cap or count checks above, rather than silently truncating a growing collection.
       } else {

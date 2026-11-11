@@ -673,6 +673,14 @@ describe("OGC API Features membership safety", () => {
     expect(featureIds(await readDocument(fetched))).toHaveLength(6);
   });
 
+  it("stops a partial walk at the cap when the cap falls inside a short page", async () => {
+    // The service answers four features where six were asked for, so the cap of six ends partway through page two.
+    const fetcher = serviceFetcher((offset) => itemsPage({ count: 4, matched: 100, first: offset, next: offset + 4 }), 100);
+    const fetched = await collectOgcFeed({ ...config, pageSize: "6", maxPages: "1" }, hosts, fetcher);
+    expect(bodyOf(fetched).completeness).toBe("partial");
+    expect(featureIds(await readDocument(fetched))).toHaveLength(6);
+  });
+
   it("validates the last page's envelope, not only the pages before it", async () => {
     // The final page lies about its count; nothing follows it to force the check.
     const fetcher = serviceFetcher(() => itemsPage({ count: 2, returned: 9, matched: 2 }), 2);
