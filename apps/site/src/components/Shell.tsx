@@ -99,6 +99,16 @@ export function Shell({ section, children }: { section: Section; children: React
         <a className="skip-link" href="#content">
           Skip to content
         </a>
+        {/* A strip above the header for one piece of news; it scrolls away with the page and is taken out when the news is old. */}
+        <aside aria-label="Announcement" className="border-b border-kumo-line bg-kumo-tint">
+          <p className="mx-auto w-full max-w-7xl px-4 py-1.5 text-center text-sm text-kumo-default sm:px-6">
+            <span className="mr-2 rounded-sm bg-kumo-brand px-1.5 py-0.5 text-xs font-semibold text-white">Beta</span>
+            Portugal's weather, built on this data: forecasts, warnings and stations from IPMA.{" "}
+            <a href="https://weather.open-data.pt/" className="font-medium whitespace-nowrap text-kumo-link underline">
+              Open weather.open-data.pt
+            </a>
+          </p>
+        </aside>
         {/* Sticky from md up; on phones the two-row header scrolls away instead of covering a third of the screen. */}
         <header className="relative z-40 border-b md:sticky md:top-0 border-kumo-line bg-[color-mix(in_srgb,var(--color-kumo-canvas)_88%,transparent)] backdrop-blur-md">
           <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 sm:px-6">

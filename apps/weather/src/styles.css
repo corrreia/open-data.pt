@@ -1,0 +1,145 @@
+/* weather.open-data.pt on Kumo: Cloudflare's components, with a cool neutral scale and one blue. */
+@source "../node_modules/@cloudflare/kumo/dist/**/*.{js,jsx}";
+@import "@cloudflare/kumo/styles";
+@import "tailwindcss";
+
+/*
+ * Kumo's semantic tokens, each written once for light and dark with light-dark(). The neutrals
+ * lean a little towards the blue of the accent; the status colours keep their meaning in both.
+ */
+@theme {
+  --font-sans: "Archivo Variable", "Helvetica Neue", Arial, system-ui, sans-serif;
+
+  --text-color-kumo-default: light-dark(oklch(0.25 0.02 245), oklch(0.93 0.008 245));
+  --text-color-kumo-strong: light-dark(oklch(0.18 0.02 245), oklch(0.985 0.004 245));
+  --text-color-kumo-subtle: light-dark(oklch(0.46 0.02 245), oklch(0.75 0.012 245));
+  --text-color-kumo-placeholder: light-dark(oklch(0.55 0.015 245), oklch(0.66 0.012 245));
+  --text-color-kumo-inactive: light-dark(oklch(0.7 0.012 245), oklch(0.5 0.012 245));
+  --text-color-kumo-brand: light-dark(oklch(0.45 0.13 245), oklch(0.78 0.11 240));
+  --text-color-kumo-link: light-dark(oklch(0.45 0.13 245), oklch(0.78 0.11 240));
+  --text-color-kumo-success: light-dark(#1b7a4f, #4fc98a);
+  --text-color-kumo-warning: light-dark(#a85400, #f0a25a);
+  --text-color-kumo-danger: light-dark(#b3261e, #f08a80);
+  --text-color-kumo-info: light-dark(#2f66c4, #7fa6f0);
+
+  --color-kumo-canvas: light-dark(oklch(0.965 0.005 245), oklch(0.19 0.012 245));
+  --color-kumo-base: light-dark(oklch(0.995 0.002 245), oklch(0.235 0.013 245));
+  --color-kumo-elevated: light-dark(oklch(0.978 0.004 245), oklch(0.215 0.012 245));
+  --color-kumo-recessed: light-dark(oklch(0.948 0.007 245), oklch(0.205 0.012 245));
+  --color-kumo-control: light-dark(oklch(0.997 0.002 245), oklch(0.25 0.013 245));
+  --color-kumo-overlay: light-dark(oklch(0.995 0.002 245), oklch(0.26 0.013 245));
+  --color-kumo-interact: light-dark(oklch(0.87 0.012 245), oklch(0.37 0.014 245));
+  --color-kumo-tint: light-dark(oklch(0.94 0.025 245), oklch(0.3 0.04 245));
+  --color-kumo-fill: light-dark(oklch(0.925 0.009 245), oklch(0.31 0.014 245));
+  --color-kumo-fill-hover: light-dark(oklch(0.885 0.011 245), oklch(0.36 0.015 245));
+  --color-kumo-line: light-dark(oklch(0.87 0.011 245), oklch(0.36 0.014 245));
+  --color-kumo-hairline: light-dark(oklch(0.905 0.009 245), oklch(0.31 0.013 245));
+  --color-kumo-focus: light-dark(oklch(0.45 0.13 245), oklch(0.78 0.11 240));
+  --color-kumo-brand: light-dark(oklch(0.45 0.13 245), oklch(0.6 0.13 245));
+  --color-kumo-brand-hover: light-dark(oklch(0.38 0.12 245), oklch(0.66 0.13 245));
+  --color-kumo-contrast: light-dark(oklch(0.25 0.03 245), oklch(0.94 0.02 245));
+  --color-kumo-success: light-dark(#1b7a4f, #4fc98a);
+  --color-kumo-success-tint: light-dark(oklch(0.94 0.05 158), oklch(0.3 0.05 158));
+  --color-kumo-warning: light-dark(#a85400, #f0a25a);
+  --color-kumo-warning-tint: light-dark(oklch(0.95 0.06 75), oklch(0.32 0.06 70));
+  --color-kumo-danger: light-dark(#b3261e, #f08a80);
+  --color-kumo-danger-tint: light-dark(oklch(0.95 0.05 25), oklch(0.32 0.06 25));
+  --color-kumo-info: light-dark(#2f66c4, #7fa6f0);
+  --color-kumo-info-tint: light-dark(oklch(0.94 0.04 262), oklch(0.3 0.05 262));
+
+  /* Kumo sets 13px text at 1.18; anything that wraps needs room between its lines. */
+  --text-sm--line-height: calc(20 / 13);
+}
+
+:root {
+  color-scheme: light dark;
+}
+
+html {
+  background: var(--color-kumo-canvas);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100dvh;
+  font-family: var(--font-sans);
+  background: var(--color-kumo-canvas);
+  color: var(--text-color-kumo-default);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Kumo portals its menus to the end of <body>: isolated, the whole page sits below them. */
+#root {
+  isolation: isolate;
+}
+
+/*
+ * One focus indicator for everything a keyboard reaches: outside Tailwind's layers, so it wins
+ * over an outline-none, and an outline survives forced-colours mode.
+ */
+:focus-visible {
+  outline: 2px solid var(--color-kumo-focus);
+  outline-offset: 2px;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+/* The weather glyphs: ink for clouds, and a colour only where it says something (sun, rain, lightning). */
+.weather {
+  fill: none;
+  stroke: var(--text-color-kumo-default);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.weather .sun {
+  fill: #f6c445;
+  stroke: #b97c08;
+}
+
+.weather .rays {
+  stroke: #b97c08;
+}
+
+.weather .cloud {
+  fill: var(--color-kumo-base);
+}
+
+.weather .rain {
+  stroke: light-dark(#1f6fb5, #7db8ee);
+  stroke-width: 2;
+}
+
+.weather .bolt {
+  fill: #f6c445;
+  stroke: #8a5d06;
+  stroke-width: 1;
+}
+
+.weather .snow,
+.weather .mist {
+  stroke: var(--text-color-kumo-subtle);
+}
+
+/* Where a row of tabs runs past the edge, it fades there, so there is seen to be more. */
+.scroll-fade {
+  /* The fade is the cue; a scrollbar under a row of tabs is only clutter. */
+  scrollbar-width: none;
+  mask-image: linear-gradient(90deg, #000 calc(100% - 2.5rem), transparent);
+}
+
+@media (min-width: 64rem) {
+  .scroll-fade {
+    mask-image: none;
+  }
+}
