@@ -4,7 +4,7 @@ import { IPMA_DEPLOYMENT, IPMA_NORMALIZER, IPMA_TRANSFORMER, collectIpmaFeed } f
 export const FEED = defineFeed(IPMA_DEPLOYMENT, {
   slug: "ipma-uv-index-feed",
   title: "IPMA UV index forecast",
-  description: "Daily UV index forecasts by IPMA forecast location and period.",
+  description: "The UV index IPMA forecasts for each of its forecast places and day, with the hours of its peak when IPMA gives them.",
   licence: "ipma-terms",
   attribution: "Instituto Português do Mar e da Atmosfera (IPMA)",
   topics: ["environment", "weather"],

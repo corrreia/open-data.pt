@@ -4,7 +4,8 @@ import { IPMA_DEPLOYMENT, IPMA_NORMALIZER, IPMA_TRANSFORMER, collectIpmaFeed } f
 export const FEED = defineFeed(IPMA_DEPLOYMENT, {
   slug: "ipma-weather-warnings-feed",
   title: "IPMA weather warnings",
-  description: "Weather warnings by district or island, with severity and validity periods.",
+  description:
+    "IPMA's weather warnings by warning area (a district, or a part of Madeira or the Azores), with their severity and validity, and the forecast places IPMA lists in each area.",
   licence: "ipma-terms",
   attribution: "Instituto Português do Mar e da Atmosfera (IPMA)",
   topics: ["environment", "weather"],

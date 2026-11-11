@@ -4,7 +4,7 @@ import { IPMA_DEPLOYMENT, IPMA_NORMALIZER, IPMA_TRANSFORMER, collectIpmaFeed } f
 export const FEED = defineFeed(IPMA_DEPLOYMENT, {
   slug: "ipma-fire-risk-feed",
   title: "IPMA municipal fire risk",
-  description: "Three-day rural fire danger forecasts by municipality code.",
+  description: "The rural fire danger IPMA forecasts for each municipality of mainland Portugal, by its code, for today and the two days after.",
   licence: "ipma-terms",
   attribution: "Instituto Português do Mar e da Atmosfera (IPMA)",
   topics: ["environment"],
