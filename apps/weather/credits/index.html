@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#060a12" />
+    <meta name="description" content="De onde vêm os dados de weather.open-data.pt, quem os publica e sob que licença." />
+    <title>Créditos · weather.open-data.pt</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='5' fill='%23f2b84b'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="/src/credits.css" />
+  </head>
+  <body>
+    <main>
+      <p><a href="/">← Voltar ao mapa</a></p>
+      <h1>Créditos</h1>
+      <p>
+        Tudo o que este mapa mostra é publicado por organismos públicos portugueses e chega aqui através de
+        <a href="https://open-data.pt/">open-data.pt</a>, que recolhe e serve os dados tal como cada um os publica. Os dados são de quem os publica; o que este site lhes faz está
+        descrito em cada linha.
+      </p>
+
+      <h2>Dados</h2>
+      <ul id="sources">
+        <li>A ler as fontes…</li>
+      </ul>
+
+      <h2>O que é calculado aqui</h2>
+      <ul>
+        <li>
+          <b>Relevo.</b> Não existe um modelo de elevação em open-data.pt. A altura do terreno é interpolada entre os vértices geodésicos e os cumes principais, com a costa ao
+          nível do mar. Esses marcos estão em pontos altos, por isso os vales aparecem mais rasos do que são.
+        </li>
+        <li><b>Temperatura.</b> A cor do terreno é interpolada entre as leituras das estações, pela distância. Não conhece a altitude nem o mar: não é uma previsão.</li>
+        <li><b>Vento.</b> Cada anemómetro roda à velocidade medida na estação. Os dados trazem a velocidade e não a direção.</li>
+        <li><b>Albufeiras.</b> A largura de cada copo segue a capacidade da albufeira e o enchimento segue o último volume lido.</li>
+        <li><b>Luz.</b> A posição do sol é calculada para a hora de Lisboa, sem dados externos.</li>
+      </ul>
+
+      <h2>Software</h2>
+      <ul>
+        <li><a href="https://threejs.org/">three.js</a>, licença MIT</li>
+        <li><a href="https://github.com/mapbox/delaunator">Delaunator</a>, licença ISC</li>
+      </ul>
+
+      <p class="quiet">O código deste site está em <a href="https://github.com/corrreia/open-data.pt">github.com/corrreia/open-data.pt</a>, em <code>apps/weather</code>.</p>
+    </main>
+    <script type="module" src="/src/credits.ts"></script>
+  </body>
+</html>

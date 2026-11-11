@@ -13,7 +13,6 @@ const canvas = document.querySelector("canvas");
 const status = element("status");
 const clock = element("clock");
 const readout = element("readout");
-const credits = element("credits");
 const tip = element("tip");
 const live = element("live");
 const scale = element("scale");
@@ -69,15 +68,6 @@ async function open(): Promise<void> {
         : `${Math.abs(reading.latitude).toFixed(3)}° N  ${Math.abs(reading.longitude).toFixed(3)}° W\n≈ ${WHOLE.format(Math.round(reading.metres / 10) * 10)} m`;
   };
 
-  // An attribution reads "publisher — work": name each publisher once, with the works drawn from.
-  const marks = manifest.sources.reduce((sum, source) => (source.product === "dgt-caop-trocos" ? sum : sum + source.rows), 0);
-  const works = new Map<string, string[]>();
-  for (const source of manifest.sources) {
-    const [publisher = source.attribution, work = source.title] = source.attribution.split(" — ");
-    works.set(publisher, [...(works.get(publisher) ?? []), work]);
-  }
-  const publishers = [...works].map(([publisher, drawn]) => `${publisher} (${drawn.join("; ")})`).join(", ");
-  credits.textContent = `Relevo interpolado entre ${WHOLE.format(marks)} vértices geodésicos e cumes, não é um modelo de elevação; temperatura interpolada entre estações. Dados: ${publishers}, CC BY; observações do IPMA; albufeiras da APA (SNIRH e InfoÁgua). Tudo via open-data.pt.`;
   status.hidden = true;
 
   // Rivers and lagoons are baked like the terrain; a build without them still draws everything else.

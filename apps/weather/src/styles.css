@@ -115,6 +115,12 @@ footer {
   max-width: 70ch;
 }
 
+#credits a {
+  color: var(--ink);
+  pointer-events: auto;
+  text-underline-offset: 3px;
+}
+
 #hint {
   color: var(--ink);
   opacity: 0.75;
