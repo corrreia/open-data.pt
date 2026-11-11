@@ -132,12 +132,7 @@ const ENDPOINTS: FeedEndpoints = {
   seismic: ["/open-data/observation/seismic/7.json", "/open-data/observation/seismic/3.json"],
   warnings: ["/open-data/forecast/warnings/warnings_www.json", "/open-data/distrits-islands.json"],
   "uv-index": ["/open-data/forecast/meteorology/uv/uv.json", "/open-data/distrits-islands.json"],
-  "fire-risk": [
-    "/open-data/forecast/meteorology/rcm/rcm-d0.json",
-    "/open-data/forecast/meteorology/rcm/rcm-d1.json",
-    "/open-data/forecast/meteorology/rcm/rcm-d2.json",
-    "/open-data/distrits-islands.json",
-  ],
+  "fire-risk": ["/open-data/forecast/meteorology/rcm/rcm-d0.json", "/open-data/forecast/meteorology/rcm/rcm-d1.json", "/open-data/forecast/meteorology/rcm/rcm-d2.json"],
   "sea-forecast": [
     "/open-data/forecast/oceanography/daily/hp-daily-sea-forecast-day0.json",
     "/open-data/forecast/oceanography/daily/hp-daily-sea-forecast-day1.json",
@@ -318,7 +313,7 @@ function combinedDocument(feed: Exclude<IpmaApiFeed, IpmaDatasetFeed>, resources
     case "uv-index":
       return joinJson(['{"uv":', resources[0]!, ',"cities":', resources[1]!, "}"]);
     case "fire-risk":
-      return joinJson(['{"forecasts":[', resources[0]!, ",", resources[1]!, ",", resources[2]!, '],"municipalities":', resources[3]!, "}"]);
+      return joinJson(['{"forecasts":[', resources[0]!, ",", resources[1]!, ",", resources[2]!, "]}"]);
     case "sea-forecast":
       return joinJson(['{"forecasts":[', resources[0]!, ",", resources[1]!, ",", resources[2]!, '],"locations":', resources[3]!, "}"]);
   }

@@ -31,7 +31,7 @@ describe("IPMA transformers", () => {
   it("creates latest station records and one hourly series per measure", async () => {
     const result = await transformer.transform(fixture("station-observations"), context("station-observations"));
 
-    expect(result.transformer).toEqual({ id: "ipma-open-data", version: "4" });
+    expect(result.transformer).toEqual({ id: "ipma-open-data", version: "5" });
     expect(result.products.map((product) => [product.slug, product.role])).toEqual([
       ["ipma-stations-latest", "current-state"],
       ["ipma-observations", "time-series"],

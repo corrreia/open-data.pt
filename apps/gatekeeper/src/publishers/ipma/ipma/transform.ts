@@ -65,7 +65,7 @@ const WARNING_SCHEMA: CanonicalSchema = {
   fields: [
     field("warningId", "identifier", false),
     field("areaCode", "category", false),
-    field("area", "category", false),
+    field("locations", "json", false),
     field("type", "category", false),
     { ...field("level", "category", false), display: { badge: { colorField: "levelColor" } } },
     field("levelColor", "color", false),
@@ -83,7 +83,7 @@ const UV_SCHEMA: CanonicalSchema = {
     field("latitude", "latitude", false),
     field("longitude", "longitude", false),
     field("date", "date", false),
-    field("period", "category", false),
+    field("period", "category", true),
     field("uvIndex", "number", false, "UV index"),
   ],
 };
@@ -92,7 +92,6 @@ const FIRE_RISK_SCHEMA: CanonicalSchema = {
   fields: [
     field("fireRiskId", "identifier", false),
     field("municipalityCode", "identifier", false),
-    field("municipality", "category", false),
     field("latitude", "latitude", false),
     field("longitude", "longitude", false),
     field("riskLevel", "number", false),
@@ -161,7 +160,7 @@ const WIND_DIRECTIONS: readonly (string | null)[] = [null, "N", "NE", "E", "SE",
 
 export class IpmaTransformer {
   readonly id = "ipma-open-data";
-  readonly version = "4";
+  readonly version = "5";
 
   async transform(bytes: Uint8Array, context: TransformContext): Promise<TransformResult> {
     let value: JsonValue;
@@ -458,7 +457,15 @@ function transformWarnings(root: JsonObject): Omit<TransformResult, "transformer
   if (!Array.isArray(root.warnings) || !isJsonObject(root.areas)) {
     throw new Error("IPMA warning document requires warnings and areas");
   }
-  const areas = lookup(root.areas.data, "idAreaAviso", "local");
+  // IPMA names a warning's area only by its code. What its list of places says of an area is which
+  // forecast places lie in it (Braga and Guimarães in BRG), so those are published, not one of them as its name.
+  const locations = new Map<string, string[]>();
+  for (const place of Array.isArray(root.areas.data) ? root.areas.data : []) {
+    if (!isJsonObject(place)) continue;
+    const code = nonEmptyString(place.idAreaAviso);
+    const name = nonEmptyString(place.local);
+    if (code && name) locations.set(code, [...(locations.get(code) ?? []), name]);
+  }
   const byId = new Map<string, CanonicalRecord>();
   let malformed = 0;
   let consolidated = 0;
@@ -485,7 +492,7 @@ function transformWarnings(root: JsonObject): Omit<TransformResult, "transformer
       payload: {
         warningId,
         areaCode,
-        area: areas.get(areaCode) ?? areaCode,
+        locations: locations.get(areaCode) ?? [],
         type,
         level,
         levelColor: WARNING_LEVELS[level].color,
@@ -539,7 +546,7 @@ function transformUvIndex(root: JsonObject): Omit<TransformResult, "transformer"
     throw new Error("IPMA UV document requires uv and cities");
   }
   const cities = locationLookup(root.cities.data);
-  const selected = new Map<string, { location: Location; date: string; period: string; uvIndex: number }>();
+  const selected = new Map<string, { location: Location; date: string; period: string | null; uvIndex: number }>();
   let rejected = 0;
   for (const value of root.uv) {
     if (!isJsonObject(value)) {
@@ -550,9 +557,10 @@ function transformUvIndex(root: JsonObject): Omit<TransformResult, "transformer"
     const location = locationId ? cities.get(locationId) : undefined;
     const date = dateOnly(value.data);
     const periodId = identifier(value.idPeriodo);
-    const period = nonEmptyString(value.intervaloHora);
+    // IPMA leaves the hours of the peak blank outside the season it forecasts them for: the index still stands.
+    const period = nullableString(value.intervaloHora);
     const uvIndex = finiteNumber(value.iUv);
-    if (!locationId || !location || !date || !periodId || !period || uvIndex === null) {
+    if (!locationId || !location || !date || !periodId || uvIndex === null) {
       rejected += 1;
       continue;
     }
@@ -613,10 +621,7 @@ const FIRE_LEVELS = {
 } as const;
 
 function transformFireRisk(root: JsonObject): Omit<TransformResult, "transformer"> {
-  if (!Array.isArray(root.forecasts) || !isJsonObject(root.municipalities)) {
-    throw new Error("IPMA fire-risk document requires forecasts and municipalities");
-  }
-  const municipalityNames = municipalityLookup(root.municipalities.data);
+  if (!Array.isArray(root.forecasts)) throw new Error("IPMA fire-risk document requires forecasts");
   const records: CanonicalRecord[] = [];
   let candidates = 0;
   for (const forecast of root.forecasts) {
@@ -638,7 +643,6 @@ function transformFireRisk(root: JsonObject): Omit<TransformResult, "transformer
         payload: {
           fireRiskId,
           municipalityCode,
-          municipality: municipalityNames.get(municipalityCode) ?? municipalityCode,
           latitude,
           longitude,
           riskLevel,
@@ -751,20 +755,6 @@ function locationLookup(value: JsonValue | undefined): Map<string, Location> {
     if (id && name && latitude !== null && longitude !== null) {
       result.set(id, { id, name, latitude, longitude });
     }
-  }
-  return result;
-}
-
-function municipalityLookup(value: JsonValue | undefined): Map<string, string> {
-  const result = new Map<string, string>();
-  if (!Array.isArray(value)) return result;
-  for (const item of value) {
-    if (!isJsonObject(item)) continue;
-    const district = finiteNumber(item.idDistrito);
-    const municipality = finiteNumber(item.idConcelho);
-    const name = nonEmptyString(item.local);
-    if (district === null || municipality === null || !name) continue;
-    result.set(`${String(district).padStart(2, "0")}${String(municipality).padStart(2, "0")}`, name);
   }
   return result;
 }

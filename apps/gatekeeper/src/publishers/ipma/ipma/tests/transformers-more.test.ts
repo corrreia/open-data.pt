@@ -38,7 +38,7 @@ describe("IPMA additional transformers", () => {
     const product = result.products[0];
     const yellow = product?.records?.find((record) => record.payload.level === "yellow");
 
-    expect(result.transformer).toEqual({ id: "ipma-open-data", version: "4" });
+    expect(result.transformer).toEqual({ id: "ipma-open-data", version: "5" });
     expect(product).toMatchObject({
       slug: "ipma-warnings",
       role: "event-log",
@@ -48,8 +48,9 @@ describe("IPMA additional transformers", () => {
     expect(yellow).toMatchObject({
       validFrom: "2026-09-07T17:36:00.000Z",
       payload: {
-        area: "Évora",
         areaCode: "EVR",
+        // The forecast places IPMA lists in the area, not a name for it.
+        locations: ["Évora"],
         level: "yellow",
         levelColor: "#f9a825",
       },
@@ -98,10 +99,12 @@ describe("IPMA additional transformers", () => {
       period: "12h-15h",
       uvIndex: 7,
     });
+    // Out of season IPMA gives the index without the hours of its peak.
+    expect(reference?.records?.find((record) => record.payload.date === "2026-09-09" && record.payload.period === null)?.payload).toMatchObject({ uvIndex: 2.7 });
     expect(reference?.watermark).toBeDefined();
   });
 
-  it("creates three-day fire-risk records with labels, colours, and municipality fallback", async () => {
+  it("creates three-day fire-risk records with labels and colours, by municipality code alone", async () => {
     const result = await transformer.transform(fixture("fire-risk"), context("fire-risk"));
     const product = result.products[0];
 
@@ -109,14 +112,12 @@ describe("IPMA additional transformers", () => {
     expect(product?.records).toHaveLength(6);
     expect(product?.records?.find((record) => record.entityKey === "0105:2026-09-07")?.payload).toMatchObject({
       municipalityCode: "0105",
-      municipality: "Aveiro",
       riskLevel: 1,
       riskLabel: "Reduzido",
       riskColor: "#2e7d32",
       forecastDate: "2026-09-07",
     });
     expect(product?.records?.find((record) => record.entityKey === "0101:2026-09-07")?.payload).toMatchObject({
-      municipality: "0101",
       riskLabel: "Moderado",
       riskColor: "#f9a825",
     });

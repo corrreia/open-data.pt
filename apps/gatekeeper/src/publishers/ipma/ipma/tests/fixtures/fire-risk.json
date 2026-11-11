@@ -69,21 +69,5 @@
         }
       }
     }
-  ],
-  "municipalities": {
-    "owner": "IPMA",
-    "country": "PT",
-    "data": [
-      {
-        "idRegiao": 1,
-        "idAreaAviso": "AVR",
-        "idConcelho": 5,
-        "globalIdLocal": 1010500,
-        "latitude": "40.6413",
-        "idDistrito": 1,
-        "local": "Aveiro",
-        "longitude": "-8.6535"
-      }
-    ]
-  }
+  ]
 }
