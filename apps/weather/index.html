@@ -34,21 +34,6 @@
           </label>
           <div id="wind-key" class="key" aria-hidden="true"><i style="--w: 8px"></i><b>10</b><i style="--w: 16px"></i><b>30</b><i style="--w: 28px"></i><b>60&nbsp;km/h</b></div>
           <label>
-            <input type="checkbox" name="temperature" checked />
-            <svg viewBox="0 0 28 16" aria-hidden="true">
-              <defs>
-                <linearGradient id="warmth">
-                  <stop offset="0" stop-color="#5d8fb3" />
-                  <stop offset="0.5" stop-color="#e9e0b8" />
-                  <stop offset="1" stop-color="#d9743f" />
-                </linearGradient>
-              </defs>
-              <rect x="2" y="3" width="24" height="10" fill="url(#warmth)" stroke="none" />
-            </svg>
-            <span>Temperatura</span><output></output>
-          </label>
-          <div id="scale" class="key" aria-hidden="true"></div>
-          <label>
             <input type="checkbox" name="warnings" checked />
             <svg viewBox="0 0 28 16" aria-hidden="true"><circle cx="14" cy="8" r="6" fill="#f2c200" fill-opacity="0.3" stroke="#f2c200" stroke-width="2" /></svg>
             <span>Avisos do IPMA</span><output></output>
@@ -61,6 +46,17 @@
             </svg>
             <span>Trovoada, 24 h</span><output></output>
           </label>
+        </fieldset>
+
+        <fieldset id="paints">
+          <legend>Cor do terreno</legend>
+          <label><input type="radio" name="paint" value="temperature" checked /><i class="swatch"></i><span>Temperatura</span></label>
+          <label
+            ><input type="radio" name="paint" value="rain" /><i class="swatch"></i><span>Chuva <small>na última hora</small></span></label
+          >
+          <label><input type="radio" name="paint" value="humidity" /><i class="swatch"></i><span>Humidade</span></label>
+          <label><input type="radio" name="paint" value="relief" /><i class="swatch relief"></i><span>Relevo</span></label>
+          <div id="scale" class="key" aria-hidden="true"></div>
         </fieldset>
 
         <fieldset>

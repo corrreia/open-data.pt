@@ -13,7 +13,7 @@ const USES: [product: string, use: string][] = [
   ["dgt-caop-trocos", "A linha de costa, a fronteira e os limites de distrito."],
   ["dgt-rgn-vertices-geodesicos", "Altitudes para o relevo."],
   ["dgt-serras-cumes-principais", "Altitudes dos cumes para o relevo."],
-  ["ipma-stations-latest", "Temperatura, humidade, chuva e vento em cada estação."],
+  ["ipma-stations-latest", "Temperatura, humidade, chuva da última hora e vento em cada estação."],
   ["ipma-warnings", "Os avisos meteorológicos em vigor em cada distrito."],
   ["dgt-caop-distritos", "O centro de cada distrito, onde os avisos são desenhados."],
   ["ipma-lightning-discharges", "As descargas elétricas das últimas 24 horas."],

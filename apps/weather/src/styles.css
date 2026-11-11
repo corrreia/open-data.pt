@@ -182,14 +182,26 @@ a:focus-visible {
   color: var(--faint);
 }
 
-label:has(input:not(:checked)) + .key {
+label:has(input:not(:checked)) + #wind-key {
+  display: none;
+}
+
+#scale[hidden] {
   display: none;
 }
 
 #scale {
   height: 8px;
-  margin-bottom: 20px;
+  margin: 8px 8px 24px;
   position: relative;
+}
+
+/* A measure's swatch is its own scale in small; the relief's is the land's tints. */
+.swatch {
+  width: 24px;
+  height: 10px;
+  margin-inline: 2px;
+  background: var(--scale, linear-gradient(90deg, #5f7f66, #c2bd85, #c9a274, #f1ece0));
 }
 
 #scale b {
@@ -366,4 +378,13 @@ button {
   #legend {
     transition: none;
   }
+}
+
+/* One of these is always chosen, so the others are quieter, not struck out. */
+#paints label:has(input:not(:checked)) span {
+  text-decoration: none;
+}
+
+#paints label:has(input:not(:checked)) .swatch {
+  opacity: 0.35;
 }

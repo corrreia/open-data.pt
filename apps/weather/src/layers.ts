@@ -30,7 +30,7 @@ export const TEMPERATURE_SCALE: [degrees: number, colour: number][] = [
   [44, 0x5e1a2b],
 ];
 
-function scaled(scale: readonly [value: number, colour: number][], value: number, into: THREE.Color): THREE.Color {
+function scaled(scale: readonly (readonly [value: number, colour: number])[], value: number, into: THREE.Color): THREE.Color {
   let below = scale[0] ?? [0, 0];
   for (const above of scale) {
     if (value <= above[0]) return into.setHex(below[1]).lerp(new THREE.Color(above[1]), above[0] === below[0] ? 0 : (value - below[0]) / (above[0] - below[0]));
@@ -56,39 +56,89 @@ function onTheMainland<Thing extends { longitude: number; latitude: number }>(ma
   });
 }
 
+/** Something the stations measure that the land can be coloured by. */
+export interface Measure {
+  /** What the legend calls it. */
+  name: string;
+  unit: string;
+  /** Value to colour, lowest first. */
+  scale: readonly (readonly [value: number, colour: number])[];
+  of(station: Station): number | undefined;
+}
+
+export const MEASURES = new Map<string, Measure>([
+  ["temperature", { name: "Temperatura", unit: "°C", scale: TEMPERATURE_SCALE, of: (station) => station.temperature }],
+  [
+    "rain",
+    {
+      name: "Chuva na última hora",
+      unit: "mm",
+      // Dry land stays the colour of the paper; rain darkens it through blue to the purple of a downpour.
+      scale: [
+        [0, 0xe9e0b8],
+        [0.2, 0xcfe0d8],
+        [1, 0x8fc1d9],
+        [4, 0x4f8fc4],
+        [10, 0x3a5aa8],
+        [25, 0x5b3a94],
+        [50, 0x7a1f6b],
+      ],
+      of: (station) => station.precipitation,
+    },
+  ],
+  [
+    "humidity",
+    {
+      name: "Humidade",
+      unit: "%",
+      scale: [
+        [20, 0xd9a05b],
+        [40, 0xe9e0b8],
+        [60, 0xb5d3c5],
+        [80, 0x6fa9c4],
+        [100, 0x2f5f9e],
+      ],
+      of: (station) => station.humidity,
+    },
+  ],
+]);
+
 /**
- * The land coloured by air temperature: at every point, the nearest stations' readings weighted by
- * distance. It is a picture of the readings, not a forecast model: it knows nothing of altitude or the sea.
+ * The land coloured by one thing the stations measure: at every point, the nearest stations'
+ * readings weighted by distance. It is a picture of the readings, not a forecast model: it knows
+ * nothing of altitude or the sea, and a shower between two stations is not on it.
  */
-export function temperatureLayer(map: MapScene, stations: readonly Station[]): Layer {
-  const placed = onTheMainland(map, stations).filter((station) => station.thing.temperature !== undefined);
+export function measureLayer(map: MapScene, stations: readonly Station[], measure: Measure): Layer {
   const field = new Heights(40);
-  for (const station of placed) field.add(station.point, station.thing.temperature ?? 0);
+  let readings = 0;
+  for (const station of onTheMainland(map, stations)) {
+    const value = measure.of(station.thing);
+    if (value === undefined) continue;
+    field.add(station.point, value);
+    readings++;
+  }
   return {
     show(visible) {
-      map.paint(visible && placed.length > 0 ? (point, into) => void scaled(TEMPERATURE_SCALE, field.at(point, 6, 12), into) : undefined);
+      map.paint(visible && readings > 0 ? (point, into) => void scaled(measure.scale, field.at(point, 6, 12), into) : undefined);
     },
-    spots: () =>
-      placed.map((station) => ({
-        point: station.point,
-        height: station.ground,
-        label: `${station.thing.name}\n${NUMBER.format(station.thing.temperature ?? 0)} °C${station.thing.humidity === undefined ? "" : ` · ${NUMBER.format(station.thing.humidity)} % humidade`}\nIPMA, ${HOUR.format(station.thing.observedAt)}`,
-      })),
+    spots: () => [],
   };
 }
 
 const COMPASS_NAMES = ["norte", "nordeste", "leste", "sueste", "sul", "sudoeste", "oeste", "noroeste"];
 
-function windLabel(station: Station): string {
-  const from = station.windFrom === undefined ? "" : ` de ${COMPASS_NAMES[Math.round(station.windFrom / 45) % 8] ?? ""}`;
-  return `${station.name}\nvento${from} a ${NUMBER.format(station.windSpeed ?? 0)} km/h\nIPMA, ${HOUR.format(station.observedAt)}`;
-}
-
-/** Where each station measures the wind, for the pointer to ask: the flow itself is drawn elsewhere. */
-export function windReadings(map: MapScene, stations: readonly Station[]): Spot[] {
-  return onTheMainland(map, stations)
-    .filter((station) => station.thing.windSpeed !== undefined)
-    .map((station) => ({ point: station.point, height: station.ground, label: windLabel(station.thing) }));
+/** Every station on the mainland, with all it last measured, for the pointer to ask. */
+export function stationReadings(map: MapScene, stations: readonly Station[]): Spot[] {
+  return onTheMainland(map, stations).map((station) => {
+    const { name, temperature, humidity, precipitation, windSpeed, windFrom, observedAt } = station.thing;
+    const from = windFrom === undefined ? "" : ` de ${COMPASS_NAMES[Math.round(windFrom / 45) % 8] ?? ""}`;
+    const lines = [
+      ...(temperature === undefined ? [] : [`${NUMBER.format(temperature)} °C${humidity === undefined ? "" : ` · ${NUMBER.format(humidity)} % de humidade`}`]),
+      ...(precipitation === undefined ? [] : [precipitation > 0 ? `${NUMBER.format(precipitation)} mm de chuva na última hora` : "sem chuva na última hora"]),
+      ...(windSpeed === undefined ? [] : [`vento${from} a ${NUMBER.format(windSpeed)} km/h`]),
+    ];
+    return { point: station.point, height: station.ground, label: `${name}\n${lines.join("\n")}\nIPMA, ${HOUR.format(observedAt)}` };
+  });
 }
 
 const TANK_HEIGHT = 5;
