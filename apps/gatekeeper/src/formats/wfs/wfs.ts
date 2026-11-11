@@ -106,6 +106,12 @@ export interface WfsReferenceConfig extends WfsCommonConfig {
   outputFormat?: string;
   /** `none` for a service that ignores `startIndex` and must be read whole. */
   paging?: string;
+  /**
+   * Written before the `idField` value to make each record's key. A layer once keyed by `@id` whose service now names
+   * features afresh on every request keeps the keys its records already carry: `w_condicionalismos_via_publica.` and
+   * `id` 1418 give `w_condicionalismos_via_publica.1418`, as before.
+   */
+  idPrefix?: string;
   /** The coordinate system to ask for, where the layer is not stored in WGS 84. */
   srsName?: string;
 }
@@ -184,6 +190,7 @@ function validateReferenceConfig(config: SourceConfig, hosts: ReadonlySet<string
     "paging",
     "srsName",
     "filterPattern",
+    "idPrefix",
   ];
   for (const key of Object.keys(config)) if (!allowed.includes(key)) throw new GatekeeperError(`Unsupported WFS field: ${key}`, key === "url" ? "source-denied" : "invalid-config");
   const host = config.host?.trim().toLowerCase();
@@ -211,6 +218,10 @@ function validateReferenceConfig(config: SourceConfig, hosts: ReadonlySet<string
    * already stored in WGS 84 need not ask.
    */
   if (config.srsName !== undefined) normalized.srsName = token(config.srsName, "srsName", /^[A-Za-z0-9][A-Za-z0-9:._-]{0,60}$/u);
+  if (config.idPrefix !== undefined) {
+    if (normalized.idField === WFS_FEATURE_ID) throw new GatekeeperError("WFS idPrefix is for an idField attribute, not @id", "invalid-config");
+    normalized.idPrefix = token(config.idPrefix, "idPrefix", /^[A-Za-z0-9_.:-]{1,120}$/u);
+  }
   if (config.paging !== undefined) {
     if (config.paging !== WFS_NO_PAGING) throw new GatekeeperError(`WFS paging is either omitted or "${WFS_NO_PAGING}"`, "invalid-config");
     normalized.paging = WFS_NO_PAGING;

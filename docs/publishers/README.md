@@ -27,6 +27,7 @@ credential, a proxy, an unusual cadence, a permission, a known habit of the sour
 | [ANACOM](anacom.md)                                   | Their terms' conditions; files rebuilt nightly, looked up by code              |
 | [Ookla](ookla.md)                                     | Files bigger than a Worker, read by byte range; a non-commercial licence       |
 | [PeeringDB](peeringdb.md)                             | Permission to republish under their acceptable-use policy                      |
+| [Câmara Municipal de Águeda](cm-agueda.md)            | Off: their portal refuses Cloudflare, and who to ask to lift it                |
 
 ## Writing one
 

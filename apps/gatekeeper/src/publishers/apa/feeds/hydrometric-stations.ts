@@ -10,13 +10,13 @@ export const FEED = defineFeed(ARCGIS_DEPLOYMENT, {
   attribution: "Agência Portuguesa do Ambiente — SNIAmb",
   topics: ["environment"],
   config: {
-    host: "sniambgeoogc.apambiente.pt",
-    service: "getogc/rest/services/SNIAmb/Estacoes_hidrometricas/MapServer",
+    host: "inspire.apambiente.pt",
+    service: "arcgis/rest/services/INSPIRE/EF_Hidrometricas/MapServer",
     layer: "0",
   },
   policy: APA_POLICY,
   staleAfterSeconds: 172_800,
-  /** Once a day: layer 0 of the Estacoes_hidrometricas MapServer on sniambgeoogc.apambiente.pt — its metadata, then, when it has moved, every feature page by page. */
+  /** Once a day: APA's INSPIRE hydrometric-station layer, its metadata and every feature page. */
   fetch: ({ config, validator, library, fetch }) => collectArcgisFeed(config, validator, library.hosts, fetch),
   /** The layer's GeoJSON pages, streamed, into one record per feature with the layer's own schema. */
   transform: { normalizer: ARCGIS_NORMALIZER, streaming: (body, context) => ARCGIS_TRANSFORMER.transform(body, context) },

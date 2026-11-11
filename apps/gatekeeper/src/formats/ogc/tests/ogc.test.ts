@@ -637,7 +637,14 @@ describe("OGC API Features membership safety", () => {
     // the count cannot be trusted, so the promised complete membership fails.
     const fetcher = serviceFetcher((offset) => itemsPage({ count: 2, matched: 6, first: offset, next: offset + 2 }), 6);
     const fetched = await collectOgcFeed({ ...config, pageSize: "2", maxPages: "3" }, hosts, fetcher);
-    await expect(readDocument(fetched)).rejects.toThrow(/more pages than the count it reported allows/);
+    await expect(readDocument(fetched)).rejects.toThrow(/more than the 6 features/);
+  });
+
+  it("uses extra pages when the service caps responses below the requested page size", async () => {
+    const fetcher = serviceFetcher((offset) => itemsPage({ count: 2, matched: 6, first: offset, next: offset + 2 < 6 ? offset + 2 : undefined }), 6);
+    const fetched = await collectOgcFeed({ ...config, pageSize: "6", maxPages: "1" }, hosts, fetcher);
+    expect(bodyOf(fetched).completeness).toBe("complete");
+    expect(featureIds(await readDocument(fetched))).toHaveLength(6);
   });
 
   it("ends cleanly on the empty page pygeoapi links after the last full one", async () => {
@@ -662,6 +669,14 @@ describe("OGC API Features membership safety", () => {
   it("still stops cleanly at an explicit cap, which was declared partial up front", async () => {
     const fetcher = serviceFetcher((offset) => itemsPage({ count: 2, matched: 100, first: offset, next: offset + 2 }), 100);
     const fetched = await collectOgcFeed({ ...config, pageSize: "2", maxPages: "3" }, hosts, fetcher);
+    expect(bodyOf(fetched).completeness).toBe("partial");
+    expect(featureIds(await readDocument(fetched))).toHaveLength(6);
+  });
+
+  it("stops a partial walk at the cap when the cap falls inside a short page", async () => {
+    // The service answers four features where six were asked for, so the cap of six ends partway through page two.
+    const fetcher = serviceFetcher((offset) => itemsPage({ count: 4, matched: 100, first: offset, next: offset + 4 }), 100);
+    const fetched = await collectOgcFeed({ ...config, pageSize: "6", maxPages: "1" }, hosts, fetcher);
     expect(bodyOf(fetched).completeness).toBe("partial");
     expect(featureIds(await readDocument(fetched))).toHaveLength(6);
   });

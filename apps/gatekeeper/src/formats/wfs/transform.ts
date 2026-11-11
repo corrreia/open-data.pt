@@ -130,14 +130,15 @@ function featureRecord(value: JsonValue | undefined, config: SourceConfig, profi
   // A layer that names no identifier of its own is keyed by the identity the service gives the feature.
   const key = config.idField === WFS_FEATURE_ID ? value.id : properties[config.idField ?? ""];
   if ((!isJsonString(key) && !isJsonNumber(key)) || String(key) === "") return undefined;
+  const entityKey = `${config.idPrefix ?? ""}${String(key)}`;
   const payload: JsonObject = {};
   for (const item of profiles) payload[item.field] = canonical(properties[item.field], item.type);
   // A reference feature is identified, not dated: it carries no event time to keep.
-  if (config.feed === "reference") return { entityKey: String(key), payload };
+  if (config.feed === "reference") return { entityKey, payload };
   const eventTime = sourceDate(properties[config.eventTimeField ?? ""]);
   const sourcePublishedAt = sourceDate(properties[config.sourcePublishedAtField ?? ""]);
   if (!eventTime || !sourcePublishedAt) return undefined;
-  return { entityKey: String(key), eventTime, sourcePublishedAt, payload };
+  return { entityKey, eventTime, sourcePublishedAt, payload };
 }
 
 function canonical(value: JsonValue | undefined, type: FieldType): JsonValue {

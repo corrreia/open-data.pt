@@ -100,7 +100,7 @@
     "kind": "anepc:active-occurrences"
   },
   "apa-air-quality-stations-feed": {
-    "resourceKey": "arcgis:arcgis:layer:e6ec31b69a95520eb46a988cc7f738bdcbb63b859e9ce43d34986e7ce52116f5",
+    "resourceKey": "arcgis:arcgis:layer:838566eb4ca38286924e7d2b8565a769dd2801bf5069c86a22a590fcdea371ef",
     "kind": "arcgis:layer"
   },
   "apa-bathing-beaches-feed": {
@@ -108,7 +108,7 @@
     "kind": "arcgis:layer"
   },
   "apa-bathing-waters-feed": {
-    "resourceKey": "arcgis:arcgis:layer:bd8bd352dcd712c2cde1f4e88a8c03c57adc09919c3e6a6dce10e60294dccde4",
+    "resourceKey": "arcgis:arcgis:layer:ffc41b6e6fe8c579b7be53bd43516767b493cef0c46a6df2e62f90a41a1a9abb",
     "kind": "arcgis:layer"
   },
   "apa-beach-occupancy-feed": {
@@ -119,24 +119,36 @@
     "resourceKey": "arcgis:arcgis:layer:c2ac80737d8b6b52bf7b582532390c9c2702c60e0957ffc7cee72a890bf554cf",
     "kind": "arcgis:layer"
   },
+  "apa-drinking-water-protection-areas-feed": {
+    "resourceKey": "arcgis:arcgis:layer:8b1f725a252829805fd161ebea98d95c697e7e98e6eac690c5702c071cda4491",
+    "kind": "arcgis:layer"
+  },
   "apa-emas-organisations-feed": {
     "resourceKey": "arcgis:arcgis:layer:d266aaafc020dd88b175dc0ee6c30e5f935496b6ddde8210c4ec00574ae02020",
     "kind": "arcgis:layer"
   },
   "apa-emissions-trading-installations-feed": {
-    "resourceKey": "arcgis:arcgis:layer:f257dc8e2fda27ab065c1e15ca56b04c5527e83a39f8c639c5c752fcb81ca286",
+    "resourceKey": "arcgis:arcgis:layer:83b25ab7d1e73b2744a1da90ab863b9acff11ca094d0fe5befa981416bf62912",
     "kind": "arcgis:layer"
   },
   "apa-flood-marks-feed": {
     "resourceKey": "arcgis:arcgis:layer:ab291a658de48987673c3d2b9525563d933d0c43f8f598e72458a34819417ff6",
     "kind": "arcgis:layer"
   },
+  "apa-groundwater-quality-stations-feed": {
+    "resourceKey": "arcgis:arcgis:layer:59950fd92697bf1f43eb7820439430e439c85cd0d5caad135f2ba0e43ebafae3",
+    "kind": "arcgis:layer"
+  },
+  "apa-groundwater-quantity-stations-feed": {
+    "resourceKey": "arcgis:arcgis:layer:3f9582a944f0ba413c0d9d111baed32da45929f96b28c523ebd47d551d3e862f",
+    "kind": "arcgis:layer"
+  },
   "apa-hydrometric-stations-feed": {
-    "resourceKey": "arcgis:arcgis:layer:c38cc0585dfd2efb5f40d46eb9dee6d514eec63c737b92019fe159b4a7adedbd",
+    "resourceKey": "arcgis:arcgis:layer:ae0f991a62d4a4ad8323f09509224423e4e60e3e0b1c0faa5940fa8b4b34405f",
     "kind": "arcgis:layer"
   },
   "apa-impact-assessment-projects-feed": {
-    "resourceKey": "arcgis:arcgis:layer:644d4d599782eb51cdc0bc6cecf5a8a3467481d4747a852f86825d3acafa7b7d",
+    "resourceKey": "arcgis:arcgis:layer:ec9a88a4a034ba4e1aedb63d93f3f951a59c2f589d4f8530bba5188aa932e5b5",
     "kind": "arcgis:layer"
   },
   "apa-landfills-feed": {
@@ -164,19 +176,27 @@
     "kind": "arcgis:layer"
   },
   "apa-radnet-stations-feed": {
-    "resourceKey": "arcgis:arcgis:layer:706e1f3fd2b12d92a5c6c478f58fc1031620d28d569f1ffb9b34784577f85c21",
+    "resourceKey": "arcgis:arcgis:layer:8c237c0e2d456cc96351f2b3544018f7e8fca563d51bffc3a2482753072be7fc",
     "kind": "arcgis:layer"
   },
   "apa-seveso-establishments-feed": {
-    "resourceKey": "arcgis:arcgis:layer:1c7a7a2be7de4f933ccab56cd1a096fc7213f895466ca4aaf9b3a4b310e44ce0",
+    "resourceKey": "arcgis:arcgis:layer:79044d4df38ea51464af846119c214847982b426c234e83bc5757477fbbcb639",
+    "kind": "arcgis:layer"
+  },
+  "apa-surface-water-quality-stations-feed": {
+    "resourceKey": "arcgis:arcgis:layer:f9b431c4ef4293f74de3210252f62345897c5dd913c9194a72c5720c9f963e44",
+    "kind": "arcgis:layer"
+  },
+  "apa-tyre-collection-points-feed": {
+    "resourceKey": "arcgis:arcgis:layer:fdf071e2ee765e75a0f3e3e584379231b7f7c1d73afbb16e874d4f9878d32790",
     "kind": "arcgis:layer"
   },
   "apa-waste-infrastructure-feed": {
-    "resourceKey": "arcgis:arcgis:layer:98195f610b40552a6ca3958ed99ed1ce8f6d1a644a39342483fbc1a474e23d38",
+    "resourceKey": "arcgis:arcgis:layer:8955c3341b04fc893a2b65e5c9f9d33852ad1da85422ca3eb96f51217a731796",
     "kind": "arcgis:layer"
   },
   "apa-waste-operators-feed": {
-    "resourceKey": "arcgis:arcgis:layer:9b1a3fcf0629bfeba5dedf99a3f481324d3a817b96c58af77c43b245ac58a3df",
+    "resourceKey": "arcgis:arcgis:layer:7d805ca38dfaaca677723268cbd58e513db87fb5fb47b45c6a5a8b2f1835dd77",
     "kind": "arcgis:layer"
   },
   "barraqueiro-oeste-lisboa-torres-vedras-feed": {
@@ -568,7 +588,7 @@
     "kind": "ogc:collection"
   },
   "dgt-crus-feed": {
-    "resourceKey": "ogc:ogc:collection:50a4df8f1f881a1bb3758556715079c1c2b4c3e7440205d7fc28efed73c4d690",
+    "resourceKey": "ogc:ogc:collection:24884f4fe4df919764773d32032e4f07635b3be07c1f99fdaff1250f355419ea",
     "kind": "ogc:collection"
   },
   "dgt-fototeca-index-feed": {
@@ -1171,6 +1191,10 @@
     "resourceKey": "ogc:ogc:collection:efcd513a9b0765fa21d566881431fdb4dcebc3d08cc57bf695440573a7cefd8e",
     "kind": "ogc:collection"
   },
+  "mafra-associacoes-feed": {
+    "resourceKey": "arcgis:arcgis:layer:9108431c68e69a210a4bc2c1a342589ca367a097d3860bc6edb2ddc41fb0ab18",
+    "kind": "arcgis:layer"
+  },
   "mafra-centros-saude-feed": {
     "resourceKey": "arcgis:arcgis:layer:61d592dd1cffab01afa4dfc14e79df655f7b03afd4497084c2a2d07df8547420",
     "kind": "arcgis:layer"
@@ -1183,24 +1207,12 @@
     "resourceKey": "arcgis:arcgis:layer:427cfddd3070d5c75deca7ef181937f4fd41bf4340cb0e19f39ced5431a167e1",
     "kind": "arcgis:layer"
   },
-  "mafra-ecopontos-contentores-feed": {
-    "resourceKey": "arcgis:arcgis:layer:ffbfdea1a30d080b2029f4082f7238e52a8e7303288fcb27c1b75e3b201f01bd",
-    "kind": "arcgis:layer"
-  },
-  "mafra-equipamentos-cultura-feed": {
-    "resourceKey": "arcgis:arcgis:layer:e6a105d769dcfcb37023522c7ac71552dadcf66d7d86206a5cf6d30e4f09bb46",
-    "kind": "arcgis:layer"
-  },
   "mafra-equipamentos-escolares-feed": {
     "resourceKey": "arcgis:arcgis:layer:915c0350b75cd858ab1553e2a7e6b8fbf0a240ffca71ba9bdcfaaf4c3f00e476",
     "kind": "arcgis:layer"
   },
   "mafra-equipamentos-sociais-feed": {
     "resourceKey": "arcgis:arcgis:layer:957dfef7ff42d58013c3e032638c3609e0fcf5103cdc3743dea206309121ebe8",
-    "kind": "arcgis:layer"
-  },
-  "mafra-espacos-jogo-recreio-feed": {
-    "resourceKey": "arcgis:arcgis:layer:1690123e31254a0e185d0c2fb63f5c1594bd5c21cfa5644a4852dc16e385b75b",
     "kind": "arcgis:layer"
   },
   "mafra-espacos-verdes-feed": {
@@ -1213,6 +1225,18 @@
   },
   "mafra-farmacias-feed": {
     "resourceKey": "arcgis:arcgis:layer:0698bcdb27c2848b7de0bdebccd87c1e05e7799239120e4c139a91972459afac",
+    "kind": "arcgis:layer"
+  },
+  "mafra-fontes-pocos-lavadouros-feed": {
+    "resourceKey": "arcgis:arcgis:layer:b961c8bc75f1656f730194d5911c47628e9befed2a2066074504ba509ce1f096",
+    "kind": "arcgis:layer"
+  },
+  "mafra-fortes-feed": {
+    "resourceKey": "arcgis:arcgis:layer:40270e0acd070e4f60f17149a0ec7969e9c60ac12756ad6c1bed0f3eaa91099d",
+    "kind": "arcgis:layer"
+  },
+  "mafra-linhas-torres-percursos-feed": {
+    "resourceKey": "arcgis:arcgis:layer:2269c6701864012c995977a024080ca2d640d7885ee496f9c549ca1d3dc8ad2f",
     "kind": "arcgis:layer"
   },
   "mafra-lugares-mobilidade-reduzida-feed": {
@@ -1248,7 +1272,7 @@
     "kind": "myinfo:network"
   },
   "metro-do-porto-gtfs-feed": {
-    "resourceKey": "gtfs:gtfs:static:a113af14d4555704c0eb69632e915939baa919a28f831377317b8bda80daeb9d",
+    "resourceKey": "gtfs:gtfs:static:292aeb21ee240e7f607abfcf4b113dc4b89851f2090b9fb9fdfaede963cbafaf",
     "kind": "gtfs:static"
   },
   "metro-lisboa-gtfs-feed": {
@@ -1312,7 +1336,7 @@
     "kind": "wfs:reference"
   },
   "oeiras-condicionalismos-via-publica-feed": {
-    "resourceKey": "wfs:wfs:reference:e8c33db0355a43e7ab63ee7f594ca8e49107b2f281ce8fe9a926ebc16d0ad7d8",
+    "resourceKey": "wfs:wfs:reference:11e3a522061604f15ca7b4599ffcc6c5b2adb184cc618dba6ce1793d847ac6e0",
     "kind": "wfs:reference"
   },
   "oeiras-docas-bicicletas-feed": {
@@ -1567,10 +1591,6 @@
     "resourceKey": "snirh:snirh:readings:6d36c81031e53d4c0a2a1670a89ede91f2938c25a840bec0b28fb262117a7297",
     "kind": "snirh:readings"
   },
-  "snirh-groundwater-levels-feed": {
-    "resourceKey": "snirh:snirh:readings:6e79ff37e0eb6eeb8122cebfc6003991aa3ab9e5d48d425e452aa43e14d9b00a",
-    "kind": "snirh:readings"
-  },
   "snirh-groundwater-state-feed": {
     "resourceKey": "snirh:snirh:groundwater-state:a879ab19090a9eef81554466219eaa16301a4c40972acbe734d056b0b98a40f1",
     "kind": "snirh:groundwater-state"
@@ -1605,10 +1625,6 @@
   },
   "snirh-river-levels-feed": {
     "resourceKey": "snirh:snirh:readings:087064668fbd6a276ea58975507bb0ec43f384fd9789b9a771ded64d762f2a91",
-    "kind": "snirh:readings"
-  },
-  "snirh-wind-speed-feed": {
-    "resourceKey": "snirh:snirh:readings:dd3a0313a8c47b2f63e940c50bc0a560eaf52770cb4a6484c73a3fdb6e6ed06d",
     "kind": "snirh:readings"
   },
   "snit-medidas-preventivas-feed": {

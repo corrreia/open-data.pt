@@ -53,7 +53,6 @@ export interface SnirhReading {
 
 const HYDROMETRIC = "920123705";
 const METEOROLOGICAL = "920123704";
-const PIEZOMETRIC = "100290946";
 
 export const SNIRH_READINGS = {
   "river-level": {
@@ -127,27 +126,6 @@ export const SNIRH_READINGS = {
     description: "Hourly relative humidity at SNIRH meteorological stations.",
     liveDays: 3,
     historyDays: 4,
-  },
-  "wind-speed": {
-    network: METEOROLOGICAL,
-    parameter: "100750606",
-    label: "Velocidade do vento horária",
-    unit: "m/s",
-    title: "Hourly wind speed",
-    description: "Hourly wind speed at SNIRH meteorological stations.",
-    liveDays: 3,
-    historyDays: 4,
-  },
-  "groundwater-level": {
-    network: PIEZOMETRIC,
-    parameter: "100290981",
-    label: "Nível piezométrico",
-    unit: "m",
-    title: "Groundwater levels",
-    description:
-      "Piezometric level at SNIRH groundwater observation wells, in metres above sea level. Most wells are read by hand about once a month, so readings arrive weeks after they are taken.",
-    liveDays: 120,
-    historyDays: 732,
   },
 } as const satisfies Record<string, SnirhReading>;
 

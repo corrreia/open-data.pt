@@ -6,18 +6,21 @@ export const FEED = defineFeed(ARCGIS_DEPLOYMENT, {
   slug: "apa-impact-assessment-projects-feed",
   title: "Portugal environmental impact assessment projects",
   description:
-    "The projects that went through environmental impact assessment in Portugal, as points: the assessment number and its record in APA's SIAIA system, the project, its typology and class (such as a wind farm), its phase, area and installed power, the authority that assessed it, when the assessment began, and the date and outcome of its decision.",
+    "The projects that went through environmental impact assessment in Portugal, each as the area it covers: the assessment number and its record in APA's SIAIA system, the project, its typology and class (such as a wind farm), its phase, area and installed power, the authority that assessed it, when the assessment began, and the date and outcome of its decision.",
   licence: "source-terms",
   attribution: "Agência Portuguesa do Ambiente",
   topics: ["environment", "energy"],
   config: {
     host: "sniambgeoogc.apambiente.pt",
     service: "getogc/rest/services/AIA/AIA_externo/MapServer",
-    layer: "36",
+    layer: "41",
+    // Since November 2026 the projects are areas, and the server fails to write most of them as GeoJSON.
+    format: "json",
   },
-  policy: APA_POLICY,
+  // 2,500 project areas, about 28 MB in ten pages of 250 (November 2026), the largest area 0.9 MB.
+  policy: { ...APA_POLICY, timeoutSeconds: 180, maxBytes: 48 * 1024 * 1024, maxOutputBytes: 64 * 1024 * 1024, maxRecordBytes: 1024 * 1024 },
   staleAfterSeconds: 172_800,
-  /** Once a day: layer 36 of the AIA_externo MapServer on sniambgeoogc.apambiente.pt — its metadata, then every feature page by page. */
+  /** Once a day: layer 41 of the AIA_externo MapServer on sniambgeoogc.apambiente.pt — its metadata, then every feature page by page. */
   fetch: ({ config, validator, library, fetch }) => collectArcgisFeed(config, validator, library.hosts, fetch),
   /** The layer's GeoJSON pages, streamed, into one record per feature with the layer's own schema. */
   transform: { normalizer: ARCGIS_NORMALIZER, streaming: (body, context) => ARCGIS_TRANSFORMER.transform(body, context) },

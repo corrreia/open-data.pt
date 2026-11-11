@@ -7,7 +7,7 @@ export const FEED = defineFeed(GTFS_DEPLOYMENT, {
   // Read from Metro do Porto rather than from Porto's open-data portal: their two newest
   // uploads there are zero bytes, as they were on the old portal, leaving the portal's
   // newest readable archive the one from 7 April 2026. The file linked from
-  // https://www.metrodoporto.pt/pages/337 is the September 2026 schedule.
+  // https://www.metrodoporto.pt/pages/337 publishes this stable application feed beside the dated human timetables.
   // The name carries its release date, so a new schedule needs this address changed;
   // the feed goes stale within three days if that is missed. The archive carries no
   // feed_info.txt, which the old configuration asked for and never received.
@@ -17,7 +17,7 @@ export const FEED = defineFeed(GTFS_DEPLOYMENT, {
   attribution: "Published by the named transit operator",
   topics: ["mobility"],
   config: {
-    url: "https://www.metrodoporto.pt/metrodoporto/uploads/document/file/794/google_transit_04_09_2026.zip",
+    url: "https://www.metrodoporto.pt/metrodoporto/uploads/document/file/794/google_transit.zip",
     files: "agency,stops,routes,calendar,calendar_dates,shapes",
   },
   policy: DAILY_STATIC,

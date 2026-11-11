@@ -109,14 +109,21 @@ export function validateArcgisFeedConfig(config: SourceConfig, hosts: ReadonlySe
     };
   }
 
-  if (keys.length !== 3 || !keys.includes("host") || !keys.includes("service") || !keys.includes("layer")) {
+  const addressed = keys.filter((key) => key !== "format");
+  if (addressed.length !== 3 || !addressed.includes("host") || !addressed.includes("service") || !addressed.includes("layer")) {
     throw new GatekeeperError("ArcGIS layers require host, service, and layer, or one layerUrl", "invalid-config");
   }
 
   const host = normalizeHost(config.host ?? "", hosts);
   const service = normalizeService(config.service ?? "");
   const layer = normalizeLayer(config.layer ?? "");
-  return { host, service, layer: String(layer) };
+  const validated: SourceConfig = { host, service, layer: String(layer) };
+  if (config.format !== undefined) {
+    // A layer that offers GeoJSON but fails to write some of its geometries in it is read as Esri JSON instead.
+    if (config.format !== "json") throw new GatekeeperError('ArcGIS format may only be "json"', "invalid-config");
+    validated.format = config.format;
+  }
+  return validated;
 }
 
 export function layerUrlFromConfig(config: SourceConfig): URL {
@@ -146,6 +153,7 @@ export async function collectArcgisFeed(config: SourceConfig, checkpoint: Source
   const metadataPayload = parseDocument(await readBoundedResponse(metadataResponse, MAX_METADATA_BYTES, "ArcGIS layer metadata"), "layer metadata");
   assertNoArcgisError(metadataPayload, "layer metadata");
   const metadata = parseLayerMetadata(metadataPayload, layerUrl.toString());
+  if (validated.format === "json") metadata.queryFormat = "json";
   const revision = revisionValidator(metadata.lastEditDate);
   if (
     revision !== undefined &&

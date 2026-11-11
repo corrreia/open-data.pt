@@ -16,7 +16,11 @@ export const FEED = defineFeed(WFS_DEPLOYMENT, {
     host: "oeirasinterativa.oeiras.pt",
     path: "/gis/services/dados_abertos/wfs",
     typeName: "dados_abertos:w_condicionalismos_via_publica",
-    idField: "@id",
+    // Until November 2026 the service named each feature `w_condicionalismos_via_publica.<id>`; it now names them afresh
+    // on every request and refuses to page without a sort. Sorting and keying by `id` under that prefix keeps each
+    // record's key as it was.
+    idField: "id",
+    idPrefix: "w_condicionalismos_via_publica.",
     srsName: "EPSG:4326",
     dateFields: "ultima_atualizacao",
     dateOnlyFields: "data_prevista_inicio,data_prevista_conclusao",
