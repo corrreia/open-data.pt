@@ -44,7 +44,8 @@ function showKey(measure: Measure | undefined): void {
   const last = measure.scale.length - 1;
   scale.replaceChildren(
     ...measure.scale.flatMap(([value], index) => {
-      if (index % 2 !== 0 && index !== last) return [];
+      // Every other step is named, and the last; the one before the last gives way to it when they would touch.
+      if (index !== last && (index % 2 !== 0 || index === last - 1)) return [];
       const figure = document.createElement("b");
       figure.textContent = index === last ? `${value} ${measure.unit}` : `${value}`;
       figure.style.left = `${(index / last) * 100}%`;
