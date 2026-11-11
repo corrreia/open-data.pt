@@ -101,6 +101,23 @@ export const MEASURES = new Map<string, Measure>([
       of: (station) => station.humidity,
     },
   ],
+  [
+    "radiation",
+    {
+      name: "Radiação solar",
+      unit: "kJ/m²",
+      // Night and deep cloud are slate; full summer sun on the ground is about 3,600 kJ/m² in an hour.
+      scale: [
+        [0, 0x4a5a66],
+        [300, 0x8e9a94],
+        [900, 0xd8cfa0],
+        [1800, 0xf0c765],
+        [2700, 0xf09a3e],
+        [3600, 0xe2552c],
+      ],
+      of: (station) => station.radiation,
+    },
+  ],
 ]);
 
 /**
@@ -130,12 +147,13 @@ const COMPASS_NAMES = ["norte", "nordeste", "leste", "sueste", "sul", "sudoeste"
 /** Every station on the mainland, with all it last measured, for the pointer to ask. */
 export function stationReadings(map: MapScene, stations: readonly Station[]): Spot[] {
   return onTheMainland(map, stations).map((station) => {
-    const { name, temperature, humidity, precipitation, windSpeed, windFrom, observedAt } = station.thing;
+    const { name, temperature, humidity, precipitation, radiation, windSpeed, windFrom, observedAt } = station.thing;
     const from = windFrom === undefined ? "" : ` de ${COMPASS_NAMES[Math.round(windFrom / 45) % 8] ?? ""}`;
     const lines = [
       ...(temperature === undefined ? [] : [`${NUMBER.format(temperature)} °C${humidity === undefined ? "" : ` · ${NUMBER.format(humidity)} % de humidade`}`]),
       ...(precipitation === undefined ? [] : [precipitation > 0 ? `${NUMBER.format(precipitation)} mm de chuva na última hora` : "sem chuva na última hora"]),
       ...(windSpeed === undefined ? [] : [`vento${from} a ${NUMBER.format(windSpeed)} km/h`]),
+      ...(radiation === undefined ? [] : [`${NUMBER.format(radiation)} kJ/m² de sol na última hora`]),
     ];
     return { point: station.point, height: station.ground, label: `${name}\n${lines.join("\n")}\nIPMA, ${HOUR.format(observedAt)}` };
   });

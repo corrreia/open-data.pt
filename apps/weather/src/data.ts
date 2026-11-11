@@ -23,6 +23,8 @@ export interface Station {
   windFrom: number | undefined;
   /** Millimetres in the hour. */
   precipitation: number | undefined;
+  /** Kilojoules of sunlight on a square metre in the hour, when the product says. */
+  radiation: number | undefined;
 }
 
 export interface Reservoir {
@@ -49,6 +51,7 @@ interface StationRow {
   windSpeed: number | null;
   windDirection?: string | null;
   precipitation: number | null;
+  radiation?: number | null;
 }
 
 interface ReservoirRow {
@@ -88,6 +91,7 @@ export async function readStations(now: Date): Promise<Station[]> {
       windSpeed: row.windSpeed ?? undefined,
       windFrom: COMPASS.get(row.windDirection ?? ""),
       precipitation: row.precipitation ?? undefined,
+      radiation: row.radiation ?? undefined,
     }))
     .filter((station) => now.getTime() - station.observedAt.getTime() < FRESH_MS);
 }

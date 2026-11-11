@@ -111,6 +111,8 @@ async function readLayers(map: MapScene, previous: Shown): Promise<Shown> {
     paints: new Map([...MEASURES].map(([name, measure]) => [name, measureLayer(map, stations, measure)])),
     counts: new Map([
       ["wind", directed ? "" : "sem direção"],
+      // Read by the legend to offer the sun's radiation only once the product carries it.
+      ["radiation", stations.some((station) => station.radiation !== undefined) ? "há" : ""],
       ["reservoirs", `${reservoirs.length}`],
       ["occurrences", `${occurrences.happenings.length}`],
       ["lightning", `${lightning.length}`],
@@ -172,6 +174,8 @@ async function open(): Promise<void> {
     for (const [name, layer] of shown.paints) if (name !== paint) layer.show(false);
     shown.paints.get(paint)?.show(true);
     showKey(MEASURES.get(paint));
+    const sun = panel.querySelector<HTMLInputElement>('input[value="radiation"]')?.parentElement;
+    if (sun !== null && sun !== undefined) sun.hidden = shown.counts.get("radiation") !== "há";
     for (const input of panel.querySelectorAll("input")) {
       const count = input.parentElement?.querySelector("output");
       if (count !== null && count !== undefined) count.textContent = shown.counts.get(input.name) ?? "";
