@@ -86,6 +86,8 @@ describe("WFS source boundary", () => {
     });
     // A reference layer has no window to filter, so the event fields are not its to carry.
     expect(() => validateWfsFeedConfig({ ...wfsReferenceConfig, days: "180" }, SGIFR_HOSTS)).toThrow("Unsupported WFS field: days");
+    expect(validateWfsFeedConfig({ ...wfsReferenceConfig, idPrefix: "apps." }, SGIFR_HOSTS)).toMatchObject({ idField: "id", idPrefix: "apps." });
+    expect(() => validateWfsFeedConfig({ ...wfsReferenceConfig, idField: "@id", idPrefix: "apps." }, SGIFR_HOSTS)).toThrow("WFS idPrefix is for an idField attribute");
     expect(() => validateWfsFeedConfig({ ...wfsReferenceConfig, host: "evil.example" }, SGIFR_HOSTS)).toThrow("The WFS host is not allowed");
     expect(() => validateWfsFeedConfig({ ...wfsReferenceConfig, url: "https://evil.example" }, SGIFR_HOSTS)).toThrow("Unsupported WFS field: url");
   });

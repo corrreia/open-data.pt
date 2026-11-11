@@ -132,6 +132,32 @@ describe("WFS normalizer", () => {
     expect(result.quality).toMatchObject({ acceptedRecords: 3, rejectedRecords: 0 });
   });
 
+  it("keeps a layer's old feature identities as keys once the service names its features afresh on every request", () => {
+    // Since November 2026 Oeiras names each feature anew on every request and publishes the key as `id` instead.
+    const collection = JSON.parse(readFixture(new URL("./fixtures/oeiras-condicionalismos-via-publica.json", import.meta.url)));
+    for (const [index, feature] of collection.features.entries()) {
+      feature.properties.id = index + 1;
+      feature.id = `w_condicionalismos_via_publica.fid--31562874_1a1c95c3581_-${index}`;
+    }
+    const config = {
+      feed: "reference",
+      host: "oeirasinterativa.oeiras.pt",
+      path: "/gis/services/dados_abertos/wfs",
+      typeName: "dados_abertos:w_condicionalismos_via_publica",
+      idField: "id",
+      idPrefix: "w_condicionalismos_via_publica.",
+    };
+    const result = new WfsTransformer().transform(
+      new TextEncoder().encode(JSON.stringify(collection)),
+      context("oeiras-condicionalismos-via-publica-feed", config, "feature", "reference"),
+    );
+    expect(result.products[0]?.records?.map((record) => record.entityKey)).toEqual([
+      "w_condicionalismos_via_publica.1",
+      "w_condicionalismos_via_publica.2",
+      "w_condicionalismos_via_publica.3",
+    ]);
+  });
+
   it("keeps the outlines of a plan the service will only hand over a class at a time", () => {
     const config = {
       feed: "reference",
