@@ -2,34 +2,71 @@
 <html lang="pt">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#060a12" />
-    <meta name="description" content="O tempo em Portugal, em três dimensões, só com dados abertos servidos por open-data.pt." />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta name="theme-color" content="#03060c" />
+    <meta name="description" content="Portugal ao vivo em três dimensões: tempo, vento, água, proteção civil. Só com dados abertos servidos por open-data.pt." />
     <title>weather.open-data.pt</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='5' fill='%23f2b84b'/%3E%3C/svg%3E" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='5' fill='%234fe3ff'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
-    <canvas id="map" aria-label="Mapa de Portugal continental em relevo. Arraste para mover, use a roda para aproximar."></canvas>
-    <header>
+    <canvas id="map" aria-label="Mapa de Portugal continental em relevo, com o tempo ao vivo. Arraste para mover, use a roda para aproximar, o botão direito para rodar."></canvas>
+    <div id="veil" aria-hidden="true"></div>
+
+    <header class="glass">
       <h1>weather<span>.open-data.pt</span></h1>
-      <p id="clock"></p>
+      <p id="clock"><i class="pulse"></i><b>AO VIVO</b><span id="time"></span></p>
     </header>
-    <p id="status" role="status">A desenhar Portugal…</p>
-    <output id="readout" aria-live="off"></output>
-    <form id="layers" aria-label="Camadas">
-      <label><input type="checkbox" name="temperature" checked /><span>Temperatura</span></label>
-      <div id="scale" aria-hidden="true"></div>
-      <label><input type="checkbox" name="wind" checked /><span>Vento</span></label>
-      <label><input type="checkbox" name="reservoirs" checked /><span>Albufeiras</span></label>
-      <label hidden><input type="checkbox" name="water" checked /><span>Rios e lagoas</span></label>
+
+    <section id="stats" aria-label="Portugal agora"></section>
+
+    <button id="compass" type="button" class="glass" aria-label="Virar para norte" title="Virar para norte">
+      <svg viewBox="0 0 40 40" aria-hidden="true">
+        <path d="M20 5 L25 20 L20 17 L15 20 Z" />
+        <path class="south" d="M20 35 L25 20 L20 23 L15 20 Z" />
+      </svg>
+    </button>
+
+    <details id="layers" class="glass" open>
+      <summary>Camadas</summary>
+      <form>
+        <fieldset>
+          <legend>Atmosfera</legend>
+          <label><input type="checkbox" name="temperature" checked /><span>Temperatura</span><output></output></label>
+          <div id="scale" aria-hidden="true"></div>
+          <label><input type="checkbox" name="wind" checked /><span>Vento</span><output></output></label>
+          <label><input type="checkbox" name="lightning" checked /><span>Trovoada</span><output></output></label>
+          <label><input type="checkbox" name="warnings" checked /><span>Avisos do IPMA</span><output></output></label>
+        </fieldset>
+        <fieldset>
+          <legend>Água</legend>
+          <label><input type="checkbox" name="reservoirs" checked /><span>Albufeiras</span><output></output></label>
+          <label hidden><input type="checkbox" name="water" checked /><span>Rios e lagoas</span><output></output></label>
+          <label><input type="checkbox" name="floods" checked /><span>Alertas de cheia</span><output></output></label>
+        </fieldset>
+        <fieldset>
+          <legend>Proteção civil e terra</legend>
+          <label><input type="checkbox" name="occurrences" checked /><span>Ocorrências</span><output></output></label>
+          <label><input type="checkbox" name="hotspots" checked /><span>Focos de calor</span><output></output></label>
+          <label><input type="checkbox" name="earthquakes" checked /><span>Sismos</span><output></output></label>
+        </fieldset>
+      </form>
       <p id="live"></p>
-    </form>
-    <div id="tip" hidden></div>
+    </details>
+
     <footer>
-      <p id="hint">Arrastar move · roda aproxima · botão direito ou dois dedos rodam</p>
-      <p id="credits">Dados de DGT, IPMA e APA, via open-data.pt. O relevo e a temperatura são interpolados. <a href="/credits/">Créditos</a></p>
+      <output id="readout" aria-live="off"></output>
+      <p id="credits">Dados de DGT, IPMA, APA, ANEPC, NASA e EUMETSAT, via open-data.pt · <a href="/credits/">Créditos</a></p>
     </footer>
+
+    <div id="tip" class="glass" hidden></div>
+    <div id="boot" role="status">
+      <div>
+        <h2>weather<span>.open-data.pt</span></h2>
+        <p id="status">A sincronizar com open-data.pt</p>
+        <i></i>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

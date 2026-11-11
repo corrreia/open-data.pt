@@ -1,3 +1,6 @@
+import "@fontsource-variable/space-grotesk";
+import "@fontsource-variable/jetbrains-mono";
+
 /**
  * The credits page's list of sources. What each product is called, who it is attributed to and under
  * what licence are read from open-data.pt as the page opens, so they are never out of step with it.
@@ -10,7 +13,15 @@ const USES: [product: string, use: string][] = [
   ["dgt-caop-trocos", "A linha de costa, a fronteira e os limites de distrito."],
   ["dgt-rgn-vertices-geodesicos", "Altitudes para o relevo."],
   ["dgt-serras-cumes-principais", "Altitudes dos cumes para o relevo."],
-  ["ipma-stations-latest", "Temperatura, humidade e velocidade do vento em cada estação, lidas de dez em dez minutos."],
+  ["ipma-stations-latest", "Temperatura, humidade, chuva e vento em cada estação."],
+  ["ipma-warnings", "Os avisos meteorológicos em vigor em cada distrito."],
+  ["dgt-caop-distritos", "O centro de cada distrito, onde os avisos são desenhados."],
+  ["ipma-lightning-discharges", "As descargas elétricas das últimas 24 horas."],
+  ["ipma-earthquakes", "Os sismos dos últimos sete dias."],
+  ["anepc-active-occurrences", "As ocorrências que a proteção civil tem em curso, com os meios empenhados."],
+  ["nasa-firms-mainland-thermal-anomalies", "Os focos de calor vistos por satélite nas últimas 24 horas."],
+  ["eumetsat-mtg-active-fires", "Os fogos ativos detetados pelo satélite geoestacionário."],
+  ["infoagua-flood-alerts", "As estações com alerta de cheia."],
   ["infoagua-reservoirs", "Onde fica cada albufeira e quanto pode guardar."],
   ["snirh-reservoir-storage", "O volume guardado em cada albufeira na última leitura."],
   ["apa-river-water-bodies", "O traçado dos rios."],

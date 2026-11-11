@@ -1,6 +1,6 @@
 import Delaunator from "delaunator";
 import * as THREE from "three";
-import type { Reservoir, Station } from "./data.ts";
+import type { Happening, Reservoir, Station } from "./data.ts";
 import type { MapScene } from "./scene.ts";
 import type { Water } from "./terrain/format.ts";
 import { Heights, Land, type Point, project } from "./terrain/geometry.ts";
@@ -77,6 +77,20 @@ export function temperatureLayer(map: MapScene, stations: readonly Station[]): L
   };
 }
 
+const COMPASS_NAMES = ["norte", "nordeste", "leste", "sueste", "sul", "sudoeste", "oeste", "noroeste"];
+
+function windLabel(station: Station): string {
+  const from = station.windFrom === undefined ? "" : ` de ${COMPASS_NAMES[Math.round(station.windFrom / 45) % 8] ?? ""}`;
+  return `${station.name}\nvento${from} a ${NUMBER.format(station.windSpeed ?? 0)} km/h\nIPMA, ${HOUR.format(station.observedAt)}`;
+}
+
+/** Where each station measures the wind, for the pointer to ask: the flow itself is drawn elsewhere. */
+export function windReadings(map: MapScene, stations: readonly Station[]): Spot[] {
+  return onTheMainland(map, stations)
+    .filter((station) => station.thing.windSpeed !== undefined)
+    .map((station) => ({ point: station.point, height: station.ground, label: windLabel(station.thing) }));
+}
+
 /** An anemometer's rotor: three arms with a cup at the end of each, turning about the upright axis. */
 function rotor(): THREE.BufferGeometry {
   const positions: number[] = [];
@@ -139,7 +153,7 @@ export function windLayer(map: MapScene, stations: readonly Station[]): Layer {
     if (!group.visible) return;
     placed.forEach((station, index) => {
       position.set(station.point[0], station.ground, -station.point[1]);
-      const scale = Math.max(0.5, position.distanceTo(map.camera.position) * 0.0065);
+      const scale = Math.max(0.25, position.distanceTo(map.camera.position) * 0.0032);
       const top = station.ground + scale * 1.6;
       heights[index] = top;
       // A full turn a second at about 60 km/h; still air barely creeps.
@@ -158,12 +172,12 @@ export function windLayer(map: MapScene, stations: readonly Station[]): Layer {
       placed.map((station, index) => ({
         point: station.point,
         height: heights[index] ?? station.ground,
-        label: `${station.thing.name}\nvento a ${NUMBER.format(station.thing.windSpeed ?? 0)} km/h\nIPMA, ${HOUR.format(station.thing.observedAt)}`,
+        label: windLabel(station.thing),
       })),
   };
 }
 
-const TANK_HEIGHT = 16;
+const TANK_HEIGHT = 5;
 
 /**
  * Each reservoir as a glass standing where its dam is: as wide as it is large, and filled as far
@@ -184,7 +198,7 @@ export function reservoirLayer(map: MapScene, reservoirs: readonly Reservoir[]):
     reservoir.storedHm3 === undefined ? undefined : Math.max(0, Math.min(1, reservoir.storedHm3 / reservoir.capacityHm3));
   placed.forEach((reservoir, index) => {
     // Area on the map in proportion to capacity, so a glass twice as wide holds four times as much.
-    const radius = 0.9 + Math.sqrt(reservoir.thing.capacityHm3) * 0.22;
+    const radius = 0.3 + Math.sqrt(reservoir.thing.capacityHm3) * 0.07;
     const base = new THREE.Vector3(reservoir.point[0], reservoir.ground, -reservoir.point[1]);
     glass.setMatrixAt(index, matrix.compose(base, upright, new THREE.Vector3(radius, TANK_HEIGHT, radius)));
     water.setMatrixAt(index, matrix.compose(base, upright, new THREE.Vector3(radius * 0.94, Math.max(0.05, TANK_HEIGHT * (fullness(reservoir.thing) ?? 0)), radius * 0.94)));
@@ -223,7 +237,7 @@ export function waterLayer(map: MapScene, water: Water): Layer {
   }
   const riverGeometry = new THREE.BufferGeometry();
   riverGeometry.setAttribute("position", new THREE.Float32BufferAttribute(lines, 3));
-  const rivers = new THREE.LineSegments(riverGeometry, new THREE.LineBasicMaterial({ color: 0x6fc3ff, transparent: true, opacity: 0.85 }));
+  const rivers = new THREE.LineSegments(riverGeometry, new THREE.LineBasicMaterial({ color: 0x2f9bff, transparent: true, opacity: 0.55 }));
 
   const group = new THREE.Group();
   group.add(rivers);
@@ -247,4 +261,55 @@ export function waterLayer(map: MapScene, water: Water): Layer {
   }
   map.scene.add(group);
   return { show: (visible) => void (group.visible = visible), spots: () => [] };
+}
+
+/**
+ * Things happening at places, each a ring of light on the ground with a beam standing in it. The
+ * ring breathes; what matters more among its kind stands taller and wider. They keep their size
+ * on the screen, so one incident can be found from over the whole country. `size` is how large a
+ * kind is drawn against the others, and `beams` whether its weightier ones stand a beam in their ring.
+ */
+export function happeningLayer(map: MapScene, happenings: readonly Happening[], size: number, beams: boolean): Layer {
+  const placed = onTheMainland(map, happenings);
+  const ring = new THREE.RingGeometry(0.72, 1, 40).rotateX(-Math.PI / 2);
+  const beam = new THREE.CylinderGeometry(0.05, 0.16, 1, 8, 1, true).translate(0, 0.5, 0);
+  const glow = { transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, side: THREE.DoubleSide };
+  const rings = new THREE.InstancedMesh(ring, new THREE.MeshBasicMaterial({ ...glow, opacity: 0.8 }), placed.length);
+  const shafts = new THREE.InstancedMesh(beam, new THREE.MeshBasicMaterial({ ...glow, opacity: 0.4 }), placed.length);
+  const colour = new THREE.Color();
+  placed.forEach((happening, index) => {
+    rings.setColorAt(index, colour.setHex(happening.thing.colour));
+    shafts.setColorAt(index, colour);
+  });
+  for (const mesh of [rings, shafts]) {
+    mesh.frustumCulled = false;
+    mesh.renderOrder = 5;
+  }
+  const group = new THREE.Group();
+  group.add(rings, shafts);
+  map.scene.add(group);
+
+  const matrix = new THREE.Matrix4();
+  const position = new THREE.Vector3();
+  const upright = new THREE.Quaternion();
+  const stretch = new THREE.Vector3();
+  map.onFrame((now) => {
+    if (!group.visible) return;
+    placed.forEach((happening, index) => {
+      position.set(happening.point[0], happening.ground + 0.15, -happening.point[1]);
+      const scale = Math.max(0.35, position.distanceTo(map.camera.position) * 0.0045) * size * (0.6 + happening.thing.weight * 0.9);
+      const breath = 1 + 0.22 * Math.sin(now / 420 + index * 1.7);
+      rings.setMatrixAt(index, matrix.compose(position, upright, stretch.setScalar(scale * breath)));
+      // A beam of no height is no beam: the lighter ones keep to their ring.
+      const tall = beams && happening.thing.weight > 0.3 ? scale * (2 + happening.thing.weight * 5) : 0;
+      shafts.setMatrixAt(index, matrix.compose(position, upright, stretch.set(scale, tall, scale)));
+    });
+    rings.instanceMatrix.needsUpdate = true;
+    shafts.instanceMatrix.needsUpdate = true;
+  });
+
+  return {
+    show: (visible) => void (group.visible = visible),
+    spots: () => placed.map((happening) => ({ point: happening.point, height: happening.ground, label: happening.thing.label })),
+  };
 }
