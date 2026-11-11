@@ -1207,20 +1207,12 @@
     "resourceKey": "arcgis:arcgis:layer:427cfddd3070d5c75deca7ef181937f4fd41bf4340cb0e19f39ced5431a167e1",
     "kind": "arcgis:layer"
   },
-  "mafra-ecopontos-contentores-feed": {
-    "resourceKey": "arcgis:arcgis:layer:ffbfdea1a30d080b2029f4082f7238e52a8e7303288fcb27c1b75e3b201f01bd",
-    "kind": "arcgis:layer"
-  },
   "mafra-equipamentos-escolares-feed": {
     "resourceKey": "arcgis:arcgis:layer:915c0350b75cd858ab1553e2a7e6b8fbf0a240ffca71ba9bdcfaaf4c3f00e476",
     "kind": "arcgis:layer"
   },
   "mafra-equipamentos-sociais-feed": {
     "resourceKey": "arcgis:arcgis:layer:957dfef7ff42d58013c3e032638c3609e0fcf5103cdc3743dea206309121ebe8",
-    "kind": "arcgis:layer"
-  },
-  "mafra-espacos-jogo-recreio-feed": {
-    "resourceKey": "arcgis:arcgis:layer:1690123e31254a0e185d0c2fb63f5c1594bd5c21cfa5644a4852dc16e385b75b",
     "kind": "arcgis:layer"
   },
   "mafra-espacos-verdes-feed": {
