@@ -1,5 +1,5 @@
-import "@fontsource-variable/space-grotesk";
-import "@fontsource-variable/jetbrains-mono";
+import "@fontsource-variable/archivo/wdth.css";
+import "@fontsource/b612-mono/latin-400.css";
 
 /**
  * The credits page's list of sources. What each product is called, who it is attributed to and under

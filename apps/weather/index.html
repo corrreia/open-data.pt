@@ -3,70 +3,138 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <meta name="theme-color" content="#03060c" />
-    <meta name="description" content="Portugal ao vivo em três dimensões: tempo, vento, água, proteção civil. Só com dados abertos servidos por open-data.pt." />
+    <meta name="theme-color" content="#0b2129" />
+    <meta
+      name="description"
+      content="Carta do tempo de Portugal continental, em relevo e ao vivo: vento, temperatura, água e proteção civil, só com dados abertos servidos por open-data.pt."
+    />
     <title>weather.open-data.pt</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='5' fill='%234fe3ff'/%3E%3C/svg%3E" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%230f2a33'/%3E%3Cpath d='M8 2l3 9-3-2-3 2z' fill='%23e9e4d4'/%3E%3C/svg%3E"
+    />
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
-    <canvas id="map" aria-label="Mapa de Portugal continental em relevo, com o tempo ao vivo. Arraste para mover, use a roda para aproximar, o botão direito para rodar."></canvas>
-    <div id="veil" aria-hidden="true"></div>
+    <canvas id="map" aria-label="Carta de Portugal continental em relevo, com o tempo ao vivo. Arraste para mover e use a roda para aproximar."></canvas>
 
-    <header class="glass">
-      <h1>weather<span>.open-data.pt</span></h1>
-      <p id="clock"><i class="pulse"></i><b>AO VIVO</b><span id="time"></span></p>
-    </header>
+    <aside id="legend">
+      <header>
+        <h1>Portugal continental</h1>
+        <p>Carta do tempo · <span id="time"></span></p>
+      </header>
 
-    <section id="stats" aria-label="Portugal agora"></section>
-
-    <button id="compass" type="button" class="glass" aria-label="Virar para norte" title="Virar para norte">
-      <svg viewBox="0 0 40 40" aria-hidden="true">
-        <path d="M20 5 L25 20 L20 17 L15 20 Z" />
-        <path class="south" d="M20 35 L25 20 L20 23 L15 20 Z" />
-      </svg>
-    </button>
-
-    <details id="layers" class="glass" open>
-      <summary>Camadas</summary>
       <form>
         <fieldset>
           <legend>Atmosfera</legend>
-          <label><input type="checkbox" name="temperature" checked /><span>Temperatura</span><output></output></label>
-          <div id="scale" aria-hidden="true"></div>
-          <label><input type="checkbox" name="wind" checked /><span>Vento</span><output></output></label>
-          <label><input type="checkbox" name="lightning" checked /><span>Trovoada</span><output></output></label>
-          <label><input type="checkbox" name="warnings" checked /><span>Avisos do IPMA</span><output></output></label>
+          <label>
+            <input type="checkbox" name="wind" checked />
+            <svg viewBox="0 0 28 16" aria-hidden="true"><path d="M2 7h16V4l8 4-8 4V9H2z" fill="currentColor" stroke="none" /></svg>
+            <span>Vento</span><output></output>
+          </label>
+          <div id="wind-key" class="key" aria-hidden="true"><i style="--w: 8px"></i><b>10</b><i style="--w: 16px"></i><b>30</b><i style="--w: 28px"></i><b>60&nbsp;km/h</b></div>
+          <label>
+            <input type="checkbox" name="temperature" checked />
+            <svg viewBox="0 0 28 16" aria-hidden="true">
+              <defs>
+                <linearGradient id="warmth">
+                  <stop offset="0" stop-color="#5d8fb3" />
+                  <stop offset="0.5" stop-color="#e9e0b8" />
+                  <stop offset="1" stop-color="#d9743f" />
+                </linearGradient>
+              </defs>
+              <rect x="2" y="3" width="24" height="10" fill="url(#warmth)" stroke="none" />
+            </svg>
+            <span>Temperatura</span><output></output>
+          </label>
+          <div id="scale" class="key" aria-hidden="true"></div>
+          <label>
+            <input type="checkbox" name="warnings" checked />
+            <svg viewBox="0 0 28 16" aria-hidden="true"><circle cx="14" cy="8" r="6" fill="#f2c200" fill-opacity="0.3" stroke="#f2c200" stroke-width="2" /></svg>
+            <span>Avisos do IPMA</span><output></output>
+          </label>
+          <label>
+            <input type="checkbox" name="lightning" checked />
+            <svg viewBox="0 0 28 16" aria-hidden="true">
+              <circle cx="14" cy="8" r="4.5" stroke="#b08ae0" stroke-width="2" fill="none" />
+              <circle cx="14" cy="8" r="1.5" fill="#b08ae0" stroke="none" />
+            </svg>
+            <span>Trovoada, 24 h</span><output></output>
+          </label>
         </fieldset>
+
         <fieldset>
           <legend>Água</legend>
-          <label><input type="checkbox" name="reservoirs" checked /><span>Albufeiras</span><output></output></label>
-          <label hidden><input type="checkbox" name="water" checked /><span>Rios e lagoas</span><output></output></label>
-          <label><input type="checkbox" name="floods" checked /><span>Alertas de cheia</span><output></output></label>
+          <label hidden>
+            <input type="checkbox" name="water" checked />
+            <svg viewBox="0 0 28 16" aria-hidden="true"><path d="M2 10c4-6 7 4 11-1s7 3 13-3" stroke="#5fa8dc" stroke-width="2" fill="none" /></svg>
+            <span>Rios e lagoas</span><output></output>
+          </label>
+          <label>
+            <input type="checkbox" name="reservoirs" checked />
+            <svg viewBox="0 0 28 16" aria-hidden="true">
+              <rect x="9" y="2" width="10" height="12" stroke="#e9e4d4" stroke-opacity="0.6" fill="none" />
+              <rect x="9" y="7" width="10" height="7" fill="#5fa8dc" stroke="none" />
+            </svg>
+            <span>Albufeiras</span><output></output>
+          </label>
+          <label>
+            <input type="checkbox" name="floods" checked />
+            <svg viewBox="0 0 28 16" aria-hidden="true">
+              <circle cx="14" cy="8" r="4.5" stroke="#5fa8dc" stroke-width="2" fill="none" />
+              <circle cx="14" cy="8" r="1.5" fill="#5fa8dc" stroke="none" />
+            </svg>
+            <span>Alertas de cheia</span><output></output>
+          </label>
         </fieldset>
+
         <fieldset>
           <legend>Proteção civil e terra</legend>
-          <label><input type="checkbox" name="occurrences" checked /><span>Ocorrências</span><output></output></label>
-          <label><input type="checkbox" name="hotspots" checked /><span>Focos de calor</span><output></output></label>
-          <label><input type="checkbox" name="earthquakes" checked /><span>Sismos</span><output></output></label>
+          <label>
+            <input type="checkbox" name="occurrences" checked />
+            <svg viewBox="0 0 28 16" aria-hidden="true">
+              <circle cx="9" cy="8" r="4" stroke="#e9e4d4" stroke-width="2" fill="none" />
+              <circle cx="9" cy="8" r="1.3" fill="#e9e4d4" stroke="none" />
+              <circle cx="20" cy="8" r="4" stroke="#e5534a" stroke-width="2" fill="none" />
+              <circle cx="20" cy="8" r="1.3" fill="#e5534a" stroke="none" />
+            </svg>
+            <span>Ocorrências <small>e incêndios</small></span
+            ><output></output>
+          </label>
+          <label>
+            <input type="checkbox" name="hotspots" checked />
+            <svg viewBox="0 0 28 16" aria-hidden="true">
+              <circle cx="14" cy="8" r="4.5" stroke="#f0843c" stroke-width="2" fill="none" />
+              <circle cx="14" cy="8" r="1.5" fill="#f0843c" stroke="none" />
+            </svg>
+            <span>Focos de calor, 24 h</span><output></output>
+          </label>
+          <label>
+            <input type="checkbox" name="earthquakes" checked />
+            <svg viewBox="0 0 28 16" aria-hidden="true">
+              <circle cx="14" cy="8" r="4.5" stroke="#4fb58a" stroke-width="2" fill="none" />
+              <circle cx="14" cy="8" r="1.5" fill="#4fb58a" stroke="none" />
+            </svg>
+            <span>Sismos, 7 dias</span><output></output>
+          </label>
         </fieldset>
       </form>
-      <p id="live"></p>
-    </details>
 
-    <footer>
-      <output id="readout" aria-live="off"></output>
-      <p id="credits">Dados de DGT, IPMA, APA, ANEPC, NASA e EUMETSAT, via open-data.pt · <a href="/credits/">Créditos</a></p>
-    </footer>
+      <footer>
+        <p id="live" role="status">A ler open-data.pt…</p>
+        <output id="readout" aria-live="off"></output>
+        <p>Dados de quem os publica, via <a href="https://open-data.pt/">open-data.pt</a>. <a href="/credits/">Créditos</a></p>
+      </footer>
+    </aside>
 
-    <div id="tip" class="glass" hidden></div>
-    <div id="boot" role="status">
-      <div>
-        <h2>weather<span>.open-data.pt</span></h2>
-        <p id="status">A sincronizar com open-data.pt</p>
-        <i></i>
-      </div>
-    </div>
+    <button id="fold" type="button" aria-controls="legend" aria-expanded="true">Legenda</button>
+    <button id="compass" type="button" aria-label="Virar para norte" title="Virar para norte">
+      <svg viewBox="0 0 40 40" aria-hidden="true">
+        <path d="M20 6l6 26-6-5-6 5z" />
+        <text x="20" y="5" text-anchor="middle">N</text>
+      </svg>
+    </button>
+    <div id="tip" hidden></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

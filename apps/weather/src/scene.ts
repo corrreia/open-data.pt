@@ -1,9 +1,5 @@
 import Delaunator from "delaunator";
 import * as THREE from "three";
-import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
-import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
-import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { MapControls } from "./controls.ts";
 import type { Terrain } from "./terrain/format.ts";
 import { Heights, Land, ORIGIN, type Point, project, unproject } from "./terrain/geometry.ts";
@@ -14,18 +10,23 @@ export const EXAGGERATION = 9;
 export const metresToScene = (metres: number): number => (metres / 1000) * EXAGGERATION;
 /** How far under the sea the shore's cliff reaches. */
 const PLINTH = 5;
+/** The spacing of the coarse grid of ground heights. */
+const COARSE_KM = 3;
 
-const NIGHT = new THREE.Color(0x060a12);
-const SEA = new THREE.Color(0x0d1d33);
+/** The Atlantic as a chart prints it: a deep ink, not the black of a screen. */
+const NIGHT = new THREE.Color(0x0f2a33);
+const SEA = new THREE.Color(0x12303a);
+/** The colour of the chart's own lines and lettering. */
+const PAPER = 0xe9e4d4;
 
 /** Hypsometric tints, metres to colour: lowland green through dry upland to bare summit. */
 const TINTS: [metres: number, colour: THREE.Color][] = [
-  [0, new THREE.Color(0x24483a)],
-  [150, new THREE.Color(0x3f6e47)],
-  [400, new THREE.Color(0x8f9a58)],
-  [800, new THREE.Color(0xb48c5a)],
-  [1300, new THREE.Color(0xc4b29c)],
-  [2000, new THREE.Color(0xf6f3ec)],
+  [0, new THREE.Color(0x5f7f66)],
+  [150, new THREE.Color(0x86a074)],
+  [400, new THREE.Color(0xc2bd85)],
+  [800, new THREE.Color(0xc9a274)],
+  [1300, new THREE.Color(0xb98f78)],
+  [2000, new THREE.Color(0xf1ece0)],
 ];
 
 function tint(metres: number, into: THREE.Color): THREE.Color {
@@ -90,21 +91,18 @@ function landMesh(terrain: Terrain, rings: Point[][]): THREE.Mesh {
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nvarying float vHeight;")
       .replace("#include <begin_vertex>", "#include <begin_vertex>\nvHeight = position.y;");
-    shader.fragmentShader = shader.fragmentShader
-      .replace("#include <common>", "#include <common>\nvarying float vHeight;\nuniform float metresPerUnit;")
-      .replace(
-        "#include <color_fragment>",
-        `#include <color_fragment>
+    shader.fragmentShader = shader.fragmentShader.replace("#include <common>", "#include <common>\nvarying float vHeight;\nuniform float metresPerUnit;").replace(
+      "#include <color_fragment>",
+      `#include <color_fragment>
         float contour = vHeight * metresPerUnit / 100.0;
         float onContour = 1.0 - clamp(abs(fract(contour - 0.5) - 0.5) / fwidth(contour), 0.0, 1.0);
-        diffuseColor.rgb = mix(diffuseColor.rgb * 0.82, vec3(0.55, 0.95, 1.0), onContour * 0.22);`,
-      )
-      .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\ntotalEmissiveRadiance += vec3(0.05, 0.45, 0.6) * onContour * 0.16;");
+        diffuseColor.rgb *= 1.0 - onContour * 0.2;`,
+    );
   };
   return new THREE.Mesh(geometry, material);
 }
 
-/** The shore and the frontier as a line of light around the country. */
+/** The shore and the frontier, drawn as a chart draws a coast. */
 function outline(rings: Point[][]): THREE.Group {
   const group = new THREE.Group();
   for (const ring of rings) {
@@ -116,7 +114,7 @@ function outline(rings: Point[][]): THREE.Group {
         3,
       ),
     );
-    group.add(new THREE.LineLoop(geometry, new THREE.LineBasicMaterial({ color: 0x4fe3ff, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false })));
+    group.add(new THREE.LineLoop(geometry, new THREE.LineBasicMaterial({ color: PAPER, transparent: true, opacity: 0.75, depthWrite: false })));
   }
   return group;
 }
@@ -144,7 +142,7 @@ function plinth(terrain: Terrain): THREE.Mesh {
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   geometry.computeVertexNormals();
-  return new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0x0c1a22, emissive: 0x0a3442, emissiveIntensity: 0.5, roughness: 1, side: THREE.DoubleSide }));
+  return new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0x0a2028, roughness: 1, side: THREE.DoubleSide }));
 }
 
 /** District borders, laid a little above the ground they cross. */
@@ -161,13 +159,35 @@ function borders(terrain: Terrain): THREE.LineSegments {
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  return new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color: 0xbfefff, transparent: true, opacity: 0.22, depthWrite: false }));
+  return new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color: 0x0b2129, transparent: true, opacity: 0.35, depthWrite: false }));
+}
+
+/** A few characters lying on the sea, lettered as on a chart's margin, about twenty kilometres tall. */
+function lettering(text: string, at: Point): THREE.Mesh {
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 64;
+  const pen = canvas.getContext("2d");
+  if (pen !== null) {
+    pen.font = "500 40px 'B612 Mono', ui-monospace, monospace";
+    pen.textAlign = "center";
+    pen.textBaseline = "middle";
+    pen.fillStyle = "#e9e4d4";
+    pen.fillText(text, 128, 34);
+  }
+  const mesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(56, 14),
+    new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(canvas), transparent: true, opacity: 0.5, depthWrite: false }),
+  );
+  mesh.rotation.x = -Math.PI / 2;
+  mesh.position.set(at[0], 0.02, -at[1]);
+  return mesh;
 }
 
 /** The sea, with a line at every degree of latitude and longitude. */
 function sea(): THREE.Group {
   const group = new THREE.Group();
-  const water = new THREE.Mesh(new THREE.CircleGeometry(4000, 64), new THREE.MeshStandardMaterial({ color: SEA, roughness: 0.55, metalness: 0.2 }));
+  const water = new THREE.Mesh(new THREE.CircleGeometry(4000, 64), new THREE.MeshBasicMaterial({ color: SEA }));
   water.rotation.x = -Math.PI / 2;
   water.position.y = -0.05;
   group.add(water);
@@ -187,7 +207,11 @@ function sea(): THREE.Group {
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  group.add(new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color: 0x3fb8e0, transparent: true, opacity: 0.14 })));
+  group.add(new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color: PAPER, transparent: true, opacity: 0.13 })));
+
+  // Each line named where it leaves the land for the sea: parallels down the west, meridians along the south.
+  for (let latitude = 37; latitude <= 42; latitude++) group.add(lettering(`${latitude}° N`, project([-10.45, latitude])));
+  for (let longitude = -9; longitude <= -7; longitude++) group.add(lettering(`${-longitude}° W`, project([longitude, 36.55])));
   return group;
 }
 
@@ -207,6 +231,8 @@ export interface MapScene {
   onLand(point: Point): boolean;
   /** How high the drawn ground stands at a point of the plane, in the scene's units. */
   ground(point: Point): number;
+  /** The same, read from a coarse grid: for what asks thousands of times a frame and can be a little off. */
+  groundFast(point: Point): number;
   /** Where a point of the plane at a height of the scene falls on the screen, in CSS pixels; nothing when it is behind the camera. */
   toScreen(point: Point, height: number): [x: number, y: number] | undefined;
   /** Called before every frame is drawn, with the time in milliseconds. */
@@ -230,13 +256,13 @@ export function createMap(canvas: HTMLCanvasElement, terrain: Terrain): MapScene
 
   const scene = new THREE.Scene();
   scene.background = NIGHT;
-  scene.fog = new THREE.Fog(NIGHT, 900, 3200);
+  scene.fog = new THREE.Fog(NIGHT, 1400, 4200);
 
   const rings = ringsOf(terrain);
   const land = landMesh(terrain, rings);
   scene.add(land, plinth(terrain), borders(terrain), outline(rings), sea());
 
-  const sky = new THREE.HemisphereLight(0xbcd3ff, 0x1b2430, 0.9);
+  const sky = new THREE.HemisphereLight(0xe6edf0, 0x3a4a4c, 0.9);
   const sun = new THREE.DirectionalLight(0xffffff, 2);
   scene.add(sky, sun, sun.target);
 
@@ -253,16 +279,12 @@ export function createMap(canvas: HTMLCanvasElement, terrain: Terrain): MapScene
   const controls = new MapControls(camera, canvas, still ? rest : far);
   if (!still) controls.flyTo(rest, 0.0014);
 
-  const composer = new EffectComposer(renderer);
-  composer.addPass(new RenderPass(scene, camera));
-  // Only what is brighter than the lit land blooms: the lines of light, the wind and the beacons.
-  composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 0.32, 0.6, 0.86));
-  composer.addPass(new OutputPass());
-
   const resize = (): void => {
     renderer.setSize(window.innerWidth, window.innerHeight, false);
-    composer.setSize(window.innerWidth, window.innerHeight);
     camera.aspect = window.innerWidth / window.innerHeight;
+    // The legend covers a margin of the window: the middle of the view is the middle of what is left.
+    const wide = window.innerWidth > 700;
+    camera.setViewOffset(window.innerWidth, window.innerHeight, wide ? -134 : 0, wide ? 0 : 37, window.innerWidth, window.innerHeight);
     // A phone held upright sees the country whole only from farther back.
     camera.fov = camera.aspect < 0.8 ? 52 : 36;
     camera.updateProjectionMatrix();
@@ -274,6 +296,10 @@ export function createMap(canvas: HTMLCanvasElement, terrain: Terrain): MapScene
   for (let index = 0; index < terrain.points.length; index += 3) ground.add([terrain.points[index] ?? 0, terrain.points[index + 1] ?? 0], terrain.points[index + 2] ?? 0);
   const onLand = new Land(rings);
   const listeners: ((now: number) => void)[] = [];
+  // Filled in as it is asked: most of the grid is sea and never is.
+  const columns = Math.ceil(span.x / COARSE_KM) + 1;
+  const rows = Math.ceil(span.z / COARSE_KM) + 1;
+  const coarse = new Float32Array(columns * rows).fill(-1);
   const corner = new THREE.Vector3();
   const colours = land.geometry.getAttribute("color");
   const colour = new THREE.Color();
@@ -284,6 +310,17 @@ export function createMap(canvas: HTMLCanvasElement, terrain: Terrain): MapScene
     bounds: { west: box.min.x, east: box.max.x, south: -box.max.z, north: -box.min.z },
     onLand: (point) => onLand.has(point),
     ground: (point) => metresToScene(ground.at(point, 3, 0.3)),
+    groundFast(point) {
+      const column = Math.round((point[0] - box.min.x) / COARSE_KM);
+      const row = Math.round((point[1] + box.max.z) / COARSE_KM);
+      if (column < 0 || row < 0 || column >= columns || row >= rows) return 0;
+      const cell = row * columns + column;
+      const known = coarse[cell] ?? -1;
+      if (known >= 0) return known;
+      const height = metresToScene(ground.at([box.min.x + column * COARSE_KM, -box.max.z + row * COARSE_KM], 3, 0.3));
+      coarse[cell] = height;
+      return height;
+    },
     toScreen(point, height) {
       corner.set(point[0], height, -point[1]).project(camera);
       return corner.z > 1 ? undefined : [((corner.x + 1) / 2) * window.innerWidth, ((1 - corner.y) / 2) * window.innerHeight];
@@ -317,8 +354,8 @@ export function createMap(canvas: HTMLCanvasElement, terrain: Terrain): MapScene
         .add(centre);
       sun.target.position.copy(centre);
       sun.color.lerpColors(new THREE.Color(0x6f8fd8), new THREE.Color(elevation < 12 ? 0xffc58a : 0xfff4e2), day);
-      sun.intensity = THREE.MathUtils.lerp(0.9, 2.6, day);
-      sky.intensity = THREE.MathUtils.lerp(0.35, 0.95, day);
+      sun.intensity = THREE.MathUtils.lerp(1.1, 2.3, day);
+      sky.intensity = THREE.MathUtils.lerp(0.75, 1.15, day);
       return elevation;
     },
   };
@@ -346,7 +383,7 @@ export function createMap(canvas: HTMLCanvasElement, terrain: Terrain): MapScene
     last = now;
     for (const listener of listeners) listener(now);
     if (pointerMoved) read();
-    composer.render();
+    renderer.render(scene, camera);
   });
 
   return map;

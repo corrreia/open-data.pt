@@ -174,7 +174,7 @@ export async function readOccurrences(): Promise<Occurrences> {
         at: new Date(row.startedAt),
         label: `${row.nature}\n${row.locality ?? row.municipality}, ${row.municipality}\n${row.status} · ${means}\nANEPC, desde ${WHEN.format(new Date(row.startedAt))}`,
         weight: Math.min(1, (row.personnel ?? 0) / 60),
-        colour: fire ? 0xff4d2e : 0xffb02e,
+        colour: fire ? 0xd8342a : 0x1d1d1b,
       },
     ];
   });
@@ -195,7 +195,7 @@ export async function readLightning(now: Date): Promise<Happening[]> {
         at: new Date(row.occurredAt),
         label: `Descarga elétrica\n${kind}${row.peakCurrent === null ? "" : ` · ${COUNT.format(Math.abs(row.peakCurrent))} kA`}\nIPMA, ${WHEN.format(new Date(row.occurredAt))}`,
         weight: 1 - age / DAY_MS,
-        colour: 0xd9c2ff,
+        colour: 0x7b4bb3,
       },
     ];
   });
@@ -215,7 +215,7 @@ export async function readEarthquakes(now: Date): Promise<Happening[]> {
         at: new Date(row.time),
         label: `Sismo de magnitude ${COUNT.format(row.magnitude)}\n${row.region ?? ""}${row.depth === null ? "" : ` · ${COUNT.format(row.depth)} km de profundidade`}\nIPMA, ${WHEN.format(new Date(row.time))}`,
         weight: Math.min(1, row.magnitude / 5),
-        colour: 0x7dffb0,
+        colour: 0x1f7a52,
       },
     ];
   });
@@ -243,7 +243,7 @@ export async function readFloodAlerts(): Promise<Happening[]> {
         at: undefined,
         label: `Alerta de cheia em ${row.name}\n${row.river ?? ""} · bacia do ${row.basin ?? ""}\nnível ${row.alertLevel} · ${row.watchedParameter ?? ""}\nAPA, InfoÁgua`,
         weight: Math.min(1, row.alertLevel / 4),
-        colour: row.alertColor === null ? 0x4fc3ff : Number.parseInt(row.alertColor.slice(1), 16),
+        colour: 0x1f6aa8,
       },
     ];
   });
@@ -267,7 +267,7 @@ export async function readHotspots(now: Date): Promise<Happening[]> {
         at: new Date(row.acquiredAt),
         label: `Foco de calor\n${row.fireRadiativePower === null ? "" : `${COUNT.format(row.fireRadiativePower)} MW · `}${row.satellite ?? "satélite"}\nNASA FIRMS, ${WHEN.format(new Date(row.acquiredAt))}`,
         weight: Math.min(1, (row.fireRadiativePower ?? 10) / 100),
-        colour: 0xff7a1a,
+        colour: 0xe8590c,
       })),
     ...mtg
       .filter((row) => recent(row.detectedAt))
@@ -277,16 +277,16 @@ export async function readHotspots(now: Date): Promise<Happening[]> {
         at: new Date(row.detectedAt),
         label: `Fogo ativo visto do espaço\n${row.certainty ?? ""}\nEUMETSAT, ${WHEN.format(new Date(row.detectedAt))}`,
         weight: 0.6,
-        colour: 0xff7a1a,
+        colour: 0xe8590c,
       })),
   ];
 }
 
 /** IPMA's warning levels above green, mildest first, each with its colour and its name. */
 const WARNING_LEVELS = new Map([
-  ["yellow", { colour: 0xffd84a, name: "amarelo" }],
-  ["orange", { colour: 0xff8a1f, name: "laranja" }],
-  ["red", { colour: 0xff2e4d, name: "vermelho" }],
+  ["yellow", { colour: 0xf2c200, name: "amarelo" }],
+  ["orange", { colour: 0xf07f13, name: "laranja" }],
+  ["red", { colour: 0xd8342a, name: "vermelho" }],
 ]);
 
 /**
