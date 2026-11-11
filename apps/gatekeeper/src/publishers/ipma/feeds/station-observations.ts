@@ -4,7 +4,8 @@ import { IPMA_DEPLOYMENT, IPMA_NORMALIZER, IPMA_TRANSFORMER, collectIpmaFeed } f
 export const FEED = defineFeed(IPMA_DEPLOYMENT, {
   slug: "ipma-station-observations-feed",
   title: "IPMA hourly station observations",
-  description: "The last 24 hours of temperature, humidity, wind, precipitation, and pressure readings from IPMA stations.",
+  description:
+    "The last 24 hours of temperature, humidity, wind speed, precipitation, pressure and solar radiation readings from IPMA stations, and each station's latest reading with the compass point its wind blows from.",
   licence: "ipma-terms",
   attribution: "Instituto Português do Mar e da Atmosfera (IPMA)",
   topics: ["environment", "weather"],
