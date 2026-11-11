@@ -124,6 +124,21 @@ describe("ArcGIS Gatekeeper — APA SNIAmb", () => {
     expect(fetcher.mock.calls[2]?.[0].toString()).toContain("f=geojson&outSR=4326");
   });
 
+  it("reads Esri JSON when the feed asks for it, though the layer offers GeoJSON", async () => {
+    const esriPage = {
+      spatialReference: { wkid: 4326 },
+      features: [{ attributes: { objectid: 1, nome_praia: "Beach 1" }, geometry: { x: -9.01, y: 38.01 } }],
+    };
+    const fetcher = vi.fn(fixtureFetcher(metadata(), esriPage));
+    const fetched = bodyOf(await collectArcgisFeed({ ...config, format: "json" }, undefined, hosts, fetcher));
+
+    const text = await readText(fetched.body);
+    expect(fetcher.mock.calls[2]?.[0].toString()).toContain("f=json&outSR=4326");
+    expect(text).toContain('"nome_praia":"Beach 1"');
+    expect(validateArcgisFeedConfig({ ...config, format: "json" }, hosts)).toEqual({ ...config, format: "json" });
+    expect(() => validateArcgisFeedConfig({ ...config, format: "kml" }, hosts)).toThrowError(GatekeeperError);
+  });
+
   it("collects again when a layer without editingInfo was collected before", async () => {
     const fetcher = vi.fn(fixtureFetcher(metadata(), geojsonPage([1, 2]), 2));
     const fetched = await collectArcgisFeed(config, { etag: '"sha256-stale"' }, hosts, fetcher);

@@ -119,6 +119,10 @@
     "resourceKey": "arcgis:arcgis:layer:c2ac80737d8b6b52bf7b582532390c9c2702c60e0957ffc7cee72a890bf554cf",
     "kind": "arcgis:layer"
   },
+  "apa-drinking-water-protection-areas-feed": {
+    "resourceKey": "arcgis:arcgis:layer:8b1f725a252829805fd161ebea98d95c697e7e98e6eac690c5702c071cda4491",
+    "kind": "arcgis:layer"
+  },
   "apa-emas-organisations-feed": {
     "resourceKey": "arcgis:arcgis:layer:d266aaafc020dd88b175dc0ee6c30e5f935496b6ddde8210c4ec00574ae02020",
     "kind": "arcgis:layer"
@@ -131,12 +135,20 @@
     "resourceKey": "arcgis:arcgis:layer:ab291a658de48987673c3d2b9525563d933d0c43f8f598e72458a34819417ff6",
     "kind": "arcgis:layer"
   },
+  "apa-groundwater-quality-stations-feed": {
+    "resourceKey": "arcgis:arcgis:layer:59950fd92697bf1f43eb7820439430e439c85cd0d5caad135f2ba0e43ebafae3",
+    "kind": "arcgis:layer"
+  },
+  "apa-groundwater-quantity-stations-feed": {
+    "resourceKey": "arcgis:arcgis:layer:3f9582a944f0ba413c0d9d111baed32da45929f96b28c523ebd47d551d3e862f",
+    "kind": "arcgis:layer"
+  },
   "apa-hydrometric-stations-feed": {
     "resourceKey": "arcgis:arcgis:layer:ae0f991a62d4a4ad8323f09509224423e4e60e3e0b1c0faa5940fa8b4b34405f",
     "kind": "arcgis:layer"
   },
   "apa-impact-assessment-projects-feed": {
-    "resourceKey": "arcgis:arcgis:layer:644d4d599782eb51cdc0bc6cecf5a8a3467481d4747a852f86825d3acafa7b7d",
+    "resourceKey": "arcgis:arcgis:layer:ec9a88a4a034ba4e1aedb63d93f3f951a59c2f589d4f8530bba5188aa932e5b5",
     "kind": "arcgis:layer"
   },
   "apa-landfills-feed": {
@@ -168,7 +180,15 @@
     "kind": "arcgis:layer"
   },
   "apa-seveso-establishments-feed": {
-    "resourceKey": "arcgis:arcgis:layer:1c7a7a2be7de4f933ccab56cd1a096fc7213f895466ca4aaf9b3a4b310e44ce0",
+    "resourceKey": "arcgis:arcgis:layer:79044d4df38ea51464af846119c214847982b426c234e83bc5757477fbbcb639",
+    "kind": "arcgis:layer"
+  },
+  "apa-surface-water-quality-stations-feed": {
+    "resourceKey": "arcgis:arcgis:layer:f9b431c4ef4293f74de3210252f62345897c5dd913c9194a72c5720c9f963e44",
+    "kind": "arcgis:layer"
+  },
+  "apa-tyre-collection-points-feed": {
+    "resourceKey": "arcgis:arcgis:layer:fdf071e2ee765e75a0f3e3e584379231b7f7c1d73afbb16e874d4f9878d32790",
     "kind": "arcgis:layer"
   },
   "apa-waste-infrastructure-feed": {
@@ -1171,6 +1191,10 @@
     "resourceKey": "ogc:ogc:collection:efcd513a9b0765fa21d566881431fdb4dcebc3d08cc57bf695440573a7cefd8e",
     "kind": "ogc:collection"
   },
+  "mafra-associacoes-feed": {
+    "resourceKey": "arcgis:arcgis:layer:9108431c68e69a210a4bc2c1a342589ca367a097d3860bc6edb2ddc41fb0ab18",
+    "kind": "arcgis:layer"
+  },
   "mafra-centros-saude-feed": {
     "resourceKey": "arcgis:arcgis:layer:61d592dd1cffab01afa4dfc14e79df655f7b03afd4497084c2a2d07df8547420",
     "kind": "arcgis:layer"
@@ -1209,6 +1233,18 @@
   },
   "mafra-farmacias-feed": {
     "resourceKey": "arcgis:arcgis:layer:0698bcdb27c2848b7de0bdebccd87c1e05e7799239120e4c139a91972459afac",
+    "kind": "arcgis:layer"
+  },
+  "mafra-fontes-pocos-lavadouros-feed": {
+    "resourceKey": "arcgis:arcgis:layer:b961c8bc75f1656f730194d5911c47628e9befed2a2066074504ba509ce1f096",
+    "kind": "arcgis:layer"
+  },
+  "mafra-fortes-feed": {
+    "resourceKey": "arcgis:arcgis:layer:40270e0acd070e4f60f17149a0ec7969e9c60ac12756ad6c1bed0f3eaa91099d",
+    "kind": "arcgis:layer"
+  },
+  "mafra-linhas-torres-percursos-feed": {
+    "resourceKey": "arcgis:arcgis:layer:2269c6701864012c995977a024080ca2d640d7885ee496f9c549ca1d3dc8ad2f",
     "kind": "arcgis:layer"
   },
   "mafra-lugares-mobilidade-reduzida-feed": {
@@ -1563,10 +1599,6 @@
     "resourceKey": "snirh:snirh:readings:6d36c81031e53d4c0a2a1670a89ede91f2938c25a840bec0b28fb262117a7297",
     "kind": "snirh:readings"
   },
-  "snirh-groundwater-levels-feed": {
-    "resourceKey": "snirh:snirh:readings:6e79ff37e0eb6eeb8122cebfc6003991aa3ab9e5d48d425e452aa43e14d9b00a",
-    "kind": "snirh:readings"
-  },
   "snirh-groundwater-state-feed": {
     "resourceKey": "snirh:snirh:groundwater-state:a879ab19090a9eef81554466219eaa16301a4c40972acbe734d056b0b98a40f1",
     "kind": "snirh:groundwater-state"
@@ -1601,10 +1633,6 @@
   },
   "snirh-river-levels-feed": {
     "resourceKey": "snirh:snirh:readings:087064668fbd6a276ea58975507bb0ec43f384fd9789b9a771ded64d762f2a91",
-    "kind": "snirh:readings"
-  },
-  "snirh-wind-speed-feed": {
-    "resourceKey": "snirh:snirh:readings:dd3a0313a8c47b2f63e940c50bc0a560eaf52770cb4a6484c73a3fdb6e6ed06d",
     "kind": "snirh:readings"
   },
   "snit-medidas-preventivas-feed": {
