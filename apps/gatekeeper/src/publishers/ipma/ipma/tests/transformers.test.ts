@@ -31,7 +31,7 @@ describe("IPMA transformers", () => {
   it("creates latest station records and one hourly series per measure", async () => {
     const result = await transformer.transform(fixture("station-observations"), context("station-observations"));
 
-    expect(result.transformer).toEqual({ id: "ipma-open-data", version: "3" });
+    expect(result.transformer).toEqual({ id: "ipma-open-data", version: "4" });
     expect(result.products.map((product) => [product.slug, product.role])).toEqual([
       ["ipma-stations-latest", "current-state"],
       ["ipma-observations", "time-series"],
@@ -45,9 +45,14 @@ describe("IPMA transformers", () => {
         latitude: 37.033,
         longitude: -7.821,
         temperature: 31.4,
+        // IPMA's direction class 5 is a wind from the south.
+        windDirection: "S",
+        radiation: 0,
       },
     });
-    expect(result.products[1]?.points).toHaveLength(30);
+    // The second station reports -99 for radiation, which is IPMA saying it has no reading.
+    expect(result.products[0]?.records?.[1]?.payload).toMatchObject({ windDirection: "SW", radiation: null });
+    expect(result.products[1]?.points).toHaveLength(33);
     expect(result.products[1]?.points).toContainEqual({
       seriesKey: "1210881:temperature",
       eventTime: "2026-09-07T16:00:00.000Z",

@@ -11,8 +11,10 @@ const LATEST_STATION_SCHEMA: CanonicalSchema = {
     field("temperature", "number", true, "°C"),
     field("humidity", "number", true, "%"),
     field("windSpeed", "number", true, "km/h"),
+    field("windDirection", "category", true),
     field("precipitation", "number", true, "mm"),
     field("pressure", "number", true, "hPa"),
+    field("radiation", "number", true, "kJ/m²"),
   ],
 };
 
@@ -136,8 +138,10 @@ interface StationReading {
   temperature: number | null;
   humidity: number | null;
   windSpeed: number | null;
+  windDirection: string | null;
   precipitation: number | null;
   pressure: number | null;
+  radiation: number | null;
 }
 
 const MEASURES = [
@@ -146,11 +150,18 @@ const MEASURES = [
   { source: "intensidadeVentoKM", payload: "windSpeed", suffix: "wind-speed", unit: "km/h" },
   { source: "precAcumulada", payload: "precipitation", suffix: "precipitation", unit: "mm" },
   { source: "pressao", payload: "pressure", suffix: "pressure", unit: "hPa" },
+  { source: "radiacao", payload: "radiation", suffix: "radiation", unit: "kJ/m²" },
 ] as const;
+
+/**
+ * The compass point the wind blew from, as IPMA numbers it in `idDireccVento`: 1 and 9 are both north,
+ * and 0 is a wind with no bearing, which is no direction at all.
+ */
+const WIND_DIRECTIONS: readonly (string | null)[] = [null, "N", "NE", "E", "SE", "S", "SW", "W", "NW", "N"];
 
 export class IpmaTransformer {
   readonly id = "ipma-open-data";
-  readonly version = "3";
+  readonly version = "4";
 
   async transform(bytes: Uint8Array, context: TransformContext): Promise<TransformResult> {
     let value: JsonValue;
@@ -232,8 +243,10 @@ function transformStationObservations(root: JsonObject): Omit<TransformResult, "
         temperature: measurement(rawReading.temperatura),
         humidity: measurement(rawReading.humidade),
         windSpeed: measurement(rawReading.intensidadeVentoKM),
+        windDirection: WIND_DIRECTIONS[finiteNumber(rawReading.idDireccVento) ?? 0] ?? null,
         precipitation: measurement(rawReading.precAcumulada),
         pressure: measurement(rawReading.pressao),
+        radiation: measurement(rawReading.radiacao),
       };
       let hasMeasurement = false;
       for (const measure of MEASURES) {

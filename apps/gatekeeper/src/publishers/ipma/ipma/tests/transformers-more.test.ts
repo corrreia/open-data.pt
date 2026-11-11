@@ -38,7 +38,7 @@ describe("IPMA additional transformers", () => {
     const product = result.products[0];
     const yellow = product?.records?.find((record) => record.payload.level === "yellow");
 
-    expect(result.transformer).toEqual({ id: "ipma-open-data", version: "3" });
+    expect(result.transformer).toEqual({ id: "ipma-open-data", version: "4" });
     expect(product).toMatchObject({
       slug: "ipma-warnings",
       role: "event-log",
