@@ -160,7 +160,7 @@ async function open(): Promise<void> {
   if (aboutWater.ok && waterBytes.ok && aboutWater.headers.get("content-type")?.includes("json") === true) {
     // SAFETY: water.json is written by bake.ts from a WaterManifest and ships beside this script.
     fixed.set("water", waterLayer(map, decodeWater((await aboutWater.json()) as WaterManifest, await waterBytes.arrayBuffer())));
-    const row = panel.querySelector<HTMLElement>("label[hidden]");
+    const row = panel.querySelector<HTMLInputElement>('input[name="water"]')?.parentElement ?? null;
     if (row !== null) row.hidden = false;
   }
 

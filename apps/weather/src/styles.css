@@ -211,6 +211,16 @@ label:has(input:not(:checked)) + #wind-key {
   transform: translateX(-50%);
 }
 
+/* The ends of the key sit inside it, so the last figure and its unit are not pushed off the margin. */
+#scale b:first-child {
+  transform: none;
+}
+
+#scale b:last-child {
+  transform: translateX(-100%);
+  white-space: nowrap;
+}
+
 #wind-key {
   white-space: nowrap;
   display: flex;
