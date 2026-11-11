@@ -1,0 +1,19 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  // weather.open-data.pt is files only: the page, its script and the baked terrain. Everything it
+  // shows it reads in the browser from open-data.pt's public API, so there is no Worker code here.
+  "name": "open-data-pt-weather",
+  "compatibility_date": "2026-09-09",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    {
+      "pattern": "weather.open-data.pt",
+      "custom_domain": true,
+    },
+  ],
+  "assets": {
+    "directory": "dist",
+    "not_found_handling": "single-page-application",
+  },
+}

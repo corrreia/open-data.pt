@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#060a12" />
+    <meta name="description" content="O tempo em Portugal, em três dimensões, só com dados abertos servidos por open-data.pt." />
+    <title>weather.open-data.pt</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='5' fill='%23f2b84b'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <canvas id="map" aria-label="Mapa de Portugal continental em relevo. Arraste para mover, use a roda para aproximar."></canvas>
+    <header>
+      <h1>weather<span>.open-data.pt</span></h1>
+      <p id="clock"></p>
+    </header>
+    <p id="status" role="status">A desenhar Portugal…</p>
+    <output id="readout" aria-live="off"></output>
+    <footer>
+      <p id="hint">Arrastar move · roda aproxima · botão direito ou dois dedos rodam</p>
+      <p id="credits"></p>
+    </footer>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

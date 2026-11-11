@@ -15,6 +15,7 @@
     "tools/oxlint/anti-slop/**",
     "**/worker-configuration.d.ts",
     "apps/site/dist/**",
+    "apps/weather/dist/**",
     "apps/gatekeeper/src/catalog/folders.generated.ts"
   ],
   "jsPlugins": [
