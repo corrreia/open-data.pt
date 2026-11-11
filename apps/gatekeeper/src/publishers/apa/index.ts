@@ -39,6 +39,8 @@ import { FEED as drinkingWaterProtectionAreas } from "./feeds/drinking-water-pro
 import { FEED as surfaceWaterQualityStations } from "./feeds/surface-water-quality-stations";
 import { FEED as groundwaterQualityStations } from "./feeds/groundwater-quality-stations";
 import { FEED as groundwaterQuantityStations } from "./feeds/groundwater-quantity-stations";
+import { FEED as riverWaterBodies } from "./feeds/river-water-bodies";
+import { FEED as publicLagoons } from "./feeds/public-lagoons";
 
 /** A common Chrome's name: every APA server but InfoÁgua returns 520 to a Worker under ours. */
 const BROWSER = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
@@ -107,5 +109,7 @@ export const PUBLISHER: PublisherDefinition = {
     surfaceWaterQualityStations,
     groundwaterQualityStations,
     groundwaterQuantityStations,
+    riverWaterBodies,
+    publicLagoons,
   ],
 };
