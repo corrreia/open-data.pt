@@ -3,20 +3,20 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0b2129" />
+    <meta name="theme-color" content="#f3f5f4" />
     <meta name="description" content="De onde vêm os dados de weather.open-data.pt, quem os publica e sob que licença." />
-    <title>Créditos · weather.open-data.pt</title>
+    <title>Fontes e créditos · Tempo em Portugal</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='5' fill='%23f2b84b'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="/src/credits.css" />
   </head>
   <body>
     <main>
-      <p><a href="/">← Voltar ao mapa</a></p>
-      <h1>Créditos</h1>
+      <p><a href="/">← Voltar ao tempo</a></p>
+      <h1>Fontes e créditos</h1>
       <p>
-        Tudo o que este mapa mostra é publicado por organismos públicos portugueses e chega aqui através de
-        <a href="https://open-data.pt/">open-data.pt</a>, que recolhe e serve os dados tal como cada um os publica. Os dados são de quem os publica; o que este site lhes faz está
-        descrito em cada linha.
+        Quase tudo o que este site mostra é publicado pelo Instituto Português do Mar e da Atmosfera (IPMA) e chega aqui através de
+        <a href="https://open-data.pt/">open-data.pt</a>, que recolhe e serve os dados tal como cada organismo os publica. Este site não é do IPMA nem fala por ele: os dados são de
+        quem os publica.
       </p>
 
       <h2>Dados</h2>
@@ -27,19 +27,14 @@
       <h2>O que é calculado aqui</h2>
       <ul>
         <li>
-          <b>Relevo.</b> Não existe um modelo de elevação em open-data.pt. A altura do terreno é interpolada entre os vértices geodésicos e os cumes principais, com a costa ao
-          nível do mar. Esses marcos estão em pontos altos, por isso os vales aparecem mais rasos do que são.
+          <b>Cor do mapa nas observações.</b> Entre estações, o valor é interpolado pela distância. Não conhece a altitude nem o mar, e o que acontece entre duas estações não
+          aparece: não é radar nem previsão.
         </li>
         <li>
-          <b>Cor do terreno.</b> A temperatura, a chuva da última hora e a humidade são interpoladas entre as leituras das estações, pela distância. Não conhecem a altitude nem o
-          mar, e um aguaceiro entre duas estações não aparece: não é radar nem previsão.
+          <b>Relevo.</b> Não existe um modelo de elevação em open-data.pt. A altura do terreno é interpolada entre os vértices geodésicos e os cumes principais da DGT, com a costa
+          ao nível do mar; os vales aparecem mais rasos do que são.
         </li>
-        <li>
-          <b>Vento.</b> Cada estação diz de onde sopra o vento e com que força. As setas entre estações são uma média pela distância: mostram a tendência, não conhecem serras nem o
-          mar. Cada seta aponta para onde o ar vai e é tão comprida quanto o vento é forte.
-        </li>
-        <li><b>Avisos.</b> O IPMA dá o nome da área de cada aviso; o anel é desenhado no centro do distrito com esse nome na CAOP.</li>
-        <li><b>Albufeiras.</b> A largura de cada copo segue a capacidade da albufeira e o enchimento segue o último volume lido.</li>
+        <li><b>Avisos no mapa.</b> O IPMA avisa por distrito; a marca é posta no centro do distrito na Carta Administrativa.</li>
         <li><b>Luz.</b> A posição do sol é calculada para a hora de Lisboa, sem dados externos.</li>
       </ul>
 
@@ -47,6 +42,7 @@
       <ul>
         <li><a href="https://threejs.org/">three.js</a>, licença MIT</li>
         <li><a href="https://github.com/mapbox/delaunator">Delaunator</a>, licença ISC</li>
+        <li>Tipo de letra <a href="https://github.com/Omnibus-Type/Archivo">Archivo</a>, licença SIL Open Font</li>
       </ul>
 
       <p class="quiet">O código deste site está em <a href="https://github.com/corrreia/open-data.pt">github.com/corrreia/open-data.pt</a>, em <code>apps/weather</code>.</p>

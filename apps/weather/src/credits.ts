@@ -1,5 +1,4 @@
 import "@fontsource-variable/archivo/wdth.css";
-import "@fontsource/b612-mono/latin-400.css";
 
 /**
  * The credits page's list of sources. What each product is called, who it is attributed to and under
@@ -10,22 +9,26 @@ const API = "https://open-data.pt/api/products";
 
 /** Every product the site draws from, with what it is used for. One the catalog does not carry yet is left out. */
 const USES: [product: string, use: string][] = [
-  ["dgt-caop-trocos", "A linha de costa, a fronteira e os limites de distrito."],
-  ["dgt-rgn-vertices-geodesicos", "Altitudes para o relevo."],
-  ["dgt-serras-cumes-principais", "Altitudes dos cumes para o relevo."],
-  ["ipma-stations-latest", "Temperatura, humidade, chuva da última hora e vento em cada estação."],
-  ["ipma-warnings", "Os avisos meteorológicos em vigor em cada distrito."],
-  ["dgt-caop-distritos", "O centro de cada distrito, onde os avisos são desenhados."],
-  ["ipma-lightning-discharges", "As descargas elétricas das últimas 24 horas."],
-  ["ipma-earthquakes", "Os sismos dos últimos sete dias."],
-  ["anepc-active-occurrences", "As ocorrências que a proteção civil tem em curso, com os meios empenhados."],
-  ["nasa-firms-mainland-thermal-anomalies", "Os focos de calor vistos por satélite nas últimas 24 horas."],
-  ["eumetsat-mtg-active-fires", "Os fogos ativos detetados pelo satélite geoestacionário."],
-  ["infoagua-flood-alerts", "As estações com alerta de cheia."],
-  ["infoagua-reservoirs", "Onde fica cada albufeira e quanto pode guardar."],
-  ["snirh-reservoir-storage", "O volume guardado em cada albufeira na última leitura."],
-  ["apa-river-water-bodies", "O traçado dos rios."],
-  ["apa-public-lagoons", "O contorno das lagoas."],
+  ["ipma-forecast-daily", "A previsão para três dias nas capitais de distrito e nas ilhas."],
+  ["ipma-warnings", "Os avisos meteorológicos."],
+  ["ipma-stations-latest", "A última leitura de cada estação."],
+  ["ipma-observations", "O último dia de cada estação, hora a hora."],
+  ["ipma-sea-forecast", "A previsão do estado do mar."],
+  ["ipma-shellfish-restrictions", "As zonas de apanha de bivalves e as espécies interditas."],
+  ["ipma-uv-index", "A previsão do índice ultravioleta."],
+  ["ipma-fire-risk", "O perigo de incêndio rural por concelho."],
+  ["ipma-earthquakes", "Os sismos dos últimos trinta dias."],
+  ["ipma-lightning-discharges", "As descargas elétricas localizadas."],
+  ["ipma-lightning-hourly", "As descargas por hora."],
+  ["ipma-municipal-temperature", "A temperatura diária por concelho."],
+  ["ipma-municipal-precipitation", "A chuva diária por concelho."],
+  ["dgt-caop-trocos", "A linha de costa, a fronteira e os limites de distrito do mapa."],
+  ["dgt-rgn-vertices-geodesicos", "Altitudes para o relevo do mapa."],
+  ["dgt-serras-cumes-principais", "Altitudes dos cumes para o relevo do mapa."],
+  ["dgt-caop-distritos", "O centro de cada distrito, onde os avisos são marcados."],
+  ["dgt-caop-municipios", "O nome e o centro de cada concelho."],
+  ["apa-river-water-bodies", "O traçado dos rios no mapa."],
+  ["apa-public-lagoons", "O contorno das lagoas no mapa."],
 ];
 
 interface Product {

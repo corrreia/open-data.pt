@@ -1,19 +1,20 @@
 /*
- * The page is a chart with its legend in the margin. The sea is ink, the lettering is the colour
- * of the paper, and nothing floats: the legend is a solid column, and every row of it shows the
- * mark the map uses and turns that mark on or off.
+ * A weather service's pages: light, plain and dense, so the numbers are what is seen. The map is
+ * the left half and stays put; the right half is the section's own table. One blue, used for what
+ * can be pressed and for where you are; every other colour on the page means something measured.
  */
 :root {
-  color-scheme: dark;
-  --sea: #0f2a33;
-  --margin: #0b2129;
-  --paper: #e9e4d4;
-  --faint: rgb(233 228 212 / 0.55);
-  --rule: rgb(233 228 212 / 0.16);
+  color-scheme: light;
+  --page: #f3f5f4;
+  --sheet: #ffffff;
+  --ink: #14212a;
+  --quiet: #5b6b76;
+  --rule: #dde3e6;
+  --blue: #0b5a8c;
   --label: "Archivo Variable", "Helvetica Neue", Arial, sans-serif;
-  --figures: "B612 Mono", ui-monospace, Menlo, monospace;
-  --rail: 268px;
   font-family: var(--label);
+  font-size: 15px;
+  line-height: 1.45;
 }
 
 * {
@@ -24,16 +25,108 @@
 html,
 body {
   height: 100%;
+}
+
+body {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background: var(--page);
+  color: var(--ink);
+}
+
+a {
+  color: var(--blue);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+button,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+body > header {
+  display: flex;
+  align-items: stretch;
+  gap: 28px;
+  padding: 0 20px;
+  background: var(--sheet);
+  border-bottom: 1px solid var(--rule);
+}
+
+.name {
+  align-self: center;
+  padding: 14px 0;
+  font-size: 17px;
+  font-weight: 750;
+  font-stretch: 112%;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+nav {
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+nav a {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  color: var(--quiet);
+  font-weight: 550;
+  font-stretch: 96%;
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+  border-top: 3px solid transparent;
+}
+
+nav a:hover {
+  color: var(--ink);
+}
+
+nav a[aria-current] {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+}
+
+#clock {
+  margin-left: auto;
+  align-self: center;
+  font-size: 13px;
+  color: var(--quiet);
+  white-space: nowrap;
+}
+
+#clock::first-letter {
+  text-transform: uppercase;
+}
+
+main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(380px, 520px);
+  min-height: 0;
+}
+
+#chart {
+  position: relative;
+  min-height: 0;
   overflow: hidden;
-  overscroll-behavior: none;
-  background: var(--sea);
-  color: var(--paper);
-  -webkit-user-select: none;
-  user-select: none;
 }
 
 canvas {
-  position: fixed;
+  position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
@@ -46,355 +139,574 @@ canvas:active {
   cursor: grabbing;
 }
 
-#legend {
-  position: fixed;
-  inset: 0 auto 0 0;
-  width: var(--rail);
-  display: flex;
-  flex-direction: column;
-  background: var(--margin);
-  border-right: 1px solid var(--rule);
-  overflow: hidden auto;
-  scrollbar-width: thin;
-}
-
-#legend > header {
-  padding: 22px 20px 18px;
-  border-bottom: 1px solid var(--rule);
-}
-
-/* Chart titles are lettered wide and in capitals; Archivo's width axis is what makes that possible in one family. */
-h1 {
-  font-size: 15px;
-  font-weight: 650;
-  font-stretch: 125%;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  line-height: 1.25;
-}
-
-#legend > header p {
-  margin-top: 7px;
-  font-size: 13px;
-  font-stretch: 88%;
-  color: var(--faint);
-}
-
-#time {
-  font-variant-numeric: tabular-nums;
-}
-
-form {
-  padding: 4px 0 8px;
-}
-
-fieldset {
-  border: 0;
-  padding: 14px 12px 6px;
-}
-
-fieldset + fieldset {
-  border-top: 1px solid var(--rule);
-}
-
-/* Floated, a legend stops sitting on its fieldset's top edge and becomes a heading inside it. */
-legend {
-  float: left;
-  width: 100%;
-  padding: 0 8px;
-  margin-bottom: 6px;
-  font-size: 10.5px;
-  font-weight: 600;
-  font-stretch: 112%;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--faint);
-}
-
-label {
-  clear: both;
-  display: grid;
-  grid-template-columns: 28px 1fr auto;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 8px;
-  border-radius: 3px;
-  font-size: 14px;
-  font-stretch: 92%;
-  cursor: pointer;
-}
-
-label[hidden] {
-  display: none;
-}
-
-label:hover {
-  background: rgb(233 228 212 / 0.06);
-}
-
-/* The mark is the switch: the box itself is there for the keyboard and for readers, not for the eye. */
-label input {
+#marks {
   position: absolute;
-  opacity: 0;
+  inset: 0;
+  overflow: hidden;
   pointer-events: none;
 }
 
-label svg {
-  width: 28px;
-  height: 16px;
-  color: var(--paper);
-  stroke: currentColor;
-}
-
-label small {
-  font-size: inherit;
-  color: var(--faint);
-}
-
-label output {
-  font: 12px var(--figures);
-  color: var(--faint);
-}
-
-label:has(input:not(:checked)) {
-  color: var(--faint);
-}
-
-label:has(input:not(:checked)) svg {
-  opacity: 0.25;
-}
-
-label:has(input:not(:checked)) span {
-  text-decoration: line-through;
-  text-decoration-color: rgb(233 228 212 / 0.4);
-}
-
-label:has(input:focus-visible),
-button:focus-visible,
-a:focus-visible {
-  outline: 2px solid var(--paper);
-  outline-offset: 1px;
-}
-
-.key {
-  margin: 0 8px 8px 46px;
-  font: 10.5px var(--figures);
-  color: var(--faint);
-}
-
-label:has(input:not(:checked)) + #wind-key {
-  display: none;
-}
-
-#scale[hidden] {
-  display: none;
-}
-
-#scale {
-  height: 8px;
-  margin: 8px 8px 24px;
-  position: relative;
-}
-
-/* A measure's swatch is its own scale in small; the relief's is the land's tints. */
-.swatch {
-  width: 24px;
-  height: 10px;
-  margin-inline: 2px;
-  background: var(--scale, linear-gradient(90deg, #5f7f66, #c2bd85, #c9a274, #f1ece0));
-}
-
-#scale b {
+.mark {
   position: absolute;
-  top: 11px;
+  top: 0;
+  left: 0;
+  will-change: transform;
+  white-space: nowrap;
+}
+
+.mark[hidden] {
+  display: none;
+}
+
+button.mark,
+.mark[title] {
+  pointer-events: auto;
+}
+
+#home {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 5px 10px;
+  font-size: 13px;
+  font-weight: 550;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#key {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  max-width: min(420px, calc(100% - 24px));
+  padding: 8px 11px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--quiet);
+  background: rgb(255 255 255 / 0.92);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+#key:has(span:empty) {
+  display: none;
+}
+
+.scale {
+  display: grid;
+  gap: 6px;
+}
+
+.strip {
+  display: block;
+  height: 9px;
+  border-radius: 2px;
+}
+
+.ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.ticks b {
   font-weight: 400;
-  transform: translateX(-50%);
 }
 
-/* The ends of the key sit inside it, so the last figure and its unit are not pushed off the margin. */
-#scale b:first-child {
-  transform: none;
-}
-
-#scale b:last-child {
-  transform: translateX(-100%);
-  white-space: nowrap;
-}
-
-#wind-key {
-  white-space: nowrap;
+/* The marks: a forecast for a city, a count of warnings, a station's reading, and so on. */
+.forecast {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 3px;
+  padding: 1px 7px 1px 3px;
+  background: var(--sheet);
+  border: 1px solid rgb(20 33 42 / 0.25);
+  border-radius: 14px;
+  font-size: 13px;
 }
 
-#wind-key i {
-  width: var(--w);
-  height: 2px;
-  background: var(--paper);
-  position: relative;
+.forecast .weather {
+  width: 24px;
+  height: 24px;
+}
+
+.forecast b {
+  font-weight: 700;
+}
+
+.forecast span {
+  color: var(--quiet);
+  font-size: 11.5px;
+}
+
+.warning,
+.index {
+  display: grid;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  border-radius: 13px;
+  background: var(--level);
+  border: 1.5px solid rgb(20 33 42 / 0.55);
+  font: 700 12.5px var(--label);
+  color: var(--ink);
+}
+
+.station {
+  padding: 0 4px;
+  background: rgb(255 255 255 / 0.86);
+  border: 1px solid rgb(20 33 42 / 0.3);
+  border-radius: 3px;
+  font-size: 11px;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.station:hover {
+  background: var(--sheet);
+  border-color: var(--blue);
+  z-index: 1;
+}
+
+.station .arrow {
+  width: 9px;
+  height: 9px;
+  margin-right: 2px;
+}
+
+.sea {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px 1px 5px;
+  background: #e4f0f6;
+  border: 1px solid rgb(11 90 140 / 0.45);
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.sea b {
+  font-weight: 650;
+}
+
+.fire {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--level);
+  border: 1px solid rgb(20 33 42 / 0.5);
+}
+
+.quake {
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  border: 2px solid #a3271e;
+  background: rgb(216 52 42 / 0.22);
+}
+
+.strike {
+  width: 9px;
+  height: 9px;
+  background: #6a3fb5;
+  border: 1px solid #fff;
+  transform-origin: center;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+.pin {
+  padding: 2px 8px;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 3px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.arrow {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  fill: currentColor;
+  vertical-align: -1px;
+}
+
+.weather {
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.weather .sun {
+  fill: #f6c445;
+  stroke: #c98a12;
+}
+
+.weather .rays {
+  stroke: #c98a12;
+}
+
+.weather .cloud {
+  fill: #fff;
+}
+
+.weather .rain {
+  stroke: #1f6fb5;
+  stroke-width: 2;
+}
+
+.weather .bolt {
+  fill: #f6c445;
+  stroke: #9a6a0a;
+  stroke-width: 1;
+}
+
+.weather .snow,
+.weather .mist {
+  stroke: #5b7f99;
+}
+
+#panel {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 22px 24px 40px;
+  background: var(--sheet);
+  border-left: 1px solid var(--rule);
+}
+
+h2 {
+  font-size: 26px;
+  font-weight: 750;
+  font-stretch: 108%;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+}
+
+h3 {
+  margin: 26px 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.lede {
+  margin: 8px 0 16px;
+  color: var(--quiet);
+  max-width: 52ch;
+}
+
+.empty {
+  margin-top: 16px;
+  color: var(--quiet);
+}
+
+.choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 14px 0 10px;
+}
+
+.choice button {
+  padding: 5px 11px;
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 550;
+  font-stretch: 96%;
+  cursor: pointer;
+}
+
+.choice button::first-letter {
+  text-transform: uppercase;
+}
+
+.choice button:hover {
+  border-color: var(--quiet);
+}
+
+.choice button[aria-pressed="true"] {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+
+select {
+  width: 100%;
+  margin-bottom: 4px;
+  padding: 7px 8px;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-stretch: 94%;
+}
+
+th,
+td {
+  padding: 7px 8px 7px 0;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--rule);
+  font-weight: 400;
+}
+
+thead th {
+  padding-block: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-stretch: 104%;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--quiet);
+}
+
+tbody th {
+  font-weight: 600;
+}
+
+th small {
+  display: block;
+  font-weight: 400;
+  font-size: 12.5px;
+  color: var(--quiet);
+}
+
+td.icon {
+  width: 38px;
+  padding-block: 3px;
+}
+
+.figure {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+thead .figure {
+  font: 600 11.5px var(--label);
+  font-stretch: 104%;
+}
+
+.figure b {
+  font-weight: 700;
+}
+
+.quiet,
+td.period {
+  color: var(--quiet);
+}
+
+td.period {
+  font-size: 12.5px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+td.wind {
+  white-space: nowrap;
+}
+
+td.wind .arrow {
   margin-right: 5px;
 }
 
-#wind-key i::after {
-  content: "";
-  position: absolute;
-  right: -5px;
-  top: -3px;
-  border: 4px solid transparent;
-  border-left: 6px solid var(--paper);
-  border-right: 0;
+.level,
+.state {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 3px;
+  font-size: 12.5px;
+  font-weight: 650;
+  white-space: nowrap;
 }
 
-#wind-key b {
-  font-weight: 400;
-  margin-right: 4px;
+.level {
+  background: var(--level);
+  color: var(--ink);
 }
 
-#legend > footer {
-  margin-top: auto;
-  padding: 14px 20px 16px;
-  border-top: 1px solid var(--rule);
-  font-size: 12px;
-  font-stretch: 90%;
-  line-height: 1.5;
-  color: var(--faint);
+.level::first-letter {
+  text-transform: uppercase;
 }
 
-#readout {
+.state.open {
+  background: #dcefd9;
+  color: #1f5c22;
+}
+
+.state.partial {
+  background: #fbeab8;
+  color: #6b4a00;
+}
+
+.state.closed {
+  background: #f6d5d1;
+  color: #8a1c14;
+}
+
+.swatch {
   display: block;
-  min-height: 1.5em;
-  margin: 4px 0;
-  font: 11.5px/1.5 var(--figures);
-  color: var(--paper);
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid rgb(20 33 42 / 0.25);
 }
 
-a {
-  color: var(--paper);
-  text-underline-offset: 3px;
-  text-decoration-thickness: 1px;
-}
-
-button {
-  font: inherit;
-  color: inherit;
+.link {
+  padding: 0;
+  background: none;
+  border: 0;
+  font-weight: 600;
+  text-align: left;
   cursor: pointer;
 }
 
-#compass {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 0;
-  background: none;
+.link:hover {
+  color: var(--blue);
+  text-decoration: underline;
 }
 
-#compass svg {
+.places {
+  color: var(--quiet);
+  font-size: 13.5px;
+}
+
+.detail:not(:empty) {
+  margin: 4px 0 18px;
+  padding: 2px 14px 12px;
+  background: var(--page);
+  border-left: 3px solid var(--blue);
+}
+
+.detail h3 {
+  margin-top: 12px;
+}
+
+.chart {
+  display: block;
   width: 100%;
-  height: 100%;
-  overflow: visible;
-  fill: var(--paper);
+  max-width: 460px;
+  height: auto;
 }
 
-#compass text {
-  font: 600 9px var(--label);
+.chart .line {
+  fill: none;
+  stroke: var(--blue);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
 }
 
-#fold {
-  display: none;
+.chart .bar {
+  fill: #4f93cf;
 }
 
-/* A note pinned to the chart: paper, with ink on it. */
-#tip {
-  position: fixed;
-  z-index: 2;
-  pointer-events: none;
-  transform: translate(14px, -50%);
-  padding: 8px 11px 9px;
-  max-width: 280px;
+.chart .rule {
+  stroke: var(--rule);
+}
+
+.chart .figure {
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  fill: var(--quiet);
+}
+
+body > footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 9px 20px;
   font-size: 12.5px;
-  font-stretch: 92%;
-  line-height: 1.45;
-  white-space: pre-line;
-  background: var(--paper);
-  color: #14262b;
-  border-radius: 2px;
-  box-shadow: 0 2px 0 rgb(0 0 0 / 0.25);
+  color: var(--quiet);
+  background: var(--sheet);
+  border-top: 1px solid var(--rule);
 }
 
-#tip::first-line {
-  font-weight: 700;
-  font-stretch: 100%;
-}
-
-@media (max-width: 700px) {
-  #legend {
-    inset: auto 0 0 0;
-    width: auto;
-    max-height: 62vh;
-    border-right: 0;
-    border-top: 1px solid var(--rule);
-    transition: transform 0.25s ease-out;
+@media (max-width: 860px) {
+  html,
+  body {
+    height: auto;
   }
 
-  #legend.folded {
-    transform: translateY(calc(100% - 74px));
-    overflow: hidden;
-  }
-
-  #legend > header {
-    padding: 14px 96px 14px 16px;
-  }
-
-  fieldset {
-    padding-inline: 8px;
-  }
-
-  #fold {
+  body {
     display: block;
-    position: fixed;
-    right: 12px;
-    bottom: 20px;
-    z-index: 1;
-    padding: 7px 12px;
-    border: 1px solid var(--rule);
-    border-radius: 3px;
-    background: var(--margin);
+  }
+
+  body > header {
+    flex-wrap: wrap;
+    gap: 0 16px;
+    padding: 0 14px;
+  }
+
+  .name {
+    padding: 11px 0 4px;
+  }
+
+  #clock {
     font-size: 12px;
-    font-weight: 600;
-    font-stretch: 112%;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
   }
 
-  #legend:not(.folded) ~ #fold {
-    bottom: calc(62vh - 52px);
+  nav {
+    order: 3;
+    width: 100%;
+    margin-inline: -8px;
   }
 
-  #readout {
-    display: none;
+  nav a {
+    padding: 9px 8px;
   }
 
-  #compass {
-    top: 10px;
-    right: 10px;
+  main {
+    display: block;
   }
-}
 
-@media (prefers-reduced-motion: reduce) {
-  #legend {
-    transition: none;
+  /* The map keeps its height and its key goes under it, where it covers nothing. */
+  #chart {
+    overflow: visible;
   }
-}
 
-/* One of these is always chosen, so the others are quieter, not struck out. */
-#paints label:has(input:not(:checked)) span {
-  text-decoration: none;
-}
+  canvas {
+    position: relative;
+    height: 58vh;
+    min-height: 340px;
+  }
 
-#paints label:has(input:not(:checked)) .swatch {
-  opacity: 0.35;
+  #marks {
+    bottom: auto;
+    height: max(58vh, 340px);
+  }
+
+  #key {
+    position: static;
+    max-width: none;
+    border-width: 1px 0 0;
+    border-radius: 0;
+    background: var(--page);
+  }
+
+  #panel {
+    border-left: 0;
+    border-top: 1px solid var(--rule);
+    padding: 18px 14px 32px;
+    overflow: visible;
+  }
+
+  body > footer {
+    display: block;
+    padding: 12px 14px;
+  }
 }
