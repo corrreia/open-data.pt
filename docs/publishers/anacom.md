@@ -1,7 +1,8 @@
 # ANACOM
 
 Autoridade Nacional de Comunicações, Portugal's communications and postal regulator. We read
-fourteen of its market statistics and three layers of the universal postal service network.
+fourteen of its market statistics, three layers of the universal postal service network, the
+amateur radio service's shared stations and its television signal probes.
 Published under their terms: see [Permission](#permission).
 
 ## Source
@@ -16,17 +17,31 @@ English one. A feed makes two requests a week. It looks up its indicator's row b
 CSV with a BOM. Each file holds the indicator's whole history: quarterly from 2018 T1 to the latest
 quarter, so the first collection already has all of it.
 
-**GEO.ANACOM** (`geo.anacom.pt`), read by the `arcgis` format. Three layers of the
-`publico/ServicosPostais_Pub` MapServer (ArcGIS Server 11.3): post offices (layer 6, about 560),
-postal agencies (layer 9, about 1,900) and street mail boxes (layer 4, about 10,700, in eleven
-pages). Every row says when it was updated (`data_site`, "Final 2º Trimestre 2026"). The layers carry
-no edit date, so each weekly run reads them whole. On purpose, we do not read:
+**GEO.ANACOM** (`geo.anacom.pt`), read by the `arcgis` format. Seven point layers, each read whole once a week:
 
-- the coverage layers, which run to millions of rows;
+- three of the `publico/ServicosPostais_Pub` MapServer (ArcGIS Server 11.3): post offices (layer 6,
+  about 560), postal agencies (layer 9, about 1,900) and street mail boxes (layer 4, about 10,700, in
+  eleven pages). Every row says when it was updated (`data_site`, "Final 2º Trimestre 2026");
+- three of `publico/PlaneamentoGestaoEspectro_Pub`: the amateur service's shared stations, as
+  beacons (layer 44, 17), analogue repeaters (layer 43, about 140) and stations without assigned
+  frequencies (layer 42, about 100). Each row also carries its position as ANACOM writes it, in
+  degrees, minutes and seconds (`40° 41' 54",400 N`), which the format keeps as `latitude__source` and
+  `longitude__source` beside the point's own;
+- one of `publico/MonitorizacaoFiscalizacaoEspetro_Pub`: the probes measuring the digital terrestrial
+  television signal (layer 72, about 400), with the quality each last reported.
+
+The layers carry no edit date, so each run reads them whole. On purpose, we do not read:
+
+- the network coverage layers (`CoberturaQoS_Pub`, `Rede_Fixa`, `Rede_Móvel`, `Coberturas_Disponiveis`).
+  Mobile coverage per operator and technology is raster only. Fibre and coax coverage (layers 8, 4, 5)
+  answer a query without their geometry, so they hold nothing but the technology and a date. Copper
+  coverage (layer 6, 8,036 polygons) runs to 17 MB for one polygon, past what a record may be, and the
+  per-building and per-grid-square tables run to 4.8, 10.7 and 9.3 million rows, ten at a time;
+- the satellite footprints (layer 116), single polygons of up to 5 MB;
 - NET.mede and the drive tests;
 - ITED/ITUR, which hold personal data;
 - the municipal market-statistics layers (146–175 of `EstatisticasMercado_Pub`), which repeat the
-  STAT files.
+  STAT files, and the CAOP boundaries of `TemasGerais_Pub`, which are DGT's.
 
 ## Access
 
@@ -77,5 +92,6 @@ We publish under the conditions the authorization sets: a reference to the origi
 www.anacom.pt and the copyright notice on every copy, and informational, non-commercial use, which our
 licensing rule accepts. The terms also ask to be notified of any use: we notify ANACOM through
 stat.suporte@anacom.pt, giving the indicators and layers above and the weekly pace, and record any
-answer here. Every feed is under the `anacom-terms` licence, and its attribution carries the
+answer here. The four spectrum layers were added on 2026-11-27, after the first notification of
+2026-10-03, and need a notification of their own. Every feed is under the `anacom-terms` licence, and its attribution carries the
 reference to www.anacom.pt and the copyright notice word for word (`publishers/anacom/terms.ts`).

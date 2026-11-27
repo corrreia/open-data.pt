@@ -1,6 +1,10 @@
 import type { PublisherDefinition } from "#/catalog/define";
+import { FEED as amateurRadioBeacons } from "./feeds/amateur-radio-beacons";
+import { FEED as amateurRadioRepeaters } from "./feeds/amateur-radio-repeaters";
+import { FEED as amateurRadioSharedStations } from "./feeds/amateur-radio-shared-stations";
 import { FEED as bundleSubscriberShares } from "./feeds/bundle-subscriber-shares";
 import { FEED as bundleSubscribers } from "./feeds/bundle-subscribers";
+import { FEED as dttSignalProbes } from "./feeds/dtt-signal-probes";
 import { FEED as fixedBroadbandAccesses } from "./feeds/fixed-broadband-accesses";
 import { FEED as fixedBroadbandShares } from "./feeds/fixed-broadband-shares";
 import { FEED as fixedTelephoneAccesses } from "./feeds/fixed-telephone-accesses";
@@ -24,7 +28,7 @@ export const PUBLISHER: PublisherDefinition = {
     // STAT.ANACOM: two requests a feed, fourteen feeds that may all come due together. A few seconds apart, that
     // burst is a minute or so of requests to a Power Pages site rather than a spike.
     { host: "stat.anacom.pt", minIntervalSeconds: 3 },
-    // GEO.ANACOM's ArcGIS Server: the mail boxes alone are eleven pages.
+    // GEO.ANACOM's ArcGIS Server: the mail boxes alone are eleven pages, and seven layers may come due together.
     { host: "geo.anacom.pt", minIntervalSeconds: 1 },
   ],
   feeds: [
@@ -45,5 +49,9 @@ export const PUBLISHER: PublisherDefinition = {
     postOffices,
     postalAgencies,
     mailBoxes,
+    amateurRadioBeacons,
+    amateurRadioRepeaters,
+    amateurRadioSharedStations,
+    dttSignalProbes,
   ],
 };
