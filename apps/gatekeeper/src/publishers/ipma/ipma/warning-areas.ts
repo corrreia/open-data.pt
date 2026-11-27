@@ -69,6 +69,8 @@ export async function collectIpmaWarningAreas(webOrigin: string, fetcher: typeof
     if (!isJsonObject(parsed) || parsed.type !== "FeatureCollection" || !isJsonArray(parsed.features)) {
       throw new GatekeeperError(`IPMA ${file}.geojson must be a FeatureCollection`, "invalid-response");
     }
+    // Every file holds at least one area; an empty one would retract its areas from the snapshot.
+    if (parsed.features.length === 0) throw new GatekeeperError(`IPMA ${file}.geojson has no areas`, "invalid-response");
     for (const feature of parsed.features) {
       if (!isJsonObject(feature)) throw new GatekeeperError(`IPMA ${file}.geojson carries a feature that is not an object`, "invalid-response");
       features.push({ ...feature, file, surface });
@@ -144,7 +146,11 @@ function areaRecord(feature: JsonValue): CanonicalRecord {
     throw new GatekeeperError("IPMA warning area must be a GeoJSON feature", "invalid-response");
   }
   const { properties, geometry, file, surface } = feature;
-  if ((geometry.type !== "Polygon" && geometry.type !== "MultiPolygon") || !isJsonArray(geometry.coordinates)) {
+  if (
+    !(geometry.type === "Polygon"
+      ? isPolygon(geometry.coordinates)
+      : geometry.type === "MultiPolygon" && isJsonArray(geometry.coordinates) && geometry.coordinates.length > 0 && geometry.coordinates.every(isPolygon))
+  ) {
     throw new GatekeeperError(`IPMA warning area geometry in ${file} must be a polygon`, "invalid-response");
   }
   const areaCode = requiredString(properties.RegCode, "RegCode", file);
@@ -162,6 +168,24 @@ function areaRecord(feature: JsonValue): CanonicalRecord {
       geometry,
     },
   };
+}
+
+/** A GeoJSON polygon's coordinates: one or more closed rings of at least four longitude/latitude positions. */
+function isPolygon(rings: JsonValue | undefined): boolean {
+  return isJsonArray(rings) && rings.length > 0 && rings.every(isRing);
+}
+
+function isRing(ring: JsonValue): boolean {
+  if (!isJsonArray(ring) || ring.length < 4 || !ring.every(isPosition)) return false;
+  const first = ring[0];
+  const last = ring.at(-1);
+  return isJsonArray(first) && isJsonArray(last) && first[0] === last[0] && first[1] === last[1];
+}
+
+function isPosition(position: JsonValue): boolean {
+  if (!isJsonArray(position) || position.length < 2) return false;
+  const [longitude, latitude] = position;
+  return isJsonNumber(longitude) && isJsonNumber(latitude) && Math.abs(longitude) <= 180 && Math.abs(latitude) <= 90;
 }
 
 function requiredString(value: JsonValue | undefined, name: string, file: string): string {

@@ -115,5 +115,8 @@ describe("IPMA warning areas", () => {
     await expect(frames(site((path, body) => without(path, body, '"RegCode":"AVR"', '"RegCode":""')))).rejects.toThrow();
     await expect(frames(site((path, body) => without(path, body, '"RegCode":"AVR"', '"RegCode":"BJA"')))).rejects.toThrow();
     await expect(frames(site((path, body) => without(path, body, '"type":"Polygon"', '"type":"Point"')))).rejects.toThrow();
+    // A polygon's coordinates under a multipolygon's type: rings where polygons should be, numbers where rings.
+    const flat = (path: string, body: string) => new Response(path.endsWith("/po-ww.geojson") ? body.replace('"type":"Polygon"', '"type":"MultiPolygon"') : body);
+    await expect(frames(site(flat))).rejects.toThrow("must be a polygon");
   });
 });
