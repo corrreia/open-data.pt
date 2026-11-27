@@ -1,7 +1,7 @@
 # IPMA
 
 Instituto Português do Mar e da Atmosfera, Portugal's weather, sea and seismic institute. We read ten
-feeds from their open-data API and one, lightning, from their website.
+feeds from their open-data API and two, lightning and the warning areas, from their website.
 
 ## Source
 
@@ -11,6 +11,11 @@ The `ipma` library (`apps/gatekeeper/src/publishers/ipma/ipma/`) reads two hosts
 - `www.ipma.pt/pt/otempo/obs.dea/`: the lightning page (`lightning.ts`). It has no API behind it; the
   map's own script declares, as a JSON object, every discharge IPMA's detection network located in
   the last 24 hours. The feed reads that object out of the page.
+- `www.ipma.pt/bin/file.data/{po,md,ac}-ww{,-sea}.geojson`: the six outline files the warnings map on
+  `www.ipma.pt/pt/otempo/` draws (`warning-areas.ts`), land and sea for the mainland, Madeira and the
+  Azores. Each outline's `RegCode` is a warning's `idAreaAviso`. The website serves them as
+  `text/html`, and they have not changed since October 2021, so the feed reads all six once a week;
+  if IPMA moves them, the feed fails rather than publish part of the set.
 
 ## Access
 

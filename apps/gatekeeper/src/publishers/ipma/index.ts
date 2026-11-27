@@ -9,6 +9,7 @@ import { FEED as seismic } from "./feeds/seismic";
 import { FEED as shellfishRestrictions } from "./feeds/shellfish-restrictions";
 import { FEED as stationObservations } from "./feeds/station-observations";
 import { FEED as uvIndex } from "./feeds/uv-index";
+import { FEED as warningAreas } from "./feeds/warning-areas";
 import { FEED as weatherWarnings } from "./feeds/weather-warnings";
 
 export const PUBLISHER: PublisherDefinition = {
@@ -27,6 +28,7 @@ export const PUBLISHER: PublisherDefinition = {
     shellfishRestrictions,
     stationObservations,
     uvIndex,
+    warningAreas,
     weatherWarnings,
   ],
 };

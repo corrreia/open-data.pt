@@ -3,6 +3,7 @@ import { IPMA_FEEDS, validateIpmaFeedConfig } from "./ipma";
 import { IpmaTransformer } from "./transform";
 import { IpmaDatasetTransformer } from "./datasets";
 import { IpmaLightningTransformer } from "./lightning";
+import { IpmaWarningAreasTransformer } from "./warning-areas";
 
 /** What an IPMA feed's functions are handed when they run: the origin its API answers on, and its website's. */
 export interface IpmaContext {
@@ -31,3 +32,9 @@ export const IPMA_LIGHTNING_TRANSFORMER = new IpmaLightningTransformer();
 
 /** The normalizer the lightning feed's collections are stamped with. */
 export const IPMA_LIGHTNING_NORMALIZER = { id: IPMA_LIGHTNING_TRANSFORMER.id, version: IPMA_LIGHTNING_TRANSFORMER.version };
+
+/** The streaming translator from the website's warning-area files into products. */
+export const IPMA_WARNING_AREAS_TRANSFORMER = new IpmaWarningAreasTransformer();
+
+/** The normalizer the warning areas' collections are stamped with. */
+export const IPMA_WARNING_AREAS_NORMALIZER = { id: IPMA_WARNING_AREAS_TRANSFORMER.id, version: IPMA_WARNING_AREAS_TRANSFORMER.version };

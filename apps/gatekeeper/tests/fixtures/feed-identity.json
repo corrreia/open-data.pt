@@ -27,6 +27,18 @@
     "resourceKey": "ckan:ckan:resource:001a90e1380bd938b8097e20cca0815273329171ec18f3c89e3d46eb8116fb7c",
     "kind": "ckan:resource"
   },
+  "anacom-amateur-radio-beacons": {
+    "resourceKey": "arcgis:arcgis:layer:b725cac2e1c65b42a8c723d8d9f7ef98abfacef15c968caadfdbd0ed38ec8dac",
+    "kind": "arcgis:layer"
+  },
+  "anacom-amateur-radio-repeaters": {
+    "resourceKey": "arcgis:arcgis:layer:452c2bb84e2e1d2b1969416431681b967d9d019a05ccfd82e7353e5ea88c3033",
+    "kind": "arcgis:layer"
+  },
+  "anacom-amateur-radio-shared-stations": {
+    "resourceKey": "arcgis:arcgis:layer:a2fee01d2f10f7a22fe6a765748a2a2b4e9775da393505d683de52a9ce17585d",
+    "kind": "arcgis:layer"
+  },
   "anacom-bundle-subscriber-shares": {
     "resourceKey": "dataverse:dataverse:indicator:1efb33d16078dae2d640dd6cde97fe67266eb49e2c59c178fd9d26d5ed968060",
     "kind": "dataverse:indicator"
@@ -34,6 +46,10 @@
   "anacom-bundle-subscribers": {
     "resourceKey": "dataverse:dataverse:indicator:1efaabda56dcb82849e54c6bae2ef2e62b0aa388e1d86c2325441ddd8c87c141",
     "kind": "dataverse:indicator"
+  },
+  "anacom-dtt-signal-probes": {
+    "resourceKey": "arcgis:arcgis:layer:4080ced37145d005798d18b6a75dacfa0eb28d32c828bd3af81e1dfdf9836a84",
+    "kind": "arcgis:layer"
   },
   "anacom-fixed-broadband-accesses": {
     "resourceKey": "dataverse:dataverse:indicator:9d1047f424d848c40a17450205ca93c0b6b01839dd10e95e1404af4d5e09d348",
@@ -1058,6 +1074,10 @@
   "ipma-uv-index-feed": {
     "resourceKey": "ipma:ipma:uv-index:42b2605ee89e7d18cc0a86a6f547ffefb7129f3cf45bfbccae56c5a6da8f35fb",
     "kind": "ipma:uv-index"
+  },
+  "ipma-warning-areas-feed": {
+    "resourceKey": "ipma:ipma:warning-areas:0694329c0588197bbb2e3efb9f41b321e88362fb5037998d5603adda91d83cfc",
+    "kind": "ipma:warning-areas"
   },
   "ipma-weather-warnings-feed": {
     "resourceKey": "ipma:ipma:warnings:95ec23ce318e77e691c7787a40b6e06fdedeac7bb738789d2f62d1bfe5bb35e4",

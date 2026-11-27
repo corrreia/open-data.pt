@@ -93,12 +93,17 @@ export const IPMA_FEEDS = {
     kind: "lightning",
     semantics: { domainSubject: "event", defaultProductRole: "event-log" },
   },
+  // The outline of every area a weather warning names, on land and at sea, read from the website's own map files.
+  "warning-areas": {
+    kind: "warning-areas",
+    semantics: { domainSubject: "reference", defaultProductRole: "reference" },
+  },
 } as const satisfies Record<string, FeedKindDescription>;
 
 export type IpmaFeedName = keyof typeof IPMA_FEEDS;
 
-/** The feeds read from api.ipma.pt; lightning comes from the website (`lightning.ts`). */
-type IpmaApiFeed = Exclude<IpmaFeedName, "lightning">;
+/** The feeds read from api.ipma.pt; lightning and the warning areas come from the website (`lightning.ts`, `warning-areas.ts`). */
+type IpmaApiFeed = Exclude<IpmaFeedName, "lightning" | "warning-areas">;
 
 /** The largest document each IPMA API feed may return, in bytes. */
 type FeedLimits = { [Feed in IpmaApiFeed]: number };
@@ -165,9 +170,11 @@ export function validateIpmaFeedConfig(config: SourceConfig): SourceConfig {
 
 export async function collectIpmaFeed(config: SourceConfig, checkpoint: SourceValidator | undefined, apiOrigin: string, fetcher: typeof fetch): Promise<SourceFetch> {
   const validated = validateIpmaFeedConfig(config);
-  if (validated.feed === "lightning") throw new GatekeeperError("IPMA lightning is read from the website, not the API", "invalid-config");
+  if (validated.feed === "lightning" || validated.feed === "warning-areas") {
+    throw new GatekeeperError(`IPMA ${validated.feed} is read from the website, not the API`, "invalid-config");
+  }
   // SAFETY: `validateIpmaFeedConfig` has just confirmed `feed` names one of
-  // the feeds IPMA_FEEDS declares, and the line above that it is an API feed.
+  // the feeds IPMA_FEEDS declares, and the lines above that it is an API feed.
   const feed = validated.feed as IpmaApiFeed;
   const origin = fixedOrigin(apiOrigin, ALLOWED_ORIGIN);
   const paths = ENDPOINTS[feed];
