@@ -6,10 +6,13 @@ export {
   IPMA_LIGHTNING_TRANSFORMER,
   IPMA_NORMALIZER,
   IPMA_TRANSFORMER,
+  IPMA_WARNING_AREAS_NORMALIZER,
+  IPMA_WARNING_AREAS_TRANSFORMER,
   resolveIpmaFeed,
   type IpmaContext,
 } from "./collector";
 export { IPMA_LIGHTNING_MAX_BYTES, IPMA_LIGHTNING_PAGE, IPMA_WEB_ORIGIN, IpmaLightningTransformer, collectIpmaLightning } from "./lightning";
+export { IPMA_WARNING_AREAS_MAX_BYTES, IPMA_WARNING_AREAS_PAGE, IPMA_WARNING_AREA_FILES, IpmaWarningAreasTransformer, collectIpmaWarningAreas } from "./warning-areas";
 export { IPMA_FEEDS, IPMA_FEED_LIMITS, collectIpmaFeed, validateIpmaFeedConfig, type IpmaFeedName } from "./ipma";
 export { IpmaTransformer } from "./transform";
 export { IpmaDatasetTransformer } from "./datasets";
